@@ -12,11 +12,6 @@ require_once __DIR__ . '/../librerias/pdf.php';
 // Definir constantes para IDs de módulo
 define('MODULO_CATALOGO', 10);
 
-if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
-    exit;
-}
-
 $esAdmin = isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] == 'Administrador';
 
 $data = [];
@@ -521,7 +516,7 @@ try {
 // Asignar la página y cargar la vista
 $pagina = "catalogo";
 if (is_file("vista/" . $pagina . ".php")) {
-    if (!defined('SKIP_SIDE_EFFECTS')) {
+    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
             MODULO_CATALOGO,

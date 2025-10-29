@@ -3711,7 +3711,7 @@ if (isset($_SESSION['id_usuario'])) {
     );
 } else {
     // Redirigir a login si no hay sesiÃ³n
-    header('Location: login.php');
+    header('Location: ?pagina=login');
     exit;
 }
 $data = [];

@@ -8,7 +8,7 @@ define('MODULO_PERMISOS', 17);
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
+    header('Location: ?pagina=login');
     exit;
 }
 

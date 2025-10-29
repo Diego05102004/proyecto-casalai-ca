@@ -10,7 +10,7 @@ define('MODULO_PASARELA_PAGOS', 16); // Define el ID del módulo
 
 // Registrar acceso al módulo si hay sesión activa
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
+    header('Location: ?pagina=login');
     exit;
 }
 if (!defined('SKIP_SIDE_EFFECTS')) {

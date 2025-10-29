@@ -11,7 +11,7 @@ require_once __DIR__ . '/../modelo/bitacora.php';
 define('MODULO_USUARIO', 1);
 
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
+    header('Location: ?pagina=login');
     exit;
 }
 

@@ -1,6 +1,10 @@
 <?php
 ob_start();
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
+// Evitar caché en páginas protegidas
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 require_once __DIR__ . '/../modelo/producto.php';
 require_once __DIR__ . '/../modelo/carrito.php';
 require_once __DIR__ . '/../modelo/factura.php';
@@ -10,7 +14,7 @@ require_once __DIR__ . '/../modelo/bitacora.php';
 define('MODULO_CARRITO', 0);
 
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
+    header('Location: ?pagina=login');
     exit;
 }
 

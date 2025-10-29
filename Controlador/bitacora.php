@@ -15,7 +15,7 @@ $permisosUsuario = $permisos->getPermisosPorRolModulo();
 
 // Redirigir a login si no hay sesión
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: login.php');
+    header('Location: ?pagina=login');
     exit;
 }
 
