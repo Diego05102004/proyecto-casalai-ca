@@ -1,2 +1,2 @@
-# proyecto-casalai-ca
-Proyecto de universidad
+# proyecto-casalai
+Repositorio general del proyecto CASALAI

@@ -1,0 +1,46 @@
+/* Botón flotante de gráfica */
+.btn-grafica {
+    position: fixed;
+    top: 100px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background-color: #1f66df;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 500;
+}
+
+.btn-grafica img {
+    width: 32px;
+    height: 32px;
+    filter: invert(1);
+    pointer-events: none;
+}
+
+.btn-grafica:hover {
+    background-color: #1552b3;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* En pantallas pequeñas, ajustamos tamaño */
+@media (max-width: 768px) {
+    .btn-grafica {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        left: 20px;
+    }
+
+    .btn-grafica img {
+        width: 26px;
+        height: 26px;
+    }
+}

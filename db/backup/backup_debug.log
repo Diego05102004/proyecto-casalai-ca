@@ -1,0 +1,14 @@
+[2025-10-26T16:35:35-04:00] CONTROLADOR: --- INICIO GENERAR ---
+[2025-10-26T16:35:35-04:00] MODELO: generar tipo=P, db=casalai, archivo=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\Modelo/../db/backup/backup_principal_20251026_163535.sql
+[2025-10-26T16:35:35-04:00] MODELO: mysqldump existe=1, is_executable=1
+[2025-10-26T16:35:35-04:00] MODELO: disable_functions=
+[2025-10-26T16:35:35-04:00] MODELO: comando="C:\xampp\mysql\bin\mysqldump.exe" --user="root" --password="" --host="localhost" --databases casalai --add-drop-database --add-drop-table --routines --events --triggers > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\Modelo/../db/backup/backup_principal_20251026_163535.sql" 2>&1
+[2025-10-26T16:35:36-04:00] MODELO: dump final ok=1, existe=1, size=312611
+[2025-10-26T16:35:36-04:00] CONTROLADOR: Acción GENERAR tipo=P, archivo=backup_principal_20251026_163535.sql, ok=1, ruta=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\db\backup\backup_principal_20251026_163535.sql
+[2025-10-26T16:35:52-04:00] CONTROLADOR: --- INICIO GENERAR ---
+[2025-10-26T16:35:52-04:00] MODELO: generar tipo=S, db=seguridadlai, archivo=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\Modelo/../db/backup/backup_seguridad_20251026_163552.sql
+[2025-10-26T16:35:52-04:00] MODELO: mysqldump existe=1, is_executable=1
+[2025-10-26T16:35:52-04:00] MODELO: disable_functions=
+[2025-10-26T16:35:52-04:00] MODELO: comando="C:\xampp\mysql\bin\mysqldump.exe" --user="root" --password="" --host="localhost" --databases seguridadlai --add-drop-database --add-drop-table --routines --events --triggers > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\Modelo/../db/backup/backup_seguridad_20251026_163552.sql" 2>&1
+[2025-10-26T16:35:53-04:00] MODELO: dump final ok=1, existe=1, size=118745
+[2025-10-26T16:35:53-04:00] CONTROLADOR: Acción GENERAR tipo=S, archivo=backup_seguridad_20251026_163552.sql, ok=1, ruta=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\db\backup\backup_seguridad_20251026_163552.sql
