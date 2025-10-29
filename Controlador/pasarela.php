@@ -91,7 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $_SESSION['id_usuario'],
                             MODULO_PASARELA_PAGOS,
                             'INGRESAR',
-                            'El usuario registró la referencia bancaria: ' . $pagoData['referencia'],
+                            'El usuario incluyó la referencia bancaria: ' . $pagoData['referencia'],
                             'media');
                          $resultados[] = [
                             'status' => 'success', 
@@ -231,7 +231,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '12',
     'ACCESAR',
-    'El usuario accedió al al modulo de Pasarela de pagos',
+    'El usuario accedió al modulo de Pasarela de pagos',
     'media'
 );}
 } else {

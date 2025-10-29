@@ -14,7 +14,10 @@ $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('despacho'));
 
-
+// Reportes de despacho (restaurados)
+$reporteDespacho = new Despacho();
+$despachoEstado = $reporteDespacho->getDespachosEstado();
+$despachoMes = $reporteDespacho->getProductosDespachadosPorMes();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Instanciar solo cuando se va a usar
@@ -115,9 +118,7 @@ $despachos = getdespacho();
 $k = new Despacho();
 $proveedores = $k->obtenercliente();
 $productos = $k->consultarproductos();
-// Reportes de despacho (restaurados)
-$despachoEstado = $k->getDespachosEstado();
-$despachoMes = $k->getProductosDespachadosPorMes();
+
 // Total de despachos
 $totalDespachos = count($despachos);
 

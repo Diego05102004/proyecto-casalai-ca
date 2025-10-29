@@ -4,16 +4,19 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'modelo/producto.php';
-require_once 'modelo/bitacora.php';
-require_once 'modelo/DolarService.php';
-require_once 'librerias/pdf.php';
+require_once __DIR__ . '/../modelo/producto.php';
+require_once __DIR__ . '/../modelo/bitacora.php';
+require_once __DIR__ . '/../modelo/DolarService.php';
+require_once __DIR__ . '/../librerias/pdf.php';
 
 // Definir constantes para IDs de módulo
 define('MODULO_CATALOGO', 10);
 
-$productosModel = new Productos();
-$bitacoraModel = new Bitacora();
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: login.php');
+    exit;
+}
+
 $esAdmin = isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] == 'Administrador';
 
 $data = [];
@@ -21,6 +24,8 @@ $dolarService = new DolarService();
 $precioDolar = $dolarService->obtenerPrecioDolar();
 $dolarService->guardarPrecioCache($precioDolar);
 
+$productosModel = new Productos();
+$bitacoraModel = new Bitacora();
 // Manejar generación de reportes PDF
 try {
     $dolarService = new DolarService();
@@ -68,7 +73,6 @@ function generarReporteAccesosSemanales($bitacoraModel) {
     $pdf->generarReporteAccesos($datos);
 }
 
-
 // Manejar solicitudes AJAX
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
@@ -104,36 +108,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
         header('Content-Type: application/json');
         $accion = $_POST['accion'];
 
-        // (revert) sin endpoint obtener_marcas
-
-if ($accion == 'obtener_datos_reportes') {
-    try {
-        // Obtener estadísticas de accesos
-        $estadisticas = $bitacoraModel->obtenerEstadisticasAccesos();
-        
-        // Obtener usuarios más activos
-        $usuariosActivos = $bitacoraModel->obtenerUsuariosMasActivos(10);
-        
-        echo json_encode([
-            'status' => 'success',
-            'estadisticas' => $estadisticas,
-            'usuarios' => $usuariosActivos
-        ]);
-    } catch (Exception $e) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
-    }
-    exit;
-}
+        if ($accion == 'obtener_datos_reportes') {
+            try {
+                // Obtener estadísticas de accesos
+                $estadisticas = $bitacoraModel->obtenerEstadisticasAccesos();
+                
+                // Obtener usuarios más activos
+                $usuariosActivos = $bitacoraModel->obtenerUsuariosMasActivos(10);
+                
+                echo json_encode([
+                    'status' => 'success',
+                    'estadisticas' => $estadisticas,
+                    'usuarios' => $usuariosActivos
+                ]);
+            } catch (Exception $e) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit;
+        }
 
         if ($accion == 'filtrar_por_marca') {
             $id_marca = $_POST['id_marca'] ?? null;
             $productos = $id_marca ? $productosModel->obtenerProductosPorMarca($id_marca) : $productosModel->obtenerProductosConMarca();
 
             // Registrar filtrado
-            if (isset($_SESSION['id_usuario'])) {
+            if (!defined('SKIP_SIDE_EFFECTS')) {
                 $marcaFiltro = $id_marca ? " (Marca ID: $id_marca)" : "";
                 $bitacoraModel->registrarBitacora(
                     $_SESSION['id_usuario'],
@@ -240,13 +242,15 @@ if ($accion == 'obtener_datos_reportes') {
 
                 if ($result) {
                     // Registrar en bitácora
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CATALOGO,
-                        'INCLUIR',
-                        "El usuario agregó producto al carrito: $nombreProducto (Cantidad: $cantidad)",
-                        'alta'
-                    );
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_CATALOGO,
+                            'INCLUIR',
+                            "El usuario agregó producto al carrito: $nombreProducto (Cantidad: $cantidad)",
+                            'alta'
+                        );
+                    }
 
                     // Respuesta limpia en JSON
                     header('Content-Type: application/json');
@@ -287,7 +291,7 @@ if ($accion == 'obtener_datos_reportes') {
                 $id_combo = $productosModel->crearCombo($nombre, $descripcion, $productos);
 
                 // Registrar creación de combo
-                if (isset($_SESSION['id_usuario'])) {
+                if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_CATALOGO,
@@ -325,16 +329,18 @@ if ($accion == 'obtener_datos_reportes') {
                 $resultado = $productosModel->cambiarEstadoCombo($id_combo);
                 
                 // Registrar cambio de estado
-                if ($resultado && isset($_SESSION['id_usuario'])) {
+                if ($resultado) {
                     $nuevoEstado = $productosModel->obtenerComboPorId($id_combo)['activo'];
                     $accionEstado = $nuevoEstado ? 'habilitó' : 'deshabilitó';
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CATALOGO,
-                        'CAMBIAR_ESTADO',
-                        "El usuario $accionEstado el combo: {$combo['nombre_combo']} (ID: $id_combo)",
-                        'media'
-                    );
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_CATALOGO,
+                            'CAMBIAR_ESTADO',
+                            "El usuario $accionEstado el combo: {$combo['nombre_combo']} (ID: $id_combo)",
+                            'media'
+                        );
+                    }
                 }
                 
                 echo json_encode([
@@ -369,14 +375,16 @@ if ($accion == 'obtener_datos_reportes') {
                 $result = $productosModel->actualizarCombo($id_combo, $nombre, $descripcion, $productos);
 
                 // Registrar actualización
-                if ($result && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CATALOGO,
-                        'MODIFICAR',
-                        "El usuario modificó el combo: {$comboAntes['nombre_combo']} (ID: $id_combo)",
-                        'media'
-                    );
+                if ($result) {
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_CATALOGO,
+                            'MODIFICAR',
+                            "El usuario modificó el combo: {$comboAntes['nombre_combo']} (ID: $id_combo)",
+                            'media'
+                        );
+                    }
                 }
 
                 echo json_encode([
@@ -403,14 +411,16 @@ if ($accion == 'obtener_datos_reportes') {
                 $result = $productosModel->eliminarCombo($id_combo);
 
                 // Registrar eliminación
-                if ($result && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CATALOGO,
-                        'ELIMINAR',
-                        "El usuario eliminó el combo: {$combo['nombre_combo']} (ID: $id_combo)",
-                        'media'
-                    );
+                if ($result) {
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_CATALOGO,
+                            'ELIMINAR',
+                            "El usuario eliminó el combo: {$combo['nombre_combo']} (ID: $id_combo)",
+                            'media'
+                        );
+                    }
                 }
 
                 echo json_encode([
@@ -463,13 +473,15 @@ if ($accion == 'obtener_datos_reportes') {
                 $detalles = $productosModel->obtenerDetallesCombo($id_combo);
 
                 // Registrar en bitácora
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_CATALOGO,
-                    'INCLUIR',
-                    "El usuario agregó combo al carrito: {$combo['nombre_combo']} (ID: $id_combo, Productos: ".count($detalles).")",
-                    'alta'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_CATALOGO,
+                        'INCLUIR',
+                        "El usuario agregó combo al carrito: {$combo['nombre_combo']} (ID: $id_combo, Productos: ".count($detalles).")",
+                        'alta'
+                    );
+                }
 
                 echo json_encode([
                     'status' => 'success',
@@ -509,14 +521,15 @@ try {
 // Asignar la página y cargar la vista
 $pagina = "catalogo";
 if (is_file("vista/" . $pagina . ".php")) {
-    if (isset($_SESSION['id_usuario'])) {
-         $bitacoraModel->registrarBitacora(
-    $_SESSION['id_usuario'],
-    '10',
-    'ACCESAR',
-    'El usuario accedió al al modulo de Catálogo',
-    'media'
-);}
+    if (!defined('SKIP_SIDE_EFFECTS')) {
+        $bitacoraModel->registrarBitacora(
+            $_SESSION['id_usuario'],
+            MODULO_CATALOGO,
+            'ACCESAR',
+            'El usuario accedió al modulo de Catálogo',
+            'media'
+        );
+    }
     require_once("vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";

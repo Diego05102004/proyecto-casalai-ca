@@ -4,16 +4,14 @@ ob_start();
 require_once 'modelo/modelo.php';
 require_once 'modelo/permiso.php';
 require_once 'modelo/bitacora.php';
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
-// Definir constantes para IDs de módulo y acciones
 define('MODULO_MODELOS', 5);
 
-$permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('modelos'));
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('modelos'));
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['accion'])) {
@@ -25,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('modelos'));
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('modelos'));
             echo json_encode($permisosActualizados);
             exit;
             
@@ -49,17 +47,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
                 // Registrar éxito en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $detalle = 'Registro de nuevo modelo: ' . $_POST['nombre_modelo'] . 
-                              ' (ID: ' . $modeloRegistrado['id_modelo'] . 
-                              ', Marca ID: ' . $_POST['id_marca'] . ')';
+                    $bitacoraModel = new Bitacora(); 
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        MODULO_MODELOS,
-                        'REGISTRAR',
-                        $detalle,
+                        '5',
+                        'INCLUIR',
+                        'El usuario incluyó un nuevo modelo: ' . $_POST['nombre_modelo'],
                         'media'
-                    );  
-                   }
+                    );
+                }
                 
                 echo json_encode([
                     'status' => 'success',
@@ -110,14 +106,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
                 // Registrar modificación exitosa
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $detalle = 'Modificación de modelo: ' . $_POST['nombre_modelo'] . 
-                               ' (ID: ' . $id_modelo . 
-                               ', Nueva marca ID: ' . $_POST['id_marca'] . ')';
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        MODULO_MODELOS,
+                        '5',
                         'MODIFICAR',
-                        $detalle,
+                        'El usuario modifico el modelo ' . $modeloActualizado['nombre_modelo'] . '',
                         'media'
                     );
                 }
@@ -143,13 +137,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (is_array($resultado) && $resultado['status'] === 'error') {
                 // Registrar en bitácora el intento fallido
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_MODELOS,
-                    'ELIMINAR_FALLIDO',
-                    'Intento de eliminación fallido de modelo (ID: ' . $id_modelo . '): ' . $resultado['mensaje'],
-                    'media'
-                );
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_MODELOS,
+                        'ELIMINAR_FALLIDO',
+                        'Intento de eliminación fallido de modelo (ID: ' . $id_modelo . '): ' . $resultado['mensaje'],
+                        'media'
+                    );
                 }
                 
                 echo json_encode([
@@ -161,13 +156,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else if ($resultado['status'] === 'success') {
                 // Registrar eliminación exitosa
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_MODELOS,
-                    'ELIMINAR',
-                    'El usuario eliminó el modelo ID: ' . $id_modelo,
-                    'media'
-                );
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_MODELOS,
+                        'ELIMINAR',
+                        'El usuario eliminó el modelo ID: ' . $id_modelo,
+                        'media'
+                    );
                 }
                 
                 echo json_encode(['status' => 'success']);
@@ -197,14 +193,15 @@ $pagina = "modelo";
 if (is_file("vista/" . $pagina . ".php")) {
     $modelos = getModelos();
     $marcas = getmarcas();
-           if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+        $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
-    $_SESSION['id_usuario'],
-    '5',
-    'ACCESAR',
-    'El usuario accedió al al modulo de Modelos',
-    'media'
-);
+        $_SESSION['id_usuario'],
+        '5',
+        'ACCESAR',
+        'El usuario accedió al modulo de Modelos',
+        'media'
+    );
 }
     require_once("vista/" . $pagina . ".php");
 } else {

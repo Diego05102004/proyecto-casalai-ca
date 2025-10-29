@@ -1,18 +1,17 @@
 <?php
 ob_start();
 
-require_once 'modelo/producto.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once __DIR__ . '/../modelo/producto.php';
+require_once __DIR__ . '/../modelo/permiso.php';
+require_once __DIR__ . '/../modelo/bitacora.php';
 
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 define('MODULO_PRODUCTOS', 6);
 
 $id_rol = $_SESSION['id_rol'] ?? 0;
-$permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('productos'));
+
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('productos'));
 
 // Manejo de solicitudes POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -22,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('productos'));
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('productos'));
             echo json_encode($permisosActualizados, JSON_UNESCAPED_UNICODE);
             exit;
 
@@ -53,13 +52,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $resultado = $Producto->ingresarProducto($_POST);
                     if ($resultado) {
                         $id_producto = $resultado;
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_PRODUCTOS,
-                            'REGISTRAR',
-                            'El usuario registró un nuevo producto: ' . ($_POST['nombre_producto'] ?? ''),
-                            'media'
-                        );
+                        if (!defined('SKIP_SIDE_EFFECTS')) {
+                            $bitacoraModel = new Bitacora();
+                            $bitacoraModel->registrarBitacora(
+                                $_SESSION['id_usuario'],
+                                MODULO_PRODUCTOS,
+                                'INCLUIR',
+                                'El usuario incluyó un nuevo producto: ' . ($_POST['nombre_producto'] ?? ''),
+                                'media'
+                            );
+                        }
 
                         $respuesta = [
                             'status' => 'success',
@@ -185,13 +187,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     } else {
                         // Sin imagen, solo éxito en modificación
                         $productoActualizado = $Producto->obtenerProductoPorId($id);
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_PRODUCTOS,
-                            'MODIFICAR',
-                            'El usuario modificó el producto: ' . ($_POST['nombre_producto'] ?? '') . ' | Antes: ' . json_encode($productoViejo) . ' | Después: ' . json_encode($productoActualizado),
-                            'media'
-                        );
+                        if (!defined('SKIP_SIDE_EFFECTS')) {
+                            $bitacoraModel = new Bitacora();
+                            $bitacoraModel->registrarBitacora(
+                                $_SESSION['id_usuario'],
+                                MODULO_PRODUCTOS,
+                                'MODIFICAR',
+                                'El usuario modificó el producto: ' . ($_POST['nombre_producto'] ?? '') . ' | Antes: ' . json_encode($productoViejo) . ' | Después: ' . json_encode($productoActualizado),
+                                'media'
+                            );
+                        }
+
                         header('Content-Type: application/json; charset=utf-8');
                         echo json_encode(['status' => 'success', 'mensaje' => 'Producto modificado correctamente'], JSON_UNESCAPED_UNICODE);
                         exit;
@@ -218,13 +224,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $producto = new Productos();
             $response = $producto->eliminarProducto($id_producto);
             if (is_array($response) && ($response['success'] ?? false)) {
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_PRODUCTOS,
-                    'ELIMINAR',
-                    'El usuario eliminó el producto ID: ' . $id_producto,
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_PRODUCTOS,
+                        'ELIMINAR',
+                        'El usuario eliminó el producto ID: ' . $id_producto,
+                        'media'
+                    );
+                }
+
                 echo json_encode(['status' => 'success', 'message' => $response['message']], JSON_UNESCAPED_UNICODE);
             } else {
                 $msg = is_array($response) ? ($response['message'] ?? 'Error al eliminar producto') : 'Error al eliminar producto';
@@ -248,13 +258,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $producto = new Productos();
             $producto->setId($id);
             if ($producto->cambiarEstatus($nuevoEstatus)) {
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_PRODUCTOS,
-                    'CAMBIAR ESTATUS',
-                    'El usuario cambió el estatus del producto ID ' . $id . ' a ' . $nuevoEstatus,
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_PRODUCTOS,
+                        'CAMBIAR ESTATUS',
+                        'El usuario cambió el estatus del producto ID ' . $id . ' a ' . $nuevoEstatus,
+                        'media'
+                    );
+                }
                 echo json_encode(['status' => 'success'], JSON_UNESCAPED_UNICODE);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Error al cambiar el estatus'], JSON_UNESCAPED_UNICODE);
@@ -331,14 +344,18 @@ $mostrarFormulario = !empty($categoriasDinamicas);
 $pagina = "producto";
 if (is_file("vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
-        $bitacoraModel->registrarBitacora(
-            $_SESSION['id_usuario'],
-            '6',
-            'ACCESAR',
-            'El usuario accedió al modulo de Productos',
-            'media'
-        );
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                '6',
+                'ACCESAR',
+                'El usuario accedió al modulo de Productos',
+                'media'
+            );
+        }
     }
+
     $modelos = obtenerModelos();
     $productos = obtenerProductos();
     require_once("vista/" . $pagina . ".php");

@@ -7,17 +7,16 @@ if (session_status() === PHP_SESSION_NONE) {
 // error_reporting(0);
 // ini_set('display_errors', 0);
 
-require_once 'Modelo/usuario.php';
-require_once 'Modelo/bitacora.php';
+require_once __DIR__ . '/../modelo/usuario.php';
+require_once __DIR__ . '/../modelo/bitacora.php';
 define('MODULO_PERFIL', 22);
 
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: ?pagina=login');
+    header('Location: login.php');
     exit;
 }
 
 $usuarioModel = new Usuarios();
-$bitacoraModel = new Bitacora();
 $usuario = $usuarioModel->obtenerUsuarioPorId($_SESSION['id_usuario']);
 
 // Manejo de actualizaciones específicas
@@ -26,16 +25,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     switch($tipo) {
         case 'personal':
-            $respuesta = handlePersonalUpdate($usuarioModel, $bitacoraModel, $usuario);
+            $respuesta = handlePersonalUpdate($usuarioModel, new Bitacora(), $usuario);
             break;
         case 'email':
-            $respuesta = handleEmailUpdate($usuarioModel, $bitacoraModel, $usuario);
+            $respuesta = handleEmailUpdate($usuarioModel, new Bitacora(), $usuario);
             break;
         case 'password':
-            $respuesta = handlePasswordUpdate($usuarioModel, $bitacoraModel, $usuario);
+            $respuesta = handlePasswordUpdate($usuarioModel, new Bitacora(), $usuario);
             break;
         case 'avatar':
-            $respuesta = handleAvatarUpdate($usuarioModel, $bitacoraModel, $usuario);
+            $respuesta = handleAvatarUpdate($usuarioModel, new Bitacora(), $usuario);
             break;
         default:
             $respuesta = ['status' => 'error', 'message' => 'Tipo de acción no válido'];
@@ -80,7 +79,16 @@ function handlePersonalUpdate($usuarioModel, $bitacoraModel, $usuario) {
         foreach ($datosActualizar as $campo => $valor) {
             $_SESSION[$campo] = $valor;
         }
-        $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], MODULO_PERFIL, 'Actualizó su información personal', 'UPDATE', 'tbl_usuarios');
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraLocal = new Bitacora();
+            $bitacoraLocal->registrarBitacora(
+                $_SESSION['id_usuario'],
+                MODULO_PERFIL,
+                'MODIFICAR',
+                'Actualizó su información personal',
+                'media'
+            );
+        }
         return ['status' => 'success', 'message' => 'Información personal actualizada correctamente'];
     }
 
@@ -124,7 +132,16 @@ function handleAvatarUpdate($usuarioModel, $bitacoraModel, $usuario) {
             
             if ($usuarioModel->actualizarPerfil($_SESSION['id_usuario'], ['foto_perfil' => $nombreArchivo])) {
                 $_SESSION['foto_perfil'] = $nombreArchivo;
-                $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], MODULO_PERFIL, 'Cambió su foto de perfil', 'UPDATE', 'tbl_usuarios');
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraLocal = new Bitacora();
+                    $bitacoraLocal->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_PERFIL,
+                        'MODIFICAR',
+                        'Cambió su foto de perfil',
+                        'media'
+                    );
+                }
                 return ['status' => 'success', 'message' => 'Foto de perfil actualizada correctamente'];
             }
         }
@@ -163,7 +180,16 @@ function handleEmailUpdate($usuarioModel, $bitacoraModel, $usuario) {
     if ($usuarioModel->actualizarPerfil($_SESSION['id_usuario'], ['correo' => $nuevo_correo])) {
         // Actualizar sesión
         $_SESSION['correo'] = $nuevo_correo;
-        $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], MODULO_PERFIL, 'Cambió su correo electrónico', 'UPDATE', 'tbl_usuarios');
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraLocal = new Bitacora();
+            $bitacoraLocal->registrarBitacora(
+                $_SESSION['id_usuario'],
+                MODULO_PERFIL,
+                'MODIFICAR',
+                'Cambió su correo electrónico',
+                'media'
+            );
+        }
         return ['status' => 'success', 'message' => 'Correo electrónico actualizado correctamente'];
     }
 
@@ -203,7 +229,16 @@ function handlePasswordUpdate($usuarioModel, $bitacoraModel, $usuario) {
 
     // Actualizar contraseña (el modelo realizará el hash)
     if ($usuarioModel->actualizarPerfil($_SESSION['id_usuario'], ['password' => $new_password])) {
-        $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], MODULO_PERFIL, 'Cambió su contraseña', 'UPDATE', 'tbl_usuarios');
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraLocal = new Bitacora();
+            $bitacoraLocal->registrarBitacora(
+                $_SESSION['id_usuario'],
+                MODULO_PERFIL,
+                'MODIFICAR',
+                'Cambió su contraseña',
+                'media'
+            );
+        }
         return ['status' => 'success', 'message' => 'Contraseña actualizada correctamente'];
     }
 
@@ -212,8 +247,18 @@ function handlePasswordUpdate($usuarioModel, $bitacoraModel, $usuario) {
 
 // Cargar vista
 $pagina = "perfil";
-if (is_file("Vista/" . $pagina . ".php")) {
-    require_once("Vista/" . $pagina . ".php");
+if (is_file("vista/" . $pagina . ".php")) {
+    if (!defined('SKIP_SIDE_EFFECTS')) {
+        $bitacoraAcceso = new Bitacora();
+        $bitacoraAcceso->registrarBitacora(
+            $_SESSION['id_usuario'],
+            MODULO_PERFIL,
+            'ACCESAR',
+            'Acceso al módulo de perfil',
+            'baja'
+        );
+    }
+    require_once("vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

@@ -56,8 +56,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_CUENTA_BANCARIA,
-                        'REGISTRAR',
-                        'El usuario registró una nueva cuenta bancaria: ' . ($_POST['nombre_banco'] ?? ''),
+                        'INCLUIR',
+                        'El usuario incluyó una nueva cuenta bancaria: ' . ($_POST['nombre_banco'] ?? ''),
                         'media'
                     );
                 }
@@ -239,7 +239,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '15',
         'ACCESAR',
-        'El usuario accedió al al modulo de Cuentas Bancarias',
+        'El usuario accedió al modulo de Cuentas Bancarias',
         'media'
     );}
     $cuentabancos = consultarCuentabanco();

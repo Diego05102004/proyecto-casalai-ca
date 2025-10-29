@@ -1,16 +1,20 @@
 <?php 
 ob_start();
-require_once 'modelo/pasareladepago.php';
-require_once 'modelo/cuenta.php';
-require_once 'modelo/factura.php';
-require_once 'modelo/bitacora.php';
-require_once 'modelo/DolarService.php';
-require_once 'modelo/notificacion.php';
+require_once __DIR__ . '/../modelo/pasareladepago.php';
+require_once __DIR__ . '/../modelo/cuenta.php';
+require_once __DIR__ . '/../modelo/factura.php';
+require_once __DIR__ . '/../modelo/bitacora.php';
+require_once __DIR__ . '/../modelo/DolarService.php';
+require_once __DIR__ . '/../modelo/notificacion.php';
 define('MODULO_PASARELA_PAGOS', 16); // Define el ID del módulo
-$bitacoraModel = new Bitacora();
 
 // Registrar acceso al módulo si hay sesión activa
-if (isset($_SESSION['id_usuario'])) {
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: login.php');
+    exit;
+}
+if (!defined('SKIP_SIDE_EFFECTS')) {
+    $bitacoraModel = new Bitacora();
     $bitacoraModel->registrarBitacora(
         $_SESSION['id_usuario'],
         MODULO_PASARELA_PAGOS,
@@ -18,10 +22,6 @@ if (isset($_SESSION['id_usuario'])) {
         'Acceso al módulo de pasarela de pagos',
         'baja'
     );
-} else {
-    // Redirigir a login si no hay sesión
-    header('Location: login.php');
-    exit;
 }
 $data = [];
 $dolarService = new DolarService();
@@ -123,13 +123,16 @@ if (!empty($_FILES['pagos']['name'][$index]['comprobante'])) {
 
                     // Guardar pago
                     if ($pasarela->pasarelaTransaccion('Ingresar')) {
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_PASARELA_PAGOS,
-                            'INGRESAR',
-                            'Ingreso de pago con referencia ' . $pagoData['referencia'],
-                            'alta'
-                        );
+                        if (!defined('SKIP_SIDE_EFFECTS')) {
+                            $bitacoraModel = new Bitacora();
+                            $bitacoraModel->registrarBitacora(
+                                $_SESSION['id_usuario'],
+                                MODULO_PASARELA_PAGOS,
+                                'INGRESAR',
+                                'Ingreso de pago con referencia ' . $pagoData['referencia'],
+                                'alta'
+                            );
+                        }
                         // Crear notificación
                         $bd_seguridad = new BD('S');
                         $pdo_seguridad = $bd_seguridad->getConexion();

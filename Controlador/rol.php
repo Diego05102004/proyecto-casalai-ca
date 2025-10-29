@@ -50,8 +50,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_ROLES,
-                        'REGISTRAR',
-                        'El usuario registró un nuevo rol: ' . $_POST['nombre_rol'],
+                        'INCLUIR',
+                        'El usuario incluyó un nuevo rol: ' . $_POST['nombre_rol'],
                         'media'
                     );
                 }

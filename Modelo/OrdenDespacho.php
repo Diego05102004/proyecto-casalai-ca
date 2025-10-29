@@ -13,8 +13,7 @@ class OrdenDespacho extends BD {
     private $tableordendespacho = 'tbl_orden_despachos';
 
     public function __construct() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $this->conex = null;
     }
 
     // Getters y Setters
@@ -53,104 +52,66 @@ class OrdenDespacho extends BD {
         $this->estado = $estado;
     }
 
-    /*
-    public function setRango($rango) {
-        $this->rango = $rango;
-    }*/
-
-    
-    
-    // Método para obtener las facturas disponibles
-
     public function obtenerFacturasDisponibles() {
         return $this->obt_facturasDisponibles(); 
     }
     private function obt_facturasDisponibles() {
-        $sql = "SELECT f.id_factura, f.fecha, c.nombre
-                FROM tbl_facturas f
-                INNER JOIN tbl_clientes c ON f.cliente = c.id_clientes
-                WHERE f.estatus = 'Pagada'
-                AND f.id_factura NOT IN (
-                    SELECT DISTINCT id_factura 
-                    FROM tbl_orden_despachos 
-                    WHERE id_factura IS NOT NULL
-                )";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT f.id_factura, f.fecha, c.nombre
+                    FROM tbl_facturas f
+                    INNER JOIN tbl_clientes c ON f.cliente = c.id_clientes
+                    WHERE f.estatus = 'Pagada'
+                    AND f.id_factura NOT IN (
+                        SELECT DISTINCT id_factura 
+                        FROM tbl_orden_despachos 
+                        WHERE id_factura IS NOT NULL
+                    )";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
-    /* Método para validar si el correlativo ya existe
-
-    public function validarCorrelativo() {
-        $sql = "SELECT COUNT(*) FROM tbl_orden_despachos WHERE correlativo = :correlativo";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':correlativo', $this->correlativo);
-        $stmt->execute();
-        $count = $stmt->fetchColumn();
-    
-        // Retorna true si no existe un producto con el mismo nombre
-        return $count == 0;
-    }*/
-
-    /* Método para ingresar una nueva orden de despacho
-    public function ingresarOrdenDespacho() {
-        $sql = "INSERT INTO tbl_orden_despachos (fecha_despacho, id_factura, correlativo, activo)
-                VALUES (:fecha, :factura, :correlativo, :activo)";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':fecha', $this->fecha);
-        $stmt->bindParam(':factura', $this->factura);
-        $stmt->bindParam(':correlativo', $this->correlativo);
-        $stmt->bindParam(':activo', $this->activo, PDO::PARAM_INT);
-        
-        return $stmt->execute();
-    }*/
-    /*
-    public function obtenerUltimaOrden() {
-        return $this->obtUltimaOrden();
-    }
-
-    private function obtUltimaOrden() {
-        $sql = "SELECT o.id_orden_despachos,o.correlativo, o.id_factura, o.fecha_despacho, o.activo
-                FROM tbl_orden_despachos o
-                ORDER BY o.id_orden_despachos DESC LIMIT 1";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute();
-        $orden = $stmt->fetch(PDO::FETCH_ASSOC);
-        $this->conex = null;
-        return $orden ? $orden : null;
-    }*/
-
-    // Método para obtener una orden de despacho por su ID
     public function obtenerOrdenPorId($id) {
         return $this->obt_ordenPorId($id); 
     }
     private function obt_ordenPorId($id) {
-        $query = "SELECT * FROM tbl_orden_despachos WHERE id_orden_despachos = ?";
-        $stmt = $this->conex->prepare($query);
-        $stmt->execute([$id]);
-        $ordendespacho = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $ordendespacho;
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $query = "SELECT * FROM tbl_orden_despachos WHERE id_orden_despachos = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([$id]);
+            $ordendespacho = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $ordendespacho;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
-    /* Método para eliminar una orden de despacho
-    public function eliminarOrdenDespacho($id) {
-        $sql = "UPDATE tbl_orden_despachos SET activo = 0 WHERE id_orden_despachos = :id";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
-    }*/
-    
     public function cambiarEstatus($nuevoEstatus) {
+        return $this->cambiar_Estatus($nuevoEstatus); 
+    }
+    private function cambiar_Estatus($nuevoEstatus) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_usuarios SET estatus = :estatus WHERE id_usuario = :id";
             $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':estatus', $nuevoEstatus);
             $stmt->bindParam(':id', $this->id);
-            
             return $stmt->execute();
         } catch (PDOException $e) {
             return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -159,6 +120,9 @@ class OrdenDespacho extends BD {
     }
 
   private function g_ordenesDespacho() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
     $query = "
         SELECT 
             od.id_orden_despachos,
@@ -205,8 +169,19 @@ class OrdenDespacho extends BD {
     }
 
     return $ordendespacho;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
+
     public function DescargarOrdenDespacho($id) {
+        return $this->d_OrdenDespacho($id); 
+    }
+    private function d_OrdenDespacho($id) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
             $query = "
         SELECT 
             od.id_orden_despachos,
@@ -255,12 +230,19 @@ class OrdenDespacho extends BD {
     }
 
     return $ordendespacho;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     public function getDetallesCompra($idDespacho) {
         return $this->g_detallesCompra($idDespacho); 
     }
     private function g_detallesCompra($idDespacho) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
         // Productos
         $sqlProductos = "
             SELECT p.nombre_producto, d.cantidad, p.precio, (d.cantidad * p.precio) AS subtotal
@@ -275,17 +257,28 @@ class OrdenDespacho extends BD {
         return [
             'productos' => $productos
         ];
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     public function cambiarEstadoOrden($id, $nuevoEstado) {
         return $this->cam_estadoOrden($id, $nuevoEstado); 
     }
     private function cam_estadoOrden($id, $nuevoEstado) {
-        $sql = "UPDATE tbl_orden_despachos SET estado = :estado WHERE id_orden_despachos = :id";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':estado', $nuevoEstado);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "UPDATE tbl_orden_despachos SET estado = :estado WHERE id_orden_despachos = :id";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':estado', $nuevoEstado);
+            $stmt->bindParam(':id', $id);
+            return $stmt->execute();
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     public function anularOrdenDespacho($idOrden) {
@@ -293,18 +286,29 @@ class OrdenDespacho extends BD {
     }
 
     private function an_orden_despacho($idOrden) {
-        $sql = "UPDATE tbl_orden_despachos SET activo = 0 WHERE id_orden_despachos = :id";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id', $idOrden, PDO::PARAM_INT);
-        $result = $stmt->execute();
-
-        return $result 
-            ? ['status' => 'success'] 
-            : ['status' => 'error', 'message' => 'No se pudo anular la orden de despacho'];
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "UPDATE tbl_orden_despachos SET activo = 0 WHERE id_orden_despachos = :id";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':id', $idOrden, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            return $result 
+                ? ['status' => 'success'] 
+                : ['status' => 'error', 'message' => 'No se pudo anular la orden de despacho'];
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     // Crear una orden de despacho para una factura específica con estado 'Por Entregar'
     public function crearPorFactura($idFactura) {
+        return $this->c_PorFactura($idFactura); 
+    }
+    private function c_PorFactura($idFactura) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
         try {
             // Validar duplicado (orden activa existente para la factura)
             $sqlDup = "SELECT id_orden_despachos FROM tbl_orden_despachos WHERE id_factura = :id AND activo = 1 LIMIT 1";
@@ -344,6 +348,9 @@ class OrdenDespacho extends BD {
             return ['status' => 'error', 'message' => 'No se pudo crear la orden de despacho'];
         } catch (Exception $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 }

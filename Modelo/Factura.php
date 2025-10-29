@@ -14,10 +14,9 @@ class Factura extends BD
     private $cedula;
     private $conex;
 
-    // Constructor
+    // Constructor sin conexión persistente
 public function __construct() {
-    parent::__construct('P'); // Inicializa la conexión en BD
-    $this->conex = $this->getConexion();
+    $this->conex = null;
 }
 
     // Getters y Setters
@@ -44,23 +43,44 @@ public function __construct() {
     public function getCedula() { return $this->cedula; }
     public function setCedula($cedula) { $this->cedula = $cedula; }
     public function registrar() {
-    $sql = "INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) 
-            VALUES (?, ?, ?, ?)";
-    $stmt = $this->getConexion()->prepare($sql);
-    $stmt->execute([
-        $this->fecha,
-        $this->cliente,
-        $this->descuento,
-        $this->estatus
-    ]);
-    return $this->getConexion()->lastInsertId();
-}
+        return $this->r_registrar();
+    }
+    private function r_registrar() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) 
+                    VALUES (?, ?, ?, ?)";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute([
+                $this->fecha,
+                $this->cliente,
+                $this->descuento,
+                $this->estatus
+            ]);
+            return $this->conex->lastInsertId();
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
+    }
 
 public function agregarProducto($idFactura, $idProducto, $cantidad) {
-    $sql = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
-            VALUES (?, ?, ?)";
-    $stmt = $this->getConexion()->prepare($sql);
-    $stmt->execute([$idFactura, $idProducto, $cantidad]);
+    return $this->a_agregarProducto($idFactura, $idProducto, $cantidad);
+}
+private function a_agregarProducto($idFactura, $idProducto, $cantidad) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
+                VALUES (?, ?, ?)";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->execute([$idFactura, $idProducto, $cantidad]);
+        return true;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
     // Transacciones
     public function facturaTransaccion($transaccion) {
@@ -84,6 +104,8 @@ public function agregarProducto($idFactura, $idProducto, $cantidad) {
 
     // Crear factura
 private function facturaIngresar() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     $pdo = $this->conex;
     try {
         $pdo->beginTransaction();
@@ -134,18 +156,33 @@ private function facturaIngresar() {
         $pdo->commit();
         return true;
     } catch (Exception $e) {
-        $pdo->rollBack();
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         return ['error' => $e->getMessage()];
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
     public function obtenerUltimaFactura() {
-    $sql = "SELECT MAX(id_factura) AS ultima_factura FROM tbl_facturas";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->execute();
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $result ? $result['ultima_factura'] : null;
+        return $this->o_ultimaFactura();
+    }
+    private function o_ultimaFactura() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT MAX(id_factura) AS ultima_factura FROM tbl_facturas";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ? $result['ultima_factura'] : null;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
   private function facturaConsultarTodas() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     // Primero obtenemos información de pagos para validar después
     $sqlPagos = "SELECT id_factura, estatus FROM tbl_detalles_pago";
     $stmtPagos = $this->conex->prepare($sqlPagos);
@@ -361,14 +398,21 @@ private function facturaIngresar() {
     $html .= "<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css' rel='stylesheet'>
         <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'></script>";
 
-    return [
+    $resultadoListado = [
         'resultado' => 'listado',
         'mensaje' => $html
     ];
+    if (isset($conexion)) { $conexion->cerrar(); }
+    $this->conex = null;
+    return $resultadoListado;
 }
 
 private function facturaConsultar() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     if (empty($this->cedula)) {
+        $conexion->cerrar();
+        $this->conex = null;
         return ['resultado' => 'error', 'mensaje' => 'No se ha proporcionado la cédula para consultar facturas.'];
     }
     
@@ -589,10 +633,15 @@ private function facturaConsultar() {
     $html .= "<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css' rel='stylesheet'>
         <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'></script>";
 
-    return [
-        'resultado' => 'listado',
-        'mensaje' => $html
-    ];
+    try {
+        return [
+            'resultado' => 'listado',
+            'mensaje' => $html
+        ];
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
     
     
@@ -602,21 +651,42 @@ private function facturaConsultar() {
 
     // Marcar factura como Cancelada
     public function facturaCancelar($id) {
-        $stmt = $this->conex->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
-        return $stmt->execute([$id]);
-
+        return $this->c_facturaCancelar($id);
+    }
+    private function c_facturaCancelar($id) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $stmt = $this->conex->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
+            return $stmt->execute([$id]);
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     // Marcar factura como Procesada
     public function facturaProcesar($id, $estatus) {
-        $pdo = $this->conex;
-        $stmt = $pdo->prepare("UPDATE tbl_facturas SET estatus = ? WHERE id_factura = ?");
-        return $stmt->execute([$estatus, $id]);
-         
+        return $this->p_facturaProcesar($id, $estatus);
+    }
+    private function p_facturaProcesar($id, $estatus) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $stmt = $this->conex->prepare("UPDATE tbl_facturas SET estatus = ? WHERE id_factura = ?");
+            return $stmt->execute([$estatus, $id]);
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
     }
 
     public function obtenerMontoTotalFactura($id_factura) {
-        $sql = "SELECT 
+        return $this->o_montoTotalFactura($id_factura);
+    }
+    private function o_montoTotalFactura($id_factura) {
+        $conexion = new BD('P');
+        try {
+            $sql = "SELECT 
                     ROUND(
                         (
                             SUM(p.precio * df.cantidad) * (1 - (f.descuento / 100))
@@ -627,75 +697,82 @@ private function facturaConsultar() {
                 JOIN tbl_productos p ON df.id_producto = p.id_producto
                 WHERE f.id_factura = :id_factura
                 GROUP BY f.id_factura";
-    
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id_factura', $id_factura, PDO::PARAM_INT);
-        $stmt->execute();
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+            $stmt = $conexion->getConexion()->prepare($sql);
+            $stmt->bindParam(':id_factura', $id_factura, PDO::PARAM_INT);
+            $stmt->execute();
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
             try {
+                $conexionTasa = new BD('P');
+                $db = $conexionTasa->getConexion();
+                
+                $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
+                $stmt->execute();
+                
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($result && (time() - strtotime($result['fecha'])) < 86400) {
+                    $tasa = floatval($result['precio']);
+                }
+            } catch (Exception $e) {
+                error_log('Error al obtener cache del dólar: ' . $e->getMessage());
+            }
+            $total = $resultado['total_con_impuesto'] * $tasa;
+            $conexion->cerrar();
+            return $total;
+        } catch (Exception $e) {
+            error_log('Error al obtener monto total de factura: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function facturaDescargar($id_factura) {
+        return $this->f_descargar($id_factura);
+    }
+    private function f_descargar($id_factura) {
+        $conexionPrincipal = new BD('P');
+        try {
+            // Conexión para la tasa
             $conexion = new BD('P');
             $db = $conexion->getConexion();
             
+            // Obtener la última tasa en cache
             $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
             $stmt->execute();
             
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($result && (time() - strtotime($result['fecha'])) < 86400) { // Usar cache si tiene menos de 24 horas
+            // Validar si la tasa está vigente (menos de 24 horas) o asignar una por defecto (1)
+            $tasa = 1;
+            if ($result && (time() - strtotime($result['fecha'])) < 86400) {
                 $tasa = floatval($result['precio']);
             }
+            $conexion->cerrar();
         } catch (Exception $e) {
             error_log('Error al obtener cache del dólar: ' . $e->getMessage());
+            $tasa = 1; // Valor por defecto en caso de error
         }
-        $total = $resultado['total_con_impuesto'] * $tasa;
-        return $total;
-    }
-    
-private function facturaDescargar($id_factura) {
-    try {
-        // Conexión para la tasa
-        $conexion = new BD('P');
-        $db = $conexion->getConexion();
-        
-        // Obtener la última tasa en cache
-        $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
+
+        // Consulta de la factura
+        $sql = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
+                       p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
+                       p.precio, 
+                       p.precio * :tasa AS precio_convertido,
+                       df.cantidad, f.descuento
+                FROM tbl_factura_detalle df
+                JOIN tbl_facturas f ON f.id_factura = df.factura_id
+                JOIN tbl_clientes c ON c.id_clientes = f.cliente
+                JOIN tbl_productos p ON df.id_producto = p.id_producto
+                JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
+                JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
+                WHERE f.id_factura = :id_factura";
+
+        $stmt = $conexionPrincipal->getConexion()->prepare($sql);
+        $stmt->bindParam(':id_factura', $id_factura, PDO::PARAM_INT);
+        $stmt->bindParam(':tasa', $tasa);
         $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Validar si la tasa está vigente (menos de 24 horas) o asignar una por defecto (1)
-        $tasa = 1;
-        if ($result && (time() - strtotime($result['fecha'])) < 86400) {
-            $tasa = floatval($result['precio']);
-        }
-    } catch (Exception $e) {
-        error_log('Error al obtener cache del dólar: ' . $e->getMessage());
-        $tasa = 1; // Valor por defecto en caso de error
+        $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $conexionPrincipal->cerrar();
+        return $facturas;
     }
-
-    // Consulta de la factura
-    $sql = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
-                   p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
-                   p.precio, 
-                   p.precio * :tasa AS precio_convertido,
-                   df.cantidad, f.descuento
-            FROM tbl_factura_detalle df
-            JOIN tbl_facturas f ON f.id_factura = df.factura_id
-            JOIN tbl_clientes c ON c.id_clientes = f.cliente
-            JOIN tbl_productos p ON df.id_producto = p.id_producto
-            JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
-            JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
-            WHERE f.id_factura = :id_factura";
-
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_factura', $id_factura, PDO::PARAM_INT);
-    $stmt->bindParam(':tasa', $tasa);
-    $stmt->execute();
-    $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    return $facturas;
-}
-
-
-    
 }

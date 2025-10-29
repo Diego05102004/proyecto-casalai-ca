@@ -78,8 +78,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_RECEPCION,
-                        'REGISTRAR',
-                        'El usuario registró una nueva recepción: ' . $_POST['correlativo'],
+                        'INCLUIR',
+                        'El usuario incluyó una nueva recepción: ' . $_POST['correlativo'],
                         'media'
                     );
                 }

@@ -4,31 +4,44 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'modelo/bitacora.php';
+require_once __DIR__ . '/../modelo/bitacora.php';
 require_once __DIR__ . '/../modelo/permiso.php';
+
+define('MODULO_BITACORA', 1);
+
+// Permisos (si la vista los requiere)
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
-define('MODULO_BITACORA', 1);
-$bitacoraModel = new Bitacora();
 
+// Redirigir a login si no hay sesión
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: login.php');
+    exit;
+}
+
+// Registrar acceso al módulo (formato Recepción) si no está en modo pruebas
+if (!defined('SKIP_SIDE_EFFECTS')) {
+    $bitacoraAcceso = new Bitacora();
+    $bitacoraAcceso->registrarBitacora(
+        $_SESSION['id_usuario'],
+        MODULO_BITACORA,
+        'ACCESAR',
+        'Acceso al módulo de bitácora',
+        'baja'
+    );
+}
+
+// Consultar registros
+$bitacoraModel = new Bitacora();
 try {
     $registros = $bitacoraModel->obtenerRegistrosDetallados(500);
 } catch (Exception $e) {
     $registros = [];
 }
 
+// Render de vista
 $pagina = "bitacora";
 if (is_file("vista/" . $pagina . ".php")) {
-    if (isset($_SESSION['id_usuario'])) {
-        $bitacoraModel->registrarBitacora(
-    $_SESSION['id_usuario'],
-    '19',
-    'ACCESO',
-    'El usuario accedió al al modulo de bitacora',
-    'alta'
-);
-
-    }
     require_once("vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";

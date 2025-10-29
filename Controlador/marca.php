@@ -3,17 +3,15 @@ ob_start();
 require_once 'modelo/marca.php';
 require_once 'modelo/permiso.php';
 require_once 'modelo/bitacora.php';
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
-$id_rol = $_SESSION['id_rol'] ?? 0; // Valor por defecto para pruebas si no hay sesión
 
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 define('MODULO_MARCA', 4);
 
-$permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
+$id_rol = $_SESSION['id_rol'] ?? 0;
 
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('marcas'));
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('marcas'));
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['accion'])) {
@@ -40,13 +38,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $marcaRegistrada = $marca->obtenerUltimaMarca();
 
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel->registrarBitacora($_SESSION['id_usuario'],'4','INCLUIR',
-                        'El usuario incluyó la marca: ' . implode(', ', array_map(
-                            function ($value, $key) { return "$key: $value"; },
-                            $marcaRegistrada,
-                            array_keys($marcaRegistrada)
-                        )),
-                        'alta'
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        '4',
+                        'INCLUIR',
+                        'El usuario incluyó una nueva marca: ' . $_POST['nombre_marca'],
+                        'media'
                     );
                 }
 
@@ -59,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
             // Ejecuta SIEMPRE la consulta en tiempo real
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('marcas'));
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('marcas'));
             echo json_encode($permisosActualizados);
             exit;
 
@@ -101,6 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($marca->modificarmarcas($id_marca)) {
                 $marcaActualizada = $marca->obtenermarcasPorId($id_marca);
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         '4',
@@ -134,6 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $eliminada = $marca->obtenermarcasPorId($id_marca); // Cargar datos actuales antes de eliminar
             if ($marca->eliminarmarcas($id_marca)) {
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         '4',
@@ -172,11 +172,12 @@ if (!function_exists('getmarcas')) {
 $pagina = "marca";
 if (is_file("vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+        $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
             '4',
             'ACCESAR',
-            'El usuario accedió al al modulo de marcas',
+            'El usuario accedió al modulo de marcas',
             'media'
         );
     }

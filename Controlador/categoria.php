@@ -1,17 +1,23 @@
 <?php
 ob_start();
-require_once 'modelo/categoria.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
-$id_rol = $_SESSION['id_rol'] ?? 0; // Valor por defecto para pruebas si no hay sesión
+require_once __DIR__ . '/../modelo/categoria.php';
+require_once __DIR__ . '/../modelo/permiso.php';
+require_once __DIR__ . '/../modelo/bitacora.php';
 
 define('MODULO_CATEGORIA', 7);
 
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: login.php');
+    exit;
+}
+
+// Inicializaciones
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$id_rol = $_SESSION['id_rol'] ?? 0;
+
 $permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
 
 $permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('Categorias'));
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -35,17 +41,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($categoria->registrarCategoria($caracteristicas)) {
                 $categoriaRegistrado = $categoria->obtenerUltimoCategoria();
 
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_CATEGORIA,
-                    'INCLUIR',
-                    'El usuario incluyó la categoría: ' . implode(', ', array_map(
-                        function($value, $key) { return "$key: $value"; },
-                        $categoriaRegistrado,
-                        array_keys($categoriaRegistrado)
-                    )),
-                    'alta'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_CATEGORIA,
+                        'INCLUIR',
+                        'El usuario incluyó la categoría: ' . $_POST['nombre_categoria'],
+                        'media'
+                    );
+                }
 
                 echo json_encode([
                     'status' => 'success',
@@ -106,13 +111,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($categoria->modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas)) {
                 $categoriaActualizada = $categoria->obtenerCategoriaPorId($id_categoria);
 
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_CATEGORIA,
-                    'MODIFICAR',
-                    'El usuario modificó la categoría ID: ' . $id_categoria,
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_CATEGORIA,
+                        'MODIFICAR',
+                        'El usuario modificó la categoría ID: ' . $id_categoria,
+                        'media'
+                    );
+                }
 
                 echo json_encode([
                     'status' => 'success',
@@ -130,13 +138,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($resultado['status'] === 'error') {
                 // Registrar en bitácora el intento fallido
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_CATEGORIA,
-                    'ELIMINAR_FALLIDO',
-                    'Intento de eliminación fallido de categoría (ID: ' . $id_categoria . '): ' . $resultado['mensaje'],
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_CATEGORIA,
+                        'ELIMINAR_FALLIDO',
+                        'Intento de eliminación fallido de categoría (ID: ' . $id_categoria . '): ' . $resultado['mensaje'],
+                        'media'
+                    );
+                }
                 
                 echo json_encode([
                     'status' => 'error', 
@@ -146,13 +157,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
             } else {
                 // Registrar eliminación exitosa
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    MODULO_CATEGORIA,
-                    'ELIMINAR',
-                    'El usuario eliminó la categoría ID: ' . $id_categoria,
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_CATEGORIA,
+                        'ELIMINAR',
+                        'El usuario eliminó la categoría ID: ' . $id_categoria,
+                        'media'
+                    );
+                }
                 
                 echo json_encode(['status' => 'success']);
             }
@@ -171,14 +185,16 @@ function consultarCategorias() {
 
 $pagina = "categoria";
 if (is_file("vista/" . $pagina . ".php")) {
-    if (isset($_SESSION['id_usuario'])) {
+    if (!defined('SKIP_SIDE_EFFECTS')) {
+        $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
-    $_SESSION['id_usuario'],
-    '7',
-    'ACCESAR',
-    'El usuario accedió al al modulo de Categorias',
-    'media'
-);}
+            $_SESSION['id_usuario'],
+            MODULO_CATEGORIA,
+            'ACCESAR',
+            'El usuario accedió al modulo de Categorias',
+            'media'
+        );
+    }
     $categorias = consultarCategorias();
     require_once("vista/" . $pagina . ".php");
 } else {

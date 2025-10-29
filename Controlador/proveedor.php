@@ -64,8 +64,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacora->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_PROVEEDORES,
-                        'REGISTRAR',
-                        'El usuario registró un nuevo proveedor: ' . $_POST['nombre_proveedor'],
+                        'INCLUIR',
+                        'El usuario incluyó un nuevo proveedor: ' . $_POST['nombre_proveedor'],
                         'media'
                     );
                 }

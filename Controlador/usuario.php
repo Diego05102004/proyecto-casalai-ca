@@ -4,19 +4,22 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'modelo/usuario.php';
-require_once 'modelo/rol.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
-define('MODULO_USUARIO', 1); // Define el ID del módulo de cuentas bancarias
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+require_once __DIR__ . '/../modelo/usuario.php';
+require_once __DIR__ . '/../modelo/rol.php';
+require_once __DIR__ . '/../modelo/permiso.php';
+require_once __DIR__ . '/../modelo/bitacora.php';
+define('MODULO_USUARIO', 1);
+
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: login.php');
+    exit;
+}
 
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
-$permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('usuario'));
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('usuario'));
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id_usuario_accion = $_SESSION['id_usuario'] ?? null; // Usuario que realiza la acción
@@ -30,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('usuario'));
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('usuario'));
             echo json_encode($permisosActualizados);
             exit;
 
@@ -73,17 +76,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $usuarioRegistrado = $usuario->obtenerUltimoUsuario();
                 
                 // Registrar en bitácora
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    '1',
-                    'INCLUIR',
-                    'El usuario incluyó el usuario: ' . implode(', ', array_map(
-                        function($value, $key) { return "$key: $value"; },
-                        $usuarioRegistrado,
-                        array_keys($usuarioRegistrado)
-                    )),
-                    'alta'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_USUARIO,
+                        'INCLUIR',
+                        'El usuario incluyó un nuevo usuario: ' . $_POST['nombre_usuario'],
+                        'media'
+                    );
+                }
                 
                 echo json_encode([
                     'status' => 'success',
@@ -160,13 +162,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $usuarioActualizado = $usuario->obtenerUsuarioPorId($id_usuario);
                 
                 // Registrar en bitácora
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    '1',
-                    'MODIFICAR',
-                    'Actualización de usuario: ' .$usuarioViejo.' a '.$usuarioActualizado.'',
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_USUARIO,
+                        'MODIFICAR',
+                        'Actualización de usuario: ' .$usuarioViejo.' a '.$usuarioActualizado.'',
+                        'media'
+                    );
+                }
                 
                 echo json_encode([
                     'status' => 'success',
@@ -186,13 +191,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             if ($usuarioModel->eliminarUsuario($id_usuario)) {
                 // Registrar en bitácora
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    '1',
-                    'ELIMINAR',
-                    'Eliminación del usuario: ' . $usuarioAEliminar . '',
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_USUARIO,
+                        'ELIMINAR',
+                        'Eliminación del usuario: ' . $usuarioAEliminar . '',
+                        'media'
+                    );
+                }
                 
                 echo json_encode(['status' => 'success']);
             } else {
@@ -214,13 +222,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             if ($usuario->cambiarEstatus($nuevoEstatus)) {
                 // Registrar en bitácora
-                $bitacoraModel->registrarBitacora(
-                    $_SESSION['id_usuario'],
-                    '1',
-                    'MODIFICAR',
-                    'Cambio de estatus de usuario: ' . $id_usuario . ' a ' . $nuevoEstatus,
-                    'media'
-                );
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_USUARIO,
+                        'MODIFICAR',
+                        'Cambio de estatus de usuario: ' . $id_usuario . ' a ' . $nuevoEstatus,
+                        'media'
+                    );
+                }
                 
                 echo json_encode(['status' => 'success']);
             } else {
@@ -251,14 +262,16 @@ unset($rol);
 
 $pagina = "usuario";
 if (is_file("vista/" . $pagina . ".php")) {
-         if (isset($_SESSION['id_usuario'])) {
+    if (!defined('SKIP_SIDE_EFFECTS')) {
+        $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
-    $_SESSION['id_usuario'],
-    '1',
-    'ACCESAR',
-    'El usuario accedió al al modulo de Usuarios',
-    'media'
-);}
+            $_SESSION['id_usuario'],
+            MODULO_USUARIO,
+            'ACCESAR',
+            'El usuario accedió al modulo de Usuarios',
+            'media'
+        );
+    }
     $usuarios = getusuarios();
     require_once("vista/" . $pagina . ".php");
 } else {

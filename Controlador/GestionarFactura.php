@@ -82,7 +82,7 @@ $bitacoraModel = new Bitacora();
     $_SESSION['id_usuario'],
     '13',
     'ACCESAR',
-    'El usuario accedió al al modulo de Pedidos',
+    'El usuario accedió al modulo de Pedidos',
     'media'
 );}
 } else {

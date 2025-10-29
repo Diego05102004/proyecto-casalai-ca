@@ -39,8 +39,7 @@ class Productos extends BD{
     private $precio;
     
     function __construct() {
-        parent::__construct();
-        $this->conex = parent::getConexion();
+        $this->conex = null;
     }
 
     // Getters y Setters
@@ -202,37 +201,68 @@ public function setTomas($tomas) { $this->tomas = $tomas; }
 public function getTomas() { return $this->tomas; }
 
     public function guardarImagenProducto($id_producto, $nombre_imagen) {
-        $sql = "UPDATE tbl_productos SET imagen = :imagen WHERE id_producto = :id";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':imagen', $nombre_imagen);
-        $stmt->bindParam(':id', $id_producto, PDO::PARAM_INT);
-        return $stmt->execute();
+        return $this->g_guardarImagenProducto($id_producto, $nombre_imagen);
+    }
+    private function g_guardarImagenProducto($id_producto, $nombre_imagen) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "UPDATE tbl_productos SET imagen = :imagen WHERE id_producto = :id";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':imagen', $nombre_imagen);
+            $stmt->bindParam(':id', $id_producto, PDO::PARAM_INT);
+            return $stmt->execute();
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     } 
     public function validarNombreProducto() {
-        $sql = "SELECT COUNT(*) FROM tbl_productos WHERE nombre_producto = :nombre_producto";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':nombre_producto', $this->nombre_producto);
-        $stmt->execute();
-        $count = $stmt->fetchColumn();
-    
-        // Retorna true si no existe un producto con el mismo nombre
-        return $count == 0;
+        return $this->v_nombreProducto();
+    }
+    private function v_nombreProducto() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_productos WHERE nombre_producto = :nombre_producto";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':nombre_producto', $this->nombre_producto);
+            $stmt->execute();
+            $count = $stmt->fetchColumn();
+            return $count == 0;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
     
     public function validarCodigoProducto() {
-        $sql = "SELECT COUNT(*) FROM tbl_productos WHERE serial = :serial_Interno";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':serial_Interno', $this->serial);
-        $stmt->execute();
-        $count = $stmt->fetchColumn();
-    
-        // Retorna true si no existe un producto con el mismo código interno
-        return $count == 0;
+        return $this->v_codigoProducto();
+    }
+    private function v_codigoProducto() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_productos WHERE serial = :serial_Interno";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':serial_Interno', $this->serial);
+            $stmt->execute();
+            $count = $stmt->fetchColumn();
+            return $count == 0;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
 
 
 public function ingresarProducto($datosCategoria) {
+    return $this->g_ingresarProducto($datosCategoria);
+}
+private function g_ingresarProducto($datosCategoria) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     try {
         $this->conex->beginTransaction();
 
@@ -308,85 +338,128 @@ public function ingresarProducto($datosCategoria) {
         return $idProducto;
 
     } catch (Exception $e) {
-        $this->conex->rollBack();
+        if ($this->conex && $this->conex->inTransaction()) {
+            $this->conex->rollBack();
+        }
         throw new Exception("Error al ingresar producto: " . $e->getMessage());
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 public function actualizarstockProducto($id_producto, $cantidad) {
-    // Disminuir el stock según la cantidad vendida
-    $sql = "UPDATE tbl_productos 
-            SET stock = stock - :cantidad
-            WHERE id_producto = :id_producto";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':cantidad', $cantidad, PDO::PARAM_INT);
-    $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
-    return $stmt->execute();
+    return $this->a_actualizarstockProducto($id_producto, $cantidad);
+}
+private function a_actualizarstockProducto($id_producto, $cantidad) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "UPDATE tbl_productos 
+                SET stock = stock - :cantidad
+                WHERE id_producto = :id_producto";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':cantidad', $cantidad, PDO::PARAM_INT);
+        $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+        return $stmt->execute();
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
     public function obtenerProductoPorId($id) {
-        $query = "SELECT * FROM tbl_productos WHERE id_producto = ?";
-        $stmt = $this->conex->prepare($query);
-        $stmt->execute([$id]);
-        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $producto;
+        return $this->o_productoPorId($id);
+    }
+    private function o_productoPorId($id) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $query = "SELECT * FROM tbl_productos WHERE id_producto = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([$id]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $producto;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     // Obtiene las características dinámicas según la categoría del producto
     public function obtenerCaracteristicasDinamicasPorProducto($id_producto) {
-        // 1. Obtener nombre de la categoría del producto
-        $sql = "SELECT c.nombre_categoria
-                FROM tbl_productos p
-                INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
-                WHERE p.id_producto = :id";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id', $id_producto, PDO::PARAM_INT);
-        $stmt->execute();
-        $nombreCategoria = $stmt->fetchColumn();
+        return $this->c_caracteristicasPorProducto($id_producto);
+    }
+    private function c_caracteristicasPorProducto($id_producto) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT c.nombre_categoria
+                    FROM tbl_productos p
+                    INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
+                    WHERE p.id_producto = :id";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':id', $id_producto, PDO::PARAM_INT);
+            $stmt->execute();
+            $nombreCategoria = $stmt->fetchColumn();
 
-        if (!$nombreCategoria) {
-            return [];
+            if (!$nombreCategoria) {
+                return [];
+            }
+
+            $tablaCategoria = 'cat_' . strtolower(str_replace(' ', '_', $nombreCategoria));
+
+            $sqlCat = "SELECT * FROM `$tablaCategoria` WHERE id_producto = :id_producto LIMIT 1";
+            $stmtCat = $this->conex->prepare($sqlCat);
+            $stmtCat->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+            $stmtCat->execute();
+            $row = $stmtCat->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                return [];
+            }
+
+            unset($row['id'], $row['id_producto']);
+            return $row;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
-
-        // 2. Determinar la tabla dinámica de la categoría
-        $tablaCategoria = 'cat_' . strtolower(str_replace(' ', '_', $nombreCategoria));
-
-        // 3. Buscar el registro de características por id_producto
-        $sqlCat = "SELECT * FROM `$tablaCategoria` WHERE id_producto = :id_producto LIMIT 1";
-        $stmtCat = $this->conex->prepare($sqlCat);
-        $stmtCat->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
-        $stmtCat->execute();
-        $row = $stmtCat->fetch(PDO::FETCH_ASSOC);
-
-        if (!$row) {
-            return [];
-        }
-
-        // 4. Filtrar campos técnicos
-        unset($row['id'], $row['id_producto']);
-        return $row;
     }
 
     // Obtiene el producto con información de marca/modelo, nombre de categoría y sus características dinámicas
     public function obtenerProductoDetallado($id_producto) {
-        $sql = "SELECT p.*, c.nombre_categoria, mo.nombre_modelo, m.nombre_marca, p.imagen
-                FROM tbl_productos p
-                INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
-                INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-                INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
-                WHERE p.id_producto = :id_producto";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
-        $stmt->execute();
-        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $this->o_productoDetallado($id_producto);
+    }
+    private function o_productoDetallado($id_producto) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT p.*, c.nombre_categoria, mo.nombre_modelo, m.nombre_marca, p.imagen
+                    FROM tbl_productos p
+                    INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
+                    INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                    INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                    WHERE p.id_producto = :id_producto";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+            $stmt->execute();
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$producto) {
-            return null;
+            if (!$producto) {
+                return null;
+            }
+
+            // Cerrar antes de llamar a otro método que abre conexión
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+            $producto['caracteristicas'] = $this->obtenerCaracteristicasDinamicasPorProducto($id_producto);
+            return $producto;
+        } finally {
+            // conexión ya cerrada arriba si fue abierta
+            $this->conex = null;
         }
-
-        $producto['caracteristicas'] = $this->obtenerCaracteristicasDinamicasPorProducto($id_producto);
-        return $producto;
     }
 
-    // Obtiene productos relacionados por categoría (excluye el producto actual)
+    /* Obtiene productos relacionados por categoría (excluye el producto actual)
     public function obtenerRelacionadosPorCategoria($id_producto, $limit = 8) {
         $sql = "SELECT p.*, mo.nombre_modelo, m.nombre_marca
                 FROM tbl_productos p
@@ -404,69 +477,112 @@ public function actualizarstockProducto($id_producto, $cantidad) {
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    }*/
 
 public function CategoriasReporte(){
-    $sql = "SELECT id_categoria, nombre_categoria FROM tbl_categoria";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->c_categoriasReporte();
+}
+private function c_categoriasReporte(){
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT id_categoria, nombre_categoria FROM tbl_categoria";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 public function obtenerCategoriasDinamicas() {
-    $sql = "SHOW TABLES LIKE 'cat\_%'";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->execute();
-    $tablas = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return $this->o_categoriasDinamicas();
+}
+private function o_categoriasDinamicas() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SHOW TABLES LIKE 'cat\_%'";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->execute();
+        $tablas = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    $categorias = [];
-    foreach ($tablas as $tabla) {
-        // Obtener nombre de la categoría
-        $nombre_categoria = ucfirst(str_replace('cat_', '', $tabla));
-        // Obtener columnas (características)
-        $cols = $this->conex->query("SHOW COLUMNS FROM `$tabla`")->fetchAll(PDO::FETCH_ASSOC);
-        $caracteristicas = [];
-        foreach ($cols as $col) {
-            if (!in_array($col['Field'], ['id', 'id_producto'])) {
-                $tipo = 'string';
-                if (strpos($col['Type'], 'int') !== false) $tipo = 'int';
-                elseif (strpos($col['Type'], 'float') !== false) $tipo = 'float';
-                $max = 255;
-                if (preg_match('/varchar\((\d+)\)/i', $col['Type'], $m)) $max = $m[1];
-                $caracteristicas[] = [
-                    'nombre' => $col['Field'],
-                    'tipo' => $tipo,
-                    'max' => $max
-                ];
+        $categorias = [];
+        foreach ($tablas as $tabla) {
+            $nombre_categoria = ucfirst(str_replace('cat_', '', $tabla));
+            $cols = $this->conex->query("SHOW COLUMNS FROM `$tabla`")->fetchAll(PDO::FETCH_ASSOC);
+            $caracteristicas = [];
+            foreach ($cols as $col) {
+                if (!in_array($col['Field'], ['id', 'id_producto'])) {
+                    $tipo = 'string';
+                    if (strpos($col['Type'], 'int') !== false) $tipo = 'int';
+                    elseif (strpos($col['Type'], 'float') !== false) $tipo = 'float';
+                    $max = 255;
+                    if (preg_match('/varchar\((\d+)\)/i', $col['Type'], $m)) $max = $m[1];
+                    $caracteristicas[] = [
+                        'nombre' => $col['Field'],
+                        'tipo' => $tipo,
+                        'max' => $max
+                    ];
+                }
             }
+            $categorias[] = [
+                'tabla' => $tabla,
+                'nombre_categoria' => $nombre_categoria,
+                'caracteristicas' => $caracteristicas
+            ];
         }
-        $categorias[] = [
-            'tabla' => $tabla,
-            'nombre_categoria' => $nombre_categoria,
-            'caracteristicas' => $caracteristicas
-        ];
+        return $categorias;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
-    return $categorias;
 }
     public function obtenerProductoStock() {
-        $queryProductos = 'SELECT id_producto, nombre_producto, stock, id_modelo, serial FROM tbl_productos';
-        $stmtProductos = $this->conex->prepare($queryProductos);
-        $stmtProductos->execute();
-        $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
-        return $productos;
+        return $this->o_productoStock();
+    }
+    private function o_productoStock() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $queryProductos = 'SELECT id_producto, nombre_producto, stock, id_modelo, serial FROM tbl_productos';
+            $stmtProductos = $this->conex->prepare($queryProductos);
+            $stmtProductos->execute();
+            $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
+            return $productos;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
 
 public function obtenerReporteCategorias() {
-    $sql = "SELECT c.nombre_categoria, COUNT(p.id_producto) as cantidad
-            FROM tbl_categoria c
-            LEFT JOIN tbl_productos p ON c.id_categoria = p.id_categoria
-            GROUP BY c.id_categoria, c.nombre_categoria
-            ORDER BY cantidad DESC";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_reporteCategorias();
+}
+private function o_reporteCategorias() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT c.nombre_categoria, COUNT(p.id_producto) as cantidad
+                FROM tbl_categoria c
+                LEFT JOIN tbl_productos p ON c.id_categoria = p.id_categoria
+                GROUP BY c.id_categoria, c.nombre_categoria
+                ORDER BY cantidad DESC";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 public function modificarProducto($id, $datosCategoria) {
+    return $this->m_modificarProducto($id, $datosCategoria);
+}
+private function m_modificarProducto($id, $datosCategoria) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     try {
         $this->conex->beginTransaction();
 
@@ -586,14 +702,24 @@ public function modificarProducto($id, $datosCategoria) {
         return true;
 
     } catch (Exception $e) {
-        $this->conex->rollBack();
+        if ($this->conex && $this->conex->inTransaction()) {
+            $this->conex->rollBack();
+        }
         throw new Exception('Error al modificar producto: ' . $e->getMessage());
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
 
 
 public function eliminarProducto($id) {
+    return $this->e_eliminarProducto($id);
+}
+private function e_eliminarProducto($id) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     try {
         $sql = "DELETE FROM `tbl_productos` WHERE id_producto = :id";
         $stmt = $this->conex->prepare($sql);
@@ -605,7 +731,6 @@ public function eliminarProducto($id) {
         ];
     } catch (PDOException $e) {
         if ($e->getCode() == '23000') {
-            // Código de error para violación de clave foránea
             return [
                 'success' => false,
                 'message' => 'No se puede eliminar el producto porque tiene registros asociados.'
@@ -616,10 +741,16 @@ public function eliminarProducto($id) {
                 'message' => 'Error inesperado: ' . $e->getMessage()
             ];
         }
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
     public function obtenerModelos() {
+        return $this->o_modelos();
+    }
+    private function o_modelos() {
         $query = "SELECT 
     mo.id_modelo AS tbl_modelos,
     mo.nombre_modelo,
@@ -629,141 +760,212 @@ FROM
 JOIN 
     tbl_marcas mar ON mo.id_marca = mar.id_marca;
 ";
-        $stmt = $this->conex->query($query);
-
-        if ($stmt) {
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } else {
-            $errorInfo = $this->conex->errorInfo();
-            echo "Debug: Error en el query: " . $errorInfo[2] . "\n";
-            return [];
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $stmt = $this->conex->query($query);
+            if ($stmt) {
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                return [];
+            }
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
         public function cambiarEstatus($nuevoEstatus) {
+        return $this->c_cambiarEstatus($nuevoEstatus);
+    }
+    private function c_cambiarEstatus($nuevoEstatus) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_productos SET estado = :estatus WHERE id_producto = :id";
             $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':estatus', $nuevoEstatus);
             $stmt->bindParam(':id', $this->id);
-            
             return $stmt->execute();
         } catch (PDOException $e) {
             return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
    
 public function obtenerProductosPorCategoria($nombreCategoria) {
-    $sql = "SELECT p.nombre_producto, p.stock
-            FROM tbl_productos p
-            INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
-            WHERE c.nombre_categoria = :nombre_categoria";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':nombre_categoria', $nombreCategoria);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_productosPorCategoria($nombreCategoria);
+}
+private function o_productosPorCategoria($nombreCategoria) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT p.nombre_producto, p.stock
+                FROM tbl_productos p
+                INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
+                WHERE c.nombre_categoria = :nombre_categoria";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':nombre_categoria', $nombreCategoria);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function obtenerProductosConPrecios() {
-    $sql = "SELECT nombre_producto, precio FROM tbl_productos";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_productosConPrecios();
 }
-    //catalogo
-    public function obtenerMarcas() {
-    $query = "SELECT id_marca, nombre_marca FROM tbl_marcas";
-    $stmt = $this->conex->query($query);
-
-    if ($stmt) {
+private function o_productosConPrecios() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT nombre_producto, precio FROM tbl_productos";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $errorInfo = $this->conex->errorInfo();
-        echo "Debug: Error en el query: " . $errorInfo[2] . "\n";
-        return [];
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
+}
+
+// catalogo
+public function obtenerMarcas() {
+    return $this->o_marcas();
+}
+private function o_marcas() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $query = "SELECT id_marca, nombre_marca FROM tbl_marcas";
+        $stmt = $this->conex->query($query);
+        if ($stmt) {
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            return [];
+        }
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
 public function obtenerProductosConMarca() {
-    $query = "SELECT p.*, m.nombre_marca as marca 
-              FROM tbl_productos p
-              JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-              JOIN tbl_marcas m ON mo.id_marca = m.id_marca
-              WHERE p.estado = 'habilitado' AND p.stock > 0
-              ORDER BY p.nombre_producto DESC";
-    
-    $stmt = $this->conex->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_productosConMarca();
+}
+private function o_productosConMarca() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $query = "SELECT p.*, m.nombre_marca as marca 
+                  FROM tbl_productos p
+                  JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                  JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                  WHERE p.estado = 'habilitado' AND p.stock > 0
+                  ORDER BY p.nombre_producto DESC";
+        $stmt = $this->conex->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function obtenerProductosPorMarca($id_marca) {
-    $query = "SELECT p.*, m.nombre_marca as marca 
-              FROM tbl_productos p
-              JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-              JOIN tbl_marcas m ON mo.id_marca = m.id_marca
-              WHERE m.id_marca = :id_marca AND p.estado = 'habilitado' AND p.stock > 0
-              ORDER BY p.nombre_producto DESC";
-    
-    $stmt = $this->conex->prepare($query);
-    $stmt->bindParam(':id_marca', $id_marca);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_productosPorMarca($id_marca);
+}
+private function o_productosPorMarca($id_marca) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $query = "SELECT p.*, m.nombre_marca as marca 
+                  FROM tbl_productos p
+                  JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                  JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                  WHERE m.id_marca = :id_marca AND p.estado = 'habilitado' AND p.stock > 0
+                  ORDER BY p.nombre_producto DESC";
+        $stmt = $this->conex->prepare($query);
+        $stmt->bindParam(':id_marca', $id_marca);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function obtenerCombosDisponibles($esAdmin = false) {
-    $sql = "SELECT * FROM tbl_combo";
-    if (!$esAdmin) {
-        $sql .= " WHERE activo = 1";
-    }else{
-        $sql .= " WHERE activo IN (0, 1)";
+    return $this->o_combosDisponibles($esAdmin);
+}
+private function o_combosDisponibles($esAdmin = false) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT * FROM tbl_combo";
+        if (!$esAdmin) {
+            $sql .= " WHERE activo = 1";
+        } else {
+            $sql .= " WHERE activo IN (0, 1)";
+        }
+        $stmt = $this->conex->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
-    $stmt = $this->conex->prepare($sql);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 public function obtenerDetallesCombo($id_combo) {
-    $query = "SELECT cd.id_producto, cd.cantidad, p.nombre_producto, p.precio, p.stock, 
-                     m.nombre_marca as marca, p.descripcion_producto as descripcion
-              FROM tbl_combo_detalle cd
-              INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
-              INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-              INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
-              WHERE cd.id_combo = :id_combo AND p.estado = 'habilitado'";
-    
-    $stmt = $this->conex->prepare($query);
-    $stmt->bindParam(':id_combo', $id_combo);
-    $stmt->execute();
-    
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_detallesCombo($id_combo);
+}
+private function o_detallesCombo($id_combo) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $query = "SELECT cd.id_producto, cd.cantidad, p.nombre_producto, p.precio, p.stock, 
+                         m.nombre_marca as marca, p.descripcion_producto as descripcion
+                  FROM tbl_combo_detalle cd
+                  INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
+                  INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                  INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                  WHERE cd.id_combo = :id_combo AND p.estado = 'habilitado'";
+        $stmt = $this->conex->prepare($query);
+        $stmt->bindParam(':id_combo', $id_combo);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function agregarProductoAlCarrito($id_cliente, $id_producto, $cantidad = 1, $id_combo = null) {
+    return $this->b_agregarProductoAlCarrito($id_cliente, $id_producto, $cantidad, $id_combo);
+}
+private function b_agregarProductoAlCarrito($id_cliente, $id_producto, $cantidad = 1, $id_combo = null) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     try {
-        // Verificar stock disponible
         $producto = $this->obtenerProductoPorId($id_producto);
         if (!$producto || $producto['stock'] < $cantidad) {
             throw new Exception('Producto no disponible o cantidad insuficiente');
         }
-
-        // Obtener o crear carrito
         $id_carrito = $this->obtenerOCrearCarrito($id_cliente);
-
-        // Verificar si ya existe en el carrito
         $sql = "SELECT id_carrito_detalle, cantidad FROM tbl_carritodetalle 
                 WHERE id_carrito = :id_carrito AND id_producto = :id_producto";
-        
         $stmt = $this->conex->prepare($sql);
         $stmt->bindParam(':id_carrito', $id_carrito);
         $stmt->bindParam(':id_producto', $id_producto);
         $stmt->execute();
-        
         $existente = $stmt->fetch(PDO::FETCH_ASSOC);
-        
         if ($existente) {
-            // Actualizar cantidad si ya existe
             $nueva_cantidad = $existente['cantidad'] + $cantidad;
             $sql = "UPDATE tbl_carritodetalle SET cantidad = :cantidad 
                     WHERE id_carrito_detalle = :id_carrito_detalle";
@@ -772,25 +974,27 @@ public function agregarProductoAlCarrito($id_cliente, $id_producto, $cantidad = 
             $stmt->bindParam(':id_carrito_detalle', $existente['id_carrito_detalle']);
             return $stmt->execute();
         } else {
-            // Insertar nuevo registro
             $sql = "INSERT INTO tbl_carritodetalle 
                     (id_carrito, id_producto, cantidad, estatus) 
                     VALUES (:id_carrito, :id_producto, :cantidad, 'pendiente')";
-            
             $stmt = $this->conex->prepare($sql);
-            
             $stmt->bindParam(':id_carrito', $id_carrito);
             $stmt->bindParam(':id_producto', $id_producto);
             $stmt->bindParam(':cantidad', $cantidad);
-            
             return $stmt->execute();
         }
     } catch (Exception $e) {
-    return $e->getMessage();
-}
+        return $e->getMessage();
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
-private function obtenerOCrearCarrito($id_cliente) {
+public function obtenerOCrearCarrito($id_cliente) {
+    return $this->obtCrearCarrito($id_cliente);
+}
+private function obtCrearCarrito($id_cliente) {
     $sql = "SELECT id_carrito FROM tbl_carrito 
             WHERE id_cliente = :id_cliente
             ORDER BY fecha_creacion DESC LIMIT 1";
@@ -798,169 +1002,226 @@ private function obtenerOCrearCarrito($id_cliente) {
     $stmt->bindParam(':id_cliente', $id_cliente);
     $stmt->execute();
     $carrito = $stmt->fetch(PDO::FETCH_ASSOC);
-    
     if ($carrito) {
         return $carrito['id_carrito'];
-    } else {
-        $sql = "INSERT INTO tbl_carrito (id_cliente) VALUES (:id_cliente)";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id_cliente', $id_cliente);
-        $stmt->execute();
-        return $this->conex->lastInsertId();
     }
+    $sql = "INSERT INTO tbl_carrito (id_cliente) VALUES (:id_cliente)";
+    $stmt = $this->conex->prepare($sql);
+    $stmt->bindParam(':id_cliente', $id_cliente);
+    $stmt->execute();
+    return $this->conex->lastInsertId();
 }
 
 public function agregarComboAlCarrito($id_cliente, $id_combo) {
+    return $this->a_agregarComboAlCarrito($id_cliente, $id_combo);
+}
+private function a_agregarComboAlCarrito($id_cliente, $id_combo) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     $this->conex->beginTransaction();
-    
     try {
-        // 1. Verificar que el combo existe
         $combo = $this->obtenerComboPorId($id_combo);
         if (!$combo) {
             throw new Exception("El combo no está disponible");
         }
-
-        // 2. Obtener los productos del combo con sus cantidades
         $productosCombo = $this->obtenerDetallesCombo($id_combo);
         if (empty($productosCombo)) {
             throw new Exception("El combo no contiene productos válidos");
         }
-
-        // 3. Verificar stock para todos los productos del combo
         foreach ($productosCombo as $producto) {
             $productoInfo = $this->obtenerProductoPorId($producto['id_producto']);
             if (!$productoInfo || $productoInfo['stock'] < $producto['cantidad']) {
                 throw new Exception("El producto {$productoInfo['nombre_producto']} no tiene suficiente stock");
             }
         }
-
-        // 4. Obtener o crear carrito
         $id_carrito = $this->obtenerOCrearCarrito($id_cliente);
-
-        // 5. Agregar cada producto del combo al carrito
         foreach ($productosCombo as $producto) {
             $this->agregarProductoAlCarrito($id_cliente, $producto['id_producto'], $producto['cantidad']);
         }
-        
         $this->conex->commit();
         return true;
-        
     } catch (Exception $e) {
         $this->conex->rollBack();
         throw $e;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
 public function obtenerComboPorId($id_combo) {
-    $sql = "SELECT * FROM tbl_combo WHERE id_combo = :id_combo";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_combo', $id_combo);
-    $stmt->execute();
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+    return $this->o_comboPorId($id_combo);
+}
+private function o_comboPorId($id_combo) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT * FROM tbl_combo WHERE id_combo = :id_combo";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_combo', $id_combo);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function obtenerTodosProductosParaCombos() {
-    $query = "SELECT p.id_producto, p.nombre_producto, p.stock, m.nombre_marca as marca, p.precio
-              FROM tbl_productos p
-              JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-              JOIN tbl_marcas m ON mo.id_marca = m.id_marca
-              WHERE p.estado = 'habilitado'
-              ORDER BY p.nombre_producto DESC";
-    
-    $stmt = $this->conex->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_todosProductosParaCombos();
+}
+private function o_todosProductosParaCombos() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $query = "SELECT p.id_producto, p.nombre_producto, p.stock, m.nombre_marca as marca, p.precio
+                  FROM tbl_productos p
+                  JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                  JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                  WHERE p.estado = 'habilitado'
+                  ORDER BY p.nombre_producto DESC";
+        $stmt = $this->conex->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function obtenerProductosBajoStock() {
-    $query = "SELECT p.id_producto, p.nombre_producto, p.stock, p.stock_minimo, 
-                     m.nombre_marca as marca
-              FROM tbl_productos p
-              JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-              JOIN tbl_marcas m ON mo.id_marca = m.id_marca
-              WHERE p.stock <= p.stock_minimo AND p.estado = 'habilitado'
-              ORDER BY (p.stock / p.stock_minimo) DESC";
-    
-    $stmt = $this->conex->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->o_productosBajoStock();
+}
+private function o_productosBajoStock() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $query = "SELECT p.id_producto, p.nombre_producto, p.stock, p.stock_minimo, 
+                         m.nombre_marca as marca
+                  FROM tbl_productos p
+                  JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                  JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                  WHERE p.stock <= p.stock_minimo AND p.estado = 'habilitado'
+                  ORDER BY (p.stock / p.stock_minimo) DESC";
+        $stmt = $this->conex->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function buscarProductos($termino) {
-    $query = "SELECT p.*, m.nombre_marca as marca 
-              FROM tbl_productos p
-              JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-              JOIN tbl_marcas m ON mo.id_marca = m.id_marca
-              WHERE (p.nombre_producto LIKE :termino OR 
-                    p.descripcion_producto LIKE :termino OR
-                    p.serial LIKE :termino OR
-                    m.nombre_marca LIKE :termino)
-              AND p.estado = 'habilitado'
-              ORDER BY p.nombre_producto DESC";
-    
-    $stmt = $this->conex->prepare($query);
-    $termino = "%$termino%";
-    $stmt->bindParam(':termino', $termino);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $this->b_buscarProductos($termino);
+}
+private function b_buscarProductos($termino) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $query = "SELECT p.*, m.nombre_marca as marca 
+                  FROM tbl_productos p
+                  JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                  JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                  WHERE (p.nombre_producto LIKE :termino OR 
+                        p.descripcion_producto LIKE :termino OR
+                        p.serial LIKE :termino OR
+                        m.nombre_marca LIKE :termino)
+                  AND p.estado = 'habilitado'
+                  ORDER BY p.nombre_producto DESC";
+        $stmt = $this->conex->prepare($query);
+        $like = "%$termino%";
+        $stmt->bindParam(':termino', $like);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function actualizarStock($id_producto, $cantidad) {
-    $sql = "UPDATE tbl_productos SET stock = stock + :cantidad 
-            WHERE id_producto = :id_producto";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':cantidad', $cantidad);
-    $stmt->bindParam(':id_producto', $id_producto);
-    return $stmt->execute();
+    return $this->a_actualizarStock($id_producto, $cantidad);
 }
-private function agregarProductoACombo($id_combo, $id_producto, $cantidad) {
-    // Verificar que el producto existe
-    $producto = $this->obtenerProductoPorId($id_producto);
-    if (!$producto) {
-        throw new Exception("El producto con ID $id_producto no existe");
+private function a_actualizarStock($id_producto, $cantidad) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "UPDATE tbl_productos SET stock = stock + :cantidad 
+                WHERE id_producto = :id_producto";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':cantidad', $cantidad);
+        $stmt->bindParam(':id_producto', $id_producto);
+        return $stmt->execute();
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
-    
-    $sql = "INSERT INTO tbl_combo_detalle (id_combo, id_producto, cantidad) 
-            VALUES (:id_combo, :id_producto, :cantidad)";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_combo', $id_combo);
-    $stmt->bindParam(':id_producto', $id_producto);
-    $stmt->bindParam(':cantidad', $cantidad);
-    return $stmt->execute();
+}
+
+public function agregarProductoACombo($id_combo, $id_producto, $cantidad) {
+    return $this->a_agregarProductoACombo($id_combo, $id_producto, $cantidad);
+}
+private function a_agregarProductoACombo($id_combo, $id_producto, $cantidad) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        // Verificar que el producto existe
+        $producto = $this->obtenerProductoPorId($id_producto);
+        if (!$producto) {
+            throw new Exception("El producto con ID $id_producto no existe");
+        }
+        
+        $sql = "INSERT INTO tbl_combo_detalle (id_combo, id_producto, cantidad) 
+                VALUES (:id_combo, :id_producto, :cantidad)";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_combo', $id_combo);
+        $stmt->bindParam(':id_producto', $id_producto);
+        $stmt->bindParam(':cantidad', $cantidad);
+        return $stmt->execute();
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function crearCombo($nombre, $descripcion, $productos) {
+    return $this->c_crearCombo($nombre, $descripcion, $productos);
+}
+private function c_crearCombo($nombre, $descripcion, $productos) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     $this->conex->beginTransaction();
-    
     try {
-        // Insertar el combo principal
         $sql = "INSERT INTO tbl_combo (nombre_combo, descripcion) 
                 VALUES (:nombre, :descripcion)";
         $stmt = $this->conex->prepare($sql);
         $stmt->bindParam(':nombre', $nombre);
         $stmt->bindParam(':descripcion', $descripcion);
         $stmt->execute();
-        
         $id_combo = $this->conex->lastInsertId();
-        
-        // Insertar los productos del combo
         foreach ($productos as $producto) {
             $this->agregarProductoACombo($id_combo, $producto['id'], $producto['cantidad']);
         }
-        
         $this->conex->commit();
         return $id_combo;
     } catch (Exception $e) {
         $this->conex->rollBack();
         throw $e;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
 public function actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
+    return $this->a_actualizarCombo($id_combo, $nombre, $descripcion, $productos);
+}
+private function a_actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
     $this->conex->beginTransaction();
-    
     try {
-        // Actualizar el combo principal
         $sql = "UPDATE tbl_combo 
                 SET nombre_combo = :nombre, 
                     descripcion = :descripcion
@@ -970,186 +1231,288 @@ public function actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
         $stmt->bindParam(':descripcion', $descripcion);
         $stmt->bindParam(':id_combo', $id_combo);
         $stmt->execute();
-        
-        // Eliminar los productos actuales del combo
         $sql = "DELETE FROM tbl_combo_detalle WHERE id_combo = :id_combo";
         $stmt = $this->conex->prepare($sql);
         $stmt->bindParam(':id_combo', $id_combo);
         $stmt->execute();
-        
-        // Insertar los nuevos productos del combo
         foreach ($productos as $producto) {
             $this->agregarProductoACombo($id_combo, $producto['id'], $producto['cantidad']);
         }
-        
         $this->conex->commit();
         return true;
     } catch (Exception $e) {
         $this->conex->rollBack();
         throw $e;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
 public function eliminarCombo($id_combo) {
-    // Opción 1: Eliminación física (elimina también los detalles por CASCADE)
-    // $sql = "DELETE FROM tbl_combo WHERE id_combo = :id_combo";
-    
-    // Opción 2: Eliminación lógica (recomendado)
-    $sql = "UPDATE tbl_combo SET activo = 0 WHERE id_combo = :id_combo";
-    
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_combo', $id_combo);
-    return $stmt->execute();
+    return $this->e_eliminarCombo($id_combo);
+}
+private function e_eliminarCombo($id_combo) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "UPDATE tbl_combo SET activo = 0 WHERE id_combo = :id_combo";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_combo', $id_combo);
+        return $stmt->execute();
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function obtenerInfoCompletaCombo($id_combo) {
-    $combo = $this->obtenerComboPorId($id_combo);
-    if (!$combo) {
-        return null;
-    }
-    
-    $combo['productos'] = $this->obtenerDetallesCombo($id_combo);
-    
-    // Calcular precio total del combo
-    $combo['precio_total'] = 0;
-    foreach ($combo['productos'] as $producto) {
-        $combo['precio_total'] += ($producto['precio'] * $producto['cantidad']);
-    }
-    
-    // Calcular ahorro estimado (10% del total)
-    $combo['ahorro_estimado'] = $combo['precio_total'] * 0.1;
-    $combo['precio_final'] = $combo['precio_total'] - $combo['ahorro_estimado'];
-    
-    return $combo;
+    return $this->o_infoCompletaCombo($id_combo);
 }
-
-public function obtenerTodosCombosConDetalles() {
-    $combos = $this->obtenerCombosDisponibles();
-    
-    foreach ($combos as &$combo) {
-        $combo['productos'] = $this->obtenerDetallesCombo($combo['id_combo']);
-        
-        // Calcular información adicional
-        $combo['total_productos'] = count($combo['productos']);
+private function o_infoCompletaCombo($id_combo) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $combo = $this->obtenerComboPorId($id_combo);
+        if (!$combo) {
+            return null;
+        }
+        $combo['productos'] = $this->obtenerDetallesCombo($id_combo);
         $combo['precio_total'] = 0;
-        
         foreach ($combo['productos'] as $producto) {
             $combo['precio_total'] += ($producto['precio'] * $producto['cantidad']);
         }
-        
         $combo['ahorro_estimado'] = $combo['precio_total'] * 0.1;
         $combo['precio_final'] = $combo['precio_total'] - $combo['ahorro_estimado'];
+        return $combo;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
-    
-    return $combos;
+}
+
+public function obtenerTodosCombosConDetalles() {
+    return $this->o_todosCombosConDetalles();
+}
+private function o_todosCombosConDetalles() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $combos = $this->obtenerCombosDisponibles();
+        foreach ($combos as &$combo) {
+            $combo['productos'] = $this->obtenerDetallesCombo($combo['id_combo']);
+            $combo['total_productos'] = count($combo['productos']);
+            $combo['precio_total'] = 0;
+            foreach ($combo['productos'] as $producto) {
+                $combo['precio_total'] += ($producto['precio'] * $producto['cantidad']);
+            }
+            $combo['ahorro_estimado'] = $combo['precio_total'] * 0.1;
+            $combo['precio_final'] = $combo['precio_total'] - $combo['ahorro_estimado'];
+        }
+        return $combos;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function obtenerCantidadCarrito($id_cliente) {
-    $sql = "SELECT SUM(cd.cantidad) as total 
-            FROM tbl_carritodetalle cd
-            JOIN tbl_carrito c ON cd.id_carrito = c.id_carrito
-            WHERE c.id_cliente = :id_cliente AND cd.estatus = 'pendiente'";
-    
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_cliente', $id_cliente);
-    $stmt->execute();
-    
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $result['total'] ?? 0;
+    return $this->o_cantidadCarrito($id_cliente);
+}
+private function o_cantidadCarrito($id_cliente) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT SUM(cd.cantidad) as total 
+                FROM tbl_carritodetalle cd
+                JOIN tbl_carrito c ON cd.id_carrito = c.id_carrito
+                WHERE c.id_cliente = :id_cliente AND cd.estatus = 'pendiente'";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_cliente', $id_cliente);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total'] ?? 0;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function verificarStock($id_producto, $cantidad) {
-    $sql = "SELECT stock FROM tbl_productos WHERE id_producto = :id_producto AND estado = 'habilitado'";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_producto', $id_producto);
-    $stmt->execute();
-    
-    $producto = $stmt->fetch(PDO::FETCH_ASSOC);
-    return ($producto && $producto['stock'] >= $cantidad);
+    return $this->v_verificarStock($id_producto, $cantidad);
+}
+private function v_verificarStock($id_producto, $cantidad) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        $sql = "SELECT stock FROM tbl_productos WHERE id_producto = :id_producto AND estado = 'habilitado'";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_producto', $id_producto);
+        $stmt->execute();
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($producto && $producto['stock'] >= $cantidad);
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
+    }
 }
 
 public function cambiarEstadoCombo($id_combo) {
-    // Verificar que el combo existe
-    $combo = $this->obtenerComboPorId($id_combo);
-    if (!$combo) {
-        throw new Exception('Combo no encontrado');
+    return $this->c_EstadoCombo($id_combo);
+}
+private function c_EstadoCombo($id_combo) {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        // Verificar que el combo existe
+        $combo = $this->obtenerComboPorId($id_combo);
+        if (!$combo) {
+            throw new Exception('Combo no encontrado');
+        }
+        
+        // Determinar el nuevo estado (alternar entre 1 y 0)
+        $nuevoEstado = $combo['activo'] ? 0 : 1;
+        
+        // Preparar y ejecutar la consulta
+        $sql = "UPDATE tbl_combo SET activo = :activo WHERE id_combo = :id_combo";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':activo', $nuevoEstado, PDO::PARAM_INT);
+        $stmt->bindParam(':id_combo', $id_combo, PDO::PARAM_INT);
+        
+        if (!$stmt->execute()) {
+            throw new Exception('Error al actualizar el estado del combo');
+        }
+        
+        return true;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
-    
-    // Determinar el nuevo estado (alternar entre 1 y 0)
-    $nuevoEstado = $combo['activo'] ? 0 : 1;
-    
-    // Preparar y ejecutar la consulta
-    $sql = "UPDATE tbl_combo SET activo = :activo WHERE id_combo = :id_combo";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':activo', $nuevoEstado, PDO::PARAM_INT);
-    $stmt->bindParam(':id_combo', $id_combo, PDO::PARAM_INT);
-    
-    if (!$stmt->execute()) {
-        throw new Exception('Error al actualizar el estado del combo');
-    }
-    
-    return true;
 }
 
 
     // 1. Productos más vendidos (Top 10)
     public function getProductosMasVendidos() {
-        $sql = "
-            SELECT 
-                p.id_producto,
-                p.nombre_producto,
-                SUM(fd.cantidad) AS total_vendido
-            FROM tbl_factura_detalle fd
-            INNER JOIN tbl_productos p ON fd.id_producto = p.id_producto
-            GROUP BY p.id_producto, p.nombre_producto
-            ORDER BY total_vendido DESC
-            LIMIT 10;
-        ";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->g_productosMasVendidos();
+    }
+    private function g_productosMasVendidos() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "
+                SELECT 
+                    p.id_producto,
+                    p.nombre_producto,
+                    SUM(fd.cantidad) AS total_vendido
+                FROM tbl_factura_detalle fd
+                INNER JOIN tbl_productos p ON fd.id_producto = p.id_producto
+                GROUP BY p.id_producto, p.nombre_producto
+                ORDER BY total_vendido DESC
+                LIMIT 10;
+            ";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     // 2. Productos con mayor stock vs. bajo stock
     public function getStockProductos() {
-        $sql = "
-            SELECT 
-    p.nombre_producto,
-    p.stock,
-    p.stock_minimo,
-    p.id_categoria,
-    c.nombre_categoria,
-    CASE 
-        WHEN p.stock <= p.stock_minimo THEN 'Bajo Stock'
-        ELSE 'Alto Stock'
-    END AS categoria_stock
-FROM tbl_productos p 
-INNER JOIN tbl_categoria c ON c.id_categoria = p.id_categoria;
-        ";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->g_stockProductos();
+    }
+    private function g_stockProductos() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "
+                SELECT 
+                    p.nombre_producto,
+                    p.stock,
+                    p.stock_minimo,
+                    p.id_categoria,
+                    c.nombre_categoria,
+                    CASE 
+                        WHEN p.stock <= p.stock_minimo THEN 'Bajo Stock'
+                        ELSE 'Alto Stock'
+                    END AS categoria_stock
+                FROM tbl_productos p 
+                INNER JOIN tbl_categoria c ON c.id_categoria = p.id_categoria;
+            ";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
     // 3. Rotación de productos (días promedio en inventario antes de venta)
     public function getRotacionProductos() {
-        $sql = "
-            SELECT p.id_producto, p.nombre_producto, 
-            AVG( CASE WHEN r.fecha IS NOT NULL AND primera_factura.fecha_minima 
-            IS NOT NULL THEN DATEDIFF(primera_factura.fecha_minima, r.fecha) ELSE NULL END ) AS dias_promedio
-             FROM tbl_recepcion_productos r INNER JOIN tbl_detalle_recepcion_productos dr 
-             ON r.id_recepcion = dr.id_recepcion INNER JOIN tbl_productos p 
-             ON dr.id_producto = p.id_producto 
-            INNER JOIN ( SELECT fd.id_producto, MIN(f.fecha) AS fecha_minima FROM tbl_factura_detalle fd INNER JOIN tbl_facturas f ON fd.factura_id = f.id_factura WHERE f.fecha IS NOT NULL GROUP BY fd.id_producto ) primera_factura ON p.id_producto = primera_factura.id_producto 
-            WHERE r.fecha IS NOT NULL GROUP BY p.id_producto, p.nombre_producto;";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->g_rotacionProductos();
+    }
+    private function g_rotacionProductos() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "
+                SELECT p.id_producto, p.nombre_producto, 
+                AVG( CASE WHEN r.fecha IS NOT NULL AND primera_factura.fecha_minima 
+                IS NOT NULL THEN DATEDIFF(primera_factura.fecha_minima, r.fecha) ELSE NULL END ) AS dias_promedio
+                FROM tbl_recepcion_productos r 
+                INNER JOIN tbl_detalle_recepcion_productos dr ON r.id_recepcion = dr.id_recepcion 
+                INNER JOIN tbl_productos p ON dr.id_producto = p.id_producto 
+                INNER JOIN (
+                    SELECT fd.id_producto, MIN(f.fecha) AS fecha_minima 
+                    FROM tbl_factura_detalle fd 
+                    INNER JOIN tbl_facturas f ON fd.factura_id = f.id_factura 
+                    WHERE f.fecha IS NOT NULL 
+                    GROUP BY fd.id_producto
+                ) primera_factura ON p.id_producto = primera_factura.id_producto 
+                WHERE r.fecha IS NOT NULL 
+                GROUP BY p.id_producto, p.nombre_producto;";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
     }
 
+
+    public function obtenerRelacionadosPorCategoria($id_producto, $limit = 8) {
+        return $this->o_relacionadosPorCategoria($id_producto, $limit);
+    }
+    private function o_relacionadosPorCategoria($id_producto, $limit = 8) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT p.*, mo.nombre_modelo, m.nombre_marca
+                    FROM tbl_productos p
+                    INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                    INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                    WHERE p.id_categoria = (
+                        SELECT id_categoria FROM tbl_productos WHERE id_producto = :id_producto
+                    )
+                    AND p.id_producto <> :id_producto
+                    AND p.estado = 'habilitado'
+                    ORDER BY p.stock DESC, p.nombre_producto ASC
+                    LIMIT :limit";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
+    }
 }
-
-
 
 class Producto extends Productos{
     private $conex;
@@ -1163,12 +1526,18 @@ class Producto extends Productos{
 
     function __construct() {
         parent::__construct();
-        $this->conex = parent::getConexion();
+        $this->conex = null;
     }
 
 public function obtenerProductos() {
-    // 1. Consulta general con modelo y categoría
-    $queryProductos = '
+    return $this->o_obtenerProductos();
+}
+private function o_obtenerProductos() {
+    $conexion = new BD('P');
+    $this->conex = $conexion->getConexion();
+    try {
+        // 1. Consulta general con modelo y categoría
+        $queryProductos = '
 SELECT 
     tbl_productos.*, 
     tbl_modelos.nombre_modelo,
@@ -1184,36 +1553,45 @@ INNER JOIN tbl_categoria
 ORDER BY tbl_productos.id_producto DESC;
 ';
 
-    $stmtProductos = $this->conex->prepare($queryProductos);
-    $stmtProductos->execute();
-    $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
+        $stmtProductos = $this->conex->prepare($queryProductos);
+        $stmtProductos->execute();
+        $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2. Agregar características específicas por categoría
-foreach ($productos as &$producto) {
-    $idProducto = $producto['id_producto'];
-    $nombreTabla = 'cat_' . strtolower(str_replace(' ', '_', $producto['nombre_categoria']));
-    $sql = "SHOW TABLES LIKE :tabla";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->execute([':tabla' => $nombreTabla]);
-    if ($stmt->fetch()) {
-        $sqlCarac = "SELECT * FROM `$nombreTabla` WHERE id_producto = :id";
-        $stmtCarac = $this->conex->prepare($sqlCarac);
-        $stmtCarac->bindParam(':id', $idProducto, PDO::PARAM_INT);
-        $stmtCarac->execute();
-        $caracteristicas = $stmtCarac->fetch(PDO::FETCH_ASSOC);
-        $producto['caracteristicas'] = $caracteristicas ?: [];
-    } else {
-        $producto['caracteristicas'] = [];
+        // 2. Agregar características específicas por categoría
+        foreach ($productos as &$producto) {
+            $idProducto = $producto['id_producto'];
+            $nombreTabla = 'cat_' . strtolower(str_replace(' ', '_', $producto['nombre_categoria']));
+            $sql = "SHOW TABLES LIKE :tabla";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute([':tabla' => $nombreTabla]);
+            if ($stmt->fetch()) {
+                $sqlCarac = "SELECT * FROM `$nombreTabla` WHERE id_producto = :id";
+                $stmtCarac = $this->conex->prepare($sqlCarac);
+                $stmtCarac->bindParam(':id', $idProducto, PDO::PARAM_INT);
+                $stmtCarac->execute();
+                $caracteristicas = $stmtCarac->fetch(PDO::FETCH_ASSOC);
+                $producto['caracteristicas'] = $caracteristicas ?: [];
+            } else {
+                $producto['caracteristicas'] = [];
+            }
+        }
+
+        return $productos;
+    } finally {
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
-}
-    
-
-    return $productos;
 }
 
 
     public function obtenerProductosConBajoStock() {
-    $queryProductos = '
+        return $this->o_obtenerProductosConBajoStock();
+    }
+    private function o_obtenerProductosConBajoStock() {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $queryProductos = '
         SELECT tbl_productos.*, 
                tbl_modelos.nombre_modelo, 
                tbl_categoria.nombre_categoria 
@@ -1225,12 +1603,16 @@ foreach ($productos as &$producto) {
         WHERE tbl_productos.stock < tbl_productos.stock_minimo
     ';
 
-    $stmtProductos = $this->conex->prepare($queryProductos);
-    $stmtProductos->execute();
-    $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
+            $stmtProductos = $this->conex->prepare($queryProductos);
+            $stmtProductos->execute();
+            $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
 
-    return $productos;
-}
+            return $productos;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
+    }
 
 }
 

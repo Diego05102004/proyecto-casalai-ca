@@ -64,7 +64,7 @@ if (is_file("vista/" . $pagina . ".php")) {
                 $_SESSION['id_usuario'],
                 MODULO_FINANZA,
                 'ACCESAR',
-                'El usuario accedió al al modulo de Finanzas',
+                'El usuario accedió al modulo de Finanzas',
                 'media'
             );
         }
