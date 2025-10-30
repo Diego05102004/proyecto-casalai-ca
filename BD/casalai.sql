@@ -7910,23 +7910,21 @@ CREATE TABLE `tbl_productos` (
 --
 -- Volcado de datos para la tabla `tbl_productos`
 --
-
 INSERT INTO `tbl_productos` (`id_producto`, `serial`, `nombre_producto`, `descripcion_producto`, `id_modelo`, `id_categoria`, `stock`, `stock_minimo`, `stock_maximo`, `clausula_garantia`, `precio`, `estado`, `imagen`) VALUES
-(28, '0001', 'Impresora Super', 'Impresora multifuncional con función wifi', 6, 11, 50, 10, 100, 'Garantia Valida hasta los 3 meses ', 1000.00, 'habilitado', 'img\\productos\\producto_28.jpg'),
-(29, '0002', 'Impresora Maxi', 'Impresora de Punta de fibra de vidrio para oficina', 37, 11, 50, 10, 100, 'Garantía para 1 mes', 1500.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(30, '0003', 'Impresora KING', 'Impresora de Escáner Laser de Ultima Generación', 34, 11, 50, 10, 100, 'Garantía valida en los primeros 365 días', 2000.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(31, '0004', 'Colormedia', 'Tintas multicolor para Impresoras Epson', 16, 12, 20, 10, 50, 'Sin Garantía', 10.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(32, '0005', 'Tinta Arcoiris', 'Tintas de multi color duraderas para impresoras', 23, 12, 20, 5, 50, 'Sin Garantía', 8.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(33, '0006', 'ImpriColor', 'Tintas Profesionales de 4 colores', 26, 12, 30, 10, 70, 'Sin Garantía', 12.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(34, '0007', 'Caja de Color', 'Cartuchos de Tintas para Impresion', 8, 13, 10, 5, 20, 'Garantía de 1 mes de duración', 120.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(35, '0008', 'ColorBox', 'Cartuchos de Tinta Profesional tamaño XL', 49, 13, 7, 5, 20, 'Garantía de 1 mes de duración', 100.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(36, '0009', 'Colors Pandora', 'Cartuchos de Tinta Para Impresoras HP', 9, 13, 10, 5, 25, 'Garantía de 1 mes de duración', 130.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(37, '0010', 'GigaVoltio', 'Protector de Voltaje para uso domestico', 50, 14, 12, 10, 40, 'Garantía de 1 mes de duración', 60.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(38, '0011', 'ProtecVoltorb', 'Protector de Voltaje para Neveras', 76, 14, 16, 5, 20, 'Garantía de 1 mes de duración', 25.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(39, '0012', 'ThunderBolt', 'Protector de Voltaje de uso Empresarial', 52, 14, 7, 3, 15, 'Garantía de 1 mes de duración', 250.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(40, '0013', 'Clips de papel', 'Clips para actividades académicas', 31, 15, 20, 10, 100, 'Garantía de 1 mes de duración', 5.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg'),
-(41, '0014', 'Rema de Papel ', 'Rema de papel de oficina con 200 hojas blancas ', 38, 15, 15, 5, 50, 'Sin Garantia', 3.00, 'habilitado', 'img\\productos\\lucid_realism_create_an_image_of_a_sleek_silver_and_modern_3D__0.jpg');
-
+(28, '0001', 'EPSON EcoTank L3250', 'Impresora multifuncional imprime, copia, escanea y Wi‑Fi', 16, 11, 50, 10, 100, 'Garantia Valida hasta los 3 meses ', 372.66, 'habilitado', 'img\\productos\\producto_29.jpg'),
+(29, '0002', 'HP DeskJet 2775', 'Imprime, copia y escanea. Garantía de 1 año. Imprime desde el teléfono. Recarga fácil.', 24, 11, 50, 10, 100, 'Garantía para 1 mes', 243.33, 'habilitado', 'img\\productos\\producto_31.jpg'),
+(30, '0003', 'Cutter 360', 'Corta en todas direcciones. Ideal para manualidades.', 31, 15, 50, 10, 100, 'Garantía valida en los primeros 365 días', 10.75, 'habilitado', 'img\\productos\\producto_42.jpg'),
+(31, '0004', 'Pegamento Simbi para papel', 'Pegamento para papel. Ideal para reparar billetes.', 32, 15, 20, 10, 50, 'Sin Garantía', 7.16, 'habilitado', 'img\\productos\\producto_43.jpg'),
+(32, '0005', 'Cortadoras de papel', 'Cortadoras especiales para papelería.', 33, 15, 20, 5, 50, 'Sin Garantía', 8.00, 'habilitado', 'img\\productos\\producto_44.jpg'),
+(33, '0006', 'Resma de papel HP carta', 'Resmas de papel originales HP. Calidad en cada hoja, perfecta para oficina (tamaño carta).', 31, 15, 30, 10, 70, 'Sin Garantía', 7.16, 'habilitado', 'img\\productos\\producto_45.jpg'),
+(34, '0007', 'Pendrive Kingston 64GB', 'Unidad flash USB 3.2 Gen 1. Compatible y de alto rendimiento.', 31, 15, 10, 5, 20, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'img\\productos\\producto_46.jpg'),
+(35, '0008', 'Tarjeta SD Kingston 64GB', 'Tarjeta microSD con adaptador. Velocidades de hasta 150MB/s en lectura.', 31, 15, 7, 5, 20, 'Garantía de 1 mes de duración', 8.84, 'habilitado', 'img\\productos\\producto_47.jpg'),
+(36, '0009', 'Pendrive Kingston 128GB', 'Unidad flash USB 3.2 Gen 1. Gran capacidad para tus archivos.', 31, 15, 10, 5, 25, 'Garantía de 1 mes de duración', 10.96, 'habilitado', 'img\\productos\\producto_48.jpg'),
+(37, '0010', 'Cable USB para impresoras', 'Cable USB para impresoras, dos metros de largo.', 31, 11, 12, 10, 40, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'img\\productos\\producto_49.jpg'),
+(38, '0011', 'Auriculares Redmi Buds 6 Lite', 'Sonido de alta fidelidad con cancelación de ruido.', 31, 15, 16, 5, 20, 'Garantía de 1 mes de duración', 37.97, 'habilitado', 'img\\productos\\producto_50.jpg'),
+(39, '0012', 'Cinta Epson S0156312', 'Cinta original para impresoras Epson LX300 y LX350.', 31, 15, 7, 3, 15, 'Garantía de 1 mes de duración', 20.00, 'habilitado', 'img\\productos\\producto_51.jpg'),
+(40, '0013', 'Tinta HP Original GT52/GT53 Negra', 'Botella de tinta negra original HP GT52/GT53.', 39, 12, 20, 10, 100, 'Garantía de 1 mes de duración', 31.52, 'habilitado', 'img\\productos\\producto_52.jpg'),
+(41, '0014', 'Kit de tintas CasaLai', 'Kit de tintas para impresoras con sistema adaptado en CasaLai.', 55, 12, 15, 5, 50, 'Sin Garantia', 57.32, 'habilitado', 'img\\productos\\producto_53.jpg');
 -- --------------------------------------------------------
 
 --
