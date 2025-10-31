@@ -57,6 +57,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $nuevo_estado = ($estado_actual === 'Por Despachar') ? 'Despachado' : 'Por Despachar';
             $despachoModel = new Despacho();
             if ($despachoModel->cambiarEstadoDespacho($id, $nuevo_estado)) {
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    // Bitácora
+                    $bitacora = new Bitacora();
+                    $bitacora->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_DESPACHO,
+                        'CAMBIAR ESTADO',
+                        'El usuario cambió el estado del despacho con ID: ' . $id . ' a ' . $nuevo_estado,
+                        'media'
+                    );
+
+                    // Notificación
+                    $bd_seguridad = new BD('S');
+                    $pdo_seguridad = $bd_seguridad->getConexion();
+                    $notificacionModel = new NotificacionModel($pdo_seguridad);
+                    $notificacionModel->crear(
+                        $_SESSION['id_usuario'],
+                        'despacho',
+                        'Estado de despacho actualizado',
+                        "Se ha cambiado el estado del despacho con ID ".$id." a '".$nuevo_estado."' por el usuario ".($_SESSION['name'] ?? ''),
+                        'media',
+                        MODULO_DESPACHO,
+                        'actualizar',
+                        $id
+                    );
+                }
                 echo json_encode(['status' => 'success', 'nuevo_estado' => $nuevo_estado]);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'No se pudo cambiar el estado']);
