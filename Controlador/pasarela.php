@@ -13,8 +13,8 @@ $bitacoraModel = new Bitacora();
 $id_rol = $_SESSION['id_rol'];
 
 
-$permisosObj = new Permisos();
-$permisosUsuario = $permisosObj->getPermisosPorRolModulo();
+$permisos = new Permisos();
+$permisosUsuario = $permisos->getPermisosPorRolModulo();
 
 $pasarela = new PasareladePago();
 $cuentaModel = new Cuentabanco();
@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, 'Pasarela de pagos');
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, 'Pasarela de pagos');
             echo json_encode($permisosActualizados);
             exit;
             

@@ -12,14 +12,11 @@ if (!isset($_SESSION['id_usuario'])) {
     exit;
 }
 
-// Inicializaciones
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $id_rol = $_SESSION['id_rol'] ?? 0;
 
-$permisosObj = new Permisos();
-
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('Categorias'));
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('Categorias'));
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
@@ -67,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('categorias'));
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('categorias'));
             echo json_encode($permisosActualizados);
             exit;
 

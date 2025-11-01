@@ -4,16 +4,14 @@ ob_start();
 require_once 'modelo/cliente.php';
 require_once 'modelo/permiso.php';
 require_once 'modelo/bitacora.php';
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
 define('MODULO_CLIENTE', 9);
 
-$permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
-
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('clientes'));
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('clientes'));
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
@@ -39,15 +37,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $clienteRegistrado = $cliente->obtenerUltimoCliente();
 
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_CLIENTE,
                         'INCLUIR',
-                        'El usuario incluyó el cliente: ' . implode(', ', array_map(
-                            function($value, $key) { return "$key: $value"; },
-                            $clienteRegistrado,
-                            array_keys($clienteRegistrado)
-                        )),
+                        'El usuario incluyó al cliente: ' . $_POST['nombre'],
                         'alta'
                     );
                 }
@@ -66,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, strtolower('clientes'));
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('clientes'));
             echo json_encode($permisosActualizados);
             exit;
         case 'obtener_clientes':
@@ -108,6 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $clienteModificado = $cliente->obtenerclientesPorId($id);
 
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_CLIENTE,
@@ -131,6 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $clientesModel = new cliente();
             if ($clientesModel->eliminarclientes($id)) {
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_CLIENTE,
@@ -161,13 +158,14 @@ $totalComprasClientes = array_sum(array_column($reporteComprasClientes, 'cantida
 $pagina = "cliente";
 if (is_file("vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-         $bitacoraModel->registrarBitacora(
-    $_SESSION['id_usuario'],
-    '9',
-    'ACCESAR',
-    'El usuario accedió al modulo de Clientes',
-    'media'
-);
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
+        $_SESSION['id_usuario'],
+        '9',
+        'ACCESAR',
+        'El usuario accedió al modulo de Clientes',
+        'media'
+    );
 }
     $clientes = getclientes();
     require_once("vista/" . $pagina . ".php");

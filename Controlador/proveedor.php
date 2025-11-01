@@ -6,13 +6,13 @@ require_once 'modelo/producto.php';
 require_once __DIR__ . '/../modelo/permiso.php';
 require_once 'modelo/bitacora.php';
 
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
 // Definir constantes para IDs de módulo y acciones
 define('MODULO_PROVEEDORES', 8); // Cambiar según tu estructura de módulos
 
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('proveedores'));
 
 $reporteProveedor = new Proveedores();

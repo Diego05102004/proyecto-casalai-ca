@@ -6,14 +6,11 @@ require_once 'modelo/permiso.php';
 require_once 'modelo/bitacora.php';
 define('MODULO_ROLES', 18);
 
-// Inicializaciones de clases
-$permisos = new Permisos();
-$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $id_rol = $_SESSION['id_rol'] ?? 0;
 
-$permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, 'Roles');
+$permisos = new Permisos();
+$permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, 'Roles');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
@@ -26,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
                 case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, 'Roles');
+            $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, 'Roles');
             echo json_encode($permisosActualizados);
             exit;
         case 'registrar':
@@ -47,6 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($rol->registrarRol()) {
                 $rolRegistrado = $rol->obtenerUltimoRol();
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_ROLES,
@@ -109,6 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($rol->modificarRol($id_rol)) {
                 $rolActualizado = $rol->obtenerRolPorId($id_rol);
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                    $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_ROLES,
@@ -138,6 +137,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $rolEliminado = $rol->obtenerRolPorId($id_rol);
                 if ($rol->eliminarRol($id_rol)) {
                     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                        $bitacoraModel = new Bitacora();
                         $bitacoraModel->registrarBitacora(
                             $_SESSION['id_usuario'],
                             MODULO_ROLES,
@@ -167,6 +167,7 @@ function consultarRoles() {
 $pagina = "rol";
 if (is_file("vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+        $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
             MODULO_ROLES,

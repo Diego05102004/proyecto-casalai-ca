@@ -46,14 +46,14 @@ try {
     error_log('Error obteniendo precio dólar: ' . $e->getMessage());
 }
 $id_rol = $_SESSION['id_rol'] ?? 0; // valor por defecto seguro
-$permisosObj = new Permisos();
-$bitacoraModel = new Bitacora();
+
 $cuentaModel = new Cuentabanco();
 $despacho = new OrdenDespacho();
 $facturaModel = new Factura();
 
 // Usar un nombre de módulo consistente sin acentos para evitar desajustes con la BD
-$permisosUsuario = $permisosObj->getPermisosUsuarioModulo($id_rol, 'compra fisica');
+$permisos = new Permisos();
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, 'compra fisica');
 
 if (is_file("vista/" . $pagina . ".php")) {
     $accion = $_POST['accion'] ?? '';
@@ -174,6 +174,7 @@ if (is_file("vista/" . $pagina . ".php")) {
                     
                     // Registrar en bitácora
                     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                        $bitacoraModel = new Bitacora();
                         $bitacoraModel->registrarBitacora(
                             $_SESSION['id_usuario'],
                             MODULO_DESPACHO,
@@ -247,6 +248,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $listadocuentas = $cuentaModel->consultarCuentabanco();
     require_once("vista/" . $pagina . ".php");
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+        $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
             MODULO_DESPACHO,

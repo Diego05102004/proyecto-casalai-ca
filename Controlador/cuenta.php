@@ -12,7 +12,6 @@ define('MODULO_CUENTA_BANCARIA', 15);
 // Inicializaciones de clases compartidas
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
-$bitacoraModel = new Bitacora();
 $id_rol = $_SESSION['id_rol'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -235,6 +234,7 @@ function cuentasReportes() {
 $pagina = "cuenta";
 if (is_file("vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
+        $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
         $_SESSION['id_usuario'],
         '15',
