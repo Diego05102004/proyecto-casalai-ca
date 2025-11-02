@@ -18,11 +18,11 @@ $(document).ready(function () {
   });
 
   $("#cedula").on("keypress", function(e){
-    validarkeypress(/^[0-9.]*$/, e);
+    validarKeyPress(/^[0-9.]*$/, e);
   });
 
   $("#cedula").on("keyup", function(){
-    validarkeyup(
+    validarKeyUp(
         /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
         $(this),
         $("#scedula"),
@@ -222,13 +222,17 @@ $(document).ready(function() {
     ) {
       valido = false;
     }
-if(validarKeyUp(
-            /^[VEJPG0-9.\b]{6,12}$/,
-            $("#cedula"),
-            $("#scedula"),
-            "*El formato solo permite números y (V,E,J,P,G,-.)*"
+    
+    let cedula = $("#cedula");
+    cedula.val(space(cedula.val()).trim());
+    if (
+      validarKeyUp(
+        /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
+        cedula,
+        $("#scedula"),
+        "*Formato válido: 1.234.567 o 12.345.678*"
         )==0){
-            mensajes('error',4000,'Verifique el número de Cedula','El formato solo permite números y (V,E,J,P,G,-.)');
+            mensajes('error',4000,'Verifique el número de Cedula','El formato solo permite números.');
             return false;
         }
     let telefono_usuario = $("#telefono_usuario");
@@ -352,12 +356,15 @@ function agregarFilaUsuario(usuario) {
     $("#snombre").text("");
     $("#apellido").val("");
     $("#sapellido").text("");
+    $("#cedula").val("");
+    $("#scedula").text("");
     $("#nombre_usuario").val("");
     $("#snombre_usuario").text("");
     $("#telefono_usuario").val("");
     $("#stelefono_usuario").text("");
     $("#correo_usuario").val("");
     $("#scorreo_usuario").text("");
+    //$("#rango").val("");
     $("#clave_usuario").val("");
     $("#sclave_usuario").text("");
     $("#clave_confirmar").val("");
@@ -368,6 +375,7 @@ function agregarFilaUsuario(usuario) {
     $("#incluirusuario")[0].reset();
     $("#snombre").text("");
     $("#sapellido").text("");
+    $("#scedula").text("");
     $("#snombre_usuario").text("");
     $("#scorreo_usuario").text("");
     $("#stelefono_usuario").text("");

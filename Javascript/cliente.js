@@ -25,7 +25,7 @@ $(document).ready(function () {
     });
 
     $("#cedula").on("keyup", function(){
-        validarkeyup(
+        validarKeyUp(
             /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
             $(this),
             $("#scedula"),

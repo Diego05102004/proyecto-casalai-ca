@@ -46,7 +46,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             <div class="grupo-form">
                                 <div class="grupo-interno">
                                     <label for="cedula">Cédula</label>
-                                    <input class="control-form" placeholder="00.000.000" maxlength="9" type="text" id="cedula" name="cedula" required>
+                                    <input class="control-form" placeholder="00.000.000" maxlength="10" type="text" id="cedula" name="cedula" required>
                                     <span class="span-value" id="scedula"></span>                                
                                 </div>
                                 <div class="grupo-interno">
