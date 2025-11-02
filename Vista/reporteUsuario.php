@@ -34,10 +34,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     </select>
                 </div>
                 <div id="parametrosUsuarios" class="col-md-8 row g-3"></div>
-                <div class="col-md-12" style="text-align:right;">
-                    <button id="btnGenerarUsuarios" class="btn btn-primary">Generar Reporte</button>
-                    <button id="descargarPDFUsuarios" class="btn btn-success">Descargar PDF</button>
-                </div>
             </div>
         </div>
 
@@ -50,6 +46,10 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 <div class="chart-table" style="flex:2; min-width:380px;">
                     <div id="tablaUsuarios"></div>
                 </div>
+            </div>
+            <div style="text-align:center;">
+                <button id="btnGenerarUsuarios" class="btn btn-primary">Generar Reporte</button>
+                <button id="descargarPDFUsuarios" class="btn btn-success">Descargar PDF</button>
             </div>
         </div>
     </div>
