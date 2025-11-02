@@ -1,21 +1,4 @@
-// Fallback para SweetAlert2 si por alguna razón no está disponible
-if (typeof window.Swal === 'undefined') {
-  window.Swal = {
-    fire: function (opts) {
-      try {
-        const msg = (opts && (opts.title || opts.text)) || 'Operación realizada';
-        alert(msg);
-      } catch (_) {
-        alert('Operación realizada');
-      }
-      // Devolver una promesa resuelta para soportar `.then(...)` (confirmaciones)
-      return Promise.resolve({ isConfirmed: true, isDenied: false, isDismissed: false });
-    }
-  };
-}
-
 $(document).ready(function () {
-
   if ($.trim($("#mensajes").text()) != "") {
     mensajes("warning", 4000, "Atención", $("#mensajes").html());
   }
@@ -34,29 +17,29 @@ $(document).ready(function () {
     );
   });
 
-  $("#cedula").on("keypress", function (e) {
-    validarKeyPress(/^[0-9]*$/, e); 
+  $("#cedula").on("keypress", function(e){
+    validarkeypress(/^[0-9.]*$/, e);
   });
 
   $("#cedula").on("keyup", function(){
-      validarkeyup(
-          /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
-          $(this),
-          $("#scedula"),
-          "*El formato debe ser 1.234.567 o 12.345.678*"
-      );
+    validarkeyup(
+        /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
+        $(this),
+        $("#scedula"),
+        "*Formato válido: 1.234.567 o 12.345.678*"
+    );
   });
   $("#cedula").on("input", function() {
-      let d = $(this).val().replace(/\D/g, '');
-      let out = d;
-      if (d.length === 7) {
-          // X.XXX.XXX
-          out = d.slice(0,1) + '.' + d.slice(1,4) + '.' + d.slice(4,7);
-      } else if (d.length === 8) {
-          // XX.XXX.XXX
-          out = d.slice(0,2) + '.' + d.slice(2,5) + '.' + d.slice(5,8);
-      }
-      $(this).val(out);
+    let d = $(this).val().replace(/\D/g, '');
+    let out = d;
+    if (d.length === 7) {
+        // X.XXX.XXX
+        out = d.slice(0,1) + '.' + d.slice(1,4) + '.' + d.slice(4,7);
+    } else if (d.length === 8) {
+        // XX.XXX.XXX
+        out = d.slice(0,2) + '.' + d.slice(2,5) + '.' + d.slice(5,8);
+    }
+    $(this).val(out);
   });
 
   $("#apellido_usuario").on("keypress", function (e) {
@@ -94,7 +77,7 @@ $(document).ready(function () {
       /^\d{4}-\d{3}-\d{4}$/,
       $(this),
       $("#stelefono_usuario"),
-      "*Formato válido: 0400-000-0000*"
+      "*Formato válido: 04XX-XXX-XXXX*"
     );
   });
 
@@ -116,7 +99,7 @@ $(document).ready(function () {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       $(this),
       $("#scorreo_usuario"),
-      "*Formato válido: ejemplo@gmail.com*"
+      "*Formato válido: example@gmail.com*"
     );
   });
 
@@ -239,22 +222,22 @@ $(document).ready(function() {
     ) {
       valido = false;
     }
-    if(validarKeyUp(
-        /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
-        $("#cedula"),
-        $("#scedula"),
-        "*Formato válido: 1.234.567 o 12.345.678*"
-    )==0){
-        mensajes('error',4000,'Verifique el número de cédula','El formato solo permite números.');
-        return false;
-    }
+if(validarKeyUp(
+            /^[VEJPG0-9.\b]{6,12}$/,
+            $("#cedula"),
+            $("#scedula"),
+            "*El formato solo permite números y (V,E,J,P,G,-.)*"
+        )==0){
+            mensajes('error',4000,'Verifique el número de Cedula','El formato solo permite números y (V,E,J,P,G,-.)');
+            return false;
+        }
     let telefono_usuario = $("#telefono_usuario");
     if (
       validarKeyUp(
         /^\d{4}-\d{3}-\d{4}$/,
         telefono_usuario,
         $("#stelefono_usuario"),
-        "*Formato válido: 0400-000-0000*"
+        "*Formato válido: 04XX-XXX-XXXX*"
       ) == 0
     ) {
       valido = false;
@@ -266,7 +249,7 @@ $(document).ready(function() {
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         correo_usuario,
         $("#scorreo_usuario"),
-        "*Formato válido: ejemplo@gmail.com*"
+        "*Formato válido: example@gmail.com*"
       ) == 0
     ) {
       valido = false;
@@ -329,36 +312,36 @@ $(document).ready(function() {
 function agregarFilaUsuario(usuario) {
     const tabla = $("#tablaConsultas").DataTable();
     const nuevaFila = [
-      `<ul>
-            <div>
-                <button class="btn-modificar"
-                    data-id="${usuario.id_usuario}"
-                    data-username="${usuario.username}"
-                    data-nombres="${usuario.nombres}"
-                    data-cedula="${usuario.cedula}"
-                    data-apellidos="${usuario.apellidos}"
-                    data-correo="${usuario.correo}"
-                    data-telefono="${usuario.telefono}"
-                    data-clave=""
-                    data-rango="${usuario.id_rol}">
-                    Modificar
-                </button>
-            </div>
-            <div>
-                <button class="btn-eliminar"
-                    data-id="${usuario.id_usuario}">
-                    Eliminar
-                </button>
-            </div>
-        </ul>`,
       `<span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span>`,
-      `<span class="campo-tex-num">${usuario.correo}</span>`,
-      `<span class="campo-nombres">${usuario.username}</span>`,
-      `<span class="campo-numeros">${usuario.telefono}</span>`,
+      `<span class="campo-correo">${usuario.correo}</span>`,
+      `<span class="campo-usuario">${usuario.username}</span>`,
+      `<span class="campo-telefono">${usuario.telefono}</span>`,
       `<span class="campo-rango">${usuario.nombre_rol}</span>`, // <--- Aquí
       `<span class="campo-estatus habilitado" data-id="${usuario.id_usuario}" style="cursor: pointer;">
             habilitado
         </span>`,
+      `<ul>
+          <div>
+              <button class="btn-modificar"
+                  data-id="${usuario.id_usuario}"
+                  data-username="${usuario.username}"
+                  data-nombres="${usuario.nombres}"
+                  data-cedula="${usuario.cedula}"
+                  data-apellidos="${usuario.apellidos}"
+                  data-correo="${usuario.correo}"
+                  data-telefono="${usuario.telefono}"
+                  data-clave=""
+                  data-rango="${usuario.id_rol}">
+                  <img src="img/pencil.svg">
+              </button>
+          </div>
+          <div>
+              <button class="btn-eliminar"
+                  data-id="${usuario.id_usuario}">
+                  <img src="img/circle-x.svg">
+              </button>
+          </div>
+      </ul>`
     ];
     const rowNode = tabla.row.add(nuevaFila).draw(false).node();
     $(rowNode).attr("data-id", usuario.id_usuario);
@@ -404,8 +387,6 @@ function agregarFilaUsuario(usuario) {
             icon: "success",
             title: "Éxito",
             text: respuesta.message || "Usuario registrado correctamente",
-            timer: 1800,
-            showConfirmButton: false
           });
           agregarFilaUsuario(respuesta.usuario);
           resetUsuario();
@@ -493,7 +474,7 @@ function agregarFilaUsuario(usuario) {
       /^\d{4}-\d{3}-\d{4}$/,
       $(this),
       $("#smodificartelefono_usuario"),
-      "*Formato válido: 0400-000-0000*"
+      "*Formato válido: 04XX-XXX-XXXX*"
     );
   });
 
@@ -506,7 +487,7 @@ function agregarFilaUsuario(usuario) {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       $(this),
       $("#smodificarcorreo_usuario"),
-      "*Formato válido: ejemplo@gmail.com*"
+      "*Formato válido: example@gmail.com*"
     );
   });
 
@@ -548,9 +529,10 @@ function agregarFilaUsuario(usuario) {
         "El usuario debe tener entre 4 y 20 caracteres alfanuméricos."
       );
     }
-    if (!/^[0-9]{6,8}$/.test($("#modificarcedula").val())) {
-      errores.push("Formato válido: 00.000.000");
-    }
+    if (!/^[VEJPG]?\d{6,9}$/.test($("#modificarcedula").val())) {
+  errores.push("Cédula: formato válido V12345678");
+}
+
     if (!/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,30}$/.test(datos.nombres)) {
       errores.push("Nombres: solo letras, de 2 a 30 caracteres.");
     }
@@ -558,13 +540,14 @@ function agregarFilaUsuario(usuario) {
       errores.push("Apellidos: solo letras, de 2 a 30 caracteres.");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)) {
-      errores.push("Formato válido: ejemplo@gmail.com.");
+      errores.push("Formato correcto: example@gmail.com.");
     }
     if (!/^\d{4}-\d{3}-\d{4}$/.test(datos.telefono)) {
-      errores.push("Formato válido: 0400-000-0000.");
+      errores.push("Formato correcto: 04XX-XXX-XXXX.");
     }  
+    
     $("#modificarcedula").on("keypress", function(e){
-        validarKeyPress(/^[0-9]{6,8}$/, e);
+        validarKeyPress(/^[VEJPG0-9.\b]*$/, e);
     });
 
     if (errores.length > 0) {
@@ -572,7 +555,6 @@ function agregarFilaUsuario(usuario) {
         icon: "error",
         title: "Error de validación",
         html: errores.join("<br>"),
-        confirmButtonText: 'Aceptar'
       });
       return;
     }
@@ -581,17 +563,12 @@ function agregarFilaUsuario(usuario) {
   formData.append("accion", "modificar");
   enviarAjax(formData, function (response) {
     if (response.status === "success") {
-      // Esperar a que el modal termine de ocultarse para mostrar el Swal por encima
-      $('#modificar_usuario_modal').one('hidden.bs.modal', function() {
-        Swal.fire({
-          icon: "success",
-          title: "Modificado",
-          text: "El usuario se ha modificado correctamente",
-          timer: 1800,
-          showConfirmButton: false
-        });
-      });
       $("#modificar_usuario_modal").modal("hide");
+      Swal.fire({
+        icon: "success",
+        title: "Modificado",
+        text: "El usuario se ha modificado correctamente",
+      });
 
 const tabla = $("#tablaConsultas").DataTable();
 const id = $("#modificar_id_usuario").val();
@@ -600,6 +577,16 @@ const usuario = response.usuario;
 
 if (fila.length) {
   fila.data([
+    `<span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span>`,
+    `<span class="campo-correo">${usuario.correo}</span>`,
+    `<span class="campo-usuario">${usuario.username}</span>`,
+    `<span class="campo-telefono">${usuario.telefono}</span>`,
+    `<span class="campo-rango">${usuario.nombre_rol}</span>`,
+    `<span class="campo-estatus ${
+      usuario.estatus === "habilitado" ? "habilitado" : "inhabilitado"
+    }" data-id="${usuario.id_usuario}" style="cursor: pointer;">
+        ${usuario.estatus}
+    </span>`,
     `<ul>
         <div>
             <button class="btn-modificar"
@@ -611,26 +598,16 @@ if (fila.length) {
                 data-telefono="${usuario.telefono}"
                 data-clave=""
                 data-rango="${usuario.id_rol}">
-                Modificar
+                <img src="img/pencil.svg">
             </button>
         </div>
         <div>
             <button class="btn-eliminar"
                 data-id="${usuario.id_usuario}">
-                Eliminar
+                <img src="img/circle-x.svg">
             </button>
         </div>
-    </ul>`,
-    `<span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span>`,
-    `<span class="campo-tex-num">${usuario.correo}</span>`,
-    `<span class="campo-nombres">${usuario.username}</span>`,
-    `<span class="campo-numeros">${usuario.telefono}</span>`,
-    `<span class="campo-rango">${usuario.nombre_rol}</span>`,
-    `<span class="campo-estatus ${
-      usuario.estatus === "habilitado" ? "habilitado" : "inhabilitado"
-    }" data-id="${usuario.id_usuario}" style="cursor: pointer;">
-        ${usuario.estatus}
-    </span>`,
+    </ul>`
   ]).draw(false);
 
   // Actualiza los data-* del botón Modificar
@@ -644,93 +621,18 @@ if (fila.length) {
   botonModificar.data("rango", usuario.id_rol);
 }
     } else {
-      // Mostrar error específico e indicar el campo problemático sin cerrar el modal
-      const msg = (response && response.message) ? response.message.toLowerCase() : '';
-      if (msg.includes('correo')) {
-        $("#smodificarcorreo_usuario").text("*El correo ya está en uso por otro usuario*");
-        $("#modificarcorreo_usuario").focus();
-      } else if (msg.includes('cedula') || msg.includes('cédula')) {
-        $("#smodificarcedula").text("*La cédula ya pertenece a otro usuario*");
-        $("#modificarcedula").focus();
-      } else if (msg.includes('usuario') || msg.includes('nombre de usuario')) {
-        $("#smodificarnombre_usuario").text("*El nombre de usuario ya existe*");
-        $("#modificarnombre_usuario").focus();
-      }
       Swal.fire({
         icon: "error",
         title: "Error",
         text: response.message || "No se pudo modificar el usuario",
-        confirmButtonText: 'Aceptar'
       });
     }
   });
 });
 
   $(document).on("click", "#modificar_usuario_modal .close", function () {
-  $("#modificar_usuario_modal").modal("hide");
-});
-
-// Al cerrar el modal de modificar, refrescar el listado según el filtro actual para evitar que un redraw deje "oculta" la fila
-$('#modificar_usuario_modal').on('hidden.bs.modal', function () {
-  const estatus = $('#filtro-estatus').val() || 'habilitado';
-  $.ajax({
-    url: '',
-    type: 'POST',
-    dataType: 'json',
-    data: { accion: 'filtrar_estatus', estatus: estatus },
-    success: function(respuesta) {
-      if (respuesta.status === 'success') {
-        var usuarios = respuesta.usuarios;
-        var tbody = '';
-        usuarios.forEach(function(usuario) {
-          tbody += `
-            <tr data-id="${usuario.id_usuario}">
-              <td><span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span></td>
-              <td><span class="campo-tex-num">${usuario.correo}</span></td>
-              <td><span class="campo-nombres">${usuario.username}</span></td>
-              <td><span class="campo-numeros">${usuario.telefono}</span></td>
-              <td><span class="campo-rango">${usuario.nombre_rol}</span></td>
-              <td>
-                ${usuario.nombre_rol.toLowerCase() !== 'superusuario' ? `
-                  <span class="campo-estatus ${usuario.estatus === 'habilitado' ? 'habilitado' : 'inhabilitado'}"
-                        data-id="${usuario.id_usuario}"
-                        style="cursor: pointer;"
-                        title="Cambiar Estatus">${usuario.estatus}</span>
-                ` : ''}
-              </td>
-              <td>
-                <ul>
-                  ${usuario.nombre_rol.toLowerCase() !== 'superusuario' ? `
-                    <button class="btn-modificar" title="Modificar Usuario"
-                      data-id="${usuario.id_usuario}"
-                      data-username="${usuario.username}"
-                      data-nombres="${usuario.nombres}"
-                      data-apellidos="${usuario.apellidos}"
-                      data-cedula="${usuario.cedula}"
-                      data-correo="${usuario.correo}"
-                      data-telefono="${usuario.telefono}"
-                      data-clave="${usuario.password || ''}"
-                      data-rango="${usuario.id_rol}">
-                      <img src="img/pencil.svg">
-                    </button>
-                    <button class="btn-eliminar" title="Eliminar Usuario" data-id="${usuario.id_usuario}">
-                      <img src="img/circle-x.svg">
-                    </button>
-                  ` : ''}
-                </ul>
-              </td>
-            </tr>`;
-        });
-        var tabla = $('#tablaConsultas').DataTable();
-        tabla.destroy();
-        $('#tablaConsultas tbody').html(tbody);
-        $('#tablaConsultas').DataTable({
-          language: { url: 'public/js/es-ES.json' }
-        });
-      }
-    }
+    $("#modificar_usuario_modal").modal("hide");
   });
-});
 
   $(document).on("click", ".btn-eliminar", function (e) {
     e.preventDefault();
@@ -750,14 +652,18 @@ $('#modificar_usuario_modal').on('hidden.bs.modal', function () {
         datos.append("id_usuario", id_usuario);
         enviarAjax(datos, function (respuesta) {
           if (respuesta.status === "success") {
-            Swal.fire({icon: 'success', title: 'Eliminado', text: 'El usuario ha sido eliminado.', timer: 1800, showConfirmButton: false});
+            Swal.fire("Eliminado!", "El usuario ha sido eliminado.", "success");
             const tabla = $("#tablaConsultas").DataTable();
             const fila = tabla.row(
               `#tablaConsultas tbody tr[data-id="${id_usuario}"]`
             );
             tabla.row(fila).remove().draw();
           } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: respuesta.message || 'No se pudo eliminar el usuario', confirmButtonText: 'Aceptar' });
+            Swal.fire(
+              "Error",
+              respuesta.message || "No se pudo eliminar el usuario",
+              "error"
+            );
           }
         });
       }
@@ -854,75 +760,4 @@ $('#modificar_usuario_modal').on('hidden.bs.modal', function () {
       },
     });
   }
-});
-
-$('#filtro-estatus').on('change', function() {
-    var estatus = $(this).val();
-    $.ajax({
-        url: '',
-        type: 'POST',
-        dataType: 'json',
-        data: { accion: 'filtrar_estatus', estatus: estatus },
-        success: function(respuesta) {
-            if (respuesta.status === "success") {
-                var usuarios = respuesta.usuarios;
-                var tbody = '';
-                usuarios.forEach(function(usuario) {
-                    tbody += `
-                        <tr data-id="${usuario.id_usuario}">
-                            <td><span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span></td>
-                            <td><span class="campo-tex-num">${usuario.correo}</span></td>
-                            <td><span class="campo-nombres">${usuario.username}</span></td>
-                            <td><span class="campo-numeros">${usuario.telefono}</span></td>
-                            <td><span class="campo-rango">${usuario.nombre_rol}</span></td>
-                            <td>
-                                ${usuario.nombre_rol.toLowerCase() !== 'superusuario' ? `
-                                    <span class="campo-estatus ${usuario.estatus === 'habilitado' ? 'habilitado' : 'inhabilitado'}"
-                                        data-id="${usuario.id_usuario}"
-                                        style="cursor: pointer;"
-                                        title="Cambiar Estatus">
-                                        ${usuario.estatus}
-                                    </span>
-                                ` : ''}
-                            </td>
-                            <td>
-                                <ul>
-                                    ${usuario.nombre_rol.toLowerCase() !== 'superusuario' ? `
-                                    <button class="btn-modificar"
-                                        title="Modificar Usuario"
-                                        data-id="${usuario.id_usuario}"
-                                        data-username="${usuario.username}"
-                                        data-nombres="${usuario.nombres}"
-                                        data-apellidos="${usuario.apellidos}"
-                                        data-cedula="${usuario.cedula}"
-                                        data-correo="${usuario.correo}"
-                                        data-telefono="${usuario.telefono}"
-                                        data-clave="${usuario.password || ''}"
-                                        data-rango="${usuario.id_rol}">
-                                        <img src="img/pencil.svg">
-                                    </button>
-                                    <button class="btn-eliminar"
-                                        title="Eliminar Usuario"
-                                        data-id="${usuario.id_usuario}">
-                                        <img src="img/circle-x.svg">
-                                    </button>
-                                    ` : ''}
-                                </ul>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                // Destruye y vuelve a crear el DataTable para evitar errores
-                var tabla = $('#tablaConsultas').DataTable();
-                tabla.destroy();
-                $('#tablaConsultas tbody').html(tbody);
-                $('#tablaConsultas').DataTable({
-                    language: {
-                        url: 'public/js/es-ES.json'
-                    }
-                });
-            }
-        }
-    });
 });
