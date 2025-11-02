@@ -578,6 +578,10 @@ function agregarFilaUsuario(usuario) {
     if (!/^\d{4}-\d{3}-\d{4}$/.test(datos.telefono)) {
       errores.push("Formato correcto: 04XX-XXX-XXXX.");
     }  
+    
+    $("#modificarcedula").on("keypress", function(e){
+        validarKeyPress(/^[VEJPG0-9.\b]*$/, e);
+    });
 
     if (errores.length > 0) {
       Swal.fire({
@@ -588,56 +592,69 @@ function agregarFilaUsuario(usuario) {
       return;
     }
 
-  var formData = new FormData(this);
-  formData.append("accion", "modificar");
-  enviarAjax(formData, function (response) {
-    if (response.status === "success") {
-      $("#modificar_usuario_modal").modal("hide");
-      Swal.fire({
-        icon: "success",
-        title: "Modificado",
-        text: "El usuario se ha modificado correctamente",
-      });
-
-const tabla = $("#tablaConsultas").DataTable();
-const id = $("#modificar_id_usuario").val();
-const fila = tabla.row(`tr[data-id="${id}"]`);
-const usuario = response.usuario;
-
-if (fila.length) {
-  fila.data([
-    `<span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span>`,
-    `<span class="campo-tex-num">${usuario.correo}</span>`,
-    `<span class="campo-nombres">${usuario.username}</span>`,
-    `<span class="campo-numeros">${usuario.telefono}</span>`,
-    `<span class="campo-rango">${usuario.nombre_rol}</span>`,
-    `<span class="campo-estatus ${
-      usuario.estatus === "habilitado" ? "habilitado" : "inhabilitado"
-    }" data-id="${usuario.id_usuario}" style="cursor: pointer;">
-        ${usuario.estatus}
-    </span>`,
-    `<ul>
-        <div>
-            <button class="btn-modificar"
-                data-id="${usuario.id_usuario}"
-                data-username="${usuario.username}"
-                data-nombres="${usuario.nombres}"
-                data-apellidos="${usuario.apellidos}"
-                data-cedula="${usuario.cedula}"
-                data-correo="${usuario.correo}"
-                data-telefono="${usuario.telefono}"
-                data-clave=""
-                data-rango="${usuario.id_rol}">
-                <img src="img/pencil.svg">
-            </button>
-        </div>
-        <div>
-            <button class="btn-eliminar"
-                data-id="${usuario.id_usuario}">
-                <img src="img/circle-x.svg">
-            </button>
-        </div>
-    </ul>`
+    const formData = new FormData(this);
+    formData.append("accion", "modificar");
+    formData.append("id_usuario", $("#modificar_id_usuario").val());
+    
+    // Mostrar indicador de carga
+    const botonSubmit = $(this).find('button[type="submit"]');
+    const textoOriginal = botonSubmit.html();
+    botonSubmit.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Actualizando...');
+    
+    enviarAjax(formData, function (response) {
+      // Restaurar el botón
+      botonSubmit.prop('disabled', false).html(textoOriginal);
+      
+      if (response.status === "success") {
+        $("#modificar_usuario_modal").modal("hide");
+        
+        // Mostrar mensaje de éxito
+        Swal.fire({
+          icon: "success",
+          title: "¡Éxito!",
+          text: response.message || "Usuario modificado correctamente",
+          timer: 2000,
+          showConfirmButton: false
+        });
+        
+        // Actualizar la fila en la tabla
+        const tabla = $("#tablaConsultas").DataTable();
+        const id = response.usuario.id_usuario || $("#modificar_id_usuario").val();
+        const fila = $(`tr[data-id="${id}"]`);
+        
+        if (fila.length) {
+          const usuario = response.usuario;
+          const celdaNombres = fila.find("td:eq(0)");
+          const celdaCorreo = fila.find("td:eq(1)");
+          const celdaUsuario = fila.find("td:eq(2)");
+          const celdaTelefono = fila.find("td:eq(3)");
+          const celdaRol = fila.find("td:eq(4)");
+          
+          // Actualizar el contenido de las celdas
+          celdaNombres.html(`<span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span>`);
+          celdaCorreo.html(`<span class="campo-tex-num">${usuario.correo}</span>`);
+          celdaUsuario.html(`<span class="campo-nombres">${usuario.username}</span>`);
+          celdaTelefono.html(`<span class="campo-numeros">${usuario.telefono}</span>`);
+          celdaRol.html(`<span class="campo-rango">${usuario.nombre_rol || ''}</span>`);
+          
+          // Actualizar los data-attributes del botón de modificar
+          const botonModificar = fila.find(".btn-modificar");
+          botonModificar.data("nombres", usuario.nombres);
+          botonModificar.data("apellidos", usuario.apellidos);
+          botonModificar.data("correo", usuario.correo);
+          botonModificar.data("telefono", usuario.telefono);
+          botonModificar.data("username", usuario.username);
+          botonModificar.data("rango", usuario.id_rol);
+      } else {
+        // Si hay un error, mostrarlo
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: response.message || "No se pudo modificar el usuario"
+        });
+      }
+    });
+  });
   ]).draw(false);
 
   // Actualiza los data-* del botón Modificar
@@ -646,7 +663,6 @@ if (fila.length) {
   botonModificar.data("username", usuario.username);
   botonModificar.data("nombres", usuario.nombres);
   botonModificar.data("apellidos", usuario.apellidos);
-  botonModificar.data("cedula", usuario.cedula);
   botonModificar.data("correo", usuario.correo);
   botonModificar.data("telefono", usuario.telefono);
   botonModificar.data("rango", usuario.id_rol);
@@ -700,12 +716,6 @@ if (fila.length) {
       }
     });
   });
-
-  function eliminarFilaUsuario(id_usuario) {
-    const tabla = $('#tablaConsultas').DataTable();
-    const fila = $(`#tablaConsultas tbody tr[data-id="${id_usuario}"]`);
-    tabla.row(fila).remove().draw();
-  }
 
   function mensajes(icono, tiempo, titulo, mensaje) {
     Swal.fire({

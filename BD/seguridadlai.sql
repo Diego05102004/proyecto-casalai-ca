@@ -1059,7 +1059,7 @@ CREATE TABLE `tbl_usuarios` (
   `id_usuario` int(11) NOT NULL,
   `username` varchar(20) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
-  `cedula` varchar(8) DEFAULT NULL,
+  `cedula` varchar(10) DEFAULT NULL,
   `id_rol` int(11) NOT NULL,
   `correo` varchar(50) DEFAULT NULL,
   `nombres` varchar(50) DEFAULT NULL,
