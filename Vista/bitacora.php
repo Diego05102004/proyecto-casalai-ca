@@ -54,7 +54,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                             </td>
                             <td>
                                 <span class="campo-numeros">
-                                    <?= date('d/m/Y', strtotime($registro['fecha_hora'])) ?>
+                                    <?= date('d/m/Y h:i:s A', strtotime($registro['fecha_hora'])) ?>
                                 </span>
                             </td>
                             <td>
