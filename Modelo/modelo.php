@@ -3,12 +3,11 @@ require_once 'config/config.php';
 
 class modelo extends BD{
     private $id_marca;
-    private $conex;
     private $nombre_modelo;
     private $id_modelo;
 
     public function __construct() {
-        $this->conex = null;
+        parent::__construct();
     }
 
     public function getnombre_modelo() {
@@ -39,7 +38,7 @@ class modelo extends BD{
     }
     private function existeNomModelo($nombre_modelo, $excluir_id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT COUNT(*) FROM tbl_modelos WHERE nombre_modelo = ?";
             $params = [$nombre_modelo];
@@ -47,12 +46,14 @@ class modelo extends BD{
                 $sql .= " AND id_modelo != ?";
                 $params[] = $excluir_id;
             }
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -61,17 +62,19 @@ class modelo extends BD{
     }
     private function r_modelos() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "INSERT INTO tbl_modelos (nombre_modelo, id_marca)
                     VALUES (:nombre_modelo, :id_marca)";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':nombre_modelo', $this->nombre_modelo);
             $stmt->bindParam(':id_marca', $this->id_marca);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -80,19 +83,21 @@ class modelo extends BD{
     }
     private function obtUltimoModelo() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT m.id_modelo, m.nombre_modelo, m.id_marca, ma.nombre_marca
                 FROM tbl_modelos m
                 JOIN tbl_marcas ma ON m.id_marca = ma.id_marca
                 ORDER BY m.id_modelo DESC LIMIT 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute();
             $modelo = $stmt->fetch(PDO::FETCH_ASSOC);
             return $modelo ? $modelo : null;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -101,16 +106,18 @@ class modelo extends BD{
     }
     private function obtModeloPorId($id_modelo) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT * FROM tbl_modelos WHERE id_modelo = ?";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute([$id_modelo]);
             $modelo = $stmt->fetch(PDO::FETCH_ASSOC);
             return $modelo;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -119,21 +126,23 @@ class modelo extends BD{
     }
     private function g_marcas() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $query = "SELECT id_marca, nombre_marca FROM tbl_marcas";
-            $stmt = $this->conex->query($query);
+            $stmt = $co->query($query);
 
             if ($stmt) {
                 return $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
-                $errorInfo = $this->conex->errorInfo();
+                $errorInfo = $co->errorInfo();
                 echo "Debug: Error en el query: " . $errorInfo[2] . "\n";
                 return [];
             }
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -142,17 +151,19 @@ class modelo extends BD{
     }
     private function m_modelo($id_modelo) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_modelos SET nombre_modelo = :nombre_modelo, id_marca = :id_marca WHERE id_modelo = :id_modelo";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':id_modelo', $id_modelo);
             $stmt->bindParam(':id_marca', $this->id_marca);
             $stmt->bindParam(':nombre_modelo', $this->nombre_modelo);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -175,15 +186,17 @@ class modelo extends BD{
 
         // Si no hay productos, proceder con la eliminación
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "DELETE FROM tbl_modelos WHERE id_modelo = :id_modelo";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':id_modelo', $id_modelo);
             $result = $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
         
         if ($result) {
@@ -203,36 +216,40 @@ class modelo extends BD{
     }
     private function tieneProductosAso($id_modelo) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             // Verificar si hay productos asociados al modelo
             $sql = "SELECT COUNT(*) as total FROM tbl_productos WHERE id_modelo = :id_modelo";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':id_modelo', $id_modelo, PDO::PARAM_INT);
             $stmt->execute();
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-            $count = $resultado['total'];
 
-            if ($count > 0) {
-                // Obtener información de los productos asociados
-                $sqlProductos = "SELECT nombre_producto, codigo_producto 
-                            FROM tbl_productos 
-                            WHERE id_modelo = :id_modelo 
-                            ORDER BY nombre_producto 
-                            LIMIT 5";
-                $stmtProductos = $this->conex->prepare($sqlProductos);
+            if ($resultado['total'] > 0) {
+                // Obtener algunos nombres de productos para el mensaje de error
+                $sqlProductos = "SELECT nombre_producto 
+                                FROM tbl_productos 
+                                WHERE id_modelo = :id_modelo 
+                                ORDER BY nombre_producto 
+                                LIMIT 5";
+                $stmtProductos = $co->prepare($sqlProductos);
                 $stmtProductos->bindParam(':id_modelo', $id_modelo, PDO::PARAM_INT);
                 $stmtProductos->execute();
                 $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
-                
+                $nombresProductos = array_column($productos, 'nombre_producto');
+
                 return [
                     'tiene_productos' => true,
-                    'productos' => $productos,
-                    'total' => $count
+                    'total' => $resultado['total'],
+                    'productos' => $nombresProductos
                 ];
             }
 
-            return ['tiene_productos' => false];
+            return [
+                'tiene_productos' => false,
+                'total' => 0,
+                'productos' => []
+            ];
         } catch (PDOException $e) {
             // Por seguridad, asumimos que hay productos si hay error
             error_log("Error al verificar productos asociados: " . $e->getMessage());
@@ -242,8 +259,10 @@ class modelo extends BD{
                 'total' => 'Desconocido'
             ];
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -256,14 +275,16 @@ class modelo extends BD{
                 JOIN tbl_marcas ma ON m.id_marca = ma.id_marca
                 WHERE m.id_modelo = ?";
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute([$id_modelo]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -272,22 +293,24 @@ class modelo extends BD{
     }
     private function g_modelos() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         $querymodelos = 'SELECT mo.id_modelo,
                                 mo.id_marca,
                                 mo.nombre_modelo,
-                                ma.nombre_marca 
-                                FROM tbl_modelos AS mo
-                                INNER JOIN tbl_marcas AS ma ON mo.id_marca = ma.id_marca
-                                ORDER BY mo.id_modelo DESC';
+                                ma.nombre_marca
+                         FROM tbl_modelos AS mo
+                         INNER JOIN tbl_marcas AS ma ON mo.id_marca = ma.id_marca
+                         ORDER BY mo.id_modelo DESC';
         try {
-            $stmtmodelos = $this->conex->prepare($querymodelos);
+            $stmtmodelos = $co->prepare($querymodelos);
             $stmtmodelos->execute();
             $modelos = $stmtmodelos->fetchAll(PDO::FETCH_ASSOC);
             return $modelos;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 }

@@ -12,7 +12,7 @@ class Finanza extends BD {
     private $id_recepcion;
 
     public function __construct() {
-        $this->conex = null;
+        parent::__construct();
     }
 
     // Getters y setters

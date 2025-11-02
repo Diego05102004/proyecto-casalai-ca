@@ -3,9 +3,6 @@ require_once __DIR__ . '/../Config/config.php';
 
 class Usuarios extends BD {
     
-    private $conex;
-    private $con;
-
     private $id_usuario;
     private $username;
     private $clave;
@@ -19,11 +16,6 @@ class Usuarios extends BD {
     private $estatus = 1;
     private $usuarios;
     private $cedula;
-
-    public function __construct() {
-        $this->conex = null;
-        $this->con = null;
-    }
 
     // Getters y Setters
     public function getUsername() { return $this->username; }

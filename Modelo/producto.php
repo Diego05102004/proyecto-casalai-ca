@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../config/config.php';
 
 class Productos extends BD{
-    private $conex;
     private $id_centro;
     private $nombre_producto;
     private $descripcion_p;
@@ -38,9 +37,6 @@ class Productos extends BD{
 
     private $precio;
     
-    function __construct() {
-        $this->conex = null;
-    }
 
     // Getters y Setters
     public function getNombreP() {
@@ -205,16 +201,18 @@ public function getTomas() { return $this->tomas; }
     }
     private function g_guardarImagenProducto($id_producto, $nombre_imagen) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_productos SET imagen = :imagen WHERE id_producto = :id";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':imagen', $nombre_imagen);
             $stmt->bindParam(':id', $id_producto, PDO::PARAM_INT);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     } 
     public function validarNombreProducto() {
@@ -222,17 +220,19 @@ public function getTomas() { return $this->tomas; }
     }
     private function v_nombreProducto() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT COUNT(*) FROM tbl_productos WHERE nombre_producto = :nombre_producto";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':nombre_producto', $this->nombre_producto);
             $stmt->execute();
             $count = $stmt->fetchColumn();
             return $count == 0;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
     
@@ -241,17 +241,19 @@ public function getTomas() { return $this->tomas; }
     }
     private function v_codigoProducto() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT COUNT(*) FROM tbl_productos WHERE serial = :serial_Interno";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':serial_Interno', $this->serial);
             $stmt->execute();
             $count = $stmt->fetchColumn();
             return $count == 0;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -262,9 +264,9 @@ public function ingresarProducto($datosCategoria) {
 }
 private function g_ingresarProducto($datosCategoria) {
     $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $co = $conexion->getConexion();
     try {
-        $this->conex->beginTransaction();
+        $co->beginTransaction();
 
         // 1. Obtener el nombre de la tabla dinámica y deducir el nombre de la categoría
         if (empty($datosCategoria['tabla_categoria'])) {
@@ -277,13 +279,13 @@ private function g_ingresarProducto($datosCategoria) {
 
         // 2. Buscar el id_categoria en tbl_categoria usando el nombre
         $sqlCatId = "SELECT id_categoria FROM tbl_categoria WHERE LOWER(nombre_categoria) = LOWER(:nombre_categoria) LIMIT 1";
-        $stmtCatId = $this->conex->prepare($sqlCatId);
+        $stmtCatId = $co->prepare($sqlCatId);
         $stmtCatId->bindParam(':nombre_categoria', $nombreCategoria);
         $stmtCatId->execute();
         $idCategoria = $stmtCatId->fetchColumn();
 
         if (!$idCategoria) {
-            $this->conex->rollBack();
+            $co->rollBack();
             throw new Exception("No se encontró la categoría '$nombreCategoria' en la base de datos.");
         }
 
@@ -291,7 +293,7 @@ private function g_ingresarProducto($datosCategoria) {
         $sql = "INSERT INTO tbl_productos (`serial`, `nombre_producto`, `descripcion_producto`, `id_modelo`, `id_categoria`, `stock`, `stock_minimo`, `stock_maximo`, `clausula_garantia`, `precio`, `estado`)
                 VALUES (:serial_p, :nombre_producto, :descripcion_producto, :modelo, :categoria, :stock_actual, :stock_minimo, :stock_maximo, :clausula_garantia, :precio, 'habilitado')";
 
-        $stmt = $this->conex->prepare($sql);
+        $stmt = $co->prepare($sql);
 
         $stmt->bindParam(':serial_p', $this->serial);
         $stmt->bindParam(':nombre_producto', $this->nombre_producto);
@@ -306,11 +308,11 @@ private function g_ingresarProducto($datosCategoria) {
 
         if (!$stmt->execute()) {
             $errorInfo = $stmt->errorInfo();
-            $this->conex->rollBack();
+            $co->rollBack();
             throw new Exception("Error SQL al insertar producto: " . $errorInfo[2]);
         }
 
-        $idProducto = $this->conex->lastInsertId();
+        $idProducto = $co->lastInsertId();
 
         // 4. Insertar características dinámicas en la tabla de la categoría
         if (!empty($tablaCategoria) && !empty($datosCategoria['carac']) && is_array($datosCategoria['carac'])) {
@@ -320,7 +322,7 @@ private function g_ingresarProducto($datosCategoria) {
             $placeholders = array_map(function($k){ return ':' . $k; }, $campos);
 
             $sqlCat = "INSERT INTO `$tablaCategoria` (id_producto, " . implode(',', $campos) . ") VALUES (:id_producto, " . implode(',', $placeholders) . ")";
-            $stmtCat = $this->conex->prepare($sqlCat);
+            $stmtCat = $co->prepare($sqlCat);
             $stmtCat->bindParam(':id_producto', $idProducto);
 
             foreach ($caracteristicas as $campo => $valor) {
@@ -329,22 +331,22 @@ private function g_ingresarProducto($datosCategoria) {
 
             if (!$stmtCat->execute()) {
                 $errorInfo = $stmtCat->errorInfo();
-                $this->conex->rollBack();
+                $co->rollBack();
                 throw new Exception("Error SQL al insertar características: " . $errorInfo[2]);
             }
         }
 
-        $this->conex->commit();
+        $co->commit();
         return $idProducto;
 
     } catch (Exception $e) {
-        if ($this->conex && $this->conex->inTransaction()) {
-            $this->conex->rollBack();
+        if (isset($co) && $co->inTransaction()) {
+            $co->rollBack();
         }
         throw new Exception("Error al ingresar producto: " . $e->getMessage());
     } finally {
         if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
+        $co = null;
     }
 }
 public function actualizarstockProducto($id_producto, $cantidad) {
@@ -352,18 +354,20 @@ public function actualizarstockProducto($id_producto, $cantidad) {
 }
 private function a_actualizarstockProducto($id_producto, $cantidad) {
     $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $co = $conexion->getConexion();
     try {
         $sql = "UPDATE tbl_productos 
                 SET stock = stock - :cantidad
                 WHERE id_producto = :id_producto";
-        $stmt = $this->conex->prepare($sql);
+        $stmt = $co->prepare($sql);
         $stmt->bindParam(':cantidad', $cantidad, PDO::PARAM_INT);
         $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
         return $stmt->execute();
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
+        if (isset($conexion)) { 
+            $conexion->cerrar();
+        }
+        $co = null;
     }
 }
     public function obtenerProductoPorId($id) {
@@ -371,16 +375,18 @@ private function a_actualizarstockProducto($id_producto, $cantidad) {
     }
     private function o_productoPorId($id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $query = "SELECT * FROM tbl_productos WHERE id_producto = ?";
-            $stmt = $this->conex->prepare($query);
+            $stmt = $co->prepare($query);
             $stmt->execute([$id]);
             $producto = $stmt->fetch(PDO::FETCH_ASSOC);
             return $producto;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -390,13 +396,13 @@ private function a_actualizarstockProducto($id_producto, $cantidad) {
     }
     private function c_caracteristicasPorProducto($id_producto) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT c.nombre_categoria
                     FROM tbl_productos p
                     INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
                     WHERE p.id_producto = :id";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':id', $id_producto, PDO::PARAM_INT);
             $stmt->execute();
             $nombreCategoria = $stmt->fetchColumn();
@@ -408,7 +414,7 @@ private function a_actualizarstockProducto($id_producto, $cantidad) {
             $tablaCategoria = 'cat_' . strtolower(str_replace(' ', '_', $nombreCategoria));
 
             $sqlCat = "SELECT * FROM `$tablaCategoria` WHERE id_producto = :id_producto LIMIT 1";
-            $stmtCat = $this->conex->prepare($sqlCat);
+            $stmtCat = $co->prepare($sqlCat);
             $stmtCat->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
             $stmtCat->execute();
             $row = $stmtCat->fetch(PDO::FETCH_ASSOC);
@@ -421,7 +427,7 @@ private function a_actualizarstockProducto($id_producto, $cantidad) {
             return $row;
         } finally {
             if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            $co = null;
         }
     }
 
@@ -1526,7 +1532,6 @@ class Producto extends Productos{
 
     function __construct() {
         parent::__construct();
-        $this->conex = null;
     }
 
 public function obtenerProductos() {

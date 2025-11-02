@@ -12,11 +12,10 @@ class Factura extends BD
     private $cantidad;
 
     private $cedula;
-    private $conex;
 
     // Constructor sin conexión persistente
 public function __construct() {
-    $this->conex = null;
+    parent::__construct();
 }
 
     // Getters y Setters
@@ -47,21 +46,23 @@ public function __construct() {
     }
     private function r_registrar() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) 
                     VALUES (?, ?, ?, ?)";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute([
                 $this->fecha,
                 $this->cliente,
                 $this->descuento,
                 $this->estatus
             ]);
-            return $this->conex->lastInsertId();
+            return $co->lastInsertId();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -70,16 +71,18 @@ public function agregarProducto($idFactura, $idProducto, $cantidad) {
 }
 private function a_agregarProducto($idFactura, $idProducto, $cantidad) {
     $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $co = $conexion->getConexion();
     try {
         $sql = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
                 VALUES (?, ?, ?)";
-        $stmt = $this->conex->prepare($sql);
+        $stmt = $co->prepare($sql);
         $stmt->execute([$idFactura, $idProducto, $cantidad]);
         return true;
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
+        if (isset($conexion)) { 
+            $conexion->cerrar();
+        }
+        $co = null;
     }
 }
     // Transacciones
@@ -105,8 +108,8 @@ private function a_agregarProducto($idFactura, $idProducto, $cantidad) {
     // Crear factura
 private function facturaIngresar() {
     $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
-    $pdo = $this->conex;
+    $co = $conexion->getConexion();
+    $pdo = $co;
     try {
         $pdo->beginTransaction();
 
@@ -159,8 +162,10 @@ private function facturaIngresar() {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         return ['error' => $e->getMessage()];
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
+        if (isset($conexion)) { 
+            $conexion->cerrar();
+        }
+        $co = null;
     }
 }
     public function obtenerUltimaFactura() {
@@ -168,24 +173,26 @@ private function facturaIngresar() {
     }
     private function o_ultimaFactura() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT MAX(id_factura) AS ultima_factura FROM tbl_facturas";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result ? $result['ultima_factura'] : null;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
   private function facturaConsultarTodas() {
     $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $co = $conexion->getConexion();
     // Primero obtenemos información de pagos para validar después
     $sqlPagos = "SELECT id_factura, estatus FROM tbl_detalles_pago";
-    $stmtPagos = $this->conex->prepare($sqlPagos);
+    $stmtPagos = $co->prepare($sqlPagos);
     $stmtPagos->execute();
     $todosPagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     
@@ -210,7 +217,7 @@ private function facturaIngresar() {
     JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
     ORDER BY f.id_factura DESC";
 
-    $stmt = $this->conex->prepare($sqlDetalles);
+    $stmt = $co->prepare($sqlDetalles);
     $stmt->execute();
     $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -235,7 +242,7 @@ private function facturaIngresar() {
     }
 
     // Obtener los estatus y observaciones desde tbl_detalles_pago
-    $stmtPagos = $this->conex->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
+    $stmtPagos = $co->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
     $stmtPagos->execute();
     $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     $mapaPagos = [];
@@ -402,23 +409,23 @@ private function facturaIngresar() {
         'resultado' => 'listado',
         'mensaje' => $html
     ];
-    if (isset($conexion)) { $conexion->cerrar(); }
-    $this->conex = null;
+    if (isset($conexion)) { 
+        $conexion->cerrar();
+    }
+    $co = null;
     return $resultadoListado;
 }
 
 private function facturaConsultar() {
     $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $co = $conexion->getConexion();
     if (empty($this->cedula)) {
-        $conexion->cerrar();
-        $this->conex = null;
         return ['resultado' => 'error', 'mensaje' => 'No se ha proporcionado la cédula para consultar facturas.'];
     }
     
     // Primero obtenemos información de pagos para validar después
     $sqlPagos = "SELECT id_factura, estatus FROM tbl_detalles_pago";
-    $stmtPagos = $this->conex->prepare($sqlPagos);
+    $stmtPagos = $co->prepare($sqlPagos);
     $stmtPagos->execute();
     $todosPagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     
@@ -444,7 +451,7 @@ private function facturaConsultar() {
     WHERE c.cedula = :cedula
     ORDER BY f.id_factura DESC";
 
-    $stmt = $this->conex->prepare($sqlDetalles);
+    $stmt = $co->prepare($sqlDetalles);
     $stmt->bindParam(':cedula', $this->cedula);
     $stmt->execute();
     $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -470,7 +477,7 @@ private function facturaConsultar() {
     }
     
     // Obtener los estatus y observaciones desde tbl_detalles_pago
-    $stmtPagos = $this->conex->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
+    $stmtPagos = $co->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
     $stmtPagos->execute();
     $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     $mapaPagos = [];
@@ -655,13 +662,15 @@ private function facturaConsultar() {
     }
     private function c_facturaCancelar($id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
-            $stmt = $this->conex->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
+            $stmt = $co->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
             return $stmt->execute([$id]);
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -671,12 +680,15 @@ private function facturaConsultar() {
     }
     private function p_facturaProcesar($id, $estatus) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
-            $stmt = $this->conex->prepare("UPDATE tbl_facturas SET estatus = ? WHERE id_factura = ?");
+            $stmt = $co->prepare("UPDATE tbl_facturas SET estatus = ? WHERE id_factura = ?");
             return $stmt->execute([$estatus, $id]);
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 

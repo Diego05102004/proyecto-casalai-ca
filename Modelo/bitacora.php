@@ -2,11 +2,8 @@
 require_once __DIR__ . '/../config/config.php';
 
 class Bitacora extends BD {
-    private $conex;
-    
-
     public function __construct() {
-        $this->conex = null;
+        parent::__construct();
     }
 
     // Registrar acción en la bitácora
@@ -20,7 +17,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
         return true;
     }
     $conexion = new BD('S');
-    $this->conex = $conexion->getConexion();
+    $co = $conexion->getConexion();
     try {
         $sql = "
             INSERT INTO tbl_bitacora 
@@ -28,7 +25,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
             VALUES 
             (:id_usuario, :modulo, :accion, :descripcion, :datos_anteriores, :datos_nuevos, NOW(), :prioridad)
         ";
-        $stmt = $this->conex->prepare($sql);
+        $stmt = $co->prepare($sql);
         $stmt->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
         $stmt->bindParam(':modulo', $modulo, PDO::PARAM_STR);
         $stmt->bindParam(':accion', $accion, PDO::PARAM_STR);
@@ -40,8 +37,10 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
         $stmt->bindParam(':prioridad', $prioridad, PDO::PARAM_STR);
         return $stmt->execute();
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
+        if (isset($conexion)) { 
+            $conexion->cerrar(); 
+        }
+        $co = null;
     }
 }
 
@@ -52,7 +51,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
     }
     private function o_registrosDetallados($limit = 100) {
         $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT 
                     b.id_bitacora,
@@ -71,15 +70,17 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                 INNER JOIN tbl_modulos m ON b.id_modulo = m.id_modulo
                 ORDER BY b.fecha_hora DESC
                 LIMIT :limite";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindValue(':limite', (int)$limit, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             return [];
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar(); 
+            }
+            $co = null;
         }
     }
 
@@ -89,7 +90,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
     }
     private function o_estadisticasAccesos() {
         $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             // Agrupa por semana (formato: YYYYWW)
             $sql = "SELECT 
@@ -102,19 +103,19 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                     GROUP BY semana
                     ORDER BY semana DESC
                     LIMIT 10";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute();
             $semanas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Totales generales
             $sqlTotal = "SELECT COUNT(*) AS total, COUNT(DISTINCT id_usuario) AS unicos FROM tbl_bitacora WHERE id_modulo = 1";
-            $stmtTotal = $this->conex->prepare($sqlTotal);
+            $stmtTotal = $co->prepare($sqlTotal);
             $stmtTotal->execute();
             $totales = $stmtTotal->fetch(PDO::FETCH_ASSOC);
 
             // Promedio diario global
             $sqlDias = "SELECT DATEDIFF(MAX(fecha_hora), MIN(fecha_hora)) + 1 AS dias FROM tbl_bitacora WHERE id_modulo = 1";
-            $stmtDias = $this->conex->prepare($sqlDias);
+            $stmtDias = $co->prepare($sqlDias);
             $stmtDias->execute();
             $dias = $stmtDias->fetchColumn();
             $promedio_diario = ($dias > 0 && $totales['total'] > 0) ? round($totales['total'] / $dias, 1) : 0;
@@ -126,8 +127,10 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                 'semanas' => $semanas
             ];
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar(); 
+            }
+            $co = null;
         }
     }
 
@@ -137,7 +140,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
     }
     private function o_usuariosMasActivos($limite = 10) {
         $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT 
                         u.id_usuario,
@@ -152,7 +155,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                     GROUP BY u.id_usuario
                     ORDER BY total_accesos DESC
                     LIMIT :limite";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
             $stmt->execute();
             $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -163,8 +166,10 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
             }
             return $usuarios;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar(); 
+            }
+            $co = null;
         }
     }
 

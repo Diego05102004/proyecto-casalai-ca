@@ -3,7 +3,6 @@ require_once 'config/config.php';
 
 class cliente extends BD {
     private $tableclientes = 'tbl_clientes';
-    private $conex;
     private $nombre;
     private $direccion;
     private $telefono;
@@ -13,7 +12,7 @@ class cliente extends BD {
     private $id;
 
     public function __construct() {
-        $this->conex = null;
+        parent::__construct();
     }
 
     // Getters y Setters
@@ -71,11 +70,11 @@ class cliente extends BD {
     }
     private function r_cliente() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "INSERT INTO tbl_clientes (`nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`)
                     VALUES (:nombre, :cedula, :direccion, :telefono, :correo, 1)";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':direccion', $this->direccion);
             $stmt->bindParam(':telefono', $this->telefono);
@@ -83,25 +82,29 @@ class cliente extends BD {
             $stmt->bindParam(':correo', $this->correo);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
     // En modelo/cliente.php
     public function listarTodosClientes() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $co = $conexion->getConexion();
         try {
-            $stmt = $this->conex->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
+            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $stmt = $co->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             return [];
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -110,7 +113,7 @@ class cliente extends BD {
     }
     private function existeNumCedula($cedula, $excluir_id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = ?";
             $params = [$cedula];
@@ -118,12 +121,14 @@ class cliente extends BD {
                 $sql .= " AND id_clientes != ?";
                 $params[] = $excluir_id;
             }
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -132,38 +137,42 @@ class cliente extends BD {
     }
     private function obtUltimaCliente() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT * FROM tbl_clientes ORDER BY id_clientes DESC LIMIT 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->execute();
             $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $cliente ? $cliente : null;
+            return $cliente ?: null;
         } catch (PDOException $e) {
             return null;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
     function obtenerReporteComprasClientes() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "SELECT c.nombre, COUNT(d.id_producto) AS cantidad
-FROM tbl_clientes c
-JOIN tbl_despachos ds ON c.id_clientes = ds.id_clientes
-JOIN tbl_despacho_detalle d ON ds.id_despachos = d.id_despacho
-GROUP BY c.id_clientes, c.nombre
-ORDER BY cantidad DESC
-LIMIT 10;";
-            $stmt = $this->conex->prepare($sql);
+                    FROM tbl_clientes c
+                    JOIN tbl_despachos ds ON c.id_clientes = ds.id_clientes
+                    JOIN tbl_despacho_detalle d ON ds.id_despachos = d.id_despacho
+                    GROUP BY c.id_clientes, c.nombre
+                    ORDER BY cantidad DESC
+                    LIMIT 10";
+            $stmt = $co->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
     public function obtenerclientesPorId($id) {
@@ -171,16 +180,17 @@ LIMIT 10;";
     }
     private function obtClientePorId($id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $query = "SELECT * FROM tbl_clientes WHERE id_clientes = ?";
-            $stmt = $this->conex->prepare($query);
+            $stmt = $co->prepare($query);
             $stmt->execute([$id]);
-            $clientes = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $clientes;
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -189,10 +199,10 @@ LIMIT 10;";
     }
     private function m_cliente($id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_clientes SET nombre = :nombre, cedula = :cedula, direccion = :direccion, telefono = :telefono, correo = :correo, activo = :activo WHERE id_clientes = :id_clientes";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':direccion', $this->direccion);
@@ -202,22 +212,26 @@ LIMIT 10;";
             $stmt->bindParam(':activo', $this->activo);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
     function eliminar_l($id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_clientes SET activo = 0 WHERE id_clientes = :id_clientes";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -226,16 +240,17 @@ LIMIT 10;";
     }
     private function e_cliente($id) {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $sql = "DELETE FROM tbl_clientes WHERE id_clientes = :id_clientes";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $co->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
-            $result = $stmt->execute();
-            return $result;
+            return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 
@@ -244,16 +259,17 @@ LIMIT 10;";
     }
     private function g_clientes() {
         $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $co = $conexion->getConexion();
         try {
             $queryclientes = 'SELECT * FROM ' . $this->tableclientes;
-            $stmtclientes = $this->conex->prepare($queryclientes);
+            $stmtclientes = $co->prepare($queryclientes);
             $stmtclientes->execute();
-            $clientes = $stmtclientes->fetchAll(PDO::FETCH_ASSOC);
-            return $clientes;
+            return $stmtclientes->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar();
+            }
+            $co = null;
         }
     }
 }
