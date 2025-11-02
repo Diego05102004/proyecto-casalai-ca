@@ -39,10 +39,49 @@
         style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
         <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-            
-            <!-- Primer Reporte - Finanzas -->
+
+            <div class="reporte-parametros" style="text-align:center; margin-top: 50px;">
+                <h3 class="titulo-form">Reporte de Cuentas</h3>
+                <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                    <label for="fechaInicioCuentas">Fecha inicio:</label>
+                    <input type="date" id="fechaInicioCuentas" class="form-control" style="width:160px;">
+                    <label for="fechaFinCuentas">Fecha fin:</label>
+                    <input type="date" id="fechaFinCuentas" class="form-control" style="width:160px;">
+                    <label for="agruparPor">Agrupar por:</label>
+                    <select id="agruparPor" class="form-select" style="width:200px;">
+                        <option value="metodos">Método de Pago</option>
+                        <option value="nombre_banco">Banco</option>
+                        <option value="nombre">Cliente</option>
+                        <option value="estatus">Estatus</option>
+                    </select>
+                    <label for="tipoGraficaCuentas">Tipo de gráfica:</label>
+                    <select id="tipoGraficaCuentas" class="form-select" style="width:200px;">
+                        <option value="bar">Barras</option>
+                        <option value="line">Líneas</option>
+                        <option value="pie">Pastel</option>
+                        <option value="doughnut">Donas</option>
+                        <option value="polarArea">Área Polar</option>
+                    </select>
+                    <button id="generarReporteCuentasBtn" class="btn btn-primary">Generar</button>
+                    <button id="descargarPDFCuentas" class="btn btn-success">Descargar PDF</button>
+                </div>
+            </div>
+
+            <div class="reporte-container" style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+                <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center;">
+                    <div style="flex:1; min-width:320px; text-align:center;">
+                        <div class="grafica-container" style="max-width:600px; margin:0 auto 24px auto;">
+                            <canvas id="graficoCuentas" width="600" height="400"></canvas>
+                        </div>
+                    </div>
+                    <div style="flex:2; min-width:320px;">
+                        <div id="tablaReporteCuentas"></div>
+                    </div>
+                </div>
+            </div>
+
             <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center;">
-                <h3 class="titulo-form">Reportes de Finanzas</h3>
+                <h3 class="titulo-form">Reporte de Ingresos y Egresos</h3>
                 <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                     <label for="fechaInicio">Fecha inicio:</label>
                     <input type="date" id="fechaInicio" class="form-control" style="width:160px;">
@@ -72,7 +111,7 @@
 
             <div class="reporte-container"
                 style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-                <h3 class="titulo-form">Reporte de Ingresos y Egresos</h3>
+                
                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center;">
                     <div style="flex:1; min-width:320px; text-align:center;">
                         <div class="grafica-container" style="max-width:600px; margin:0 auto 24px auto;">
@@ -81,47 +120,6 @@
                     </div>
                     <div style="flex:2; min-width:320px;">
                         <div id="tablaReporteFinanzas"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Segundo Reporte - Cuentas -->
-            <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center; margin-top: 50px;">
-                <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-                    <label for="fechaInicioCuentas">Fecha inicio:</label>
-                    <input type="date" id="fechaInicioCuentas" class="form-control" style="width:160px;">
-                    <label for="fechaFinCuentas">Fecha fin:</label>
-                    <input type="date" id="fechaFinCuentas" class="form-control" style="width:160px;">
-                    <label for="agruparPor">Agrupar por:</label>
-                    <select id="agruparPor" class="form-select" style="width:200px;">
-                        <option value="metodos">Método de Pago</option>
-                        <option value="nombre_banco">Banco</option>
-                        <option value="nombre">Cliente</option>
-                        <option value="estatus">Estatus</option>
-                    </select>
-                    <label for="tipoGraficaCuentas">Tipo de gráfica:</label>
-                    <select id="tipoGraficaCuentas" class="form-select" style="width:200px;">
-                        <option value="bar">Barras</option>
-                        <option value="line">Líneas</option>
-                        <option value="pie">Pastel</option>
-                        <option value="doughnut">Donas</option>
-                        <option value="polarArea">Área Polar</option>
-                    </select>
-                    <button id="generarReporteCuentasBtn" class="btn btn-primary">Generar</button>
-                    <button id="descargarPDFCuentas" class="btn btn-success">Descargar PDF</button>
-                </div>
-            </div>
-
-            <div class="reporte-container" style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-                <h3 class="titulo-form">Reporte de Cuentas</h3>
-                <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center;">
-                    <div style="flex:1; min-width:320px; text-align:center;">
-                        <div class="grafica-container" style="max-width:600px; margin:0 auto 24px auto;">
-                            <canvas id="graficoCuentas" width="600" height="400"></canvas>
-                        </div>
-                    </div>
-                    <div style="flex:2; min-width:320px;">
-                        <div id="tablaReporteCuentas"></div>
                     </div>
                 </div>
             </div>
