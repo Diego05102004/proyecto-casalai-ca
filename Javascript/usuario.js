@@ -317,10 +317,10 @@ function agregarFilaUsuario(usuario) {
     const tabla = $("#tablaConsultas").DataTable();
     const nuevaFila = [
       `<span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span>`,
-      `<span class="campo-correo">${usuario.correo}</span>`,
-      `<span class="campo-usuario">${usuario.username}</span>`,
-      `<span class="campo-telefono">${usuario.telefono}</span>`,
-      `<span class="campo-rango">${usuario.nombre_rol}</span>`, // <--- Aquí
+      `<span class="campo-tex-num">${usuario.correo}</span>`,
+      `<span class="campo-nombres">${usuario.username}</span>`,
+      `<span class="campo-numeros">${usuario.telefono}</span>`,
+      `<span class="campo-rango">${usuario.nombre_rol}</span>`,
       `<span class="campo-estatus habilitado" data-id="${usuario.id_usuario}" style="cursor: pointer;">
             habilitado
         </span>`,
@@ -586,9 +586,9 @@ const usuario = response.usuario;
 if (fila.length) {
   fila.data([
     `<span class="campo-nombres">${usuario.nombres} ${usuario.apellidos}</span>`,
-    `<span class="campo-correo">${usuario.correo}</span>`,
-    `<span class="campo-usuario">${usuario.username}</span>`,
-    `<span class="campo-telefono">${usuario.telefono}</span>`,
+    `<span class="campo-tex-num">${usuario.correo}</span>`,
+    `<span class="campo-nombres">${usuario.username}</span>`,
+    `<span class="campo-numeros">${usuario.telefono}</span>`,
     `<span class="campo-rango">${usuario.nombre_rol}</span>`,
     `<span class="campo-estatus ${
       usuario.estatus === "habilitado" ? "habilitado" : "inhabilitado"
