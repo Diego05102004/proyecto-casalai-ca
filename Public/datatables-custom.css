@@ -1,13 +1,14 @@
-/* Reset completo de estilos de DataTables */
+/* Contenedor principal de DataTables */
 .dataTables_wrapper {
     padding: 20px !important;
     background: white !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     border-radius: 8px !important;
-    width: 100% !important;
+    display: inline-block !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     margin: 20px 0 !important;
     position: relative;
-    overflow: hidden;
 }
 
 /* Contenedor de controles superiores */
@@ -15,13 +16,16 @@
     display: flex !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    width: 100% !important;
+    min-width: 0 !important;
     margin: 0 0 20px 0 !important;
     padding: 10px 15px !important;
     background: #f8f9fa !important;
     border-radius: 6px !important;
     border: 1px solid #e9ecef !important;
     gap: 15px !important;
+    box-sizing: border-box !important;
+    width: fit-content !important;
+    min-width: 100% !important;
 }
 
 /* Contenedor de longitud y búsqueda */
@@ -32,10 +36,12 @@
     margin: 0 !important;
     padding: 0 !important;
     float: none !important;
-    display: inline-block !important;
-    vertical-align: middle !important;
+    display: flex !important;
+    align-items: center !important;
     height: auto !important;
     line-height: normal !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
 }
 
 /* Select de longitud */
@@ -64,6 +70,8 @@
 .dataTables_filter {
     margin-left: auto !important;
     margin-right: 0 !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
 }
 
 .dataTables_filter label {
@@ -71,6 +79,14 @@
     align-items: center !important;
     margin: 0 !important;
     white-space: nowrap;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.dataTables_filter input {
+    max-width: 200px !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
 }
 
 .dataTables_filter input {
@@ -83,18 +99,51 @@
     border-radius: 4px !important;
 }
 
-/* Estilos para la tabla */
+/* Estilo de la tabla */
 .dataTables_wrapper table {
-    width: 100% !important;
-    margin: 10px 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    table-layout: auto !important;
     background: white !important;
     border-collapse: collapse !important;
     border: 1px solid #e9ecef !important;
     border-radius: 8px !important;
-    overflow: hidden;
 }
 
-/* Líneas divisorias de columnas */
+/* Contenedor de la tabla con scroll horizontal */
+.dataTables_scroll {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: inline-block !important;
+    min-width: 100% !important;
+}
+
+/* Estilo de celdas */
+.dataTables_wrapper th,
+.dataTables_wrapper td {
+    padding: 8px 12px !important;
+    white-space: nowrap !important;
+}
+
+/* Estilo del contenedor de la tabla */
+.dataTables_scrollBody {
+    width: auto !important;
+    min-width: 100% !important;
+}
+
+/* Contenedor del encabezado */
+.dataTables_scrollHeadInner {
+    width: auto !important;
+}
+
+/* Estilo del encabezado */
+.dataTables_wrapper thead th {
+    position: relative !important;
+}
+
+/* Ajustar el ancho de las celdas */
 .dataTables_wrapper th,
 .dataTables_wrapper td {
     border-right: 1px solid #e9ecef !important;
@@ -132,18 +181,19 @@
     font-weight: 500 !important;
 }
 
-/* Paginación */
+/* Contenedor de paginación */
 .dataTables_paginate {
     margin: 0 !important;
     padding: 0 !important;
     float: none !important;
     display: flex !important;
+    flex-shrink: 0 !important;
+    min-width: 0 !important;
     align-items: center !important;
     flex-wrap: wrap !important;
     gap: 5px !important;
     justify-content: flex-end !important;
     flex: 1 !important;
-    min-width: 0 !important;
 }
 
 .paginate_button {
