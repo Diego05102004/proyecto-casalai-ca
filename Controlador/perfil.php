@@ -252,8 +252,8 @@ function handlePasswordUpdate($usuarioModel, $bitacoraModel, $usuario) {
 $pagina = "perfil";
 if (is_file("vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
-        $bitacoraAcceso = new Bitacora();
-        $bitacoraAcceso->registrarBitacora(
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
             MODULO_PERFIL,
             'ACCESAR',

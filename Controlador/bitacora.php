@@ -21,8 +21,8 @@ if (!isset($_SESSION['id_usuario'])) {
 
 // Registrar acceso al módulo (formato Recepción) si no está en modo pruebas
 if (!defined('SKIP_SIDE_EFFECTS')) {
-    $bitacoraAcceso = new Bitacora();
-    $bitacoraAcceso->registrarBitacora(
+    $bitacoraModel = new Bitacora();
+    $bitacoraModel->registrarBitacora(
         $_SESSION['id_usuario'],
         MODULO_BITACORA,
         'ACCESAR',
