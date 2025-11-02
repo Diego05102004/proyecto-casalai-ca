@@ -312,6 +312,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                         data-descripcion="<?= htmlspecialchars($producto['descripcion_producto']); ?>"
                         data-modelo="<?= htmlspecialchars($producto['nombre_modelo']); ?>"
                         data-marca="<?= htmlspecialchars($producto['nombre_marca']); ?>"
+                        data-modeloid="<?= htmlspecialchars($producto['id_modelo']); ?>"
                         data-stockactual="<?= htmlspecialchars($producto['stock']); ?>"
                         data-stockmaximo="<?= htmlspecialchars($producto['stock_maximo']); ?>"
                         data-stockminimo="<?= htmlspecialchars($producto['stock_minimo']); ?>"

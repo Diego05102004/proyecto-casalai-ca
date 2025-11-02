@@ -144,44 +144,79 @@ $(document).ready(function () {
 
     // Al abrir el modal de modificar, carga los datos del producto y sus características
 $(document).on('click', '.btn-modificar', function () {
-    // 1. Datos generales
-    $('#modificarIdProducto').val(this.dataset.id);
-    $('#modificarNombreProducto').val(this.dataset.nombre);
-    $('#modificarDescripcionProducto').val(this.dataset.descripcion);
-    $('#modificarModelo').val(this.dataset.modelo);
-    $('#modificarMarca').val(this.dataset.marca);
-    $('#modificarStockActual').val(this.dataset.stockactual);
-    $('#modificarStockMaximo').val(this.dataset.stockmaximo);
-    $('#modificarStockMinimo').val(this.dataset.stockminimo);
-    $('#modificarClausulaGarantia').val(this.dataset.clausula);
-    $('#modificarSeriales').val(this.dataset.seriales);
-    $('#modificarPrecio').val(this.dataset.precio);
+    // 1. Resetear el formulario primero
+    $('#modificarProductoForm')[0].reset();
+    
+    // 2. Datos generales
+    const $this = $(this);
+    const dataset = $this.data();
+    
+    // Establecer los valores de los campos
+    $('#modificarIdProducto').val(dataset.id);
+    $('#modificarNombreProducto').val(dataset.nombre);
+    $('#modificarDescripcionProducto').val(dataset.descripcion);
+    $('#modificarMarca').val(dataset.marca);
+    $('#modificarStockActual').val(dataset.stockactual);
+    $('#modificarStockMaximo').val(dataset.stockmaximo);
+    $('#modificarStockMinimo').val(dataset.stockminimo);
+    $('#modificarClausulaGarantia').val(dataset.clausula);
+    $('#modificarSeriales').val(dataset.seriales);
+    $('#modificarPrecio').val(dataset.precio);
+    
+    // Establecer el valor del modelo usando el ID del modelo
+    setTimeout(() => {
+        const $selectModelo = $('#modificarModelo');
+        const modeloId = dataset.modeloid; // Usamos el ID del modelo del data-attribute
+        
+        if (modeloId) {
+            // Buscar la opción que coincida con el ID del modelo
+            $selectModelo.val(modeloId).trigger('change');
+        }
+    }, 100);
 
-    // 2. Categoría y tabla dinámica
-    const tablaCategoria = this.dataset.tabla_categoria || this.dataset.categoria;
+    // 3. Categoría y tabla dinámica
+    const tablaCategoria = dataset.tabla_categoria || dataset.categoria;
     $('#modificarCategoria').val(tablaCategoria).trigger('change');
     $('#modificar_tabla_categoria').val(tablaCategoria);
 
-    // 3. Imagen
-     const imagen = this.dataset.imagen;
+    // 4. Imagen
     const preview = document.getElementById('modificarImagenPreview');
-    preview.src = imagen;
-    preview.style.display = 'block';
+    if (dataset.imagen) {
+        preview.src = dataset.imagen;
+        preview.style.display = 'block';
+    } else {
+        preview.src = '#';
+        preview.style.display = 'none';
+    }
 
-    // Espera a que los campos dinámicos se generen y luego coloca los valores
-    setTimeout(() => {
-        const categoriaObj = categoriasDinamicas.find(cat => cat.tabla === tablaCategoria);
-        if (categoriaObj) {
+    // 5. Cargar características dinámicas
+    const categoriaObj = categoriasDinamicas.find(cat => cat.tabla === tablaCategoria);
+    if (categoriaObj) {
+        // Esperar un momento para que se generen los campos dinámicos
+        setTimeout(() => {
             categoriaObj.caracteristicas.forEach(carac => {
-                // camelCase para dataset
+                // Procesar el nombre para que coincida con el dataset (camelCase)
                 const camelName = carac.nombre.replace(/_([a-z])/g, g => g[1].toUpperCase());
-                const valor = this.dataset[camelName];
-                if (valor !== undefined) {
-                    $(`#modificar_${carac.nombre}`).val(valor);
+                const valor = dataset[camelName];
+                const $campo = $(`#modificar_${carac.nombre}`);
+                
+                if ($campo.length && valor !== undefined) {
+                    // Manejar campos de voltaje específicamente
+                    if (carac.nombre.toLowerCase().includes('voltaje')) {
+                        // Asegurarse de que el valor sea numérico y tenga el formato correcto
+                        const valorNumerico = parseFloat(valor);
+                        if (!isNaN(valorNumerico)) {
+                            $campo.val(valorNumerico);
+                        }
+                    } else {
+                        $campo.val(valor);
+                    }
                 }
             });
-        }
-    }, 200);
+        }, 200);
+    }
+    
+    // Mostrar el modal
     $('#modificarProductoModal').modal('show');
 });
 
@@ -246,45 +281,68 @@ $(document).ready(function() {
     
     $('#modificarProductoForm').on('submit', function(e) {
         e.preventDefault();
-        $('#modificar_tabla_categoria').val($('#modificarCategoria').val());
-           let caracteristicasInvalidas = [];
-    $('#caracteristicasCategoria input[type="number"]').each(function() {
-        if (parseFloat($(this).val()) < 0) {
-            caracteristicasInvalidas.push($(this).attr('name'));
-            $(this).addClass('is-invalid');
-        } else {
-            $(this).removeClass('is-invalid');
-        }
-    });
-    let caracteristicasTextoInvalidas = [];
-$('#caracteristicasCategoriaModificar input[type="text"]').each(function() {
-    if (!regexTexto.test($(this).val())) {
-        caracteristicasTextoInvalidas.push($(this).attr('name'));
-        $(this).addClass('is-invalid');
-    } else {
-        $(this).removeClass('is-invalid');
-    }
-});
-if (caracteristicasTextoInvalidas.length > 0) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error en características',
-        text: 'Las características de texto solo pueden contener letras, números, espacios, @, punto y guion.'
-    });
-    return;
-}
-    if (caracteristicasInvalidas.length > 0) {
+        
+        // Mostrar indicador de carga
         Swal.fire({
-            icon: 'error',
-            title: 'Error en características',
-            text: 'Las características numéricas no pueden tener valores negativos.'
+            title: 'Procesando...',
+            text: 'Por favor espere',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
-        return;
-    }
 
+        // Actualizar el valor de la tabla de categoría
+        $('#modificar_tabla_categoria').val($('#modificarCategoria').val());
+        
+        // Validar características numéricas
+        let caracteristicasInvalidas = [];
+        $('#caracteristicasCategoria input[type="number"]').each(function() {
+            const valor = parseFloat($(this).val());
+            if (isNaN(valor) || valor < 0) {
+                caracteristicasInvalidas.push($(this).attr('name'));
+                $(this).addClass('is-invalid');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+        // Validar características de texto
+        let caracteristicasTextoInvalidas = [];
+        $('#caracteristicasCategoriaModificar input[type="text"]').each(function() {
+            const valor = $(this).val().trim();
+            if (valor !== '' && !regexTexto.test(valor)) {
+                caracteristicasTextoInvalidas.push($(this).attr('name'));
+                $(this).addClass('is-invalid');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+        // Mostrar errores de validación si los hay
+        if (caracteristicasTextoInvalidas.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en características',
+                text: 'Las características de texto solo pueden contener letras, números, espacios, @, punto y guion.'
+            });
+            return;
+        }
+
+        if (caracteristicasInvalidas.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en características',
+                text: 'Las características numéricas deben ser valores positivos.'
+            });
+            return;
+        }
+
+        // Preparar datos del formulario
         var formData = new FormData(this);
         formData.append('accion', 'modificar');
 
+        // Enviar petición AJAX
         $.ajax({
             url: '', 
             type: 'POST',
@@ -293,38 +351,69 @@ if (caracteristicasTextoInvalidas.length > 0) {
             cache: false,
             data: formData,
             success: function(response) {
+                Swal.close();
                 console.log('Respuesta del servidor:', response);
-                var res = response;
-                if (typeof response === 'string') {
+                
+                // Parsear respuesta
+                let res;
+                try {
+                    res = typeof response === 'string' ? JSON.parse(response) : response;
+                } catch (e) {
+                    // Intentar extraer JSON de respuesta mal formada
                     try {
-                        res = JSON.parse(response);
-                    } catch (e) {
-                        try {
-                            var txt = response.trim();
-                            var first = txt.indexOf('{');
-                            var last = txt.lastIndexOf('}');
-                            if (first !== -1 && last !== -1 && last > first) {
-                                res = JSON.parse(txt.substring(first, last + 1));
-                            }
-                        } catch (ignore) {}
+                        const txt = String(response).trim();
+                        const first = txt.indexOf('{');
+                        const last = txt.lastIndexOf('}');
+                        if (first !== -1 && last !== -1 && last > first) {
+                            res = JSON.parse(txt.substring(first, last + 1));
+                        } else {
+                            throw new Error('Respuesta no válida del servidor');
+                        }
+                    } catch (parseError) {
+                        console.error('Error al parsear respuesta:', parseError);
+                        throw new Error('Error al procesar la respuesta del servidor');
                     }
                 }
+
                 if (res && res.status === 'success') {
-                    $('#modificarProductoModal').modal('hide');
+                    // Mostrar mensaje de éxito
                     Swal.fire({
                         icon: 'success',
-                        title: 'Modificado',
-                        text: (res.message || res.mensaje || 'El producto se ha modificado correctamente')
-                    }).then(function() {
-                        location.reload();
+                        title: '¡Éxito!',
+                        text: res.message || res.mensaje || 'El producto se ha modificado correctamente',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        // Cerrar modal
+                        $('#modificarProductoModal').modal('hide');
+                        
+                        // Actualizar la fila de la tabla si hay datos del producto
+                        if (res.producto) {
+                            actualizarFilaEnTabla(res.producto);
+                        } else {
+                            // Recargar como último recurso si no hay datos del producto
+                            location.reload();
+                        }
                     });
                 } else {
-                    muestraMensaje((res && (res.message || res.mensaje)) || 'Error al modificar el producto');
+                    // Mostrar mensaje de error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: (res && (res.message || res.mensaje)) || 'Error al modificar el producto',
+                        confirmButtonText: 'Aceptar'
+                    });
                 }
             },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error al modificar el producto:', textStatus, errorThrown);
-                muestraMensaje('Error al modificar el producto.');
+            error: function(xhr, status, error) {
+                Swal.close();
+                console.error('Error al modificar el producto:', status, error, xhr.responseText);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor. Por favor, intente nuevamente.',
+                    confirmButtonText: 'Aceptar'
+                });
             }
         });
     });
@@ -412,6 +501,100 @@ $(document).on('click', '.eliminar', function (e) {
         }
     });
 });
+
+/**
+ * Actualiza una fila en la tabla de productos con los nuevos datos
+ * @param {Object} producto - Objeto con los datos actualizados del producto
+ */
+function actualizarFilaEnTabla(producto) {
+    const fila = $(`tr[data-id="${producto.id_producto}"]`);
+    if (!fila.length) {
+        console.warn('No se encontró la fila del producto a actualizar');
+        location.reload(); // Recargar como último recurso
+        return;
+    }
+
+    try {
+        // Actualizar datos visibles en la fila
+        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
+        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
+        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
+        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
+        fila.find('td:eq(6) span').text(producto.seriales || '');
+        
+        // Formatear y actualizar precio
+        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
+        fila.find('.precio').text(precioFormateado);
+        
+        // Actualizar botón de edición
+        const botonEditar = fila.find('.btn-modificar');
+        if (botonEditar.length) {
+            // Actualizar atributos data-* para futuras ediciones
+            const datosActualizar = {
+                'data-nombre': producto.nombre_producto || '',
+                'data-descripcion': producto.descripcion_producto || '',
+                'data-modelo': producto.nombre_modelo || '',
+                'data-marca': producto.nombre_marca || '',
+                'data-stockactual': producto.stock_actual || '0',
+                'data-stockmaximo': producto.stock_maximo || '0',
+                'data-stockminimo': producto.stock_minimo || '0',
+                'data-seriales': producto.seriales || '',
+                'data-clausula': producto.clausula_garantia || '',
+                'data-precio': precioFormateado,
+                'data-categoria': producto.categoria_id || '',
+                'data-tabla_categoria': producto.tabla_categoria || ''
+            };
+
+            // Aplicar los cambios a los atributos data-*
+            Object.entries(datosActualizar).forEach(([key, value]) => {
+                botonEditar.attr(key, value);
+            });
+
+            // Actualizar características dinámicas si existen
+            if (producto.caracteristicas) {
+                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) {
+                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
+                        botonEditar.attr(dataKey, value);
+                    }
+                });
+            }
+        }
+
+        // Actualizar botón de detalles si existe
+        const botonDetalle = fila.find('.btn-detalle');
+        if (botonDetalle.length) {
+            botonDetalle.attr({
+                'data-nombredtl': producto.nombre_producto || '',
+                'data-modelodtl': producto.nombre_modelo || '',
+                'data-marcadtl': producto.nombre_marca || '',
+                'data-descripciondtl': producto.descripcion_producto || '',
+                'data-stockactualdtl': producto.stock_actual || '0',
+                'data-stockmaximodtl': producto.stock_maximo || '0',
+                'data-stockminimodtl': producto.stock_minimo || '0',
+                'data-serialdtl': producto.seriales || '',
+                'data-clausuladtl': producto.clausula_garantia || '',
+                'data-categoriadtl': producto.nombre_categoria || '',
+                'data-preciodtl': precioFormateado
+            });
+        }
+
+        // Mostrar notificación de éxito
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Producto actualizado',
+            showConfirmButton: false,
+            timer: 1500
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar la fila del producto:', error);
+        // Si hay un error, recargar la página para asegurar consistencia
+        location.reload();
+    }
+}
 // ...existing code...
 
     $('#btnIncluirProducto').on('click', function() {
@@ -628,6 +811,100 @@ error: function(xhr, status, error) {
     });
 });
 
+/**
+ * Actualiza una fila en la tabla de productos con los nuevos datos
+ * @param {Object} producto - Objeto con los datos actualizados del producto
+ */
+function actualizarFilaEnTabla(producto) {
+    const fila = $(`tr[data-id="${producto.id_producto}"]`);
+    if (!fila.length) {
+        console.warn('No se encontró la fila del producto a actualizar');
+        location.reload(); // Recargar como último recurso
+        return;
+    }
+
+    try {
+        // Actualizar datos visibles en la fila
+        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
+        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
+        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
+        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
+        fila.find('td:eq(6) span').text(producto.seriales || '');
+        
+        // Formatear y actualizar precio
+        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
+        fila.find('.precio').text(precioFormateado);
+        
+        // Actualizar botón de edición
+        const botonEditar = fila.find('.btn-modificar');
+        if (botonEditar.length) {
+            // Actualizar atributos data-* para futuras ediciones
+            const datosActualizar = {
+                'data-nombre': producto.nombre_producto || '',
+                'data-descripcion': producto.descripcion_producto || '',
+                'data-modelo': producto.nombre_modelo || '',
+                'data-marca': producto.nombre_marca || '',
+                'data-stockactual': producto.stock_actual || '0',
+                'data-stockmaximo': producto.stock_maximo || '0',
+                'data-stockminimo': producto.stock_minimo || '0',
+                'data-seriales': producto.seriales || '',
+                'data-clausula': producto.clausula_garantia || '',
+                'data-precio': precioFormateado,
+                'data-categoria': producto.categoria_id || '',
+                'data-tabla_categoria': producto.tabla_categoria || ''
+            };
+
+            // Aplicar los cambios a los atributos data-*
+            Object.entries(datosActualizar).forEach(([key, value]) => {
+                botonEditar.attr(key, value);
+            });
+
+            // Actualizar características dinámicas si existen
+            if (producto.caracteristicas) {
+                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) {
+                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
+                        botonEditar.attr(dataKey, value);
+                    }
+                });
+            }
+        }
+
+        // Actualizar botón de detalles si existe
+        const botonDetalle = fila.find('.btn-detalle');
+        if (botonDetalle.length) {
+            botonDetalle.attr({
+                'data-nombredtl': producto.nombre_producto || '',
+                'data-modelodtl': producto.nombre_modelo || '',
+                'data-marcadtl': producto.nombre_marca || '',
+                'data-descripciondtl': producto.descripcion_producto || '',
+                'data-stockactualdtl': producto.stock_actual || '0',
+                'data-stockmaximodtl': producto.stock_maximo || '0',
+                'data-stockminimodtl': producto.stock_minimo || '0',
+                'data-serialdtl': producto.seriales || '',
+                'data-clausuladtl': producto.clausula_garantia || '',
+                'data-categoriadtl': producto.nombre_categoria || '',
+                'data-preciodtl': precioFormateado
+            });
+        }
+
+        // Mostrar notificación de éxito
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Producto actualizado',
+            showConfirmButton: false,
+            timer: 1500
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar la fila del producto:', error);
+        // Si hay un error, recargar la página para asegurar consistencia
+        location.reload();
+    }
+}
+
 document.getElementById('imagen').addEventListener('change', function (event) {
   const input = event.target;
   const preview = document.getElementById('imagenPreview');
@@ -705,6 +982,100 @@ $('#Precio').on('input', function() {
         $('.desplegable').hide();
     });
 });
+
+/**
+ * Actualiza una fila en la tabla de productos con los nuevos datos
+ * @param {Object} producto - Objeto con los datos actualizados del producto
+ */
+function actualizarFilaEnTabla(producto) {
+    const fila = $(`tr[data-id="${producto.id_producto}"]`);
+    if (!fila.length) {
+        console.warn('No se encontró la fila del producto a actualizar');
+        location.reload(); // Recargar como último recurso
+        return;
+    }
+
+    try {
+        // Actualizar datos visibles en la fila
+        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
+        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
+        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
+        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
+        fila.find('td:eq(6) span').text(producto.seriales || '');
+        
+        // Formatear y actualizar precio
+        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
+        fila.find('.precio').text(precioFormateado);
+        
+        // Actualizar botón de edición
+        const botonEditar = fila.find('.btn-modificar');
+        if (botonEditar.length) {
+            // Actualizar atributos data-* para futuras ediciones
+            const datosActualizar = {
+                'data-nombre': producto.nombre_producto || '',
+                'data-descripcion': producto.descripcion_producto || '',
+                'data-modelo': producto.nombre_modelo || '',
+                'data-marca': producto.nombre_marca || '',
+                'data-stockactual': producto.stock_actual || '0',
+                'data-stockmaximo': producto.stock_maximo || '0',
+                'data-stockminimo': producto.stock_minimo || '0',
+                'data-seriales': producto.seriales || '',
+                'data-clausula': producto.clausula_garantia || '',
+                'data-precio': precioFormateado,
+                'data-categoria': producto.categoria_id || '',
+                'data-tabla_categoria': producto.tabla_categoria || ''
+            };
+
+            // Aplicar los cambios a los atributos data-*
+            Object.entries(datosActualizar).forEach(([key, value]) => {
+                botonEditar.attr(key, value);
+            });
+
+            // Actualizar características dinámicas si existen
+            if (producto.caracteristicas) {
+                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) {
+                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
+                        botonEditar.attr(dataKey, value);
+                    }
+                });
+            }
+        }
+
+        // Actualizar botón de detalles si existe
+        const botonDetalle = fila.find('.btn-detalle');
+        if (botonDetalle.length) {
+            botonDetalle.attr({
+                'data-nombredtl': producto.nombre_producto || '',
+                'data-modelodtl': producto.nombre_modelo || '',
+                'data-marcadtl': producto.nombre_marca || '',
+                'data-descripciondtl': producto.descripcion_producto || '',
+                'data-stockactualdtl': producto.stock_actual || '0',
+                'data-stockmaximodtl': producto.stock_maximo || '0',
+                'data-stockminimodtl': producto.stock_minimo || '0',
+                'data-serialdtl': producto.seriales || '',
+                'data-clausuladtl': producto.clausula_garantia || '',
+                'data-categoriadtl': producto.nombre_categoria || '',
+                'data-preciodtl': precioFormateado
+            });
+        }
+
+        // Mostrar notificación de éxito
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Producto actualizado',
+            showConfirmButton: false,
+            timer: 1500
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar la fila del producto:', error);
+        // Si hay un error, recargar la página para asegurar consistencia
+        location.reload();
+    }
+}
 
 
     function enviarAjax(datos, callback) {
@@ -822,3 +1193,97 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+/**
+ * Actualiza una fila en la tabla de productos con los nuevos datos
+ * @param {Object} producto - Objeto con los datos actualizados del producto
+ */
+function actualizarFilaEnTabla(producto) {
+    const fila = $(`tr[data-id="${producto.id_producto}"]`);
+    if (!fila.length) {
+        console.warn('No se encontró la fila del producto a actualizar');
+        location.reload(); // Recargar como último recurso
+        return;
+    }
+
+    try {
+        // Actualizar datos visibles en la fila
+        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
+        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
+        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
+        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
+        fila.find('td:eq(6) span').text(producto.seriales || '');
+        
+        // Formatear y actualizar precio
+        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
+        fila.find('.precio').text(precioFormateado);
+        
+        // Actualizar botón de edición
+        const botonEditar = fila.find('.btn-modificar');
+        if (botonEditar.length) {
+            // Actualizar atributos data-* para futuras ediciones
+            const datosActualizar = {
+                'data-nombre': producto.nombre_producto || '',
+                'data-descripcion': producto.descripcion_producto || '',
+                'data-modelo': producto.nombre_modelo || '',
+                'data-marca': producto.nombre_marca || '',
+                'data-stockactual': producto.stock_actual || '0',
+                'data-stockmaximo': producto.stock_maximo || '0',
+                'data-stockminimo': producto.stock_minimo || '0',
+                'data-seriales': producto.seriales || '',
+                'data-clausula': producto.clausula_garantia || '',
+                'data-precio': precioFormateado,
+                'data-categoria': producto.categoria_id || '',
+                'data-tabla_categoria': producto.tabla_categoria || ''
+            };
+
+            // Aplicar los cambios a los atributos data-*
+            Object.entries(datosActualizar).forEach(([key, value]) => {
+                botonEditar.attr(key, value);
+            });
+
+            // Actualizar características dinámicas si existen
+            if (producto.caracteristicas) {
+                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) {
+                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
+                        botonEditar.attr(dataKey, value);
+                    }
+                });
+            }
+        }
+
+        // Actualizar botón de detalles si existe
+        const botonDetalle = fila.find('.btn-detalle');
+        if (botonDetalle.length) {
+            botonDetalle.attr({
+                'data-nombredtl': producto.nombre_producto || '',
+                'data-modelodtl': producto.nombre_modelo || '',
+                'data-marcadtl': producto.nombre_marca || '',
+                'data-descripciondtl': producto.descripcion_producto || '',
+                'data-stockactualdtl': producto.stock_actual || '0',
+                'data-stockmaximodtl': producto.stock_maximo || '0',
+                'data-stockminimodtl': producto.stock_minimo || '0',
+                'data-serialdtl': producto.seriales || '',
+                'data-clausuladtl': producto.clausula_garantia || '',
+                'data-categoriadtl': producto.nombre_categoria || '',
+                'data-preciodtl': precioFormateado
+            });
+        }
+
+        // Mostrar notificación de éxito
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Producto actualizado',
+            showConfirmButton: false,
+            timer: 1500
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar la fila del producto:', error);
+        // Si hay un error, recargar la página para asegurar consistencia
+        location.reload();
+    }
+}

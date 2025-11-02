@@ -218,7 +218,7 @@ if (is_file("vista/" . $pagina . ".php")) {
 
             case 'permisos_tiempo_real':
                 header('Content-Type: application/json; charset=utf-8');
-                $permisosActualizados = $permisosObj->getPermisosUsuarioModulo($id_rol, 'compra fisica');
+                $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, 'compra fisica');
                 echo json_encode($permisosActualizados);
                 exit;
 

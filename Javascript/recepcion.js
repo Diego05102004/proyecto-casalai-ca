@@ -111,12 +111,26 @@ $(document).ready(function () {
     }
 
     function resetRecepcion() {
-        $('#correlativo').val('');
-        $('#proveedor').val('');
-        $('#tamanocompra').val('');
-        $('#scorrelativo').text('');
-        $('#sproveedor').text('');
-        $('#stamanocompra').text('');
+        // Limpiar solo los campos del formulario de recepción
+        const form = $('#ingresarRecepcion')[0];
+        if (form) {
+            form.reset();
+        }
+        
+        // Limpiar mensajes de validación específicos del formulario
+        $('#scorrelativo, #sproveedor, #stamanocompra').text('');
+        
+        // Limpiar selects específicos del formulario
+        $('#proveedor, #tamanocompra').val('').trigger('change');
+        
+        // Limpiar solo la tabla de recepción de productos dentro del modal
+        const tablaRecepcion = document.getElementById('recepcion1');
+        if (tablaRecepcion) {
+            tablaRecepcion.innerHTML = '';
+        }
+        
+        // Limpiar campos ocultos
+        $('#codigoproducto, #idproducto').val('');
     }
 
     $('#btnIncluirRecepcion').on('click', function() {
@@ -143,21 +157,37 @@ $(document).ready(function () {
             datos.append("accion", "registrar");
             enviarAjax(datos, function(respuesta){
                 if(respuesta.status === "success" || respuesta.resultado === "success"){
+                    // Cerrar el modal primero
+                    $('#registrarRecepcionModal').modal('hide');
+                    
+                    // Mostrar mensaje de éxito
                     Swal.fire({
                         icon: 'success',
-                        title: 'Éxito',
-                        text: respuesta.message || 'Recepción registrada correctamente'
+                        title: '¡Éxito!',
+                        text: respuesta.message || 'Recepción registrada correctamente',
+                        showConfirmButton: false,
+                        timer: 2000
                     });
-                    if(respuesta.status === "success" && respuesta.recepcion){
-                        console.log(respuesta.recepcion);
+                    
+                    // Limpiar el formulario
+                    resetRecepcion();
+                    
+                    // Limpiar la tabla de productos del modal
+                    const tablaRecepcion = document.getElementById('recepcion1');
+                    if (tablaRecepcion) {
+                        tablaRecepcion.innerHTML = '';
+                    }
+                    
+                    // Agregar la nueva recepción a la tabla
+                    if(respuesta.recepcion){
                         agregarFilaRecepcion(respuesta.recepcion);
-                        resetRecepcion();
                     }
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: respuesta.message || 'No se pudo registrar la recepción'
+                        text: respuesta.message || 'No se pudo registrar la recepción',
+                        showConfirmButton: true
                     });
                 }
             });

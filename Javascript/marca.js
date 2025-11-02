@@ -141,6 +141,7 @@ $(document).ready(function() {
     function resetMarca() {
         $("#nombre_marca").val('');
         $("#snombre_marca").text('');
+        $('#registrarMarcaModal').modal('hide');
     }
 
     $('#registrarMarca').on('submit', function(e) {
