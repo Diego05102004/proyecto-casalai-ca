@@ -37,10 +37,10 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                 <tr>
                     <th>ID</th>
                     <th>Fecha y Hora</th>
-                    <th>Acción Realizada</th>
-                    <th>Descripcion</th>
-                    <th>Módulo</th>
                     <th>Usuario</th>
+                    <th>Acción Realizada</th>
+                    <th>Módulo</th>
+                    <th>Descripcion</th>
                 </tr>
             </thead>
             <tbody id="tbodyBitacora">
@@ -58,13 +58,13 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                                 </span>
                             </td>
                             <td>
-                                <span class="campo-tex-num">
-                                    <?= htmlspecialchars($registro['accion']) ?>
+                                <span class="campo-nombres">
+                                    <?= htmlspecialchars($registro['username']) ?>
                                 </span>
                             </td>
                             <td>
-                                <span class="campo-nombres">
-                                    <?= htmlspecialchars($registro['descripcion']) ?>
+                                <span class="campo-tex-num">
+                                    <?= htmlspecialchars($registro['accion']) ?>
                                 </span>
                             </td>
                             <td>
@@ -74,7 +74,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                             </td>
                             <td>
                                 <span class="campo-nombres">
-                                    <?= htmlspecialchars($registro['username']) ?>
+                                    <?= htmlspecialchars($registro['descripcion']) ?>
                                 </span>
                             </td>
                         </tr>
