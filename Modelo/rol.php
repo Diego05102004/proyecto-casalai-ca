@@ -5,6 +5,7 @@ class Rol extends BD {
 
     private $id_rol;
     private $nombre_rol;
+    private $conex;
 
     public function getIdRol() { 
         return $this->id_rol; 

@@ -387,65 +387,65 @@ class Compra extends BD{
         $co = $conexion->getConexion();
         try {
             $sql = "
-                SELECT 
-                    f.id_factura,
-                    f.fecha AS fecha_factura,
-                    f.descuento,
-                    c.id_clientes,
-                    c.cedula,
-                    c.nombre AS nombre_cliente,
-                    c.direccion,
-                    c.telefono,
-                    c.correo,
-                    d.id_despachos,
-                    
-                    -- Productos agrupados como JSON
-                    GROUP_CONCAT(
-                        CONCAT(
-                            '{',
-                            '\\\"id_producto\\\":\\\"', p.id_producto, '\\\"',
-                            ',\\\"codigo\\\":\\\"', p.id_producto, '\\\"',
-                            ',\\\"nombre\\\":\\\"', REPLACE(p.nombre_producto, '"', '\\"'), '\\\"',
-                            ',\\\"descripcion\\\":\\\"', REPLACE(COALESCE(p.descripcion_producto, ''), '"', '\\"'), '\\\"',
-                            ',\\\"modelo\\\":\\\"', REPLACE(m.nombre_modelo, '"', '\\"'), '\\\"',
-                            ',\\\"marca\\\":\\\"', REPLACE(mar.nombre_marca, '"', '\\"'), '\\\"',
-                            ',\\\"serial\\\":\\\"', REPLACE(COALESCE(p.serial, ''), '"', '\\"'), '\\\"',
-                            ',\\\"precio\\\":\\\"', p.precio, '\\\"',
-                            ',\\\"cantidad\\\":\\\"', fd.cantidad, '\\\"',
-                            '}'
-                        ) SEPARATOR ','
-                    ) AS productos,
+            SELECT 
+                f.id_factura,
+                f.fecha AS fecha_factura,
+                f.descuento,
+                c.id_clientes,
+                c.cedula,
+                c.nombre AS nombre_cliente,
+                c.direccion,
+                c.telefono,
+                c.correo,
+                d.id_despachos,
+                
+                -- Productos agrupados como JSON
+                GROUP_CONCAT(
+                    CONCAT(
+                        '{',
+                        '\"id_producto\":\"', p.id_producto, '\",',
+                        '\"codigo\":\"', p.id_producto, '\",',
+                        '\"nombre\":\"', p.nombre_producto, '\",',
+                        '\"descripcion\":\"', p.descripcion_producto, '\",',
+                        '\"modelo\":\"', m.nombre_modelo, '\",',
+                        '\"marca\":\"', mar.nombre_marca, '\",',
+                        '\"serial\":\"', p.serial, '\",',
+                        '\"precio\":\"', p.precio, '\",',
+                        '\"cantidad\":\"', fd.cantidad, '\"',
+                        '}'
+                    ) SEPARATOR ','
+                ) AS productos,
 
-                    -- Pagos agrupados como JSON
-                    GROUP_CONCAT(
-                        CONCAT(
-                            '{',
-                            '\\\"id_detalles\\\":\\\"', dp.id_detalles, '\\\"',
-                            ',\\\"cuenta\\\":\\\"', COALESCE(dp.id_cuenta, ''), '\\\"',
-                            ',\\\"referencia\\\":\\\"', REPLACE(COALESCE(dp.referencia, ''), '"', '\\"'), '\\\"',
-                            ',\\\"fecha\\\":\\\"', dp.fecha, '\\\"',
-                            ',\\\"tipo\\\":\\\"', dp.tipo, '\\\"',
-                            ',\\\"monto\\\":\\\"', dp.monto, '\\\"',
-                            ',\\\"comprobante\\\":\\\"', REPLACE(COALESCE(dp.comprobante, ''), '"', '\\"'), '\\\"',
-                            ',\\\"estatus\\\":\\\"', dp.estatus, '\\\"',
-                            ',\\\"observaciones\\\":\\\"', REPLACE(COALESCE(dp.observaciones, ''), '"', '\\"'), '\\\"',
-                            '}'
-                        ) SEPARATOR ','
-                    ) AS pagos
+                -- Pagos agrupados como JSON
+                GROUP_CONCAT(
+                    CONCAT(
+                        '{',
+                        '\"id_detalles\":\"', dp.id_detalles, '\",',
+                        '\"cuenta\":\"', dp.id_cuenta, '\",',
+                        '\"referencia\":\"', dp.referencia, '\",',
+                        '\"fecha\":\"', dp.fecha, '\",',
+                        '\"tipo\":\"', dp.tipo, '\",',
+                        '\"monto\":\"', dp.monto, '\",',
+                        '\"comprobante\":\"', COALESCE(dp.comprobante, ''), '\",',
+                        '\"estatus\":\"', dp.estatus, '\",',
+                        '\"observaciones\":\"', COALESCE(dp.observaciones, ''), '\"',
+                        '}'
+                    ) SEPARATOR ','
+                ) AS pagos
 
-                FROM tbl_facturas f
-                INNER JOIN tbl_clientes c ON f.cliente = c.id_clientes
-                INNER JOIN tbl_despachos d ON d.id_clientes = c.id_clientes AND d.fecha_despacho = f.fecha
-                INNER JOIN tbl_despacho_detalle dd ON d.id_despachos = dd.id_despacho
-                INNER JOIN tbl_productos p ON dd.id_producto = p.id_producto
-                INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
-                INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
-                INNER JOIN tbl_factura_detalle fd ON f.id_factura = fd.factura_id AND p.id_producto = fd.id_producto
-                INNER JOIN tbl_detalles_pago dp ON f.id_factura = dp.id_factura
+            FROM tbl_facturas f
+            INNER JOIN tbl_clientes c ON f.cliente = c.id_clientes
+            INNER JOIN tbl_despachos d ON d.id_clientes = c.id_clientes AND d.fecha_despacho = f.fecha
+            INNER JOIN tbl_despacho_detalle dd ON d.id_despachos = dd.id_despacho
+            INNER JOIN tbl_productos p ON dd.id_producto = p.id_producto
+            INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
+            INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
+            INNER JOIN tbl_factura_detalle fd ON f.id_factura = fd.factura_id AND p.id_producto = fd.id_producto
+            INNER JOIN tbl_detalles_pago dp ON f.id_factura = dp.id_factura
 
-                GROUP BY f.id_factura
-                ORDER BY f.fecha DESC, f.id_factura DESC
-            ";
+            GROUP BY f.id_factura
+            ORDER BY f.fecha DESC, f.id_factura DESC
+        ";
 
             $stmt = $co->prepare($sql);
             $stmt->execute();
