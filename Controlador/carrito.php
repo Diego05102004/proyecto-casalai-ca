@@ -244,7 +244,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_CARRITO,
             'ACCESAR',
-            'Acceso al módulo de Carrito',
+            'El usuario accedió al módulo de Carrito',
             'baja'
         );
     }

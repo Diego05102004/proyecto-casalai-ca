@@ -177,7 +177,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             '4',
             'ACCESAR',
-            'El usuario accedió al modulo de marcas',
+            'El usuario accedió al módulo de marcas',
             'media'
         );
     }

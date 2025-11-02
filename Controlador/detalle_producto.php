@@ -26,7 +26,7 @@ try {
                 $_SESSION['id_usuario'],
                 10,
                 'ACCESAR',
-                'Acceso a detalle de producto: ' . ($producto['nombre_producto'] ?? ('ID ' . $id_producto)),
+                'El usuario accedió a detalle de producto: ' . ($producto['nombre_producto'] ?? ('ID ' . $id_producto)),
                 'baja'
             );
         }

@@ -156,7 +156,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '3',
         'ACCESAR',
-        'El usuario accedió al modulo de Despachos',
+        'El usuario accedió al módulo de Despachos',
         'media'
     );}
     $despachos = getdespacho();

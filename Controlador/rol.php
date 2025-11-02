@@ -172,7 +172,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_ROLES,
             'ACCESAR',
-            'El usuario accedió al modulo de Roles',
+            'El usuario accedió al módulo de Roles',
             'media'
         );
     }

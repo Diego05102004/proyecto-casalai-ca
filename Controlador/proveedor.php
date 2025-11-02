@@ -237,7 +237,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_PROVEEDORES,
             'ACCESAR',
-            'El usuario accedió al modulo de Proveedores',
+            'El usuario accedió al módulo de Proveedores',
             'media'
         );
     }

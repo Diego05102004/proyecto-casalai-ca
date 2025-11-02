@@ -521,7 +521,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_CATALOGO,
             'ACCESAR',
-            'El usuario accedió al modulo de Catálogo',
+            'El usuario accedió al módulo de Catálogo',
             'media'
         );
     }

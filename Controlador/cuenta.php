@@ -239,7 +239,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '15',
         'ACCESAR',
-        'El usuario accedió al modulo de Cuentas Bancarias',
+        'El usuario accedió al módulo de Cuentas Bancarias',
         'media'
     );}
     $cuentabancos = consultarCuentabanco();

@@ -231,7 +231,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '12',
     'ACCESAR',
-    'El usuario accedió al modulo de Pasarela de pagos',
+    'El usuario accedió al módulo de Pasarela de pagos',
     'media'
 );}
 } else {

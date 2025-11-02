@@ -198,7 +198,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_ORDEN_DESPACHO,
             'ACCESAR',
-            'El usuario accedió al modulo de Ordenes de Despacho',
+            'El usuario accedió al módulo de Ordenes de Despacho',
             'media'
         );
     }

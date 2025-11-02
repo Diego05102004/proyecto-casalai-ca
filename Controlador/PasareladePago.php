@@ -19,7 +19,7 @@ if (!defined('SKIP_SIDE_EFFECTS')) {
         $_SESSION['id_usuario'],
         MODULO_PASARELA_PAGOS,
         'ACCESAR',
-        'Acceso al módulo de pasarela de pagos',
+        'El usuario accedió al módulo de pasarela de pagos',
         'baja'
     );
 }

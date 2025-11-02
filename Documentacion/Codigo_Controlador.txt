@@ -245,7 +245,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '19',
     'ACCESO',
-    'El usuario accediÃ³ al al modulo de bitacora',
+    'El usuario accediÃ³ al al módulo de bitacora',
     'alta'
 );
 
@@ -1036,7 +1036,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '10',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de CatÃ¡logo',
+    'El usuario accediÃ³ al al módulo de CatÃ¡logo',
     'media'
 );}
     require_once("vista/" . $pagina . ".php");
@@ -1230,7 +1230,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '7',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de Categorias',
+    'El usuario accediÃ³ al al módulo de Categorias',
     'media'
 );}
     $categorias = consultarCategorias();
@@ -1415,7 +1415,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '9',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de Clientes',
+    'El usuario accediÃ³ al al módulo de Clientes',
     'media'
 );
 }
@@ -1756,7 +1756,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_DESPACHO,
             'ACCESAR',
-            'El usuario accediÃ³ al modulo de Compra FÃ­sica',
+            'El usuario accediÃ³ al módulo de Compra FÃ­sica',
             'media'
         );
     }
@@ -2011,7 +2011,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '15',
         'ACCESAR',
-        'El usuario accediÃ³ al al modulo de Cuentas Bancarias',
+        'El usuario accediÃ³ al al módulo de Cuentas Bancarias',
         'media'
     );}
     $cuentabancos = consultarCuentabanco();
@@ -2301,7 +2301,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '3',
         'ACCESAR',
-        'El usuario accediÃ³ al modulo de Despachos',
+        'El usuario accediÃ³ al módulo de Despachos',
         'media'
     );}
     $despachos = getdespacho();
@@ -2344,7 +2344,7 @@ try {
                 $_SESSION['id_usuario'],
                 10,
                 'ACCESAR',
-                'Acceso a detalle de producto: ' . ($producto['nombre_producto'] ?? ('ID ' . $id_producto)),
+                'El usuario accedió a detalle de producto: ' . ($producto['nombre_producto'] ?? ('ID ' . $id_producto)),
                 'baja'
             );
         }
@@ -2493,7 +2493,7 @@ if (is_file("vista/" . $pagina . ".php")) {
                 $_SESSION['id_usuario'],
                 MODULO_FINANZA,
                 'ACCESAR',
-                'El usuario accediÃ³ al al modulo de Finanzas',
+                'El usuario accediÃ³ al al módulo de Finanzas',
                 'media'
             );
         }
@@ -2591,7 +2591,7 @@ $bitacoraModel = new Bitacora();
     $_SESSION['id_usuario'],
     '13',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de Pedidos',
+    'El usuario accediÃ³ al al módulo de Pedidos',
     'media'
 );}
 } else {
@@ -2900,7 +2900,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             '4',
             'ACCESAR',
-            'El usuario accediÃ³ al al modulo de marcas',
+            'El usuario accediÃ³ al al módulo de marcas',
             'media'
         );
     }
@@ -3167,7 +3167,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '5',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de Modelos',
+    'El usuario accediÃ³ al al módulo de Modelos',
     'media'
 );
 }
@@ -3421,7 +3421,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '14',
         'ACCESAR',
-        'El usuario accediÃ³ al al modulo de Ordenes de Despacho',
+        'El usuario accediÃ³ al al módulo de Ordenes de Despacho',
         'media'
     );}
     $ordendespacho = getordendespacho();
@@ -3674,7 +3674,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '12',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de Pasarela de pagos',
+    'El usuario accediÃ³ al al módulo de Pasarela de pagos',
     'media'
 );}
 } else {
@@ -3706,7 +3706,7 @@ if (isset($_SESSION['id_usuario'])) {
         $_SESSION['id_usuario'],
         MODULO_PASARELA_PAGOS,
         'ACCESAR',
-        'Acceso al mÃ³dulo de pasarela de pagos',
+        'El usuario accedió al mÃ³dulo de pasarela de pagos',
         'baja'
     );
 } else {
@@ -4684,7 +4684,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '17',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de Permisos',
+    'El usuario accediÃ³ al al módulo de Permisos',
     'media'
 );}
 } else {
@@ -5129,7 +5129,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             '6',
             'ACCESAR',
-            'El usuario accediÃ³ al modulo de Productos',
+            'El usuario accediÃ³ al módulo de Productos',
             'media'
         );
     }
@@ -5387,7 +5387,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_PROVEEDORES,
             'ACCESAR',
-            'El usuario accediÃ³ al modulo de Proveedores',
+            'El usuario accediÃ³ al módulo de Proveedores',
             'media'
         );
     }
@@ -5623,7 +5623,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '2',
         'ACCESAR',
-        'El usuario accediÃ³ al modulo de Recepcion',
+        'El usuario accediÃ³ al módulo de Recepcion',
         'media'
     );}
     $recepciones = getrecepcion();
@@ -6378,7 +6378,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_ROLES,
             'ACCESAR',
-            'El usuario accediÃ³ al modulo de Roles',
+            'El usuario accediÃ³ al módulo de Roles',
             'media'
         );
     }
@@ -6655,7 +6655,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '1',
     'ACCESAR',
-    'El usuario accediÃ³ al al modulo de Usuarios',
+    'El usuario accediÃ³ al al módulo de Usuarios',
     'media'
 );}
     $usuarios = getusuarios();

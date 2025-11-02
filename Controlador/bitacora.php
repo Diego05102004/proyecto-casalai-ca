@@ -26,7 +26,7 @@ if (!defined('SKIP_SIDE_EFFECTS')) {
         $_SESSION['id_usuario'],
         MODULO_BITACORA,
         'ACCESAR',
-        'Acceso al módulo de bitácora',
+        'El usuario accedió al módulo de bitácora',
         'baja'
     );
 }

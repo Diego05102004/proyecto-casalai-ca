@@ -214,7 +214,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $_SESSION['id_usuario'],
         '2',
         'ACCESAR',
-        'El usuario accedió al modulo de Recepcion',
+        'El usuario accedió al módulo de Recepcion',
         'media'
     );}
     $recepciones = getrecepcion();

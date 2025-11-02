@@ -188,7 +188,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_CATEGORIA,
             'ACCESAR',
-            'El usuario accedió al modulo de Categorias',
+            'El usuario accedió al módulo de Categorias',
             'media'
         );
     }

@@ -257,7 +257,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             $_SESSION['id_usuario'],
             MODULO_PERFIL,
             'ACCESAR',
-            'Acceso al módulo de perfil',
+            'El usuario accedió al módulo de perfil',
             'baja'
         );
     }
