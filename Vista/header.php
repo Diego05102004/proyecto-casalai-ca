@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles/perfil.css">
   <link rel="stylesheet" href="styles/grafica.css">
   <link rel="stylesheet" href="styles/reportes.css">
+  <link rel="stylesheet" href="public/datatables-custom.css">
   <!-- Bootstrap 5 CSS -->
 
 <link href="public/bootstrap/css/bootstrap.min.css" rel="stylesheet">
