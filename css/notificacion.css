@@ -1,18 +1,77 @@
+/* Contenedor de notificaciones */
+#lista-notificaciones {
+    max-height: 600px; /* Altura máxima para mostrar aproximadamente 10 notificaciones */
+    overflow-y: auto; /* Hace que sea desplazable verticalmente */
+    width: 100%; /* Ocupa todo el ancho disponible */
+    margin: 0; /* Sin márgenes */
+    padding: 0; /* Sin relleno */
+}
+
+/* Estilos para la barra de desplazamiento */
+#lista-notificaciones::-webkit-scrollbar {
+    width: 8px;
+}
+
+#lista-notificaciones::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#lista-notificaciones::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#lista-notificaciones::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
 /* Estilos para la lista de notificaciones */
-.notificacion-item {
+#lista-notificaciones .notificacion-item {
     border-left: 4px solid transparent;
     transition: all 0.2s ease-in-out;
     cursor: pointer;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.notificacion-item:hover {
+#lista-notificaciones .notificacion-contenido {
+    width: 100%;
+    padding: 0.5rem 0;
+}
+
+#lista-notificaciones .notificacion-titulo {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #212529;
+    font-size: 0.95rem;
+}
+
+#lista-notificaciones .notificacion-mensaje {
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    font-size: 0.9rem;
+}
+
+#lista-notificaciones .notificacion-fecha {
+    font-size: 0.8rem;
+    color: #6c757d;
+    opacity: 0.8;
+}
+
+#lista-notificaciones .notificacion-item:hover {
     background-color: #f8f9fa;
     transform: translateX(5px);
+    border-radius: 4px;
 }
 
-.notificacion-item.no-leida {
+#lista-notificaciones .notificacion-item.no-leida {
     border-left-color: #0d6efd;
     background-color: #f8f9fa;
+    border-radius: 4px 0 0 4px;
 }
 
 .notificacion-contenido {
@@ -57,6 +116,18 @@
     color: #0d6efd;
 }
 
+/* Estilos para el contenedor de la lista */
+#lista-notificaciones {
+    max-height: 600px; /* Altura máxima para mostrar aproximadamente 10 notificaciones */
+    overflow-y: auto; /* Hace que sea desplazable verticalmente */
+    width: 90%; /* Ancho reducido */
+    margin: 0 auto; /* Centrar el contenedor */
+    max-width: 800px; /* Ancho máximo para pantallas grandes */
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
 /* Estilos para el botón de marcar como leído */
 #marcar-todas-leidas {
     transition: all 0.2s ease-in-out;
@@ -66,10 +137,35 @@
     transform: translateY(-1px);
 }
 
+/* Estilos para pantallas medianas */
+@media (max-width: 992px) {
+    #lista-notificaciones {
+        width: 95%;
+        max-height: 500px;
+    }
+    
+    #lista-notificaciones .notificacion-item {
+        padding: 0.65rem 0.9rem;
+    }
+}
+
 /* Estilos para pantallas pequeñas */
 @media (max-width: 768px) {
-    .notificacion-item {
-        padding: 0.75rem 1rem;
+    #lista-notificaciones {
+        width: 95%; /* Un poco más ancho en pantallas medianas */
+        max-height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    #lista-notificaciones {
+        width: 100%;
+        max-height: 400px;
+        border-radius: 0;
+    }
+    
+    #lista-notificaciones .notificacion-item {
+        padding: 0.6rem 0.8rem;
     }
     
     .notificacion-contenido {

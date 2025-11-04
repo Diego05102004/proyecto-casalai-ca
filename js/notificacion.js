@@ -1,201 +1,361 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const listaNotificaciones = document.getElementById('lista-notificaciones');
+    const cargando = document.getElementById('cargando');
+    const btnMarcarTodas = document.getElementById('marcar-todas');
+    
     // Cargar notificaciones al cargar la página
-    cargarNotificaciones();
+    if (listaNotificaciones) {
+        cargarNotificaciones();
+    }
     
     // Configurar el botón para marcar todas como leídas
-    document.getElementById('marcar-todas-leidas').addEventListener('click', marcarTodasComoLeidas);
+    if (btnMarcarTodas) {
+        btnMarcarTodas.addEventListener('click', marcarTodasLeidas);
+    }
     
-    // Configurar el modal de Bootstrap
-    const modalNotificacion = new bootstrap.Modal(document.getElementById('modalNotificacion'));
+    // Función para formatear la fecha en un formato legible
+    function formatearFecha(fechaString) {
+        if (!fechaString) return 'Hoy';
+        
+        try {
+            // Asegurarse de que la fecha tenga el formato correcto
+            let fecha = new Date(fechaString);
+            
+            // Si la fecha no es válida, intentar con formato ISO
+            if (isNaN(fecha.getTime())) {
+                // Intentar con formato ISO 8601 (MySQL/MariaDB)
+                fecha = new Date(fechaString.replace(' ', 'T') + 'Z');
+                
+                // Si aún no es válida, devolver 'Hoy'
+                if (isNaN(fecha.getTime())) return 'Hoy';
+            }
+            
+            const ahora = new Date();
+            const diferencia = Math.floor((ahora - fecha) / 1000); // Diferencia en segundos
+            
+            if (diferencia < 60) {
+                return 'Hace unos segundos';
+            } else if (diferencia < 3600) {
+                const minutos = Math.floor(diferencia / 60);
+                return `Hace ${minutos} minuto${minutos > 1 ? 's' : ''}`;
+            } else if (diferencia < 86400) {
+                const horas = Math.floor(diferencia / 3600);
+                return `Hace ${horas} hora${horas > 1 ? 's' : ''}`;
+            } else if (diferencia < 604800) { // Menos de una semana
+                const dias = Math.floor(diferencia / 86400);
+                return `Hace ${dias} día${dias > 1 ? 's' : ''}`;
+            } else {
+                return fecha.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        } catch (e) {
+            console.error('Error al formatear fecha:', e, 'Valor recibido:', fechaString);
+            return 'Hoy';
+        }
+    }
     
     // Función para cargar las notificaciones
     function cargarNotificaciones() {
-        fetch('controlador/notificacion.controlador.php?accion=listarNotificaciones')
+        if (!listaNotificaciones) return;
+        
+        // Mostrar indicador de carga
+        if (cargando) cargando.style.display = 'block';
+        
+        fetch('?pagina=notificacion&accion=listar')
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Error al cargar las notificaciones');
+                    throw new Error('Error al cargar las notificaciones: ' + response.status);
                 }
                 return response.json();
             })
             .then(data => {
-                if (data.error) {
-                    mostrarError(data.error);
-                    return;
+                console.log('Datos recibidos:', data); // Para depuración
+                if (data && data.exito && Array.isArray(data.data)) {
+                    mostrarNotificaciones(data.data);
+                } else {
+                    throw new Error(data?.mensaje || 'Formato de respuesta inesperado');
                 }
-                
-                const contenedor = document.getElementById('lista-notificaciones');
-                
-                if (data.length === 0) {
-                    contenedor.innerHTML = `
-                        <div class="text-center p-4">
-                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
-                            <p class="mb-0">No tienes notificaciones</p>
-                        </div>
-                    `;
-                    document.getElementById('contador-notificaciones').textContent = '0';
-                    return;
-                }
-                
-                // Actualizar contador
-                const noLeidas = data.filter(notif => !notif.leido).length;
-                document.getElementById('contador-notificaciones').textContent = data.length;
-                
-                // Generar HTML de las notificaciones
-                contenedor.innerHTML = data.map(notificacion => `
-                    <div class="notificacion-item ${notificacion.leido ? '' : 'no-leida'}" 
-                         data-id="${notificacion.id_notificacion}" 
-                         data-titulo="${escapeHtml(notificacion.titulo)}"
-                         data-mensaje="${escapeHtml(notificacion.mensaje)}"
-                         data-fecha="${notificacion.fecha_formateada || notificacion.fecha_creacion}">
-                        <div class="notificacion-contenido">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h6 class="notificacion-titulo mb-1">${escapeHtml(notificacion.titulo)}</h6>
-                                ${notificacion.leido ? '' : '<span class="badge bg-primary">Nuevo</span>'}
-                            </div>
-                            <p class="notificacion-mensaje mb-1">${truncateText(notificacion.mensaje, 80)}</p>
-                            <small class="notificacion-fecha">${formatearFecha(notificacion.fecha_formateada || notificacion.fecha_creacion)}</small>
-                        </div>
-                    </div>
-                `).join('');
-                
-                // Agregar manejadores de eventos a las notificaciones
-                document.querySelectorAll('.notificacion-item').forEach(item => {
-                    item.addEventListener('click', function() {
-                        const titulo = this.getAttribute('data-titulo');
-                        const mensaje = this.getAttribute('data-mensaje');
-                        const fecha = this.getAttribute('data-fecha');
-                        
-                        // Actualizar el modal con los datos de la notificación
-                        document.getElementById('modalNotificacionTitulo').textContent = titulo;
-                        document.getElementById('modalNotificacionMensaje').textContent = mensaje;
-                        document.getElementById('modalNotificacionFecha').textContent = formatearFecha(fecha);
-                        
-                        // Mostrar el modal
-                        modalNotificacion.show();
-                        
-                        // Marcar como leída si no lo está
-                        if (this.classList.contains('no-leida')) {
-                            const idNotificacion = this.getAttribute('data-id');
-                            marcarComoLeida(idNotificacion, this);
-                        }
-                    });
-                });
             })
             .catch(error => {
-                console.error('Error:', error);
-                mostrarError('Error al cargar las notificaciones. Por favor, inténtalo de nuevo.');
+                console.error('Error al cargar notificaciones:', error);
+                mostrarError('No se pudieron cargar las notificaciones. ' + 
+                           'Por favor, recarga la página. Detalles en consola.');
+            })
+            .finally(() => {
+                if (cargando) cargando.style.display = 'none';
             });
     }
     
     // Función para marcar una notificación como leída
     function marcarComoLeida(idNotificacion, elemento) {
-        fetch('controlador/notificacion.controlador.php', {
+        if (!idNotificacion) {
+            console.error('ID de notificación no válido');
+            return;
+        }
+
+        // Mostrar indicador de carga
+        if (elemento && elemento.classList) {
+            const originalHTML = elemento.innerHTML;
+            elemento.disabled = true;
+            elemento.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Procesando...';
+        }
+
+        const formData = new FormData();
+        formData.append('id_notificacion', idNotificacion);
+        
+        fetch('?pagina=notificacion&accion=marcar_leida', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: `accion=marcarComoLeida&id_notificacion=${idNotificacion}`
+            body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.exito) {
-                elemento.classList.remove('no-leida');
-                elemento.classList.add('notificacion-leida');
-                
-                // Actualizar contador
-                const contador = document.getElementById('contador-notificaciones');
-                const nuevoContador = parseInt(contador.textContent) - 1;
-                contador.textContent = nuevoContador > 0 ? nuevoContador : '0';
-                
-                // Eliminar el badge de "Nuevo"
-                const badge = elemento.querySelector('.badge');
-                if (badge) {
-                    badge.remove();
-                }
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
             }
+            return response.json();
         })
-        .catch(error => console.error('Error:', error));
-    }
-    
-    // Función para marcar todas las notificaciones como leídas
-    function marcarTodasComoLeidas() {
-        fetch('controlador/notificacion.controlador.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'accion=marcarTodasComoLeidas'
-        })
-        .then(response => response.json())
         .then(data => {
             if (data.exito) {
                 // Actualizar la interfaz
-                document.querySelectorAll('.notificacion-item').forEach(item => {
-                    item.classList.remove('no-leida');
-                    item.classList.add('notificacion-leida');
-                    const badge = item.querySelector('.badge');
-                    if (badge) {
-                        badge.remove();
+                if (elemento) {
+                    const item = elemento.closest ? 
+                        elemento.closest('.list-group-item') : 
+                        document.querySelector(`.list-group-item[data-id="${idNotificacion}"]`);
+                    
+                    if (item) {
+                        item.classList.remove('notificacion-no-leida');
+                        item.classList.add('notificacion-leida');
+                        const botonMarcarLeido = item.querySelector('.btn-marcar-leido');
+                        if (botonMarcarLeido) botonMarcarLeido.remove();
                     }
-                });
+                }
+                // Actualizar contador en la barra de navegación
+                const contador = document.getElementById('contador-notificaciones');
+                if (contador) {
+                    const nuevoContador = Math.max(0, parseInt(contador.textContent) - 1);
+                    contador.textContent = nuevoContador > 0 ? nuevoContador : '0';
+                }
                 
-                // Actualizar contador
-                document.getElementById('contador-notificaciones').textContent = '0';
-                
-                // Mostrar mensaje de éxito
-                mostrarMensaje('Todas las notificaciones han sido marcadas como leídas', 'success');
+                mostrarMensaje('Notificación marcada como leída', 'success');
+            } else {
+                throw new Error(data.mensaje || 'Error al marcar como leída');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            mostrarError('Error al marcar las notificaciones como leídas');
+            mostrarError('Error al marcar la notificación como leída: ' + error.message);
         });
     }
     
+    // Función para marcar todas las notificaciones como leídas
+    function marcarTodasLeidas() {
+        if (!confirm('¿Estás seguro de que deseas marcar todas las notificaciones como leídas?')) {
+            return;
+        }
+
+        fetch('?pagina=notificacion&accion=marcar_todas_leidas', {
+            method: 'POST'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.exito) {
+                // Actualizar la interfaz
+                const itemsNoLeidos = document.querySelectorAll('.list-group-item.notificacion-no-leida');
+                itemsNoLeidos.forEach(item => {
+                    item.classList.remove('notificacion-no-leida');
+                    item.classList.add('notificacion-leida');
+                    const boton = item.querySelector('.btn-marcar-leido');
+                    if (boton) boton.remove();
+                });
+                
+                // Actualizar contador en la barra de navegación
+                const contador = document.getElementById('contador-notificaciones');
+                if (contador) contador.textContent = '0';
+                
+                mostrarMensaje('Todas las notificaciones han sido marcadas como leídas', 'success');
+            } else {
+                throw new Error(data.mensaje || 'Error al marcar todas las notificaciones como leídas');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError('No se pudieron marcar todas las notificaciones como leídas: ' + error.message);
+        });
+    }
+    
+    // Función para mostrar notificaciones
+    function mostrarNotificaciones(notificaciones) {
+        if (!listaNotificaciones) return;
+        
+        // Mostrar indicador de carga
+        if (cargando) cargando.style.display = 'none';
+        
+        if (!notificaciones || !Array.isArray(notificaciones) || notificaciones.length === 0) {
+            listaNotificaciones.innerHTML = `
+                <div class="text-center p-4">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <p class="mb-0">No hay notificaciones para mostrar</p>
+                </div>`;
+            return;
+        }
+    
+        let html = '';
+        notificaciones.forEach(notif => {
+            try {
+                // Obtener y formatear la fecha
+                const fechaOriginal = notif.fecha_creacion || notif.fecha_hora || new Date().toISOString();
+                const fechaFormateada = formatearFecha(fechaOriginal);
+                
+                // Determinar si la notificación está leída (compatibilidad con diferentes formatos)
+                // Por defecto, asumir que no está leída si no se especifica lo contrario
+                const estaLeida = (
+                    notif.leido === '1' || notif.leido === 1 || notif.leido === true || 
+                    notif.leida === '1' || notif.leida === 1 || notif.leida === true ||
+                    notif.estado === 'leido' || notif.estado === 'leída' ||
+                    notif.estado === '1' || notif.estado === 1
+                );
+                
+                const claseNotificacion = estaLeida ? 'notificacion-leida' : 'notificacion-no-leida';
+                const idNotificacion = notif.id_notificacion || notif.id || `temp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                
+                // Depuración: Mostrar información de la notificación
+                console.log('Notificación:', {
+                    id: idNotificacion,
+                    titulo: notif.titulo,
+                    leido: notif.leido,
+                    leida: notif.leida,
+                    estado: notif.estado,
+                    marcadaComoLeida: estaLeida
+                });
+                
+                if (!idNotificacion) {
+                    console.warn('Notificación sin ID:', notif);
+                    return;
+                }
+                
+                // Validar y escapar los datos
+                const titulo = escapeHtml(notif.titulo || 'Notificación sin título');
+                const mensaje = escapeHtml(notif.mensaje || 'Sin descripción');
+                
+                html += `
+                    <div class="list-group-item list-group-item-action ${claseNotificacion}" 
+                         data-id="${escapeHtml(String(idNotificacion))}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${titulo}</h6>
+                            <small class="fecha-notificacion text-muted">${fechaFormateada}</small>
+                        </div>
+                        <p class="mb-1">${truncateText(mensaje, 100)}</p>`;
+                
+                // Mostrar el botón en todas las notificaciones que no estén marcadas como leídas
+                // Verificar explícitamente si está marcada como no leída
+                const mostrarBoton = (
+                    notif.leido === '0' || notif.leido === 0 || notif.leido === false ||
+                    notif.leida === '0' || notif.leida === 0 || notif.leida === false ||
+                    notif.estado === '0' || notif.estado === 0 || notif.estado === 'no_leido' ||
+                    notif.leido === undefined || notif.leida === undefined || notif.estado === undefined
+                );
+                
+                if (mostrarBoton) {
+                    html += `
+                        <div class="d-flex justify-content-end mt-2">
+                            <button class="btn btn-sm btn-outline-primary btn-marcar-leido" 
+                                    data-id="${escapeHtml(String(idNotificacion))}"
+                                    data-leido="${estaLeida ? '1' : '0'}">
+                                <i class="fas fa-check me-1"></i> Marcar como leída
+                            </button>
+                        </div>`;
+                    
+                    // Si la notificación no está marcada como leída, forzar la clase no-leida
+                    if (!estaLeida) {
+                        html = html.replace('list-group-item-action', 'list-group-item-action notificacion-no-leida');
+                    }
+                }
+                
+                html += `
+                    </div>`;
+                    
+            } catch (error) {
+                console.error('Error al procesar notificación:', error, notif);
+            }
+        });
+        
+        listaNotificaciones.innerHTML = html;
+        agregarManejadoresEventos();
+    }
+
+    // Agregar manejadores de eventos
+    function agregarManejadoresEventos() {
+        // Marcar como leída al hacer clic en el botón
+        document.querySelectorAll('.btn-marcar-leido').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const idNotificacion = this.getAttribute('data-id');
+                if (idNotificacion) {
+                    marcarComoLeida(idNotificacion, this);
+                } else {
+                    console.error('No se pudo obtener el ID de la notificación');
+                }
+            });
+        });
+        
+        // Marcar como leída al hacer clic en la notificación
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Evitar marcar como leída si se hace clic en un botón dentro de la notificación
+                if (e.target.closest('.btn-marcar-leido')) {
+                    return;
+                }
+                
+                const idNotificacion = this.getAttribute('data-id');
+                if (idNotificacion && !this.classList.contains('notificacion-leida')) {
+                    marcarComoLeida(idNotificacion, this);
+                }
+            });
+        });
+    }
+
     // Funciones auxiliares
     function escapeHtml(unsafe) {
         if (!unsafe) return '';
         return unsafe
-            .toString()
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
     }
-    
+
     function truncateText(text, maxLength) {
         if (!text) return '';
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     }
-    
-    function formatearFecha(fechaString) {
-        if (!fechaString) return '';
-        
-        const fecha = new Date(fechaString);
-        if (isNaN(fecha.getTime())) return fechaString;
-        
-        return fecha.toLocaleString('es-ES', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-    
+
     function mostrarError(mensaje) {
-        const contenedor = document.getElementById('lista-notificaciones');
-        contenedor.innerHTML = `
-            <div class="alert alert-danger m-3" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
+        console.error(mensaje);
+        // Mostrar mensaje de error en la interfaz
+        listaNotificaciones.innerHTML = `
+            <div class="alert alert-danger m-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
                 ${mensaje}
-                <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            </div>
-        `;
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>`;
+        
+        if (cargando) cargando.style.display = 'none';
     }
-    
+
     function mostrarMensaje(mensaje, tipo = 'success') {
         const alerta = document.createElement('div');
         alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
