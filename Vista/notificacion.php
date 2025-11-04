@@ -20,9 +20,8 @@ $error = $error ?? null;
     <div class="row justify-content-center">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Mis Notificaciones</h4>
-                    <button id="marcar-todas" class="btn btn-sm btn-light">Marcar todas como leídas</button>
                 </div>
                 <div class="card-body p-0">
                     <?php if ($error): ?>

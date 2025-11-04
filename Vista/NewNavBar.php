@@ -424,30 +424,32 @@ if (isset($_SESSION['id_usuario'])) {
 
     <!-- Panel de Notificaciones -->
     <div class="notificacion-panel" id="notifications-panel">
-        <h2>Notificaciones <a href="?pagina=notificacion" class="small">Ver más</a> <span><?php echo $notificaciones_count; ?></span></h2>
-        <?php if ($notificaciones_count > 0): ?>
-            <?php foreach ($notificaciones as $notif): ?>
+        <h2>Notificaciones <a href="?pagina=notificacion" class="small">Ver más</a> <span class="notification-count"><?php echo $notificaciones_count; ?></span></h2>
+        <div id="notifications-list">
+            <?php if ($notificaciones_count > 0): ?>
+                <?php foreach ($notificaciones as $notif): 
+                    $estaLeida = ($notif['leido'] == '1' || $notif['leido'] == 1 || $notif['estado'] == 'leido' || $notif['estado'] == 'leída');
+                    $claseNotificacion = $estaLeida ? 'notificacion-leida' : 'notificacion-no-leida';
+                ?>
+                    <div class="item-notificacion <?= $claseNotificacion ?>" data-id="<?= $notif['id_notificacion'] ?>" style="pointer-events: none; cursor: default;">
+                        <div class="texto">
+                            <h4><?= htmlspecialchars($notif['titulo']) ?></h4>
+                            <p><?= htmlspecialchars($notif['mensaje']) ?></p>
+                            <?php if ($notif['tipo'] == 'pago' && !empty($notif['detalle_pago'])): ?>
+                                <small>Referencia: <?= htmlspecialchars($notif['detalle_pago']['referencia']) ?></small>
+                            <?php endif; ?>
+                            <small class="fecha-notificacion"><?= date('d/m/Y H:i', strtotime($notif['fecha_creacion'] ?? $notif['fecha_hora'])) ?></small>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
                 <div class="item-notificacion">
                     <div class="texto">
-                        <h4><?= htmlspecialchars($notif['titulo']) ?></h4>
-                        <p><?= htmlspecialchars($notif['mensaje']) ?></p>
-                        <?php if ($notif['tipo'] == 'pago' && !empty($notif['detalle_pago'])): ?>
-                            <small>Referencia: <?= htmlspecialchars($notif['detalle_pago']['referencia']) ?></small>
-                        <?php endif; ?>
-                        <small><?= date('d/m/Y H:i', strtotime($notif['fecha_hora'])) ?></small>
+                        <p>No hay notificaciones recientes</p>
                     </div>
-                    <button class="marcar-leido" data-id="<?= $notif['id_notificacion'] ?>">
-                        <img src="img/check.svg" alt="Marcar leído" class="local-icon">
-                    </button>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="item-notificacion">
-                <div class="texto">
-                    <p>No hay notificaciones recientes</p>
-                </div>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
     <!-- Panel de Perfil -->
@@ -471,6 +473,7 @@ if (isset($_SESSION['id_usuario'])) {
             </a>
         </div>
     </div>
+
 
     <!-- Bootstrap JS Bundle (incluye Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -506,6 +509,12 @@ if (isset($_SESSION['id_usuario'])) {
     
     // JavaScript para el menú lateral
     document.addEventListener('DOMContentLoaded', function() {
+        // Prevenir clics en notificaciones
+        document.querySelectorAll('.item-notificacion, .notificacion-panel *').forEach(element => {
+            element.style.pointerEvents = 'none';
+            element.style.cursor = 'default';
+        });
+        
         // Elementos del menú lateral
         const hamburgerBtn = document.getElementById('hamburger-btn');
         const sideMenu = document.getElementById('side-menu');

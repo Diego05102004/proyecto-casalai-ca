@@ -1,16 +1,30 @@
 document.addEventListener('DOMContentLoaded', function() {
     const listaNotificaciones = document.getElementById('lista-notificaciones');
     const cargando = document.getElementById('cargando');
-    const btnMarcarTodas = document.getElementById('marcar-todas');
     
     // Cargar notificaciones al cargar la página
     if (listaNotificaciones) {
         cargarNotificaciones();
     }
     
-    // Configurar el botón para marcar todas como leídas
-    if (btnMarcarTodas) {
-        btnMarcarTodas.addEventListener('click', marcarTodasLeidas);
+    // Manejador de eventos para el modal de notificaciones
+    const modalNotificacion = document.getElementById('modalNotificacion');
+    if (modalNotificacion) {
+        modalNotificacion.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const idNotificacion = button.getAttribute('data-bs-id');
+            
+            // Mostrar el botón de marcar como leída en el modal
+            const btnMarcarLeida = document.getElementById('btn-marcar-leida-modal');
+            if (btnMarcarLeida) {
+                btnMarcarLeida.setAttribute('data-id', idNotificacion);
+                
+                // Agregar manejador de evento al botón del modal
+                btnMarcarLeida.onclick = function() {
+                    marcarComoLeida(idNotificacion, button.closest('.list-group-item'));
+                };
+            }
+        });
     }
     
     // Función para formatear la fecha en un formato legible
@@ -154,47 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Función para marcar todas las notificaciones como leídas
-    function marcarTodasLeidas() {
-        if (!confirm('¿Estás seguro de que deseas marcar todas las notificaciones como leídas?')) {
-            return;
-        }
-
-        fetch('?pagina=notificacion&accion=marcar_todas_leidas', {
-            method: 'POST'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.exito) {
-                // Actualizar la interfaz
-                const itemsNoLeidos = document.querySelectorAll('.list-group-item.notificacion-no-leida');
-                itemsNoLeidos.forEach(item => {
-                    item.classList.remove('notificacion-no-leida');
-                    item.classList.add('notificacion-leida');
-                    const boton = item.querySelector('.btn-marcar-leido');
-                    if (boton) boton.remove();
-                });
-                
-                // Actualizar contador en la barra de navegación
-                const contador = document.getElementById('contador-notificaciones');
-                if (contador) contador.textContent = '0';
-                
-                mostrarMensaje('Todas las notificaciones han sido marcadas como leídas', 'success');
-            } else {
-                throw new Error(data.mensaje || 'Error al marcar todas las notificaciones como leídas');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarError('No se pudieron marcar todas las notificaciones como leídas: ' + error.message);
-        });
-    }
-    
     // Función para mostrar notificaciones
     function mostrarNotificaciones(notificaciones) {
         if (!listaNotificaciones) return;
@@ -258,30 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <p class="mb-1">${truncateText(mensaje, 100)}</p>`;
                 
-                // Mostrar el botón en todas las notificaciones que no estén marcadas como leídas
-                // Verificar explícitamente si está marcada como no leída
-                const mostrarBoton = (
-                    notif.leido === '0' || notif.leido === 0 || notif.leido === false ||
-                    notif.leida === '0' || notif.leida === 0 || notif.leida === false ||
-                    notif.estado === '0' || notif.estado === 0 || notif.estado === 'no_leido' ||
-                    notif.leido === undefined || notif.leida === undefined || notif.estado === undefined
-                );
-                
-                if (mostrarBoton) {
-                    html += `
-                        <div class="d-flex justify-content-end mt-2">
-                            <button class="btn btn-sm btn-outline-primary btn-marcar-leido" 
-                                    data-id="${escapeHtml(String(idNotificacion))}"
-                                    data-leido="${estaLeida ? '1' : '0'}">
-                                <i class="fas fa-check me-1"></i> Marcar como leída
-                            </button>
-                        </div>`;
-                    
-                    // Si la notificación no está marcada como leída, forzar la clase no-leida
-                    if (!estaLeida) {
-                        html = html.replace('list-group-item-action', 'list-group-item-action notificacion-no-leida');
-                    }
-                }
+                // No mostrar botón en la lista, se manejará desde el modal
                 
                 html += `
                     </div>`;
