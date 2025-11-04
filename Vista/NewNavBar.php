@@ -428,10 +428,12 @@ if (isset($_SESSION['id_usuario'])) {
         <div id="notifications-list">
             <?php if ($notificaciones_count > 0): ?>
                 <?php foreach ($notificaciones as $notif): 
-                    $estaLeida = ($notif['leido'] == '1' || $notif['leido'] == 1 || $notif['estado'] == 'leido' || $notif['estado'] == 'leída');
+                    $estado = $notif['estado'] ?? '';
+                    $leido = $notif['leido'] ?? '0';
+                    $estaLeida = ($leido == '1' || $leido == 1 || $estado == 'leido' || $estado == 'leída');
                     $claseNotificacion = $estaLeida ? 'notificacion-leida' : 'notificacion-no-leida';
                 ?>
-                    <div class="item-notificacion <?= $claseNotificacion ?>" data-id="<?= $notif['id_notificacion'] ?>" style="pointer-events: none; cursor: default;">
+                    <div class="item-notificacion <?= $claseNotificacion ?>" data-id="<?= $notif['id_notificacion'] ?>">
                         <div class="texto">
                             <h4><?= htmlspecialchars($notif['titulo']) ?></h4>
                             <p><?= htmlspecialchars($notif['mensaje']) ?></p>
@@ -509,8 +511,8 @@ if (isset($_SESSION['id_usuario'])) {
     
     // JavaScript para el menú lateral
     document.addEventListener('DOMContentLoaded', function() {
-        // Prevenir clics en notificaciones
-        document.querySelectorAll('.item-notificacion, .notificacion-panel *').forEach(element => {
+        // Prevenir clics solo en las notificaciones individuales, no en el panel completo
+        document.querySelectorAll('.item-notificacion').forEach(element => {
             element.style.pointerEvents = 'none';
             element.style.cursor = 'default';
         });

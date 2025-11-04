@@ -1,10 +1,141 @@
+/* Estilos para el panel de notificaciones en el navbar */
+.notificacion-panel {
+    position: fixed;
+    top: 60px; /* Ajusta según la altura de tu navbar */
+    right: 20px;
+    width: 350px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 9999; /* Asegura que esté por encima de todo */
+    display: none;
+    max-height: 70vh;
+    overflow-y: auto;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notificacion-panel.active {
+    display: block;
+}
+
+.notificacion-panel-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #fff;
+    border-radius: 8px 8px 0 0;
+}
+
+.notificacion-panel-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.ver-mas-link {
+    font-size: 0.85rem;
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.ver-mas-link:hover {
+    text-decoration: none;
+    background-color: #f0f7ff;
+}
+
+.notification-badge {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: 8px;
+    position: relative;
+    top: -1px;
+}
+
 /* Contenedor de notificaciones */
-#lista-notificaciones {
-    max-height: 600px; /* Altura máxima para mostrar aproximadamente 10 notificaciones */
-    overflow-y: auto; /* Hace que sea desplazable verticalmente */
-    width: 100%; /* Ocupa todo el ancho disponible */
-    margin: 0; /* Sin márgenes */
-    padding: 0; /* Sin relleno */
+#notifications-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estilos para cada notificación */
+.item-notificacion {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.item-notificacion:last-child {
+    border-bottom: none;
+}
+
+.item-notificacion:hover {
+    background-color: #f8f9fa;
+}
+
+.item-notificacion .texto h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.item-notificacion .texto p {
+    margin: 0 0 5px 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.item-notificacion .fecha-notificacion {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* Estilos para notificaciones no leídas */
+.item-notificacion.notificacion-no-leida {
+    background-color: #f8f9ff;
+    border-left: 3px solid #4e73df;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .notificacion-panel {
+        position: fixed;
+        top: 56px; /* Ajusta según la altura de tu navbar móvil */
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-height: 70vh;
+    }
+    
+    .notificacion-panel-header h2 {
+        font-size: 1rem;
+    }
+    
+    .ver-mas-link {
+        font-size: 0.8rem;
+    }
 }
 
 /* Estilos para la barra de desplazamiento */
