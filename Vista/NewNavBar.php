@@ -424,7 +424,7 @@ if (isset($_SESSION['id_usuario'])) {
 
     <!-- Panel de Notificaciones -->
     <div class="notificacion-panel" id="notifications-panel">
-        <h2>Notificaciones <span><?php echo $notificaciones_count; ?></span></h2>
+        <h2>Notificaciones <span><a href="?pagina=notificacion" class="small">Ver más</a><?php echo $notificaciones_count; ?></span></h2>
         <?php if ($notificaciones_count > 0): ?>
             <?php foreach ($notificaciones as $notif): ?>
                 <div class="item-notificacion">

@@ -1,0 +1,90 @@
+/* Estilos para la lista de notificaciones */
+.notificacion-item {
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.notificacion-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.notificacion-item.no-leida {
+    border-left-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.notificacion-contenido {
+    padding: 1rem;
+}
+
+.notificacion-titulo {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #212529;
+}
+
+.notificacion-mensaje {
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.notificacion-fecha {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* Estilos para el estado de leído */
+.notificacion-leida .notificacion-titulo,
+.notificacion-leida .notificacion-mensaje {
+    opacity: 0.7;
+}
+
+/* Estilos para el modal de notificación */
+#modalNotificacion .modal-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+#modalNotificacion .modal-footer {
+    border-top: 1px solid #dee2e6;
+}
+
+/* Estilos para el contador de notificaciones */
+#contador-notificaciones {
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+/* Estilos para el botón de marcar como leído */
+#marcar-todas-leidas {
+    transition: all 0.2s ease-in-out;
+}
+
+#marcar-todas-leidas:hover {
+    transform: translateY(-1px);
+}
+
+/* Estilos para pantallas pequeñas */
+@media (max-width: 768px) {
+    .notificacion-item {
+        padding: 0.75rem 1rem;
+    }
+    
+    .notificacion-contenido {
+        padding: 0.5rem 0;
+    }
+    
+    .notificacion-titulo {
+        font-size: 1rem;
+    }
+    
+    .notificacion-mensaje {
+        font-size: 0.9rem;
+    }
+    
+    .notificacion-fecha {
+        font-size: 0.75rem;
+    }
+}
