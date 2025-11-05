@@ -137,7 +137,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <div class="ghost"></div>
 
         <h3>Lista de Recepciones</h3>
-        
+
         <div class="space-btn-incluir">
             <button id="btnIncluirRecepcion"
                 class="btn-incluir"
@@ -145,11 +145,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 <img src="img/plus.svg">
             </button>
         </div>
-        <div class="space-btn-incluir">
-
-</div>
-
- 
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
