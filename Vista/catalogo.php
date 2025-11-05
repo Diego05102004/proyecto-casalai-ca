@@ -101,12 +101,12 @@
                             <!-- Imagen del producto -->
                             <a href="?pagina=detalle_producto&id=<?= (int)$producto['id_producto'] ?>" class="producto-imagen-container" style="display:block;">
                                 <?php if (!empty($producto['imagen'])): ?>
-                                    <img src="<?= htmlspecialchars($producto['imagen']) ?>" 
+                                    <IMG src="<?= htmlspecialchars($producto['imagen']) ?>" 
                                          class="producto-imagen"
-                                         alt="<?= htmlspecialchars($producto['nombre_producto']) ?>"
+                                         alt="<?= htmlspecialchars($producto['imagen']) ?>"
                                          onerror="this.src='img/placeholder-product.png'">
                                 <?php else: ?>
-                                    <div class="producto-imagen-container img-placeholder">
+                                    <div class="producto-imagen-container IMG-placeholder">
                                         <i class="bi bi-image" style="font-size: 3rem; color: #6b7280;"></i>
                                     </div>
                                 <?php endif; ?>
@@ -194,9 +194,9 @@
                                     if (!empty($producto['imagen'])):
                                         $imagenesMostradas++;
                                 ?>
-                                        <img src="<?= htmlspecialchars($producto['imagen']) ?>" 
+                                        <IMG src="<?= htmlspecialchars($producto['imagen']) ?>" 
                                              class="combo-imagen <?= $imagenesMostradas == 1 ? 'principal' : '' ?>"
-                                             alt="<?= htmlspecialchars($producto['nombre_producto']) ?>"
+                                             alt="<?= htmlspecialchars($producto['imagen']) ?>"
                                              onerror="this.src='img/placeholder-product.png'">
                                 <?php
                                     endif;
@@ -204,7 +204,7 @@
 
                                 // Placeholders para imágenes faltantes
                                 while ($imagenesMostradas < 4) {
-                                    echo '<div class="combo-imagen ' . ($imagenesMostradas == 0 ? 'principal' : '') . ' img-placeholder">';
+                                    echo '<div class="combo-imagen ' . ($imagenesMostradas == 0 ? 'principal' : '') . ' IMG-placeholder">';
                                     echo '<i class="bi bi-image"></i>';
                                     echo '</div>';
                                     $imagenesMostradas++;
@@ -312,7 +312,7 @@
                 background: '#f8f9fa',
                 backdrop: `
                     rgba(0,0,0,0.4)
-                    url("/public/img/cart.gif")
+                    url("/Public/img/cart.gif")
                     center top
                     no-repeat
                 `

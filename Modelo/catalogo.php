@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once 'Config/Config.php';
 
 class Catalogo extends BD {
     private $tablaCombo = 'tbl_combo';

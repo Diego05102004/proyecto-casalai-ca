@@ -1,5 +1,5 @@
 <?php 
-require_once __DIR__ . '/../Config/config.php';
+require_once 'Config/Config.php';
 
 class Usuarios extends BD {
     
@@ -400,20 +400,18 @@ class Usuarios extends BD {
         }
     }
 
-    public function getusuarios($estatus = 'habilitado') {
-        return $this->g_getusuarios($estatus);
+    public function getusuarios() {
+        return $this->g_getusuarios();
     }
-    private function g_getusuarios($estatus = 'habilitado') {
+    private function g_getusuarios() {
         $conexion = new BD('S');
         $pdo = $conexion->getConexion();
         try {
             $queryusuarios = "SELECT usuarios.*, rol.nombre_rol 
                               FROM tbl_usuarios AS usuarios
                               INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
-                              WHERE usuarios.estatus = :estatus
                               ORDER BY usuarios.id_usuario DESC";
             $stmtusuarios = $pdo->prepare($queryusuarios);
-            $stmtusuarios->bindParam(':estatus', $estatus);
             $stmtusuarios->execute();
             return $stmtusuarios->fetchAll(PDO::FETCH_ASSOC);
         } finally {

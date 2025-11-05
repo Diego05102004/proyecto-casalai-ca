@@ -3,9 +3,9 @@
 ob_start();
 
 // Importa los modelos necesarios
-require_once 'modelo/producto.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/producto.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 define('MODULO_PRODUCTOS', 6); // Define el ID del módulo de cuentas bancarias
 
@@ -59,10 +59,10 @@ if (empty($categoriasDinamicas)) {
 // Asigna el nombre de la página
 $pagina = "reporteProductos";
 // Verifica si el archivo de vista existe
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     // Obtiene los modelos y productos
     $modelos = obtenerModelos();
-        require_once("vista/" . $pagina . ".php");
+        require_once("Vista/" . $pagina . ".php");
 } else {
     // Muestra un mensaje si la página está en construcción
     echo "Página en construcción";

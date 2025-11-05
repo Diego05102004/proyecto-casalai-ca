@@ -1,9 +1,9 @@
 <?php
 ob_start();
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require_once 'modelo/rol.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/rol.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 define('MODULO_ROLES', 18);
 
 $id_rol = $_SESSION['id_rol'] ?? 0;
@@ -165,7 +165,7 @@ function consultarRoles() {
 }
 
 $pagina = "rol";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -177,7 +177,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         );
     }
     $roles = consultarRoles();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

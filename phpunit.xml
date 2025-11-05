@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="c:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\tests\bootstrap.php" colors="true">
+<phpunit bootstrap="./tests/bootstrap.php" colors="true">
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>

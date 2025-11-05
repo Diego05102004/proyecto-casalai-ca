@@ -4,9 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../modelo/producto.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
-require_once __DIR__ . '/../modelo/DolarService.php';
+require_once 'Modelo/producto.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/DolarService.php';
 require_once __DIR__ . '/../librerias/pdf.php';
 
 // Definir constantes para IDs de módulo
@@ -515,7 +515,7 @@ try {
 
 // Asignar la página y cargar la vista
 $pagina = "catalogo";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
@@ -525,7 +525,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             'media'
         );
     }
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

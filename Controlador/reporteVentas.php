@@ -1,10 +1,10 @@
 <?php  
 
-require_once 'modelo/notificacion.php';
-require_once("modelo/Recepcion.php");
-require_once("modelo/Despacho.php");
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/notificacion.php';
+require_once("Modelo/Recepcion.php");
+require_once("Modelo/Despacho.php");
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 $reporteDespacho = new Despacho();
 $despachoEstado = $reporteDespacho->getDespachosEstado();
@@ -25,8 +25,8 @@ $totalDespachos = count($despachos);
 
 
 $pagina = "reporteVentas";
-if (is_file("vista/" . $pagina . ".php")) {
-    require_once("vista/" . $pagina . ".php");
+if (is_file("Vista/" . $pagina . ".php")) {
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

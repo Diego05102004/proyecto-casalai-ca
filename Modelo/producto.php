@@ -1,7 +1,8 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once 'Config/Config.php';
 
 class Productos extends BD{
+    private $conex;
     private $id_centro;
     private $nombre_producto;
     private $descripcion_p;

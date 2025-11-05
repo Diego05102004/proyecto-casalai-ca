@@ -1,5 +1,5 @@
 <?php
-require_once('modelo/permiso.php');
+require_once('Modelo/permiso.php');
 
 $id_rol = $_SESSION['id_rol'];
 $nombre_rol = $_SESSION['nombre_rol'] ?? '';
@@ -51,8 +51,8 @@ if ($nombre_rol === 'SuperUsuario') {
         $permisosConsulta[$moduloBD] = $permisosObj->getPermisosUsuarioModulo($id_rol, $moduloBD)['ingresar'] ?? false;
     }
 }
-if(is_file('vista/'.$pagina.'.php')){
-    require_once ('vista/'.$pagina.'.php');  //si la pagina existe se carga su vista correspondiente
+if(is_file('Vista/'.$pagina.'.php')){
+    require_once ('Vista/'.$pagina.'.php');  //si la pagina existe se carga su vista correspondiente
 }else{
     echo "PAGINA EN CONSTRUCCIÓN";
 }

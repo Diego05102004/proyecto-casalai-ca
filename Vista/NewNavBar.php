@@ -1,6 +1,6 @@
 <?php
-require_once('config/config.php');
-require_once('modelo/permiso.php');
+require_once('Config/Config.php');
+require_once('Modelo/permiso.php');
 
 $id_rol = $_SESSION['id_rol'];
 $nombre_rol = $_SESSION['nombre_rol'] ?? '';
@@ -9,7 +9,7 @@ $id_usuario = $_SESSION['id_usuario'] ?? 0;
 $permisosObj = new Permisos();
 
 // Obtener datos de la tasa BCV
-require_once 'modelo/DolarService.php';
+require_once 'Modelo/DolarService.php';
 $dolarService = new DolarService();
 $tasaBCV = $dolarService->obtenerPrecioDolar();
 $tasaBCVFormateada = number_format($tasaBCV, 2);
@@ -34,7 +34,7 @@ $modulos = [
     'permisos' => ['Gestionar Permisos', 'img/key-round.svg', '?pagina=permiso'],
     'Roles' => ['Gestionar Roles', 'img/user-round-search.svg', '?pagina=rol'],
     'bitacora' => ['Gestionar Bitácora', 'img/notebook.svg', '?pagina=bitacora'],
-    'Respaldo' => ['Gestionar Respaldo', 'img/files.svg', '?pagina=backup'],    
+    'Respaldo' => ['Gestionar Respaldo', 'img/files.svg', '?pagina=respaldo'],    
 ];
 
 $permisosConsulta = [];
@@ -82,7 +82,7 @@ $notificaciones_count = count($notificaciones);
 // Obtener cantidad de productos en el carrito
 $carrito_count = 0;
 if (isset($_SESSION['id_usuario'])) {
-    require_once 'modelo/carrito.php';
+    require_once 'Modelo/carrito.php';
     $carritoObj = new Carrito();
     $carritoCliente = $carritoObj->obtenerCarritoPorCliente($_SESSION['id_usuario']);
     if ($carritoCliente) {
@@ -98,7 +98,7 @@ if (isset($_SESSION['id_usuario'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Casa Lai</title>
-    <link rel="stylesheet" href="Styles/new_menu.css">
+    <link rel="stylesheet" href="styles/new_menu.css">
     
     <!-- jQuery (DEBE ir antes de Bootstrap) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -119,14 +119,14 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Ícono de menú hamburguesa -->
             <div class="hamburger-menu">
                 <button class="icon-btn" id="hamburger-btn">
-                    <img src="img/menu.svg" alt="Menú" class="local-icon">
+                    <IMG src="img/menu.svg" alt="Menú" class="local-icon">
                 </button>
             </div>
             
             <!-- Logo y nombre de la empresa (clickeable para ir al dashboard) -->
             <div class="logo-container" onclick="window.location.href='?pagina=dashboard'">
                 <div class="logo">
-                    <img src="img/logo.png" alt="Logo Casa Lai" height="40">
+                    <IMG src="img/LOGO.png" alt="Logo Casa Lai" height="40">
                 </div>
                 <div class="company-name">
                     CasaLai C.A
@@ -137,13 +137,13 @@ if (isset($_SESSION['id_usuario'])) {
         <div class="nav-icons">
             <!-- Botón de tasa de cambio -->
             <button class="icon-btn" id="tasa-cambio-btn">
-                <img src="img/currency-exchange.svg" alt="Tasa de Cambio" class="local-icon">
+                <IMG src="img/currency-exchange.svg" alt="Tasa de Cambio" class="local-icon">
             </button>
 
             <!-- Botón de carrito -->
             <?php if ($_SESSION['nombre_rol'] === 'Cliente') {  ?>
                 <button class="icon-btn" id="cart-btn">
-                    <img src="img/shopping-cart2.svg" alt="Carrito" class="local-icon">
+                    <IMG src="img/shopping-cart2.svg" alt="Carrito" class="local-icon">
                     <?php if ($carrito_count > 0): ?>
                         <span class="cart-count-badge"><?php echo $carrito_count; ?></span>
                     <?php endif; ?>
@@ -152,7 +152,7 @@ if (isset($_SESSION['id_usuario'])) {
 
             <!-- Botón de notificaciones -->
             <button class="icon-btn" id="notifications-btn">
-                <img src="img/bell.svg" alt="Notificaciones" class="local-icon">
+                <IMG src="img/bell.svg" alt="Notificaciones" class="local-icon">
                 <?php if ($notificaciones_count > 0): ?>
                     <span class="notification-badge"><?php echo $notificaciones_count; ?></span>
                 <?php endif; ?>
@@ -161,7 +161,7 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Botón de ayuda -->
             <button class="icon-btn">
                 <a href="public/casalai-manual/index.php" target="_blank">
-                    <img src="img/info.svg" alt="Ayuda" class="local-icon">
+                    <IMG src="img/info.svg" alt="Ayuda" class="local-icon">
                 </a>
             </button>
             
@@ -181,7 +181,7 @@ if (isset($_SESSION['id_usuario'])) {
         <div class="side-menu-header">
             <h3>Menú Principal</h3>
             <button class="close-btn" id="close-menu">
-                <img src="img/x.svg" alt="Cerrar" class="local-icon">
+                <IMG src="img/x.svg" alt="Cerrar" class="local-icon">
             </button>
         </div>
         
@@ -189,15 +189,15 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Administrar Perfiles -->
             <?php if (!empty($permisosConsulta['Usuario']) && $nombre_rol !== 'Cliente'): ?>
             <div class="menu-option" data-target="profiles">
-                <span><img src="img/users-round.svg" alt="Perfiles" class="menu-icon"> Administrar Perfiles</span>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <span><IMG src="img/users-round.svg" alt="Perfiles" class="menu-icon"> Administrar Perfiles</span>
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="profiles">
                 <div class="sub-option" onclick="window.location.href='?pagina=usuario'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Usuario
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Usuario
                 </div>
                 <div class="sub-option" onclick="window.location.href='?pagina=reporteUsuario'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Perfiles
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Perfiles
                 </div>
             </div>
             <?php endif; ?>
@@ -205,15 +205,15 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Administrar Inventario -->
             <?php if (!empty($permisosConsulta['Recepcion']) && $nombre_rol !== 'Cliente'): ?>
             <div class="menu-option" data-target="inventory">
-                <span><img src="img/package-open.svg" alt="Inventario" class="menu-icon"> Administrar Inventario</span>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <span><IMG src="img/package-open.svg" alt="Inventario" class="menu-icon"> Administrar Inventario</span>
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="inventory">
                 <div class="sub-option" onclick="window.location.href='?pagina=recepcion'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Recepción
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Recepción
                 </div>
                 <div class="sub-option" onclick="window.location.href='?pagina=reporteInventario'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Inventario
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Inventario
                 </div>
             </div>
             <?php endif; ?>
@@ -221,33 +221,33 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Administrar Productos -->
             <?php if (($nombre_rol !== 'Cliente') && (!empty($permisosConsulta['Marcas']) || !empty($permisosConsulta['Modelos']) || !empty($permisosConsulta['Productos']) || !empty($permisosConsulta['Categorias']))): ?>
             <div class="menu-option" data-target="products">
-                <span><img src="img/package-search.svg" alt="Productos" class="menu-icon"> Administrar Productos</span>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <span><IMG src="img/package-search.svg" alt="Productos" class="menu-icon"> Administrar Productos</span>
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="products">
                 <?php if (!empty($permisosConsulta['Marcas'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=marca'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Marcas
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Marcas
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Modelos'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=modelo'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Modelos
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Modelos
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Productos'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=producto'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Productos
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Productos
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Categorias'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=categoria'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Categorías
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Categorías
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Marcas']) || !empty($permisosConsulta['Modelos']) || !empty($permisosConsulta['Productos']) || !empty($permisosConsulta['Categorias'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=reporteProductos'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Productos
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Productos
                 </div>
                 <?php endif; ?>
             </div>
@@ -256,15 +256,15 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Administrar Proveedores -->
             <?php if (!empty($permisosConsulta['Proveedores']) && $nombre_rol !== 'Cliente'): ?>
             <div class="menu-option" data-target="providers">
-                <span><img src="img/truck.svg" alt="Proveedores" class="menu-icon"> Administrar Proveedores</span>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <span><IMG src="img/truck.svg" alt="Proveedores" class="menu-icon"> Administrar Proveedores</span>
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="providers">
                 <div class="sub-option" onclick="window.location.href='?pagina=proveedor'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Proveedores
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Proveedores
                 </div>
                 <div class="sub-option" onclick="window.location.href='?pagina=reporteProveedores'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Proveedores
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Proveedores
                 </div>
             </div>
             <?php endif; ?>
@@ -272,12 +272,12 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Administrar Clientes -->
             <?php if (!empty($permisosConsulta['Clientes']) && $nombre_rol !== 'Cliente'): ?>
             <div class="menu-option" data-target="clients">
-                <span><img src="img/users-round.svg" alt="Clientes" class="menu-icon"> Administrar Clientes</span>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <span><IMG src="img/users-round.svg" alt="Clientes" class="menu-icon"> Administrar Clientes</span>
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="clients">
                 <div class="sub-option" onclick="window.location.href='?pagina=cliente'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Clientes
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Clientes
                 </div>
             </div>
             <?php endif; ?>
@@ -286,61 +286,61 @@ if (isset($_SESSION['id_usuario'])) {
             <?php if (!empty($permisosConsulta['Catalogo']) || !empty($permisosConsulta['Compra Física']) || !empty($permisosConsulta['pasarela']) || !empty($permisosConsulta['Prefactura']) || !empty($permisosConsulta['Ordenes de despacho']) || !empty($permisosConsulta['Despacho'])): ?>
             <div class="menu-option" data-target="sales">
                 <?php if ($nombre_rol === 'Cliente'): ?>
-                    <span><img src="img/shopping-cart.svg" alt="Compras" class="menu-icon"> Compras</span>
+                    <span><IMG src="img/shopping-cart.svg" alt="Compras" class="menu-icon"> Compras</span>
                 <?php else: ?>
-                    <span><img src="img/shopping-cart.svg" alt="Ventas" class="menu-icon"> Administrar Ventas</span>
+                    <span><IMG src="img/shopping-cart.svg" alt="Ventas" class="menu-icon"> Administrar Ventas</span>
                 <?php endif; ?>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="sales">
                 <?php if (!empty($permisosConsulta['Catalogo'])): ?>
                     <?php if ($nombre_rol === 'Cliente'): ?>
                         <div class="sub-option" onclick="window.location.href='?pagina=catalogo'">
-                            <img src="img/angle-right.svg" alt=">" class="menu-icon"> Catálogo
+                            <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Catálogo
                         </div>
                     <?php else: ?>
                         <div class="sub-option" onclick="window.location.href='?pagina=catalogo'">
-                            <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Catálogo
+                            <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Catálogo
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Compra Física']) && $nombre_rol !== 'Cliente'): ?>
                     <div class="sub-option" onclick="window.location.href='?pagina=comprafisica'">
-                        <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Ventas Presenciales
+                        <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Ventas Presenciales
                     </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['pasarela'])): ?>
                     <?php if ($nombre_rol === 'Cliente'): ?>
                         <div class="sub-option" onclick="window.location.href='?pagina=pasarela'">
-                            <img src="img/angle-right.svg" alt=">" class="menu-icon"> Pagos
+                            <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Pagos
                         </div>
                     <?php else: ?>
                         <div class="sub-option" onclick="window.location.href='?pagina=pasarela'">
-                            <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Pagos
+                            <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Pagos
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Pedidos']) && $nombre_rol !== 'Cliente'): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=gestionarfactura'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Pedidos
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Pedidos
                 </div>
                 <?php endif; ?>
                  <?php if (!empty($permisosConsulta['Pedidos']) && $nombre_rol == 'Cliente'): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=gestionarfactura'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Pedidos Realizados
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Pedidos Realizados
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Ordenes de despacho']) && $nombre_rol !== 'Cliente'): ?>
                     <div class="sub-option" onclick="window.location.href='?pagina=ordendespacho'">
-                        <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Ordenes de Despacho
+                        <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Ordenes de Despacho
                     </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Despacho']) && $nombre_rol !== 'Cliente'): ?>
                     <div class="sub-option" onclick="window.location.href='?pagina=despacho'">
-                        <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Despacho
+                        <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Despacho
                     </div>
                     <div class="sub-option" onclick="window.location.href='?pagina=reporteVentas'">
-                        <img src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Ventas
+                        <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Ventas
                     </div>
                 <?php endif; ?>
             </div>
@@ -349,23 +349,23 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Administrar Finanzas -->
             <?php if (!empty($permisosConsulta['Cuentas bancarias']) || !empty($permisosConsulta['Finanzas'] && $nombre_rol !== 'Cliente')): ?>
             <div class="menu-option" data-target="finances">
-                <span><img src="img/dollar-sign.svg" alt="Finanzas" class="menu-icon"> Administrar Finanzas</span>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <span><IMG src="img/dollar-sign.svg" alt="Finanzas" class="menu-icon"> Administrar Finanzas</span>
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="finances">
                 <?php if (!empty($permisosConsulta['Cuentas bancarias'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=cuenta'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Cuentas Bancarias
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Cuentas Bancarias
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Finanzas'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=finanza'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Ingresos y Egresos
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Ingresos y Egresos
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Cuentas bancarias']) || !empty($permisosConsulta['Finanzas'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=reporteFinanzas'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Reportes de Finanzas
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Reportes de Finanzas
                 </div>
                 <?php endif; ?>
             </div>
@@ -374,28 +374,28 @@ if (isset($_SESSION['id_usuario'])) {
             <!-- Administrar Seguridad -->
             <?php if (!empty($permisosConsulta['permisos']) || !empty($permisosConsulta['Roles']) || !empty($permisosConsulta['bitacora']) || !empty($permisosConsulta['Respaldo'])): ?>
             <div class="menu-option" data-target="security">
-                <span><img src="img/key-round.svg" alt="Seguridad" class="menu-icon"> Administrar Seguridad</span>
-                <img src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
+                <span><IMG src="img/key-round.svg" alt="Seguridad" class="menu-icon"> Administrar Seguridad</span>
+                <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
             </div>
             <div class="sub-options" id="security">
                 <?php if (!empty($permisosConsulta['permisos'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=permiso'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Permisos
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Permisos
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Roles'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=rol'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Roles
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Roles
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['bitacora'])): ?>
                 <div class="sub-option" onclick="window.location.href='?pagina=bitacora'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Bitácora
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Bitácora
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Respaldo'])): ?>
-                <div class="sub-option" onclick="window.location.href='?pagina=backup'">
-                    <img src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Respaldo
+                <div class="sub-option" onclick="window.location.href='?pagina=respaldo'">
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Respaldo
                 </div>
                 <?php endif; ?>
             </div>
@@ -408,7 +408,7 @@ if (isset($_SESSION['id_usuario'])) {
 
         <!-- Panel de Tasa de Cambio -->
         <div class="tasa-cambio-panel" id="tasa-cambio-panel">
-        <h2>Tipo de Cambio <img src="img/currency-exchange.svg" alt="Tasa" class="local-icon" style="width: 20px; height: 20px;"></h2>
+        <h2>Tipo de Cambio <IMG src="img/currency-exchange.svg" alt="Tasa" class="local-icon" style="width: 20px; height: 20px;"></h2>
         <div class="tasa-info">
             <div class="tasa-valor">
                 <strong>1 USD = <?= $tasaBCVFormateada ?> BS</strong>
@@ -437,7 +437,7 @@ if (isset($_SESSION['id_usuario'])) {
                         <small><?= date('d/m/Y H:i', strtotime($notif['fecha_hora'])) ?></small>
                     </div>
                     <button class="marcar-leido" data-id="<?= $notif['id_notificacion'] ?>">
-                        <img src="img/check.svg" alt="Marcar leído" class="local-icon">
+                        <IMG src="img/check.svg" alt="Marcar leído" class="local-icon">
                     </button>
                 </div>
             <?php endforeach; ?>
@@ -462,11 +462,11 @@ if (isset($_SESSION['id_usuario'])) {
         </div>
         <div class="profile-options">
             <a href="?pagina=perfil" class="profile-option">
-                <img src="img/user.svg" alt="Perfil" class="local-icon">
+                <IMG src="img/user.svg" alt="Perfil" class="local-icon">
                 Mi Perfil
             </a>
             <a href="#" class="profile-option session-out" onclick="confirmarCerrarSesion(); return false;">
-                <img src="img/log-out.svg" alt="Cerrar Sesión" class="local-icon">
+                <IMG src="img/log-out.svg" alt="Cerrar Sesión" class="local-icon">
                 Cerrar Sesión
             </a>
         </div>
@@ -782,7 +782,7 @@ if (isset($_SESSION['id_usuario'])) {
                                             <small>${notif.fecha_hora}</small>
                                         </div>
                                         <button class="marcar-leido" data-id="${notif.id_notificacion}">
-                                            <img src="img/check.svg" alt="Marcar leído" class="local-icon">
+                                            <IMG src="img/check.svg" alt="Marcar leído" class="local-icon">
                                         </button>
                                     </div>
                                 `;

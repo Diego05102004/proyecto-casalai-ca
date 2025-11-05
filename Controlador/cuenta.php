@@ -2,9 +2,9 @@
 ob_start();
 
 // Requires
-require_once 'modelo/cuenta.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/cuenta.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 // Constantes de módulo
 define('MODULO_CUENTA_BANCARIA', 15);
@@ -232,7 +232,7 @@ function cuentasReportes() {
 }
 
 $pagina = "cuenta";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -244,7 +244,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     );}
     $cuentabancos = consultarCuentabanco();
     $cuentasReportes = cuentasReportes();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

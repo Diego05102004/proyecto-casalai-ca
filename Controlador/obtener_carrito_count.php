@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once '../config/config.php';
-require_once '../modelo/carrito.php';
+require_once 'Config/Config.php';
+require_once 'Modelo/carrito.php';
 
 header('Content-Type: application/json');
 

@@ -103,13 +103,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <div class="contenedor-tabla">
 
     <div class="tabla-header">
-        <div class="filtro-status">
-            <label for="filtro-estatus">Mostrar:</label>
-            <select id="filtro-estatus">
-                <option value="habilitado" selected>Habilitados</option>
-                <option value="inhabilitado">Inhabilitados</option>
-            </select>
-        </div>
+
 
         <h3>LISTA DE USUARIOS</h3>
 
@@ -122,7 +116,15 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         </div>
     </div>
 
-    <table class="tablaConsultas" id="tablaConsultas">
+    <div class="filtro-status">
+        <label for="filtro-estatus">Mostrar:</label>
+        <select id="filtro-estatus" class="form-select">
+            <option value="todos" selected>Todos</option>
+            <option value="habilitado">Habilitados</option>
+            <option value="inhabilitado">Inhabilitados</option>
+        </select>
+    </div>
+    <table class="table table-striped table-bordered" id="tablaConsultas" style="width:100%">
         <thead>
             <tr>
                 <th>Nombre y Apellido</th>
@@ -383,24 +385,14 @@ document.getElementById('descargarPDFUsuarios').addEventListener('click', functi
         <!-- Modal de eliminación -->
         <?php include 'footer.php'; ?>
         <!-- jQuery ya se carga en header.php; evitar recargarlo aquí para no perder handlers -->
-        <script src="public/js/jquery.dataTables.min.js"></script>
-        <script src="public/js/dataTables.bootstrap5.min.js"></script>
-        <script src="public/js/datatable.js"></script>
+        <!-- DataTables -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css"/>
+        <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+        
         <!-- Cargar lógica del módulo al final, con todas las dependencias listas -->
         <script src="javascript/usuario.js"></script>
         <script src="public/bootstrap/js/sidebar.js"></script>
-        <script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-        <script>
-            $(document).ready(function() {
-                $('#tablaConsultas').DataTable({
-                    language: {
-                        url: 'public/js/es-ES.json'
-                    },
-                    order: [[0, 'desc']]
-                });
-            });
-        </script>
 
         <button 
             class="btn-grafica"

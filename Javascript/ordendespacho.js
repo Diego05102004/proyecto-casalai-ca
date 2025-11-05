@@ -1,4 +1,86 @@
-$(document).ready(function () {
+// Esperar a que el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si la tabla existe
+    const tabla = document.getElementById('tablaConsultas');
+    if (!tabla) {
+        console.error('No se encontró la tabla con ID "tablaConsultas"');
+        return;
+    }
+
+    // Verificar que la tabla tenga la estructura correcta
+    const thead = tabla.querySelector('thead');
+    const tbody = tabla.querySelector('tbody');
+    
+    if (!thead || !tbody) {
+        console.error('La tabla no tiene la estructura correcta (falta thead o tbody)');
+        return;
+    }
+
+    // Contar columnas en el encabezado
+    const columnCount = thead.querySelectorAll('th').length;
+    console.log('Número de columnas en la tabla:', columnCount);
+
+    // Verificar que todas las filas tengan el mismo número de celdas
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, index) => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length !== columnCount) {
+            console.error(`La fila ${index + 1} tiene ${cells.length} celdas, se esperaban ${columnCount}`);
+        }
+    });
+
+    // Inicializar DataTable solo si no está ya inicializada
+    if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+        try {
+            const table = $('#tablaConsultas').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+                },
+                "columnDefs": [
+                    { 
+                        "targets": [5], // Columna de acciones (índice 5)
+                        "orderable": false,
+                        "searchable": false,
+                        "className": "dt-center"
+                    },
+                    { 
+                        "targets": [0], // Columna de fecha (índice 0)
+                        "type": 'date',
+                        "className": "dt-center"
+                    },
+                    { 
+                        "targets": [1, 2, 4], // Columnas a centrar
+                        "className": "dt-center"
+                    },
+                    { 
+                        "targets": [3], // Columna de cliente
+                        "className": "dt-left"
+                    }
+                ],
+                "order": [[0, "desc"]],
+                "responsive": true,
+                "autoWidth": false,
+                "pageLength": 10,
+                "processing": true,
+                "serverSide": false,
+                "deferRender": true,
+                "dom": '<"top"f>rt<"bottom"lip><"clear">',
+                "initComplete": function(settings, json) {
+                    console.log('DataTable inicializada correctamente');
+                },
+                "drawCallback": function() {
+                    console.log('Tabla redibujada');
+                },
+                "error": function(settings, techNote, message) {
+                    console.error('Error en DataTables:', message);
+                }
+            });
+
+            console.log('DataTable inicializada con éxito');
+        } catch (error) {
+            console.error('Error al inicializar DataTable:', error);
+        }
+    }
 
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", "Atención", $("#mensajes").html());

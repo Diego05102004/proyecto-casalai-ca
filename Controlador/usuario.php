@@ -4,10 +4,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../modelo/usuario.php';
-require_once __DIR__ . '/../modelo/rol.php';
-require_once __DIR__ . '/../modelo/permiso.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
+require_once __DIR__ . '/../Modelo/usuario.php';
+require_once __DIR__ . '/../Modelo/rol.php';
+require_once __DIR__ . '/../Modelo/permiso.php';
+require_once __DIR__ . '/../Modelo/bitacora.php';
 define('MODULO_USUARIO', 1);
 
 if (!isset($_SESSION['id_usuario'])) {
@@ -164,11 +164,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel = new Bitacora();
+                    $detalle = sprintf(
+                        'Actualización de usuario (ID: %d). Usuario: %s %s (antes) -> %s %s (después)',
+                        $id_usuario,
+                        $usuarioViejo['nombres'] ?? 'N/A',
+                        $usuarioViejo['apellidos'] ?? 'N/A',
+                        $usuarioActualizado['nombres'] ?? 'N/A',
+                        $usuarioActualizado['apellidos'] ?? 'N/A'
+                    );
+                    
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_USUARIO,
                         'MODIFICAR',
-                        'Actualización de usuario: ' .$usuarioViejo.' a '.$usuarioActualizado.'',
+                        $detalle,
                         'media'
                     );
                 }
@@ -261,7 +270,7 @@ foreach ($reporteRoles as &$rol) {
 unset($rol);
 
 $pagina = "usuario";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -273,7 +282,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         );
     }
     $usuarios = getusuarios();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

@@ -1,5 +1,5 @@
 <?php
-require_once 'config/config.php';
+require_once 'Config/Config.php';
 
 class OrdenDespacho extends BD {
     
@@ -339,7 +339,7 @@ class OrdenDespacho extends BD {
                        VALUES (:id_factura, :cliente, NOW(), 'Por Entregar', 1)";
             $stmt = $this->conex->prepare($sqlIns);
             $stmt->bindParam(':id_factura', $idFactura, PDO::PARAM_INT);
-            // Guardar NOMBRE del cliente como lo requiere la vista/reportes
+            // Guardar NOMBRE del cliente como lo requiere la Vista/reportes
             $stmt->bindParam(':cliente', $clienteNombre, PDO::PARAM_STR);
             $ok = $stmt->execute();
             if ($ok) {

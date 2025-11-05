@@ -1,9 +1,9 @@
 <?php  
 // Requires organizados al inicio
-require_once 'modelo/Despacho.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
-require_once 'modelo/notificacion.php';
+require_once 'Modelo/Despacho.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/notificacion.php';
 
 define('MODULO_DESPACHO', 3);
 
@@ -149,7 +149,7 @@ $productos = $k->consultarproductos();
 $totalDespachos = count($despachos);
 
 $pagina = "despacho";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -160,7 +160,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         'media'
     );}
     $despachos = getdespacho();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "pagina en construccion";
 }

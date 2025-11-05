@@ -1,10 +1,10 @@
 <?php
 ob_start();
 require __DIR__ . '/../public/fpdf/fpdf.php';
-require_once __DIR__ . '/../modelo/ordendespacho.php';
-require_once __DIR__ . '/../modelo/permiso.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
-require_once __DIR__ . '/../modelo/notificacion.php';
+require_once 'Modelo/ordendespacho.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/notificacion.php';
 define('MODULO_ORDEN_DESPACHO', 14);
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
@@ -191,7 +191,7 @@ function getordendespacho() {
     }
 
 $pagina = "ordendespacho";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -208,7 +208,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $ordenModel = new OrdenDespacho();
     $facturas = $ordenModel->obtenerFacturasDisponibles();
 
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

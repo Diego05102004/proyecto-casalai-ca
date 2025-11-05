@@ -1,9 +1,9 @@
 <?php
 ob_start();
-require_once 'modelo/cuenta.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
-require_once 'modelo/finanza.php';
+require_once 'Modelo/cuenta.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/finanza.php';
 
 $id_rol = $_SESSION['id_rol'];
 
@@ -86,10 +86,10 @@ $totalEgresos = array_sum(array_column($finanzas['egresos'], 'monto'));
 
 
 $pagina = "reporteFinanzas";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     $cuentabancos = consultarCuentabanco();
     $cuentasReportes = cuentasReportes();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

@@ -1,5 +1,5 @@
 <?php
-require_once 'config/config.php';
+require_once 'Config/Config.php';
 
 class cliente extends BD {
     private $tableclientes = 'tbl_clientes';
@@ -89,7 +89,7 @@ class cliente extends BD {
         }
     }
 
-    // En modelo/cliente.php
+    // En Modelo/cliente.php
     public function listarTodosClientes() {
         $conexion = new BD('P');
         $co = $conexion->getConexion();

@@ -1,7 +1,7 @@
 <?php
 // Obtener datos de la tasa BCV para usuarios no logeados
-require_once 'config/config.php';
-require_once 'modelo/DolarService.php';
+require_once 'Config/Config.php';
+require_once 'Modelo/DolarService.php';
 $dolarService = new DolarService();
 $tasaBCV = $dolarService->obtenerPrecioDolar();
 $tasaBCVFormateada = number_format($tasaBCV, 2);

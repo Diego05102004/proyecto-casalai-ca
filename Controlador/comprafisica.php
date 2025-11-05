@@ -3,14 +3,14 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 // Página y dependencias
 $pagina = 'comprafisica';
-require_once 'modelo/comprafisica.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/ordendespacho.php';
-require_once 'modelo/bitacora.php';
-require_once 'modelo/cuenta.php';
-require_once 'modelo/DolarService.php';
-require_once 'modelo/notificacion.php';
-require_once 'modelo/Factura.php';
+require_once 'Modelo/comprafisica.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/ordendespacho.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/cuenta.php';
+require_once 'Modelo/DolarService.php';
+require_once 'Modelo/notificacion.php';
+require_once 'Modelo/Factura.php';
 
 // Constante de módulo
 define('MODULO_DESPACHO', 3);
@@ -55,7 +55,7 @@ $facturaModel = new Factura();
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, 'compra fisica');
 
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     $accion = $_POST['accion'] ?? '';
 
     function getdespacho()
@@ -246,7 +246,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $permisos = new Permisos();
     $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
     $listadocuentas = $cuentaModel->consultarCuentabanco();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(

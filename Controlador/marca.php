@@ -1,8 +1,8 @@
 <?php
 ob_start();
-require_once 'modelo/marca.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/marca.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 define('MODULO_MARCA', 4);
@@ -170,7 +170,7 @@ if (!function_exists('getmarcas')) {
 
 
 $pagina = "marca";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -184,7 +184,7 @@ if (is_file("vista/" . $pagina . ".php")) {
 
     $marcas = getmarcas();
     // Pasa $permisosUsuario a la vista
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

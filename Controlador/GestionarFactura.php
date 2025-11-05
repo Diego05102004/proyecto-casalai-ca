@@ -1,23 +1,23 @@
 <?php
 
-if (!is_file("modelo/factura.php")) {
+if (!is_file("Modelo/Factura.php")) {
     echo "Falta definir la clase Factura";
     exit;
 }
 
-require_once("modelo/factura.php");
-require_once 'modelo/bitacora.php';
-require_once('modelo/permiso.php');
+require_once("Modelo/Factura.php");
+require_once 'Modelo/bitacora.php';
+require_once('Modelo/permiso.php');
 $permisosObj = new Permisos();
 $permisosUsuario = $permisosObj->getPermisosPorRolModulo();
-if (is_file("vista/gestionarfactura.php")) {
+if (is_file("Vista/gestionarfactura.php")) {
     $factura = new Factura();
     
     if (isset($_POST['descargarFactura'])) {
     $id_factura = $_POST['descargarFactura'];
     $factura->setId($id_factura);
     $res = $factura->facturaTransaccion('DescargarFactura');
-    require_once("vista/descargarfactura.php");
+    require_once("Vista/descargarfactura.php");
     exit; // para evitar que se ejecute el resto
 }
 
@@ -75,7 +75,7 @@ if (is_file("vista/gestionarfactura.php")) {
 
     
 
-    require_once("vista/gestionarfactura.php");
+    require_once("Vista/gestionarfactura.php");
         if (isset($_SESSION['id_usuario'])) {
 $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(

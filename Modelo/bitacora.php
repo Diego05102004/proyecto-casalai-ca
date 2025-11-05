@@ -1,6 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
-
+require_once 'Config/Config.php';
 class Bitacora extends BD {
     public function __construct() {
         parent::__construct();

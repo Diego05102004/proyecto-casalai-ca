@@ -1,6 +1,6 @@
 <?php
-require_once 'config/config.php';
-require_once 'factura.php';
+require_once 'Config/Config.php';
+require_once 'Factura.php';
 require_once 'ordendespacho.php';
 
 class PasareladePago extends Factura {

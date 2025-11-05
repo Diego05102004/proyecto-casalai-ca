@@ -1,8 +1,8 @@
 <?php
 ob_start();
-require_once __DIR__ . '/../modelo/categoria.php';
-require_once __DIR__ . '/../modelo/permiso.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
+require_once 'Modelo/categoria.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 define('MODULO_CATEGORIA', 7);
 
@@ -181,7 +181,7 @@ function consultarCategorias() {
 }
 
 $pagina = "categoria";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -193,7 +193,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         );
     }
     $categorias = consultarCategorias();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

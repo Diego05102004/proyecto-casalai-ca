@@ -70,7 +70,7 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
         <div class="ghost"></div>
     </div>
 
-    <table class="tablaConsultas" id="tablaConsultas">
+    <table class="table table-striped table-bordered" id="tablaConsultas" style="width:100%">
         <thead>
             <tr>
                 <th>Fecha</th>
@@ -311,49 +311,38 @@ echo json_encode(array_map(function($factura) {
 }, $facturas));
 ?>;
 </script>
-<script src="javascript/ordendespacho.js"></script>
-
-<script>
-$(document).ready(function() {
-    $('#tablaConsultas').DataTable({
-        language: {
-            url: 'public/js/es-ES.json'
-        },
-        columnDefs: [
-            {
-                targets: 4, // Columna del estado
-                render: function(data, type, row) {
-                    if (type === 'sort') {
-                        // "Por Entregar" se ordena primero (0), "Entregada" después (1)
-                        return data === 'Por Entregar' ? 0 : 1;
-                    }
-                    return data;
-                }
-            }
-        ],
-        order: [
-            [4, 'asc'], // Primero Por Entregar, luego Entregada
-            [0, 'asc']  // Dentro del estado, fecha más vieja primero
-        ]
-    });
-});
-</script>
-
-<!-- Botón para abrir el modal (puedes colocarlo donde prefieras) -->
-<script>
-$(document).ready(function() {
-    $('#btnIncluirOrden').on('click', function() {
-        $('#registrarOrdenModal').modal('show');
-    });
-});
-</script>
     <button 
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteVentas'">
         <img src="img/grafic.png" alt="Reportes" width="30" height="30">
-    
     </button>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css"/>
+    
+    <!-- DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Nuestro archivo JS -->
+    <script src="javascript/ordendespacho.js"></script>
+    
+    <!-- Inicialización de componentes -->
+    <script>
+    $(document).ready(function() {
+        // Inicialización del botón de incluir orden
+        $('#btnIncluirOrden').on('click', function() {
+            $('#registrarOrdenModal').modal('show');
+        });
+    });
+    </script>
 </body>
 
 

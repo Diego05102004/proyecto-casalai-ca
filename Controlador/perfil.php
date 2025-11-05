@@ -10,8 +10,8 @@ header('Expires: 0');
 // error_reporting(0);
 // ini_set('display_errors', 0);
 
-require_once __DIR__ . '/../modelo/usuario.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
+require_once 'Modelo/usuario.php';
+require_once 'Modelo/bitacora.php';
 define('MODULO_PERFIL', 22);
 
 if (!isset($_SESSION['id_usuario'])) {
@@ -250,7 +250,7 @@ function handlePasswordUpdate($usuarioModel, $bitacoraModel, $usuario) {
 
 // Cargar vista
 $pagina = "perfil";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -261,7 +261,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             'baja'
         );
     }
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

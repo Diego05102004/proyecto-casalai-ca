@@ -3,9 +3,9 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../modelo/backup.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
-require_once __DIR__ . '/../modelo/permiso.php';
+require_once 'Modelo/respaldo.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/permiso.php';
 define('MODULO_BACKUP', 17);
 
 // Inicialización de permisos para la vista
@@ -14,7 +14,7 @@ $permisosUsuario = $permisos->getPermisosPorRolModulo();
 
 // Función simple de depuración a archivo
 function backup_debug_log($mensaje) {
-    $logDir = __DIR__ . '/../db/backup/';
+    $logDir = __DIR__ . '/../db/respaldo/';
     if (!is_dir($logDir)) { @mkdir($logDir, 0775, true); }
     $logFile = $logDir . 'backup_debug.log';
     @file_put_contents($logFile, '[' . date('c') . "] CONTROLADOR: " . $mensaje . "\n", FILE_APPEND);
@@ -44,7 +44,7 @@ if (isset($_GET['accion'])) {
             $backup = new Backup($tipo);
             $nombreArchivo = 'backup_' . ($tipo === 'S' ? 'seguridad' : 'principal') . '_' . date('Ymd_His') . '.sql';
             $ok = $backup->generar($nombreArchivo);
-            $ruta = realpath(__DIR__ . '/../db/backup/' . $nombreArchivo);
+            $ruta = realpath(__DIR__ . '/../db/respaldo/' . $nombreArchivo);
             backup_debug_log("Acción GENERAR tipo={$tipo}, archivo={$nombreArchivo}, ok=" . ($ok ? '1' : '0') . ", ruta=" . ($ruta ?: 'N/A'));
 
             if ($ok && $ruta && file_exists($ruta)) {
@@ -62,7 +62,7 @@ if (isset($_GET['accion'])) {
                 }
                 echo json_encode(['success' => true, 'archivo' => $nombreArchivo]);
             } else {
-                $logFile = __DIR__ . '/../db/backup/backup_debug.log';
+                $logFile = __DIR__ . '/../db/respaldo/backup_debug.log';
                 $logMsg = file_exists($logFile) ? @file_get_contents($logFile) : '';
                 backup_debug_log('Error al GENERAR respaldo (ok=0 o archivo no existe).');
                 echo json_encode([
@@ -86,7 +86,7 @@ if (isset($_GET['accion'])) {
 
     if ($_GET['accion'] === 'descargar') {
         $archivo = $_GET['archivo'] ?? '';
-        $ruta = realpath(__DIR__ . '/../db/backup/' . $archivo);
+        $ruta = realpath(__DIR__ . '/../db/respaldo/' . $archivo);
         backup_debug_log('Acción DESCARGAR archivo=' . $archivo . ', existe=' . ((bool)$ruta && file_exists($ruta) ? '1' : '0'));
         if ($archivo && file_exists($ruta)) {
             header('Content-Type: application/sql');
@@ -112,7 +112,7 @@ if (isset($_GET['accion'])) {
 
     if ($_GET['accion'] === 'restaurar') {
         $archivo = $_GET['archivo'] ?? '';
-        $ruta = realpath(__DIR__ . '/../db/backup/' . $archivo);
+        $ruta = realpath(__DIR__ . '/../db/respaldo/' . $archivo);
         header('Content-Type: application/json');
         backup_debug_log('Acción RESTAURAR archivo=' . $archivo . ', existe=' . ($ruta && file_exists($ruta) ? '1' : '0'));
         if ($archivo && file_exists($ruta)) {
@@ -144,11 +144,11 @@ if (isset($_GET['accion'])) {
 }
 
 // Renderizado de la vista
-$pagina = "backup";
-if (is_file("vista/" . $pagina . ".php")) {
+$pagina = "respaldo";
+if (is_file("Vista/" . $pagina . ".php")) {
     $backup = new Backup();
     $backups = $backup->listar();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
     if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {
             $bitacoraModel = new Bitacora();

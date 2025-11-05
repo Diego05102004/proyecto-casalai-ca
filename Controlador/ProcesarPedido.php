@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/../modelo/proveedor.php';
-require_once __DIR__ . '/../modelo/producto.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
-require_once __DIR__ . '/../config/config.php';
+require_once 'Modelo/proveedor.php';
+require_once 'Modelo/producto.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Config/Config.php';
 
 require_once __DIR__ . '/../config/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/../config/PHPMailer/Exception.php';
@@ -95,12 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($_POST['accion'] ?? '') == 'realiza
         // Redirigir con mensaje de éxito
         if (session_status() === PHP_SESSION_NONE) { session_start(); }
         $_SESSION['mensaje'] = "Pedido realizado correctamente y notificación enviada al proveedor.";
-        header('Location: ../vista/proveedor.php');
+        header('Location: ../Vista/proveedor.php');
     } catch (Exception $e) {
         // En caso de error
         session_start();
         $_SESSION['error'] = "Error al procesar el pedido: " . $e->getMessage();
-        header('Location: ../vista/proveedor.php');
+        header('Location: ../Vista/proveedor.php');
     }
     exit();
 }

@@ -1,6 +1,6 @@
 <?php if ($_SESSION) { ?>
 
-<?php require_once 'modelo/despacho.php' ; require_once 'controlador/factura.php' ; ?>
+<?php require_once 'Modelo/despacho.php' ; require_once 'controlador/factura.php' ; ?>
     <!DOCTYPE html>
     <html lang="en">
 

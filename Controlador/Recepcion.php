@@ -1,9 +1,9 @@
 <?php
 // Requires organizados al inicio
-require_once 'modelo/Recepcion.php';
-require_once 'modelo/notificacion.php';
-require_once __DIR__ . '/../modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/Recepcion.php';
+require_once 'Modelo/notificacion.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 define('MODULO_RECEPCION', 2); // Define el ID del módulo de cuentas bancarias
 
@@ -207,7 +207,7 @@ $RecepcionMensual = $r->getRecepcionesMensuales();
 
 $proveedores = (new Recepcion())->obtenerproveedor();
 $pagina = "recepcion";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -218,7 +218,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         'media'
     );}
     $recepciones = getrecepcion();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

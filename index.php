@@ -1,47 +1,80 @@
 <?php 
-$pagina = "catalogo"; 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-if (!empty($_GET['pagina'])){ 
-   $pagina = $_GET['pagina'];  
+// Cargar configuración de rutas
+require_once __DIR__ . '/Config/paths.php';
+
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-$rango = "";
-if (is_file("modelo/validalogin.php")) {
-   require_once("modelo/validalogin.php");
-   $v = new validalogin();
-   if ($pagina == 'cerrar') {
-      $v->destruyesesion();
-   } else {
-      $name = $v->leesesion();
-   }
+// Página por defecto
+$pagina = "catalogo"; 
+
+// Obtener la página solicitada
+if (!empty($_GET['pagina'])) { 
+    $pagina = $_GET['pagina'];  
+}
+
+// Verificar sesión de usuario
+if (file_exists(MODEL_PATH . "/validalogin.php")) {
+    require_once MODEL_PATH . "/validalogin.php";
+    $v = new validalogin();
+    
+    if ($pagina == 'cerrar') {
+        $v->destruyesesion();
+        header('Location: ' . ROOT_PATH);
+        exit;
+    } else {
+        $name = $v->leesesion();
+    }
 }
 
 // Manejo especial para recuperación de contraseña
 if ($pagina == 'password-recovery') {
     $action = $_GET['action'] ?? 'show_form';
     
-    require_once("controlador/PasswordRecoveryController.php");
-    $controller = new PasswordRecoveryController();
-    
-    switch ($action) {
-        case 'request':
-            $controller->procesarSolicitud();
-            break;
-        case 'reset':
-            $controller->procesarReseteo();
-            break;
-        case 'show_reset_form':
-            $controller->mostrarFormularioReseteo();
-            break;
-        default:
-            $controller->mostrarFormularioRecuperacion();
-            break;
+    try {
+        loadController('PasswordRecovery');
+        $controller = new PasswordRecoveryController();
+        
+        switch ($action) {
+            case 'request':
+                $controller->procesarSolicitud();
+                break;
+            case 'reset':
+                $controller->procesarReseteo();
+                break;
+            case 'show_reset_form':
+                $controller->mostrarFormularioReseteo();
+                break;
+            default:
+                $controller->mostrarFormularioRecuperacion();
+                break;
+        }
+    } catch (Exception $e) {
+        die("Error: " . $e->getMessage());
     }
     exit;
 } 
-else if(is_file("controlador/".$pagina.".php")){ 
-    require_once("controlador/".$pagina.".php");
-}
-else{
-    echo "Página en construcción";
+// Cargar controlador solicitado
+else {
+    $controllerFile = CONTROLLER_PATH . "/{$pagina}.php";
+    
+    if (file_exists($controllerFile)) {
+        try {
+            require_once $controllerFile;
+        } catch (Exception $e) {
+            die("Error al cargar el controlador: " . $e->getMessage());
+        }
+    } else {
+        // Mostrar página de error 404 o redirigir
+        header("HTTP/1.0 404 Not Found");
+        echo "<h1>404 Página no encontrada</h1>";
+        echo "<p>La página que estás buscando no existe.</p>";
+        exit;
+    }
 }

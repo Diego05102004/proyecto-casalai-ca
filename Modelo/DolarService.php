@@ -1,5 +1,5 @@
 <?php
-require_once 'config/config.php';
+require_once 'Config/Config.php';
 
 class DolarService {
     private $url = 'https://www.bcv.org.ve';

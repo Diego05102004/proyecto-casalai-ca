@@ -1,8 +1,8 @@
 <?php
 ob_start();
-require_once 'modelo/finanza.php';
-require_once __DIR__ . '/../modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/finanza.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
@@ -55,8 +55,8 @@ $totalIngresos = array_sum(array_column($finanzas['ingresos'], 'monto'));
 $totalEgresos = array_sum(array_column($finanzas['egresos'], 'monto'));
 
 $pagina = "finanza";
-if (is_file("vista/" . $pagina . ".php")) {
-    require_once("vista/" . $pagina . ".php");
+if (is_file("Vista/" . $pagina . ".php")) {
+    require_once("Vista/" . $pagina . ".php");
         if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {
             $bitacoraModel = new Bitacora();

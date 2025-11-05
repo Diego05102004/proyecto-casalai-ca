@@ -4,9 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'modelo/producto.php';
-require_once 'modelo/DolarService.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/producto.php';
+require_once 'Modelo/DolarService.php';
+require_once 'Modelo/bitacora.php';
 
 $productosModel = new Productos();
 $bitacoraModel = new Bitacora();
@@ -57,8 +57,8 @@ try {
 }
 
 $pagina = 'detalle_producto';
-if (is_file('vista/' . $pagina . '.php')) {
-    require_once('vista/' . $pagina . '.php');
+if (is_file('Vista/' . $pagina . '.php')) {
+    require_once('Vista/' . $pagina . '.php');
 } else {
     echo 'Página en construcción';
 }

@@ -1,5 +1,5 @@
 <?php
-require_once 'config/config.php';
+require_once 'Config/Config.php';
 
 class Cuentabanco extends BD {
 
@@ -11,6 +11,7 @@ class Cuentabanco extends BD {
     private $correo_cuenta;
     private $metodos_pago;
     private $estado;
+    protected $db;
 
     public function __construct() {
         $this->db = null;

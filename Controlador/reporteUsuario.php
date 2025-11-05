@@ -4,10 +4,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'modelo/usuario.php';
-require_once 'modelo/rol.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/usuario.php';
+require_once 'Modelo/rol.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 define('MODULO_USUARIO', 1);
 
 $permisos = new Permisos();
@@ -36,7 +36,7 @@ unset($rol);
 // ---------------------------------------------------------
 
 $pagina = "reporteUsuario";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
@@ -46,7 +46,7 @@ if (is_file("vista/" . $pagina . ".php")) {
             'media'
         );
     }
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 
 } else {
     echo "Página en construcción";

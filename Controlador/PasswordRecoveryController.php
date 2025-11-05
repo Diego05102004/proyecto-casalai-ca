@@ -1,5 +1,5 @@
 <?php
-require_once 'modelo/PasswordRecoveryModel.php';
+require_once 'Modelo/PasswordRecoveryModel.php';
 
 class PasswordRecoveryController {
     
@@ -13,7 +13,7 @@ class PasswordRecoveryController {
     }
     
     public function mostrarFormularioRecuperacion() {
-        include 'vista/password_recovery/form.php';
+        include 'Vista/password_recovery/form.php';
     }
 
     public function procesarSolicitud() {
@@ -68,7 +68,7 @@ class PasswordRecoveryController {
             die('Token inválido o expirado.');
         }
 
-        include 'vista/password_recovery/reset_form.php';
+        include 'Vista/password_recovery/reset_form.php';
     }
 
     public function procesarReseteo() {

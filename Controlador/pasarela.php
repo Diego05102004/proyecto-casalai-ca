@@ -1,13 +1,13 @@
 <?php
 ob_start();
-require_once 'modelo/pasareladepago.php';
-require_once 'modelo/cuenta.php';
-require_once 'modelo/factura.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
-require_once 'modelo/DolarService.php';
-require_once 'modelo/notificacion.php';
-require_once 'modelo/ordenDespacho.php';
+require_once 'Modelo/pasareladepago.php';
+require_once 'Modelo/cuenta.php';
+require_once 'Modelo/Factura.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/DolarService.php';
+require_once 'Modelo/notificacion.php';
+require_once 'Modelo/ordendespacho.php';
 define('MODULO_PASARELA_PAGOS', 16); // Define el ID
 $bitacoraModel = new Bitacora();
 $id_rol = $_SESSION['id_rol'];
@@ -224,8 +224,8 @@ if ($_SESSION['nombre_rol'] != 'Cliente') {
 }
 
 $pagina = "pasarela";
-if (is_file("vista/" . $pagina . ".php")) {
-    require_once("vista/" . $pagina . ".php");
+if (is_file("Vista/" . $pagina . ".php")) {
+    require_once("Vista/" . $pagina . ".php");
             if (isset($_SESSION['id_usuario'])) {
         $bitacoraModel->registrarBitacora(
     $_SESSION['id_usuario'],

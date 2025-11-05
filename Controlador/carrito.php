@@ -5,12 +5,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
-require_once __DIR__ . '/../modelo/producto.php';
-require_once __DIR__ . '/../modelo/carrito.php';
-require_once __DIR__ . '/../modelo/factura.php';
-require_once __DIR__ . '/../modelo/DolarService.php';
-require_once __DIR__ . '/../modelo/permiso.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
+require_once 'Modelo/producto.php';
+require_once 'Modelo/carrito.php';
+require_once 'Modelo/factura.php';
+require_once 'Modelo/DolarService.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 define('MODULO_CARRITO', 0);
 
 if (!isset($_SESSION['id_usuario'])) {
@@ -237,7 +237,7 @@ function obtenerMarcas() {
 
 // Cargar vista
 $pagina = "carrito";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
@@ -251,7 +251,7 @@ if (is_file("vista/" . $pagina . ".php")) {
     $productos = obtenerProductos();
     $carritos = obtenerProductosDelCarrito();
     $marcas = obtenerMarcas();
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 
 } else {
     echo "Página en construcción";

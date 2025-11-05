@@ -1,9 +1,9 @@
 <?php
 ob_start();
 
-require_once 'modelo/modelo.php';
-require_once 'modelo/permiso.php';
-require_once 'modelo/bitacora.php';
+require_once 'Modelo/modelo.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/bitacora.php';
 
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
@@ -190,7 +190,7 @@ function getmarcas() {
 }
 
 $pagina = "modelo";
-if (is_file("vista/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     $modelos = getModelos();
     $marcas = getmarcas();
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
@@ -203,7 +203,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         'media'
     );
 }
-    require_once("vista/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }

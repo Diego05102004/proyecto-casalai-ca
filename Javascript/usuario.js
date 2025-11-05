@@ -1,4 +1,47 @@
-$(document).ready(function () {
+$(document).ready(function() {
+    // Verificar si DataTable ya está inicializado
+    if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+        // Inicializar DataTable con configuración personalizada
+        var tablaUsuarios = $('#tablaConsultas').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+            },
+            "responsive": true,
+            "columnDefs": [
+                { 
+                    "targets": 5, // Índice de la columna de estatus
+                    "searchable": true,
+                    "type": 'string',
+                    "render": function(data, type, row) {
+                        // Para la búsqueda, devolvemos el texto del estado
+                        if (type === 'filter' || type === 'sort') {
+                            return $(data).text().trim().toLowerCase();
+                        }
+                        return data;
+                    }
+                },
+                { 
+                    "orderable": false, 
+                    "targets": [6] // Deshabilitar ordenamiento en columna de acciones
+                }
+            ]
+        });
+
+        // Manejar el cambio en el filtro de estatus
+        $('#filtro-estatus').off('change').on('change', function() {
+            var estatus = $(this).val();
+            
+            if (estatus === 'todos') {
+                tablaUsuarios.column(5).search('').draw();
+            } else {
+                // Buscar el texto exacto del estado
+                tablaUsuarios.column(5).search('^' + estatus + '$', true, false).draw();
+            }
+        });
+    }
+
+    // Resto del código...
+
   if ($.trim($("#mensajes").text()) != "") {
     mensajes("warning", 4000, "Atención", $("#mensajes").html());
   }
@@ -421,15 +464,33 @@ function agregarFilaUsuario(usuario) {
       contentType: false,
       processData: false,
       cache: false,
+      dataType: 'json', // Esperar una respuesta JSON
       success: function (respuesta) {
-        if (typeof respuesta === "string") {
-          respuesta = JSON.parse(respuesta);
-        }
         if (callback) callback(respuesta);
       },
-      error: function () {
-        Swal.fire("Error", "Error en la solicitud AJAX", "error");
-      },
+      error: function (xhr, status, error) {
+        try {
+          // Intentar extraer el JSON de la respuesta aunque venga con advertencias
+          let responseText = xhr.responseText;
+          // Buscar el primer { y el último } para extraer el JSON
+          const jsonStart = responseText.indexOf('{');
+          const jsonEnd = responseText.lastIndexOf('}') + 1;
+          if (jsonStart >= 0 && jsonEnd > 0) {
+            const jsonString = responseText.substring(jsonStart, jsonEnd);
+            const jsonResponse = JSON.parse(jsonString);
+            if (callback) callback(jsonResponse);
+          } else {
+            throw new Error('No se pudo extraer JSON de la respuesta');
+          }
+        } catch (e) {
+          console.error('Error al procesar la respuesta:', e);
+          Swal.fire({
+            title: "Error",
+            text: "Error al procesar la respuesta del servidor: " + error,
+            icon: "error"
+          });
+        }
+      }
     });
   }
 
@@ -592,17 +653,25 @@ function agregarFilaUsuario(usuario) {
   formData.append("accion", "modificar");
   enviarAjax(formData, function (response) {
     if (response.status === "success") {
+      const tabla = $("#tablaConsultas").DataTable();
+      const id = $("#modificar_id_usuario").val();
+      const fila = tabla.row(`tr[data-id="${id}"]`);
+      const usuario = response.usuario;
+      
+      // Cerrar el modal
       $("#modificar_usuario_modal").modal("hide");
+      
+      // Limpiar el formulario
+      $("#modificarusuario")[0].reset();
+      
+      // Mostrar mensaje de éxito
       Swal.fire({
         icon: "success",
-        title: "Modificado",
+        title: "¡Éxito!",
         text: "El usuario se ha modificado correctamente",
+        timer: 2000,
+        showConfirmButton: false
       });
-
-const tabla = $("#tablaConsultas").DataTable();
-const id = $("#modificar_id_usuario").val();
-const fila = tabla.row(`tr[data-id="${id}"]`);
-const usuario = response.usuario;
 
 if (fila.length) {
   fila.data([
@@ -683,18 +752,31 @@ if (fila.length) {
         datos.append("id_usuario", id_usuario);
         enviarAjax(datos, function (respuesta) {
           if (respuesta.status === "success") {
-            Swal.fire("Eliminado!", "El usuario ha sido eliminado.", "success");
             const tabla = $("#tablaConsultas").DataTable();
             const fila = tabla.row(
               `#tablaConsultas tbody tr[data-id="${id_usuario}"]`
             );
+            
+            // Eliminar la fila de la tabla
             tabla.row(fila).remove().draw();
+            
+            // Cerrar el modal si está abierto
+            $(".modal").modal('hide');
+            
+            // Mostrar mensaje de éxito
+            Swal.fire({
+              title: "¡Eliminado!",
+              text: "El usuario ha sido eliminado correctamente.",
+              icon: "success",
+              timer: 2000,
+              showConfirmButton: false
+            });
           } else {
-            Swal.fire(
-              "Error",
-              respuesta.message || "No se pudo eliminar el usuario",
-              "error"
-            );
+            Swal.fire({
+              title: "Error",
+              text: respuesta.message || "No se pudo eliminar el usuario",
+              icon: "error"
+            });
           }
         });
       }

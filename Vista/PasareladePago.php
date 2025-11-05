@@ -526,8 +526,8 @@
                                class="control-form" accept="image/*" required>
                         <span class="error-validacion" id="error-comprobante-${id}"></span>
                         <div class="preview-comprobante" id="preview-${id}">
-                            <img src="" alt="Vista previa del comprobante" id="img-preview-${id}">
-                            <p style="font-size: 0.75rem; margin: 0.25rem 0;">Vista previa del comprobante</p>
+                            <img src="" alt="Vista/ previa del comprobante" id="img-preview-${id}">
+                            <p style="font-size: 0.75rem; margin: 0.25rem 0;">Vista/ previa del comprobante</p>
                         </div>
                     </div>
                     <div class="envolver-form">
@@ -558,8 +558,8 @@
                                class="control-form" accept="image/*" required>
                         <span class="error-validacion" id="error-comprobante-${id}"></span>
                         <div class="preview-comprobante" id="preview-${id}">
-                            <img src="" alt="Vista previa del comprobante" id="img-preview-${id}">
-                            <p style="font-size: 0.75rem; margin: 0.25rem 0;">Vista previa del comprobante</p>
+                            <img src="" alt="Vista/ previa del comprobante" id="img-preview-${id}">
+                            <p style="font-size: 0.75rem; margin: 0.25rem 0;">Vista/ previa del comprobante</p>
                         </div>
                     </div>
                     <div class="envolver-form">

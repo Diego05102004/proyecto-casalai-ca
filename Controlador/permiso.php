@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/../modelo/permiso.php';
-require_once __DIR__ . '/../modelo/usuario.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
-require_once __DIR__ . '/../modelo/notificacion.php';
+require_once 'Modelo/permiso.php';
+require_once 'Modelo/usuario.php';
+require_once 'Modelo/bitacora.php';
+require_once 'Modelo/notificacion.php';
 
 define('MODULO_PERMISOS', 17);
 
@@ -59,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
 }
 
 $pagina = "permiso";
-if (is_file("vista/" . $pagina . ".php")) {
-    require_once("vista/" . $pagina . ".php");
+if (is_file("Vista/" . $pagina . ".php")) {
+    require_once("Vista/" . $pagina . ".php");
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
