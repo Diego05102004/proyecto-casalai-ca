@@ -8,11 +8,13 @@ $id_usuario = $_SESSION['id_usuario'] ?? 0;
 
 $permisosObj = new Permisos();
 
-// Obtener datos de la tasa BCV
+// Obtener datos de la tasa BCV (registro del día)
 require_once 'Modelo/DolarService.php';
 $dolarService = new DolarService();
-$tasaBCV = $dolarService->obtenerPrecioDolar();
+$registroDolar = $dolarService->obtenerRegistroDelDia();
+$tasaBCV = isset($registroDolar['precio']) ? (float)$registroDolar['precio'] : $dolarService->obtenerPrecioDelDia();
 $tasaBCVFormateada = number_format($tasaBCV, 2);
+$tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtotime($registroDolar['fecha'])) : date('d/m/Y H:i');
 
 $modulos = [
     'Usuario' => ['Gestionar Usuario', 'img/users-round.svg', '?pagina=usuario'],
@@ -414,7 +416,7 @@ if (isset($_SESSION['id_usuario'])) {
                 <strong>1 USD = <?= $tasaBCVFormateada ?> BS</strong>
             </div>
             <div class="tasa-actualizacion">
-                <small>Actualizado: <?= date('d/m/Y H:i') ?></small>
+                <small>Actualizado: <?= $tasaFechaFormateada ?></small>
             </div>
             <div class="tasa-fuente">
                 <small>Fuente: Banco Central de Venezuela</small>
