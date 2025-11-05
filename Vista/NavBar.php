@@ -3,8 +3,10 @@
 require_once 'Config/Config.php';
 require_once 'Modelo/DolarService.php';
 $dolarService = new DolarService();
-$tasaBCV = $dolarService->obtenerPrecioDolar();
+$registroDolar = $dolarService->obtenerRegistroDelDia();
+$tasaBCV = isset($registroDolar['precio']) ? (float)$registroDolar['precio'] : $dolarService->obtenerPrecioDelDia();
 $tasaBCVFormateada = number_format($tasaBCV, 2);
+$tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtotime($registroDolar['fecha'])) : date('d/m/Y H:i');
 ?>
 
 <div class="top-bar">
@@ -54,7 +56,7 @@ $tasaBCVFormateada = number_format($tasaBCV, 2);
             <strong>1 USD = <?= $tasaBCVFormateada ?> BS</strong>
         </div>
         <div class="tasa-actualizacion">
-            <small>Actualizado: <?= date('d/m/Y H:i') ?></small>
+            <small>Actualizado: <?= $tasaFechaFormateada ?></small>
         </div>
         <div class="tasa-fuente">
             <small>Fuente: Banco Central de Venezuela</small>
