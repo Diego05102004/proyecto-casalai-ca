@@ -16,6 +16,8 @@ class Usuarios extends BD {
     private $estatus = 1;
     private $usuarios;
     private $cedula;
+    private $conex; // Conexión a la base de datos (seguridad)
+    private $con;   // Conexión a la base de datos (inventario)
 
     // Getters y Setters
     public function getUsername() { return $this->username; }

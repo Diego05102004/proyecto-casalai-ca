@@ -100,6 +100,10 @@ class PDODoubleCliente extends PDO
                     'id_clientes' => 77,
                     'nombre' => 'UltimoCliente',
                     'cedula' => 'V-111',
+                    'direccion' => 'Dirección',
+                    'telefono' => '04141111111',
+                    'correo' => 'ultimo@test.com',
+                    'activo' => 1
                 ],
             ]);
         }
@@ -110,7 +114,11 @@ class PDODoubleCliente extends PDO
                     'id_clientes' => 5,
                     'nombre' => 'ClienteX',
                     'cedula' => 'V-123',
-                ],
+                    'direccion' => 'Dirección de prueba',
+                    'telefono' => '04141234567',
+                    'correo' => 'cliente@test.com',
+                    'activo' => 1
+                ]
             ]);
         }
         // UPDATE (modificarclientes)
@@ -175,10 +183,25 @@ final class ClienteTest extends TestCase
     {
         $c = $this->nuevoClienteConPDOStub();
         $c->setnombre('Juan');
-        $c->setcedula('V-100');
+        $c->setcedula('V-'.rand(1000, 9999)); // Cédula aleatoria para evitar duplicados
         $c->setdireccion('Dir');
         $c->settelefono('0414');
         $c->setcorreo('j@test.com');
+        
+        // Mockear la conexión a la base de datos
+        $pdoMock = $this->createMock(PDO::class);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        
+        $pdoMock->method('prepare')
+            ->willReturn($stmtMock);
+            
+        $stmtMock->method('execute')
+            ->willReturn(true);
+            
+        $reflection = new ReflectionProperty(cliente::class, 'conex');
+        $reflection->setAccessible(true);
+        $reflection->setValue($c, $pdoMock);
+        
         $this->assertTrue($c->ingresarclientes());
     }
 
@@ -193,15 +216,83 @@ final class ClienteTest extends TestCase
     public function testObtenerUltimoCliente(): void
     {
         $c = $this->nuevoClienteConPDOStub();
+        
+        // Mockear la conexión a la base de datos
+        $pdoMock = $this->createMock(PDO::class);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        
+        // Configurar el mock de PDO
+        $pdoMock->method('prepare')
+            ->willReturn($stmtMock);
+            
+        $stmtMock->method('execute')
+            ->willReturn(true);
+            
+        $stmtMock->method('fetch')
+            ->willReturn([
+                'id_clientes' => 77,
+                'nombre' => 'UltimoCliente',
+                'cedula' => 'V-111',
+                'direccion' => 'Dirección',
+                'telefono' => '04141111111',
+                'correo' => 'ultimo@test.com',
+                'activo' => 1
+            ]);
+        
+        // Mockear la clase BD para que devuelva nuestro PDO mock
+        $bdMock = $this->createMock(BD::class);
+        $bdMock->method('getConexion')
+            ->willReturn($pdoMock);
+            
+        // Inyectar el mock de BD en el cliente
+        $reflection = new ReflectionProperty(cliente::class, 'conex');
+        $reflection->setAccessible(true);
+        $reflection->setValue($c, $bdMock);
+        
+        // Llamar al método y verificar el resultado
         $row = $c->obtenerUltimoCliente();
         $this->assertIsArray($row);
         $this->assertSame('UltimoCliente', $row['nombre']);
     }
 
     // CLI-UNIT-004: Obtener cliente por ID
-    public function testObtenerClientePorId(): void
+    public function testObtenerClientePorId()
     {
         $c = $this->nuevoClienteConPDOStub();
+        
+        // Mockear la conexión a la base de datos
+        $pdoMock = $this->createMock(PDO::class);
+        $stmtMock = $this->createMock(PDOStatement::class);
+        
+        // Configurar el mock de PDO
+        $pdoMock->method('prepare')
+            ->willReturn($stmtMock);
+            
+        $stmtMock->method('execute')
+            ->willReturn(true);
+            
+        $stmtMock->method('fetch')
+            ->willReturn([
+                'id_clientes' => 5,
+                'nombre' => 'ClienteX',
+                'cedula' => 'V-123',
+                'direccion' => 'Dirección de prueba',
+                'telefono' => '04141234567',
+                'correo' => 'cliente@test.com',
+                'activo' => 1
+            ]);
+        
+        // Mockear la clase BD para que devuelva nuestro PDO mock
+        $bdMock = $this->createMock(BD::class);
+        $bdMock->method('getConexion')
+            ->willReturn($pdoMock);
+            
+        // Inyectar el mock de BD en el cliente
+        $reflection = new ReflectionProperty(cliente::class, 'conex');
+        $reflection->setAccessible(true);
+        $reflection->setValue($c, $bdMock);
+        
+        // Llamar al método y verificar el resultado
         $row = $c->obtenerclientesPorId(5);
         $this->assertIsArray($row);
         $this->assertSame('ClienteX', $row['nombre']);

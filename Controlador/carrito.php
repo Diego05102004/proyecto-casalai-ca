@@ -11,7 +11,7 @@ require_once 'Modelo/factura.php';
 require_once 'Modelo/DolarService.php';
 require_once 'Modelo/permiso.php';
 require_once 'Modelo/bitacora.php';
-define('MODULO_CARRITO', 0);
+define('MODULO_CARRITO', 11);
 
 if (!isset($_SESSION['id_usuario'])) {
     header('Location: ?pagina=login');

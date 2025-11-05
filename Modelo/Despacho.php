@@ -10,6 +10,7 @@ class Despacho extends BD{
     private $estado;
     private $correlativo;
     private $tablerecepcion = 'tbl_despachos';
+    private $conex; // Conexión a la base de datos
 
     public function __construct() {
         parent::__construct();
