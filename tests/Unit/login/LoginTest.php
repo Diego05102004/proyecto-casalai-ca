@@ -183,8 +183,9 @@ final class LoginTest extends TestCase
         $l->set_username('admin');
         $l->set_password('secret123');
         $r = $l->existe();
-        $this->assertSame('noexiste', $r['resultado']); // Updated to match actual implementation
-        $this->assertSame('Error en usuario o contraseña!!!', $r['mensaje']);
+        $this->assertSame('existe', $r['resultado']);
+        $this->assertSame('admin', $r['mensaje']);
+        $this->assertSame('Supervisor', $r['nombre_rol']);
     }
 
     // LGN-UNIT-002: Login falla por password incorrecto
@@ -200,32 +201,11 @@ final class LoginTest extends TestCase
     // LGN-UNIT-003: Solicitar recuperación OK
     public function testSolicitarRecuperacionOk(): void
     {
-        $ref = new ReflectionClass(Login::class);
-        /** @var Login $l */
-        $l = $ref->newInstanceWithoutConstructor();
-        // Stub personalizado que devuelve un usuario en el SELECT email
-        $co = new class extends PDODoubleLogin {
-            public function prepare($statement, array $options = [])
-            {
-                $sql = trim($statement);
-                if (stripos($sql, 'SELECT id_usuario FROM tbl_usuarios WHERE correo') !== false) {
-                    return new StatementDoubleLogin($sql, [ 'row' => ['id_usuario' => 10] ]);
-                } elseif (stripos($sql, 'INSERT INTO tbl_recuperacion') !== false) {
-                    return new StatementDoubleLogin($sql);
-                }
-                return parent::prepare($statement, $options);
-            }
-        };
-        $cop = new PDODoubleLoginP();
-        $propCo = new ReflectionProperty(Login::class, 'co');
-        $propCo->setAccessible(true);
-        $propCo->setValue($l, $co);
-        $propCop = new ReflectionProperty(Login::class, 'cop');
-        $propCop->setAccessible(true);
-        $propCop->setValue($l, $cop);
-
+        $l = $this->nuevoLoginConPDOStub();
         $res = $l->solicitarRecuperacion('a@b.com');
-        $this->assertSame('error', $res['status']); // Updated to match actual implementation
+        $this->assertSame('success', $res['status']);
+        $this->assertArrayHasKey('token', $res);
+        $this->assertSame(10, $res['id_usuario']);
     }
 
     // LGN-UNIT-004: Solicitar recuperación email no registrado
@@ -260,38 +240,10 @@ final class LoginTest extends TestCase
     // LGN-UNIT-005: Validar token OK
     public function testValidarTokenOk(): void
     {
-        $ref = new ReflectionClass(Login::class);
-        /** @var Login $l */
-        $l = $ref->newInstanceWithoutConstructor();
-        // Stub personalizado para validar token
-        $co = new class extends PDODoubleLogin {
-            public function prepare($statement, array $options = [])
-            {
-                $sql = trim($statement);
-                if (stripos($sql, 'SELECT id_usuario, fecha_creacion FROM tbl_recuperacion') !== false) {
-                    return new StatementDoubleLogin($sql, [ 
-                        'row' => [
-                            'id_usuario' => 10,
-                            'fecha_creacion' => date('Y-m-d H:i:s'),
-                            'token' => 'valid_token',
-                            'utilizado' => 0
-                        ] 
-                    ]);
-                }
-                return parent::prepare($statement, $options);
-            }
-        };
-        $cop = new PDODoubleLoginP();
-        $propCo = new ReflectionProperty(Login::class, 'co');
-        $propCo->setAccessible(true);
-        $propCo->setValue($l, $co);
-        $propCop = new ReflectionProperty(Login::class, 'cop');
-        $propCop->setAccessible(true);
-        $propCop->setValue($l, $cop);
-
-        $result = $l->validarToken(10, 'valid_token');
-        $this->assertIsArray($result);
-        $this->assertSame(10, $result['id_usuario']);
+        $l = $this->nuevoLoginConPDOStub();
+        $row = $l->validarToken(10, 'tok');
+        $this->assertIsArray($row);
+        $this->assertSame(10, $row['id_usuario']);
     }
 
     // LGN-UNIT-006: Actualizar password OK (transacción)
@@ -305,47 +257,19 @@ final class LoginTest extends TestCase
     // LGN-UNIT-007: Registrar usuario + cliente OK
     public function testRegistrarUsuarioYClienteOk(): void
     {
-        $ref = new ReflectionClass(Login::class);
-        /** @var Login $l */
-        $l = $ref->newInstanceWithoutConstructor();
-        
-        // Stub personalizado que simula la inserción exitosa
-        $co = new class extends PDODoubleLogin {
-            public function prepare($statement, array $options = [])
-            {
-                $sql = trim($statement);
-                if (stripos($sql, 'SELECT COUNT(*) FROM tbl_usuarios WHERE username') !== false) {
-                    return new StatementDoubleLogin($sql, [ 'scalar' => 0 ]);
-                } elseif (stripos($sql, 'INSERT INTO tbl_usuarios') !== false) {
-                    return new StatementDoubleLogin($sql, [ 'scalar' => 1 ]);
-                } elseif (stripos($sql, 'INSERT INTO tbl_clientes') !== false) {
-                    return new StatementDoubleLogin($sql, [ 'scalar' => 1 ]);
-                }
-                return parent::prepare($statement, $options);
-            }
-        };
-        
-        $cop = new PDODoubleLoginP();
-        $propCo = new ReflectionProperty(Login::class, 'co');
-        $propCo->setAccessible(true);
-        $propCo->setValue($l, $co);
-        $propCop = new ReflectionProperty(Login::class, 'cop');
-        $propCop->setAccessible(true);
-        $propCop->setValue($l, $cop);
-
-        $datos = [
-            'cedula' => 'V-12345678',
-            'nombres' => 'Juan',
-            'apellidos' => 'Perez',
-            'fecha_nacimiento' => '1990-01-01',
-            'telefono' => '1234567890',
-            'direccion' => 'Calle 123',
-            'username' => 'jperez',
-            'password' => 'password123',
-            'correo' => 'jperez@example.com'
-        ];
-        $res = $l->registrarUsuarioYCliente($datos);
-        $this->assertSame('success', $res['status']); // Updated to match actual implementation
+        PDODoubleLogin::$usernameExists = false;
+        $l = $this->nuevoLoginConPDOStub();
+        $res = $l->registrarUsuarioYCliente([
+            'nombre_usuario' => 'nuevo',
+            'clave' => 'clave',
+            'cedula' => 'V-12',
+            'nombre' => 'Ana',
+            'apellido' => 'Gomez',
+            'correo' => 'ana@test.com',
+            'telefono' => '0414',
+            'direccion' => 'Dir 1',
+        ]);
+        $this->assertSame('success', $res['status']);
     }
 
     // LGN-UNIT-008: Registrar usuario falla por username duplicado

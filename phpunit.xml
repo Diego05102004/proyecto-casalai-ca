@@ -2,10 +2,12 @@
 <phpunit bootstrap="./tests/bootstrap.php" colors="true">
     <testsuites>
         <testsuite name="Unit">
-            <directory>tests/Unit</directory>
+            <directory suffix="Test.php">tests/Unit</directory>
+            <exclude>tests/Unit/Backup</exclude>
         </testsuite>
         <testsuite name="Integration">
-            <directory>tests/Integration</directory>
+            <directory suffix="Test.php">tests/Integration</directory>
+            <exclude>tests/Integration/Backup</exclude>
         </testsuite>
     </testsuites>
     <php>
