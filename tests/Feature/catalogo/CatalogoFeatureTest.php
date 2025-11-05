@@ -6,217 +6,126 @@ require_once __DIR__ . '/../../../Config/config.php';
 require_once __DIR__ . '/../../../Modelo/catalogo.php';
 
 /*
- * Pruebas de INTEGRACIÓN del módulo de Catálogo.
- *
- * Secciones:
- * - Dobles: `StatementDoubleCatalogoF` y `PDODoubleCatalogoF` (simulan PDO/Statement y lastInsertId).
- * - Escenarios: insertar combo, obtener productos, obtener combos, eliminar combo,
- *   obtener último id de combo, crear nuevo combo, insertar producto en combo.
+ * Pruebas de INTEGRACIÓN reales del módulo Catálogo (sin mocks).
  */
 
-// ======================================
-// Dobles de prueba (PDOStatement/Catalogo)
-// ======================================
-class StatementDoubleCatalogoF
-{
-    private string $sql;
-    private array $rows;
-    private ?array $row;
-    private mixed $scalar;
-    private array $bound = [];
-
-    public function __construct(string $sql, array $data = [])
-    {
-        $this->sql = $sql;
-        $this->rows = $data['rows'] ?? [];
-        $this->row = $data['row'] ?? null;
-        $this->scalar = $data['scalar'] ?? null;
-    }
-
-    public function bindParam($name, &$value, $type = null)
-    {
-        $this->bound[$name] = $value;
-    }
-
-    public function execute(array $params = [])
-    {
-        // Validaciones mínimas
-        if (stripos($this->sql, 'INSERT INTO tbl_combo (id_producto, cantidad)') !== false) {
-            $idProducto = $params[':id_producto'] ?? ($this->bound[':id_producto'] ?? null);
-            $cantidad = $params[':cantidad'] ?? ($this->bound[':cantidad'] ?? null);
-            if ($idProducto === null || $idProducto === '') {
-                throw new Exception('id_producto requerido');
-            }
-            if ($cantidad === null || $cantidad === '' || (int)$cantidad <= 0) {
-                throw new Exception('cantidad requerida');
-            }
-        }
-        if (stripos($this->sql, 'INSERT INTO tbl_combo (id_combo, id_producto, cantidad)') !== false) {
-            $idCombo = $params[':id_combo'] ?? ($this->bound[':id_combo'] ?? null);
-            $idProducto = $params[':id_producto'] ?? ($this->bound[':id_producto'] ?? null);
-            $cantidad = $params[':cantidad'] ?? ($this->bound[':cantidad'] ?? null);
-            if ($idCombo === null || $idProducto === null || $cantidad === null) {
-                throw new Exception('parametros requeridos');
-            }
-        }
-        return true;
-    }
-
-    public function fetch($mode = null)
-    {
-        if ($this->row !== null) return $this->row;
-        if ($this->scalar !== null) return $this->scalar;
-        return null;
-    }
-
-    public function fetchAll($mode = null)
-    {
-        return $this->rows;
-    }
-}
-
-// ======================
-// Doble de prueba (PDO)
-// ======================
-class PDODoubleCatalogoF extends PDO
-{
-    private int $lastId = 900;
-
-    public function __construct() {}
-    public function setAttribute($attribute, $value) { return true; }
-    public function lastInsertId($name = null): string|false { return (string)$this->lastId; }
-
-    public function prepare($statement, array $options = [])
-    {
-        $sql = trim($statement);
-        // insertarCombo (id_producto, cantidad)
-        if (stripos($sql, 'INSERT INTO tbl_combo (id_producto, cantidad)') !== false) {
-            return new StatementDoubleCatalogoF($sql);
-        }
-        // obtenerProductos join
-        if (stripos($sql, 'FROM productos p') !== false && stripos($sql, 'INNER JOIN modelo') !== false) {
-            return new StatementDoubleCatalogoF($sql, [
-                'rows' => [
-                    [
-                        'id_producto' => 1,
-                        'nombre_producto' => 'Prod A',
-                        'nombre_modelo' => 'M1',
-                        'categoria' => 'Cat1',
-                        'stock' => 10,
-                        'precio' => 5.5,
-                    ],
-                ],
-            ]);
-        }
-        // obtenerCombos con GROUP_CONCAT y SUM
-        if (stripos($sql, 'GROUP_CONCAT(p.nombre_producto') !== false && stripos($sql, 'SUM(p.precio * c.cantidad)') !== false) {
-            return new StatementDoubleCatalogoF($sql, [
-                'rows' => [
-                    [
-                        'id_combo' => 10,
-                        'productos' => 'Prod A, Prod B',
-                        'precio_total' => 30.0,
-                    ],
-                ],
-            ]);
-        }
-        // eliminarCombo
-        if (stripos($sql, 'DELETE FROM tbl_combo WHERE id_combo') !== false) {
-            return new StatementDoubleCatalogoF($sql);
-        }
-        // obtenerUltimoIdCombo
-        if (stripos($sql, 'SELECT MAX(id_combo) AS ultimo_id FROM tbl_combo') !== false) {
-            return new StatementDoubleCatalogoF($sql, [
-                'row' => ['ultimo_id' => 15],
-            ]);
-        }
-        // crearNuevoCombo
-        if (stripos($sql, 'INSERT INTO tbl_combo (fecha_creacion)') !== false) {
-            $this->lastId = 901;
-            return new StatementDoubleCatalogoF($sql);
-        }
-        // insertarProductoEnCombo
-        if (stripos($sql, 'INSERT INTO tbl_combo (id_combo, id_producto, cantidad)') !== false) {
-            return new StatementDoubleCatalogoF($sql);
-        }
-        return new StatementDoubleCatalogoF($sql);
-    }
-}
-
-// ================================
-// Casos de prueba (Integración)
-// ================================
 final class CatalogoFeatureTest extends TestCase
 {
-    // Helper: crea `Catalogo` con PDO stub
-    private function nuevoCatalogoConPDOStub(): Catalogo
+    private Catalogo $catalogo;
+    private ?int $comboId = null;
+    private ?int $productoId = null;
+
+    protected function setUp(): void
     {
-        $ref = new ReflectionClass(Catalogo::class);
-        /** @var Catalogo $c */
-        $c = $ref->newInstanceWithoutConstructor();
-        $pdo = new PDODoubleCatalogoF();
-        $prop = new ReflectionProperty(Catalogo::class, 'conex');
-        $prop->setAccessible(true);
-        $prop->setValue($c, $pdo);
-        return $c;
+        $this->catalogo = new Catalogo();
+        $this->crearDatosBasicos();
     }
 
-    // CAT-FEAT-001: Insertar combo
+    protected function tearDown(): void
+    {
+        $this->limpiarDatos();
+    }
+
+    private function crearDatosBasicos(): void
+    {
+        $bd = new BD('P');
+        $pdo = $bd->getConexion();
+        try {
+            // Crear marca y modelo
+            $pdo->exec("INSERT INTO tbl_marcas (nombre_marca) VALUES ('MarcaCat_" . uniqid() . "')");
+            $idMarca = (int)$pdo->lastInsertId();
+            $pdo->exec("INSERT INTO tbl_modelos (nombre_modelo, id_marca) VALUES ('ModeloCat_" . uniqid() . "', {$idMarca})");
+            $idModelo = (int)$pdo->lastInsertId();
+
+            // Crear categoría
+            $pdo->exec("INSERT INTO tbl_categoria (nombre_categoria) VALUES ('CategoriaCat_" . uniqid() . "')");
+            $idCategoria = (int)$pdo->lastInsertId();
+
+            // Crear producto habilitado (con modelo y categoría para cumplir INNER JOIN)
+            $stmt = $pdo->prepare("INSERT INTO tbl_productos (serial, nombre_producto, precio, stock, estado, id_modelo, id_categoria, clausula_garantia)
+                                   VALUES (:serial, :nombre, :precio, :stock, 'habilitado', :id_modelo, :id_categoria, :garantia)");
+            $stmt->execute([
+                ':serial' => 'SCAT' . rand(10000,99999),
+                ':nombre' => 'Prod Cat ' . uniqid(),
+                ':precio' => 10.5,
+                ':stock' => 20,
+                ':id_modelo' => $idModelo,
+                ':id_categoria' => $idCategoria,
+                ':garantia' => 'Sin Garantía',
+            ]);
+            $this->productoId = (int)$pdo->lastInsertId();
+
+            // Crear un combo base
+            $this->comboId = (int)$this->catalogo->crearNuevoCombo();
+        } finally {
+            $bd->cerrar();
+        }
+    }
+
+    private function limpiarDatos(): void
+    {
+        $bd = new BD('P');
+        $pdo = $bd->getConexion();
+        try {
+            if ($this->comboId) {
+                $pdo->exec("DELETE FROM tbl_combo_detalle WHERE id_combo = {$this->comboId}");
+                $pdo->exec("DELETE FROM tbl_combo WHERE id_combo = {$this->comboId}");
+            }
+            // No eliminamos el producto para evitar violaciones de FK de posibles otras tablas
+        } finally {
+            $bd->cerrar();
+        }
+    }
+
     public function testInsertarComboIntegracion(): void
     {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $c->setIdProducto(1);
-        $c->setCantidad(2);
-        $this->assertTrue($c->insertarCombo());
+        $this->catalogo->setIdProducto($this->productoId);
+        $this->catalogo->setCantidad(2);
+        $this->assertTrue($this->catalogo->insertarCombo());
     }
 
-    // CAT-FEAT-002: Obtener productos
     public function testObtenerProductosIntegracion(): void
     {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $rows = $c->obtenerProductos();
+        $rows = $this->catalogo->obtenerProductos();
         $this->assertIsArray($rows);
         $this->assertNotEmpty($rows);
         $this->assertArrayHasKey('nombre_producto', $rows[0]);
     }
 
-    // CAT-FEAT-003: Obtener combos
     public function testObtenerCombosIntegracion(): void
     {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $rows = $c->obtenerCombos();
+        // Asegurar un detalle para que aparezca en el listado
+        $ok = $this->catalogo->insertarProductoEnCombo($this->comboId, $this->productoId, 3);
+        $this->assertTrue($ok);
+
+        $rows = $this->catalogo->obtenerCombos();
         $this->assertIsArray($rows);
         $this->assertNotEmpty($rows);
         $this->assertArrayHasKey('precio_total', $rows[0]);
     }
 
-    // CAT-FEAT-004: Eliminar combo
     public function testEliminarComboIntegracion(): void
     {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $this->assertTrue($c->eliminarCombo(10));
+        $nuevoCombo = (int)$this->catalogo->crearNuevoCombo();
+        $this->assertTrue($this->catalogo->eliminarCombo($nuevoCombo));
     }
 
-    // CAT-FEAT-005: Obtener último id de combo
     public function testObtenerUltimoIdComboIntegracion(): void
     {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $this->assertSame(15, $c->obtenerUltimoIdCombo());
+        $ultimo = $this->catalogo->obtenerUltimoIdCombo();
+        $this->assertNotNull($ultimo);
+        $this->assertGreaterThan(0, (int)$ultimo);
     }
 
-    // CAT-FEAT-006: Crear nuevo combo
     public function testCrearNuevoComboIntegracion(): void
     {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $id = $c->crearNuevoCombo();
+        $id = $this->catalogo->crearNuevoCombo();
         $this->assertNotFalse($id);
-        $this->assertSame('901', (string)$id);
+        $this->assertGreaterThan(0, (int)$id);
     }
 
-    // CAT-FEAT-007: Insertar producto en combo
     public function testInsertarProductoEnComboIntegracion(): void
     {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $this->assertTrue($c->insertarProductoEnCombo(10, 1, 3));
+        $this->assertTrue($this->catalogo->insertarProductoEnCombo($this->comboId, $this->productoId, 3));
     }
 }
