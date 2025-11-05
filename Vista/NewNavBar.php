@@ -143,19 +143,19 @@ if (isset($_SESSION['id_usuario'])) {
             </button>
 
             <!-- Botón de carrito -->
-            <?php if ($_SESSION['nombre_rol'] === 'Cliente') {  ?>
+            <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'Cliente'): ?>
                 <button class="icon-btn" id="cart-btn">
                     <IMG src="img/shopping-cart2.svg" alt="Carrito" class="local-icon">
-                    <?php if ($carrito_count > 0): ?>
+                    <?php if (isset($carrito_count) && $carrito_count > 0): ?>
                         <span class="cart-count-badge"><?php echo $carrito_count; ?></span>
                     <?php endif; ?>
                 </button>
-            <?php } ?>
+            <?php endif; ?>
 
             <!-- Botón de notificaciones -->
             <button class="icon-btn" id="notifications-btn">
                 <IMG src="img/bell.svg" alt="Notificaciones" class="local-icon">
-                <?php if ($notificaciones_count > 0): ?>
+                <?php if (isset($notificaciones_count) && $notificaciones_count > 0): ?>
                     <span class="notification-badge"><?php echo $notificaciones_count; ?></span>
                 <?php endif; ?>
             </button>
@@ -428,7 +428,7 @@ if (isset($_SESSION['id_usuario'])) {
     <div class="notificacion-panel" id="notifications-panel">
         <h2>Notificaciones <a href="?pagina=notificacion" class="small">Ver más</a> <span class="notification-count"><?php echo $notificaciones_count; ?></span></h2>
         <div id="notifications-list">
-            <?php if ($notificaciones_count > 0): ?>
+            <?php if (isset($notificaciones_count) && $notificaciones_count > 0): ?>
                 <?php foreach ($notificaciones as $notif): 
                     $estado = $notif['estado'] ?? '';
                     $leido = $notif['leido'] ?? '0';
@@ -451,9 +451,7 @@ if (isset($_SESSION['id_usuario'])) {
                     <div class="texto">
                         <p>No hay notificaciones recientes</p>
                     </div>
-                    <button class="marcar-leido" data-id="<?= $notif['id_notificacion'] ?>">
-                        <IMG src="img/check.svg" alt="Marcar leído" class="local-icon">
-                    </button>
+                    <!-- No mostrar botón de marcar leído cuando no hay notificaciones -->
                 </div>
             <?php endif; ?>
         </div>
