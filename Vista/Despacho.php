@@ -156,9 +156,11 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <?php include 'newnavbar.php'; ?>
 
 <div class="contenedor-tabla">
-    <div class="tabla-header">
+    <div class="tabla-header" style="width: 75%;">
         <div class="ghost"></div>
+
         <h3>Lista de Despachos</h3>
+
         <div class="ghost"></div>
     </div>
 

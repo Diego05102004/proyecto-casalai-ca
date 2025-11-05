@@ -34,45 +34,21 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const table = $('#tablaConsultas').DataTable({
                 "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+                    "url": 'public/js/es-ES.json'
                 },
+                "order": [[0, "desc"]],
+                "pageLength": 10,
+                "lengthMenu": [10, 25, 50, 100],
+                "responsive": true,
                 "columnDefs": [
                     { 
-                        "targets": [5], // Columna de acciones (índice 5)
+                        "targets": -1, // Última columna (acciones)
                         "orderable": false,
-                        "searchable": false,
-                        "className": "dt-center"
-                    },
-                    { 
-                        "targets": [0], // Columna de fecha (índice 0)
-                        "type": 'date',
-                        "className": "dt-center"
-                    },
-                    { 
-                        "targets": [1, 2, 4], // Columnas a centrar
-                        "className": "dt-center"
-                    },
-                    { 
-                        "targets": [3], // Columna de cliente
-                        "className": "dt-left"
+                        "searchable": false
                     }
                 ],
-                "order": [[0, "desc"]],
-                "responsive": true,
-                "autoWidth": false,
-                "pageLength": 10,
-                "processing": true,
-                "serverSide": false,
-                "deferRender": true,
-                "dom": '<"top"f>rt<"bottom"lip><"clear">',
-                "initComplete": function(settings, json) {
+                "initComplete": function() {
                     console.log('DataTable inicializada correctamente');
-                },
-                "drawCallback": function() {
-                    console.log('Tabla redibujada');
-                },
-                "error": function(settings, techNote, message) {
-                    console.error('Error en DataTables:', message);
                 }
             });
 

@@ -44,7 +44,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
 <div class="contenedor-tabla">
 
-    <div class="tabla-header">
+    <div class="tabla-header" style="width: 75%;">
         <div class="ghost"></div>
 
         <h3>Lista de Roles</h3>

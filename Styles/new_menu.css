@@ -310,6 +310,19 @@ body {
     border-radius: 8px 8px 0 0;
 }
 
+.notificacion-panel h2 a.small {
+    color: white !important;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: normal;
+    margin-left: 10px;
+    transition: opacity 0.2s;
+}
+
+.notificacion-panel h2 a.small:hover {
+    opacity: 0.8;
+}
+
 .notificacion-panel h2 span {
     background-color: #e74c3c;
     color: white;

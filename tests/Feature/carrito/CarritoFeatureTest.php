@@ -4,247 +4,291 @@ use PHPUnit\Framework\TestCase;
 require_once __DIR__ . '/../../../Config/database.php';
 require_once __DIR__ . '/../../../Config/config.php';
 require_once __DIR__ . '/../../../Modelo/carrito.php';
+require_once __DIR__ . '/../../../Modelo/producto.php';
 
-/*
+/**
  * Pruebas de INTEGRACIÓN del módulo Carrito.
- *
- * Secciones:
- * - Dobles: `StatementDoubleCarritoF`, `PDODoubleCarritoF` (principal) y `PDODoubleCarritoCF` (conexión 'C').
- * - Doble de clase: `CarritoDoubleF` para inyectar PDO 'C'.
- * - Escenarios: crear carrito, obtener por cliente, agregar producto (actualiza/insert),
- *   obtener productos, actualizar cantidad, eliminar producto, vaciar carrito,
- *   agregar combo (transacción), obtener cantidad por usuario (C), obtener resumen (C), registrar compra básico.
+ * 
+ * Estas pruebas trabajan directamente con la base de datos real
+ * para probar el flujo completo del carrito de compras.
  */
-
-// ======================================
-// Dobles de prueba (PDOStatement/Carrito Feature)
-// ======================================
-class StatementDoubleCarritoF
-{
-    private string $sql;
-    private array $rows;
-    private ?array $row;
-    private mixed $scalar;
-    private array $bound = [];
-
-    public function __construct(string $sql, array $data = [])
-    {
-        $this->sql = $sql;
-        $this->rows = $data['rows'] ?? [];
-        $this->row = $data['row'] ?? null;
-        $this->scalar = $data['scalar'] ?? null;
-    }
-
-    public function bindParam($name, &$value, $type = null) { $this->bound[$name] = $value; }
-    public function bindValue($name, $value, $type = null) { $this->bound[$name] = $value; }
-    public function execute(array $params = []) { return true; }
-    public function fetch($mode = null) { if ($this->row !== null) return $this->row; if ($this->scalar !== null) return $this->scalar; return null; }
-    public function fetchAll($mode = null) { return $this->rows; }
-}
-
-// ======================
-// Doble de prueba (PDO - Principal)
-// ======================
-class PDODoubleCarritoF extends PDO
-{
-    public bool $inTx = false;
-    public static bool $detalleExiste = false;
-
-    public function __construct() {}
-    public function setAttribute($attribute, $value) { return true; }
-    public function beginTransaction(): bool { $this->inTx = true; return true; }
-    public function commit(): bool { $this->inTx = false; return true; }
-    public function rollBack(): bool { $this->inTx = false; return true; }
-    public function lastInsertId($name = null): string|false { return '1000'; }
-
-    public function prepare($statement, array $options = [])
-    {
-        $sql = trim($statement);
-        if (stripos($sql, 'INSERT INTO tbl_carrito (id_cliente)') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        if (stripos($sql, 'SELECT id_carrito, id_cliente FROM tbl_carrito WHERE id_cliente') !== false) {
-            return new StatementDoubleCarritoF($sql, [ 'row' => ['id_carrito' => 10, 'id_cliente' => 5] ]);
-        }
-        if (stripos($sql, 'SELECT id_carrito_detalle, cantidad FROM tbl_carritodetalle') !== false) {
-            return new StatementDoubleCarritoF($sql, self::$detalleExiste
-                ? [ 'row' => ['id_carrito_detalle' => 77, 'cantidad' => 2] ]
-                : [ 'row' => null ]);
-        }
-        if (stripos($sql, 'UPDATE tbl_carritodetalle SET cantidad =') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        if (stripos($sql, 'INSERT INTO tbl_carritodetalle (id_carrito, id_producto, cantidad)') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        if (stripos($sql, 'FROM tbl_carritodetalle cd') !== false && stripos($sql, 'WHERE cd.id_carrito =') !== false) {
-            return new StatementDoubleCarritoF($sql, [
-                'rows' => [
-                    ['id_carrito_detalle' => 77, 'id_producto' => 1, 'nombre' => 'Prod1', 'nombre_modelo' => 'M1', 'nombre_marca' => 'X', 'cantidad' => 3, 'precio' => 5.0, 'subtotal' => 15.0],
-                ],
-            ]);
-        }
-        if (stripos($sql, 'DELETE FROM tbl_carritodetalle WHERE id_carrito_detalle') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        if (stripos($sql, 'DELETE FROM tbl_carritodetalle WHERE id_carrito =') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        if (stripos($sql, 'SELECT id_producto, cantidad FROM combo_detalle WHERE id_combo') !== false) {
-            return new StatementDoubleCarritoF($sql, [ 'rows' => [ ['id_producto' => 1, 'cantidad' => 2], ['id_producto' => 2, 'cantidad' => 1] ] ]);
-        }
-        if (stripos($sql, 'INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus)') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        if (stripos($sql, 'INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad)') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        if (stripos($sql, 'UPDATE tbl_productos SET stock = stock -') !== false) {
-            return new StatementDoubleCarritoF($sql);
-        }
-        return new StatementDoubleCarritoF($sql);
-    }
-}
-
-// ======================
-// Doble de prueba (PDO - Conexión 'C')
-// ======================
-class PDODoubleCarritoCF extends PDO
-{
-    public function __construct() {}
-    public function setAttribute($attribute, $value) { return true; }
-    public function prepare($statement, array $options = [])
-    {
-        $sql = trim($statement);
-        if (stripos($sql, 'SELECT COUNT(dc.id_detalle_carrito) as total') !== false) {
-            return new StatementDoubleCarritoF($sql, [ 'row' => ['total' => 4] ]);
-        }
-        if (stripos($sql, 'SELECT c.id_carrito, COUNT(dc.id_detalle_carrito) as total_productos') !== false) {
-            return new StatementDoubleCarritoF($sql, [ 'row' => ['id_carrito' => 12, 'total_productos' => 3, 'total_precio' => 45.0] ]);
-        }
-        return new StatementDoubleCarritoF($sql);
-    }
-}
-
-// Doble de clase para inyectar PDO 'C'
-class CarritoDoubleF extends Carrito
-{
-    public PDO $pdoC;
-    public function __construct() { /* evitar abrir BD real */ }
-    public function getConexion() { return new PDODoubleCarritoF(); }
-    public function setConex(PDO $pdo) { $ref = new ReflectionProperty(Carrito::class, 'conex'); $ref->setAccessible(true); $ref->setValue($this, $pdo); }
-    public function obtenerCantidadProductosCarrito($id_usuario)
-    {
-        $stmt = $this->pdoC->prepare('SELECT COUNT(dc.id_detalle_carrito) as total FROM tbl_carrito c INNER JOIN tbl_detalle_carrito dc ON c.id_carrito = dc.id_carrito WHERE c.id_usuario = ? AND c.estado = "activo"');
-        $stmt->execute([$id_usuario]);
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $resultado ? $resultado['total'] : 0;
-    }
-    public function obtenerResumenCarrito($id_usuario)
-    {
-        $stmt = $this->pdoC->prepare('SELECT c.id_carrito, COUNT(dc.id_detalle_carrito) as total_productos, SUM(dc.cantidad * dc.precio_unitario) as total_precio FROM tbl_carrito c LEFT JOIN tbl_detalle_carrito dc ON c.id_carrito = dc.id_carrito WHERE c.id_usuario = ? AND c.estado = "activo" GROUP BY c.id_carrito');
-        $stmt->execute([$id_usuario]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-}
-
-// ================================
-// Casos de prueba (Integración)
-// ================================
 final class CarritoFeatureTest extends TestCase
 {
-    private function nuevoCarritoConPDOStub(bool $detalleExiste = false): CarritoDoubleF
+    private $carrito;
+    private $testCarritoId;
+    private $testClienteId = 10; // ID de cliente (se valida en setUp y se crea si no existe)
+    private $testProductoId;
+    
+    protected function setUp(): void 
     {
-        PDODoubleCarritoF::$detalleExiste = $detalleExiste;
-        $c = new CarritoDoubleF();
-        $pdo = new PDODoubleCarritoF();
-        $c->setConex($pdo);
-        $c->pdoC = new PDODoubleCarritoCF();
-        return $c;
+        // Crear instancia real de Carrito
+        $this->carrito = new Carrito();
+        
+        // Asegurar que el cliente de prueba exista en la BD
+        $this->asegurarCliente();
+
+        // Limpiar datos de prueba previos
+        $this->limpiarDatosPrueba();
+        
+        // Crear datos de prueba básicos
+        $this->crearDatosPrueba();
     }
 
-    public function testCrearCarritoIntegracion(): void
+    private function asegurarCliente(): void
     {
-        $c = $this->nuevoCarritoConPDOStub();
-        $this->assertTrue($c->crearCarrito(5));
+        $bd = new BD('P');
+        $pdo = $bd->getConexion();
+        try {
+            // Verificar si existe el cliente actual
+            $stmt = $pdo->prepare("SELECT id_clientes FROM tbl_clientes WHERE id_clientes = :id LIMIT 1");
+            $stmt->execute([':id' => $this->testClienteId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) { return; }
+
+            // Si no existe, intentar obtener uno existente
+            $row = $pdo->query("SELECT id_clientes FROM tbl_clientes ORDER BY id_clientes ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $this->testClienteId = (int)$row['id_clientes'];
+                return;
+            }
+
+            // Crear un cliente de prueba
+            $stmt = $pdo->prepare("INSERT INTO tbl_clientes (nombre, cedula, direccion, telefono, correo, activo) VALUES (:n, :c, :d, :t, :e, 1)");
+            $stmt->execute([
+                ':n' => 'Cliente Test',
+                ':c' => (string)rand(10000000, 99999999),
+                ':d' => 'Direccion Test',
+                ':t' => '0412-0000000',
+                ':e' => 'cliente@test.local',
+            ]);
+            $this->testClienteId = (int)$pdo->lastInsertId();
+        } finally {
+            $bd->cerrar();
+        }
+    }
+    
+    protected function tearDown(): void
+    {
+        // Limpiar datos después de cada prueba
+        $this->limpiarDatosPrueba();
+    }
+    
+    private function limpiarDatosPrueba(): void
+    {
+        if (!$this->testClienteId) return;
+        
+        $conexion = new BD('P');
+        $pdo = $conexion->getConexion();
+        
+        try {
+            // Limpiar tablas relacionadas con el carrito
+            $pdo->exec("DELETE FROM tbl_carritodetalle WHERE id_carrito IN (SELECT id_carrito FROM tbl_carrito WHERE id_cliente = {$this->testClienteId})");
+            $pdo->exec("DELETE FROM tbl_carrito WHERE id_cliente = {$this->testClienteId}");
+            
+            // Si hay un carrito de prueba específico, limpiarlo también
+            if ($this->testCarritoId) {
+                $pdo->exec("DELETE FROM tbl_carritodetalle WHERE id_carrito = {$this->testCarritoId}");
+                $pdo->exec("DELETE FROM tbl_carrito WHERE id_carrito = {$this->testCarritoId}");
+            }
+            
+            // Nota: No eliminamos el producto de prueba para evitar violaciones de FK
+        } finally {
+            $conexion->cerrar();
+        }
+    }
+    
+    private function crearDatosPrueba(): void
+    {
+        $conexion = new BD('P');
+        $pdo = $conexion->getConexion();
+        
+        try {
+            // Crear marca y modelo para cumplir con los INNER JOIN del modelo
+            $pdo->exec("INSERT INTO tbl_marcas (nombre_marca) VALUES ('MarcaPrueba_" . uniqid() . "')");
+            $idMarca = $pdo->lastInsertId();
+            $pdo->exec("INSERT INTO tbl_modelos (nombre_modelo, id_marca) VALUES ('ModeloPrueba_" . uniqid() . "', {$idMarca})");
+            $idModelo = $pdo->lastInsertId();
+
+            // Insertar un producto de prueba con modelo
+            $nombreProducto = 'Producto de Prueba ' . uniqid();
+            $precio = 100.50;
+            $stock = 10;
+            $serial = 'SER' . rand(10000,99999);
+            $garantia = 'Sin Garantía';
+            
+            $stmt = $pdo->prepare("INSERT INTO tbl_productos (serial, nombre_producto, precio, stock, estado, id_modelo, clausula_garantia) VALUES (:serial, :nombre, :precio, :stock, 'habilitado', :id_modelo, :garantia)");
+            $stmt->execute([
+                ':serial' => $serial,
+                ':nombre' => $nombreProducto,
+                ':precio' => $precio,
+                ':stock' => $stock,
+                ':id_modelo' => $idModelo,
+                ':garantia' => $garantia
+            ]);
+            
+            $this->testProductoId = $pdo->lastInsertId();
+            
+            // Insertar un carrito de prueba (la tabla no tiene columna estado, fecha_creacion tiene default)
+            $stmt = $pdo->prepare("INSERT INTO tbl_carrito (id_cliente) VALUES (:cliente)");
+            $stmt->execute([':cliente' => $this->testClienteId]);
+            
+            $this->testCarritoId = $pdo->lastInsertId();
+            
+        } finally {
+            $conexion->cerrar();
+        }
     }
 
-    public function testObtenerCarritoPorClienteIntegracion(): void
-    {
-        $c = $this->nuevoCarritoConPDOStub();
-        $row = $c->obtenerCarritoPorCliente(5);
-        $this->assertIsArray($row);
-        $this->assertSame(10, $row['id_carrito']);
-    }
 
-    public function testAgregarProductoActualizaIntegracion(): void
+    public function testCrearCarrito(): void
     {
-        $c = $this->nuevoCarritoConPDOStub(true);
-        $this->assertTrue($c->agregarProductoAlCarrito(10, 1, 3));
+        // Probar crear un nuevo carrito
+        $resultado = $this->carrito->crearCarrito($this->testClienteId);
+        $this->assertTrue($resultado);
+        
+        // Verificar que se creó el carrito
+        $carrito = $this->carrito->obtenerCarritoPorCliente($this->testClienteId);
+        $this->assertIsArray($carrito);
+        $this->assertArrayHasKey('id_carrito', $carrito);
+        $this->assertArrayHasKey('id_cliente', $carrito);
+        $this->assertEquals($this->testClienteId, $carrito['id_cliente']);
     }
-
-    public function testAgregarProductoInsertaIntegracion(): void
+    
+    public function testAgregarProductoAlCarrito(): void
     {
-        $c = $this->nuevoCarritoConPDOStub(false);
-        $this->assertTrue($c->agregarProductoAlCarrito(10, 2, 1));
+        // Agregar un producto al carrito
+        $cantidad = 2;
+        $resultado = $this->carrito->agregarProductoAlCarrito($this->testCarritoId, $this->testProductoId, $cantidad);
+        $this->assertTrue($resultado);
+        
+        // Verificar que el producto se agregó al carrito
+        $productos = $this->carrito->obtenerProductosDelCarrito($this->testCarritoId);
+        $this->assertIsArray($productos);
+        $this->assertNotEmpty($productos);
+        $this->assertEquals($this->testProductoId, $productos[0]['id_producto']);
+        $this->assertEquals($cantidad, $productos[0]['cantidad']);
     }
-
-    public function testObtenerProductosDelCarritoIntegracion(): void
+    
+    public function testActualizarCantidadProducto(): void
     {
-        $c = $this->nuevoCarritoConPDOStub();
-        $rows = $c->obtenerProductosDelCarrito(10);
-        $this->assertIsArray($rows);
-        $this->assertNotEmpty($rows);
-        $this->assertArrayHasKey('subtotal', $rows[0]);
+        // Primero agregamos un producto al carrito
+        $this->testAgregarProductoAlCarrito();
+        
+        // Obtener los productos del carrito y ubicar el detalle del producto insertado
+        $productos = $this->carrito->obtenerProductosDelCarrito($this->testCarritoId);
+        $idDetalle = null;
+        foreach ($productos as $p) {
+            if ((int)$p['id_producto'] === (int)$this->testProductoId) { $idDetalle = $p['id_carrito_detalle']; break; }
+        }
+        $this->assertNotNull($idDetalle, 'No se encontró el detalle del producto agregado');
+        
+        // Actualizar la cantidad
+        $nuevaCantidad = 5;
+        $resultado = $this->carrito->actualizarCantidadProducto($idDetalle, $nuevaCantidad);
+        $this->assertTrue($resultado);
+        
+        // Verificar que se actualizó la cantidad en la fila del producto
+        $productos = $this->carrito->obtenerProductosDelCarrito($this->testCarritoId);
+        $cantidadEncontrada = null;
+        foreach ($productos as $p) {
+            if ((int)$p['id_carrito_detalle'] === (int)$idDetalle) { $cantidadEncontrada = (int)$p['cantidad']; break; }
+        }
+        $this->assertSame($nuevaCantidad, $cantidadEncontrada);
     }
-
-    public function testActualizarCantidadProductoIntegracion(): void
+    
+    public function testEliminarProductoDelCarrito(): void
     {
-        $c = $this->nuevoCarritoConPDOStub();
-        $this->assertTrue($c->actualizarCantidadProducto(77, 5));
+        // Primero agregamos un producto al carrito
+        $this->testAgregarProductoAlCarrito();
+        
+        // Obtener los productos del carrito y ubicar el detalle del producto insertado
+        $productos = $this->carrito->obtenerProductosDelCarrito($this->testCarritoId);
+        $idDetalle = null;
+        foreach ($productos as $p) {
+            if ((int)$p['id_producto'] === (int)$this->testProductoId) { $idDetalle = $p['id_carrito_detalle']; break; }
+        }
+        $this->assertNotNull($idDetalle, 'No se encontró el detalle del producto agregado');
+        
+        // Eliminar el producto del carrito
+        $resultado = $this->carrito->eliminarProductoDelCarrito($idDetalle);
+        $this->assertTrue($resultado);
+        
+        // Verificar que el producto ya no está en el carrito
+        $productos = $this->carrito->obtenerProductosDelCarrito($this->testCarritoId);
+        $encontrado = false;
+        foreach ($productos as $p) {
+            if ((int)$p['id_carrito_detalle'] === (int)$idDetalle) { $encontrado = true; break; }
+        }
+        $this->assertFalse($encontrado, 'El detalle del producto no fue eliminado');
     }
-
-    public function testEliminarProductoDelCarritoIntegracion(): void
+    
+    public function testEliminarTodoElCarrito(): void
     {
-        $c = $this->nuevoCarritoConPDOStub();
-        $this->assertTrue($c->eliminarProductoDelCarrito(77));
+        // Primero agregamos un producto al carrito
+        $this->testAgregarProductoAlCarrito();
+        
+        // Eliminar todo el carrito
+        $resultado = $this->carrito->eliminarTodoElCarrito($this->testCarritoId);
+        $this->assertTrue($resultado);
+        
+        // Verificar que el carrito está vacío
+        $productos = $this->carrito->obtenerProductosDelCarrito($this->testCarritoId);
+        $this->assertEmpty($productos);
     }
-
-    public function testEliminarTodoElCarritoIntegracion(): void
+    
+    public function testObtenerCantidadProductosCarrito(): void
     {
-        $c = $this->nuevoCarritoConPDOStub();
-        $this->assertTrue($c->eliminarTodoElCarrito(10));
+        // Primero agregamos un producto al carrito
+        $this->testAgregarProductoAlCarrito();
+        
+        // Obtener la cantidad de productos en el carrito
+        $cantidad = $this->carrito->obtenerCantidadProductosCarrito($this->testClienteId);
+        $this->assertIsInt($cantidad);
+        $this->assertGreaterThan(0, $cantidad);
     }
-
-    public function testAgregarComboAlCarritoIntegracion(): void
+    
+    public function testObtenerResumenCarrito(): void
     {
-        $c = $this->nuevoCarritoConPDOStub();
-        $this->assertTrue($c->agregarComboAlCarrito(10, 99));
+        // Primero agregamos un producto al carrito
+        $this->testAgregarProductoAlCarrito();
+        
+        // Obtener resumen del carrito
+        $resumen = $this->carrito->obtenerResumenCarrito($this->testClienteId);
+        
+        // Verificar la estructura del resumen
+        $this->assertIsArray($resumen);
+        $this->assertArrayHasKey('id_carrito', $resumen);
+        $this->assertArrayHasKey('total_productos', $resumen);
+        $this->assertArrayHasKey('total_precio', $resumen);
+        $this->assertGreaterThan(0, $resumen['total_productos']);
+        $this->assertGreaterThan(0, $resumen['total_precio']);
     }
-
-    public function testObtenerCantidadProductosCarritoIntegracion(): void
+    
+    public function testRegistrarCompra(): void
     {
-        $c = $this->nuevoCarritoConPDOStub();
-        $total = $c->obtenerCantidadProductosCarrito(123);
-        $this->assertSame(4, $total);
-    }
-
-    public function testObtenerResumenCarritoIntegracion(): void
-    {
-        $c = $this->nuevoCarritoConPDOStub();
-        $res = $c->obtenerResumenCarrito(123);
-        $this->assertIsArray($res);
-        $this->assertSame(12, $res['id_carrito']);
-        $this->assertSame(3, $res['total_productos']);
-    }
-
-    public function testRegistrarCompraBasicaIntegracion(): void
-    {
-        $c = $this->nuevoCarritoConPDOStub();
-        $ok = $c->registrarCompra(10, 5, [
-            ['id_producto' => 1, 'cantidad' => 2],
-            ['id_producto' => 2, 'cantidad' => 1],
-        ]);
-        $this->assertTrue($ok);
+        // Primero agregamos un producto al carrito
+        $this->testAgregarProductoAlCarrito();
+        
+        // Obtener los productos del carrito
+        $productos = $this->carrito->obtenerProductosDelCarrito($this->testCarritoId);
+        
+        // Preparar los datos para el registro de compra (el modelo usa id_producto y cantidad)
+        $productosCompra = [];
+        foreach ($productos as $producto) {
+            $productosCompra[] = [
+                'id_producto' => $producto['id_producto'],
+                'cantidad' => $producto['cantidad']
+            ];
+        }
+        
+        // Registrar la compra
+        $resultado = $this->carrito->registrarCompra(
+            $this->testCarritoId, 
+            $this->testClienteId,
+            $productosCompra
+        );
+        
+        // Verificar que la compra se registró correctamente
+        $this->assertTrue($resultado);
     }
 }

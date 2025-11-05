@@ -3,6 +3,8 @@
 require_once 'Config/Config.php';
 
 class Carrito extends BD{
+    private $conex;
+
     public function __construct() {
         parent::__construct();
     }
@@ -209,41 +211,44 @@ class Carrito extends BD{
         }
     }
 
-    public function obtenerCantidadProductosCarrito($id_usuario) {
-        return $this->o_cantidadProductos($id_usuario);
+    public function obtenerCantidadProductosCarrito($id_cliente) {
+        return $this->o_cantidadProductos($id_cliente);
     }
-    private function o_cantidadProductos($id_usuario) {
-        $bd = new BD('C');
+    private function o_cantidadProductos($id_cliente) {
+        $bd = new BD('P');
         $pdo = $bd->getConexion();
         try {
-            $sql = "SELECT COUNT(dc.id_detalle_carrito) as total
+            $sql = "SELECT COUNT(cd.id_carrito_detalle) as total
                     FROM tbl_carrito c 
-                    INNER JOIN tbl_detalle_carrito dc ON c.id_carrito = dc.id_carrito 
-                    WHERE c.id_usuario = ? AND c.estado = 'activo'";
+                    INNER JOIN tbl_carritodetalle cd ON c.id_carrito = cd.id_carrito 
+                    WHERE c.id_cliente = ?";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id_usuario]);
+            $stmt->execute([$id_cliente]);
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $resultado ? $resultado['total'] : 0;
+            return $resultado ? (int)$resultado['total'] : 0;
         } finally {
             $bd->cerrar();
         }
     }
 
-    public function obtenerResumenCarrito($id_usuario) {
-        return $this->o_resumenCarrito($id_usuario);
+    public function obtenerResumenCarrito($id_cliente) {
+        return $this->o_resumenCarrito($id_cliente);
     }
-    private function o_resumenCarrito($id_usuario) {
-        $bd = new BD('C');
+    private function o_resumenCarrito($id_cliente) {
+        $bd = new BD('P');
         $pdo = $bd->getConexion();
         try {
-            $sql = "SELECT c.id_carrito, COUNT(dc.id_detalle_carrito) as total_productos, 
-                           SUM(dc.cantidad * dc.precio_unitario) as total_precio
+            $sql = "SELECT c.id_carrito, 
+                           COUNT(cd.id_carrito_detalle) as total_productos, 
+                           COALESCE(SUM(cd.cantidad * p.precio),0) as total_precio
                     FROM tbl_carrito c 
-                    LEFT JOIN tbl_detalle_carrito dc ON c.id_carrito = dc.id_carrito 
-                    WHERE c.id_usuario = ? AND c.estado = 'activo'
-                    GROUP BY c.id_carrito";
+                    LEFT JOIN tbl_carritodetalle cd ON c.id_carrito = cd.id_carrito 
+                    LEFT JOIN tbl_productos p ON p.id_producto = cd.id_producto
+                    WHERE c.id_cliente = ?
+                    GROUP BY c.id_carrito
+                    LIMIT 1";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id_usuario]);
+            $stmt->execute([$id_cliente]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } finally {
             $bd->cerrar();
@@ -251,59 +256,60 @@ class Carrito extends BD{
     }
 
     // Métodos para compras
-public function registrarCompra($id_carrito, $id_cliente, $productos)
-{
-    return $this->r_registrarCompra($id_carrito, $id_cliente, $productos);
-}
-private function r_registrarCompra($id_carrito, $id_cliente, $productos)
-{
-    $bd = new BD('P');
-    $this->conex = $bd->getConexion();
-    try {
-        foreach ($productos as $detalle) {
-            if (empty($detalle['id_producto']) || empty($detalle['cantidad']) || !is_numeric($detalle['cantidad'])) {
-                throw new Exception("Uno o más productos tienen datos incompletos o inválidos.");
-            }
-        }
-        $this->conex->beginTransaction();
-        $sqlCompra = "INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) 
-                      VALUES (NOW(), :id_cliente, 0, 'Borrador')";
-        $stmtCompra = $this->conex->prepare($sqlCompra);
-        $stmtCompra->bindValue(':id_cliente', $id_cliente);
-        $stmtCompra->execute();
-        $id_factura = $this->conex->lastInsertId();
-
-        $sqlDetalle = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
-                       VALUES (:id_factura, :id_producto, :cantidad)";
-        $stmtDetalle = $this->conex->prepare($sqlDetalle);
-
-        $sqlUpdateStock = "UPDATE tbl_productos SET stock = stock - :cantidad WHERE id_producto = :id_producto";
-        $stmtUpdateStock = $this->conex->prepare($sqlUpdateStock);
-
-        foreach ($productos as $detalle) {
-            $stmtDetalle->bindValue(':id_factura', $id_factura);
-            $stmtDetalle->bindValue(':id_producto', $detalle['id_producto']);
-            $stmtDetalle->bindValue(':cantidad', $detalle['cantidad']);
-            $stmtDetalle->execute();
-
-            $stmtUpdateStock->bindValue(':cantidad', $detalle['cantidad']);
-            $stmtUpdateStock->bindValue(':id_producto', $detalle['id_producto']);
-            $stmtUpdateStock->execute();
-        }
-
-        $sqlVaciar = "DELETE FROM tbl_carritodetalle WHERE id_carrito = :id_carrito";
-        $stmtVaciar = $this->conex->prepare($sqlVaciar);
-        $stmtVaciar->bindValue(':id_carrito', $id_carrito);
-        $stmtVaciar->execute();
-
-        $this->conex->commit();
-        return true;
-    } catch (Exception $e) {
-        if ($this->conex && $this->conex->inTransaction()) { $this->conex->rollBack(); }
-        return ['error' => $e->getMessage()];
-    } finally {
-        $bd->cerrar();
-        $this->conex = null;
+    public function registrarCompra($id_carrito, $id_cliente, $productos)
+    {
+        return $this->r_registrarCompra($id_carrito, $id_cliente, $productos);
     }
-}
+
+    private function r_registrarCompra($id_carrito, $id_cliente, $productos)
+    {
+        $bd = new BD('P');
+        $this->conex = $bd->getConexion();
+        try {
+            foreach ($productos as $detalle) {
+                if (empty($detalle['id_producto']) || empty($detalle['cantidad']) || !is_numeric($detalle['cantidad'])) {
+                    throw new Exception("Uno o más productos tienen datos incompletos o inválidos.");
+                }
+            }
+            $this->conex->beginTransaction();
+            $sqlCompra = "INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) 
+                          VALUES (NOW(), :id_cliente, 0, 'Borrador')";
+            $stmtCompra = $this->conex->prepare($sqlCompra);
+            $stmtCompra->bindValue(':id_cliente', $id_cliente);
+            $stmtCompra->execute();
+            $id_factura = $this->conex->lastInsertId();
+
+            $sqlDetalle = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
+                           VALUES (:id_factura, :id_producto, :cantidad)";
+            $stmtDetalle = $this->conex->prepare($sqlDetalle);
+
+            $sqlUpdateStock = "UPDATE tbl_productos SET stock = stock - :cantidad WHERE id_producto = :id_producto";
+            $stmtUpdateStock = $this->conex->prepare($sqlUpdateStock);
+
+            foreach ($productos as $detalle) {
+                $stmtDetalle->bindValue(':id_factura', $id_factura);
+                $stmtDetalle->bindValue(':id_producto', $detalle['id_producto']);
+                $stmtDetalle->bindValue(':cantidad', $detalle['cantidad']);
+                $stmtDetalle->execute();
+
+                $stmtUpdateStock->bindValue(':cantidad', $detalle['cantidad']);
+                $stmtUpdateStock->bindValue(':id_producto', $detalle['id_producto']);
+                $stmtUpdateStock->execute();
+            }
+
+            $sqlVaciar = "DELETE FROM tbl_carritodetalle WHERE id_carrito = :id_carrito";
+            $stmtVaciar = $this->conex->prepare($sqlVaciar);
+            $stmtVaciar->bindValue(':id_carrito', $id_carrito);
+            $stmtVaciar->execute();
+
+            $this->conex->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->conex && $this->conex->inTransaction()) { $this->conex->rollBack(); }
+            return ['error' => $e->getMessage()];
+        } finally {
+            $bd->cerrar();
+            $this->conex = null;
+        }
+    }
 }

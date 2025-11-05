@@ -64,13 +64,12 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
     <div class="tabla-header">
         <div class="ghost"></div>
 
-        <h3>Lista de Orden <br>
-        de Despacho</h3>
+        <h3>Lista de Orden <br> de Despacho</h3>
         
         <div class="ghost"></div>
     </div>
 
-    <table class="table table-striped table-bordered" id="tablaConsultas" style="width:100%">
+    <table class="tablaConsultas" id="tablaConsultas" style="width:100%">
         <thead>
             <tr>
                 <th>Fecha</th>
@@ -318,19 +317,6 @@ echo json_encode(array_map(function($factura) {
         <img src="img/grafic.png" alt="Reportes" width="30" height="30">
     </button>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css"/>
-    
-    <!-- DataTables JS -->
-    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
     <!-- Nuestro archivo JS -->
     <script src="javascript/ordendespacho.js"></script>
     
@@ -343,6 +329,7 @@ echo json_encode(array_map(function($factura) {
         });
     });
     </script>
+    
 </body>
 
 

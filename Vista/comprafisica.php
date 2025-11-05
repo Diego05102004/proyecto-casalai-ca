@@ -234,11 +234,15 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
 </div>
 
 <div class="contenedor-tabla">
-    <div class="tabla-header">
+    <div class="tabla-header" style="width: 75%;">
         <div class="ghost"></div>
+
         <h3>Ventas Presenciales</h3>
+
         <div class="space-btn-incluir">
-            <button id="btnIncluirDespacho" class="btn-incluir" title="Incluir Compra Física">
+            <button id="btnIncluirDespacho"
+                class="btn-incluir"
+                title="Incluir Compra Física">
                 <img src="img/plus.svg">
             </button>
         </div>
