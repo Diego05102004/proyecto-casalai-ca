@@ -10,6 +10,7 @@ class cliente extends BD {
     private $correo;
     private $activo = 1;
     private $id;
+    private $conex;
 
     public function __construct() {
         parent::__construct();

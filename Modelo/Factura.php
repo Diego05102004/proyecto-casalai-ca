@@ -10,8 +10,8 @@ class Factura extends BD
     private $estatus;
     private $id_producto;
     private $cantidad;
-
     private $cedula;
+    private $conex;
 
     // Constructor sin conexión persistente
 public function __construct() {
