@@ -12,8 +12,15 @@ final class MarcaControllerTest extends TestCase
         $this->pdo = test_pdo();
         truncate_tablas_basicas($this->pdo);
         $this->controllerPath = __DIR__ . '/../../Controlador/marca.php';
-        // En entorno de pruebas, marcaremos como skip los tests con dependencia fuerte de estado/BD
-        $this->skipStateful = ((getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? '')) === 'testing');
+        // Habilitar pruebas en entorno de pruebas
+        $this->skipStateful = false;
+        
+        // Configurar entorno de pruebas si no está configurado
+        if (!defined('APP_ENV')) {
+            define('APP_ENV', 'testing');
+        }
+        $_ENV['APP_ENV'] = 'testing';
+        putenv('APP_ENV=testing');
     }
 
     private function runController(array $post): array
@@ -46,23 +53,29 @@ final class MarcaControllerTest extends TestCase
 
     public function testRegistrarMarcaSuccess(): void
     {
-        if ($this->skipStateful) { $this->markTestSkipped('Omitido en testing para estabilizar integración.'); }
         $nombre = 'Marca_' . bin2hex(random_bytes(6));
         // Defensa extra: asegurar que no existe antes del POST
         $stmt = $this->pdo->prepare('DELETE FROM tbl_marcas WHERE nombre_marca = ?');
         $stmt->execute([$nombre]);
+        
+        // Mensaje de depuración
+        fwrite(STDERR, "Intentando registrar marca: $nombre\n");
+        
         $resp = $this->runController([
             'accion' => 'registrar',
             'nombre_marca' => $nombre
         ]);
-        $this->assertSame('success', $resp['status'] ?? null);
-        $this->assertIsArray($resp['marca'] ?? null);
-        $this->assertSame($nombre, $resp['marca']['nombre_marca'] ?? null);
+        
+        // Mensaje de depuración
+        fwrite(STDERR, "Respuesta del controlador: " . print_r($resp, true) . "\n");
+        
+        $this->assertSame('success', $resp['status'] ?? null, 'El estado de la respuesta no es "success"');
+        $this->assertIsArray($resp['marca'] ?? null, 'La respuesta no contiene un array de marca');
+        $this->assertSame($nombre, $resp['marca']['nombre_marca'] ?? null, 'El nombre de la marca no coincide');
     }
 
     public function testRegistrarMarcaDuplicada(): void
     {
-        if ($this->skipStateful) { $this->markTestSkipped('Omitido en testing para estabilizar integración.'); }
         $this->crearMarcaDirecto('Repetida');
         $resp = $this->runController([
             'accion' => 'registrar',
@@ -74,7 +87,6 @@ final class MarcaControllerTest extends TestCase
 
     public function testObtenerMarcasPorId(): void
     {
-        if ($this->skipStateful) { $this->markTestSkipped('Omitido en testing para estabilizar integración.'); }
         $id = $this->crearMarcaDirecto('Lookup');
         $resp = $this->runController([
             'accion' => 'obtener_marcas',
@@ -84,9 +96,8 @@ final class MarcaControllerTest extends TestCase
         $this->assertSame('Lookup', $resp['nombre_marca'] ?? null);
     }
 
-    public function testModificarMarcaSuccess(): void
+public function testModificarMarcaSuccess(): void
     {
-        if ($this->skipStateful) { $this->markTestSkipped('Omitido en testing para estabilizar integración.'); }
         $id = $this->crearMarcaDirecto('Old');
         $resp = $this->runController([
             'accion' => 'modificar',
@@ -97,9 +108,8 @@ final class MarcaControllerTest extends TestCase
         $this->assertSame('New', $resp['marca']['nombre_marca'] ?? null);
     }
 
-    public function testEliminarMarcaConModelosAsociadosBloquea(): void
+public function testEliminarMarcaConModelosAsociadosBloquea(): void
     {
-        if ($this->skipStateful) { $this->markTestSkipped('Omitido en testing para estabilizar integración.'); }
         $id = $this->crearMarcaDirecto('ConModelo');
         // Asociar un modelo a la marca
         $stmt = $this->pdo->prepare('INSERT INTO tbl_modelos (id_marca, nombre_modelo) VALUES (?, ?)');
@@ -117,9 +127,8 @@ final class MarcaControllerTest extends TestCase
         $this->assertStringContainsString('modelos asociados', $resp['message'] ?? '');
     }
 
-    public function testEliminarMarcaSinAsociacionesSuccess(): void
+public function testEliminarMarcaSinAsociacionesSuccess(): void
     {
-        if ($this->skipStateful) { $this->markTestSkipped('Omitido en testing para estabilizar integración.'); }
         $id = $this->crearMarcaDirecto('SinModelo');
         $resp = $this->runController([
             'accion' => 'eliminar',
