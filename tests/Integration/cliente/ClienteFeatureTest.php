@@ -6,16 +6,18 @@ require_once __DIR__ . '/../../../Config/config.php';
 require_once __DIR__ . '/../../../Modelo/cliente.php';
 
 /*
- * Pruebas unitarias del módulo de Clientes.
+ * Pruebas de INTEGRACIÓN del módulo de Clientes.
  *
- * Se usan dobles de PDO/PDOStatement. Para `listarTodosClientes()` se crea un
- * doble de la clase que sobreescribe `getConexion()` para devolver el stub.
+ * Secciones:
+ * - Dobles: `StatementDoubleClienteF`, `PDODoubleClienteF` y `ClienteDoubleF` (simulan PDO/Statement y conexión para listarTodosClientes).
+ * - Escenarios: registrar, existencia por cédula, último, por ID, modificar,
+ *   eliminación lógica y física, listar y listarTodosClientes.
  */
 
-// ================================
-// Dobles de prueba (PDOStatement)
-// ================================
-class StatementDoubleCliente
+// ======================================
+// Dobles de prueba (PDOStatement/Cliente)
+// ======================================
+class StatementDoubleClienteF
 {
     private string $sql;
     private array $rows;
@@ -45,7 +47,6 @@ class StatementDoubleCliente
             }
         }
         if (stripos($this->sql, 'UPDATE tbl_clientes') !== false) {
-            // No exigir nombre cuando es eliminación lógica (activo=0)
             if (stripos($this->sql, 'SET activo = 0') === false) {
                 $nombre = $params[':nombre'] ?? ($this->bound[':nombre'] ?? null);
                 if ($nombre === null || $nombre === '') {
@@ -77,7 +78,7 @@ class StatementDoubleCliente
 // ======================
 // Doble de prueba (PDO)
 // ======================
-class PDODoubleCliente extends PDO
+class PDODoubleClienteF extends PDO
 {
     public function __construct() {}
     public function setAttribute($attribute, $value) { return true; }
@@ -85,17 +86,17 @@ class PDODoubleCliente extends PDO
     public function prepare($statement, array $options = [])
     {
         $sql = trim($statement);
-        // existeNumeroCedula: COUNT(*)
+        // existeNumeroCedula
         if (stripos($sql, 'SELECT COUNT(*) FROM tbl_clientes WHERE cedula') !== false) {
-            return new StatementDoubleCliente($sql, ['scalar' => 1]);
+            return new StatementDoubleClienteF($sql, ['scalar' => 1]);
         }
         // INSERT
         if (stripos($sql, 'INSERT INTO tbl_clientes') !== false) {
-            return new StatementDoubleCliente($sql);
+            return new StatementDoubleClienteF($sql);
         }
-        // Ultimo cliente
+        // Último cliente
         if (stripos($sql, 'SELECT * FROM tbl_clientes ORDER BY id_clientes DESC LIMIT 1') !== false) {
-            return new StatementDoubleCliente($sql, [
+            return new StatementDoubleClienteF($sql, [
                 'row' => [
                     'id_clientes' => 77,
                     'nombre' => 'UltimoCliente',
@@ -104,8 +105,8 @@ class PDODoubleCliente extends PDO
             ]);
         }
         // obtenerclientesPorId
-        if (stripos($sql, 'SELECT * FROM tbl_clientes WHERE id_clientes =') !== false) {
-            return new StatementDoubleCliente($sql, [
+        if (stripos($sql, 'SELECT * FROM tbl_clientes WHERE id_clientes') !== false) {
+            return new StatementDoubleClienteF($sql, [
                 'row' => [
                     'id_clientes' => 5,
                     'nombre' => 'ClienteX',
@@ -113,21 +114,21 @@ class PDODoubleCliente extends PDO
                 ],
             ]);
         }
-        // UPDATE (modificarclientes)
+        // UPDATE modificar
         if (stripos($sql, 'UPDATE tbl_clientes SET nombre =') !== false) {
-            return new StatementDoubleCliente($sql);
+            return new StatementDoubleClienteF($sql);
         }
-        // UPDATE lógico eliminar_l
+        // UPDATE eliminar_l
         if (stripos($sql, 'UPDATE tbl_clientes SET activo = 0 WHERE id_clientes') !== false) {
-            return new StatementDoubleCliente($sql);
+            return new StatementDoubleClienteF($sql);
         }
-        // DELETE eliminarclientes
+        // DELETE eliminar
         if (stripos($sql, 'DELETE FROM tbl_clientes WHERE id_clientes') !== false) {
-            return new StatementDoubleCliente($sql);
+            return new StatementDoubleClienteF($sql);
         }
         // getclientes listado
         if (stripos($sql, 'SELECT * FROM tbl_clientes') !== false) {
-            return new StatementDoubleCliente($sql, [
+            return new StatementDoubleClienteF($sql, [
                 'rows' => [
                     ['id_clientes' => 2, 'nombre' => 'Ana', 'cedula' => 'V-2'],
                     ['id_clientes' => 1, 'nombre' => 'Ben', 'cedula' => 'V-1'],
@@ -136,42 +137,43 @@ class PDODoubleCliente extends PDO
         }
         // listarTodosClientes (activo=1)
         if (stripos($sql, 'SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1') !== false) {
-            return new StatementDoubleCliente($sql, [
+            return new StatementDoubleClienteF($sql, [
                 'rows' => [
                     ['id_clientes' => 3, 'nombre' => 'Carlos', 'cedula' => 'V-3'],
                 ],
             ]);
         }
-        return new StatementDoubleCliente($sql);
+        return new StatementDoubleClienteF($sql);
     }
 }
 
-// Doble de clase para poder inyectar stub en listarTodosClientes()
-class ClienteDouble extends cliente
+// Doble de clase para listarTodosClientes()
+class ClienteDoubleF extends cliente
 {
     public function __construct() { /* evitar BD real */ }
-    public function getConexion() { return new PDODoubleCliente(); }
+    public function getConexion() { return new PDODoubleClienteF(); }
 }
 
 // ================================
-// Casos de prueba (Unit scenarios)
+// Casos de prueba (Integración)
 // ================================
-final class ClienteTest extends TestCase
+final class ClienteFeatureTest extends TestCase
 {
+    // Helper: crea `cliente` con PDO stub
     private function nuevoClienteConPDOStub(): cliente
     {
         $ref = new ReflectionClass(cliente::class);
         /** @var cliente $c */
         $c = $ref->newInstanceWithoutConstructor();
-        $pdo = new PDODoubleCliente();
+        $pdo = new PDODoubleClienteF();
         $prop = new ReflectionProperty(cliente::class, 'conex');
         $prop->setAccessible(true);
         $prop->setValue($c, $pdo);
         return $c;
     }
 
-    // CLI-UNIT-001: Registrar cliente
-    public function testRegistrarClienteHappyPath(): void
+    // CLI-FEAT-001: Registrar cliente
+    public function testRegistrarClienteIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $c->setnombre('Juan');
@@ -182,15 +184,15 @@ final class ClienteTest extends TestCase
         $this->assertTrue($c->ingresarclientes());
     }
 
-    // CLI-UNIT-002: Existe número de cédula (true)
-    public function testExisteNumeroCedulaTrue(): void
+    // CLI-FEAT-002: Existe número de cédula
+    public function testExisteNumeroCedulaIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $this->assertTrue($c->existeNumeroCedula('V-100'));
     }
 
-    // CLI-UNIT-003: Obtener último cliente
-    public function testObtenerUltimoCliente(): void
+    // CLI-FEAT-003: Obtener último cliente
+    public function testObtenerUltimoClienteIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $row = $c->obtenerUltimoCliente();
@@ -198,8 +200,8 @@ final class ClienteTest extends TestCase
         $this->assertSame('UltimoCliente', $row['nombre']);
     }
 
-    // CLI-UNIT-004: Obtener cliente por ID
-    public function testObtenerClientePorId(): void
+    // CLI-FEAT-004: Obtener cliente por ID
+    public function testObtenerClientePorIdIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $row = $c->obtenerclientesPorId(5);
@@ -207,8 +209,8 @@ final class ClienteTest extends TestCase
         $this->assertSame('ClienteX', $row['nombre']);
     }
 
-    // CLI-UNIT-005: Modificar cliente
-    public function testModificarCliente(): void
+    // CLI-FEAT-005: Modificar cliente
+    public function testModificarClienteIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $c->setnombre('Edit');
@@ -222,22 +224,22 @@ final class ClienteTest extends TestCase
         $this->assertTrue($c->modificarclientes(5));
     }
 
-    // CLI-UNIT-006: Eliminar lógico
-    public function testEliminarLogico(): void
+    // CLI-FEAT-006: Eliminar lógico
+    public function testEliminarLogicoIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $this->assertTrue($c->eliminar_l(5));
     }
 
-    // CLI-UNIT-007: Eliminar cliente
-    public function testEliminarCliente(): void
+    // CLI-FEAT-007: Eliminar cliente
+    public function testEliminarClienteIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $this->assertTrue($c->eliminarclientes(5));
     }
 
-    // CLI-UNIT-008: Listar clientes (g_clientes)
-    public function testGetClientesListado(): void
+    // CLI-FEAT-008: Listar clientes (g_clientes)
+    public function testGetClientesListadoIntegracion(): void
     {
         $c = $this->nuevoClienteConPDOStub();
         $lista = $c->getclientes();
@@ -247,10 +249,10 @@ final class ClienteTest extends TestCase
         $this->assertArrayHasKey('nombre', $lista[0]);
     }
 
-    // CLI-UNIT-009: listarTodosClientes() usando ClienteDouble
-    public function testListarTodosClientes(): void
+    // CLI-FEAT-009: listarTodosClientes() usando ClienteDoubleF
+    public function testListarTodosClientesIntegracion(): void
     {
-        $c = new ClienteDouble();
+        $c = new ClienteDoubleF();
         $lista = $c->listarTodosClientes();
         $this->assertIsArray($lista);
         $this->assertNotEmpty($lista);

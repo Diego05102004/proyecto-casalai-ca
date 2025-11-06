@@ -1,5 +1,5 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class Factura extends BD
 {
@@ -10,12 +10,13 @@ class Factura extends BD
     private $estatus;
     private $id_producto;
     private $cantidad;
+
     private $cedula;
     private $conex;
 
     // Constructor sin conexión persistente
 public function __construct() {
-    parent::__construct();
+    $this->conex = null;
 }
 
     // Getters y Setters
@@ -46,23 +47,21 @@ public function __construct() {
     }
     private function r_registrar() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) 
                     VALUES (?, ?, ?, ?)";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute([
                 $this->fecha,
                 $this->cliente,
                 $this->descuento,
                 $this->estatus
             ]);
-            return $co->lastInsertId();
+            return $this->conex->lastInsertId();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -71,18 +70,16 @@ public function agregarProducto($idFactura, $idProducto, $cantidad) {
 }
 private function a_agregarProducto($idFactura, $idProducto, $cantidad) {
     $conexion = new BD('P');
-    $co = $conexion->getConexion();
+    $this->conex = $conexion->getConexion();
     try {
         $sql = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
                 VALUES (?, ?, ?)";
-        $stmt = $co->prepare($sql);
+        $stmt = $this->conex->prepare($sql);
         $stmt->execute([$idFactura, $idProducto, $cantidad]);
         return true;
     } finally {
-        if (isset($conexion)) { 
-            $conexion->cerrar();
-        }
-        $co = null;
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
     // Transacciones
@@ -108,8 +105,8 @@ private function a_agregarProducto($idFactura, $idProducto, $cantidad) {
     // Crear factura
 private function facturaIngresar() {
     $conexion = new BD('P');
-    $co = $conexion->getConexion();
-    $pdo = $co;
+    $this->conex = $conexion->getConexion();
+    $pdo = $this->conex;
     try {
         $pdo->beginTransaction();
 
@@ -162,10 +159,8 @@ private function facturaIngresar() {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         return ['error' => $e->getMessage()];
     } finally {
-        if (isset($conexion)) { 
-            $conexion->cerrar();
-        }
-        $co = null;
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
     public function obtenerUltimaFactura() {
@@ -173,26 +168,24 @@ private function facturaIngresar() {
     }
     private function o_ultimaFactura() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "SELECT MAX(id_factura) AS ultima_factura FROM tbl_facturas";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result ? $result['ultima_factura'] : null;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
   private function facturaConsultarTodas() {
     $conexion = new BD('P');
-    $co = $conexion->getConexion();
+    $this->conex = $conexion->getConexion();
     // Primero obtenemos información de pagos para validar después
     $sqlPagos = "SELECT id_factura, estatus FROM tbl_detalles_pago";
-    $stmtPagos = $co->prepare($sqlPagos);
+    $stmtPagos = $this->conex->prepare($sqlPagos);
     $stmtPagos->execute();
     $todosPagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     
@@ -217,7 +210,7 @@ private function facturaIngresar() {
     JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
     ORDER BY f.id_factura DESC";
 
-    $stmt = $co->prepare($sqlDetalles);
+    $stmt = $this->conex->prepare($sqlDetalles);
     $stmt->execute();
     $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -242,7 +235,7 @@ private function facturaIngresar() {
     }
 
     // Obtener los estatus y observaciones desde tbl_detalles_pago
-    $stmtPagos = $co->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
+    $stmtPagos = $this->conex->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
     $stmtPagos->execute();
     $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     $mapaPagos = [];
@@ -283,11 +276,11 @@ private function facturaIngresar() {
             continue;
         }
 
-        $datosCliente = '<p><strong>Cliente:</strong> ' . htmlspecialchars($fila['nombre']) .  ' | ';
-        $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars($fila['cedula']) . ' | ';
-        $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars($fila['telefono']) . ' | ';
-        $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars($fila['direccion']) . ' | ';
-        $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars($fila['descuento']) . '% | ';
+        $datosCliente = '<p><strong>Cliente:</strong> ' . htmlspecialchars((string)($fila['nombre'] ?? '')) .  ' | ';
+        $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars((string)($fila['cedula'] ?? '')) . ' | ';
+        $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars((string)($fila['telefono'] ?? '')) . ' | ';
+        $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars((string)($fila['direccion'] ?? '')) . ' | ';
+        $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
         
         // Aplicar estilo especial para diferentes estatus
         if ($esPagadaPresencialmente) {
@@ -323,7 +316,7 @@ private function facturaIngresar() {
                     break;
 
                 case 'Pago Incompleto':
-                    $mensajePago = '<div class="alert alert-danger"><strong>Pago incompleto:</strong> ' . htmlspecialchars($observaciones) . '</div>';
+                    $mensajePago = '<div class="alert alert-danger"><strong>Pago incompleto:</strong> ' . htmlspecialchars((string)($observaciones ?? '')) . '</div>';
                     break;
 
                 case 'Pago Procesado':
@@ -341,7 +334,7 @@ private function facturaIngresar() {
                     break;
 
                 case 'Pago No Encontrado':
-                    $mensajePago = '<div class="alert alert-danger"><strong>Pago no encontrado:</strong> ' . htmlspecialchars($observaciones) . '<br>Por favor, verifique los datos registrados en la pasarela de pago.</div>';
+                    $mensajePago = '<div class="alert alert-danger"><strong>Pago no encontrado:</strong> ' . htmlspecialchars((string)($observaciones ?? '')) . '<br>Por favor, verifique los datos registrados en la pasarela de pago.</div>';
                     break;
 
                 default:
@@ -409,23 +402,23 @@ private function facturaIngresar() {
         'resultado' => 'listado',
         'mensaje' => $html
     ];
-    if (isset($conexion)) { 
-        $conexion->cerrar();
-    }
-    $co = null;
+    if (isset($conexion)) { $conexion->cerrar(); }
+    $this->conex = null;
     return $resultadoListado;
 }
 
 private function facturaConsultar() {
     $conexion = new BD('P');
-    $co = $conexion->getConexion();
+    $this->conex = $conexion->getConexion();
     if (empty($this->cedula)) {
+        $conexion->cerrar();
+        $this->conex = null;
         return ['resultado' => 'error', 'mensaje' => 'No se ha proporcionado la cédula para consultar facturas.'];
     }
     
     // Primero obtenemos información de pagos para validar después
     $sqlPagos = "SELECT id_factura, estatus FROM tbl_detalles_pago";
-    $stmtPagos = $co->prepare($sqlPagos);
+    $stmtPagos = $this->conex->prepare($sqlPagos);
     $stmtPagos->execute();
     $todosPagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     
@@ -451,7 +444,7 @@ private function facturaConsultar() {
     WHERE c.cedula = :cedula
     ORDER BY f.id_factura DESC";
 
-    $stmt = $co->prepare($sqlDetalles);
+    $stmt = $this->conex->prepare($sqlDetalles);
     $stmt->bindParam(':cedula', $this->cedula);
     $stmt->execute();
     $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -477,7 +470,7 @@ private function facturaConsultar() {
     }
     
     // Obtener los estatus y observaciones desde tbl_detalles_pago
-    $stmtPagos = $co->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
+    $stmtPagos = $this->conex->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
     $stmtPagos->execute();
     $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
     $mapaPagos = [];
@@ -518,11 +511,11 @@ private function facturaConsultar() {
             continue;
         }
 
-        $datosCliente = '<p><strong>Cliente:</strong> ' . htmlspecialchars($fila['nombre']) .  ' | ';
-        $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars($fila['cedula']) . ' | ';
-        $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars($fila['telefono']) . ' | ';
-        $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars($fila['direccion']) . ' | ';
-        $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars($fila['descuento']) . '% | ';
+        $datosCliente = '<p><strong>Cliente:</strong> ' . htmlspecialchars((string)($fila['nombre'] ?? '')) .  ' | ';
+        $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars((string)($fila['cedula'] ?? '')) . ' | ';
+        $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars((string)($fila['telefono'] ?? '')) . ' | ';
+        $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars((string)($fila['direccion'] ?? '')) . ' | ';
+        $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
         
         // Aplicar estilo especial para diferentes estatus
         if ($esPagadaPresencialmente) {
@@ -558,7 +551,7 @@ private function facturaConsultar() {
                     break;
 
                 case 'Pago Incompleto':
-                    $mensajePago = '<div class="alert alert-danger"><strong>Pago incompleto:</strong> ' . htmlspecialchars($observaciones) . '</div>';
+                    $mensajePago = '<div class="alert alert-danger"><strong>Pago incompleto:</strong> ' . htmlspecialchars((string)($observaciones ?? '')) . '</div>';
                     break;
 
                 case 'Pago Procesado':
@@ -576,7 +569,7 @@ private function facturaConsultar() {
                     break;
 
                 case 'Pago No Encontrado':
-                    $mensajePago = '<div class="alert alert-danger"><strong>Pago no encontrado:</strong> ' . htmlspecialchars($observaciones) . '<br>Por favor, verifique los datos registrados en la pasarela de pago.</div>';
+                    $mensajePago = '<div class="alert alert-danger"><strong>Pago no encontrado:</strong> ' . htmlspecialchars((string)($observaciones ?? '')) . '<br>Por favor, verifique los datos registrados en la pasarela de pago.</div>';
                     break;
 
                 default:
@@ -662,15 +655,13 @@ private function facturaConsultar() {
     }
     private function c_facturaCancelar($id) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
-            $stmt = $co->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
+            $stmt = $this->conex->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
             return $stmt->execute([$id]);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -680,15 +671,12 @@ private function facturaConsultar() {
     }
     private function p_facturaProcesar($id, $estatus) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
-            $stmt = $co->prepare("UPDATE tbl_facturas SET estatus = ? WHERE id_factura = ?");
+            $stmt = $this->conex->prepare("UPDATE tbl_facturas SET estatus = ? WHERE id_factura = ?");
             return $stmt->execute([$estatus, $id]);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
         }
     }
 

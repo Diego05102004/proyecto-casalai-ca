@@ -1,7 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../../../modelo/respaldo.php';
+require_once __DIR__ . '/../../../modelo/backup.php';
 
 final class BackupModuleTest extends TestCase
 {

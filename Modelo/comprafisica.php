@@ -1,15 +1,16 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class Compra extends BD{
     private $idcliente;
     private $correlativo;
     private $desc;
     private $fecha;
+    private $conex;
     private $tablerecepcion = 'tbl_despachos';
 
     public function __construct() {
-        parent::__construct();
+        $this->conex = null;
     }
 
     public function getidcliente() {
@@ -39,22 +40,25 @@ class Compra extends BD{
 
     private function r_compraFisica($datos) {
         $d = [];
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         try {
-            $co->beginTransaction();
+            $this->conex->beginTransaction();
 
             // 1️⃣ Insertar despacho
             $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, activo) 
                             VALUES (:id_cliente, :fecha, 1)";
-            $stmt = $co->prepare($sqlDespacho);
+            $stmt = $this->conex->prepare($sqlDespacho);
             $stmt->execute([
                 ':id_cliente' => $datos['cliente'],
                 ':fecha' => date('Y-m-d'),
             ]);
-            $idDespacho = $co->lastInsertId();
+            $idDespacho = $this->conex->lastInsertId();
 
             $descripcion = "Venta: ";
             $monto_total = 0;
@@ -67,7 +71,7 @@ class Compra extends BD{
                 // Insertar en despacho_detalle
                 $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
                             VALUES (:id_despacho, :id_producto, :cantidad)";
-                $stmtDet = $co->prepare($sqlDetalle);
+                $stmtDet = $this->conex->prepare($sqlDetalle);
                 $stmtDet->execute([
                     ':id_despacho' => $idDespacho,
                     ':id_producto' => $p['id_producto'],
@@ -75,7 +79,7 @@ class Compra extends BD{
                 ]);
 
                 // Obtener información del producto
-                $stmtProd = $co->prepare("
+                $stmtProd = $this->conex->prepare("
                     SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial, p.precio
                     FROM tbl_productos p
                     INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
@@ -109,18 +113,18 @@ class Compra extends BD{
             // 3️⃣ Insertar en tbl_facturas
             $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento) 
                         VALUES (:cliente, :fecha, 0)";
-            $stmtFactura = $co->prepare($sqlFactura);
+            $stmtFactura = $this->conex->prepare($sqlFactura);
             $stmtFactura->execute([
                 ':cliente' => $datos['cliente'],
                 ':fecha' => date('Y-m-d'),
             ]);
-            $idFactura = $co->lastInsertId();
+            $idFactura = $this->conex->lastInsertId();
 
             // 4️⃣ Insertar en tbl_factura_detalle
             foreach ($productosVenta as $prod) {
                 $sqlFacturaDet = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
                                 VALUES (:factura_id, :id_producto, :cantidad)";
-                $stmtFacturaDet = $co->prepare($sqlFacturaDet);
+                $stmtFacturaDet = $this->conex->prepare($sqlFacturaDet);
                 $stmtFacturaDet->execute([
                     ':factura_id' => $idFactura,
                     ':id_producto' => $prod['id_producto'],
@@ -129,7 +133,7 @@ class Compra extends BD{
             }
 
             // 5️⃣ Obtener datos del cliente
-            $stmtCliente = $co->prepare("
+            $stmtCliente = $this->conex->prepare("
                 SELECT id_clientes, nombre, cedula, telefono, correo 
                 FROM tbl_clientes 
                 WHERE id_clientes = ?
@@ -144,7 +148,7 @@ class Compra extends BD{
                     // Insertar en tbl_detalles_pago
                     $sqlPago = "INSERT INTO tbl_detalles_pago (id_factura, tipo, id_cuenta, referencia, monto, comprobante, fecha) 
                                 VALUES (:id_factura, :tipo, :id_cuenta, :referencia, :monto, :comprobante, NOW())";
-                    $stmtPago = $co->prepare($sqlPago);
+                    $stmtPago = $this->conex->prepare($sqlPago);
                     $stmtPago->execute([
                         ':id_factura' => $idFactura,
                         ':tipo' => $pago['tipo'],
@@ -178,22 +182,19 @@ class Compra extends BD{
                 'total' => $monto_total
             ];
 
-            $co->commit();
+            $this->conex->commit();
             return $resultado;
 
         } catch (Exception $e) {
-            if ($co->inTransaction()) {
-                $co->rollBack();
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
             }
             return [
                 'status' => 'error',
                 'mensaje' => $e->getMessage()
             ];
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
         }
     }
 
@@ -216,38 +217,40 @@ class Compra extends BD{
         return $this->obt_cliente();
     }
     private function obt_cliente() {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        try {
-            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $p = $co->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
-            $p->execute();
-            return $p->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
         }
+        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $p = $this->conex->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
+        $p->execute();
+        $rows = $p->fetchAll(PDO::FETCH_ASSOC);
+        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        return $rows;
     }
 
     public function listadoproductos() {
         return $this->list_productos(); 
     }
     private function list_productos() {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        try {
-            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $resultado = $co->query("SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial, p.precio
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $r = array();
+        try{
+            $resultado = $this->conex->query("SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial,p.precio
                 FROM tbl_productos AS p 
                 INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
                 INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;");
             
-            $respuesta = '';
-            $totalFilas = 0;
-            
             if($resultado){
+                $respuesta = '';
+                $totalColumnas = 6; // Número de columnas de la tabla
+                $totalFilas = 0;
                 foreach($resultado as $r){
                     $respuesta .= "<tr style='cursor:pointer' onclick='colocaproducto(this);'>";
                     $respuesta .= "<td style='display:none'>{$r['id_producto']}</td>";
@@ -268,24 +271,20 @@ class Compra extends BD{
                     $modalSize = 'modal-xl';
                 }
             }
-            
-            return [
+            $r = [
                 'resultado' => 'listado',
                 'mensaje' => $respuesta,
-                'modalSize' => $modalSize ?? 'modal-md'
+                'modalSize' => isset($modalSize) ? $modalSize : 'modal-md'
             ];
-        } catch(Exception $e) {
-            return [
+        }catch(Exception $e){
+            $r = [
                 'resultado' => 'error',
                 'mensaje' => $e->getMessage(),
                 'modalSize' => 'modal-md'
             ];
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
         }
+        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        return $r;
     }
 
     public function buscarClientes($query) {
@@ -293,88 +292,82 @@ class Compra extends BD{
     }
 
     private function buscar_clientes($query) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        try {
-            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-            $sql = "SELECT id_clientes, nombre, cedula, telefono 
-                    FROM tbl_clientes 
-                    WHERE activo = 1 
-                    AND (nombre LIKE :query OR cedula LIKE :query)
-                    ORDER BY 
-                        CASE 
-                            WHEN nombre LIKE :query_exact THEN 1
-                            WHEN cedula LIKE :query_exact THEN 2
-                            ELSE 3
-                        END,
-                        nombre
-                    LIMIT 20";
-            
-            $stmt = $co->prepare($sql);
-            $searchTerm = "%$query%";
-            $exactTerm = "$query%";
-            
-            $stmt->execute([
-                ':query' => $searchTerm,
-                ':query_exact' => $exactTerm
-            ]);
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
         }
+        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        
+        $sql = "SELECT id_clientes, nombre, cedula, telefono 
+                FROM tbl_clientes 
+                WHERE activo = 1 
+                AND (nombre LIKE :query OR cedula LIKE :query)
+                ORDER BY 
+                    CASE 
+                        WHEN nombre LIKE :query_exact THEN 1
+                        WHEN cedula LIKE :query_exact THEN 2
+                        ELSE 3
+                    END,
+                    nombre
+                LIMIT 20";
+        
+        $stmt = $this->conex->prepare($sql);
+        $searchTerm = "%$query%";
+        $exactTerm = "$query%";
+        
+        $stmt->execute([
+            ':query' => $searchTerm,
+            ':query_exact' => $exactTerm
+        ]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        return $rows;
     }
 
     public function consultarproductos() {
         return $this->consul_productos(); 
     }
     private function consul_productos() {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        try {
-            // Obtener tasa de cambio del dólar
-            $tasa = 1; // Valor por defecto si no se encuentra la tasa
-            
-            try {
-                $conexionCache = new BD('P');
-                $db = $conexionCache->getConexion();
-                
-                $stmtCache = $db->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
-                $stmtCache->execute();
-                
-                $result = $stmtCache->fetch(PDO::FETCH_ASSOC);
-                
-                if ($result && (time() - strtotime($result['fecha'])) < 86400) { // Cache válida si tiene menos de 24 horas
-                    $tasa = floatval($result['precio']);
-                }
-                
-                $conexionCache->cerrar();
-            } catch (Exception $e) {
-                error_log('Error al obtener cache del dólar: ' . $e->getMessage());
-            }
-
-            // Obtener productos con precios convertidos
-            $stmt = $co->prepare("
-                SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial, 
-                       (p.precio * :tasa) as precio
-                FROM tbl_productos AS p 
-                INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
-                INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;
-            ");
-            
-            $stmt->execute([':tasa' => $tasa]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
         }
+        $stmt = $this->conex->prepare("
+            SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial, p.precio
+            FROM tbl_productos AS p 
+            INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
+            INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;
+        ");
+        $stmt->execute();
+        $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $tasa = 1; // Valor por defecto si no se encuentra la tasa
+
+        try {
+            $conexionCache = new BD('P');
+            $db = $conexionCache->getConexion();
+            
+            $stmtCache = $db->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
+            $stmtCache->execute();
+            
+            $result = $stmtCache->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result && (time() - strtotime($result['fecha'])) < 86400) { // Cache válida si tiene menos de 24 horas
+                $tasa = floatval($result['precio']);
+            }
+        } catch (Exception $e) {
+            error_log('Error al obtener cache del dólar: ' . $e->getMessage());
+        }
+
+        // Multiplicar el precio por la tasa
+        foreach ($registros as &$producto) {
+            $producto['precio'] = floatval($producto['precio']) * $tasa;
+        }
+
+        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        return $registros;
     }
 
 
@@ -383,10 +376,12 @@ class Compra extends BD{
         return $this->g_Compras(); 
     }
     private function g_Compras() {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        try {
-            $sql = "
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        $sql = "
             SELECT 
                 f.id_factura,
                 f.fecha AS fecha_factura,
@@ -447,100 +442,98 @@ class Compra extends BD{
             ORDER BY f.fecha DESC, f.id_factura DESC
         ";
 
-            $stmt = $co->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
-        }
+        $stmt = $this->conex->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        return $rows;
     }
 
     public function getdespacho() {
         return $this->g_despacho(); 
     }
     private function g_despacho() {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        try {
-            $querydespachos = 
-            'SELECT 
-                d.id_detalle,
-                r.id_despachos,
-                pro.id_producto,
-                c.id_clientes,
-                r.fecha_despacho,
-                c.nombre AS nombre_cliente,
-                pro.nombre_producto,
-                d.cantidad
-            FROM tbl_despachos AS r
-            INNER JOIN tbl_despacho_detalle AS d ON d.id_despacho = r.id_despachos
-            INNER JOIN tbl_clientes AS c ON c.id_clientes = r.id_clientes
-            INNER JOIN tbl_productos AS pro ON pro.id_producto = d.id_producto
-            ORDER BY r.id_despachos DESC;';
-            
-            $stmtdespachos = $co->prepare($querydespachos);
-            $stmtdespachos->execute();
-            return $stmtdespachos->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
         }
+        $querydespachos = 
+        'SELECT 
+            d.id_detalle,
+            r.id_despachos,
+            pro.id_producto,
+            c.id_clientes,
+            r.fecha_despacho,
+            c.nombre AS nombre_cliente,
+            pro.nombre_producto,
+            d.cantidad
+        FROM tbl_despachos AS r
+        INNER JOIN tbl_despacho_detalle AS d ON d.id_despacho = r.id_despachos
+        INNER JOIN tbl_clientes AS c ON c.id_clientes = r.id_clientes
+        INNER JOIN tbl_productos AS pro ON pro.id_producto = d.id_producto
+        ORDER BY r.id_despachos DESC;
+        ';
+        $stmtdespachos = $this->conex->prepare($querydespachos);
+        $stmtdespachos->execute();
+        $despachos = $stmtdespachos->fetchAll(PDO::FETCH_ASSOC);
+        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        return $despachos;
     }
 
     public function getDetallesCompra($idDespacho) {
         return $this->g_detallesCompra($idDespacho); 
     }
     private function g_detallesCompra($idDespacho) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
-        try {
-            // Productos
-            $sqlProductos = "
-                SELECT p.nombre_producto, d.cantidad, p.precio, (d.cantidad * p.precio) AS subtotal
-                FROM tbl_despacho_detalle d
-                INNER JOIN tbl_productos p ON p.id_producto = d.id_producto
-                WHERE d.id_despacho = ?
-            ";
-            $stmtProd = $co->prepare($sqlProductos);
-            $stmtProd->execute([$idDespacho]);
-            $productos = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
-
-            // Pagos
-            $sqlPagos = "
-                SELECT dp.tipo, dp.monto, dp.fecha, dp.referencia, dp.comprobante
-                FROM tbl_detalles_pago dp
-                INNER JOIN tbl_facturas f ON f.id_factura = dp.id_factura
-                WHERE f.id_despacho = ?
-            ";
-            $stmtPagos = $co->prepare($sqlPagos);
-            $stmtPagos->execute([$idDespacho]);
-            $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                'productos' => $productos,
-                'pagos' => $pagos
-            ];
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
         }
+        // Productos
+        $sqlProductos = "
+            SELECT p.nombre_producto, d.cantidad, p.precio, (d.cantidad * p.precio) AS subtotal
+            FROM tbl_despacho_detalle d
+            INNER JOIN tbl_productos p ON p.id_producto = d.id_producto
+            WHERE d.id_despacho = ?
+        ";
+        $stmtProd = $this->conex->prepare($sqlProductos);
+        $stmtProd->execute([$idDespacho]);
+        $productos = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+
+        // Pagos
+        $sqlPagos = "
+            SELECT dp.tipo, dp.monto, dp.fecha, dp.referencia, dp.comprobante
+            FROM tbl_detalles_pago dp
+            INNER JOIN tbl_facturas f ON f.id_factura = dp.id_factura
+            WHERE f.id_despacho = ?
+        ";
+        $stmtPagos = $this->conex->prepare($sqlPagos);
+        $stmtPagos->execute([$idDespacho]);
+        $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
+
+        $ret = [
+            'productos' => $productos,
+            'pagos' => $pagos
+        ];
+        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        return $ret;
     }
 
     public function obtenerDetallesPorDespacho($idDespacho) {
         return $this->obt_detallesPorDespacho($idDespacho); 
     }
     private function obt_detallesPorDespacho($idDespacho) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $datos = [];
+
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+
         try {
-            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             // Consultar productos de esa recepción
             $sql = "SELECT dr.id_producto, dr.cantidad, dr.costo, p.nombre 
@@ -548,40 +541,37 @@ class Compra extends BD{
                     INNER JOIN tbl_productos p ON dr.id_producto = p.id
                     WHERE dr.id_recepcion = :idRecepcion";
 
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':idRecepcion', $idDespacho, PDO::PARAM_INT);
             $stmt->execute();
             $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Consultar todos los productos (para el <select>)
             $sqlProductos = "SELECT id, nombre FROM tbl_productos";
-            $productosTodos = $co->query($sqlProductos)->fetchAll(PDO::FETCH_ASSOC);
+            $productosTodos = $this->conex->query($sqlProductos)->fetchAll(PDO::FETCH_ASSOC);
 
             // Agregar opciones al array de productos
             foreach ($productos as &$producto) {
                 $opciones = '';
                 foreach ($productosTodos as $item) {
                     $selected = ($item['id'] == $producto['id_producto']) ? 'selected' : '';
-                    $opciones .= "<option value='{$item['id']}' $selected>" . 
-                                htmlspecialchars($item['nombre'], ENT_QUOTES, 'UTF-8') . 
-                                "</option>";
+                    $opciones .= "<option value='{$item['id']}' $selected>{$item['nombre']}</option>";
                 }
                 $producto['opciones'] = $opciones;
             }
 
-            return $productos;
+            $datos = $productos;
 
         } catch (Exception $e) {
-            return [
+            $datos = [
                 'error' => true,
                 'mensaje' => $e->getMessage()
             ];
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
         }
+
+        return $datos;
     }
 }
 ?>

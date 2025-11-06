@@ -1,5 +1,5 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class Recepcion extends BD{
     private $idproveedor;
@@ -9,7 +9,12 @@ class Recepcion extends BD{
     private $fecha;
     private $costo;
     private $estado;
+    private $conex;
     private $tablerecepcion = 'tbl_recepcion_productos';
+
+    public function __construct() {
+        $this->conex = null;
+    }
 
     public function getidproveedor() {
         return $this->idproveedor;
@@ -67,14 +72,14 @@ class Recepcion extends BD{
     private function r_recepcion($idproducto, $cantidad, $costo) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $tiempo = date('Y-m-d');
-            $co->beginTransaction();
+            $this->conex->beginTransaction();
             $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, tamanocompra, estado) 
                 VALUES (:idproveedor, :fecha_recepcion, :correlativo, :tamanocompra, :estado)";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':idproveedor', $this->idproveedor, PDO::PARAM_INT);
             $stmt->bindParam(':fecha_recepcion', $tiempo, PDO::PARAM_STR);
             $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
@@ -82,7 +87,7 @@ class Recepcion extends BD{
             $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
             $stmt->execute();
 
-            $idRecepcion = $co->lastInsertId();
+            $idRecepcion = $this->conex->lastInsertId();
             $cap = count($idproducto);
 
             $productosArray = [];
@@ -90,21 +95,21 @@ class Recepcion extends BD{
             for ($i = 0; $i < $cap; $i++) {
                 $sqlDetalle = "INSERT INTO tbl_detalle_recepcion_productos (id_recepcion, id_producto, cantidad, costo) 
                     VALUES (:idRecepcion, :idProducto, :cantidad, :costo)";
-                $stmtDetalle = $co->prepare($sqlDetalle);
+                $stmtDetalle = $this->conex->prepare($sqlDetalle);
                 $stmtDetalle->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':idProducto', $idproducto[$i], PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':cantidad', $cantidad[$i], PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':costo', $costo[$i], PDO::PARAM_INT);
                 $stmtDetalle->execute();
-                $idDetalle = $co->lastInsertId();
+                $idDetalle = $this->conex->lastInsertId();
 
                 $sqlNombre = "SELECT id_producto FROM tbl_productos WHERE id_producto = ?";
-                $stmtNombre = $co->prepare($sqlNombre);
+                $stmtNombre = $this->conex->prepare($sqlNombre);
                 $stmtNombre->execute([$idproducto[$i]]);
                 $idProducto = $stmtNombre->fetchColumn();
 
                 $sqlNombre = "SELECT nombre_producto FROM tbl_productos WHERE id_producto = ?";
-                $stmtNombre = $co->prepare($sqlNombre);
+                $stmtNombre = $this->conex->prepare($sqlNombre);
                 $stmtNombre->execute([$idproducto[$i]]);
                 $nombreProducto = $stmtNombre->fetchColumn();
 
@@ -120,10 +125,10 @@ class Recepcion extends BD{
 
                 $sqlEgreso = "INSERT INTO tbl_ingresos_egresos (tipo, monto, descripcion, fecha, estado, id_detalle_recepcion_productos)
                     VALUES ('egreso', ?, ?, ?, 1, LAST_INSERT_ID())";
-                $stmtEgreso = $co->prepare($sqlEgreso);
+                $stmtEgreso = $this->conex->prepare($sqlEgreso);
                 $stmtEgreso->execute([$monto_total, $descripcion, $tiempo]);
             }
-            $co->commit();
+            $this->conex->commit();
 
             // Consulta la recepción recién creada con todos los datos necesarios
             $sqlRecepcion = "
@@ -141,7 +146,7 @@ class Recepcion extends BD{
                 WHERE r.id_recepcion = :idRecepcion
                 GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
             ";
-            $stmtRecepcion = $co->prepare($sqlRecepcion);
+            $stmtRecepcion = $this->conex->prepare($sqlRecepcion);
             $stmtRecepcion->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
             $stmtRecepcion->execute();
             $recepcion = $stmtRecepcion->fetch(PDO::FETCH_ASSOC);
@@ -153,8 +158,8 @@ class Recepcion extends BD{
             ];
 
         } catch (Exception $e) {
-            if (isset($co) && $co->inTransaction()) {
-                $co->rollBack();
+            if ($this->conex && $this->conex->inTransaction()) {
+                $this->conex->rollBack();
             }
             throw $e;
         } finally {
@@ -162,7 +167,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -172,11 +177,11 @@ class Recepcion extends BD{
     private function ex_correlativo($correlativo) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "SELECT COUNT(*) FROM tbl_recepcion_productos WHERE correlativo = :correlativo AND estado = 'habilitado'";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':correlativo', $correlativo, PDO::PARAM_STR);
             $stmt->execute();
             $existe = $stmt->fetchColumn();
@@ -186,7 +191,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -196,7 +201,7 @@ class Recepcion extends BD{
     private function obtUltimaRecepcion() {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "SELECT 
@@ -214,20 +219,21 @@ class Recepcion extends BD{
             ORDER BY r.id_recepcion DESC 
             LIMIT 1";
             
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             $recepcion = $stmt->fetch(PDO::FETCH_ASSOC);
             
             return $recepcion ? $recepcion : null;
             
         } catch (PDOException $e) {
-            throw $e;
+            error_log("Error en obtUltimaRecepcion: " . $e->getMessage());
+            return null;
         } finally {
             // Cerrar conexión al finalizar la función
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -238,7 +244,7 @@ class Recepcion extends BD{
     private function g_recepcion(){
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $queryrecepciones = "
@@ -258,7 +264,7 @@ class Recepcion extends BD{
                 ORDER BY r.fecha DESC, r.correlativo DESC, r.tamanocompra DESC
             ";
 
-            $stmtrecepciones = $co->prepare($queryrecepciones);
+            $stmtrecepciones = $this->conex->prepare($queryrecepciones);
             $stmtrecepciones->execute();
             $recepciones = $stmtrecepciones->fetchAll(PDO::FETCH_ASSOC);
 
@@ -268,7 +274,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -278,7 +284,7 @@ class Recepcion extends BD{
     private function obt_productos_recepcion($id_recepcion) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "
@@ -296,7 +302,7 @@ class Recepcion extends BD{
                 INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
                 WHERE d.id_recepcion = :id_recepcion
             ";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_recepcion', $id_recepcion, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -305,7 +311,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -315,11 +321,11 @@ class Recepcion extends BD{
     private function an_recepcion($correlativo) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "UPDATE tbl_recepcion_productos SET estado = 'anulado' WHERE correlativo = :correlativo";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':correlativo', $correlativo, PDO::PARAM_STR);
             $result = $stmt->execute();
             return $result ? ['status' => 'success'] : ['status' => 'error', 'message' => 'No se pudo anular la recepción'];
@@ -328,7 +334,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -338,11 +344,11 @@ class Recepcion extends BD{
     private function obt_id_recepcion_por_correlativo($correlativo) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "SELECT id_recepcion FROM tbl_recepcion_productos WHERE correlativo = :correlativo LIMIT 1";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':correlativo', $correlativo, PDO::PARAM_STR);
             $stmt->execute();
             $id = $stmt->fetchColumn();
@@ -352,7 +358,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -362,12 +368,12 @@ class Recepcion extends BD{
     private function obt_proveedor() {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
-            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $sql = "SELECT id_proveedor, nombre_proveedor FROM tbl_proveedores";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             $r = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $r;
@@ -378,7 +384,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -388,38 +394,38 @@ class Recepcion extends BD{
     private function list_productos() {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
-        $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $r = array();
         try {
             $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
                     FROM tbl_productos AS p 
                     INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
                     INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;";
-            $resultado = $co->query($sql);
+            $resultado = $this->conex->query($sql);
 
             if($resultado){
                 $respuesta = '';
-                foreach($resultado as $fila){
+                foreach($resultado as $r){
                     $respuesta = $respuesta."<tr style='cursor:pointer' onclick='colocaproducto(this);'>";
                         $respuesta = $respuesta."<td style='display:none'>";
-                            $respuesta = $respuesta.$fila['id_producto'];
+                            $respuesta = $respuesta.$r['id_producto'];
                         $respuesta = $respuesta."</td>";
                         $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$fila['id_producto'];
+                            $respuesta = $respuesta.$r['id_producto'];
                         $respuesta = $respuesta."</td>";
                         $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$fila['nombre_producto'];
+                            $respuesta = $respuesta.$r['nombre_producto'];
                         $respuesta = $respuesta."</td>";
                         $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$fila['nombre_modelo'];
+                            $respuesta = $respuesta.$r['nombre_modelo'];
                         $respuesta = $respuesta."</td>";
                         $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$fila['nombre_marca'];
+                            $respuesta = $respuesta.$r['nombre_marca'];
                         $respuesta = $respuesta."</td>";
                         $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$fila['serial'];
+                            $respuesta = $respuesta.$r['serial'];
                         $respuesta = $respuesta."</td>";
                     $respuesta = $respuesta."</tr>";
                 }
@@ -434,7 +440,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
         return $r;
     }
@@ -445,14 +451,14 @@ class Recepcion extends BD{
     private function consul_productos() {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
                     FROM tbl_productos AS p 
                     INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
                     INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $registros;
@@ -461,7 +467,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -471,13 +477,13 @@ class Recepcion extends BD{
     private function bus() {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         $r = array();
         try {
-            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $sql = "SELECT * FROM tbl_recepcion_productos WHERE correlativo = :correlativo";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute(['correlativo' => $this->correlativo]);
             $fila = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -493,7 +499,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
         return $r;
     }
@@ -504,7 +510,7 @@ class Recepcion extends BD{
     private function getRecepPorProveedor($fechaInicio = null, $fechaFin = null) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "
@@ -530,7 +536,7 @@ class Recepcion extends BD{
                 ORDER BY r.fecha DESC
             ";
 
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
@@ -538,7 +544,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -548,7 +554,7 @@ class Recepcion extends BD{
     private function getProdMasRecibidos($fechaInicio = null, $fechaFin = null, $proveedor = null) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "
@@ -581,7 +587,7 @@ class Recepcion extends BD{
                 ORDER BY r.fecha DESC
             ";
 
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
@@ -589,7 +595,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 
@@ -600,7 +606,7 @@ class Recepcion extends BD{
     private function getRecepMensuales($anio = null) {
         // Abrir conexión al inicio de la función
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
 
         try {
             $sql = "
@@ -624,7 +630,7 @@ class Recepcion extends BD{
                 ORDER BY anio, mes_num
             ";
 
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute($params);
             $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -646,7 +652,7 @@ class Recepcion extends BD{
             if (isset($conexion)) {
                 $conexion->cerrar();
             }
-            $co = null;
+            $this->conex = null;
         }
     }
 

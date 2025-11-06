@@ -1,8 +1,9 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class Proveedores extends BD {
     
+    private $conex;
     private $id_proveedor;
     private $nombre;
     private $representante;
@@ -15,6 +16,10 @@ class Proveedores extends BD {
     private $observacion;
     private $activo=1;
     private $tableproveedor= 'tbl_proveedores';
+
+    public function __construct() {
+        $this->conex = null;
+    }
 
     public function getNombre() {
         return $this->nombre;
@@ -100,8 +105,11 @@ class Proveedores extends BD {
         return $this->existeNomProveedor($nombre, $excluir_id); 
     }
     private function existeNomProveedor($nombre, $excluir_id) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
         try {
             $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE nombre_proveedor = ?";
             $params = [$nombre];
@@ -109,14 +117,11 @@ class Proveedores extends BD {
                 $sql .= " AND id_proveedor != ?";
                 $params[] = $excluir_id;
             }
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
         }
     }
 
@@ -125,11 +130,11 @@ class Proveedores extends BD {
     }
     private function r_proveedor() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "INSERT INTO tbl_proveedores (`nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`)
                     VALUES (:nombre, :rif1, :representante, :rif2, :correo, :direccion, :telefono1, :telefono2, :observacion)";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':rif1', $this->rif1);
             $stmt->bindParam(':representante', $this->representante);
@@ -141,10 +146,8 @@ class Proveedores extends BD {
             $stmt->bindParam(':observacion', $this->observacion);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -152,21 +155,21 @@ class Proveedores extends BD {
         return $this->obtUltimoProveedor(); 
     }
     private function obtUltimoProveedor() {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
         try {
             $sql = "SELECT * FROM tbl_proveedores ORDER BY id_proveedor DESC LIMIT 1";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             $proveedor = $stmt->fetch(PDO::FETCH_ASSOC);
             return $proveedor ? $proveedor : null;
         } catch (PDOException $e) {
             return null;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
         }
     }
 
@@ -175,7 +178,7 @@ class Proveedores extends BD {
     }
     private function obtReporteSuministroProveedores() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "SELECT p.nombre_proveedor, SUM(dp.cantidad) AS cantidad
                     FROM tbl_proveedores p
@@ -184,14 +187,12 @@ class Proveedores extends BD {
                     GROUP BY p.id_proveedor, p.nombre_proveedor
                     ORDER BY cantidad DESC
                     LIMIT 10";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -199,19 +200,19 @@ class Proveedores extends BD {
         return $this->obtProveedorPorId($id_proveedor);
     }
     private function obtProveedorPorId($id_proveedor) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
         try {
             $query = "SELECT * FROM tbl_proveedores WHERE id_proveedor = ?";
-            $stmt = $co->prepare($query);
+            $stmt = $this->conex->prepare($query);
             $stmt->execute([$id_proveedor]);
             $proveedores = $stmt->fetch(PDO::FETCH_ASSOC);
             return $proveedores;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
         }
     }
 
@@ -220,10 +221,10 @@ class Proveedores extends BD {
     }
     private function m_proveedor($id_proveedor) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_proveedores SET nombre_proveedor = :nombre, rif_proveedor = :rif1, nombre_representante = :representante, rif_representante = :rif2, correo_proveedor = :correo, direccion_proveedor = :direccion, telefono_1 = :telefono1, telefono_2 = :telefono2, observacion = :observacion WHERE id_proveedor = :id_proveedor";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_proveedor', $id_proveedor);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':rif1', $this->rif1);
@@ -236,10 +237,8 @@ class Proveedores extends BD {
             $stmt->bindParam(':observacion', $this->observacion);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -248,18 +247,16 @@ class Proveedores extends BD {
     }
     private function e_proveedor($id_proveedor) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "DELETE FROM tbl_proveedores WHERE id_proveedor = :id_proveedor";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_proveedor', $id_proveedor);
             $result = $stmt->execute();
             return $result;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -268,18 +265,16 @@ class Proveedores extends BD {
     }
     private function g_proveedores() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $queryproveedores = 'SELECT * FROM ' . $this->tableproveedor;
-            $stmtproveedores = $co->prepare($queryproveedores);
+            $stmtproveedores = $this->conex->prepare($queryproveedores);
             $stmtproveedores->execute();
             $proveedores = $stmtproveedores->fetchAll(PDO::FETCH_ASSOC);
             return $proveedores;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -288,7 +283,7 @@ class Proveedores extends BD {
     }
     private function getRankingProv() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "
                 SELECT p.nombre_proveedor, pr.nombre_producto, d.cantidad, d.costo, d.cantidad*d.costo AS total, r.fecha
@@ -299,14 +294,12 @@ class Proveedores extends BD {
                 GROUP BY p.nombre_proveedor
                 ORDER BY total DESC
             ";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -315,7 +308,7 @@ class Proveedores extends BD {
     }
     private function getComparacionPreciosProd() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "
                 SELECT 
@@ -341,14 +334,12 @@ class Proveedores extends BD {
                     pr.id_producto,
                     precio_promedio DESC;
             ";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -357,7 +348,7 @@ class Proveedores extends BD {
     }
     private function getDependenciaProv() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "
                 SELECT p.nombre_proveedor, SUM(d.cantidad * d.costo) AS monto_total_pagado, 
@@ -371,14 +362,12 @@ class Proveedores extends BD {
                 GROUP BY p.nombre_proveedor 
                 ORDER BY dependencia_porcentaje DESC;
             ";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -388,10 +377,10 @@ class Proveedores extends BD {
     }
     private function cam_Estatus($nuevoEstatus) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_proveedores SET estado = :estatus WHERE id_proveedor = :id_proveedor";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':estatus', $nuevoEstatus);
             $stmt->bindParam(':id_proveedor', $this->id_proveedor);
             return $stmt->execute();
@@ -399,10 +388,8 @@ class Proveedores extends BD {
             // logging opcional
             return false;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 }

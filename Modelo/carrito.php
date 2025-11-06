@@ -1,12 +1,13 @@
 <?php
 
-require_once 'Config/Config.php';
+require_once(__DIR__ . '/../config/config.php');
 
 class Carrito extends BD{
     private $conex;
 
+
     public function __construct() {
-        parent::__construct();
+        $this->conex = null;
     }
 
 
@@ -15,18 +16,19 @@ class Carrito extends BD{
         return $this->c_crearCarrito($id_cliente);
     }
     private function c_crearCarrito($id_cliente) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             $sql = "INSERT INTO tbl_carrito (id_cliente) VALUES (:id_cliente)";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_cliente', $id_cliente);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
@@ -34,19 +36,20 @@ class Carrito extends BD{
         return $this->o_carritoPorCliente($id_cliente);
     }
     private function o_carritoPorCliente($id_cliente) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             $sql = "SELECT id_carrito, id_cliente FROM tbl_carrito WHERE id_cliente = :id_cliente";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_cliente', $id_cliente);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
@@ -54,12 +57,15 @@ class Carrito extends BD{
         return $this->a_agregarProducto($id_carrito, $id_producto, $cantidad);
     }
     private function a_agregarProducto($id_carrito, $id_producto, $cantidad = 1) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             $sqlCheck = "SELECT id_carrito_detalle, cantidad FROM tbl_carritodetalle 
                          WHERE id_carrito = :id_carrito AND id_producto = :id_producto";
-            $stmtCheck = $co->prepare($sqlCheck);
+            $stmtCheck = $this->conex->prepare($sqlCheck);
             $stmtCheck->bindParam(':id_carrito', $id_carrito);
             $stmtCheck->bindParam(':id_producto', $id_producto);
             $stmtCheck->execute();
@@ -69,24 +75,22 @@ class Carrito extends BD{
                 $nuevaCantidad = $existente['cantidad'] + $cantidad;
                 $sqlUpdate = "UPDATE tbl_carritodetalle SET cantidad = :cantidad 
                               WHERE id_carrito_detalle = :id_carrito_detalle";
-                $stmtUpdate = $co->prepare($sqlUpdate);
+                $stmtUpdate = $this->conex->prepare($sqlUpdate);
                 $stmtUpdate->bindParam(':cantidad', $nuevaCantidad);
                 $stmtUpdate->bindParam(':id_carrito_detalle', $existente['id_carrito_detalle']);
                 return $stmtUpdate->execute();
             } else {
                 $sqlInsert = "INSERT INTO tbl_carritodetalle (id_carrito, id_producto, cantidad) 
                               VALUES (:id_carrito, :id_producto, :cantidad)";
-                $stmtInsert = $co->prepare($sqlInsert);
+                $stmtInsert = $this->conex->prepare($sqlInsert);
                 $stmtInsert->bindParam(':id_carrito', $id_carrito);
                 $stmtInsert->bindParam(':id_producto', $id_producto);
                 $stmtInsert->bindParam(':cantidad', $cantidad);
                 return $stmtInsert->execute();
             }
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
@@ -94,8 +98,11 @@ class Carrito extends BD{
         return $this->o_productosCarrito($id_carrito);
     }
     private function o_productosCarrito($id_carrito) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             $sql = "SELECT cd.id_carrito_detalle, p.id_producto,p.imagen, p.nombre_producto AS nombre, mo.nombre_modelo, ma.nombre_marca,
                            cd.cantidad, p.precio, (cd.cantidad * p.precio) AS subtotal
@@ -104,15 +111,13 @@ class Carrito extends BD{
                     INNER JOIN tbl_modelos mo on mo.id_modelo = p.id_modelo
                     INNER JOIN tbl_marcas ma ON ma.id_marca = mo.id_marca
                     WHERE cd.id_carrito = :id_carrito";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_carrito', $id_carrito);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
@@ -120,20 +125,21 @@ class Carrito extends BD{
         return $this->u_actualizarCantidad($id_carrito_detalle, $cantidad);
     }
     private function u_actualizarCantidad($id_carrito_detalle, $cantidad) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             $sql = "UPDATE tbl_carritodetalle SET cantidad = :cantidad 
                     WHERE id_carrito_detalle = :id_carrito_detalle";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':cantidad', $cantidad);
             $stmt->bindParam(':id_carrito_detalle', $id_carrito_detalle);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
@@ -141,18 +147,19 @@ class Carrito extends BD{
         return $this->d_eliminarProducto($id_carrito_detalle);
     }
     private function d_eliminarProducto($id_carrito_detalle) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             $sql = "DELETE FROM tbl_carritodetalle WHERE id_carrito_detalle = :id_carrito_detalle";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_carrito_detalle', $id_carrito_detalle);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
@@ -160,18 +167,19 @@ class Carrito extends BD{
         return $this->d_eliminarTodo($id_carrito);
     }
     private function d_eliminarTodo($id_carrito) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             $sql = "DELETE FROM tbl_carritodetalle WHERE id_carrito = :id_carrito";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_carrito', $id_carrito);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
@@ -180,91 +188,97 @@ class Carrito extends BD{
         return $this->a_agregarCombo($id_carrito, $id_combo);
     }
     private function a_agregarCombo($id_carrito, $id_combo) {
-        $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
-            $co->beginTransaction();
+            $this->conex->beginTransaction();
             $sqlDetalles = "SELECT id_producto, cantidad FROM combo_detalle WHERE id_combo = :id_combo";
-            $stmtDetalles = $co->prepare($sqlDetalles);
+            $stmtDetalles = $this->conex->prepare($sqlDetalles);
             $stmtDetalles->bindParam(':id_combo', $id_combo);
             $stmtDetalles->execute();
             $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
             foreach ($detalles as $detalle) {
                 $sqlInsert = "INSERT INTO tbl_carritodetalle (id_carrito, id_producto, cantidad) 
                               VALUES (:id_carrito, :id_producto, :cantidad)";
-                $stmtInsert = $co->prepare($sqlInsert);
+                $stmtInsert = $this->conex->prepare($sqlInsert);
                 $stmtInsert->bindParam(':id_carrito', $id_carrito);
                 $stmtInsert->bindParam(':id_producto', $detalle['id_producto']);
                 $stmtInsert->bindParam(':cantidad', $detalle['cantidad']);
                 $stmtInsert->execute();
             }
-            $co->commit();
+            $this->conex->commit();
             return true;
         } catch (PDOException $e) {
-            if ($co->inTransaction()) { $co->rollBack(); }
+            if ($this->conex->inTransaction()) { $this->conex->rollBack(); }
             return false;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
-    public function obtenerCantidadProductosCarrito($id_cliente) {
-        return $this->o_cantidadProductos($id_cliente);
+    public function obtenerCantidadProductosCarrito($id_usuario) {
+        return $this->o_cantidadProductos($id_usuario);
     }
-    private function o_cantidadProductos($id_cliente) {
-        $bd = new BD('P');
-        $pdo = $bd->getConexion();
+    private function o_cantidadProductos($id_usuario) {
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('C'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
-            $sql = "SELECT COUNT(cd.id_carrito_detalle) as total
+            $sql = "SELECT COUNT(dc.id_detalle_carrito) as total
                     FROM tbl_carrito c 
-                    INNER JOIN tbl_carritodetalle cd ON c.id_carrito = cd.id_carrito 
-                    WHERE c.id_cliente = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id_cliente]);
+                    INNER JOIN tbl_detalle_carrito dc ON c.id_carrito = dc.id_carrito 
+                    WHERE c.id_usuario = ? AND c.estado = 'activo'";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute([$id_usuario]);
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $resultado ? (int)$resultado['total'] : 0;
+            return $resultado ? $resultado['total'] : 0;
         } finally {
-            $bd->cerrar();
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
-    public function obtenerResumenCarrito($id_cliente) {
-        return $this->o_resumenCarrito($id_cliente);
+    public function obtenerResumenCarrito($id_usuario) {
+        return $this->o_resumenCarrito($id_usuario);
     }
-    private function o_resumenCarrito($id_cliente) {
-        $bd = new BD('P');
-        $pdo = $bd->getConexion();
+    private function o_resumenCarrito($id_usuario) {
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('C'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
-            $sql = "SELECT c.id_carrito, 
-                           COUNT(cd.id_carrito_detalle) as total_productos, 
-                           COALESCE(SUM(cd.cantidad * p.precio),0) as total_precio
+            $sql = "SELECT c.id_carrito, COUNT(dc.id_detalle_carrito) as total_productos, 
+                           SUM(dc.cantidad * dc.precio_unitario) as total_precio
                     FROM tbl_carrito c 
-                    LEFT JOIN tbl_carritodetalle cd ON c.id_carrito = cd.id_carrito 
-                    LEFT JOIN tbl_productos p ON p.id_producto = cd.id_producto
-                    WHERE c.id_cliente = ?
-                    GROUP BY c.id_carrito
-                    LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id_cliente]);
+                    LEFT JOIN tbl_detalle_carrito dc ON c.id_carrito = dc.id_carrito 
+                    WHERE c.id_usuario = ? AND c.estado = 'activo'
+                    GROUP BY c.id_carrito";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute([$id_usuario]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } finally {
-            $bd->cerrar();
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 
     // Métodos para compras
-    public function registrarCompra($id_carrito, $id_cliente, $productos)
-    {
+    public function registrarCompra($id_carrito, $id_cliente, $productos) {
         return $this->r_registrarCompra($id_carrito, $id_cliente, $productos);
     }
-
-    private function r_registrarCompra($id_carrito, $id_cliente, $productos)
-    {
-        $bd = new BD('P');
-        $this->conex = $bd->getConexion();
+    private function r_registrarCompra($id_carrito, $id_cliente, $productos) {
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
         try {
             foreach ($productos as $detalle) {
                 if (empty($detalle['id_producto']) || empty($detalle['cantidad']) || !is_numeric($detalle['cantidad'])) {
@@ -308,8 +322,8 @@ class Carrito extends BD{
             if ($this->conex && $this->conex->inTransaction()) { $this->conex->rollBack(); }
             return ['error' => $e->getMessage()];
         } finally {
-            $bd->cerrar();
-            $this->conex = null;
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
         }
     }
 }
