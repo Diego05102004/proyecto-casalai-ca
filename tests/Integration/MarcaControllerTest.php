@@ -57,13 +57,21 @@ final class MarcaControllerTest extends TestCase
         // Defensa extra: asegurar que no existe antes del POST
         $stmt = $this->pdo->prepare('DELETE FROM tbl_marcas WHERE nombre_marca = ?');
         $stmt->execute([$nombre]);
+        
+        // Mensaje de depuración
+        fwrite(STDERR, "Intentando registrar marca: $nombre\n");
+        
         $resp = $this->runController([
             'accion' => 'registrar',
             'nombre_marca' => $nombre
         ]);
-        $this->assertSame('success', $resp['status'] ?? null);
-        $this->assertIsArray($resp['marca'] ?? null);
-        $this->assertSame($nombre, $resp['marca']['nombre_marca'] ?? null);
+        
+        // Mensaje de depuración
+        fwrite(STDERR, "Respuesta del controlador: " . print_r($resp, true) . "\n");
+        
+        $this->assertSame('success', $resp['status'] ?? null, 'El estado de la respuesta no es "success"');
+        $this->assertIsArray($resp['marca'] ?? null, 'La respuesta no contiene un array de marca');
+        $this->assertSame($nombre, $resp['marca']['nombre_marca'] ?? null, 'El nombre de la marca no coincide');
     }
 
     public function testRegistrarMarcaDuplicada(): void
