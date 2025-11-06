@@ -1,5 +1,5 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class OrdenDespacho extends BD {
     
@@ -56,8 +56,12 @@ class OrdenDespacho extends BD {
         return $this->obt_facturasDisponibles(); 
     }
     private function obt_facturasDisponibles() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $sql = "SELECT f.id_factura, f.fecha, c.nombre
                     FROM tbl_facturas f
@@ -72,8 +76,8 @@ class OrdenDespacho extends BD {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -81,8 +85,12 @@ class OrdenDespacho extends BD {
         return $this->obt_ordenPorId($id); 
     }
     private function obt_ordenPorId($id) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $query = "SELECT * FROM tbl_orden_despachos WHERE id_orden_despachos = ?";
             $stmt = $this->conex->prepare($query);
@@ -90,8 +98,8 @@ class OrdenDespacho extends BD {
             $ordendespacho = $stmt->fetch(PDO::FETCH_ASSOC);
             return $ordendespacho;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -99,8 +107,12 @@ class OrdenDespacho extends BD {
         return $this->cambiar_Estatus($nuevoEstatus); 
     }
     private function cambiar_Estatus($nuevoEstatus) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $sql = "UPDATE tbl_usuarios SET estatus = :estatus WHERE id_usuario = :id";
             $stmt = $this->conex->prepare($sql);
@@ -110,8 +122,8 @@ class OrdenDespacho extends BD {
         } catch (PDOException $e) {
             return false;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -120,8 +132,12 @@ class OrdenDespacho extends BD {
     }
 
   private function g_ordenesDespacho() {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $created = false;
+    if (!($this->conex instanceof PDO)) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        $created = true;
+    }
     try {
     $query = "
         SELECT 
@@ -170,8 +186,8 @@ class OrdenDespacho extends BD {
 
     return $ordendespacho;
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
+        if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+        if (isset($created) && $created) { $this->conex = null; }
     }
 }
 
@@ -179,8 +195,12 @@ class OrdenDespacho extends BD {
         return $this->d_OrdenDespacho($id); 
     }
     private function d_OrdenDespacho($id) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $query = "
         SELECT 
@@ -231,8 +251,8 @@ class OrdenDespacho extends BD {
 
     return $ordendespacho;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -240,8 +260,12 @@ class OrdenDespacho extends BD {
         return $this->g_detallesCompra($idDespacho); 
     }
     private function g_detallesCompra($idDespacho) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
         // Productos
         $sqlProductos = "
@@ -258,8 +282,8 @@ class OrdenDespacho extends BD {
             'productos' => $productos
         ];
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -267,8 +291,12 @@ class OrdenDespacho extends BD {
         return $this->cam_estadoOrden($id, $nuevoEstado); 
     }
     private function cam_estadoOrden($id, $nuevoEstado) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $sql = "UPDATE tbl_orden_despachos SET estado = :estado WHERE id_orden_despachos = :id";
             $stmt = $this->conex->prepare($sql);
@@ -276,8 +304,8 @@ class OrdenDespacho extends BD {
             $stmt->bindParam(':id', $id);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -286,8 +314,12 @@ class OrdenDespacho extends BD {
     }
 
     private function an_orden_despacho($idOrden) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $sql = "UPDATE tbl_orden_despachos SET activo = 0 WHERE id_orden_despachos = :id";
             $stmt = $this->conex->prepare($sql);
@@ -297,8 +329,8 @@ class OrdenDespacho extends BD {
                 ? ['status' => 'success'] 
                 : ['status' => 'error', 'message' => 'No se pudo anular la orden de despacho'];
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -307,6 +339,12 @@ class OrdenDespacho extends BD {
         return $this->c_PorFactura($idFactura); 
     }
     private function c_PorFactura($idFactura) {
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         $conexion = new BD('P');
         $this->conex = $conexion->getConexion();
         try {
@@ -339,7 +377,7 @@ class OrdenDespacho extends BD {
                        VALUES (:id_factura, :cliente, NOW(), 'Por Entregar', 1)";
             $stmt = $this->conex->prepare($sqlIns);
             $stmt->bindParam(':id_factura', $idFactura, PDO::PARAM_INT);
-            // Guardar NOMBRE del cliente como lo requiere la Vista/reportes
+            // Guardar NOMBRE del cliente como lo requiere la vista/reportes
             $stmt->bindParam(':cliente', $clienteNombre, PDO::PARAM_STR);
             $ok = $stmt->execute();
             if ($ok) {

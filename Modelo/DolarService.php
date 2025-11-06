@@ -1,5 +1,5 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class DolarService {
     private $url = 'https://www.bcv.org.ve';
@@ -31,10 +31,7 @@ class DolarService {
             // Buscar el div con id="dolar" y el strong dentro
             if (preg_match('/<div id="dolar".*?<strong>\s*([\d,]+)\s*<\/strong>/s', $html, $matches)) {
                 $precioDolar = str_replace(',', '.', str_replace('.', '', $matches[1]));
-                $valor = floatval($precioDolar);
-                // Guardar/actualizar el valor del día
-                $this->guardarPrecioCache($valor);
-                return $valor;
+                return floatval($precioDolar);
             } else {
                 throw new Exception('No se pudo encontrar el precio del dólar en la página del BCV');
             }
@@ -44,51 +41,6 @@ class DolarService {
             error_log('Error obteniendo precio del dólar: ' . $e->getMessage());
             return $this->obtenerPrecioCache();
         }
-    }
-    
-    public function obtenerRegistroDelDia() {
-        try {
-            $conexion = new BD('P');
-            $db = $conexion->getConexion();
-            $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache WHERE DATE(fecha) = CURDATE() ORDER BY fecha DESC LIMIT 1");
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) {
-                return $row;
-            }
-            // Si no hay registro del día, obtener desde fuente y devolver el nuevo registro
-            $precio = $this->obtenerPrecioDolar();
-            // Reconsultar para obtener fecha actualizada
-            $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache WHERE DATE(fecha) = CURDATE() ORDER BY fecha DESC LIMIT 1");
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) {
-                return $row;
-            }
-        } catch (Exception $e) {
-            error_log('Error al obtener registro del día del dólar: ' . $e->getMessage());
-        }
-        // Fallback: último registro disponible
-        return $this->obtenerUltimoRegistro();
-    }
-
-    public function obtenerPrecioDelDia() {
-        $registro = $this->obtenerRegistroDelDia();
-        return isset($registro['precio']) ? floatval($registro['precio']) : $this->obtenerPrecioCache();
-    }
-
-    private function obtenerUltimoRegistro() {
-        try {
-            $conexion = new BD('P');
-            $db = $conexion->getConexion();
-            $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row) return $row;
-        } catch (Exception $e) {
-            error_log('Error al obtener último registro del dólar: ' . $e->getMessage());
-        }
-        return ['precio' => 35.50, 'fecha' => date('Y-m-d H:i:s')];
     }
     
     private function obtenerPrecioCache() {
@@ -118,17 +70,8 @@ class DolarService {
             $conexion = new BD('P');
             $db = $conexion->getConexion();
             
-            $stmt = $db->prepare("SELECT id FROM dolar_cache WHERE DATE(fecha) = CURDATE() ORDER BY fecha DESC LIMIT 1");
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($row && isset($row['id'])) {
-                $update = $db->prepare("UPDATE dolar_cache SET precio = ?, fecha = NOW() WHERE id = ?");
-                $update->execute([$precio, $row['id']]);
-            } else {
-                $insert = $db->prepare("INSERT INTO dolar_cache (precio, fecha) VALUES (?, NOW())");
-                $insert->execute([$precio]);
-            }
+            $stmt = $db->prepare("INSERT INTO dolar_cache (precio, fecha) VALUES (?, NOW())");
+            $stmt->execute([$precio]);
             return true;
         } catch (Exception $e) {
             error_log('Error al guardar cache del dólar: ' . $e->getMessage());

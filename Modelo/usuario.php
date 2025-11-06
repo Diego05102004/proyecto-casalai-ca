@@ -1,8 +1,11 @@
 <?php 
-require_once 'Config/Config.php';
+require_once __DIR__ . '/../Config/config.php';
 
 class Usuarios extends BD {
     
+    private $conex;
+    private $con;
+
     private $id_usuario;
     private $username;
     private $clave;
@@ -16,8 +19,11 @@ class Usuarios extends BD {
     private $estatus = 1;
     private $usuarios;
     private $cedula;
-    private $conex; // Conexión a la base de datos (seguridad)
-    private $con;   // Conexión a la base de datos (inventario)
+
+    public function __construct() {
+        $this->conex = null;
+        $this->con = null;
+    }
 
     // Getters y Setters
     public function getUsername() { return $this->username; }
@@ -78,7 +84,7 @@ class Usuarios extends BD {
     }
 
     public function clienteExiste($cedula) {
-        $this->c_clienteExiste($cedula);
+        return $this->c_clienteExiste($cedula);
     }
     private function c_clienteExiste($cedula) {
         $conexion = new BD('P');
@@ -97,10 +103,24 @@ class Usuarios extends BD {
         return $this->i_ingresarUsuario();
     }
     private function i_ingresarUsuario() {
-        $conexionS = new BD('S');
-        $pdoS = $conexionS->getConexion();
-        $conexionP = new BD('P');
-        $pdoP = $conexionP->getConexion();
+        // Usar stubs inyectados si existen; en caso contrario crear conexiones reales
+        $createdS = false; $createdP = false;
+        if ($this->conex instanceof PDO) {
+            $pdoS = $this->conex;
+            $conexionS = null;
+        } else {
+            $conexionS = new BD('S');
+            $pdoS = $conexionS->getConexion();
+            $createdS = true;
+        }
+        if ($this->con instanceof PDO) {
+            $pdoP = $this->con;
+            $conexionP = null;
+        } else {
+            $conexionP = new BD('P');
+            $pdoP = $conexionP->getConexion();
+            $createdP = true;
+        }
         try {
             $pdoS->beginTransaction();
             $claveEncriptada = password_hash($this->clave, PASSWORD_BCRYPT);
@@ -136,8 +156,8 @@ class Usuarios extends BD {
             if ($pdoS->inTransaction()) { $pdoS->rollBack(); }
             return false;
         } finally {
-            $conexionS->cerrar();
-            $conexionP->cerrar();
+            if ($createdS && isset($conexionS)) { $conexionS->cerrar(); }
+            if ($createdP && isset($conexionP)) { $conexionP->cerrar(); }
         }
     }
 
@@ -145,10 +165,17 @@ class Usuarios extends BD {
         return $this->m_modificarUsuario($id_usuario);
     }
     private function m_modificarUsuario($id_usuario) {
-        $conexionS = new BD('S');
-        $pdoS = $conexionS->getConexion();
-        $conexionP = new BD('P');
-        $pdoP = $conexionP->getConexion();
+        $createdS = false; $createdP = false;
+        if ($this->conex instanceof PDO) {
+            $pdoS = $this->conex; $conexionS = null;
+        } else {
+            $conexionS = new BD('S'); $pdoS = $conexionS->getConexion(); $createdS = true;
+        }
+        if ($this->con instanceof PDO) {
+            $pdoP = $this->con; $conexionP = null;
+        } else {
+            $conexionP = new BD('P'); $pdoP = $conexionP->getConexion(); $createdP = true;
+        }
         try {
             $pdoS->beginTransaction();
             $claveEncriptada = !empty($this->clave) ? password_hash($this->clave, PASSWORD_BCRYPT) : null;
@@ -201,8 +228,8 @@ class Usuarios extends BD {
             if ($pdoS->inTransaction()) { $pdoS->rollBack(); }
             return false;
         } finally {
-            $conexionS->cerrar();
-            $conexionP->cerrar();
+            if (isset($createdS) && $createdS && isset($conexionS)) { $conexionS->cerrar(); }
+            if (isset($createdP) && $createdP && isset($conexionP)) { $conexionP->cerrar(); }
         }
     }
 
@@ -210,9 +237,9 @@ class Usuarios extends BD {
         return $this->e_existeUsuario($username, $excluir_id);
     }
     private function e_existeUsuario($username, $excluir_id = null) {
-        $conexion = new BD('S');
-        $pdo = $conexion->getConexion();
-        try {
+        // Usar conexión inyectada en pruebas si existe, si no crear una nueva
+        if ($this->conex instanceof PDO) {
+            $pdo = $this->conex;
             $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE username = ?";
             $params = [$username];
             if ($excluir_id !== null) {
@@ -222,17 +249,30 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        } finally {
-            $conexion->cerrar();
+        } else {
+            $conexion = new BD('S');
+            $pdo = $conexion->getConexion();
+            try {
+                $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE username = ?";
+                $params = [$username];
+                if ($excluir_id !== null) {
+                    $sql .= " AND id_usuario != ?";
+                    $params[] = $excluir_id;
+                }
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                return $stmt->fetchColumn() > 0;
+            } finally {
+                $conexion->cerrar();
+            }
         }
     }
     public function existeCedula($cedula, $excluir_id = null) {
         return $this->e_existeCedula($cedula, $excluir_id);
     }
     private function e_existeCedula($cedula, $excluir_id = null) {
-        $conexion = new BD('S');
-        $pdo = $conexion->getConexion();
-        try {
+        if ($this->conex instanceof PDO) {
+            $pdo = $this->conex;
             $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE cedula = ?";
             $params = [$cedula];
             if ($excluir_id !== null) {
@@ -242,17 +282,30 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        } finally {
-            $conexion->cerrar();
+        } else {
+            $conexion = new BD('S');
+            $pdo = $conexion->getConexion();
+            try {
+                $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE cedula = ?";
+                $params = [$cedula];
+                if ($excluir_id !== null) {
+                    $sql .= " AND id_usuario != ?";
+                    $params[] = $excluir_id;
+                }
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                return $stmt->fetchColumn() > 0;
+            } finally {
+                $conexion->cerrar();
+            }
         }
     }
     public function existeCorreo($correo, $excluir_id = null) {
         return $this->e_existeCorreo($correo, $excluir_id);
     }
     private function e_existeCorreo($correo, $excluir_id = null) {
-        $conexion = new BD('S');
-        $pdo = $conexion->getConexion();
-        try {
+        if ($this->conex instanceof PDO) {
+            $pdo = $this->conex;
             $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE correo = ?";
             $params = [$correo];
             if ($excluir_id !== null) {
@@ -262,8 +315,22 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        } finally {
-            $conexion->cerrar();
+        } else {
+            $conexion = new BD('S');
+            $pdo = $conexion->getConexion();
+            try {
+                $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE correo = ?";
+                $params = [$correo];
+                if ($excluir_id !== null) {
+                    $sql .= " AND id_usuario != ?";
+                    $params[] = $excluir_id;
+                }
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                return $stmt->fetchColumn() > 0;
+            } finally {
+                $conexion->cerrar();
+            }
         }
     }
 
@@ -271,9 +338,8 @@ class Usuarios extends BD {
         return $this->o_ultimoUsuario();
     }
     private function o_ultimoUsuario() {
-        $conexion = new BD('S');
-        $pdo = $conexion->getConexion();
-        try {
+        if ($this->conex instanceof PDO) {
+            $pdo = $this->conex;
             $sql = "SELECT usuarios.*, rol.nombre_rol 
                     FROM tbl_usuarios AS usuarios
                     INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
@@ -282,10 +348,23 @@ class Usuarios extends BD {
             $stmt->execute();
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
             return $usuario ? $usuario : null;
-        } catch (PDOException $e) {
-            return null;
-        } finally {
-            $conexion->cerrar();
+        } else {
+            $conexion = new BD('S');
+            $pdo = $conexion->getConexion();
+            try {
+                $sql = "SELECT usuarios.*, rol.nombre_rol 
+                        FROM tbl_usuarios AS usuarios
+                        INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
+                        ORDER BY usuarios.id_usuario DESC LIMIT 1";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $usuario ? $usuario : null;
+            } catch (PDOException $e) {
+                return null;
+            } finally {
+                $conexion->cerrar();
+            }
         }
     }
 
@@ -402,18 +481,20 @@ class Usuarios extends BD {
         }
     }
 
-    public function getusuarios() {
-        return $this->g_getusuarios();
+    public function getusuarios($estatus = 'habilitado') {
+        return $this->g_getusuarios($estatus);
     }
-    private function g_getusuarios() {
+    private function g_getusuarios($estatus = 'habilitado') {
         $conexion = new BD('S');
         $pdo = $conexion->getConexion();
         try {
             $queryusuarios = "SELECT usuarios.*, rol.nombre_rol 
                               FROM tbl_usuarios AS usuarios
                               INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
+                              WHERE usuarios.estatus = :estatus
                               ORDER BY usuarios.id_usuario DESC";
             $stmtusuarios = $pdo->prepare($queryusuarios);
+            $stmtusuarios->bindParam(':estatus', $estatus);
             $stmtusuarios->execute();
             return $stmtusuarios->fetchAll(PDO::FETCH_ASSOC);
         } finally {

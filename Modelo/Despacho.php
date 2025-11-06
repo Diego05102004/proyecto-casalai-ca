@@ -1,7 +1,8 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class Despacho extends BD{
+    private $conex;
     private $id;
     private $idcliente;
     private $tipocompra;
@@ -10,10 +11,9 @@ class Despacho extends BD{
     private $estado;
     private $correlativo;
     private $tablerecepcion = 'tbl_despachos';
-    private $conex; // Conexión a la base de datos
 
     public function __construct() {
-        parent::__construct();
+        $this->conex = null;
     }
 
     public function getid() {
@@ -63,19 +63,17 @@ class Despacho extends BD{
     }
     private function obt_cliente() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
-            $co->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $p = $co->prepare("SELECT * FROM tbl_clientes");
+            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $p = $this->conex->prepare("SELECT * FROM tbl_clientes");
             $p->execute();
             return $p->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             return ['error' => true, 'mensaje' => $e->getMessage()];
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -85,10 +83,10 @@ class Despacho extends BD{
     }
     private function list_productos() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         $r = array();
         try {
-            $resultado = $co->query("
+            $resultado = $this->conex->query("
                 SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
                 FROM tbl_productos AS p 
                 INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
@@ -137,20 +135,18 @@ class Despacho extends BD{
     }
     private function consul_productos() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
                     FROM tbl_productos AS p 
                     INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
                     INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -160,7 +156,7 @@ class Despacho extends BD{
 
     private function g_despacho() {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $query = "
                 SELECT 
@@ -180,7 +176,7 @@ class Despacho extends BD{
                 GROUP BY r.id_despachos, r.fecha_despacho, r.tipocompra, r.estado, c.nombre
                 ORDER BY r.fecha_despacho DESC
             ";
-            $stmt = $co->prepare($query);
+            $stmt = $this->conex->prepare($query);
             $stmt->execute();
             $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -203,17 +199,15 @@ class Despacho extends BD{
                     INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
                     WHERE d.id_despacho = ?
                 ";
-                $stmtProd = $co->prepare($sqlProd);
+                $stmtProd = $this->conex->prepare($sqlProd);
                 $stmtProd->execute([$despacho['id_despachos']]);
                 $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
             }
 
             return $despachos;
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -222,7 +216,7 @@ class Despacho extends BD{
     }
     private function obt_productos_des($id_despacho) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "
                 SELECT 
@@ -238,15 +232,13 @@ class Despacho extends BD{
                 INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
                 WHERE d.id_despacho = :id_despacho
             ";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id_despacho', $id_despacho, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -255,7 +247,7 @@ class Despacho extends BD{
 // 🚚 4. Despachos por estado (con rango de fechas)
 public function getDespachosEstado($fechaInicio = null, $fechaFin = null) {
     $conexion = new BD('P');
-    $co = $conexion->getConexion();
+    $this->conex = $conexion->getConexion();
     try {
         $sql = "
             SELECT 
@@ -275,14 +267,12 @@ public function getDespachosEstado($fechaInicio = null, $fechaFin = null) {
 
         $sql .= " GROUP BY estado ORDER BY value DESC";
 
-        $stmt = $co->prepare($sql);
+        $stmt = $this->conex->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } finally {
-        if (isset($conexion)) { 
-            $conexion->cerrar();
-        }
-        $co = null;
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
@@ -291,7 +281,7 @@ public function getDespachosEstado($fechaInicio = null, $fechaFin = null) {
 // 📦 5. Volumen de productos despachados por mes (por año)
 public function getProductosDespachadosPorMes($anio = null) {
     $conexion = new BD('P');
-    $co = $conexion->getConexion();
+    $this->conex = $conexion->getConexion();
     try {
         $sql = "
             SELECT 
@@ -314,7 +304,7 @@ public function getProductosDespachadosPorMes($anio = null) {
             ORDER BY mes_num
         ";
 
-        $stmt = $co->prepare($sql);
+        $stmt = $this->conex->prepare($sql);
         $stmt->execute($params);
         $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -332,10 +322,8 @@ public function getProductosDespachadosPorMes($anio = null) {
 
         return $resultados;
     } finally {
-        if (isset($conexion)) { 
-            $conexion->cerrar();
-        }
-        $co = null;
+        if (isset($conexion)) { $conexion->cerrar(); }
+        $this->conex = null;
     }
 }
 
@@ -345,10 +333,10 @@ public function getProductosDespachadosPorMes($anio = null) {
 
     private function an_despacho($idDespacho) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_despachos SET activo = 0 WHERE id_despachos = :id";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':id', $idDespacho, PDO::PARAM_INT);
             $result = $stmt->execute();
 
@@ -356,10 +344,8 @@ public function getProductosDespachadosPorMes($anio = null) {
                 ? ['status' => 'success'] 
                 : ['status' => 'error', 'message' => 'No se pudo anular el despacho'];
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 
@@ -368,18 +354,16 @@ public function getProductosDespachadosPorMes($anio = null) {
     }
     private function cam_estadoDespacho($id, $nuevoEstado) {
         $conexion = new BD('P');
-        $co = $conexion->getConexion();
+        $this->conex = $conexion->getConexion();
         try {
             $sql = "UPDATE tbl_despachos SET estado = :estado WHERE id_despachos = :id";
-            $stmt = $co->prepare($sql);
+            $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':estado', $nuevoEstado);
             $stmt->bindParam(':id', $id);
             return $stmt->execute();
         } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar();
-            }
-            $co = null;
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
         }
     }
 }

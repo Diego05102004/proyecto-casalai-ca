@@ -1,11 +1,15 @@
 <?php
-require_once 'Config/Config.php';
+require_once 'config/config.php';
 
 class Rol extends BD {
 
     private $id_rol;
     private $nombre_rol;
     private $conex;
+
+    public function __construct() {
+        $this->conex = null;
+    }
 
     public function getIdRol() { 
         return $this->id_rol; 

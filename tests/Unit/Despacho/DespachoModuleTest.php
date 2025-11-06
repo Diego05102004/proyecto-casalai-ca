@@ -103,31 +103,9 @@ final class DespachoModuleTest extends TestCase
     {
         $d = new Despacho();
         $resp = $d->listadoproductos();
-        
-        // Verificar que la respuesta es un array
-        $this->assertIsArray($resp, 'La respuesta debe ser un array');
-        
-        // Verificar las claves esperadas en la respuesta
-        $this->assertArrayHasKey('resultado', $resp, 'La respuesta debe tener una clave "resultado"');
-        $this->assertArrayHasKey('mensaje', $resp, 'La respuesta debe tener una clave "mensaje"');
-        
-        // Verificar que el resultado es 'listado' o 'error'
-        $this->assertContains($resp['resultado'], ['listado', 'error'], 'El resultado debe ser "listado" o "error"');
-        
-        // Si hay un mensaje de error, verificar que no esté vacío
-        if ($resp['resultado'] === 'error') {
-            $this->assertNotEmpty($resp['mensaje'], 'El mensaje de error no debe estar vacío');
-        } else {
-            // Si es un listado, verificar que el mensaje contenga HTML de tabla
-            $this->assertIsString($resp['mensaje'], 'El mensaje debe ser un string');
-            if (!empty($resp['mensaje'])) {
-                $this->assertStringContainsString('<tr', $resp['mensaje'], 'El mensaje debe contener etiquetas de tabla HTML');
-            }
-        }
-        
-        // Verificar que existe la clave modalSize y es un string
-        $this->assertArrayHasKey('modalSize', $resp, 'La respuesta debe tener una clave "modalSize"');
-        $this->assertIsString($resp['modalSize'], 'El tamaño del modal debe ser un string');
+        $this->assertIsArray($resp);
+        $this->assertSame('listado', $resp['resultado'] ?? null);
+        $this->assertStringContainsString('<tr', $resp['mensaje'] ?? '');
     }
 
     public function testConsultarProductos(): void
