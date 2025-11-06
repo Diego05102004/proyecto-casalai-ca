@@ -1,23 +1,33 @@
 <?php
 use PHPUnit\Framework\TestCase;
+require_once __DIR__ . '/../../../Modelo/categoria.php';
+require_once __DIR__ . '/../../../Config/Config.php';
 
 final class CategoriaControllerTest extends TestCase
 {
-    private string $controllerPath;
+    private $categoria;
+    private $db;
 
     protected function setUp(): void
     {
-        $this->controllerPath = __DIR__ . '/../../../Controlador/categoria.php';
+        // Create a test database connection
+        $this->db = new BD('P');
+        $this->categoria = new Categoria();
+        
+        // Start transaction
+        $pdo = $this->db->getConexion();
+        $pdo->beginTransaction();
     }
 
-    private function runController(array $post): array
+    protected function tearDown(): void
     {
-        $projectRoot = realpath(__DIR__ . '/../../..');
-        $controllerPath = $this->controllerPath;
-        $postExport = var_export($post, true);
-
-        $script = <<<'PHP'
-<?php
+        // Rollback transaction to clean up after each test
+        $pdo = $this->db->getConexion();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $this->db->cerrar();
+    }
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
