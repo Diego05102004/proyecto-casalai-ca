@@ -33,19 +33,26 @@ final class FinanzaControllerTest extends TestCase
         $wrapper = tempnam(sys_get_temp_dir(), 'it_fin_') . '.php';
 
         $escapedRoot = addslashes($projectRoot);
+        $escapedDoubles = addslashes($projectRoot . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'doubles');
         $script  = "<?php\n";
         $script .= "error_reporting(E_ALL);\n";
         $script .= "ini_set('display_errors','1');\n";
+
         $script .= "if (session_status() === PHP_SESSION_NONE) { session_start(); }\n";
         $script .= "if (!isset(\$_SESSION['id_usuario'])) { \$_SESSION['id_usuario'] = 1; }\n";
         $script .= "if (!isset(\$_SESSION['id_rol'])) { \$_SESSION['id_rol'] = 1; }\n";
         $script .= "if (!isset(\$_SESSION['name'])) { \$_SESSION['name'] = 'Tester'; }\n";
         $script .= "\$_SERVER['REQUEST_METHOD'] = 'GET';\n";
         $script .= "define('SKIP_SIDE_EFFECTS', true);\n";
-        $script .= "chdir('" . $escapedRoot . "');\n";
+        // Cambiar al directorio de doubles para que Vista/finanza.php sea el stub y no la vista real
+        $script .= "chdir('" . $escapedDoubles . "');\n";
+        $script .= "// Cargar bootstrap de pruebas (ruta absoluta) para include_path y stubs\n";
+        $script .= "require '" . $escapedRoot . "/tests/bootstrap.php';\n";
+        $script .= "// Asegurar limpieza total de buffers (el controlador abre uno propio)\n";
         $script .= "ob_start();\n";
         $script .= "require 'controlador/finanza.php';\n";
-        $script .= "ob_end_clean();\n";
+        $script .= "while (ob_get_level() > 0) { ob_end_clean(); }\n";
+
         // Empaquetar variables globales producidas por el controlador
         $script .= "$"."data = [\n";
         $script .= "  'finanzas' => isset($"."finanzas) ? $"."finanzas : null,\n";

@@ -8,9 +8,25 @@ $_SESSION['id_rol'] = $_SESSION['id_rol'] ?? 1; // Ajusta si necesitas otro rol
 date_default_timezone_set('America/Caracas');
 
 $projectRoot = __DIR__ . DIRECTORY_SEPARATOR . '..';
-set_include_path($projectRoot . PATH_SEPARATOR . get_include_path());
+$testsDoubles = __DIR__ . DIRECTORY_SEPARATOR . 'doubles';
+// Prioriza stubs/doubles en pruebas, antes que el código de producción
+set_include_path($testsDoubles . PATH_SEPARATOR . $projectRoot . PATH_SEPARATOR . get_include_path());
 
 require_once $projectRoot . '/Config/Config.php';
+
+// Evitar efectos secundarios (inclusión de vistas, redirecciones) en controladores durante pruebas
+if (!defined('SKIP_SIDE_EFFECTS')) {
+    define('SKIP_SIDE_EFFECTS', true);
+}
+
+// Nota: El stub de DolarService está en tests/doubles/Modelo/DolarService.php y se cargará
+// gracias a include_path que antepone tests/doubles.
+if (!class_exists('DolarService')) {
+    $stubPath = __DIR__ . DIRECTORY_SEPARATOR . 'doubles' . DIRECTORY_SEPARATOR . 'Modelo' . DIRECTORY_SEPARATOR . 'DolarService.php';
+    if (is_file($stubPath)) {
+        require_once $stubPath;
+    }
+}
 
 function test_pdo(): PDO {
     $bd = new BD('P');
