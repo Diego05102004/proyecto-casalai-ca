@@ -98,9 +98,15 @@ final class DespachoControllerTest extends TestCase
         $script .= "\$_POST = " . $postExport . ";\n";
         $script .= "$"."pagina = 'Despacho';\n";
         $script .= "chdir('" . $escapedRoot . "');\n";
+        $script .= "// Evitar efectos secundarios (bitácora, redirecciones) y cargar bootstrap de pruebas\n";
+        $script .= "if (!defined('SKIP_SIDE_EFFECTS')) { define('SKIP_SIDE_EFFECTS', true); }\n";
+        $script .= "require 'tests/bootstrap.php';\n";
+        $script .= "// Ejecutar controlador y capturar salida\n";
         $script .= "ob_start();\n";
         $script .= "require 'controlador/Despacho.php';\n";
         $script .= "$"."out = ob_get_clean();\n";
+        $script .= "// Limpiar cualquier buffer residual\n";
+        $script .= "while (ob_get_level() > 0) { ob_end_clean(); }\n";
         $script .= "echo $"."out;\n";
 
         file_put_contents($wrapper, $script);
