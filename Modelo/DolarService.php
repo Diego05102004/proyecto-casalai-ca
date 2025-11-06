@@ -78,5 +78,18 @@ class DolarService {
             return false;
         }
     }
+
+    // Métodos de compatibilidad usados por vistas: NewNavBar.php
+    public function obtenerPrecioDelDia() {
+        return $this->obtenerPrecioDolar();
+    }
+
+    public function obtenerRegistroDelDia() {
+        $precio = $this->obtenerPrecioDolar();
+        return [
+            'precio' => $precio,
+            'fecha' => date('Y-m-d H:i:s'),
+        ];
+    }
 }
 ?>
