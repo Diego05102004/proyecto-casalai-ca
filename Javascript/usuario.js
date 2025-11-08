@@ -179,26 +179,26 @@ $(document).ready(function() {
   });
 
   $("#clave_usuario").on("keypress", function (e) {
-    validarKeyPress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/, e);
+    validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
   });
   $("#clave_usuario").on("keyup", function () {
     validarKeyUp(
-      /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
       $(this),
       $("#sclave_usuario"),
-      "*Solo letras y números, de 6 a 15 caracteres*"
+      "*6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial*"
     );
   });
 
   $("#clave_confirmar").on("keypress", function (e) {
-    validarKeyPress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/, e);
+    validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
   });
   $("#clave_confirmar").on("keyup", function () {
     validarKeyUp(
-      /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
       $(this),
       $("#sclave_confirmar"),
-      "*Solo letras y números, de 6 a 15 caracteres*"
+      "*Ingrese la contraseña nuevamente*"
     );
   });
 function verificarPermisosEnTiempoRealUsuarios() {
@@ -363,6 +363,13 @@ $(document).ready(function() {
       mensajes('error','Verifique la contraseña','Debe tener mínimo 6 caracteres.');
       return false;
     }
+    // Complejidad de contraseña: 6-15, 1 mayúscula, 1 número y 1 caracter especial
+    var passPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/;
+    if (!passPattern.test(passVal)) {
+      $("#sclave_usuario").text("*6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial*");
+      mensajes('error','Verifique la contraseña','Formato inválido.');
+      return false;
+    }
 
     let clave_confirmar = $("#clave_confirmar");
     const pass2Val = clave_confirmar.val();
@@ -374,6 +381,11 @@ $(document).ready(function() {
     if (pass2Val.length < 6) {
       $("#sclave_confirmar").text("*Mínimo 6 caracteres*");
       mensajes('error','Verifique la confirmación de la contraseña','Debe tener mínimo 6 caracteres.');
+      return false;
+    }
+    if (!passPattern.test(pass2Val)) {
+      $("#sclave_confirmar").text("*Debe ingresar la contraseña nuevamente*");
+      mensajes('error','Verifique la confirmación de la contraseña','Formato inválido.');
       return false;
     }
       
