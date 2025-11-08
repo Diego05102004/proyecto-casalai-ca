@@ -22,7 +22,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             aria-labelledby="registrarUsuarioModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <form id="incluirusuario" method="POST">
+                    <form id="incluirusuario" method="POST" novalidate>
                         <div class="modal-header">
                             <h5 class="titulo-form" id="registrarUsuarioModalLabel">Incluir Usuario</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -212,7 +212,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     aria-labelledby="modificar_usuario_modal_label" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="modificarusuario" method="POST">
+            <form id="modificarusuario" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="modificar_usuario_modal_label">Modificar Usuario</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
