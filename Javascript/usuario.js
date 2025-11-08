@@ -1,8 +1,10 @@
 $(document).ready(function() {
     // Verificar si DataTable ya está inicializado
+    var tablaUsuarios;
+    var $tabla = $('#tablaConsultas');
     if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
         // Inicializar DataTable con configuración personalizada
-        var tablaUsuarios = $('#tablaConsultas').DataTable({
+        tablaUsuarios = $tabla.DataTable({
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
             },
@@ -26,20 +28,42 @@ $(document).ready(function() {
                 }
             ]
         });
-
-        // Manejar el cambio en el filtro de estatus
-        $('#filtro-estatus').off('change').on('change', function() {
-            var estatus = $(this).val();
-            
-            if (estatus === 'todos') {
-                tablaUsuarios.column(5).search('').draw();
-            } else {
-                // Buscar el texto exacto del estado
-                tablaUsuarios.column(5).search('^' + estatus + '$', true, false).draw();
-            }
-        });
+    } else {
+        tablaUsuarios = $tabla.DataTable();
     }
 
+    // Detectar dinámicamente el índice de la columna "Estatus" (fallback a 5)
+    var estatusColIndex = $tabla.find('thead th').filter(function(){
+        return $(this).text().trim().toLowerCase() === 'estatus';
+    }).index();
+    if (estatusColIndex < 0) estatusColIndex = 5;
+
+    // Registrar filtro global UNA sola vez para esta tabla
+    if (!$tabla.data('estatusFilterAdded')) {
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
+            if (!settings.nTable || settings.nTable !== $tabla.get(0)) return true;
+            var desired = ($tabla.data('estatusFilterValue') || 'todos').toLowerCase();
+            if (desired === 'todos') return true;
+            var row = settings.aoData && settings.aoData[dataIndex];
+            var cell = row && row.anCells ? row.anCells[estatusColIndex] : null;
+            var text = cell ? $(cell).text().trim().toLowerCase() : '';
+            return text === desired;
+        });
+        $tabla.data('estatusFilterAdded', true);
+    }
+
+    // Vincular el cambio del select con espacio de nombres y dibujar
+    var $filtro = $('#filtro-estatus');
+    $filtro.off('change.estatus').on('change.estatus', function(){
+        var val = ($(this).val() || 'todos').toLowerCase();
+        $tabla.data('estatusFilterValue', val);
+        tablaUsuarios.draw();
+    });
+
+    // Establecer valor inicial desde el select y dibujar una vez
+    $tabla.data('estatusFilterValue', ($filtro.val() || 'todos').toLowerCase());
+    tablaUsuarios.draw();
+    
     // Resto del código...
 
   if ($.trim($("#mensajes").text()) != "") {
@@ -942,6 +966,10 @@ if (fila.length) {
             showConfirmButton: false,
             timer: 1500,
           });
+          // Actualizar DataTable y aplicar el filtro activo inmediatamente
+          var table = $('#tablaConsultas').DataTable();
+          table.row(span.closest('tr')).invalidate();
+          table.draw(false);
         } else {
           span.text(estatusActual);
           span.removeClass("habilitado inhabilitado").addClass(estatusActual);
