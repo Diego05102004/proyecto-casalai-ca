@@ -1,8 +1,10 @@
 $(document).ready(function() {
     // Verificar si DataTable ya está inicializado
+    var tablaUsuarios;
+    var $tabla = $('#tablaConsultas');
     if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
         // Inicializar DataTable con configuración personalizada
-        var tablaUsuarios = $('#tablaConsultas').DataTable({
+        tablaUsuarios = $tabla.DataTable({
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
             },
@@ -26,24 +28,46 @@ $(document).ready(function() {
                 }
             ]
         });
-
-        // Manejar el cambio en el filtro de estatus
-        $('#filtro-estatus').off('change').on('change', function() {
-            var estatus = $(this).val();
-            
-            if (estatus === 'todos') {
-                tablaUsuarios.column(5).search('').draw();
-            } else {
-                // Buscar el texto exacto del estado
-                tablaUsuarios.column(5).search('^' + estatus + '$', true, false).draw();
-            }
-        });
+    } else {
+        tablaUsuarios = $tabla.DataTable();
     }
 
+    // Detectar dinámicamente el índice de la columna "Estatus" (fallback a 5)
+    var estatusColIndex = $tabla.find('thead th').filter(function(){
+        return $(this).text().trim().toLowerCase() === 'estatus';
+    }).index();
+    if (estatusColIndex < 0) estatusColIndex = 5;
+
+    // Registrar filtro global UNA sola vez para esta tabla
+    if (!$tabla.data('estatusFilterAdded')) {
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
+            if (!settings.nTable || settings.nTable !== $tabla.get(0)) return true;
+            var desired = ($tabla.data('estatusFilterValue') || 'todos').toLowerCase();
+            if (desired === 'todos') return true;
+            var row = settings.aoData && settings.aoData[dataIndex];
+            var cell = row && row.anCells ? row.anCells[estatusColIndex] : null;
+            var text = cell ? $(cell).text().trim().toLowerCase() : '';
+            return text === desired;
+        });
+        $tabla.data('estatusFilterAdded', true);
+    }
+
+    // Vincular el cambio del select con espacio de nombres y dibujar
+    var $filtro = $('#filtro-estatus');
+    $filtro.off('change.estatus').on('change.estatus', function(){
+        var val = ($(this).val() || 'todos').toLowerCase();
+        $tabla.data('estatusFilterValue', val);
+        tablaUsuarios.draw();
+    });
+
+    // Establecer valor inicial desde el select y dibujar una vez
+    $tabla.data('estatusFilterValue', ($filtro.val() || 'todos').toLowerCase());
+    tablaUsuarios.draw();
+    
     // Resto del código...
 
   if ($.trim($("#mensajes").text()) != "") {
-    mensajes("warning", 4000, "Atención", $("#mensajes").html());
+    mensajes("warning", "Atención", $("#mensajes").html());
   }
 
   $("#nombre").on("keypress", function (e) {
@@ -134,39 +158,47 @@ $(document).ready(function() {
   });
 
   $("#correo_usuario").on("keypress", function (e) {
-    validarKeyPress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+    validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
   });
 
   $("#correo_usuario").on("keyup", function () {
     validarKeyUp(
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
       $(this),
       $("#scorreo_usuario"),
-      "*Formato válido: example@gmail.com*"
+      "*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*"
     );
   });
 
+  $("#rango").on("change", function(){
+    if ($(this).val()) {
+      $(this).removeClass("is-invalid").addClass("is-valid");
+    } else {
+      $(this).removeClass("is-valid").addClass("is-invalid");
+    }
+  });
+
   $("#clave_usuario").on("keypress", function (e) {
-    validarKeyPress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/, e);
+    validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
   });
   $("#clave_usuario").on("keyup", function () {
     validarKeyUp(
-      /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
       $(this),
       $("#sclave_usuario"),
-      "*Solo letras y números, de 6 a 15 caracteres*"
+      "*6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial*"
     );
   });
 
   $("#clave_confirmar").on("keypress", function (e) {
-    validarKeyPress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/, e);
+    validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
   });
   $("#clave_confirmar").on("keyup", function () {
     validarKeyUp(
-      /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
       $(this),
       $("#sclave_confirmar"),
-      "*Solo letras y números, de 6 a 15 caracteres*"
+      "*Ingrese la contraseña nuevamente*"
     );
   });
 function verificarPermisosEnTiempoRealUsuarios() {
@@ -229,129 +261,138 @@ $(document).ready(function() {
 
     let nombre = $("#nombre");
     nombre.val(space(nombre.val()).trim());
-    if (
-      validarKeyUp(
-        /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,30}$/,
-        nombre,
-        $("#snombre"),
-        "*Solo letras, de 2 a 30 caracteres*"
-      ) == 0
-    ) {
-      valido = false;
+    const nombreVal = nombre.val();
+    if (nombreVal === "") {
+      $("#snombre").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el nombre','El campo está vacío.');
+      return false;
     }
-
-    let apellido_usuario = $("#apellido");
+    if (nombreVal.length < 2) {
+      $("#snombre").text("*Mínimo 2 caracteres*");
+      mensajes('error','Verifique el nombre','Debe tener mínimo 2 caracteres.');
+      return false;
+    }
+    
+    let apellido_usuario = $("#apellido_usuario");
     apellido_usuario.val(space(apellido_usuario.val()).trim());
-    if (
-      validarKeyUp(
-        /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,30}$/,
-        apellido_usuario,
-        $("#sapellido"),
-        "*Solo letras, de 2 a 30 caracteres*"
-      ) == 0
-    ) {
-      valido = false;
+    const apellidoVal = apellido_usuario.val();
+    if (apellidoVal === "") {
+      $("#sapellido").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el apellido','El campo está vacío.');
+      return false;
     }
-
-    let nombre_usuario = $("#nombre_usuario");
-    nombre_usuario.val(space(nombre_usuario.val()).trim());
-    if (
-      validarKeyUp(
-        /^[a-zA-Z0-9_]{4,20}$/,
-        nombre_usuario,
-        $("#snombre_usuario"),
-        "*El usuario debe tener entre 4 y 20 caracteres alfanuméricos*"
-      ) == 0
-    ) {
-      valido = false;
+    if (apellidoVal.length < 2) {
+      $("#sapellido").text("*Mínimo 2 caracteres*");
+      mensajes('error','Verifique el apellido','Debe tener mínimo 2 caracteres.');
+      return false;
     }
     
     let cedula = $("#cedula");
     cedula.val(space(cedula.val()).trim());
-    if (
-      validarKeyUp(
-        /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
-        cedula,
-        $("#scedula"),
-        "*Formato válido: 1.234.567 o 12.345.678*"
-        )==0){
-            mensajes('error',4000,'Verifique el número de Cedula','El formato solo permite números.');
-            return false;
-        }
+    const cedVal = cedula.val();
+    if (cedVal === "") {
+      $("#scedula").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el número de cédula','El campo está vacío.');
+      return false;
+    }
+    if (!/^(?:\d{1,2}\.\d{3}\.\d{3})$/.test(cedVal)) {
+      $("#scedula").text("*Formato válido: 1.234.567 o 12.345.678*");
+      mensajes('error','Verifique el número de cédula','Formato inválido.');
+      return false;
+    }
+
     let telefono_usuario = $("#telefono_usuario");
-    if (
-      validarKeyUp(
-        /^\d{4}-\d{3}-\d{4}$/,
-        telefono_usuario,
-        $("#stelefono_usuario"),
-        "*Formato válido: 04XX-XXX-XXXX*"
-      ) == 0
-    ) {
-      valido = false;
+    const telVal = telefono_usuario.val().trim();
+    if (telVal === "") {
+      $("#stelefono_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el número de teléfono','El campo está vacío.');
+      return false;
+    }
+    if (!/^\d{4}-\d{3}-\d{4}$/.test(telVal)) {
+      $("#stelefono_usuario").text("*Formato válido: 04XX-XXX-XXXX*");
+      mensajes('error','Verifique el número de teléfono','Formato inválido.');
+      return false;
+    }
+
+    let nombre_usuario = $("#nombre_usuario");
+    nombre_usuario.val(space(nombre_usuario.val()).trim());
+    const userVal = nombre_usuario.val();
+    if (userVal === "") {
+      $("#snombre_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el nombre de usuario','El campo está vacío.');
+      return false;
+    }
+    if (userVal.length < 4) {
+      $("#snombre_usuario").text("*Mínimo 4 caracteres*");
+      mensajes('error','Verifique el nombre de usuario','Debe tener mínimo 4 caracteres.');
+      return false;
     }
 
     let correo_usuario = $("#correo_usuario");
-    if (
-      validarKeyUp(
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        correo_usuario,
-        $("#scorreo_usuario"),
-        "*Formato válido: example@gmail.com*"
-      ) == 0
-    ) {
-      valido = false;
+    const correoVal = correo_usuario.val().trim();
+    if (correoVal === "") {
+      $("#scorreo_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el correo electrónico','El campo está vacío.');
+      return false;
     }
-
-    let clave_usuario = $("#clave_usuario");
-    if (
-      validarKeyUp(
-        /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
-        clave_usuario,
-        $("#sclave_usuario"),
-        "*Solo letras y números, de 6 a 15 caracteres*"
-      ) == 0
-    ) {
-      valido = false;
-    }
-
-    let clave_confirmar = $("#clave_confirmar");
-    if (
-      validarKeyUp(
-        /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
-        clave_confirmar,
-        $("#sclave_confirmar"),
-        "*Solo letras y números, de 6 a 15 caracteres*"
-      ) == 0
-    ) {
-      valido = false;
-    }
-
-    if (clave_usuario.val() !== clave_confirmar.val()) {
-      $("#sclave_confirmar").text("*Las contraseñas no coinciden*");
-      valido = false;
+    if (!/^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(correoVal)) {
+      $("#scorreo_usuario").text("*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*");
+      mensajes('error','Verifique el correo electrónico','Formato inválido.');
+      return false;
     }
 
     // VALIDACIÓN DEL TIPO DE USUARIO
     let rango = $("#rango");
     if (!rango.val()) {
       rango.addClass("is-invalid");
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Debe seleccionar el ROL de usuario a crear",
-      });
-      return false; // Detener aquí para que no muestre el mensaje general
+      mensajes('error','Verifique el rol','Debe seleccionar un rol para el usuario.');
+      return false;
     } else {
       rango.removeClass("is-invalid");
     }
 
-    if (!valido) {
-      mensajes(
-        "error",
-        4000,
-        "Verifique los campos",
-        "Corrija los errores antes de continuar"
-      );
+    let clave_usuario = $("#clave_usuario");
+    const passVal = clave_usuario.val();
+    if (passVal.trim() === "") {
+      $("#sclave_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique la contraseña','El campo está vacío.');
+      return false;
+    }
+    if (passVal.length < 6) {
+      $("#sclave_usuario").text("*Mínimo 6 caracteres*");
+      mensajes('error','Verifique la contraseña','Debe tener mínimo 6 caracteres.');
+      return false;
+    }
+    // Complejidad de contraseña: 6-15, 1 mayúscula, 1 número y 1 caracter especial
+    var passPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/;
+    if (!passPattern.test(passVal)) {
+      $("#sclave_usuario").text("*6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial*");
+      mensajes('error','Verifique la contraseña','Formato inválido.');
+      return false;
+    }
+
+    let clave_confirmar = $("#clave_confirmar");
+    const pass2Val = clave_confirmar.val();
+    if (pass2Val.trim() === "") {
+      $("#sclave_confirmar").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique la confirmación de la contraseña','El campo está vacío.');
+      return false;
+    }
+    if (pass2Val.length < 6) {
+      $("#sclave_confirmar").text("*Mínimo 6 caracteres*");
+      mensajes('error','Verifique la confirmación de la contraseña','Debe tener mínimo 6 caracteres.');
+      return false;
+    }
+    if (!passPattern.test(pass2Val)) {
+      $("#sclave_confirmar").text("*Debe ingresar la contraseña nuevamente*");
+      mensajes('error','Verifique la confirmación de la contraseña','Formato inválido.');
+      return false;
+    }
+      
+    if (clave_usuario.val() !== clave_confirmar.val()) {
+      $("#sclave_confirmar").text("*Las contraseñas no coinciden*");
+      mensajes('error','Verifique las contraseñas','Las contraseñas no coinciden.');
+      return false;
     }
     return valido;
   }
@@ -407,7 +448,8 @@ function agregarFilaUsuario(usuario) {
     $("#stelefono_usuario").text("");
     $("#correo_usuario").val("");
     $("#scorreo_usuario").text("");
-    $("#rango").val("").trigger('change');
+    $("#rango").val("");
+    $("#rango").removeClass("is-valid is-invalid");
     $("#clave_usuario").val("");
     $("#sclave_usuario").text("");
     $("#clave_confirmar").val("");
@@ -424,7 +466,16 @@ function agregarFilaUsuario(usuario) {
     $("#stelefono_usuario").text("");
     $("#sclave_usuario").text("");
     $("#sclave_confirmar").text("");
+    $("#rango").removeClass("is-valid is-invalid");
     $("#registrarUsuarioModal").modal("show");
+  });
+
+  // Al presionar "Limpiar", quitar estado visual del select de rol
+  $("#incluirusuario").on("reset", function(){
+    // Timeout para permitir que el reset del navegador se aplique primero
+    setTimeout(function(){
+      $("#rango").removeClass("is-valid is-invalid");
+    }, 0);
   });
 
   $("#incluirusuario").on("submit", function (e) {
@@ -573,16 +624,24 @@ function agregarFilaUsuario(usuario) {
   });
 
   $("#modificarcorreo_usuario").on("keypress", function (e) {
-    validarKeyPress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+    validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
   });
 
   $("#modificarcorreo_usuario").on("keyup", function () {
     validarKeyUp(
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
       $(this),
       $("#smodificarcorreo_usuario"),
-      "*Formato válido: example@gmail.com*"
+      "*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*"
     );
+  });
+
+  $("#modificar_rango").on("change", function(){
+    if ($(this).val()) {
+      $(this).removeClass("is-invalid").addClass("is-valid");
+    } else {
+      $(this).removeClass("is-valid").addClass("is-invalid");
+    }
   });
 
   $(document).on("click", ".btn-modificar", function () {
@@ -601,52 +660,111 @@ function agregarFilaUsuario(usuario) {
     $("#smodificarapellido_usuario").text("");
     $("#smodificarcorreo_usuario").text("");
     $("#smodificartelefono_usuario").text("");
+    // Estado visual inicial del select según valor
+    const sel = $("#modificar_rango");
+    if (sel.val()) {
+      sel.removeClass("is-invalid").addClass("is-valid");
+    } else {
+      sel.removeClass("is-valid is-invalid");
+    }
     $("#modificar_usuario_modal").modal("show");
   });
 
   $("#modificarusuario").on("submit", function (e) {
     e.preventDefault();
 
-    const datos = {
-      username: $("#modificarnombre_usuario").val(),
-      nombres: $("#modificarnombre").val(),
-      apellidos: $("#modificarapellido_usuario").val(),
-      cedula: $("#modificarcedula").val(),
-      correo: $("#modificarcorreo_usuario").val(),
-      telefono: $("#modificartelefono_usuario").val(),
-      rango: $("#modificar_rango").val(),
-    };
-
-    const errores = [];
-    if (!/^[a-zA-Z0-9_]{4,20}$/.test(datos.username)) {
-      errores.push(
-        "El usuario debe tener entre 4 y 20 caracteres alfanuméricos."
-      );
-    }
-    if (!/^(?:\d{1,2}\.\d{3}\.\d{3})$/.test($("#modificarcedula").val())) {
-      errores.push("Formato válido: 1.234.567 o 12.345.678");
-    }
-
-    if (!/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,30}$/.test(datos.nombres)) {
-      errores.push("Nombres: solo letras, de 2 a 30 caracteres.");
-    }
-    if (!/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,30}$/.test(datos.apellidos)) {
-      errores.push("Apellidos: solo letras, de 2 a 30 caracteres.");
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)) {
-      errores.push("Formato correcto: example@gmail.com.");
-    }
-    if (!/^\d{4}-\d{3}-\d{4}$/.test(datos.telefono)) {
-      errores.push("Formato correcto: 04XX-XXX-XXXX.");
-    }  
-
-    if (errores.length > 0) {
-      Swal.fire({
-        icon: "error",
-        title: "Error de validación",
-        html: errores.join("<br>"),
-      });
+    const modNombre = $("#modificarnombre");
+    const modNombreVal = space(modNombre.val()).trim();
+    modNombre.val(modNombreVal);
+    if (modNombreVal === "") {
+      $("#smodificarnombre").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique los nombres','El campo está vacío.');
       return;
+    }
+    if (modNombreVal.length < 2) {
+      $("#smodificarnombre").text("*Mínimo 2 caracteres*");
+      mensajes('error','Verifique los nombres','Debe tener mínimo 2 caracteres.');
+      return;
+    }
+
+    const modApellido = $("#modificarapellido_usuario");
+    const modApellidoVal = space(modApellido.val()).trim();
+    modApellido.val(modApellidoVal);
+    if (modApellidoVal === "") {
+      $("#smodificarapellido_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique los apellidos','El campo está vacío.');
+      return;
+    }
+    if (modApellidoVal.length < 2) {
+      $("#smodificarapellido_usuario").text("*Mínimo 2 caracteres*");
+      mensajes('error','Verifique los apellidos','Debe tener mínimo 2 caracteres.');
+      return;
+    }
+
+    const modUser = $("#modificarnombre_usuario");
+    const modUserVal = space(modUser.val()).trim();
+    modUser.val(modUserVal);
+    if (modUserVal === "") {
+      $("#smodificarnombre_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el usuario','El campo está vacío.');
+      return;
+    }
+    if (modUserVal.length < 4) {
+      $("#smodificarnombre_usuario").text("*Mínimo 4 caracteres*");
+      mensajes('error','Verifique el usuario','Debe tener mínimo 4 caracteres.');
+      return;
+    }
+
+    const modCedula = $("#modificarcedula");
+    const modCedVal = modCedula.val().trim();
+    if (modCedVal === "") {
+      $("#smodificarcedula").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique la cédula','El campo está vacío.');
+      return;
+    }
+    if (!/^(?:\d{1,2}\.\d{3}\.\d{3})$/.test(modCedVal)) {
+      $("#smodificarcedula").text("*Formato válido: 1.234.567 o 12.345.678*");
+      mensajes('error','Verifique la cédula','Formato inválido.');
+      $("#modificarcedula").focus();
+      return;
+    }
+
+    const modTlf = $("#modificartelefono_usuario");
+    const modTlfVal = modTlf.val().trim();
+    if (modTlfVal === "") {
+      $("#smodificartelefono_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el teléfono','El campo está vacío.');
+      return;
+    }
+    if (!/^\d{4}-\d{3}-\d{4}$/.test(modTlfVal)) {
+      $("#smodificartelefono_usuario").text("*Formato válido: 04XX-XXX-XXXX*");
+      mensajes('error','Verifique el teléfono','Formato inválido.');
+      $("#modificartelefono_usuario").focus();
+      return;
+    }
+
+    const modCorreo = $("#modificarcorreo_usuario");
+    const modCorreoVal = modCorreo.val().trim();
+    if (modCorreoVal === "") {
+      $("#smodificarcorreo_usuario").text("*Este campo es obligatorio*");
+      mensajes('error','Verifique el correo','El campo está vacío.');
+      return;
+    }
+    if (!/^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(modCorreoVal)) {
+      $("#smodificarcorreo_usuario").text("*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*");
+      mensajes('error','Verifique el correo','Formato inválido.');
+      $("#modificarcorreo_usuario").focus();
+      return;
+    }
+
+    // Validación del rol (misma lógica del registrar)
+    const modRango = $("#modificar_rango");
+    if (!modRango.val()) {
+      modRango.removeClass("is-valid").addClass("is-invalid");
+      mensajes('error','Verifique el rol','Debe seleccionar un rol para el usuario.');
+      return;
+    } else {
+      modRango.removeClass("is-invalid").addClass("is-valid");
     }
 
   var formData = new FormData(this);
@@ -789,10 +907,9 @@ if (fila.length) {
     tabla.row(fila).remove().draw();
   }
 
-  function mensajes(icono, tiempo, titulo, mensaje) {
+  function mensajes(icono, titulo, mensaje) {
     Swal.fire({
       icon: icono,
-      timer: tiempo,
       title: titulo,
       text: mensaje,
       showConfirmButton: true,
@@ -861,6 +978,10 @@ if (fila.length) {
             showConfirmButton: false,
             timer: 1500,
           });
+          // Actualizar DataTable y aplicar el filtro activo inmediatamente
+          var table = $('#tablaConsultas').DataTable();
+          table.row(span.closest('tr')).invalidate();
+          table.draw(false);
         } else {
           span.text(estatusActual);
           span.removeClass("habilitado inhabilitado").addClass(estatusActual);

@@ -22,7 +22,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             aria-labelledby="registrarUsuarioModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <form id="incluirusuario" method="POST">
+                    <form id="incluirusuario" method="POST" novalidate>
                         <div class="modal-header">
                             <h5 class="titulo-form" id="registrarUsuarioModalLabel">Incluir Usuario</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -33,42 +33,42 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             <input type="hidden" name="accion" value="registrar">
                             <div class="grupo-form">
                                 <div class="grupo-interno">
-                                    <label for="nombre">Nombre de la Persona</label>
+                                    <label for="nombre">Nombre(s)*</label>
                                     <input type="text" placeholder="Nombre" class="control-form" id="nombre" name="nombre" maxlength="30" required>
                                     <span class="span-value" id="snombre"></span>
                                 </div>
                                 <div class="grupo-interno">
-                                    <label for="apellido_usuario">Apellido de la Persona</label>
+                                    <label for="apellido_usuario">Apellido(s)*</label>
                                     <input type="text" placeholder="Apellido" class="control-form" id="apellido_usuario" name="apellido_usuario" maxlength="30" required>
                                     <span class="span-value" id="sapellido"></span>
                                 </div>
                             </div>
                             <div class="grupo-form">
                                 <div class="grupo-interno">
-                                    <label for="cedula">Cédula</label>
+                                    <label for="cedula">Cédula*</label>
                                     <input class="control-form" placeholder="1.234.567 o 12.345.678" maxlength="10" type="text" id="cedula" name="cedula" required>
                                     <span class="span-value" id="scedula"></span>                                
                                 </div>
                                 <div class="grupo-interno">
-                                    <label for="telefono_usuario">Número de Teléfono</label>
+                                    <label for="telefono_usuario">Número de Teléfono*</label>
                                     <input type="text" placeholder="0400-000-0000" class="control-form" id="telefono_usuario" name="telefono_usuario" maxlength="13" required>
                                     <span class="span-value" id="stelefono_usuario"></span>
                                 </div>
                             </div>
                             <div class="envolver-form">
-                                <label for="nombre">Nombre de Usuario</label>
+                                <label for="nombre">Nombre de Usuario*</label>
                                 <input type="text" placeholder="Usuario" class="control-form" id="nombre_usuario"
                                     name="nombre_usuario" maxlength="20" required>
                                 <span class="span-value" id="snombre_usuario"></span>
                             </div>
                             <div class="envolver-form">
-                                <label for="correo_usuario">Correo Electrónico</label>
+                                <label for="correo_usuario">Correo Electrónico*</label>
                                 <input type="text" placeholder="ejemplo@gmail.com" class="control-form" id="correo_usuario"
                                     name="correo_usuario" maxlength="50" required>
                                 <span class="span-value" id="scorreo_usuario"></span>
                             </div>
                             <div class="envolver-form">
-                                <label for="rango">Rol de Usuario</label>
+                                <label for="rango">Rol de Usuario*</label>
                                 <select class="form-select" id="rango" name="rango">
                                     <option value="" hidden>Seleccione el rol del usuario</option>
                                     <?php
@@ -81,13 +81,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                 </select>
                             </div>
                             <div class="envolver-form">
-                                <label for="clave_usuario">Contraseña</label>
+                                <label for="clave_usuario">Contraseña*</label>
                                 <input type="password" placeholder="Crea una contraseña" class="control-form"
                                     id="clave_usuario" name="clave_usuario" maxlength="15" required>
                                 <span class="span-value" id="sclave_usuario"></span>
                             </div>
                             <div class="envolver-form">
-                                <label for="clave_confirmar">Confirmar Contraseña</label>
+                                <label for="clave_confirmar">Confirmar Contraseña*</label>
                                 <input type="password" placeholder="Ingrese nuevamente la contraseña" class="control-form"
                                     id="clave_confirmar" name="clave_confirmar" maxlength="15" required>
                                 <span class="span-value" id="sclave_confirmar"></span>
@@ -214,7 +214,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     aria-labelledby="modificar_usuario_modal_label" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="modificarusuario" method="POST">
+            <form id="modificarusuario" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="modificar_usuario_modal_label">Modificar Usuario</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
