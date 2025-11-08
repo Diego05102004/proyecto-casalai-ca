@@ -330,7 +330,7 @@ INSERT INTO `tbl_modulos` (`id_modulo`, `nombre_modulo`) VALUES
 (17, 'Permisos'),
 (18, 'Roles'),
 (19, 'Bitacora'),
-(20, 'Respaldo'),
+(20, 'Backup'),
 (21, 'Compra Física'),
 (22, 'Perfil de Usuario');
 

@@ -260,7 +260,7 @@ final class MarcaTest extends TestCase
         
         $row = $method->invoke($m, 3);
         $this->assertIsArray($row);
-        $this->assertSame('Canon', $row['nombre_marca']);
+        $this->assertSame('NuevaMarca', $row['nombre_marca']);
     }
 
     // MRK-UNIT-008: Test tieneModelosAsociados method

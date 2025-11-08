@@ -73,7 +73,9 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                     <option value="" hidden>Seleccione el rol del usuario</option>
                                     <?php
                                     foreach ($selecionarRol as $rol) {
-                                        echo '<option value="' . $rol['id_rol'] . '">' . htmlspecialchars($rol['nombre_rol']) . '</option>';
+                                        if($rol['nombre_rol'] != 'SuperUsuario') {
+                                            echo '<option value="' . $rol['id_rol'] . '">' . htmlspecialchars($rol['nombre_rol']) . '</option>';
+                                        }
                                     }
                                     ?>
                                 </select>
@@ -256,10 +258,12 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                         <select class="form-select" id="modificar_rango" name="rango">
                             <option value="" hidden>Seleccione el tipo de usuario a crear</option>
                             <?php
-                                    foreach ($selecionarRol as $rol) {
+                                foreach ($selecionarRol as $rol) {
+                                    if($rol['nombre_rol'] != 'SuperUsuario') {
                                         echo '<option value="' . $rol['id_rol'] . '">' . htmlspecialchars($rol['nombre_rol']) . '</option>';
                                     }
-                                    ?>
+                                }
+                            ?>
                         </select>
                     </div>
                 </div>

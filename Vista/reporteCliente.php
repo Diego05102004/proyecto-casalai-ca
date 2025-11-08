@@ -1,0 +1,153 @@
+<?php $idRol = $_SESSION['id_rol']; // o el rol actual del usuario
+$idModulo = 9;
+
+if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUsuarioEntrar[$idRol][$idModulo]['consultar'] === true) { ?>
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Clientes</title>
+    <?php include 'header.php'; ?>
+</head>
+<body  class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+
+<?php include 'newnavbar.php'; ?>
+
+
+
+
+<!-- Reporte estadístico de compras por cliente -->
+<div class="reporte-container" style="max-width:900px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <h3 style="text-align:center; color:#1f66df; margin-bottom:16px;">Top 10 Clientes por Productos Comprados</h3>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:16px;">
+        <div style="flex:1 1 320px; min-width:0;">
+            <canvas id="graficoComprasClientes" style="width:100%; height:260px;"></canvas>
+        </div>
+        <div style="flex:1 1 320px; min-width:0;">
+            <div style="max-width:100%; overflow-x:auto;">
+            <table class="table table-bordered table-striped" style="margin:0 auto 32px auto; width:100%; min-width:480px;">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Cantidad de <br> Productos Comprados</th>
+                        <th>Porcentaje (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($reporteComprasClientes as $cliente): 
+                        $porcentaje = $totalComprasClientes > 0 ? round(($cliente['cantidad'] / $totalComprasClientes) * 100, 2) : 0;
+                    ?>
+                        <tr>
+                            <td><?= htmlspecialchars($cliente['nombre']) ?></td>
+                            <td><?= $cliente['cantidad'] ?></td>
+                            <td><?= $porcentaje ?>%</td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Total</th>
+                        <th><?= $totalComprasClientes ?></th>
+                        <th>100%</th>
+                    </tr>
+                </tfoot>
+            </table>
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+                <button id="descargarPDFClientes" class="btn btn-success" style="padding:10px 24px; font-size:16px; border-radius:6px; background:#27ae60; color:#fff; border:none; cursor:pointer;">
+                    Descargar Reporte de Compras
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <?php include 'footer.php'; ?>
+
+
+</div>
+
+<script src="javascript/js/jquery.min.js"></script>
+<script src="javascript/js/jquery-3.5.1.min.js"></script>
+<script src="public/js/popper.min.js"></script>
+<script src="javascript/js/bootstrap.min.js"></script>
+
+<script src="javascript/cliente.js"></script>
+<script src="public/js/jquery.dataTables.min.js"></script>
+<script src="public/js/dataTables.bootstrap5.min.js"></script>
+<script src="public/js/datatable.js"></script>
+<script>
+$(document).ready(function() {
+    $('#tablaConsultas').DataTable({
+        language: {
+            url: 'public/js/es-ES.json'
+        },
+        columnDefs: [
+            { orderable: false, targets: 5 } // Deshabilitar ordenamiento para columna de acciones
+        ]
+    });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const labelsClientes = <?= json_encode(array_column($reporteComprasClientes, 'nombre')) ?>;
+const dataClientes = <?= json_encode(array_column($reporteComprasClientes, 'cantidad')) ?>;
+const ctxClientes = document.getElementById('graficoComprasClientes').getContext('2d');
+new Chart(ctxClientes, {
+    type: 'bar',
+    data: {
+        labels: labelsClientes,
+        datasets: [{
+            label: 'Productos comprados',
+            data: dataClientes,
+            backgroundColor: 'rgba(39, 174, 96, 0.7)',
+            borderColor: 'rgba(39, 174, 96, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Top 10 Clientes por Productos Comprados' }
+        },
+        scales: {
+            x: { beginAtZero: true }
+        }
+    }
+});
+
+document.getElementById('descargarPDFClientes').addEventListener('click', function () {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'pt',
+        format: 'a4'
+    });
+
+    const reporte = document.querySelector('.reporte-container');
+    html2canvas(reporte).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const imgWidth = pageWidth - 40;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+        doc.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
+        doc.save('Reporte_Compras_Clientes.pdf');
+    });
+});
+</script>
+</body>
+</html>
+
+<?php
+} else {
+    header("Location: ?pagina=acceso-denegado");
+    exit;
+}
+?>

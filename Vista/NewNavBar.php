@@ -1,15 +1,15 @@
 <?php
-require_once('Config/Config.php');
-require_once('Modelo/permiso.php');
-
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Carrito;
 $id_rol = $_SESSION['id_rol'];
 $nombre_rol = $_SESSION['nombre_rol'] ?? '';
 $id_usuario = $_SESSION['id_usuario'] ?? 0;
 
 $permisosObj = new Permisos();
-
+$carritoObj = new Carrito();
 // Obtener datos de la tasa BCV (registro del día)
-require_once 'Modelo/DolarService.php';
+use Usuario\ProyectoCasalaiCa\Clases\DolarService;
 $dolarService = new DolarService();
 $registroDolar = $dolarService->obtenerRegistroDelDia();
 $tasaBCV = isset($registroDolar['precio']) ? (float)$registroDolar['precio'] : $dolarService->obtenerPrecioDelDia();
@@ -36,7 +36,7 @@ $modulos = [
     'permisos' => ['Gestionar Permisos', 'img/key-round.svg', '?pagina=permiso'],
     'Roles' => ['Gestionar Roles', 'img/user-round-search.svg', '?pagina=rol'],
     'bitacora' => ['Gestionar Bitácora', 'img/notebook.svg', '?pagina=bitacora'],
-    'Respaldo' => ['Gestionar Respaldo', 'img/files.svg', '?pagina=respaldo'],    
+    'Backup' => ['Gestionar Backup', 'img/files.svg', '?pagina=backup'],    
 ];
 
 $permisosConsulta = [];
@@ -84,7 +84,7 @@ $notificaciones_count = count($notificaciones);
 // Obtener cantidad de productos en el carrito
 $carrito_count = 0;
 if (isset($_SESSION['id_usuario'])) {
-    require_once 'Modelo/carrito.php';
+    
     $carritoObj = new Carrito();
     $carritoCliente = $carritoObj->obtenerCarritoPorCliente($_SESSION['id_usuario']);
     if ($carritoCliente) {
@@ -281,7 +281,13 @@ if (isset($_SESSION['id_usuario'])) {
                 <div class="sub-option" onclick="window.location.href='?pagina=cliente'">
                     <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Clientes
                 </div>
+                <div class="sub-option" onclick="window.location.href='?pagina=reporteCliente'">
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Clientes
+                </div>
             </div>
+            
+                
+          
             <?php endif; ?>
 
             <!-- Ventas/Compras -->
@@ -374,7 +380,7 @@ if (isset($_SESSION['id_usuario'])) {
             <?php endif; ?>
 
             <!-- Administrar Seguridad -->
-            <?php if (!empty($permisosConsulta['permisos']) || !empty($permisosConsulta['Roles']) || !empty($permisosConsulta['bitacora']) || !empty($permisosConsulta['Respaldo'])): ?>
+            <?php if (!empty($permisosConsulta['permisos']) || !empty($permisosConsulta['Roles']) || !empty($permisosConsulta['bitacora']) || !empty($permisosConsulta['Backup'])): ?>
             <div class="menu-option" data-target="security">
                 <span><IMG src="img/key-round.svg" alt="Seguridad" class="menu-icon"> Administrar Seguridad</span>
                 <IMG src="img/chevron-right.svg" alt="Expandir" class="menu-icon">
@@ -395,9 +401,9 @@ if (isset($_SESSION['id_usuario'])) {
                     <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Bitácora
                 </div>
                 <?php endif; ?>
-                <?php if (!empty($permisosConsulta['Respaldo'])): ?>
-                <div class="sub-option" onclick="window.location.href='?pagina=respaldo'">
-                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Respaldo
+                <?php if (!empty($permisosConsulta['Backup'])): ?>
+                <div class="sub-option" onclick="window.location.href='?pagina=backup'">
+                    <IMG src="img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Backup
                 </div>
                 <?php endif; ?>
             </div>

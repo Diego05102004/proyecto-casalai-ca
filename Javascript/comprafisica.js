@@ -137,7 +137,9 @@ $(document).ready(function () {
             const cantidadVal = $(this).find("input[name='cantidad[]']").val();
             const precio = parsearNumeroFormateado(precioTxt) || 0;
             const cantidad = parsearNumeroFormateado(cantidadVal) || 0;
-            total += (precio * cantidad);
+            const tasa = parseFloat($('#tasa').val().replace(',', '.')) || 0;
+            console.log(tasa);
+            total += (precio * cantidad * tasa);
         });
         $('#totalCompra').val('Bs. ' + formatearNumero(total));
         if (typeof window.calcularCambio === 'function') { window.calcularCambio(); }

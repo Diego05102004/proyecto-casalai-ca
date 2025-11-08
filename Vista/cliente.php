@@ -320,6 +320,12 @@ document.getElementById('descargarPDFClientes').addEventListener('click', functi
     });
 });
 </script>
+<button 
+    class="btn-grafica"
+    title="Visualizar Reportes"
+    onclick="window.location.href='?pagina=reporteCliente'">
+    <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+</button>
 </body>
 </html>
 

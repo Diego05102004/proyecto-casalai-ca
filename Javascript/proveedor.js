@@ -869,7 +869,6 @@ $(document).ready(function() {
                         if ($tr.length) {
                             const $parent = $tr.hasClass('child') ? $tr.prev('tr') : $tr;
                             tabla.row($parent).remove().draw(false);
-                        } else {
                             eliminarFilaProveedor(id_proveedor);
                         }
                     } else {

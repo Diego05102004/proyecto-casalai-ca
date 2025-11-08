@@ -108,7 +108,7 @@ CREATE TABLE `tbl_modulos` (
 
 LOCK TABLES `tbl_modulos` WRITE;
 /*!40000 ALTER TABLE `tbl_modulos` DISABLE KEYS */;
-INSERT INTO `tbl_modulos` VALUES (1,'Usuario'),(2,'Recepcion'),(3,'Despacho'),(4,'Marcas'),(5,'Modelos'),(6,'Productos'),(7,'Categorias'),(8,'Proveedores'),(9,'Clientes'),(10,'Catalogo'),(11,'Carrito'),(12,'Pasarela'),(13,'Pedidos'),(14,'Ordenes de despacho'),(15,'Cuentas bancarias'),(16,'Finanzas'),(17,'Permisos'),(18,'Roles'),(19,'Bitacora'),(20,'Respaldo'),(21,'Compra Fisica'),(22,'Perfil de Usuario');
+INSERT INTO `tbl_modulos` VALUES (1,'Usuario'),(2,'Recepcion'),(3,'Despacho'),(4,'Marcas'),(5,'Modelos'),(6,'Productos'),(7,'Categorias'),(8,'Proveedores'),(9,'Clientes'),(10,'Catalogo'),(11,'Carrito'),(12,'Pasarela'),(13,'Pedidos'),(14,'Ordenes de despacho'),(15,'Cuentas bancarias'),(16,'Finanzas'),(17,'Permisos'),(18,'Roles'),(19,'Bitacora'),(20,'Backup'),(21,'Compra Fisica'),(22,'Perfil de Usuario');
 /*!40000 ALTER TABLE `tbl_modulos` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -103,7 +103,7 @@ if (isset($_GET['accion'])) {
                             $_SESSION['id_usuario'],
                             MODULO_BACKUP,
                             'GENERAR',
-                            'Se generÃ³ un respaldo ' . ($tipo === 'S' ? 'de seguridad' : 'principal') . ': ' . $nombreArchivo,
+                            'Se generÃ³ un backup ' . ($tipo === 'S' ? 'de seguridad' : 'principal') . ': ' . $nombreArchivo,
                             'media'
                         );
                     }
@@ -112,10 +112,10 @@ if (isset($_GET['accion'])) {
             } else {
                 $logFile = __DIR__ . '/../db/backup/backup_debug.log';
                 $logMsg = file_exists($logFile) ? @file_get_contents($logFile) : '';
-                backup_debug_log('Error al GENERAR respaldo (ok=0 o archivo no existe).');
+                backup_debug_log('Error al GENERAR backup (ok=0 o archivo no existe).');
                 echo json_encode([
                     'success' => false,
-                    'error' => 'Error al generar el respaldo. Ver debug.',
+                    'error' => 'Error al generar el backup. Ver debug.',
                     'debug' => $logMsg
                 ]);
             }
@@ -175,7 +175,7 @@ if (isset($_GET['accion'])) {
                             $_SESSION['id_usuario'],
                             MODULO_BACKUP,
                             'RESTAURAR',
-                            'Se restaurÃ³ el respaldo: ' . $archivo,
+                            'Se restaurÃ³ el backup: ' . $archivo,
                             'alta'
                         );
                     }
@@ -2064,7 +2064,7 @@ $modulos = [
     'permisos' => ['Gestionar Permisos', 'img/key-round.svg', '?pagina=permiso'],
     'Roles' => ['Gestionar Roles', 'img/user-round-search.svg', '?pagina=rol'],
     'bitacora' => ['Gestionar BitÃ¡cora', 'img/notebook.svg', '?pagina=bitacora'],
-    'Respaldo' => ['Gestionar Respaldo', 'img/files.svg', '?pagina=backup'],
+    'Backup' => ['Gestionar Backup', 'img/files.svg', '?pagina=backup'],
 ];
 
 $permisosConsulta = [];

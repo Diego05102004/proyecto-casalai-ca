@@ -1,3 +1,11 @@
+// Prevenir el retroceso a la pasarela de pagos
+if (window.history && window.history.pushState) {
+    window.history.pushState('forward', null, '');
+    window.onpopstate = function() {
+        window.location.href = 'gestionarfactura.php';
+    };
+}
+
 $(document).ready(function () {
 // Abrir modal y llenar campos
 $('#modificarPago').length

@@ -221,11 +221,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                         <img src="img/check.svg">
                                     </button>
                                 <?php endif; ?>
+                                <?php if ($despacho['estado'] !== 'Despachado'): ?>
                                 <button class="btn-anular"
                                     title="Anular Despacho"
                                     data-id-despacho="<?= htmlspecialchars($despacho['id_despachos']) ?>">
                                     <img src="img/circle-x.svg">
                                 </button>
+                                <?php endif; ?>
                             </ul>
                         </td>
                     </tr>

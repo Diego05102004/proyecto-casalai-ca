@@ -1,149 +1,197 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../../Modelo/categoria.php';
-require_once __DIR__ . '/../../../Config/Config.php';
 
-final class CategoriaControllerTest extends TestCase
-{
-    private $categoria;
-    private $db;
-
-    protected function setUp(): void
-    {
-        // Create a test database connection
-        $this->db = new BD('P');
-        $this->categoria = new Categoria();
-        
-        // Start transaction
-        $pdo = $this->db->getConexion();
-        $pdo->beginTransaction();
-    }
-
-    protected function tearDown(): void
-    {
-        // Rollback transaction to clean up after each test
-        $pdo = $this->db->getConexion();
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        $this->db->cerrar();
-    }
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-
-$projectRoot = %s;
-chdir($projectRoot);
-
-// Definir constantes necesarias
+// Evitar la inclusión directa del controlador para evitar conflictos
 if (!defined('SKIP_SIDE_EFFECTS')) {
     define('SKIP_SIDE_EFFECTS', true);
 }
 
-// Simular entorno de prueba
-$_SERVER['REQUEST_METHOD'] = 'POST';
-$_POST = %s;
-$_FILES = [];
+require_once __DIR__ . '/../../../Modelo/categoria.php';
+require_once __DIR__ . '/../../../Modelo/permiso.php';
+require_once __DIR__ . '/../../../Modelo/bitacora.php';
+require_once __DIR__ . '/../../../Config/Config.php';
 
-// Iniciar sesión de prueba
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+/**
+ * Pruebas de integración para el controlador de Categorías
+ */
+class CategoriaControllerTest extends TestCase
+{
+    private $categoria;
+    private $db;
+    private $pdo;
 
-// Establecer variables de sesión necesarias
-$_SESSION['id_usuario'] = 1;
-$_SESSION['id_rol'] = 1;
-
-// Capturar la salida
-ob_start();
-
-try {
-    require %s;
-    $output = ob_get_clean();
-    
-    // Si no hay salida, intentar forzar una respuesta JSON
-    if (empty($output)) {
-        $output = json_encode([
-            'status' => 'error',
-            'message' => 'No se generó ninguna salida',
-            'post_data' => $_POST
-        ]);
-    }
-    
-    echo $output;
-} catch (Exception $e) {
-    ob_end_clean();
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Excepción: ' . $e->getMessage(),
-        'file' => $e->getFile() . ':' . $e->getLine()
-    ]);
-}
-PHP;
-
-        $script = sprintf(
-            $script,
-            var_export($projectRoot, true),
-            $postExport,
-            var_export($controllerPath, true)
-        );
-
-        $tmpFile = tempnam(sys_get_temp_dir(), 'it_cat_');
-        if ($tmpFile === false) {
-            $this->fail('No se pudo crear script temporal para ejecutar el controlador.');
-        }
-        $tmpPhp = $tmpFile . '.php';
-        rename($tmpFile, $tmpPhp);
-        file_put_contents($tmpPhp, $script);
-
-        $cmd = '"' . PHP_BINARY . '" ' . escapeshellarg($tmpPhp) . ' 2>&1';
-        
-        // Ejecutar el comando y capturar la salida y el código de salida
-        $output = [];
-        $return_var = 0;
-        exec($cmd, $output, $return_var);
-        $output = implode("\n", $output);
-
-        @unlink($tmpPhp);
-
-        // Depuración: Mostrar la salida cruda
-        echo "\n--- SALIDA DEL CONTROLADOR ---\n";
-        var_dump($output);
-        echo "\nCódigo de salida: " . $return_var . "\n";
-        echo "--- FIN DE SALIDA ---\n";
-        
-        // Si hay un error de sintaxis o similar, fallar la prueba con un mensaje claro
-        if ($return_var !== 0) {
-            $this->fail("El controlador devolvió un código de error: $return_var. Salida: " . substr($output, 0, 1000));
-        }
-
-        $decoded = json_decode((string)$output, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $decoded;
-        }
-        
-        // Intentar extraer JSON de la salida
-        if (preg_match('/\{.*\}\s*$/s', (string)$output, $m)) {
-            $decoded = json_decode($m[0], true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return $decoded;
-            }
-        }
-        
-        // Si llegamos aquí, mostrar más detalles del error
-        $errorMsg = 'La salida del controlador no fue JSON parseable. ';
-        $errorMsg .= 'JSON error: ' . json_last_error_msg() . '\n';
-        $errorMsg .= 'Salida (primeros 500 caracteres): ' . substr((string)$output, 0, 500);
-        
-        $this->fail($errorMsg);
-    }
-
-    public function testAccionNoValidaCategoria(): void
+    protected function setUp(): void
     {
-        $resp = $this->runController([
-            'accion' => 'desconocida'
-        ]);
-        $this->assertIsArray($resp);
+        // Iniciar sesión de prueba
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['id_usuario'] = 1;
+        $_SESSION['id_rol'] = 1;
+
+        // Crear conexión a la base de datos de pruebas
+        $this->db = new BD('P');
+        $this->pdo = $this->db->getConexion();
+        $this->categoria = new Categoria();
+        
+        // Iniciar transacción
+        $this->pdo->beginTransaction();
+    }
+
+    protected function tearDown(): void
+    {
+        // Revertir transacción para limpiar después de cada prueba
+        if ($this->pdo && $this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+        if ($this->db) {
+            $this->db->cerrar();
+        }
+        
+        // Limpiar variables de sesión
+        $_SESSION = [];
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+    }
+
+    /**
+     * Datos de prueba para las características de las categorías
+     */
+    private function getCaracteristicasBasicas()
+    {
+        return [
+            ['nombre' => 'Color', 'tipo' => 'string', 'max' => 50],
+            ['nombre' => 'Tamaño', 'tipo' => 'string', 'max' => 20]
+        ];
+    }
+
+    /**
+     * Crea una categoría de prueba y devuelve su ID
+     */
+    private function crearCategoriaDePrueba($nombre)
+    {
+        $caracteristicas = $this->getCaracteristicasBasicas();
+        $this->categoria->setNombreCategoria($nombre);
+        $resultado = $this->categoria->registrarCategoria($caracteristicas);
+        
+        if (!$resultado) {
+            $this->fail('No se pudo crear la categoría de prueba');
+        }
+        
+        $categoria = $this->categoria->obtenerUltimoCategoria();
+        return $categoria['id_categoria'];
+    }
+
+    /**
+     * Test para la acción de listar categorías
+     */
+    public function testListarCategorias()
+    {
+        // Crear una categoría de prueba
+        $this->crearCategoriaDePrueba('Electrónica');
+        
+        // Simular petición GET
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_GET = ['action' => 'listar'];
+        
+        // Capturar la salida
+        ob_start();
+        require __DIR__ . '/../../../Controlador/categoria.php';
+        $output = json_decode(ob_get_clean(), true);
+        
+        // Verificar la respuesta
+        $this->assertIsArray($output);
+        $this->assertArrayHasKey('status', $output);
+        $this->assertEquals('success', $output['status']);
+        $this->assertArrayHasKey('data', $output);
+        $this->assertIsArray($output['data']);
+    }
+
+    /**
+     * Test para la acción de crear categoría
+     */
+    public function testCrearCategoria()
+    {
+        // Datos de prueba
+        $datos = [
+            'action' => 'crear',
+            'nombre_categoria' => 'Nueva Categoría',
+            'caracteristicas' => json_encode($this->getCaracteristicasBasicas())
+        ];
+        
+        // Simular petición POST
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = $datos;
+        
+        // Capturar la salida
+        ob_start();
+        require __DIR__ . '/../../../Controlador/categoria.php';
+        $output = json_decode(ob_get_clean(), true);
+        
+        // Verificar la respuesta
+        $this->assertIsArray($output);
+        $this->assertArrayHasKey('status', $output);
+        $this->assertEquals('success', $output['status']);
+    }
+
+    /**
+     * Test para la acción de actualizar categoría
+     */
+    public function testActualizarCategoria()
+    {
+        // Crear una categoría de prueba
+        $idCategoria = $this->crearCategoriaDePrueba('Categoría a actualizar');
+        
+        // Datos de prueba
+        $datos = [
+            'action' => 'actualizar',
+            'id_categoria' => $idCategoria,
+            'nombre_categoria' => 'Categoría Actualizada',
+            'caracteristicas' => json_encode($this->getCaracteristicasBasicas())
+        ];
+        
+        // Simular petición POST
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = $datos;
+        
+        // Capturar la salida
+        ob_start();
+        require __DIR__ . '/../../../Controlador/categoria.php';
+        $output = json_decode(ob_get_clean(), true);
+        
+        // Verificar la respuesta
+        $this->assertIsArray($output);
+        $this->assertArrayHasKey('status', $output);
+        $this->assertEquals('success', $output['status']);
+    }
+
+    /**
+     * Test para la acción de eliminar categoría
+     */
+    public function testEliminarCategoria()
+    {
+        // Crear una categoría de prueba
+        $idCategoria = $this->crearCategoriaDePrueba('Categoría a eliminar');
+        
+        // Datos de prueba
+        $datos = [
+            'action' => 'eliminar',
+            'id_categoria' => $idCategoria
+        ];
+        
+        // Simular petición POST
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = $datos;
+        
+        // Capturar la salida
+        ob_start();
+        require __DIR__ . '/../../../Controlador/categoria.php';
+        $output = json_decode(ob_get_clean(), true);
+        
+        // Verificar la respuesta
+        $this->assertIsArray($output);
+        $this->assertArrayHasKey('status', $output);
+        $this->assertEquals('success', $output['status']);
     }
 }
-

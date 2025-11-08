@@ -4,7 +4,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Cargar configuración de rutas
-require_once __DIR__ . '/Config/paths.php';
+require __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/Modelo/Config/paths.php';
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {

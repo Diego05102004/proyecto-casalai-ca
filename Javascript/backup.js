@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const DEBUG = true;
     const dlog = (...args) => { if (DEBUG) { console.log('[BACKUP]', ...args); } };
-    dlog('DOMContentLoaded disparado, inicializando módulo de respaldo...');
+    dlog('DOMContentLoaded disparado, inicializando módulo de backup...');
     // Mostrar mensajes flotantes
     function mostrarMensaje(msg, tipo = 'info') {
         let div = document.createElement('div');
@@ -16,12 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     
 
-    // Restaurar el último respaldo disponible
+    // Restaurar el último backup disponible
     document.getElementById('btn-restaurar-ultimo').addEventListener('click', function (e) {
         e.preventDefault();
-        if (confirm('¿Seguro que deseas restaurar el último respaldo?')) {
+        if (confirm('¿Seguro que deseas restaurar el último backup?')) {
             const urlList = 'controlador/backup.php?accion=consultar';
-            dlog('Solicitando lista de respaldos...', { url: urlList });
+            dlog('Solicitando lista de backups...', { url: urlList });
             fetch(urlList)
                 .then(async response => {
                     const text = await response.text();
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         data.sort().reverse();
                         let ultimo = data[0];
                         const urlRestore = 'controlador/backup.php?accion=restaurar&archivo=' + encodeURIComponent(ultimo);
-                        dlog('Restaurando último respaldo...', { archivo: ultimo, url: urlRestore });
+                        dlog('Restaurando último backup...', { archivo: ultimo, url: urlRestore });
                         fetch(urlRestore)
                             .then(async response => {
                                 const text = await response.text();
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             .catch(err => { console.error(err); alert('Error de respuesta del servidor (restaurar): ' + err.message); });
 
                     } else {
-                        alert('No hay respaldos disponibles');
+                        alert('No hay backups disponibles');
                     }
                 });
         }
@@ -61,8 +61,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
-    // Actualiza la tabla de respaldos (si usas AJAX para listar)
-    function actualizarTablaRespaldos() {
+    // Actualiza la tabla de backups (si usas AJAX para listar)
+    function actualizarTablaBackups() {
         let xhr = new XMLHttpRequest();
         xhr.open('GET', 'controlador/backup.php?accion=consultar', true);
         xhr.onload = function () {
@@ -72,13 +72,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 try { data = JSON.parse(xhr.responseText); } catch (e) { console.error('Error parseando lista:', e); return; }
                 let tbody = document.querySelector('#tablaConsultas tbody');
                 tbody.innerHTML = '';
-                data.forEach(function (respaldo) {
+                data.forEach(function (backup) {
                     let tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${respaldo}</td>
+                        <td>${backup}</td>
                         <td>
-                            <button class="btn btn-info btn-descargar" data-archivo="${respaldo}">Descargar</button>
-                            <button class="btn btn-warning btn-restaurar" data-archivo="${respaldo}">Restaurar</button>
+                            <button class="btn btn-info btn-descargar" data-archivo="${backup}">Descargar</button>
+                            <button class="btn btn-warning btn-restaurar" data-archivo="${backup}">Restaurar</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -101,7 +101,7 @@ document.querySelectorAll('.btn-descargar').forEach(btn => {
         document.querySelectorAll('.btn-restaurar').forEach(btn => {
             btn.onclick = function (e) {
                 e.preventDefault();
-                if (confirm('¿Seguro que deseas restaurar este respaldo?')) {
+                if (confirm('¿Seguro que deseas restaurar este backup?')) {
                     fetch('controlador/backup.php?accion=restaurar&archivo=' + encodeURIComponent(this.dataset.archivo))
                         .then(async response => {
                             const text = await response.text();
@@ -120,11 +120,11 @@ document.querySelectorAll('.btn-descargar').forEach(btn => {
         });
     }
 
-    // Generar respaldo principal
+    // Generar backup principal
     document.getElementById('btn-backup-principal').addEventListener('click', function (e) {
         e.preventDefault();
         const url = 'controlador/backup.php?accion=generar&tipo=P';
-        dlog('Click Generar Respaldo Principal', { url });
+        dlog('Click Generar Backup Principal', { url });
         fetch(url)
             .then(async response => {
                 const text = await response.text();
@@ -133,21 +133,21 @@ document.querySelectorAll('.btn-descargar').forEach(btn => {
             })
             .then(data => {
                 if (data.success) {
-                    mostrarMensaje('Respaldo generado: ' + data.archivo, 'success');
+                    mostrarMensaje('Backup generado: ' + data.archivo, 'success');
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    mostrarMensaje('Error al generar respaldo', 'danger');
+                    mostrarMensaje('Error al generar backup', 'danger');
                 }
             })
             .catch(err => { console.error(err); mostrarMensaje('Error de respuesta del servidor (generar P): ' + err.message, 'danger'); });
 
     });
 
-    // Generar respaldo seguridad
+    // Generar backup seguridad
     document.getElementById('btn-backup-seguridad').addEventListener('click', function (e) {
         e.preventDefault();
         const url = 'controlador/backup.php?accion=generar&tipo=S';
-        dlog('Click Generar Respaldo Seguridad', { url });
+        dlog('Click Generar Backup Seguridad', { url });
         fetch(url)
             .then(async response => {
                 const text = await response.text();
@@ -156,10 +156,10 @@ document.querySelectorAll('.btn-descargar').forEach(btn => {
             })
             .then(data => {
                 if (data.success) {
-                    mostrarMensaje('Respaldo generado: ' + data.archivo, 'success');
+                    mostrarMensaje('Backup generado: ' + data.archivo, 'success');
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    mostrarMensaje('Error al generar respaldo', 'danger');
+                    mostrarMensaje('Error al generar backup', 'danger');
                 }
             })
             .catch(err => { console.error(err); mostrarMensaje('Error de respuesta del servidor (generar S): ' + err.message, 'danger'); });

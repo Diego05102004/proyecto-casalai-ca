@@ -254,7 +254,69 @@
 </head>
 <body class="fondo" style="background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
     <?php include 'newnavbar.php'; ?>
+    <script>
+// Solución robusta para prevenir retroceso en la pasarela
+(function() {
+    // 1. Reemplazar el historial actual
+    if (window.history && window.history.pushState) {
+        window.history.pushState(null, null, document.URL);
+        
+        // 2. Controlar el evento de retroceso
+        window.onpopstate = function() {
+            // Forzar redirección a gestionarfactura
+            window.history.pushState(null, null, '?pagina=gestionarfactura');
+            window.location.href = '?pagina=gestionarfactura';
+            return false;
+        };
+    }
+
+    // 3. Prevenir retroceso con teclado
+    document.onkeydown = function(e) {
+        e = e || window.event;
+        
+        // Detectar combinaciones de teclas para retroceder
+        if (e.keyCode == 8 || // Backspace
+            (e.altKey && e.keyCode == 37) || // Alt + Flecha Izquierda
+            e.keyCode == 116 || // F5
+            (e.ctrlKey && e.keyCode == 82) || // Ctrl + R
+            (e.metaKey && e.keyCode == 82) // Cmd + R (Mac)
+        ) {
+            // Permitir backspace solo en campos de texto
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return true;
+            }
+            
+            // Prevenir la acción por defecto
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Redirigir
+            window.history.pushState(null, null, '?pagina=gestionarfactura');
+            window.location.href = '?pagina=gestionarfactura';
+            return false;
+        }
+    };
     
+    // 4. Controlar clic derecho y menú contextual
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // 5. Prevenir arrastrar imágenes
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // 6. Forzar el estado inicial
+    window.onload = function() {
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, null, document.URL);
+        }
+    };
+})();
+</script>
     <!-- CONTENEDOR PRINCIPAL COMPACTO -->
     <div class="main-content">
     <div class="contenedor-principal">

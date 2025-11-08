@@ -960,7 +960,7 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
     function crearTablaComparacion(datos) {
         if (!datos || datos.length === 0) return '<div class="alert alert-info">No hay datos de comparación</div>';
         const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-        // Preferir el mes seleccionado en parámetros. Si no existe, usar el rango de fechas como respaldo.
+        // Preferir el mes seleccionado en parámetros. Si no existe, usar el rango de fechas como backup.
         let mesFallback = 'N/A';
         const selMes = ultimoParamsProv?.mes ? parseInt(ultimoParamsProv.mes,10) : null;
         if (selMes && selMes >=1 && selMes <=12) {

@@ -86,7 +86,7 @@ if ((isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosU
 </head>
 
 <?php include 'newnavbar.php'; ?>
-<div id="tasa" hidden><?php echo $data['monitors']['bcv']['price'];?></div>
+<input type="number" id="tasa" value="<?php echo $data['monitors']['bcv']['price'];?>" hidden>
 <body class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <!-- ...código anterior... -->
@@ -847,6 +847,7 @@ $(document).on('change', '.comprobante-pago', function (e) {
 });
 
 </script>
+
 <script>
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({

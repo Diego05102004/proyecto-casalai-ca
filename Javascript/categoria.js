@@ -5,6 +5,7 @@ $(document).ready(function () {
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", 4000, "Atención", $("#mensajes").html());
     }
+    
 
     $("#nombre_categoria").on("keypress", function(e){
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]*$/, e);

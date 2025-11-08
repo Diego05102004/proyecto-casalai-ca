@@ -134,11 +134,15 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
                                 <img src="img/download.svg">
                             </button>
                         </form>
-                        <button class="btn-anular"
-                            title="Anular Orden de Despacho"
-                            data-id-orden="<?= htmlspecialchars($orden['id_orden_despachos']) ?>">
-                            <img src="img/circle-x.svg">
-                        </button>
+                        <?php if ($orden['estado'] !== 'Entregada'): ?>
+                            <?php if ($_SESSION['id_rol'] !== 1): ?>
+                                <button class="btn-anular"
+                                    title="Anular Orden de Despacho"
+                                    data-id-orden="<?= htmlspecialchars($orden['id_orden_despachos']) ?>">
+                                    <img src="img/circle-x.svg">
+                                </button>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </ul>
                 </td>
             </tr>

@@ -94,7 +94,7 @@ $modulos = [
     'permisos' => ['Gestionar Permisos', 'img/key-round.svg', '?pagina=permiso'],
     'Roles' => ['Gestionar Roles', 'img/user-round-search.svg', '?pagina=rol'],
     'bitacora' => ['Gestionar Bitácora', 'img/notebook.svg', '?pagina=bitacora'],
-    'Respaldo' => ['Gestionar Respaldo', 'img/files.svg', '?pagina=backup'],
+    'Backup' => ['Gestionar Backup', 'img/files.svg', '?pagina=backup'],
     
     // MÓDULOS DE REPORTES (AGREGADOS)
     'reporteUsuario' => ['Reporte de Perfiles', 'img/chart-bar.svg', '?pagina=reporteUsuario'],
@@ -169,14 +169,14 @@ $grupos = [
         'condicion' => ((!empty($permisosConsulta['Cuentas bancarias']) || !empty($permisosConsulta['Finanzas'])) && $nombre_rol !== 'Cliente')
     ],
     'Administrar Seguridad' => [
-        'modulos' => ['permisos', 'Roles', 'bitacora', 'Respaldo'],
+        'modulos' => ['permisos', 'Roles', 'bitacora', 'Backup'],
         'reportes' => [],
         'icon' => 'img/key-round.svg',
         'color' => '#fd7e14',
         'condicion' => !empty($permisosConsulta['permisos']) || 
                       !empty($permisosConsulta['Roles']) || 
                       !empty($permisosConsulta['bitacora']) || 
-                      !empty($permisosConsulta['Respaldo'])
+                      !empty($permisosConsulta['Backup'])
     ],
 ];
 

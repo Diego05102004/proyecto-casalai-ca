@@ -143,7 +143,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     <input type="hidden" id="modificar_id_categoria" name="id_categoria">
                     <div class="form-group">
                         <label for="modificar_nombre_categoria">Nombre de la categoría</label>
-                        <input type="text" class="form-control" id="modificar_nombre_categoria"
+                        <input type="text" disabled class="form-control" id="modificar_nombre_categoria"
                             name="nombre_categoria" maxlength="20" required>
                         <span class="span-value-modal" id="smnombre_categoria"></span>
                     </div>

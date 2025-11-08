@@ -202,11 +202,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                     data-costo_inversion="<?= htmlspecialchars($recepcion['costo_inversion']) ?>">
                                     <img src="img/eye.svg">
                                 </button>
+                                <?php if ($_SESSION['nombre_rol'] == 'Administrador' || $_SESSION['nombre_rol'] == 'SuperUsuario'): ?>
                                 <button class="btn-anular"
                                     title="Anular Recepción"
                                     data-correlativo="<?= htmlspecialchars($recepcion['correlativo']) ?>">
                                     <img src="img/circle-x.svg">
                                 </button>
+                                <?php endif; ?>
                             </ul>
                         </td>
                     </tr>
