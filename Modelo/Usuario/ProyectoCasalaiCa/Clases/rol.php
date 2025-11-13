@@ -1,6 +1,8 @@
 <?php
-require_once 'config/config.php';
-
+namespace Usuario\ProyectoCasalaiCa\Clases;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use PDO;
+use PDOException;
 class Rol extends BD {
 
     private $id_rol;

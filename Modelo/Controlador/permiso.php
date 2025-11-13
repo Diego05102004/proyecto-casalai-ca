@@ -1,9 +1,9 @@
 <?php
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/usuario.php';
-require_once 'Modelo/bitacora.php';
-require_once 'Modelo/notificacion.php';
-
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Clases\Usuario;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 define('MODULO_PERMISOS', 17);
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }

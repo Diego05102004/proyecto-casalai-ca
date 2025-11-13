@@ -1,10 +1,12 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Clases;
-
-use Usuario\ProyectoCasalaiCa\BD;
-
-require_once 'factura.php';
-require_once 'ordendespacho.php';
+use Usuario\ProyectoCasalaiCa\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Clases\OrdenDeDespacho;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use PDO;
+use PDOException;
+use PDOStatement;
+use RuntimeException;
 
 class PasareladePago extends Factura {
     private $id_detalles;

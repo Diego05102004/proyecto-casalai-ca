@@ -1,10 +1,9 @@
 <?php
 ob_start();
-
-require_once 'Modelo/proveedor.php';
-require_once 'Modelo/producto.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Proveedores;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\Productos;
 
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 

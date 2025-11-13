@@ -1,11 +1,13 @@
 <?php 
 ob_start();
-require_once 'Modelo/pasareladepago.php';
-require_once 'Modelo/cuenta.php';
-require_once 'Modelo/Factura.php';
-require_once 'Modelo/bitacora.php';
-require_once 'Modelo/DolarService.php';
-require_once 'Modelo/notificacion.php';
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Clases\PasareladePago;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Clases\Cuentabanco;
+
 define('MODULO_PASARELA_PAGOS', 16); // Define el ID del módulo
 
 // Registrar acceso al módulo si hay sesión activa

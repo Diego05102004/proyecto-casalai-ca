@@ -3,11 +3,10 @@ ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-require_once 'Modelo/usuario.php';
-require_once 'Modelo/rol.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Usuarios;
+use Usuario\ProyectoCasalaiCa\Clases\Rol;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
 define('MODULO_USUARIO', 1);
 
 $permisos = new Permisos();

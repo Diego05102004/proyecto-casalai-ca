@@ -1,10 +1,11 @@
 <?php
 ob_start();
-require __DIR__ . '/../public/fpdf/fpdf.php';
-require_once 'Modelo/ordendespacho.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
-require_once 'Modelo/notificacion.php';
+require __DIR__ . '/../../public/fpdf/fpdf.php';
+use Usuario\ProyectoCasalaiCa\Clases\OrdenDespacho;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 define('MODULO_ORDEN_DESPACHO', 14);
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }

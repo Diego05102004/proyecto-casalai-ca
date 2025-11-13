@@ -1,11 +1,10 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
+namespace Usuario\ProyectoCasalaiCa\Clases;
 use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 use PDO;
 use PDOException;
 
-
-class Compra extends BD{
+class Comprafisica extends BD{
     private $idcliente;
     private $correlativo;
     private $desc;

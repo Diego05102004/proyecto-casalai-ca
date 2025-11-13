@@ -1,9 +1,10 @@
 <?php
 // Requires organizados al inicio
-require_once 'Modelo/Recepcion.php';
-require_once 'Modelo/notificacion.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Recepcion;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 
 define('MODULO_RECEPCION', 2); // Define el ID del módulo de cuentas bancarias
 

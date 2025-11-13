@@ -1,13 +1,14 @@
 <?php
 ob_start();
-require_once 'Modelo/pasareladepago.php';
-require_once 'Modelo/cuenta.php';
-require_once 'Modelo/Factura.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
-require_once 'Modelo/DolarService.php';
-require_once 'Modelo/notificacion.php';
-require_once 'Modelo/ordendespacho.php';
+use Usuario\ProyectoCasalaiCa\Clases\PasareladePago;
+use Usuario\ProyectoCasalaiCa\Clases\Cuentabanco;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Clases\OrdenDespacho;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+
 define('MODULO_PASARELA_PAGOS', 16); // Define el ID
 $bitacoraModel = new Bitacora();
 $id_rol = $_SESSION['id_rol'];

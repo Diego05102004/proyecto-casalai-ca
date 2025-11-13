@@ -1,10 +1,10 @@
 <?php  
+use Usuario\ProyectoCasalaiCa\Clases\Despacho;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Clases\Recepcion;
 
-require_once 'Modelo/notificacion.php';
-require_once("Modelo/Recepcion.php");
-require_once("Modelo/Despacho.php");
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
 
 $reporteDespacho = new Despacho();
 $despachoEstado = $reporteDespacho->getDespachosEstado();

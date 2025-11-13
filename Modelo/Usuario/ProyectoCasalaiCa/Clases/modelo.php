@@ -1,7 +1,8 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Clases;
-
-use Usuario\ProyectoCasalaiCa\BD;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use PDO;
+use PDOException;
 
 
 class modelo extends BD{

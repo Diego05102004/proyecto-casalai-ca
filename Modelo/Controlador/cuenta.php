@@ -2,9 +2,10 @@
 ob_start();
 
 // Requires
-require_once 'Modelo/cuenta.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Cuentabanco;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
 
 // Constantes de módulo
 define('MODULO_CUENTA_BANCARIA', 15);

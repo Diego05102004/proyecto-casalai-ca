@@ -1,8 +1,8 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
-
-use Usuario\ProyectoCasalaiCa\BD;
-
+namespace Usuario\ProyectoCasalaiCa\Clases;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use PDO;
+use PDOException;
 
 class OrdenDespacho extends BD {
     

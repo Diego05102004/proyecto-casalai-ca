@@ -4,9 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'Modelo/producto.php';
-require_once 'Modelo/DolarService.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Productos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\DolarService;
 
 $productosModel = new Productos();
 $bitacoraModel = new Bitacora();

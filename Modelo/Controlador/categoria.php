@@ -1,8 +1,8 @@
 <?php
 ob_start();
-require_once 'Modelo/categoria.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Categoria;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
 
 define('MODULO_CATEGORIA', 7);
 

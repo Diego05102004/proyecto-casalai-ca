@@ -3,20 +3,21 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
 // Página y dependencias
 $pagina = 'comprafisica';
-require_once 'Modelo/comprafisica.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/ordendespacho.php';
-require_once 'Modelo/bitacora.php';
-require_once 'Modelo/cuenta.php';
-require_once 'Modelo/DolarService.php';
-require_once 'Modelo/notificacion.php';
-require_once 'Modelo/Factura.php';
-
+use Usuario\ProyectoCasalaiCa\Clases\Comprafisica;
+use Usuario\ProyectoCasalaiCa\Clases\OrdenDespacho;
+use Usuario\ProyectoCasalaiCa\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Clases\Cuentabanco;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\Finanza;
+use Usuario\ProyectoCasalaiCa\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 // Constante de módulo
 define('MODULO_DESPACHO', 3);
 
 // Inicializaciones
-$k = new Compra();
+$k = new Comprafisica();
 $data = [];
 $dolarService = new DolarService();
 $precioDolar = $dolarService->obtenerPrecioDolar();
@@ -60,7 +61,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
 
     function getdespacho()
     {
-        $despacho = new Compra();
+        $despacho = new Comprafisica();
         return $despacho->getdespacho();
     }
 

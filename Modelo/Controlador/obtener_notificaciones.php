@@ -1,7 +1,8 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../Config/Config.php';
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Clases\Notificaciones;
 
 header('Content-Type: application/json');
 

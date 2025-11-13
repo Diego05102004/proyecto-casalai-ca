@@ -513,7 +513,7 @@ if (isset($_SESSION['id_usuario'])) {
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = '?pagina=cerrar';
+                window.location.href = '?pagina=login';
             }
         });
     }
@@ -675,7 +675,7 @@ if (isset($_SESSION['id_usuario'])) {
                     e.stopPropagation();
                     const idNotificacion = this.getAttribute('data-id');
                     
-                    fetch('Controlador/marcar_notificacion.php', {
+                    fetch('Modelo/Controlador/marcar_notificacion.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -741,7 +741,7 @@ if (isset($_SESSION['id_usuario'])) {
     });
 
     function actualizarTasaCambio() {
-        fetch('Controlador/obtener_tasa_cambio.php')
+        fetch('Modelo/Controlador/obtener_tasa_cambio.php')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Error en la respuesta del servidor');
@@ -778,7 +778,7 @@ if (isset($_SESSION['id_usuario'])) {
     }
 
     function actualizarNotificaciones() {
-        fetch('Controlador/obtener_notificaciones.php')
+        fetch('Vista/Modelo/Controlador/obtener_notificaciones.php')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Error en la respuesta del servidor');
@@ -823,7 +823,7 @@ if (isset($_SESSION['id_usuario'])) {
     }
 
     function actualizarCarritoCount() {
-    fetch('Controlador/obtener_carrito_count.php')
+    fetch('Modelo/Controlador/obtener_carrito_count.php')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Error en la respuesta del servidor');

@@ -1,8 +1,11 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
+namespace Usuario\ProyectoCasalaiCa\Clases;
+
 use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 use PDO;
 use PDOException;
+use PDOStatement;
+use RuntimeException;
 class Backup {
     private $tipo;
 

@@ -5,12 +5,13 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
-require_once 'Modelo/producto.php';
-require_once 'Modelo/carrito.php';
-require_once 'Modelo/factura.php';
-require_once 'Modelo/DolarService.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Productos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Carrito;
+use Usuario\ProyectoCasalaiCa\Clases\Factura;
+
 define('MODULO_CARRITO', 11);
 
 if (!isset($_SESSION['id_usuario'])) {

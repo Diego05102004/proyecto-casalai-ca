@@ -43,14 +43,14 @@ class Permisos extends BD {
         }
     }
 
-    public function getPermisosPorRolModulo() {
-        return $this->o_permisosPorRolModulo();
+    public static function getPermisosPorRolModulo() {
+        return self::o_permisosPorRolModulo();
     }
-    private function o_permisosPorRolModulo() {
+    private static function o_permisosPorRolModulo() {
         $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
+        $conex = $conexion->getConexion();
         try {
-            $stmt = $this->conex->query("SELECT id_rol, id_modulo, accion, estatus FROM tbl_permisos");
+            $stmt = $conex->query("SELECT id_rol, id_modulo, accion, estatus FROM tbl_permisos");
             $permisos = [];
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 if ($row['estatus'] === 'Permitido') {
@@ -59,8 +59,10 @@ class Permisos extends BD {
             }
             return $permisos;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($conexion)) { 
+                $conexion->cerrar(); 
+            }
+            // Eliminamos la referencia a $this->conex ya que es un método estático
         }
     }
 

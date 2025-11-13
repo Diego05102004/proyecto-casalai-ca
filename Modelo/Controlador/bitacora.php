@@ -3,9 +3,8 @@ ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-require_once 'Modelo/bitacora.php';
-require_once 'Modelo/permiso.php';
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
 
 define('MODULO_BITACORA', 1);
 

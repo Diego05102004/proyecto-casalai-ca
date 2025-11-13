@@ -1,8 +1,8 @@
 <?php
 ob_start();
-require_once 'Modelo/marca.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\marca;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 define('MODULO_MARCA', 4);

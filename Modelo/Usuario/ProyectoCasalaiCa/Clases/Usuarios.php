@@ -1,6 +1,8 @@
 <?php 
-require_once __DIR__ . '/../Config/config.php';
-
+namespace Usuario\ProyectoCasalaiCa\Clases;
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use PDO;
+use PDOException;
 class Usuarios extends BD {
     
     private $conex;

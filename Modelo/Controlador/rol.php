@@ -1,9 +1,10 @@
 <?php
 ob_start();
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require_once 'Modelo/rol.php';
-require_once 'Modelo/permiso.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Rol;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+
 define('MODULO_ROLES', 18);
 
 $id_rol = $_SESSION['id_rol'] ?? 0;

@@ -3,11 +3,10 @@ ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-require_once __DIR__ . '/../Modelo/usuario.php';
-require_once __DIR__ . '/../Modelo/rol.php';
-require_once __DIR__ . '/../Modelo/permiso.php';
-require_once __DIR__ . '/../Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Usuarios;
+use Usuario\ProyectoCasalaiCa\Clases\Rol;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
 define('MODULO_USUARIO', 1);
 
 if (!isset($_SESSION['id_usuario'])) {

@@ -1,13 +1,9 @@
 <?php
 
-if (!is_file("Modelo/Factura.php")) {
-    echo "Falta definir la clase Factura";
-    exit;
-}
+use Usuario\ProyectoCasalaiCa\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\Permisos;
 
-require_once("Modelo/Factura.php");
-require_once 'Modelo/bitacora.php';
-require_once('Modelo/permiso.php');
 $permisosObj = new Permisos();
 $permisosUsuario = $permisosObj->getPermisosPorRolModulo();
 if (is_file("Vista/gestionarfactura.php")) {

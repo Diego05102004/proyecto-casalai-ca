@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once __DIR__ . '/../Config/Config.php';
-require_once __DIR__ . '/../Modelo/carrito.php';
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Clases\Carrito;
 
 header('Content-Type: application/json');
 

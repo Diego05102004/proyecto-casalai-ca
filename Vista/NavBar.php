@@ -1,7 +1,7 @@
 <?php
 // Obtener datos de la tasa BCV para usuarios no logeados
-require_once 'Config/Config.php';
-require_once 'Modelo/DolarService.php';
+use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Clases\DolarService;
 $dolarService = new DolarService();
 $registroDolar = $dolarService->obtenerRegistroDelDia();
 $tasaBCV = isset($registroDolar['precio']) ? (float)$registroDolar['precio'] : $dolarService->obtenerPrecioDelDia();

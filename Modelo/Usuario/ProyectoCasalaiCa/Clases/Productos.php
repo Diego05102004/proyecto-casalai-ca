@@ -4,6 +4,7 @@ namespace Usuario\ProyectoCasalaiCa\Clases;
 use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 use PDO;
 use PDOException;
+use PDOStatement;
 use RuntimeException;
 class Productos extends BD{
     private $conex;
@@ -42,8 +43,9 @@ class Productos extends BD{
 
     private $precio;
     
-    function __construct() {
-        $this->conex = null;
+    public function __construct() {
+        parent::__construct(); // Initialize parent BD class
+        $this->conex = $this->getConexion(); // Get the PDO connection from parent
     }
 
     // Getters y Setters
@@ -999,21 +1001,34 @@ public function obtenerOCrearCarrito($id_cliente) {
     return $this->obtCrearCarrito($id_cliente);
 }
 private function obtCrearCarrito($id_cliente) {
-    $sql = "SELECT id_carrito FROM tbl_carrito 
-            WHERE id_cliente = :id_cliente
-            ORDER BY fecha_creacion DESC LIMIT 1";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_cliente', $id_cliente);
-    $stmt->execute();
-    $carrito = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($carrito) {
-        return $carrito['id_carrito'];
+    // Asegurarse de que tenemos una conexión válida
+    if ($this->conex === null) {
+        $bd = new BD('P');
+        $this->conex = $bd->getConexion();
     }
-    $sql = "INSERT INTO tbl_carrito (id_cliente) VALUES (:id_cliente)";
-    $stmt = $this->conex->prepare($sql);
-    $stmt->bindParam(':id_cliente', $id_cliente);
-    $stmt->execute();
-    return $this->conex->lastInsertId();
+    
+    try {
+        $sql = "SELECT id_carrito FROM tbl_carrito 
+                WHERE id_cliente = :id_cliente
+                ORDER BY fecha_creacion DESC LIMIT 1";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_cliente', $id_cliente);
+        $stmt->execute();
+        $carrito = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($carrito) {
+            return $carrito['id_carrito'];
+        }
+        
+        $sql = "INSERT INTO tbl_carrito (id_cliente) VALUES (:id_cliente)";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_cliente', $id_cliente);
+        $stmt->execute();
+        return $this->conex->lastInsertId();
+    } catch (PDOException $e) {
+        error_log("Error en obtCrearCarrito: " . $e->getMessage());
+        throw $e; // Relanzar la excepción para manejarla más arriba
+    }
 }
 
 public function agregarComboAlCarrito($id_cliente, $id_combo) {

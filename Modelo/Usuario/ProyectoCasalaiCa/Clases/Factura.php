@@ -1,5 +1,5 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
+namespace Usuario\ProyectoCasalaiCa\Clases;
 use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 use PDO;
 use PDOException;
@@ -101,7 +101,7 @@ private function a_agregarProducto($idFactura, $idProducto, $cantidad) {
             case 'DescargarFactura':
                 return $this->facturaDescargar($this->id);
             default:
-                throw new Exception("Transacción no válida.");
+                throw new PDOException("Transacción no válida.");
         }
     }
 
@@ -119,7 +119,7 @@ private function facturaIngresar() {
         $clienteData = $stmtCliente->fetch(PDO::FETCH_ASSOC);
 
         if (!$clienteData) {
-            throw new Exception("No se encontró un cliente con la cédula indicada.");
+            throw new PDOException("No se encontró un cliente con la cédula indicada.");
         }
 
         $id_cliente = $clienteData['id_clientes'];
@@ -130,12 +130,12 @@ private function facturaIngresar() {
 
         $factura_id = $pdo->lastInsertId();
         if (!$factura_id) {
-            throw new Exception("No se pudo insertar la factura.");
+            throw new PDOException("No se pudo insertar la factura.");
         }
 
         // Validar que $this->id_producto y $this->cantidad sean arrays y tengan la misma longitud
         if (!is_array($this->id_producto) || !is_array($this->cantidad) || count($this->id_producto) !== count($this->cantidad)) {
-            throw new Exception("Datos de productos y cantidades inválidos o no coinciden.");
+            throw new PDOException("Datos de productos y cantidades inválidos o no coinciden.");
         }
 
         $detalle_insertados = 0;
@@ -145,7 +145,7 @@ private function facturaIngresar() {
             $cantidad = $this->cantidad[$index];
 
             if (empty($id_producto) || empty($cantidad)) {
-                throw new Exception("Producto o cantidad vacío en el índice $index.");
+                throw new PDOException("Producto o cantidad vacío en el índice $index.");
             }
 
             $stmt2->execute([$factura_id, $id_producto, $cantidad]);
@@ -153,12 +153,12 @@ private function facturaIngresar() {
         }
 
         if ($detalle_insertados !== count($this->id_producto)) {
-            throw new Exception("No se insertaron todos los detalles de la factura.");
+            throw new PDOException("No se insertaron todos los detalles de la factura.");
         }
 
         $pdo->commit();
         return true;
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         return ['error' => $e->getMessage()];
     } finally {
@@ -233,7 +233,7 @@ private function facturaIngresar() {
         if ($result && (time() - strtotime($result['fecha'])) < 86400) {
             $tasa = floatval($result['precio']);
         }
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         error_log('Error al obtener cache del dólar: ' . $e->getMessage());
     }
 
@@ -468,7 +468,7 @@ private function facturaConsultar() {
         if ($result && (time() - strtotime($result['fecha'])) < 86400) {
             $tasa = floatval($result['precio']);
         }
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         error_log('Error al obtener cache del dólar: ' . $e->getMessage());
     }
     
@@ -717,13 +717,13 @@ private function facturaConsultar() {
                 if ($result && (time() - strtotime($result['fecha'])) < 86400) {
                     $tasa = floatval($result['precio']);
                 }
-            } catch (Exception $e) {
+            } catch (PDOException $e) {
                 error_log('Error al obtener cache del dólar: ' . $e->getMessage());
             }
             $total = $resultado['total_con_impuesto'] * $tasa;
             $conexion->cerrar();
             return $total;
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             error_log('Error al obtener monto total de factura: ' . $e->getMessage());
             return false;
         }
@@ -751,7 +751,7 @@ private function facturaConsultar() {
                 $tasa = floatval($result['precio']);
             }
             $conexion->cerrar();
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             error_log('Error al obtener cache del dólar: ' . $e->getMessage());
             $tasa = 1; // Valor por defecto en caso de error
         }
