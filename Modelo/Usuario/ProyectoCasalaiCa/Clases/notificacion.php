@@ -1,9 +1,13 @@
 <?php
 <<<<<<< Updated upstream:Modelo/Usuario/ProyectoCasalaiCa/Clases/notificacion.php
+<<<<<<< Updated upstream:Modelo/Usuario/ProyectoCasalaiCa/Clases/notificacion.php
 namespace Usuario\ProyectoCasalaiCa\Clases;
 
 use Usuario\ProyectoCasalaiCa\BD;
 
+=======
+require_once __DIR__ . '/../Config/Config.php';
+>>>>>>> Stashed changes:Modelo/notificacion.php
 =======
 require_once __DIR__ . '/../Config/Config.php';
 >>>>>>> Stashed changes:Modelo/notificacion.php
