@@ -233,14 +233,76 @@ $(document).ready(function () {
             contentType: false,
             processData: false,
             cache: false,
+            dataType: 'json', // Esperamos una respuesta JSON
             success: function (respuesta) {
-                if (typeof respuesta === "string") {
-                    respuesta = JSON.parse(respuesta);
-                }
+                // Si llegamos aquí, la respuesta es JSON válido
                 if(callback) callback(respuesta);
             },
-            error: function () {
-                Swal.fire('Error', 'Error en la solicitud AJAX', 'error');
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('Error en la solicitud AJAX:', {
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    responseText: jqXHR.responseText
+                });
+
+                let errorMessage = 'Error en la solicitud al servidor';
+                let responseData = null;
+
+                try {
+                    // Intentar parsear la respuesta como JSON
+                    if (jqXHR.responseText) {
+                        responseData = JSON.parse(jqXHR.responseText);
+                        if (responseData && responseData.message) {
+                            errorMessage = responseData.message;
+                        }
+                    } else if (jqXHR.status === 0) {
+                        errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+                    } else if (jqXHR.status === 404) {
+                        errorMessage = 'No se encontró el recurso solicitado.';
+                    } else if (jqXHR.status === 500) {
+                        errorMessage = 'Error interno del servidor. Por favor, inténtalo de nuevo más tarde.';
+                    }
+                } catch (e) {
+                    // Si la respuesta no es JSON, mostrarla como texto plano
+                    console.log('La respuesta no es un JSON válido, mostrando como texto plano');
+                    if (jqXHR.responseText) {
+                        // Limpiar cualquier HTML o script que pueda estar en la respuesta
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = jqXHR.responseText;
+                        const textContent = tempDiv.textContent || tempDiv.innerText || '';
+                        
+                        // Mostrar solo las primeras líneas para evitar mensajes muy largos
+                        const lines = textContent.split('\n').filter(line => line.trim() !== '');
+                        errorMessage = 'Error en el servidor: ' + (lines[0] || 'Error desconocido');
+                        
+                        // Si hay un error de PHP, mostrar más detalles en la consola
+                        if (textContent.includes('Fatal error') || textContent.includes('Parse error')) {
+                            console.error('Error de PHP detectado:', textContent);
+                            errorMessage = 'Error en el servidor (ver consola para más detalles)';
+                        }
+                    }
+                }
+
+                // Mostrar el error al usuario
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    html: errorMessage,
+                    footer: 'Si el problema persiste, contacta al administrador.'
+                });
+
+                // Llamar al callback con un objeto de error estándar
+                if (callback) {
+                    callback({
+                        status: 'error',
+                        message: errorMessage,
+                        error: {
+                            status: jqXHR.status,
+                            statusText: jqXHR.statusText,
+                            responseText: jqXHR.responseText
+                        }
+                    });
+                }
             }
         });
     }
@@ -279,7 +341,7 @@ $(document).ready(function () {
         e.preventDefault();
 
         const datos = {
-            nombre_categoria: $('#modificar_nombre_categoria').val()
+            nombre_categoria: $('#modificar_nombre_categoria').val().trim()
         };
 
         const errores = validarCategoria(datos);
@@ -293,8 +355,49 @@ $(document).ready(function () {
             return;
         }
 
-        var formData = new FormData(this);
+        // Crear array para almacenar las características
+        const caracteristicas = [];
+        
+        // Buscar en el contenedor de características
+        const contenedor = document.getElementById('modificar_caracteristicasContainer');
+        if (contenedor) {
+            const caracteristicasElements = contenedor.querySelectorAll('.caracteristica-item');
+            
+            caracteristicasElements.forEach((caracteristica, index) => {
+                const nombreInput = caracteristica.querySelector('input[name$="[nombre]"]');
+                const tipoSelect = caracteristica.querySelector('select[name$="[tipo]"]');
+                const maxInput = caracteristica.querySelector('input[name$="[max]"]');
+                
+                const nombre = nombreInput ? nombreInput.value.trim() : '';
+                const tipo = tipoSelect ? tipoSelect.value : 'string';
+                const max = maxInput ? maxInput.value : '255';
+                
+                // Incluir la característica aunque el nombre esté vacío
+                caracteristicas.push({
+                    nombre: nombre || 'caracteristica_' + Date.now(), // Nombre por defecto si está vacío
+                    tipo: tipo,
+                    max: tipo === 'string' ? max : undefined
+                });
+            });
+        }
+
+        // Crear objeto con todos los datos para depuración
+        const datosEnvio = {
+            accion: 'modificar',
+            id_categoria: $('#modificar_id_categoria').val(),
+            nombre_categoria: datos.nombre_categoria,
+            caracteristicas: caracteristicas
+        };
+
+        // Mostrar datos que se enviarán
+        console.log('📤 Datos a enviar al servidor:', datosEnvio);
+
+        // Crear FormData con todos los datos necesarios
+        const formData = new FormData();
         formData.append('accion', 'modificar');
+        formData.append('id_categoria', datosEnvio.id_categoria);
+        formData.append('nombre_categoria', datosEnvio.nombre_categoria);
+        formData.append('caracteristicas', JSON.stringify(datosEnvio.caracteristicas));
         $.ajax({
             url: '',
             type: 'POST',
@@ -349,8 +452,26 @@ $(document).ready(function () {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error al modificar la categoria:', textStatus, errorThrown);
-                muestraMensaje('Error al modificar la categoria.');
+                console.error('Error al modificar la categoria:', textStatus, errorThrown, jqXHR.responseText);
+                let errorMsg = 'Error al modificar la categoría. Intente nuevamente.';
+                
+                // Intentar parsear la respuesta como JSON primero
+                try {
+                    const response = JSON.parse(jqXHR.responseText);
+                    if (response && response.message) {
+                        errorMsg = response.message;
+                    }
+                } catch (e) {
+                    // Si no es JSON válido, mostrar un mensaje genérico
+                    console.error('La respuesta no es un JSON válido:', e);
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMsg,
+                    footer: 'Si el problema persiste, contacte al administrador.'
+                });
             }
         });
     });
@@ -550,13 +671,27 @@ $(document).ready(function () {
     // Abrir modal de modificar y cargar datos
     $(document).on('click', '.btn-modificar', function () {
         const id = $(this).data('id');
+        const nombre = $(this).data('nombre');
+        
+        // Limpiar el formulario
+        $('#modificarCategoria')[0].reset();
         $('#modificar_id_categoria').val(id);
+        $('#modificar_nombre_categoria').val(nombre);
         $('#smnombre_categoria').text('');
+
+        // Limpiar contenedor de características
+        const contenedor = document.getElementById('modificar_caracteristicasContainer');
+        contenedor.innerHTML = '';
+        modificarContador = 0;
 
         // AJAX para obtener datos de la categoría y sus características
         const datos = new FormData();
         datos.append('accion', 'obtener_categoria');
         datos.append('id_categoria', id);
+
+        // Mostrar loading
+        $('#modificarCategoriaModal').modal('show');
+        $('#modificarCategoriaModal .modal-body').append('<div id="loading" class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i> Cargando...</div>');
 
         $.ajax({
             url: '',
@@ -566,18 +701,28 @@ $(document).ready(function () {
             contentType: false,
             dataType: 'json',
             success: function (categoria) {
+                // Ocultar loading
+                $('#loading').remove();
+                
+                // Establecer valores del formulario
                 $('#modificar_nombre_categoria').val(categoria.nombre_categoria);
 
-                // Limpiar y cargar características
-                const contenedor = document.getElementById('modificar_caracteristicasContainer');
+                // Limpiar contenedor primero
                 contenedor.innerHTML = '';
-                modificarContador = 0;
-
-                // Si tu backend retorna un array de características, úsalo aquí
-                if (categoria.caracteristicas && Array.isArray(categoria.caracteristicas)) {
-                    categoria.caracteristicas.forEach((carac, idx) => {
-                        const puedeEliminar = idx !== 0;
-                        contenedor.appendChild(crearInputCaracteristicaMod(modificarContador++, carac.nombre, carac.tipo, carac.max, puedeEliminar));
+                
+                // Cargar características si existen
+                if (categoria.caracteristicas && categoria.caracteristicas.length > 0) {
+                    categoria.caracteristicas.forEach((carac, index) => {
+                        // Solo permitir eliminar si no es la primera característica
+                        const puedeEliminar = index > 0;
+                        const div = crearInputCaracteristicaMod(
+                            modificarContador++,
+                            carac.nombre || '',
+                            carac.tipo || 'string',
+                            carac.max || '255',
+                            puedeEliminar
+                        );
+                        contenedor.appendChild(div);
                     });
                 } else {
                     // Si no hay características, agrega una vacía no eliminable
