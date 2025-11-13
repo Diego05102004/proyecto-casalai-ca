@@ -3,9 +3,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Incluir el modelo de notificaciones
-require_once __DIR__ . '/../modelo/notificacion.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
+// Incluir el modelo de notificaciones (respetando mayúsculas en sistemas sensibles a mayúsculas)
+require_once __DIR__ . '/../Modelo/notificacion.php';
+require_once __DIR__ . '/../Modelo/bitacora.php';
 
 function getNotificacionesUsuario($id_usuario) {
     try {
