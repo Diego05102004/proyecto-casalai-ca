@@ -864,8 +864,12 @@ $(document).ready(function () {
         if (puedeEliminar) {
             div.querySelector('.btn-eliminar-caracteristicas').addEventListener('click', () => {
                 div.parentNode.removeChild(div);
-                modificarContador--;
-                modificarBtnAgregar.disabled = false;
+                // Recalcular total actual tras eliminar y actualizar botón
+                const contenedor = document.getElementById('modificar_caracteristicasContainer');
+                modificarContador = contenedor.querySelectorAll('.caracteristica-item').length;
+                if (modificarBtnAgregar) {
+                    modificarBtnAgregar.disabled = (modificarContador >= modificarMaxCaracteristicas);
+                }
             });
         }
 
@@ -941,6 +945,20 @@ $(document).ready(function () {
                 modificarBtnAgregar = document.getElementById('modificar_agregarCaracteristica');
                 modificarBtnAgregar.disabled = modificarContador >= modificarMaxCaracteristicas;
 
+                // Limpiar estados visuales y ajustar visibilidad/attrs de max según tipo
+                $('#modificar_caracteristicasContainer .caracteristica-item input, #modificar_caracteristicasContainer .caracteristica-item select')
+                    .removeClass('is-valid is-invalid');
+                $('#modificar_caracteristicasContainer .caracteristica-item').each(function(){
+                    const $item = $(this);
+                    const $tipo = $item.find('select[name*="[tipo]"]');
+                    const $max = $item.find('input[name*="[max]"]');
+                    if ($tipo.val() === 'string') {
+                        $max.css('display','').prop('required', true).attr({min:1, max:100, maxlength:3, step:1});
+                    } else {
+                        $max.val('').css('display','none').prop('required', false);
+                    }
+                });
+
                 $('#modificarCategoriaModal').modal('show');
             },
             error: function () {
@@ -952,12 +970,36 @@ $(document).ready(function () {
     // Agregar característica en el modal de modificar
     $(document).on('click', '#modificar_agregarCaracteristica', function () {
         const contenedor = document.getElementById('modificar_caracteristicasContainer');
+        // Recalcular contador desde el DOM para soportar cierres/resets
+        modificarContador = contenedor.querySelectorAll('.caracteristica-item').length;
         if (modificarContador < modificarMaxCaracteristicas) {
             contenedor.appendChild(crearInputCaracteristicaMod(modificarContador++));
-            if (modificarContador === modificarMaxCaracteristicas) {
-                this.disabled = true;
-            }
         }
+        // Actualizar estado del botón
+        const total = contenedor.querySelectorAll('.caracteristica-item').length;
+        this.disabled = (total >= modificarMaxCaracteristicas);
+    });
+
+    // Al mostrar el modal de modificar, limpiar estados visuales
+    $('#modificarCategoriaModal').on('shown.bs.modal', function(){
+        $('#modificar_caracteristicasContainer .caracteristica-item input, #modificar_caracteristicasContainer .caracteristica-item select')
+            .removeClass('is-valid is-invalid');
+        const contenedor = document.getElementById('modificar_caracteristicasContainer');
+        modificarContador = contenedor ? contenedor.querySelectorAll('.caracteristica-item').length : 0;
+        if (modificarBtnAgregar) {
+            modificarBtnAgregar.disabled = (modificarContador >= modificarMaxCaracteristicas);
+        }
+        // Ajustar visibilidad de max según tipo y setear attrs si corresponde
+        $('#modificar_caracteristicasContainer .caracteristica-item').each(function(){
+            const $item = $(this);
+            const $tipo = $item.find('select[name*="[tipo]"]');
+            const $max = $item.find('input[name*="[max]"]');
+            if ($tipo.val() === 'string') {
+                $max.css('display','').prop('required', true).attr({min:1, max:100, maxlength:3, step:1});
+            } else {
+                $max.val('').css('display','none').prop('required', false);
+            }
+        });
     });
 
     // FUNCIONES UTILITARIAS
