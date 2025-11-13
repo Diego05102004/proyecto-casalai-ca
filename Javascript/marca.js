@@ -7,7 +7,7 @@ if (typeof nombre_rol !== "undefined" && nombre_rol === 'SuperUsuario') {
     esSuperUsuario = true;
 }
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     $("#nombre_marca").on("keypress", function(e){
@@ -86,24 +86,24 @@ function verificarPermisosEnTiempoReal() {
     
 }
 
-
-
 // Llama la función al cargar la página y luego cada 10 segundos
 $(document).ready(function() {
     verificarPermisosEnTiempoReal();
     setInterval(verificarPermisosEnTiempoReal, 1000); // 10 segundos
 });
     function validarEnvioMarca(){
-        let nombre = document.getElementById("nombre_marca");
-        nombre.value = space(nombre.value).trim();
+        let nombre = $("#nombre_marca");
+        nombre.val(space(nombre.val()).trim());
+        const userVal = nombre.val();
 
-        if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]{2,25}$/,
-            $("#nombre_marca"),
-            $("#snombre_marca"),
-            "*El nombre debe tener letras y/o números*"
-        )==0){
-            mensajes('error',4000,'Verifique el nombre de la marca','Debe tener letras y/o números');
+        if (userVal === "") {
+            $("#snombre_marca").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el nombre de la marca','El campo está vacío.');
+            return false;
+        }
+        if (userVal.length < 2) {
+            $("#snombre_marca").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre de la marca','Debe tener mínimo 2 caracteres.');
             return false;
         }
         return true;
@@ -199,36 +199,31 @@ $(document).ready(function() {
         );
     });
 
-    function validarMarca(datos) {
-        let errores = [];
-        if (!/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ0-9\s\b]{2,25}$/.test(datos.nombre_marca)) {
-            errores.push("El nombre debe tener letras y/o números.");
-        }
-        return errores;
-    }
-
     $(document).on('click', '.btn-modificar', function () {
         $('#modificar_id_marca').val($(this).data('id'));
         $('#modificar_nombre_marca').val($(this).data('nombre'));
         $('#smnombre_marca').text('');
+        // Guardar la fila origen para actualizarla tras el éxito
+        const $row = $(this).closest('tr');
+        $('#modificarMarcaModal').data('row', $row);
         $('#modificarMarcaModal').modal('show');
     });
     
     $('#modificarMarca').on('submit', function(e) {
         e.preventDefault();
 
-        const datos = {
-            nombre_marca: $('#modificar_nombre_marca').val()
-        };
+        const $nombre = $('#modificar_nombre_marca');
+        $nombre.val(space($nombre.val()).trim());
+        const valor = $nombre.val();
 
-        const errores = validarMarca(datos);
-
-        if (errores.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                html: errores.join('<br>')
-            });
+        if (valor === '') {
+            $('#smnombre_marca').text('*Este campo es obligatorio*');
+            mensajes('error','Verifique el nombre de la marca','El campo está vacío.');
+            return;
+        }
+        if (valor.length < 2) {
+            $('#smnombre_marca').text('*Mínimo 2 caracteres*');
+            mensajes('error','Verifique el nombre de la marca','Debe tener mínimo 2 caracteres.');
             return;
         }
 
@@ -250,39 +245,56 @@ $(document).ready(function() {
                     text: 'La marca se ha modificado correctamente'
                 });
 
-                const marca = response.marca;
+                const marca = response.marca || {};
+                const $rowRef = $('#modificarMarcaModal').data('row');
+                const idFallback = $('#modificar_id_marca').val() || ($rowRef && $rowRef.attr('data-id')) || '';
+                const idSeguro = (marca.id_marca !== undefined && marca.id_marca !== null && String(marca.id_marca) !== '') ? marca.id_marca : idFallback;
                 const nuevaFila = [
-                    `<span class="campo-numeros">${marca.id_marca}</span>`,
+                    `<span class="campo-numeros">${idSeguro}</span>`,
                     `<span class="campo-nombres">${marca.nombre_marca}</span>`,
                     `<ul>
                         <button class="btn-modificar"
                             title="Modificar Marca"
-                            data-id="${marca.id_marca}"
+                            data-id="${idSeguro}"
                             data-nombre="${marca.nombre_marca}">
                             <img src="img/pencil.svg">
                         </button>
                         <button class="btn-eliminar"
                             title="Eliminar Marca"
-                            data-id="${marca.id_marca}">
+                            data-id="${idSeguro}">
                             <img src="img/circle-x.svg">
                         </button>
                     </ul>`
                 ];
 
                 const tabla = $('#tablaConsultas').DataTable();
-                const page = tabla.page();
-                const rowApi = tabla.row(`tr[data-id="${marca.id_marca}"]`);
-                if (rowApi.any()) {
-                    rowApi.data(nuevaFila).draw(false);
-                    tabla.page(page).draw(false);
-                    const filaNode = rowApi.node();
-                    const $btn = $(filaNode).find('.btn-modificar');
-                    $btn.attr('data-nombre', marca.nombre_marca);
+                // Intentar actualizar la fila guardada al abrir el modal
+                const $row = $('#modificarMarcaModal').data('row');
+                if ($row && $row.length) {
+                    const rowApi = tabla.row($row);
+                    if (rowApi.any()) {
+                        rowApi.data(nuevaFila).draw(false);
+                        // Asegurar data-id y data-nombre actualizados
+                        const node = rowApi.node();
+                        $(node).attr('data-id', idSeguro);
+                        $(node).find('.btn-modificar').attr('data-nombre', marca.nombre_marca);
+                    }
                 } else {
-                    // Fallback: actualizar directamente el DOM si no se encontró la fila en DataTables
-                    const $fila = $(`#tablaConsultas tbody tr[data-id="${marca.id_marca}"]`);
-                    $fila.find('.campo-nombres').text(marca.nombre_marca);
-                    $fila.find('.btn-modificar').attr('data-nombre', marca.nombre_marca);
+                    // Fallback por selector si no se guardó la fila
+                    const rowApi = tabla.row(`tr[data-id="${idSeguro}"]`);
+                    if (rowApi.any()) {
+                        rowApi.data(nuevaFila).draw(false);
+                        const node = rowApi.node();
+                        $(node).attr('data-id', idSeguro);
+                        $(node).find('.btn-modificar').attr('data-nombre', marca.nombre_marca);
+                    } else {
+                        // Fallback DOM directo si DataTables no encuentra la fila
+                        const $fila = $(`#tablaConsultas tbody tr[data-id="${idSeguro}"]`);
+                        if ($fila.length) {
+                            $fila.find('.campo-nombres').text(marca.nombre_marca);
+                            $fila.find('.btn-modificar').attr('data-nombre', marca.nombre_marca);
+                        }
+                    }
                 }
 
             } else {
@@ -352,10 +364,9 @@ $(document).ready(function() {
         tabla.row(fila).remove().draw();
     }
 
-    function mensajes(icono, tiempo, titulo, mensaje){
+    function mensajes(icono, titulo, mensaje){
         Swal.fire({
             icon: icono,
-            timer: tiempo,
             title: titulo,
             text: mensaje,
             showConfirmButton: true,

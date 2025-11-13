@@ -20,7 +20,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="ingresarclientes" method="POST">
+            <form id="ingresarclientes" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="registrarClienteModalLabel">Incluir Cliente</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -30,31 +30,31 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
                 <div class="modal-body">
                     <input type="hidden" name="accion" value="registrar">
                     <div class="envolver-form">
-                        <label for="nombre">Nombre Completo</label>
+                        <label for="nombre">Nombre Completo*</label>
                         <input class="control-form" placeholder="Nombres y apellidos" maxlength="100" type="text" id="nombre" name="nombre" required>
                         <span class="span-value" id="snombre"></span>
                     </div>
 
                     <div class="envolver-form">
-                        <label for="cedula_o_rif">Cédula</label>
+                        <label for="cedula_o_rif">Cédula*</label>
                         <input class="control-form" placeholder="1.234.567 o 12.345.678" maxlength="10" type="text" id="cedula" name="cedula" required>
                         <span class="span-value" id="scedula"></span>
                     </div>
 
                     <div class="envolver-form">
-                        <label for="telefono">Numero de Teléfono</label>
+                        <label for="telefono">Numero de Teléfono*</label>
                         <input class="control-form" placeholder="0400-000-0000" maxlength="13" type="text" id="telefono" name="telefono" required>
                         <span class="span-value" id="stelefono"></span>
                     </div>
                     
                     <div class="envolver-form">
-                        <label for="Direccion">Dirección</label>
-                        <textarea class="form-control" maxlength="100" id="direccion" name="direccion" rows="3"></textarea>
+                        <label for="Direccion">Dirección*</label>
+                        <textarea class="form-control" maxlength="100" id="direccion" name="direccion" rows="2"></textarea>
                         <span class="span-value" id="sdireccion"></span>
                     </div>
                     
                     <div class="envolver-form">
-                        <label for="correo">Correo Electrónico</label>
+                        <label for="correo">Correo Electrónico*</label>
                         <input class="control-form" placeholder="ejemplo@gmail.com" type="text" id="correo" name="correo" maxlength="50" required>
                         <span class="span-value" id="scorreo"></span>
                     </div>
@@ -105,7 +105,7 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
                         </span>
                     </td>
                     <td>
-                        <span class="campo-tex-num">
+                        <span class="campo-numeros">
                             <?php echo htmlspecialchars($cliente['cedula']); ?>
                         </span>
                     </td>
@@ -200,7 +200,7 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
 aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="modificarclientes" method="POST">
+            <form id="modificarclientes" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="modificar_clientes_modal_label">Modificar Cliente</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -216,7 +216,7 @@ aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
                     </div>
                     <div class="form-group">
                         <label for="modificarcedula">Cédula</label>
-                        <input type="text" class="form-control" id="modificarcedula" name="cedula" maxlength="12" required>
+                        <input type="text" class="form-control" id="modificarcedula" name="cedula" maxlength="10" required>
                         <span class="span-value-modal" id="smodificarcedula"></span>
                     </div>
                     <div class="form-group">
@@ -226,7 +226,7 @@ aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
                     </div>
                     <div class="form-group">
                         <label for="modificardireccion">Dirección</label>
-                        <textarea class="form-control" maxlength="100" id="modificardireccion" name="direccion" rows="3"></textarea>
+                        <textarea class="form-control" maxlength="100" id="modificardireccion" name="direccion" rows="2"></textarea>
                         <span class="span-value-modal" id="smodificardireccion"></span>
                     </div>
                     <div class="form-group">

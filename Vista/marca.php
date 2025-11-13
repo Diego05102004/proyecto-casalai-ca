@@ -20,7 +20,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 aria-labelledby="registrarMarcaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="registrarMarca" method="POST">
+            <form id="registrarMarca" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="registrarMarcaModalLabel">Incluir Marca</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -109,7 +109,7 @@ aria-labelledby="registrarMarcaModalLabel" aria-hidden="true">
 <div class="modal fade modal-modificar" id="modificarMarcaModal" tabindex="-1" role="dialog" aria-labelledby="modificarMarcaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="modificarMarca" method="POST">
+            <form id="modificarMarca" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="modificarMarcaModalLabel">Modificar Marca</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">

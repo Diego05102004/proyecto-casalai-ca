@@ -2,7 +2,7 @@ $(document).ready(function () {
 
     // MENSAJE //
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     $("#nombre").on("keypress", function(e){
@@ -74,7 +74,7 @@ $(document).ready(function () {
 
     $("#direccion").on("keyup", function(){
         validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{4,100}$/,
             $(this),
             $("#sdireccion"),
             "*El formato permite letras y números*"
@@ -82,17 +82,18 @@ $(document).ready(function () {
     });
 
     $("#correo").on("keypress", function (e) {
-        validarKeyPress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+        validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
     });
 
-    $("#correo").on("keyup", function(){
+    $("#correo").on("keyup", function () {
         validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            $(this),
-            $("#scorreo"),
-            "*Formato válido: ejemplo@gmail.com*"
+        /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
+        $(this),
+        $("#scorreo"),
+        "*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*"
         );
     });
+    
 function verificarPermisosEnTiempoRealClientes() {
     var datos = new FormData();
     datos.append('accion', 'permisos_tiempo_real');
@@ -149,56 +150,90 @@ $(document).ready(function() {
     setInterval(verificarPermisosEnTiempoRealClientes, 10000); // 10 segundos
 });
     function validarEnvioCliente(){
-        let nombre = document.getElementById("nombre");
-        nombre.value = space(nombre.value).trim();
-
-        let direccion = document.getElementById("direccion");
-        direccion.value = space(direccion.value).trim();
-
+        let nombre = $("#nombre");
+        nombre.val(space(nombre.val()).trim());
+        const nombreVal = nombre.val();
+        if (nombreVal === "") {
+            $("#snombre").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el nombre','El campo está vacío.');
+            return false;
+        }
+        if (nombreVal.length < 2) {
+            $("#snombre").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre','Debe tener mínimo 2 caracteres.');
+            return false;
+        }
         if(validarKeyUp(
             /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{2,100}$/,
             $("#nombre"),
             $("#snombre"),
             "*El nombre debe tener solo letras*"
         )==0){
-            mensajes('error',4000,'Verifique el nombre','Debe tener solo letras');
+            mensajes('error','Verifique el nombre','Debe tener solo letras');
             return false;
         }
-        else if(validarKeyUp(
-            /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
-            $("#cedula"),
-            $("#scedula"),
-            "*Formato válido: 1.234.567 o 12.345.678*"
-        )==0){
-            mensajes('error',4000,'Verifique el número de Cedula','El formato solo permite números.');
+
+        let cedula = $("#cedula");
+        cedula.val(space(cedula.val()).trim());
+        const cedVal = cedula.val();
+        if (cedVal === "") {
+            $("#scedula").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el número de Cédula','El campo está vacío.');
             return false;
         }
-        else if(validarKeyUp(
-            /^\d{4}-\d{3}-\d{4}$/,
-            $("#telefono"),
-            $("#stelefono"),
-            "*Formato válido: 0400-000-0000*"
-        )==0){
-            mensajes('error',4000,'Verifique el teléfono','El formato solo permite números.');
+        if (!/^(?:\d{1,2}\.\d{3}\.\d{3})$/.test(cedVal)) {
+            $("#scedula").text("*Formato válido: 1.234.567 o 12.345.678*");
+            mensajes('error','Verifique el número de Cédula','Formato inválido.');
             return false;
         }
-        else if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
+
+        let telefono = $("#telefono");
+        const telVal = telefono.val().trim();
+        if (telVal === "") {
+            $("#stelefono").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el teléfono','El campo está vacío.');
+            return false;
+        }
+        if (!/^\d{4}-\d{3}-\d{4}$/.test(telVal)) {
+            $("#stelefono").text("*Formato válido: 0400-000-0000*");
+            mensajes('error','Verifique el teléfono','Formato inválido.');
+            return false;
+        }
+
+        let direccion = document.getElementById("direccion");
+        direccion.value = space(direccion.value).trim();
+        const dirVal = $("#direccion").val().trim();
+        if (dirVal === "") {
+            $("#sdireccion").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique la dirección','El campo está vacío.');
+            return false;
+        }
+        if (dirVal.length < 4) {
+            $("#sdireccion").text("*Mínimo 4 caracteres*");
+            mensajes('error','Verifique la dirección','Debe tener mínimo 4 caracteres.');
+            return false;
+        }
+        if(validarKeyUp(
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{4,100}$/,
             $("#direccion"),
             $("#sdireccion"),
-            "*Puede haber letras y números*"
+            "*El formato permite letras y números*"
         )==0){
-            mensajes('error',4000,'Verifique la dirección','Debe tener solo letras y números');
+            mensajes('error','Verifique la dirección','Debe tener solo letras y números');
             return false;
         }
-        else if(validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            $("#correo"),
-            $("#scorreo"),
-            "*Formato correcto: ejemplo@gmail.com*"
-        )==0){
-            mensajes('error',4000,'Verifique el correo','Correo no válido');
-            return false;
+        {
+            const correoVal = $("#correo").val().trim();
+            if (correoVal === "") {
+                $("#scorreo").text("*Este campo es obligatorio*");
+                mensajes('error','Verifique el correo','El campo está vacío.');
+                return false;
+            }
+            if (!/^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(correoVal)) {
+                $("#scorreo").text("*Formato correcto: ejemplo@gmail.com*");
+                mensajes('error','Verifique el correo','Formato inválido');
+                return false;
+            }
         }
         return true;
     }
@@ -370,6 +405,19 @@ $(document).ready(function() {
         );
     });
 
+    $("#modificarcedula").on("input", function() {
+        let d = $(this).val().replace(/\D/g, '');
+        let out = d;
+        if (d.length === 7) {
+            // X.XXX.XXX
+            out = d.slice(0,1) + '.' + d.slice(1,4) + '.' + d.slice(4,7);
+        } else if (d.length === 8) {
+            // XX.XXX.XXX
+            out = d.slice(0,2) + '.' + d.slice(2,5) + '.' + d.slice(5,8);
+        }
+        $(this).val(out);
+    });
+
     $("#modificartelefono").on("keypress", function(e){
         validarKeyPress(/^[0-9-]*$/, e);
     });
@@ -398,8 +446,17 @@ $(document).ready(function() {
     });
 
     $("#modificardireccion").on("keyup", function(){
+        const val = $(this).val().trim();
+        if (val === "") {
+            $("#smodificardireccion").text("*Este campo es obligatorio*");
+            return;
+        }
+        if (val.length < 4) {
+            $("#smodificardireccion").text("*Mínimo 4 caracteres*");
+            return;
+        }
         validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{4,100}$/,
             $(this),
             $("#smodificardireccion"),
             "*El formato permite letras y números*"
@@ -412,7 +469,7 @@ $(document).ready(function() {
 
     $("#modificarcorreo").on("keyup", function(){
         validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
             $(this),
             $("#smodificarcorreo"),
             "*Formato válido: example@gmail.com*"
@@ -421,20 +478,42 @@ $(document).ready(function() {
 
     function validarCliente(datos) {
         let errores = [];
-        if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{2,100}$/.test(datos.nombre)) {
+        const nom = (datos.nombre || "").trim();
+        if (nom === "") {
+            errores.push("Este campo es obligatorio.");
+        } else if (nom.length < 2) {
+            errores.push("Mínimo 2 caracteres.");
+        }
+        if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{2,100}$/.test(nom)) {
             errores.push("El nombre debe tener solo letras.");
         }
-        if (!/^[VEJPG0-9-.\b]*$/.test(datos.cedula)) {
-            errores.push("Formato correcto: 00.000.000");
+        const ced = (datos.cedula || "").trim();
+        if (ced === "") {
+            errores.push("Este campo es obligatorio.");
         }
-        if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/.test(datos.direccion)) {
+        if (!/^(?:\d{1,2}\.\d{3}\.\d{3})$/.test(ced)) {
+            errores.push("Formato válido: 1.234.567 o 12.345.678");
+        }
+        const dir = (datos.direccion || "").trim();
+        if (dir === "") {
+            errores.push("Este campo es obligatorio.");
+        } else if (dir.length < 4) {
+            errores.push("Mínimo 4 caracteres.");
+        }
+        if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{4,100}$/.test(dir)) {
             errores.push("El formato permite letras y números.");
         }
-        if (!/^\d{4}-\d{3}-\d{4}$/.test(datos.telefono)) {
-            errores.push("Formato correcto: 0400.000.0000.");
+        const tel = (datos.telefono || "").trim();
+        if (tel === "") {
+            errores.push("Este campo es obligatorio.");
         }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)) {
-            errores.push("Formato correcto: ejemplo@gmail.com.");
+        if (!/^\d{4}-\d{3}-\d{4}$/.test(tel)) {
+            errores.push("Formato correcto: 0400.000.0000");
+        }
+        if (!datos.correo || datos.correo.trim() === "") {
+            errores.push("Este campo es obligatorio.");
+        } else if (!/^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(datos.correo)) {
+            errores.push("Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com");
         }
         return errores;
     }
@@ -489,7 +568,7 @@ $(document).ready(function() {
                 if (fila.length) {
                     fila.data([
                         `<span class="campo-nombres">${cliente.nombre}</span>`,
-                        `<span class="campo-tex-num">${cliente.cedula}</span>`,
+                        `<span class="campo-numeros">${cliente.cedula}</span>`,
                         `<span class="campo-nombres">${cliente.direccion}</span>`,
                         `<span class="campo-numeros">${cliente.telefono}</span>`,
                         `<span class="campo-tex-num">${cliente.correo}</span>`,
@@ -559,10 +638,10 @@ $(document).ready(function() {
                     if (respuesta.status === 'success') {
                         Swal.fire(
                             'Eliminada!',
-                            'El proveedor ha sido eliminada.',
+                            'El cliente ha sido eliminado correctamente.',
                             'success'
                         );
-                        eliminarFilaProveedor(id_clientes);
+                        eliminarFilaCliente(id_clientes);
                     } else {
                         Swal.fire('Error', respuesta.message, 'error');
                     }
@@ -571,16 +650,15 @@ $(document).ready(function() {
         });
     });
 
-    function eliminarFilaProveedor(id_clientes) {
+    function eliminarFilaCliente(id_clientes) {
         const tabla = $('#tablaConsultas').DataTable();
         const fila = $(`#tablaConsultas tbody tr[data-id="${id_clientes}"]`);
         tabla.row(fila).remove().draw();
     }
 
-    function mensajes(icono, tiempo, titulo, mensaje){
+    function mensajes(icono, titulo, mensaje){
         Swal.fire({
             icon: icono,
-            timer: tiempo,
             title: titulo,
             text: mensaje,
             showConfirmButton: true,

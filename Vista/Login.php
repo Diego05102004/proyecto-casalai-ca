@@ -31,13 +31,18 @@
             <h2 class="title">Iniciar Sesión</h2>
             <div class="input-field">
               <i class="fas fa-user"></i>
-              <input style="margin-top: 15px;" type="text" name="username" id="username"  placeholder="Nombre de Usuario" maxlength="20" required/>
-              <span style="margin-top: 10px;" class="span-value" id="susername"></span>
+              <input type="text" name="username" id="username"  placeholder="Nombre de Usuario" maxlength="20" required/>
+              <span class="span-v" id="susername"></span>
             </div>
             <div class="input-field">
               <i class="fas fa-lock"></i>
-              <input style="margin-top: 15px;" type="password" name="password" id="password"  placeholder="Contraseña" maxlength="15" required/>
-              <span style="margin-top: 10px;" class="span-value" id="spassword"></span>
+              <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                <input style="flex:1;" type="password" name="password" id="password"  placeholder="Contraseña" maxlength="15" required/>
+                <button type="button" class="toggle-password" data-target="#password" title="Mostrar/Ocultar" style="background:transparent;border:none;cursor:pointer;color:gray;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                </button>
+              </div>
+              <span class="span-v" id="spassword"></span>
             </div>
             <button class="btn btn-vino w-100" id="acceder" name="acceder">Iniciar Sesión</button>
             <!-- Dentro del formulario de inicio de sesión, después del botón -->
@@ -54,12 +59,13 @@
     <div class="input-field">
       <i class="fas fa-user"></i>
       <input type="text" name="nombre" id="nombre" placeholder="Nombre" maxlength="50" required />
-      <span class="span-value" id="snombre"></span>
+      <span class="span-v" id="snombre"></span>
     </div>
+
     <div class="input-field">
       <i class="fas fa-user"></i>
       <input type="text" name="apellido" id="apellido" placeholder="Apellido" maxlength="50" required />
-      <span class="span-value" id="sapellido"></span>
+      <span class="span-v" id="sapellido"></span>
     </div>
   </div>
 
@@ -67,12 +73,13 @@
     <div class="input-field">
       <i class="fas fa-phone"></i>
       <input type="text" name="nombre_usuario" id="nombre_usuario" placeholder="Nombre de Usuario" maxlength="20" required />
-      <span class="span-value" id="snombre_usuario"></span>
+      <span class="span-v" id="snombre_usuario"></span>
     </div>
+
     <div class="input-field">
       <i class="fas fa-envelope"></i>
-      <input type="text" name="cedula" id="cedula" placeholder="Cédula" maxlength="8" required />
-      <span class="span-value" id="scedula"></span>
+      <input type="text" name="cedula" id="cedula" placeholder="Cédula" maxlength="10" required />
+      <span class="span-v" id="scedula"></span>
     </div>
   </div>
 
@@ -80,37 +87,49 @@
     <div class="input-field">
       <i class="fas fa-phone"></i>
       <input type="text" name="telefono" id="telefono" placeholder="Teléfono" maxlength="13" required />
-      <span class="span-value" id="stelefono_usuario"></span>
+      <span class="span-v" id="stelefono_usuario"></span>
     </div>
+
     <div class="input-field">
       <i class="fas fa-envelope"></i>
       <input type="email" name="correo" id="correo" placeholder="Correo Electrónico" maxlength="50" required />
-      <span class="span-value" id="scorreo_usuario"></span>
+      <span class="span-v" id="scorreo_usuario"></span>
     </div>
   </div>
 
-  <div class="input-field">
-    <i class="fas fa-map-marker-alt"></i>
-    <textarea class="form-control" maxlength="100" id="direccion" name="direccion" rows="2" placeholder="Dirección" required></textarea>
-    <span class="span-value" id="sdireccion"></span>
-  </div>
+    <div class="input-field">
+      <i class="fas fa-map-marker-alt"></i>
+      <input class="form-control" style="padding: 0;" id="direccion" name="direccion" placeholder="Dirección" maxlength="100" required/>
+      <span class="span-v" id="sdireccion"></span>
+    </div>
 
   <div class="input-row">
     <div class="input-field">
       <i class="fas fa-lock"></i>
-      <input type="password" name="clave" id="clave" placeholder="Contraseña" maxlength="15" required />
-      <span class="span-value" id="sclave_usuario"></span>
+      <div style="display:flex; align-items:center; gap:8px; width:100%;">
+        <input type="password" name="clave" id="clave" placeholder="Contraseña" maxlength="15" required />
+        <button type="button" class="toggle-password" data-target="#clave" title="Mostrar/Ocultar" style="background:transparent;border:none;cursor:pointer;color:gray;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </button>
+      </div>
+      <span class="span-v" id="sclave_usuario"></span>
     </div>
+
     <div class="input-field">
       <i class="fas fa-lock"></i>
-      <input type="password" name="clave_confirmar" id="clave_confirmar" placeholder="Confirmar Contraseña" maxlength="15" required />
-      <span class="span-value" id="sclave_confirmar"></span>
+      <div style="display:flex; align-items:center; gap:8px; width:100%;">
+        <input type="password" name="clave_confirmar" id="clave_confirmar" placeholder="Confirmar Contraseña" maxlength="15" required />
+        <button type="button" class="toggle-password" data-target="#clave_confirmar" title="Mostrar/Ocultar" style="background:transparent;border:none;cursor:pointer;color:gray;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </button>
+      </div>
+      <span class="span-v" id="sclave_confirmar"></span>
     </div>
   </div>
 
-  <div class="input-row">
-    <button type="submit" class="btn btn-vino w-100">Registrar</button>
-  </div>
+    <div class="input-row">
+      <button type="submit" class="btn btn-vino w-100">Registrar</button>
+    </div>
   <input type="hidden" name="accion" value="registrar" />
 </form>
 
@@ -147,5 +166,11 @@
     <?php include 'footer.php'; ?>
     <script src="javascript/darckort-login.js"></script>
     <script src="javascript/login.js"></script>
+    <script>
+      // Evitar reenvío del formulario al recargar (PRG ligero en frontend)
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, document.title, window.location.href);
+      }
+    </script>
   </body>
 </html>

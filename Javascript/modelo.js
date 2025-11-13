@@ -1,4 +1,22 @@
 $(document).ready(function () {
+    // Validación select de marca (registrar)
+    $("#id_marca").on("change", function(){
+        if ($(this).val()) {
+            $(this).removeClass("is-invalid").addClass("is-valid");
+        } else {
+            $(this).removeClass("is-valid").addClass("is-invalid");
+        }
+    });
+
+    // Validación select de marca (modificar)
+    $("#modificar_marca_modelo").on("change", function(){
+        if ($(this).val()) {
+            $(this).removeClass("is-invalid").addClass("is-valid");
+        } else {
+            $(this).removeClass("is-valid").addClass("is-invalid");
+        }
+    });
+
     // Validación en tiempo real para registro
     $("#nombre_modelo").on("keypress", function(e){
         validarKeyPress(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]*$/, e);
@@ -8,7 +26,7 @@ $(document).ready(function () {
     
     $("#nombre_modelo").on("keyup", function(){
         validarKeyUp(
-            /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{1,25}$/,
+            /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{2,25}$/,
             $(this),
             $("#snombre_modelo"),
             "*El formato permite letras, números y (-/)*"
@@ -71,18 +89,31 @@ $(document).ready(function () {
     setInterval(verificarPermisosEnTiempoRealModelos, 10000); // 10 segundos
 
     function validarEnvioModelo(){
-        let nombre = document.getElementById("nombre_modelo");
-        nombre.value = space(nombre.value).trim();
+        // Validar selección de marca
+        const $marca = $("#id_marca");
+        if (!$marca.val()) {
+            $marca.removeClass("is-valid").addClass("is-invalid");
+            mensajes('error', 'Verifique la marca', 'Debe seleccionar una marca');
+            return false;
+        } else {
+            $marca.removeClass("is-invalid").addClass("is-valid");
+        }
 
-        if(validarKeyUp(
-            /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{1,25}$/,
-            $("#nombre_modelo"),
-            $("#snombre_modelo"),
-            "*El nombre permite letras, números y (-/)*"
-        ) == 0){
-            mensajes('error', 4000, 'Verifique el nombre del modelo', 'se permite letras, números y (-/)');
+        let $nombre = $("#nombre_modelo");
+        $nombre.val(space($nombre.val()).trim());
+        const val = $nombre.val();
+
+        if (val === "") {
+            $("#snombre_modelo").text("*Este campo es obligatorio*");
+            mensajes('error', 'Verifique el nombre del modelo', 'El campo está vacío.');
             return false;
         }
+        if (val.length < 2) {
+            $("#snombre_modelo").text("*Mínimo 2 caracteres*");
+            mensajes('error', 'Verifique el nombre del modelo', 'Debe tener mínimo 2 caracteres.');
+            return false;
+        }
+
         return true;
     }
 
@@ -138,7 +169,7 @@ $(document).ready(function () {
                     Swal.fire({
                         icon: 'success',
                         title: 'Éxito',
-                        text: respuesta.message || respuesta.msg || 'modelo registrado correctamente'
+                        text: respuesta.message || respuesta.msg || 'Modelo registrado correctamente'
                     });
                     agregarFilaModelo(respuesta.modelo);
                     resetModelo();
@@ -166,7 +197,7 @@ $(document).ready(function () {
     
     $("#modificar_nombre_modelo").on("keyup", function(){
         validarKeyUp(
-            /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{1,25}$/,
+            /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{2,25}$/,
             $(this),
             $("#smnombre_modelo"),
             "*El formato permite letras, números y (-/)*"
@@ -183,13 +214,28 @@ $(document).ready(function () {
 
     $('#modificarModelo').on('submit', function(e) {
         e.preventDefault();
+        // Validación de marca seleccionada (modificar)
+        const $marcaM = $("#modificar_marca_modelo");
+        if (!$marcaM.val()) {
+            $marcaM.removeClass("is-valid").addClass("is-invalid");
+            mensajes('error', 'Verifique la marca', 'Debe seleccionar una marca');
+            return;
+        } else {
+            $marcaM.removeClass("is-invalid").addClass("is-valid");
+        }
 
-        let nombreModelo = $("#modificar_nombre_modelo").val().trim();
-        let idMarca = $("#modificar_marca_modelo").val();
-        let nombreMarca = $("#modificar_marca_modelo option:selected").text();
-
-        if(!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{1,25}$/.test(nombreModelo)){
-            Swal.fire('Error', 'El nombre solo permite letras, números y (-/)', 'error');
+        // Validación de nombre (modificar): vacío y mínimo 2
+        const $nombreM = $("#modificar_nombre_modelo");
+        $nombreM.val(space($nombreM.val()).trim());
+        const nombreModelo = $nombreM.val();
+        if (nombreModelo === "") {
+            $("#smnombre_modelo").text("*Este campo es obligatorio*");
+            mensajes('error', 'Verifique el nombre del modelo', 'El campo está vacío.');
+            return;
+        }
+        if (nombreModelo.length < 2) {
+            $("#smnombre_modelo").text("*Mínimo 2 caracteres*");
+            mensajes('error', 'Verifique el nombre del modelo', 'Debe tener mínimo 2 caracteres.');
             return;
         }
 
@@ -365,13 +411,13 @@ $(document).ready(function () {
         return text.replace(/\s{2,}/g, ' ');
     }
     
-    function mensajes(tipo, tiempo, titulo, texto) {
+    function mensajes(icono, titulo, mensaje) {
         Swal.fire({
-            icon: tipo,
-            title: titulo,
-            text: texto,
-            timer: tiempo,
-            showConfirmButton: false
+        icon: icono,
+        title: titulo,
+        text: mensaje,
+        showConfirmButton: true,
+        confirmButtonText: "Aceptar",
         });
     }
 });

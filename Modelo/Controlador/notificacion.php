@@ -4,9 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Incluir el modelo de notificaciones
-require_once __DIR__ . '/../modelo/notificacion.php';
-require_once __DIR__ . '/../modelo/bitacora.php';
+// Incluir el modelo de notificaciones (respetando mayúsculas en sistemas sensibles a mayúsculas)
+require_once __DIR__ . '/../Modelo/notificacion.php';
+require_once __DIR__ . '/../Modelo/bitacora.php';
 
 // Función para obtener las notificaciones del usuario
 function getNotificacionesUsuario($id_usuario) {
@@ -45,10 +45,19 @@ if (isset($_GET['accion']) && !empty($_GET['accion'])) {
     switch ($accion) {
         case 'listar':
             $notificaciones = getNotificacionesUsuario($_SESSION['id_usuario']);
-            // Formatear fechas para mejor legibilidad
+            // Formatear fechas para mejor legibilidad (tolerante a campos faltantes)
             foreach ($notificaciones as &$notificacion) {
-                $fecha = new DateTime($notificacion['fecha_creacion']);
-                $notificacion['fecha_formateada'] = $fecha->format('Y-m-d H:i:s');
+                try {
+                    $src = $notificacion['fecha_hora'] ?? $notificacion['fecha_creacion'] ?? null;
+                    if ($src) {
+                        $fecha = new DateTime($src);
+                        $notificacion['fecha_formateada'] = $fecha->format('Y-m-d H:i:s');
+                    } else {
+                        $notificacion['fecha_formateada'] = null;
+                    }
+                } catch (Exception $e) {
+                    $notificacion['fecha_formateada'] = null;
+                }
             }
             $respuesta = ['exito' => true, 'data' => $notificaciones];
             break;
