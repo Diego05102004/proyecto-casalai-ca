@@ -741,7 +741,7 @@ $(document).ready(function () {
                             
                             Swal.fire({
                                 icon: 'error',
-                                title: 'No se puede eliminar',
+                                title: 'Eliminación negada',
                                 html: mensaje,
                                 width: '700px',
                                 customClass: {
