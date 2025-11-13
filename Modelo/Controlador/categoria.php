@@ -90,41 +90,166 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
+            // Iniciar buffer de salida para capturar posibles errores
+            ob_start();
+            
+            // Registrar datos recibidos
+            error_log('=== INICIO DE SOLICITUD DE MODIFICACIÓN ===');
+            error_log('Datos POST recibidos: ' . print_r($_POST, true));
+            
+            if (!isset($_POST['id_categoria'], $_POST['nombre_categoria'])) {
+                $error = 'Faltan parámetros requeridos';
+                error_log('Error: ' . $error);
+                
+                // Capturar cualquier salida de depuración
+                $debugOutput = ob_get_clean();
+                if (!empty($debugOutput)) {
+                    error_log('Salida de depuración: ' . $debugOutput);
+                }
+                
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $error,
+                    'debug' => [
+                        'post_data' => $_POST,
+                        'debug_output' => $debugOutput
+                    ]
+                ]);
+                exit;
+            }
+            
             $id_categoria  = $_POST['id_categoria'];
-            $nuevo_nombre = $_POST['nombre_categoria'];
-            $caracteristicas = isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : [];
+            $nuevo_nombre = trim($_POST['nombre_categoria']);
+            $caracteristicas = [];
+            
+            // Decodificar características si están presentes
+            if (isset($_POST['caracteristicas'])) {
+                if (is_string($_POST['caracteristicas'])) {
+                    $caracteristicas = json_decode($_POST['caracteristicas'], true);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        error_log('Error al decodificar características JSON: ' . json_last_error_msg());
+                    }
+                } else {
+                    $caracteristicas = $_POST['caracteristicas'];
+                }
+            }
+            
+            error_log('Datos procesados - ID: ' . $id_categoria . ', Nombre: ' . $nuevo_nombre);
+            error_log('Características recibidas: ' . print_r($caracteristicas, true));
+            
+            if (empty($nuevo_nombre)) {
+                $error = 'El nombre de la categoría no puede estar vacío';
+                error_log('Error: ' . $error);
+                
+                // Capturar cualquier salida de depuración
+                $debugOutput = ob_get_clean();
+                
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $error,
+                    'debug' => [
+                        'id_categoria' => $id_categoria,
+                        'nombre_categoria' => $nuevo_nombre,
+                        'caracteristicas' => $caracteristicas,
+                        'debug_output' => $debugOutput
+                    ]
+                ]);
+                exit;
+            }
+            
             $categoria = new Categoria();
             $categoria->setIdCategoria($id_categoria);
             $categoria->setNombreCategoria($nuevo_nombre);
-
+            
+            error_log('Iniciando modificación de categoría: ' . $nuevo_nombre);
+            
+            // Verificar si el nombre ya existe
             if ($categoria->existeNombreCategoria($nuevo_nombre, $id_categoria)) {
+                $error = 'El nombre de la categoria ya existe';
+                error_log('Error: ' . $error);
+                
+                // Capturar cualquier salida de depuración
+                $debugOutput = ob_get_clean();
+                
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'El nombre de la categoria ya existe'
+                    'message' => $error,
+                    'debug' => [
+                        'id_categoria' => $id_categoria,
+                        'nombre_categoria' => $nuevo_nombre,
+                        'debug_output' => $debugOutput
+                    ]
                 ]);
                 exit;
             }
 
-            if ($categoria->modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas)) {
+            // Intentar modificar la categoría
+            $resultado = $categoria->modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas);
+            
+            if ($resultado === true) {
+                error_log('Categoría modificada exitosamente, obteniendo datos actualizados...');
                 $categoriaActualizada = $categoria->obtenerCategoriaPorId($id_categoria);
-
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CATEGORIA,
-                        'MODIFICAR',
-                        'El usuario modificó la categoría ID: ' . $id_categoria,
-                        'media'
-                    );
+                
+                if (!$categoriaActualizada) {
+                    error_log('Error: No se pudo obtener la categoría actualizada');
+                } else {
+                    error_log('Datos de categoría actualizada: ' . print_r($categoriaActualizada, true));
                 }
 
-                echo json_encode([
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    try {
+                        $bitacoraModel = new Bitacora();
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_CATEGORIA,
+                            'MODIFICAR',
+                            'El usuario modificó la categoría ID: ' . $id_categoria,
+                            'media'
+                        );
+                        error_log('Bitácora registrada correctamente');
+                    } catch (Exception $e) {
+                        error_log('Error al registrar en bitácora: ' . $e->getMessage());
+                    }
+                }
+                
+                // Capturar cualquier salida de depuración
+                $debugOutput = ob_get_clean();
+                
+                $respuesta = [
                     'status' => 'success',
-                    'categoria' => $categoriaActualizada
-                ]);
+                    'categoria' => $categoriaActualizada,
+                    'debug' => [
+                        'caracteristicas_enviadas' => $caracteristicas,
+                        'debug_output' => $debugOutput
+                    ]
+                ];
+                
+                error_log('Respuesta de éxito: ' . print_r($respuesta, true));
+                echo json_encode($respuesta);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al modificar la categoria']);
+                $error = 'Error al modificar la categoría';
+                if (is_string($resultado)) {
+                    $error = $resultado; // Si modificarCategoria devuelve un mensaje de error
+                }
+                
+                error_log('Error al modificar categoría: ' . $error);
+                
+                // Capturar cualquier salida de depuración
+                $debugOutput = ob_get_clean();
+                
+                $respuestaError = [
+                    'status' => 'error',
+                    'message' => $error,
+                    'debug' => [
+                        'id_categoria' => $id_categoria,
+                        'nombre_categoria' => $nuevo_nombre,
+                        'caracteristicas_enviadas' => $caracteristicas,
+                        'debug_output' => $debugOutput
+                    ]
+                ];
+                
+                error_log('Respuesta de error: ' . print_r($respuestaError, true));
+                echo json_encode($respuestaError);
             }
             exit;
 

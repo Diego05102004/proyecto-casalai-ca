@@ -1,6 +1,5 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Clases;
-
 use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 use PDO;
 use PDOException;
@@ -17,11 +16,12 @@ class Backup {
 
 
 public function generar($nombreArchivo) {
-    $conexion = new BD($this->tipo);
+
+    $conexion = new \BD($this->tipo);
     $pdo = $conexion->getConexion();
     try {
         $dbname = $pdo->query('select database()')->fetchColumn();
-        $rutaCarpeta = __DIR__ . '/../db/backup/';
+        $rutaCarpeta = __DIR__ . '/../db/respaldo/';
         $ruta = $rutaCarpeta . $nombreArchivo;
         $config = ($this->tipo === 'S') ? DB_SEGURIDAD : DB_PRINCIPAL;
 
@@ -64,10 +64,10 @@ public function generar($nombreArchivo) {
 
 
 public function restaurar($nombreArchivo) {
-    $conexion = new BD($this->tipo);
+    $conexion = new \BD($this->tipo);
     $pdo = $conexion->getConexion();
     try {
-        $ruta = __DIR__ . '/../db/backup/' . $nombreArchivo;
+        $ruta = __DIR__ . '/../db/respaldo/' . $nombreArchivo;
         $config = ($this->tipo === 'S') ? DB_SEGURIDAD : DB_PRINCIPAL;
 
         // Usa la ruta completa de mysql.exe en Windows
@@ -89,17 +89,45 @@ public function restaurar($nombreArchivo) {
 }
 
     public function listar() {
-        $ruta = __DIR__ . '/../db/backup/';
+        $ruta = __DIR__ . '/../db/respaldo/';
         $archivos = [];
         if (is_dir($ruta)) {
             $files = scandir($ruta);
             foreach ($files as $file) {
                 if (preg_match('/\.sql$/', $file)) {
-                    $archivos[] = $file;
+                    $filePath = $ruta . $file;
+                    $fileInfo = [
+                        'nombre' => $file,
+                        'tamano' => $this->formatearTamano(filesize($filePath)),
+                        'fecha_modificacion' => date('d/m/Y H:i:s', filemtime($filePath)),
+                        'tipo' => $this->obtenerTipoBackup($file)
+                    ];
+                    $archivos[] = $fileInfo;
                 }
             }
+            // Ordenar por fecha de modificación (más reciente primero)
+            usort($archivos, function($a, $b) {
+                return strtotime($b['fecha_modificacion']) - strtotime($a['fecha_modificacion']);
+            });
         }
         return $archivos;
+    }
+
+    private function formatearTamano($bytes) {
+        $unidades = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = 0;
+        while ($bytes >= 1024 && $i < count($unidades) - 1) {
+            $bytes /= 1024;
+            $i++;
+        }
+        return round($bytes, 2) . ' ' . $unidades[$i];
+    }
+
+    private function obtenerTipoBackup($nombreArchivo) {
+        if (strpos($nombreArchivo, 'seguridad') !== false) {
+            return 'Seguridad';
+        }
+        return 'Principal';
     }
 }
 ?>

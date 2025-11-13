@@ -513,11 +513,11 @@ if (isset($_SESSION['id_usuario'])) {
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = '?pagina=login';
+                window.location.href = '?pagina=cerrar_sesion';
             }
         });
     }
-    
+            
     // JavaScript para el menú lateral
     document.addEventListener('DOMContentLoaded', function() {
         // Prevenir clics solo en las notificaciones individuales, no en el panel completo

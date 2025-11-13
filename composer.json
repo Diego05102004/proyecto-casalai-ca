@@ -8,7 +8,19 @@
             "Modelo/Usuario/ProyectoCasalaiCa/Clases/"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Usuario\\ProyectoCasalaiCa\\Test\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=7.4.0"
+    },
     "require-dev": {
         "phpunit/phpunit": "^11.5"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "classmap-authoritative": true
     }
 }

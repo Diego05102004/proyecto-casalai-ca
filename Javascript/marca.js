@@ -229,6 +229,7 @@ $(document).ready(function() {
 
         var formData = new FormData(this);
         formData.append('accion', 'modificar');
+        
         $.ajax({
             url: '',
             type: 'POST',
@@ -237,77 +238,66 @@ $(document).ready(function() {
             contentType: false,
             dataType: 'json',
             success: function(response) {
-            if (response.status === 'success') {
-                $('#modificarMarcaModal').modal('hide');
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Modificado',
-                    text: 'La marca se ha modificado correctamente'
-                });
-
-                const marca = response.marca || {};
-                const $rowRef = $('#modificarMarcaModal').data('row');
-                const idFallback = $('#modificar_id_marca').val() || ($rowRef && $rowRef.attr('data-id')) || '';
-                const idSeguro = (marca.id_marca !== undefined && marca.id_marca !== null && String(marca.id_marca) !== '') ? marca.id_marca : idFallback;
-                const nuevaFila = [
-                    `<span class="campo-numeros">${idSeguro}</span>`,
-                    `<span class="campo-nombres">${marca.nombre_marca}</span>`,
-                    `<ul>
-                        <button class="btn-modificar"
-                            title="Modificar Marca"
-                            data-id="${idSeguro}"
-                            data-nombre="${marca.nombre_marca}">
-                            <img src="img/pencil.svg">
-                        </button>
-                        <button class="btn-eliminar"
-                            title="Eliminar Marca"
-                            data-id="${idSeguro}">
-                            <img src="img/circle-x.svg">
-                        </button>
-                    </ul>`
-                ];
-
-                const tabla = $('#tablaConsultas').DataTable();
-                // Intentar actualizar la fila guardada al abrir el modal
-                const $row = $('#modificarMarcaModal').data('row');
-                if ($row && $row.length) {
-                    const rowApi = tabla.row($row);
-                    if (rowApi.any()) {
-                        rowApi.data(nuevaFila).draw(false);
-                        // Asegurar data-id y data-nombre actualizados
-                        const node = rowApi.node();
-                        $(node).attr('data-id', idSeguro);
-                        $(node).find('.btn-modificar').attr('data-nombre', marca.nombre_marca);
+                try {
+                    // Asegurarse de que la respuesta sea un objeto
+                    if (typeof response === 'string') {
+                        response = JSON.parse(response);
                     }
-                } else {
-                    // Fallback por selector si no se guardó la fila
-                    const rowApi = tabla.row(`tr[data-id="${idSeguro}"]`);
-                    if (rowApi.any()) {
-                        rowApi.data(nuevaFila).draw(false);
-                        const node = rowApi.node();
-                        $(node).attr('data-id', idSeguro);
-                        $(node).find('.btn-modificar').attr('data-nombre', marca.nombre_marca);
-                    } else {
-                        // Fallback DOM directo si DataTables no encuentra la fila
-                        const $fila = $(`#tablaConsultas tbody tr[data-id="${idSeguro}"]`);
-                        if ($fila.length) {
-                            $fila.find('.campo-nombres').text(marca.nombre_marca);
-                            $fila.find('.btn-modificar').attr('data-nombre', marca.nombre_marca);
+                    
+                    if (response.status === 'success') {
+                        // Cerrar el modal de modificación
+                        $('#modificarMarcaModal').modal('hide');
+                        
+                        // Obtener el ID de la marca que se está modificando
+                        const idMarca = $('#modificar_id_marca').val();
+                        const nuevoNombre = response.marca.nombre_marca;
+                        
+                        // Actualizar la fila en la tabla
+                        const tabla = $('#tablaConsultas').DataTable();
+                        const fila = $(`#tablaConsultas tbody tr[data-id="${idMarca}"]`);
+                        
+                        if (fila.length) {
+                            // Actualizar el contenido de las celdas
+                            fila.find('td:eq(1) span').text(nuevoNombre).addClass("campo-nombres");
+                            // Actualizar los data attributes del botón de modificar
+                            fila.find('.btn-modificar')
+                                .attr('data-nombre', nuevoNombre);
+                            
+                            // Mostrar mensaje de éxito
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'La marca se ha actualizado correctamente',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            // Si no se encuentra la fila, recargar la tabla
+                            tabla.ajax.reload();
                         }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo modificar la marca'
+                        });
                     }
+                } catch (error) {
+                    console.error('Error al procesar la respuesta:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error al procesar la respuesta del servidor'
+                    });
                 }
-
-            } else {
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error al modificar la marca:', textStatus, errorThrown);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: response.message || 'No se pudo modificar la marca'
+                    text: 'Ocurrió un error al intentar modificar la marca'
                 });
-            }
-        },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error al modificar la marca:', textStatus, errorThrown);
-                muestraMensaje('Error al modificar la marca.');
             }
         });
     });

@@ -282,16 +282,47 @@ private function tienePagosAsociados($id_cuenta) {
     $conexion = new BD('P');
     $db = $conexion->getConexion();
     try {
+        // Primero verificamos si existe la tabla de detalles de pago
+        $sql = "SELECT COUNT(*) as total FROM tbl_detalles_pago WHERE id_cuenta = :id_cuenta";
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
+        $stmt->execute();
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        $count = (int)$resultado['total'];
+
+        if ($count > 0) {
+            // Si hay pagos, obtenemos los detalles de los últimos 5 pagos
+            $sqlPagos = "SELECT dp.id_detalle_pago as id_pago, dp.monto, dp.fecha, 
+                         cl.nombre, cl.apellido, cl.cedula, f.numero_factura
+                       FROM tbl_detalles_pago dp
+                       INNER JOIN tbl_facturas f ON dp.id_factura = f.id_factura
+                       INNER JOIN tbl_clientes cl ON f.cliente = cl.id_clientes
+                       WHERE dp.id_cuenta = :id_cuenta 
+                       ORDER BY dp.fecha DESC 
+                       LIMIT 5";
+            $stmtPagos = $db->prepare($sqlPagos);
+            $stmtPagos->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
+            $stmtPagos->execute();
+            $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'tiene_pagos' => true,
+                'pagos' => $pagos,
+                'total' => $count
+            ];
+        }
+
+        // Si no hay pagos en tbl_detalles_pago, verificamos en tbl_pagos por compatibilidad
         $sql = "SELECT COUNT(*) as total FROM tbl_pagos WHERE id_cuenta = :id_cuenta";
         $stmt = $db->prepare($sql);
         $stmt->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
         $stmt->execute();
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        $count = $resultado['total'];
+        $count = (int)$resultado['total'];
 
         if ($count > 0) {
-            $sqlPagos = "SELECT p.id_pago, p.monto, p.fecha_pago, 
-                         c.nombre_cliente, c.apellido_cliente
+            $sqlPagos = "SELECT p.id_pago, p.monto, p.fecha_pago as fecha, 
+                         c.nombre, c.apellido, c.cedula, '' as numero_factura
                        FROM tbl_pagos p
                        INNER JOIN tbl_clientes c ON p.id_cliente = c.id_cliente
                        WHERE p.id_cuenta = :id_cuenta 
@@ -311,11 +342,10 @@ private function tienePagosAsociados($id_cuenta) {
 
         return ['tiene_pagos' => false];
     } catch (PDOException $e) {
-        return [
-            'tiene_pagos' => true,
-            'pagos' => [],
-            'total' => 'Desconocido'
-        ];
+        // En caso de error, asumimos que no hay pagos para permitir la eliminación
+        // pero registramos el error para depuración
+        error_log("Error al verificar pagos asociados: " . $e->getMessage());
+        return ['tiene_pagos' => false];
     } finally {
         if (isset($conexion)) { $conexion->cerrar(); }
     }
@@ -323,7 +353,8 @@ private function tienePagosAsociados($id_cuenta) {
 
     public function obtenerEstadoCuenta($id_cuenta) {
        
-    }
+}
+
     public function verificarEstado() {
         return $this->v_estadoCuenta(); 
     }
