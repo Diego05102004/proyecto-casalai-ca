@@ -77,10 +77,28 @@ $(document).ready(function() {
   });
   $("#nombre").on("keyup", function () {
     validarKeyUp(
-      /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,30}$/,
+      /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,50}$/,
       $(this),
       $("#snombre"),
-      "*Solo letras, de 2 a 30 caracteres*"
+      "*Solo letras, de 2 a 50 caracteres*"
+    );
+  });
+
+  $("#cedula").on("keypress", function(e){
+    validarKeyPress(/^[0-9.]*$/, e);
+  });
+
+  $("#apellido_usuario").on("keypress", function (e) {
+    validarKeyPress(/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]*$/, e);
+    let apellido_usuario = document.getElementById("apellido_usuario");
+    apellido_usuario.value = space(apellido_usuario.value);
+  });
+  $("#apellido_usuario").on("keyup", function () {
+    validarKeyUp(
+      /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,50}$/,
+      $(this),
+      $("#sapellido"),
+      "*Solo letras, de 2 a 50 caracteres*"
     );
   });
 
@@ -109,20 +127,6 @@ $(document).ready(function() {
     $(this).val(out);
   });
 
-  $("#apellido_usuario").on("keypress", function (e) {
-    validarKeyPress(/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]*$/, e);
-    let apellido_usuario = document.getElementById("apellido_usuario");
-    apellido_usuario.value = space(apellido_usuario.value);
-  });
-  $("#apellido_usuario").on("keyup", function () {
-    validarKeyUp(
-      /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,30}$/,
-      $(this),
-      $("#sapellido"),
-      "*Solo letras, de 2 a 30 caracteres*"
-    );
-  });
-
   $("#nombre_usuario").on("keypress", function (e) {
     validarKeyPress(/^[a-zA-Z0-9_]*$/, e);
   });
@@ -144,7 +148,7 @@ $(document).ready(function() {
       /^\d{4}-\d{3}-\d{4}$/,
       $(this),
       $("#stelefono_usuario"),
-      "*Formato válido: 04XX-XXX-XXXX*"
+      "*Formato válido: 0400-000-0000*"
     );
   });
 
@@ -309,7 +313,7 @@ $(document).ready(function() {
       return false;
     }
     if (!/^\d{4}-\d{3}-\d{4}$/.test(telVal)) {
-      $("#stelefono_usuario").text("*Formato válido: 04XX-XXX-XXXX*");
+      $("#stelefono_usuario").text("*Formato válido: 0400-000-0000*");
       mensajes('error','Verifique el número de teléfono','Formato inválido.');
       return false;
     }
@@ -619,7 +623,7 @@ function agregarFilaUsuario(usuario) {
       /^\d{4}-\d{3}-\d{4}$/,
       $(this),
       $("#smodificartelefono_usuario"),
-      "*Formato válido: 04XX-XXX-XXXX*"
+      "*Formato válido: 0400-000-0000*"
     );
   });
 
@@ -737,7 +741,7 @@ function agregarFilaUsuario(usuario) {
       return;
     }
     if (!/^\d{4}-\d{3}-\d{4}$/.test(modTlfVal)) {
-      $("#smodificartelefono_usuario").text("*Formato válido: 04XX-XXX-XXXX*");
+      $("#smodificartelefono_usuario").text("*Formato válido: 0400-000-0000*");
       mensajes('error','Verifique el teléfono','Formato inválido.');
       $("#modificartelefono_usuario").focus();
       return;
@@ -787,7 +791,6 @@ function agregarFilaUsuario(usuario) {
         icon: "success",
         title: "¡Éxito!",
         text: "El usuario se ha modificado correctamente",
-        timer: 2000,
         showConfirmButton: false
       });
 
@@ -886,7 +889,6 @@ if (fila.length) {
               title: "¡Eliminado!",
               text: "El usuario ha sido eliminado correctamente.",
               icon: "success",
-              timer: 2000,
               showConfirmButton: false
             });
           } else {
@@ -976,7 +978,6 @@ if (fila.length) {
             icon: "success",
             title: "¡Estatus actualizado!",
             showConfirmButton: false,
-            timer: 1500,
           });
           // Actualizar DataTable y aplicar el filtro activo inmediatamente
           var table = $('#tablaConsultas').DataTable();

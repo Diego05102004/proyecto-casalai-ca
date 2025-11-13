@@ -12,6 +12,21 @@
   box-sizing: border-box;
 }
 
+/* ===== Login: ojo dentro y centrado en el campo contraseña ===== */
+.iniciar-sesion-form .input-field { position: relative; }
+.iniciar-sesion-form .input-field .toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.iniciar-sesion-form #password { padding-right: 48px; }
+
 .forgot-password {
     margin-top: 15px;
     text-align: center;
@@ -41,12 +56,21 @@ input {
   font-family: "Poppins", sans-serif;
 }
 
+html, body { 
+  height: 100%; 
+  overflow-y: auto; 
+  overflow-x: hidden; 
+}
+
 .container {
   position: relative;
   width: 100%;
   background-color: #fff;
   min-height: 100vh;
-  overflow: hidden;
+  /* El contenedor no debe tener su propio scroll */
+  overflow-y: hidden;
+  /* Ocultar desbordes horizontales producidos por el círculo decorativo */
+  overflow-x: hidden;
 }
 
 .forms-container {
@@ -67,6 +91,7 @@ input {
   display: grid;
   grid-template-columns: 1fr;
   z-index: 5;
+  overflow: visible; /* sin scroll interno */
 }
 
 form {
@@ -74,7 +99,6 @@ form {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  padding: 0rem 5rem;
   transition: all 0.2s 0.7s;
   overflow: hidden;
   grid-column: 1 / 2;
@@ -134,32 +158,61 @@ form.iniciar-sesion-form {
 
 /* ===== Registro: estilos específicos (no afectan inicio de sesión) ===== */
 .registrar-form {
-  max-width: 1200px;
+  max-width: 400px;
   width: 100%;
   margin: auto;
+  /* Sin scroll interno, usa el del documento */
+  max-height: none;
+  overflow: visible;
+  /* asegurar que el scroll abarque desde el título: evitar colapso de margen */
+  padding: 12px 16px;
+  box-sizing: border-box;
 }
+
+/* El título no debe colapsar margen con el contenedor scrollable */
+.registrar-form .title { margin-top: 0; }
+
+.iniciar-sesion-form{ 
+  max-height: none; 
+  overflow: visible; 
+}
+
+.registrar-form .input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.registrar-form .input-row .input-field {
+  flex: 1 1 45%;
+  width: auto;
+  max-width: 280px;
+}
+
 .registrar-form .input-field input,
 .registrar-form .input-field textarea {
-  font-size: 1.1rem;
+  font-size: 0.9rem; /* aún más compacto */
   font-weight: 600;
   text-align: left; /* como inicio de sesión */
   font-family: "Poppins", sans-serif;
 }
+
 .registrar-form .input-field input::placeholder,
 .registrar-form .input-field textarea::placeholder {
   color: #aaa;
   font-weight: 500;
 }
 .registrar-form .input-field {
-  max-width: 380px;
+  max-width: 280px; /* más estrecho */
   width: 100%;
   background-color: #f0f0f0;
-  margin: 10px 0 26px; /* espacio para mensajes debajo */
-  min-height: 55px;
-  border-radius: 55px;
+  margin: 6px; /* separación vertical compacta */
+  min-height: 40px; /* más bajo */
+  border-radius: 28px; /* acorde a menor altura */
   display: grid;
-  grid-template-columns: 15% 85%;
-  padding: 0 0.4rem;
+  grid-template-columns: 12% 88%; /* icono más compacto */
+  padding: 0 0.25rem;
   position: relative;
   align-items: center;
   flex: 0 0 auto;
@@ -183,7 +236,7 @@ form.iniciar-sesion-form {
 .registrar-form .input-row .input-field {
   flex: 1 1 45%;
   width: auto;
-  max-width: 380px;
+  max-width: 280px;
 }
 .registrar-form .input-field .span-value{
   position: absolute;
@@ -199,10 +252,10 @@ form.iniciar-sesion-form {
 }
 .registrar-form .input-field textarea.form-control {
   height: auto;
-  min-height: 55px;
-  max-height: 140px; /* límite de crecimiento visual */
+  min-height: 40px;
+  max-height: 100px; /* límite de crecimiento visual */
   line-height: 1.4;
-  padding: 16px 12px; /* leve sangría interna izquierda */
+  padding: 8px 10px; /* leve sangría interna izquierda */
   overflow-y: hidden; /* sin scroll por defecto */
   resize: none;
   background: none;
@@ -212,6 +265,73 @@ form.iniciar-sesion-form {
 .registrar-form .input-field textarea.form-control:focus {
   outline: none;
   box-shadow: none !important;
+}
+
+/* ===== Mensajes de validación (.span-v) ===== */
+/* Registro: mismo ancho que el campo, debajo y con envoltura */
+.registrar-form .input-field { position: relative; }
+.registrar-form .input-field .span-v {
+  position: absolute;
+  left: calc(12% + 12px);
+  right: 12px;
+  top: 60px;
+  color: #d93025;
+  font-family: "Poppins", sans-serif;
+  font-style: italic; /* texto en diagonal */
+  font-weight: 400;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Dejar espacio bajo cada campo para que el mensaje no se superponga */
+.registrar-form .input-field { margin-bottom: 32px; overflow: visible; }
+.registrar-form .input-row { margin-bottom: 8px; }
+
+/* Login: mismo tratamiento visual y ancho del campo */
+.iniciar-sesion-form .input-field { position: relative; }
+.iniciar-sesion-form .input-field .span-v {
+  position: absolute;
+  left: calc(15% + 12px);
+  right: 16px;
+  bottom: -22px;
+  color: #d93025;
+  font-family: "Poppins", sans-serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  pointer-events: none;
+  z-index: 0;
+}
+.iniciar-sesion-form .input-field { margin-bottom: 32px; overflow: visible; }
+
+/* Colocar el botón ojo dentro del campo (solo registro) */
+.registrar-form .input-field {
+  position: relative;
+}
+.registrar-form .input-field .toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  z-index: 1;
+}
+/* Evitar que el texto quede debajo del ojo */
+.registrar-form .input-field input[name="clave"],
+.registrar-form .input-field input[name="clave_confirmar"] {
+  padding-right: 40px;
 }
 
 /* Estado vacío: centrar verticalmente el placeholder como en input */
@@ -225,6 +345,20 @@ form.iniciar-sesion-form {
   .registrar-form .input-row .input-field {
     flex: 1 1 100%;
     max-width: 100%;
+  }
+}
+
+/* Dos columnas en pantallas medianas/grandes para filas del registro */
+@media (min-width: 768px) {
+  .registrar-form .input-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .registrar-form .input-row .input-field {
+    flex: 1 1 360px; /* igual al resto del registro */
+    max-width: 360px;
   }
 }
 

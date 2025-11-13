@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     $("#correlativo").on("keypress", function(e){
@@ -18,22 +18,24 @@ $(document).ready(function () {
         );
     });
 
-    $("#proveedor").on("change blur", function() {
-        validarkeyup(
-            /^.+$/,
-            $(this),
-            $("#sproveedor"),
-            "*Debe seleccionar un proveedor*"
-        );
+    $("#proveedor").on("change", function() {
+        if ($(this).val()) {
+            $(this).removeClass("is-invalid").addClass("is-valid");
+            $("#sproveedor").text("");
+        } else {
+            $(this).removeClass("is-valid").addClass("is-invalid");
+            $("#sproveedor").text("*Debe seleccionar un proveedor*");
+        }
     });
 
-    $("#tamanocompra").on("change blur", function() {
-        validarkeyup(
-            /^.+$/,
-            $(this),
-            $("#stamanocompra"),
-            "*Debe seleccionar un tamaño de compra*"
-        );
+    $("#tamanocompra").on("change", function() {
+        if ($(this).val()) {
+            $(this).removeClass("is-invalid").addClass("is-valid");
+            $("#stamanocompra").text("");
+        } else {
+            $(this).removeClass("is-valid").addClass("is-invalid");
+            $("#stamanocompra").text("*Debe seleccionar un tamaño de compra*");
+        }
     });
 
     function validarEnvioRecepcion(){
@@ -50,20 +52,24 @@ $(document).ready(function () {
             return false;
         }
 
-        if($("#proveedor").val() === null || $("#proveedor").val() === "") {
+        if($("#proveedor").val()) {
+            $("#proveedor").removeClass("is-invalid").addClass("is-valid");
+            $("#sproveedor").text("");
+        } else {
+            $("#proveedor").removeClass("is-valid").addClass("is-invalid");
             $("#sproveedor").text("*Debe seleccionar un proveedor*");
             mensajes('error', 'Verifique el proveedor', 'El campo esta vacio');
             return false;
-        } else {
-            $("#sproveedor").text("");
         }
 
-        if($("#tamanocompra").val() === null || $("#tamanocompra").val() === "") {
+        if($("#tamanocompra").val()) {
+            $("#tamanocompra").removeClass("is-invalid").addClass("is-valid");
+            $("#stamanocompra").text("");
+        } else {
+            $("#tamanocompra").removeClass("is-valid").addClass("is-invalid");
             $("#stamanocompra").text("*Debe seleccionar un tamaño de compra*");
             mensajes('error', 'Verifique el tamaño de compra', 'El campo esta vacio');
             return false;
-        } else {
-            $("#stamanocompra").text("");
         }
         return true;
     }
@@ -111,33 +117,19 @@ $(document).ready(function () {
     }
 
     function resetRecepcion() {
-        // Limpiar solo los campos del formulario de recepción
-        const form = $('#ingresarRecepcion')[0];
-        if (form) {
-            form.reset();
-        }
-        
-        // Limpiar mensajes de validación específicos del formulario
-        $('#scorrelativo, #sproveedor, #stamanocompra').text('');
-        
-        // Limpiar selects específicos del formulario
-        $('#proveedor, #tamanocompra').val('').trigger('change');
-        
-        // Limpiar solo la tabla de recepción de productos dentro del modal
-        const tablaRecepcion = document.getElementById('recepcion1');
-        if (tablaRecepcion) {
-            tablaRecepcion.innerHTML = '';
-        }
-        
-        // Limpiar campos ocultos
-        $('#codigoproducto, #idproducto').val('');
+        $("#correlativo").val("");
+        $("#scorrelativo").text("");
+        $("#proveedor").val("");
+        $("#proveedor").removeClass("is-valid is-invalid");
+        $("#tamanocompra").val("");
+        $("#tamanocompra").removeClass("is-valid is-invalid");
     }
 
     $('#btnIncluirRecepcion').on('click', function() {
         $('#ingresarRecepcion')[0].reset();
         $('#scorrelativo').text('');
-        $('#sproveedor').text('');
-        $('#stamanocompra').text('');
+        $("#proveedor").removeClass("is-valid is-invalid");
+        $("#tamanocompra").removeClass("is-valid is-invalid");
         $('#registrarRecepcionModal').modal('show');
     });
 
@@ -157,8 +149,6 @@ $(document).ready(function () {
             datos.append("accion", "registrar");
             enviarAjax(datos, function(respuesta){
                 if(respuesta.status === "success" || respuesta.resultado === "success"){
-                    // Cerrar el modal primero
-                    $('#registrarRecepcionModal').modal('hide');
                     
                     // Mostrar mensaje de éxito
                     Swal.fire({
@@ -166,7 +156,6 @@ $(document).ready(function () {
                         title: '¡Éxito!',
                         text: respuesta.message || 'Recepción registrada correctamente',
                         showConfirmButton: false,
-                        timer: 2000
                     });
                     
                     // Limpiar el formulario

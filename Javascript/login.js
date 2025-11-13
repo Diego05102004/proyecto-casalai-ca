@@ -1,4 +1,17 @@
 $(document).ready(function(){
+        // Toggle mostrar/ocultar contraseña (login y registro)
+        $(document).on('click', '.toggle-password', function(){
+          var target = $(this).data('target');
+          var $input = $(target);
+          if (!$input.length) return;
+          var type = $input.attr('type') === 'password' ? 'text' : 'password';
+          $input.attr('type', type);
+          // Swap icon
+          var eye = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+          var eyeOff = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/><line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2"/></svg>';
+          $(this).html(type === 'text' ? eyeOff : eye);
+        });
+
         // Auto-ajuste de altura del textarea de Dirección (registro)
         (function(){
             const direccionField = document.getElementById('direccion');
@@ -24,39 +37,27 @@ $(document).ready(function(){
             setTimeout(() => { autoResize(direccionField); togglePlaceholderCenter(); }, 0);
         })();
 
-
-        $("#nombre_usuario").on("keypress", function (e) {
-          validarkeypress(/^[a-zA-Z0-9_]*$/, e);
-        });
-        $("#nombre_usuario").on("keyup", function () {
-          validarkeyup(
-            /^[a-zA-Z0-9_]{4,20}$/,
-            $(this),
-            $("#snombre_usuario"),
-            "*El usuario debe tener entre 4 y 20 caracteres alfanuméricos*"
-          );
-        });
-
         $("#nombre").on("keypress", function (e) {
-          validarkeypress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]*$/, e);
+          validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]*$/, e);
           let nombre = document.getElementById("nombre");
           nombre.value = space(nombre.value);
         });
         $("#nombre").on("keyup", function () {
-          validarkeyup(
+          validarKeyUp(
             /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,50}$/,
             $(this),
             $("#snombre"),
             "*Solo letras, de 2 a 50 caracteres*"
           );
         });
+
         $("#apellido").on("keypress", function (e) {
-          validarkeypress(/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]*$/, e);
+          validarKeyPress(/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]*$/, e);
           let apellido_usuario = document.getElementById("apellido");
           apellido_usuario.value = space(apellido_usuario.value);
         });
         $("#apellido").on("keyup", function () {
-          validarkeyup(
+          validarKeyUp(
             /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,50}$/,
             $(this),
             $("#sapellido"),
@@ -64,12 +65,24 @@ $(document).ready(function(){
           );
         });
 
+        $("#nombre_usuario").on("keypress", function (e) {
+          validarKeyPress(/^[a-zA-Z0-9_]*$/, e);
+        });
+        $("#nombre_usuario").on("keyup", function () {
+          validarKeyUp(
+            /^[a-zA-Z0-9_]{4,20}$/,
+            $(this),
+            $("#snombre_usuario"),
+            "*4-20 caracteres alfanuméricos*"
+          );
+        });
+
         $("#cedula").on("keypress", function(e){
-            validarkeypress(/^[0-9.]*$/, e);
+            validarKeyPress(/^[0-9.]*$/, e);
         });
 
         $("#cedula").on("keyup", function(){
-            validarkeyup(
+            validarKeyUp(
                 /^(?:\d{1,2}\.\d{3}\.\d{3})$/,
                 $(this),
                 $("#scedula"),
@@ -90,15 +103,15 @@ $(document).ready(function(){
         });
 
         $("#telefono").on("keypress", function (e) {
-          validarkeypress(/^[0-9-]*$/, e);
+          validarKeyPress(/^[0-9-]*$/, e);
         });
 
         $("#telefono").on("keyup", function () {
-          validarkeyup(
+          validarKeyUp(
             /^\d{4}-\d{3}-\d{4}$/,
             $(this),
             $("#stelefono_usuario"),
-            "*Formato válido: 04XX-XXX-XXXX*"
+            "*Formato válido: 0400-000-0000*"
           );
         });
         $("#telefono").on("input", function() {
@@ -111,27 +124,36 @@ $(document).ready(function(){
         });
 
         $("#correo").on("keypress", function (e) {
-          validarkeypress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+          validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
         });
 
         $("#correo").on("keyup", function () {
-          validarkeyup(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          validarKeyUp(
+            /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
             $(this),
             $("#scorreo_usuario"),
-            "*Formato válido: example@gmail.com*"
+            "*Debe terminar en, por ejemplo: @gmail.com*"
           );
         });
 
         $("#direccion").on("keypress", function(e){
-            validarkeypress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
+            validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
             let direccion = document.getElementById("direccion");
             direccion.value = space(direccion.value);
         });
 
         $("#direccion").on("keyup", function(){
-            validarkeyup(
-                /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
+            const val = $(this).val().trim();
+            if (val === "") {
+                $("#sdireccion").text("*Este campo es obligatorio*");
+                return;
+            }
+            if (val.length < 4) {
+                $("#sdireccion").text("*Mínimo 4 caracteres*");
+                return;
+            }
+            validarKeyUp(
+                /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{4,100}$/,
                 $(this),
                 $("#sdireccion"),
                 "*El formato permite letras y números*"
@@ -139,43 +161,41 @@ $(document).ready(function(){
         });
 
         $("#clave").on("keypress", function (e) {
-          validarkeypress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/, e);
+          validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
         });
         $("#clave").on("keyup", function () {
-          validarkeyup(
-            /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
+          validarKeyUp(
+            /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
             $(this),
             $("#sclave_usuario"),
-            "*Solo letras y números, de 6 a 15 caracteres*"
+            "*6-15 caracteres, mínimo un(a) mayúscula, número y caracter especial*"
           );
         });
 
         $("#clave_confirmar").on("keypress", function (e) {
-          validarkeypress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/, e);
+          validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
         });
         $("#clave_confirmar").on("keyup", function () {
-          validarkeyup(
-            /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
+          validarKeyUp(
+            /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
             $(this),
             $("#sclave_confirmar"),
-            "*Solo letras y números, de 6 a 15 caracteres*"
+            "*Ingrese la contraseña nuevamente*"
           );
         });
 
         $("#f input, #registro-usuario-cliente input, #direccion").on("keypress", function(e) {
-        if (e.which === 13) { // 13 es el código de la tecla Enter
+        if (e.which === 13) {
             e.preventDefault();
             
-            // Determinar qué formulario enviar
             if ($(this).closest('form').attr('id') === 'f') {
-                $("#acceder").click(); // Disparar el click en el botón de inicio de sesión
+                $("#acceder").click();
             } else {
-                $("#registro-usuario-cliente").submit(); // Enviar formulario de registro
+                $("#registro-usuario-cliente").submit();
             }
         }
     });
 
-    // Validación para el formulario de registro de usuario y cliente
     $("#registro-usuario-cliente").on("submit", function(e){
         let valido = true;
         let mensaje = "";
@@ -191,110 +211,68 @@ $(document).ready(function(){
         });
 
         if(!valido){
-            muestraMensaje("error", 4000, "Error de validación", mensaje);
+            muestraMensaje("error", "Error de validación", mensaje);
             e.preventDefault();
             return false;
         }
     });
 
-    // Formato automático para teléfono ####-###-####
-    $("#telefono").on("input", function() {
-        let valor = $(this).val().replace(/\D/g, '');
-        if(valor.length > 4 && valor.length <= 7)
-            valor = valor.slice(0,4) + '-' + valor.slice(4);
-        else if(valor.length > 7)
-            valor = valor.slice(0,4) + '-' + valor.slice(4,7) + '-' + valor.slice(7,11);
-        $(this).val(valor);
-    });
-
-    // Función para bloquear caracteres inválidos
-    function validarkeypress(er, e){
-        let key = e.keyCode || e.which;
-        let tecla = String.fromCharCode(key);
-        if(!er.test(tecla)){
-            e.preventDefault();
-        }
-    }
-
-    // ... (el resto de tu código de validación y muestraMensaje permanece igual) ...
-
-    
-    //Función que verifica que exista algo dentro de un div
-    //oculto y lo muestra por el modal
     if($.trim($("#mensajes").text()) != ""){
       muestraMensaje($("#mensajes").html());
     }
-    //Fin de seccion de mostrar envio en modal mensaje//		
-      
       
       $("#username").on("keypress",function(e){
-        validarkeypress(/^[a-zA-Z0-9_]*$/,e);
+        validarKeyPress(/^[a-zA-Z0-9_]*$/,e);
       });
       
       $("#username").on("keyup",function(){
-        validarkeyup(/^[a-zA-Z0-9_]{4,20}$/,$(this),
+        validarKeyUp(/^[a-zA-Z0-9_]{4,20}$/,$(this),
         $("#susername"),"*Ingrese su nombre de usuario*");
       });
       
       $("#password").on("keypress",function(e){
-        validarkeypress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/,e);
+        validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
       });
       
       $("#password").on("keyup",function(){
-        
-        validarkeyup(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
+        validarKeyUp(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]{6,15}$/,
         $(this),$("#spassword"),"*Ingrese su contraseña de seguridad*");
       });
-      
-      
-      
-    //FIN DE VALIDACION DE DATOS
     
-    
-    
-    //CONTROL DE BOTONES
-    
-    
-    $("#acceder").on("click",function(){
-      event.preventDefault();
-      if(validarenvio()){
-        
-        $("#accion").val("acceder");	
-        $("#f").submit();
-        
-      }
-    });
-      
+      $("#acceder").on("click",function(){
+        event.preventDefault();
+        if(validarenvio()){
+          
+          $("#accion").val("acceder");	
+          $("#f").submit();
+          
+        }
+      });
     });
     
-    //Validación de todos los campos antes del envio
     function validarenvio(){
       
-      if(validarkeyup(/^[A-Za-z0-9]{4,20}$/,$("#username"),
-        $("#susername"),"El formato es de 4 y 20 caracteres")==0){
-          muestraMensaje("error",4000,"ERROR!","El usuario es incorrecto, ingrese el usuario nuevamente");
+      if(validarKeyUp(/^[A-Za-z0-9_]{4,20}$/,$("#username"),
+        $("#susername"),"*El formato es de 4 y 20 caracteres*")==0){
+          muestraMensaje("error","¡ERROR!","El usuario es incorrecto, ingrese el usuario nuevamente");
         return false;					
       }	
-      else if(validarkeyup(/^[A-Za-z0-9]{6,15}$/,
-        $("#password"),$("#spassword"),"El formato es de 6 y 15 caracteres")==0){
-         muestraMensaje("error",4000,"ERROR!","La contraseña es incorrecto, ingrese la contraseña nuevamente");
+      else if(validarKeyUp(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-={}\[\]|:;"'<>.,?\/\\]{6,15}$/,
+        $("#password"),$("#spassword"),"*El formato es de 6 y 15 caracteres*")==0){
+         muestraMensaje("error","¡ERROR!","La contraseña es incorrecta, ingrese la contraseña nuevamente");
         return false;
       }
-      
       
       return true;
     }
     
-    
-    //Funcion que muestra el modal con un mensaje
-    function muestraMensaje(icono,tiempo,titulo,mensaje){
-      Swal.fire({
-      icon:icono,
-        timer:tiempo,	
+    function muestraMensaje(icono,titulo,mensaje){
+        Swal.fire({
+        icon:icono,
         title:titulo,
-      html:mensaje,
-      showConfirmButton:true,
-      confirmButtonText:'Aceptar',
+        html:mensaje,
+        showConfirmButton:true,
+        confirmButtonText:'Aceptar',
       });
     }
     
@@ -304,12 +282,11 @@ $(document).ready(function() {
     const tipo = mensajesDiv.data("tipo") || "error";
 
     if (mensaje) {
-        muestraMensaje(tipo, 4000, tipo === "success" ? "¡Éxito!" : "Error", mensaje);
+        muestraMensaje(tipo, tipo === "success" ? "¡Éxito!" : "Error", mensaje);
     }
 });
     
-    //Función para validar por Keypress
-    function validarkeypress(er,e){
+    function validarKeyPress(er,e){
       
       key = e.keyCode;
       
@@ -327,7 +304,7 @@ $(document).ready(function() {
         
     }
     //Función para validar por keyup
-    function validarkeyup(er,etiqueta,etiquetamensaje,
+    function validarKeyUp(er,etiqueta,etiquetamensaje,
     mensaje){
       a = er.test(etiqueta.val());
       if(a){
@@ -338,5 +315,11 @@ $(document).ready(function() {
         etiquetamensaje.text(mensaje);
         return 0;
       }
+    }
+
+    function space(str) {
+      str = (str || "").toString();
+      const regex = /\s{2,}/g;
+      return str.replace(regex, " ");
     }
     

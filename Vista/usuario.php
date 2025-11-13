@@ -34,12 +34,12 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             <div class="grupo-form">
                                 <div class="grupo-interno">
                                     <label for="nombre">Nombre(s)*</label>
-                                    <input type="text" placeholder="Nombre" class="control-form" id="nombre" name="nombre" maxlength="30" required>
+                                    <input type="text" placeholder="Nombre" class="control-form" id="nombre" name="nombre" maxlength="50" required>
                                     <span class="span-value" id="snombre"></span>
                                 </div>
                                 <div class="grupo-interno">
                                     <label for="apellido_usuario">Apellido(s)*</label>
-                                    <input type="text" placeholder="Apellido" class="control-form" id="apellido_usuario" name="apellido_usuario" maxlength="30" required>
+                                    <input type="text" placeholder="Apellido" class="control-form" id="apellido_usuario" name="apellido_usuario" maxlength="50" required>
                                     <span class="span-value" id="sapellido"></span>
                                 </div>
                             </div>
@@ -82,14 +82,24 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             </div>
                             <div class="envolver-form">
                                 <label for="clave_usuario">Contraseña*</label>
-                                <input type="password" placeholder="Crea una contraseña" class="control-form"
-                                    id="clave_usuario" name="clave_usuario" maxlength="15" required>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <input type="password" placeholder="Crea una contraseña" class="control-form"
+                                        id="clave_usuario" name="clave_usuario" maxlength="15" required>
+                                    <button type="button" class="toggle-password" data-target="#clave_usuario" title="Mostrar/Ocultar" style="background:transparent;border:none;cursor:pointer;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                    </button>
+                                </div>
                                 <span class="span-value" id="sclave_usuario"></span>
                             </div>
                             <div class="envolver-form">
                                 <label for="clave_confirmar">Confirmar Contraseña*</label>
-                                <input type="password" placeholder="Ingrese nuevamente la contraseña" class="control-form"
-                                    id="clave_confirmar" name="clave_confirmar" maxlength="15" required>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <input type="password" placeholder="Ingrese nuevamente la contraseña" class="control-form"
+                                        id="clave_confirmar" name="clave_confirmar" maxlength="15" required>
+                                    <button type="button" class="toggle-password" data-target="#clave_confirmar" title="Mostrar/Ocultar" style="background:transparent;border:none;cursor:pointer;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                    </button>
+                                </div>
                                 <span class="span-value" id="sclave_confirmar"></span>
                             </div>
                         </div>

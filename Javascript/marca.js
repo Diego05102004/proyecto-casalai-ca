@@ -7,7 +7,7 @@ if (typeof nombre_rol !== "undefined" && nombre_rol === 'SuperUsuario') {
     esSuperUsuario = true;
 }
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     $("#nombre_marca").on("keypress", function(e){
@@ -86,24 +86,24 @@ function verificarPermisosEnTiempoReal() {
     
 }
 
-
-
 // Llama la función al cargar la página y luego cada 10 segundos
 $(document).ready(function() {
     verificarPermisosEnTiempoReal();
     setInterval(verificarPermisosEnTiempoReal, 1000); // 10 segundos
 });
     function validarEnvioMarca(){
-        let nombre = document.getElementById("nombre_marca");
-        nombre.value = space(nombre.value).trim();
+        let nombre = $("#nombre_marca");
+        nombre.val(space(nombre.val()).trim());
+        const userVal = nombre.val();
 
-        if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]{2,25}$/,
-            $("#nombre_marca"),
-            $("#snombre_marca"),
-            "*El nombre debe tener letras y/o números*"
-        )==0){
-            mensajes('error',4000,'Verifique el nombre de la marca','Debe tener letras y/o números');
+        if (userVal === "") {
+            $("#snombre_marca").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el nombre de la marca','El campo está vacío.');
+            return false;
+        }
+        if (userVal.length < 2) {
+            $("#snombre_marca").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre de la marca','Debe tener mínimo 2 caracteres.');
             return false;
         }
         return true;
@@ -199,36 +199,31 @@ $(document).ready(function() {
         );
     });
 
-    function validarMarca(datos) {
-        let errores = [];
-        if (!/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ0-9\s\b]{2,25}$/.test(datos.nombre_marca)) {
-            errores.push("El nombre debe tener letras y/o números.");
-        }
-        return errores;
-    }
-
     $(document).on('click', '.btn-modificar', function () {
         $('#modificar_id_marca').val($(this).data('id'));
         $('#modificar_nombre_marca').val($(this).data('nombre'));
         $('#smnombre_marca').text('');
+        // Guardar la fila origen para actualizarla tras el éxito
+        const $row = $(this).closest('tr');
+        $('#modificarMarcaModal').data('row', $row);
         $('#modificarMarcaModal').modal('show');
     });
     
     $('#modificarMarca').on('submit', function(e) {
         e.preventDefault();
 
-        const datos = {
-            nombre_marca: $('#modificar_nombre_marca').val()
-        };
+        const $nombre = $('#modificar_nombre_marca');
+        $nombre.val(space($nombre.val()).trim());
+        const valor = $nombre.val();
 
-        const errores = validarMarca(datos);
-
-        if (errores.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                html: errores.join('<br>')
-            });
+        if (valor === '') {
+            $('#smnombre_marca').text('*Este campo es obligatorio*');
+            mensajes('error','Verifique el nombre de la marca','El campo está vacío.');
+            return;
+        }
+        if (valor.length < 2) {
+            $('#smnombre_marca').text('*Mínimo 2 caracteres*');
+            mensajes('error','Verifique el nombre de la marca','Debe tener mínimo 2 caracteres.');
             return;
         }
 
@@ -359,10 +354,9 @@ $(document).ready(function() {
         tabla.row(fila).remove().draw();
     }
 
-    function mensajes(icono, tiempo, titulo, mensaje){
+    function mensajes(icono, titulo, mensaje){
         Swal.fire({
             icon: icono,
-            timer: tiempo,
             title: titulo,
             text: mensaje,
             showConfirmButton: true,
