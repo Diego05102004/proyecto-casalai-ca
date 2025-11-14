@@ -49,7 +49,7 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
                     
                     <div class="envolver-form">
                         <label for="Direccion">Dirección*</label>
-                        <textarea class="form-control" maxlength="100" id="direccion" name="direccion" rows="2"></textarea>
+                        <textarea placeholder="Estado/Ciudad/Calle o Avenida..." class="form-control" maxlength="100" id="direccion" name="direccion" rows="2"></textarea>
                         <span class="span-value" id="sdireccion"></span>
                     </div>
                     

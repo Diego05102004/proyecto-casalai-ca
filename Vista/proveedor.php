@@ -146,7 +146,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="incluirproveedor" method="POST">
+            <form id="incluirproveedor" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="registrarProveedorModalLabel">Incluir Proveedor</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -157,53 +157,53 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
                     <input type="hidden" name="accion" value="registrar">
                     <div class="grupo-form">
                         <div class="grupo-interno">
-                            <label for="nombre_proveedor">Nombre del Proveedor</label>
+                            <label for="nombre_proveedor">Nombre del Proveedor*</label>
                             <input type="text" placeholder="Nombre: Proveedor" class="control-form" id="nombre_proveedor" name="nombre_proveedor" maxlength="50" required>
                             <span class="span-value" id="snombre_proveedor"></span>
                         </div>
                         <div class="grupo-interno">
-                            <label for="rif_proveedor">RIF del Proveedor</label>                     
+                            <label for="rif_proveedor">RIF del Proveedor*</label>                     
                             <input type="text" placeholder="RIF: Proveedor" class="control-form" id="rif_proveedor" name="rif_proveedor" maxlength="12" required>
                             <span class="span-value" id="srif_proveedor"></span>
                         </div>
                         </div>
                         <div class="grupo-form">
                         <div class="grupo-interno">
-                            <label for="nombre_representante">Nombre del Representante</label>
+                            <label for="nombre_representante">Nombre del Representante*</label>
                             <input type="text" placeholder="Nombre: Representante" class="control-form" id="nombre_representante" name="nombre_representante" maxlength="50" required>
                             <span class="span-value" id="snombre_representante"></span>
                         </div>
                         <div class="grupo-interno">
-                            <label for="rif_representante">RIF del Representante</label>
+                            <label for="rif_representante">RIF del Representante*</label>
                             <input type="text" placeholder="RIF: Representante" class="control-form" id="rif_representante" name="rif_representante" maxlength="12" required>
                             <span class="span-value" id="srif_representante"></span>
                         </div>
                     </div>
                     <div class="envolver-form">
-                        <label for="correo_proveedor">Correo del Proveedor</label>
+                        <label for="correo_proveedor">Correo*</label>
                         <input type="text" placeholder="ejemplo@gmail.com" class="control-form" id="correo_proveedor" name="correo_proveedor" maxlength="50" required>
                         <span class="span-value" id="scorreo_proveedor"></span>
                     </div>
                     <div class="envolver-form">
-                        <label for="direccion_proveedor">Dirección del Proveedor</label>
-                        <input type="text" placeholder="Dirección" class="control-form" id="direccion_proveedor" name="direccion_proveedor" rows="3" maxlength="100" required>
+                        <label for="direccion_proveedor">Dirección*</label>
+                        <textarea placeholder="Estado/Ciudad/Calle o Avenida..." class="form-control" id="direccion_proveedor" name="direccion_proveedor" rows="2" maxlength="100" required></textarea>
                         <span class="span-value" id="sdireccion_proveedor"></span>
                     </div>
                     <div class="grupo-form">
                         <div class="grupo-interno">
-                            <label for="telefono_1">Teléfono Principal</label>
-                            <input type="text" placeholder="0400-000-0000" class="control-form" id="telefono_1" name="telefono_1" maxlength="13" required>
+                            <label for="telefono_1">Teléfono Principal*</label>
+                            <input type="text" placeholder="0200-000-0000" class="control-form" id="telefono_1" name="telefono_1" maxlength="13" required>
                             <span class="span-value" id="stelefono_1"></span>
                         </div>
                         <div class="grupo-interno">
-                            <label for="telefono_2">Teléfono Secundario</label>
+                            <label for="telefono_2">Teléfono Secundario*</label>
                             <input type="text" placeholder="0400-000-0000" class="control-form" id="telefono_2" name="telefono_2" maxlength="13" required>
                             <span class="span-value" id="stelefono_2"></span>
                         </div>
                     </div>
                     <div class="envolver-form">
-                        <label for="observacion">Observación</label>
-                        <textarea class="form-control" placeholder="Escriba alguna observación" id="observacion" name="observacion" maxlength="100" rows="3"></textarea>
+                        <label for="observacion">Observación*</label>
+                        <textarea class="form-control" placeholder="Escriba alguna observación" id="observacion" name="observacion" maxlength="100" rows="2"></textarea>
                         <span class="span-value" id="sobservacion"></span>
                     </div>
                 </div>
@@ -232,11 +232,11 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
         <thead>
             <tr>
                 <th>Nombre <br> (Proveedor)</th>
-                <th>RIF</th>
+                <th>RIF (Proveedor)</th>
                 <th>Nombre <br> (Representante)</th>
                 <th>Correo</th>
                 <th>Dirección</th>
-                <th>Teléfono Principal</th>
+                <th>Teléfono <br> Principal</th>
                 <th>Estatus</th>
                 <th>Acciones</th>
             </tr>
@@ -331,7 +331,7 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
 aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="FormModificarProveedor" method="POST">
+            <form id="FormModificarProveedor" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="modificarProveedorModalLabel">Modificar Proveedor</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -375,7 +375,7 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
 
                     <div class="form-group">
                         <label for="modificar_direccion_proveedor">Dirección</label>
-                        <input type="text" class="form-control" id="modificar_direccion_proveedor" name="direccion_proveedor" maxlength="100" required>
+                        <textarea class="form-control" id="modificar_direccion_proveedor" name="direccion_proveedor" maxlength="100" rows="2" required></textarea>
                         <span class="span-value-modal" id="smdireccion_proveedor"></span>
                     </div>
 
@@ -393,7 +393,7 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
 
                     <div class="form-group">
                         <label for="modificar_observacion">Observación</label>
-                        <textarea class="form-control" id="modificar_observacion" name="observacion" maxlength="100" rows="3"></textarea>
+                        <textarea class="form-control" id="modificar_observacion" name="observacion" maxlength="100" rows="2"></textarea>
                         <span class="span-value-modal" id="smobservacion"></span>
                     </div>
                 </div>
