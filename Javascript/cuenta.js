@@ -330,7 +330,17 @@ $(document).ready(function() {
         $('#scorreo_cuenta').text('');
         $("#tipo_moneda").val("");
         $("#tipo_moneda").removeClass("is-valid is-invalid");
+        $('.metodos-bs').removeClass('d-none');
+        $('.metodos-usd').addClass('d-none');
+        $('#pagoMovil, #transferencia, #zelle').prop('checked', false);
     }
+
+    $('#registrarCuenta').on('reset', function() {
+        setTimeout(function() {
+            $("#tipo_moneda").val("");
+            $("#tipo_moneda").removeClass("is-valid is-invalid");
+        }, 0);
+    });
 
     $('#btnIncluirCuenta').on('click', function() {
         $('#registrarCuenta')[0].reset();
