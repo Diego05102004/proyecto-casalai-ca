@@ -278,7 +278,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             aria-labelledby="modificarCuentaModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <form id="modificarCuenta" method="POST">
+                    <form id="modificarCuenta" method="POST" novalidate>
                         <div class="modal-header">
                             <h5 class="titulo-form" id="modificarCuentaModalLabel">Modificar Cuenta Bancaria</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
