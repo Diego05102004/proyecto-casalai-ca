@@ -18,7 +18,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <div class="modal fade modal-registrar" id="registrarRolModal" tabindex="-1" role="dialog" aria-labelledby="registrarRolModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="registrarRol" method="POST">
+            <form id="registrarRol" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="registrarRolModalLabel">Incluir Rol</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -112,7 +112,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <div class="modal fade modal-modificar" id="modificarRolModal" tabindex="-1" role="dialog" aria-labelledby="modificarRolModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="modificarRol" method="POST">
+            <form id="modificarRol" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="modificarRolModalLabel">Modificar Rol</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">

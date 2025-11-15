@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     $("#nombre_rol").on("keypress", function(e){
@@ -73,16 +73,18 @@ $(document).ready(function() {
     setInterval(verificarPermisosEnTiempoRealRoles, 10000); // 10 segundos
 });
     function validarEnvioRol(){
-        let nombre = document.getElementById("nombre_rol");
-        nombre.value = space(nombre.value).trim();
+        let nombre = $("#nombre_rol");
+        nombre.val(space(nombre.val()).trim());
+        const rolVal = nombre.val();
 
-        if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s\b]{2,25}$/,
-            $("#nombre_rol"),
-            $("#snombre_rol"),
-            "*El nombre debe tener solo letras*"
-        )==0){
-            mensajes('error',4000,'Verifique el nombre del rol','Debe tener solo letras');
+        if (rolVal === "") {
+            $("#snombre_rol").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el nombre del rol','El campo está vacío.');
+            return false;
+        }
+        if (rolVal.length < 2) {
+            $("#snombre_rol").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre del rol','Debe tener mínimo 2 caracteres.');
             return false;
         }
         return true;
@@ -178,13 +180,15 @@ $(document).ready(function() {
             }
         });
     }
-function muestraMensaje(mensaje) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: mensaje
-    });
-}
+
+    function muestraMensaje(mensaje) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: mensaje
+        });
+    }
+
     $(document).on('click', '#btnModificarRol', function () {
         $('#modificar_id_rol').val($(this).data('id'));
         $('#modificar_nombre_rol').val($(this).data('nombre'));
@@ -206,34 +210,27 @@ function muestraMensaje(mensaje) {
         );
     });
 
-    function validarRol(datos) {
-        let errores = [];
-        if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{2,25}$/.test(datos.nombre_rol)) {
-            errores.push("El nombre debe tener solo letras.");
-        }
-        return errores;
-    }
-
     $('#modificarRol').on('submit', function(e) {
         e.preventDefault();
 
-        const datos = {
-            nombre_rol: $('#modificar_nombre_rol').val()
-        };
+        const $nombre = $('#modificar_nombre_rol');
+        $nombre.val(space($nombre.val()).trim());
+        const valor = $nombre.val();
 
-        const errores = validarRol(datos);
-
-        if (errores.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                html: errores.join('<br>')
-            });
+        if (valor === '') {
+            $('#smnombre_rol').text('*Este campo es obligatorio*');
+            mensajes('error','Verifique el nombre del rol','El campo está vacío.');
+            return;
+        }
+        if (valor.length < 2) {
+            $('#smnombre_rol').text('*Mínimo 2 caracteres*');
+            mensajes('error','Verifique el nombre del rol','Debe tener mínimo 2 caracteres.');
             return;
         }
 
         var formData = new FormData(this);
         formData.append('accion', 'modificar');
+        
         $.ajax({
             url: '',
             type: 'POST',
@@ -342,10 +339,9 @@ function muestraMensaje(mensaje) {
         tabla.row(fila).remove().draw();
     }
 
-    function mensajes(icono, tiempo, titulo, mensaje){
+    function mensajes(icono, titulo, mensaje){
         Swal.fire({
             icon: icono,
-            timer: tiempo,
             title: titulo,
             text: mensaje,
             showConfirmButton: true,
