@@ -44,7 +44,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             aria-labelledby="registrarCuentaModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <form id="registrarCuenta" method="POST">
+                    <form id="registrarCuenta" method="POST" novalidate>
                         <div class="modal-header">
                             <h5 class="titulo-form" id="registrarCuentaModalLabel">Incluir Cuenta</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -55,13 +55,13 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                             <input type="hidden" name="accion" value="registrar">
                             <div class="grupo-form">
                                 <div class="grupo-interno">
-                                    <label for="nombre_banco">Nombre del Banco</label>
+                                    <label for="nombre_banco">Nombre del Banco*</label>
                                     <input type="text" placeholder="Nombre" class="control-form" id="nombre_banco"
                                         name="nombre_banco" maxlength="20" required>
                                     <span class="span-value" id="snombre_banco"></span>
                                 </div>
                                 <div class="grupo-interno">
-                                    <label for="numero_cuenta">Número de Cuenta</label>
+                                    <label for="numero_cuenta">Número de Cuenta*</label>
                                     <input type="text" placeholder="N° de cuenta" class="control-form" id="numero_cuenta"
                                         name="numero_cuenta" maxlength="23" required>
                                     <span class="span-value" id="snumero_cuenta"></span>
@@ -69,34 +69,35 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                             </div>
                             <div class="grupo-form">
                                 <div class="grupo-interno">
-                                    <label for="rif_cuenta">RIF</label>
-                                    <input type="text" placeholder="RIF" class="control-form" id="rif_cuenta"
+                                    <label for="rif_cuenta">RIF*</label>
+                                    <input type="text" placeholder="V-12345678-9" class="control-form" id="rif_cuenta"
                                         name="rif_cuenta" maxlength="12" required>
                                     <span class="span-value" id="srif_cuenta"></span>
                                 </div>
                                 <div class="grupo-interno">
-                                    <label for="telefono_cuenta">Número de Teléfono</label>
-                                    <input type="text" placeholder="Teléfono" class="control-form" id="telefono_cuenta"
+                                    <label for="telefono_cuenta">Teléfono*</label>
+                                    <input type="text" placeholder="0400-000-0000" class="control-form" id="telefono_cuenta"
                                         name="telefono_cuenta" maxlength="13" required>
                                     <span class="span-value" id="stelefono_cuenta"></span>
                                 </div>
                             </div>
                             <div class="envolver-form">
-                                <label for="correo_cuenta">Correo Electrónico</label>
-                                <input type="email" placeholder="Correo" class="control-form" id="correo_cuenta"
+                                <label for="correo_cuenta">Correo*</label>
+                                <input type="email" placeholder="ejemplo@gmail.com" class="control-form" id="correo_cuenta"
                                     name="correo_cuenta" maxlength="50" required>
                                 <span class="span-value" id="scorreo_cuenta"></span>
                             </div>
                             <div class="grupo-form">
                                 <div class="grupo-interno">
-                                    <label for="tipo_moneda">Tipo de Moneda</label>
+                                    <label for="tipo_moneda">Tipo de Moneda*</label>
                                     <select class="form-select" id="tipo_moneda" name="tipo_moneda" required>
-                                        <option value="bs" selected>Bolívares</option>
+                                        <option value="" hidden>Seleccione el tipo de moneda</option>
+                                        <option value="bs">Bolívares</option>
                                         <option value="usd">Dólares</option>
                                     </select>
                                 </div>
                                 <div class="grupo-interno">
-                                    <label class="label-checkbox" id="titulo-metodos-pago">Métodos de Pago Aceptados</label>
+                                    <label class="label-checkbox" id="titulo-metodos-pago">Métodos de Pago Aceptados*</label>
                                     <div class="btn-group metodos-bs" role="group" aria-label="Métodos en Bs">
                                         <input type="checkbox" class="btn-check" value="Pago Movil" id="pagoMovil" name="metodos_pago[]" autocomplete="off">
                                         <label class="btn btn-outline-primary" for="pagoMovil">Pago Móvil</label>

@@ -37,7 +37,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             aria-labelledby="registrarCategoriaModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-                    <form id="registrarCategoria" method="POST">
+                    <form id="registrarCategoria" method="POST" novalidate>
                         <div class="modal-header">
                             <h5 class="titulo-form" id="registrarCategoriaModalLabel">Incluir Categoria</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -47,13 +47,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                         <div class="modal-body">
                             <input type="hidden" name="accion" value="registrar">
                             <div class="envolver-form">
-                                <label for="nombre_categoria">Nombre de la categoría</label>
+                                <label for="nombre_categoria">Nombre de la categoría*</label>
                                 <input type="text" placeholder="Categoría" class="control-form" id="nombre_categoria"
                                     name="nombre_categoria" maxlength="20" required>
                                 <span class="span-value" id="snombre_categoria"></span>
                             </div>
                             <div class="envolver-form">
-                                <label>Características</label>
+                                <label>Características*</label>
                                 <div id="caracteristicasContainer"></div>
                                 <button type="button" class="btn btn-sm btn-success mt-2" id="agregarCaracteristica">+
                                     Agregar característica</button>
@@ -132,7 +132,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     aria-labelledby="modificarCategoriaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="modificarCategoria" method="POST">
+            <form id="modificarCategoria" method="POST" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="modificarCategoriaModalLabel">Modificar Categoría</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -143,7 +143,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     <input type="hidden" id="modificar_id_categoria" name="id_categoria">
                     <div class="form-group">
                         <label for="modificar_nombre_categoria">Nombre de la categoría</label>
-                        <input type="text" disabled class="form-control" id="modificar_nombre_categoria"
+                        <input type="text" class="form-control" id="modificar_nombre_categoria"
                             name="nombre_categoria" maxlength="20" required>
                         <span class="span-value-modal" id="smnombre_categoria"></span>
                     </div>
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     div.dataset.index = id;
 
 div.innerHTML = `
-  <input type="text" name="caracteristicas[${id}][nombre]" placeholder="Nombre" class="form-control" maxlength="20" required>
+  <input type="text" name="caracteristicas[${id}][nombre]" placeholder="Nombre" class="form-control" maxlength="20" required> 
   <select name="caracteristicas[${id}][tipo]" class="form-select" required>
     <option value="" disable hidden>Tipo</option>
     <option value="int">Entero</option>
@@ -226,8 +226,9 @@ selectTipo.addEventListener('change', function() {
     if (puedeEliminar) {
       div.querySelector('.btn-eliminar-caracteristicas').addEventListener('click', () => {
         contenedor.removeChild(div);
-        contador--;
-        btnAgregar.disabled = false;
+        // Recalcular total y estado del botón tras eliminar
+        const total = contenedor.querySelectorAll('.caracteristica-item').length;
+        btnAgregar.disabled = (total >= maxCaracteristicas);
       });
     }
 
@@ -238,12 +239,14 @@ selectTipo.addEventListener('change', function() {
   crearInputCaracteristica(contador++, false);
 
   btnAgregar.addEventListener('click', () => {
+    // Recalcular contador según elementos actuales para soportar resets/cierres
+    contador = contenedor.querySelectorAll('.caracteristica-item').length;
     if (contador < maxCaracteristicas) {
       crearInputCaracteristica(contador++);
-      if (contador === maxCaracteristicas) {
-        btnAgregar.disabled = true;
-      }
     }
+    // Actualizar estado del botón según total actual
+    const total = contenedor.querySelectorAll('.caracteristica-item').length;
+    btnAgregar.disabled = (total >= maxCaracteristicas);
   });
 });
 </script>

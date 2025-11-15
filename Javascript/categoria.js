@@ -3,7 +3,7 @@ $(document).ready(function () {
     var esSuperUsuario = nombre_rol === 'SuperUsuario';
 
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
     
 
@@ -11,6 +11,39 @@ $(document).ready(function () {
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]*$/, e);
         let nombre = document.getElementById("nombre_categoria");
         nombre.value = space(nombre.value);
+    });
+
+    // Al presionar Limpiar (type=reset), remover iconos y ocultar max (sin re-disparar reset)
+    $('#registrarCategoria').on('reset', function(){
+        setTimeout(function(){
+            // Limpiar spans
+            $("#snombre_categoria").text('');
+            $("#snombre_caracteristica").text('');
+            // Quitar clases de validación
+            $("#nombre_categoria").removeClass("is-valid is-invalid");
+            $('#caracteristicasContainer .caracteristica-item input, #caracteristicasContainer .caracteristica-item select')
+                .removeClass('is-valid is-invalid');
+            // Ocultar campo max (quitar required)
+            $('#caracteristicasContainer .caracteristica-item input[name*="[max]"]').each(function(){
+                $(this).css('display','none').prop('required', false);
+            });
+            // Dejar solo una característica limpia
+            const $cont = $('#caracteristicasContainer');
+            const $items = $cont.find('.caracteristica-item');
+            if ($items.length > 1) { $items.slice(1).remove(); }
+            const $first = $cont.find('.caracteristica-item').first();
+            if ($first.length) {
+                $first.find('input[name*="[nombre]"]').val('');
+                const $tipoFirst = $first.find('select[name*="[tipo]"]');
+                const $maxFirst = $first.find('input[name*="[max]"]');
+                $tipoFirst.val('');
+                $maxFirst.val('').css('display','none').prop('required', false);
+                $first.find('input, select').removeClass('is-valid is-invalid');
+            }
+            // Reactivar botón agregar
+            const btnAgregar = document.getElementById('agregarCaracteristica');
+            if (btnAgregar) btnAgregar.disabled = false;
+        }, 0);
     });
     
     $("#nombre_categoria").on("keyup", function(){
@@ -91,72 +124,93 @@ $(document).ready(function () {
     setInterval(verificarPermisosEnTiempoRealCategoria, 10000);
 
     function validarEnvioCategoria(){
-        let nombre = document.getElementById("nombre_categoria");
-        nombre.value = space(nombre.value).trim();
+        let $input = $("#nombre_categoria");
+        let $span = $("#snombre_categoria");
+        let val = space($input.val()).trim();
+        $input.val(val);
 
+        if (val.length === 0) {
+            $input.removeClass("is-valid").addClass("is-invalid");
+            $span.text("*Campo obligatorio*");
+            mensajes('error','Verifique el nombre de la categoria','El campo no puede estar vacío');
+            return false;
+        }
+        if (val.length < 2) {
+            $input.removeClass("is-valid").addClass("is-invalid");
+            $span.text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre de la categoria','Debe tener al menos 2 caracteres');
+            return false;
+        }
         if(validarKeyUp(
             /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]{2,20}$/,
-            $("#nombre_categoria"),
-            $("#snombre_categoria"),
+            $input,
+            $span,
             "*El nombre debe tener letras y/o números*"
         )==0){
-            mensajes('error',4000,'Verifique el nombre de la categoria','Debe tener letras y/o números');
+            mensajes('error','Verifique el nombre de la categoria','Debe tener letras y/o números');
             return false;
         }
         return true;
     }
 
     function validarCaracteristicas() {
-        let validacionCorrecta = true;
+        let ok = true;
         let mensajeError = '';
 
-        const regexNombre = /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ]+(?: [a-zA-ZÁÉÍÓÚñÑáéíóúüÜ]+)*$/;
-        let hayString = false;
-
         $('.caracteristica-item').each(function(index, item) {
-            const nombre = $(item).find('input[name*="[nombre]"]');
-            const tipo = $(item).find('select[name*="[tipo]"]');
-            const max = $(item).find('input[name*="[max]"]');
+            const $nombre = $(item).find('input[name*="[nombre]"]');
+            const $tipo = $(item).find('select[name*="[tipo]"]');
+            const $max = $(item).find('input[name*="[max]"]');
 
-            const nombreVal = $.trim(nombre.val());
+            const nombreVal = $.trim($nombre.val());
+            const tipoVal = $tipo.val();
 
-            if (nombreVal === '') {
-                mensajeError = 'El nombre de una característica está vacío.';
-                nombre.focus();
-                validacionCorrecta = false;
-                return false;
+            // Nombre: obligatorio y mínimo 2 caracteres
+            if (nombreVal.length === 0) {
+                mensajeError = 'El nombre de la característica está vacío.';
+                $nombre.removeClass('is-valid').addClass('is-invalid').focus();
+                ok = false; return false;
+            }
+            if (nombreVal.length < 2) {
+                mensajeError = 'El nombre de la característica debe tener al menos 2 caracteres.';
+                $nombre.removeClass('is-valid').addClass('is-invalid').focus();
+                ok = false; return false;
+            }
+            // Formato permitido (letras, números y espacios)
+            if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]{2,20}$/.test(nombreVal)) {
+                mensajeError = 'El nombre de la característica permite letras y números (2-20).';
+                $nombre.removeClass('is-valid').addClass('is-invalid').focus();
+                ok = false; return false;
             }
 
-            if (!regexNombre.test(nombreVal)) {
-                mensajeError = 'El nombre de la característica solo puede contener letras y un espacio entre palabras.';
-                nombre.focus();
-                validacionCorrecta = false;
-                return false;
-            }
-
-            if (tipo.val() === '') {
+            // Tipo requerido
+            if (!tipoVal) {
                 mensajeError = 'Debe seleccionar un tipo para cada característica.';
-                tipo.focus();
-                validacionCorrecta = false;
-                return false;
+                $tipo.removeClass('is-valid').addClass('is-invalid').focus();
+                ok = false; return false;
             }
 
-            if (tipo.val() === 'string') {
-                hayString = true;
-                if ($.trim(max.val()) === '' || parseInt(max.val()) <= 0) {
-                    mensajeError = 'El campo "Máx. caracteres" debe ser mayor a 0.';
-                    max.focus();
-                    validacionCorrecta = false;
-                    return false;
+            // Si es string, validar max > 0
+            if (tipoVal === 'string') {
+                const maxVal = ($max.val() || '').trim();
+                const maxNum = parseInt(maxVal, 10);
+                if (maxVal === '' || isNaN(maxNum) || maxNum <= 0) {
+                    mensajeError = 'El campo "Máx. caracteres" debe ser un número mayor a 0.';
+                    $max.removeClass('is-valid').addClass('is-invalid').focus();
+                    ok = false; return false;
                 }
             }
+
+            // Marcar válidos si pasaron
+            $nombre.removeClass('is-invalid').addClass('is-valid');
+            $tipo.removeClass('is-invalid').addClass('is-valid');
+            if (tipoVal === 'string') { $max.removeClass('is-invalid').addClass('is-valid'); }
         });
 
-        if (!validacionCorrecta) {
-            mensajes('error', 4000, 'Error de validación', mensajeError);
+        if (!ok) {
+            mensajes('error','Verifica la caracteristica', mensajeError);
         }
-
-        return validacionCorrecta;
+        return ok;
     }
 
     function agregarFilaCategoria(categoria) {
@@ -184,14 +238,86 @@ $(document).ready(function () {
     }
 
     function resetCategoria() {
-        $("#nombre_categoria").val('');
+        // Resetear valores del formulario
+        $("#registrarCategoria")[0].reset();
         $("#snombre_categoria").text('');
+        $("#snombre_caracteristica").text('');
+        // Quitar estados de validación del nombre de categoría
+        $("#nombre_categoria").removeClass("is-valid is-invalid");
+        // Quitar estados de validación de todos los inputs/selects dinámicos
+        $('#caracteristicasContainer .caracteristica-item input, #caracteristicasContainer .caracteristica-item select')
+            .removeClass('is-valid is-invalid');
+        // Forzar ocultar y limpiar campo max si el tipo no es string
+        $('#caracteristicasContainer .caracteristica-item').each(function(){
+            const $item = $(this);
+            const $tipo = $item.find('select[name*="[tipo]"]');
+            const $max = $item.find('input[name*="[max]"]');
+            if ($tipo.val() !== 'string') {
+                $max.val('');
+                $max.css('display','none');
+                $max.prop('required', false);
+                $max.removeClass('is-valid is-invalid');
+            }
+            // Limpiar select tipo
+            $tipo.val('');
+        });
+
+        // Dejar solo la primera característica (si existe) y eliminar las adicionales
+        const $cont = $('#caracteristicasContainer');
+        const $items = $cont.find('.caracteristica-item');
+        if ($items.length > 0) {
+            // Conservar el primero
+            const $first = $items.first();
+            // Remover el resto
+            $items.slice(1).remove();
+            // Limpiar valores del primero
+            $first.find('input[name*="[nombre]"]').val('');
+            const $tipoFirst = $first.find('select[name*="[tipo]"]');
+            const $maxFirst = $first.find('input[name*="[max]"]');
+            $tipoFirst.val('');
+            $maxFirst.val('').css('display','none').prop('required', false);
+            $first.find('input, select').removeClass('is-valid is-invalid');
+        }
+
+        // Reactivar botón Agregar característica
+        const btnAgregar = document.getElementById('agregarCaracteristica');
+        if (btnAgregar) btnAgregar.disabled = false;
     }
 
     $('#btnIncluirCategoria').on('click', function() {
-        $('#registrarCategoria')[0].reset();
-        $('#snombre_categoria').text('');
+        resetCategoria();
         $('#registrarCategoriaModal').modal('show');
+    });
+
+    // Al cerrar el modal, limpiar estados visuales
+    $('#registrarCategoriaModal').on('hidden.bs.modal', function(){
+        resetCategoria();
+    });
+
+    // Al abrir el modal, asegurar estados limpios
+    $('#registrarCategoriaModal').on('shown.bs.modal', function(){
+        $("#nombre_categoria").removeClass("is-valid is-invalid");
+        $('#caracteristicasContainer .caracteristica-item input, #caracteristicasContainer .caracteristica-item select')
+            .removeClass('is-valid is-invalid');
+        // Ocultar campo max si tipo no es string al abrir
+        $('#caracteristicasContainer .caracteristica-item').each(function(){
+            const $item = $(this);
+            const $tipo = $item.find('select[name*="[tipo]"]');
+            const $max = $item.find('input[name*="[max]"]');
+            if ($tipo.val() !== 'string') {
+                $max.val('');
+                $max.css('display','none');
+                $max.prop('required', false);
+            }
+        });
+        // Asegurar solo una fila inicial
+        const $cont = $('#caracteristicasContainer');
+        const $items = $cont.find('.caracteristica-item');
+        if ($items.length > 1) {
+            $items.slice(1).remove();
+        }
+        const btnAgregar = document.getElementById('agregarCaracteristica');
+        if (btnAgregar) btnAgregar.disabled = false;
     });
 
     $('#registrarCategoria').on('submit', function(e) {
@@ -314,10 +440,23 @@ $(document).ready(function () {
     });
     
     $("#modificar_nombre_categoria").on("keyup", function(){
+        const $input = $(this);
+        const $span = $("#smnombre_categoria");
+        const val = $input.val().trim();
+        if (val.length === 0) {
+            $input.removeClass("is-valid").addClass("is-invalid");
+            $span.text("*Campo obligatorio*");
+            return;
+        }
+        if (val.length < 2) {
+            $input.removeClass("is-valid").addClass("is-invalid");
+            $span.text("*Mínimo 2 caracteres*");
+            return;
+        }
         validarKeyUp(
             /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]{2,20}$/,
-            $(this),
-            $("#smnombre_categoria"),
+            $input,
+            $span,
             "*El formato permite letras y números*"
         );
     });
@@ -480,6 +619,72 @@ $(document).ready(function () {
         $('#modificarCategoriaModal').modal('hide');
     });
 
+    // Validaciones delegadas: nombre de característica (keypress/keyup) y tipo (change)
+    $(document).on('keypress', '#caracteristicasContainer input[name*="[nombre]"], #modificar_caracteristicasContainer input[name*="[nombre]"]', function(e){
+        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]*$/, e);
+        this.value = space(this.value);
+    });
+
+    $(document).on('keyup', '#caracteristicasContainer input[name*="[nombre]"], #modificar_caracteristicasContainer input[name*="[nombre]"]', function(){
+        const $input = $(this);
+        const val = $input.val().trim();
+        if (val.length === 0) {
+            $input.removeClass('is-valid').addClass('is-invalid');
+            return;
+        }
+        if (val.length < 2) {
+            $input.removeClass('is-valid').addClass('is-invalid');
+            return;
+        }
+        if (/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]{2,20}$/.test(val)) {
+            $input.removeClass('is-invalid').addClass('is-valid');
+        } else {
+            $input.removeClass('is-valid').addClass('is-invalid');
+        }
+    });
+
+    $(document).on('change', '#caracteristicasContainer select[name*="[tipo]"], #modificar_caracteristicasContainer select[name*="[tipo]"]', function(){
+        const $sel = $(this);
+        const cont = $sel.closest('.caracteristica-item');
+        const $max = cont.find('input[name*="[max]"]');
+        if (!$sel.val()) {
+            $sel.removeClass('is-valid').addClass('is-invalid');
+        } else {
+            $sel.removeClass('is-invalid').addClass('is-valid');
+        }
+        // Configurar restricciones cuando es string
+        if ($sel.val() === 'string') {
+            $max.attr({ min: 1, max: 100, maxlength: 3, step: 1 });
+        }
+    });
+
+    // Restringir a enteros 1-100 (3 dígitos máx) sin decimales
+    $(document).on('keypress', '#caracteristicasContainer input[name*="[max]"], #modificar_caracteristicasContainer input[name*="[max]"]', function(e){
+        const ch = String.fromCharCode(e.which);
+        if (!/[0-9]/.test(ch)) { e.preventDefault(); return; }
+        // Limitar a 3 dígitos
+        if (this.value && this.value.length >= 3 && this.selectionStart === this.selectionEnd) {
+            e.preventDefault();
+        }
+    });
+
+    $(document).on('input keyup change', '#caracteristicasContainer input[name*="[max]"], #modificar_caracteristicasContainer input[name*="[max]"]', function(){
+        const $max = $(this);
+        // Eliminar no dígitos
+        let val = ($max.val() || '').replace(/\D+/g, '');
+        if (val.length > 3) val = val.slice(0,3);
+        let num = parseInt(val || '0', 10);
+        if (isNaN(num)) num = 0;
+        // Clampear entre 1 y 100
+        if (num > 100) num = 100;
+        $max.val(num ? String(num) : '');
+        if (!num || num < 1) {
+            $max.removeClass('is-valid').addClass('is-invalid');
+        } else {
+            $max.removeClass('is-invalid').addClass('is-valid');
+        }
+    });
+
     // FUNCIÓN DE ELIMINACIÓN CON VALIDACIÓN DE PRODUCTOS ASOCIADOS
     $(document).on('click', '.btn-eliminar', function (e) {
         e.preventDefault();
@@ -536,7 +741,7 @@ $(document).ready(function () {
                             
                             Swal.fire({
                                 icon: 'error',
-                                title: 'No se puede eliminar',
+                                title: 'Eliminación negada',
                                 html: mensaje,
                                 width: '700px',
                                 customClass: {
@@ -600,8 +805,9 @@ $(document).ready(function () {
             if (puedeEliminar) {
                 div.querySelector('.btn-eliminar-caracteristicas').addEventListener('click', () => {
                     contenedor.removeChild(div);
-                    contador--;
-                    btnAgregar.disabled = false;
+                    // Recalcular total actual tras eliminar y actualizar botón
+                    const total = contenedor.querySelectorAll('.caracteristica-item').length;
+                    btnAgregar.disabled = (total >= maxCaracteristicas);
                 });
             }
 
@@ -612,12 +818,14 @@ $(document).ready(function () {
         crearInputCaracteristica(contador++, false);
 
         btnAgregar.addEventListener('click', () => {
+            // Recalcular contador según elementos actuales para soportar resets
+            contador = contenedor.querySelectorAll('.caracteristica-item').length;
             if (contador < maxCaracteristicas) {
                 crearInputCaracteristica(contador++);
-                if (contador === maxCaracteristicas) {
-                    btnAgregar.disabled = true;
-                }
             }
+            // Actualizar estado del botón según el total actual
+            const total = contenedor.querySelectorAll('.caracteristica-item').length;
+            btnAgregar.disabled = (total >= maxCaracteristicas);
         });
     });
 
@@ -656,8 +864,12 @@ $(document).ready(function () {
         if (puedeEliminar) {
             div.querySelector('.btn-eliminar-caracteristicas').addEventListener('click', () => {
                 div.parentNode.removeChild(div);
-                modificarContador--;
-                modificarBtnAgregar.disabled = false;
+                // Recalcular total actual tras eliminar y actualizar botón
+                const contenedor = document.getElementById('modificar_caracteristicasContainer');
+                modificarContador = contenedor.querySelectorAll('.caracteristica-item').length;
+                if (modificarBtnAgregar) {
+                    modificarBtnAgregar.disabled = (modificarContador >= modificarMaxCaracteristicas);
+                }
             });
         }
 
@@ -733,6 +945,20 @@ $(document).ready(function () {
                 modificarBtnAgregar = document.getElementById('modificar_agregarCaracteristica');
                 modificarBtnAgregar.disabled = modificarContador >= modificarMaxCaracteristicas;
 
+                // Limpiar estados visuales y ajustar visibilidad/attrs de max según tipo
+                $('#modificar_caracteristicasContainer .caracteristica-item input, #modificar_caracteristicasContainer .caracteristica-item select')
+                    .removeClass('is-valid is-invalid');
+                $('#modificar_caracteristicasContainer .caracteristica-item').each(function(){
+                    const $item = $(this);
+                    const $tipo = $item.find('select[name*="[tipo]"]');
+                    const $max = $item.find('input[name*="[max]"]');
+                    if ($tipo.val() === 'string') {
+                        $max.css('display','').prop('required', true).attr({min:1, max:100, maxlength:3, step:1});
+                    } else {
+                        $max.val('').css('display','none').prop('required', false);
+                    }
+                });
+
                 $('#modificarCategoriaModal').modal('show');
             },
             error: function () {
@@ -744,19 +970,42 @@ $(document).ready(function () {
     // Agregar característica en el modal de modificar
     $(document).on('click', '#modificar_agregarCaracteristica', function () {
         const contenedor = document.getElementById('modificar_caracteristicasContainer');
+        // Recalcular contador desde el DOM para soportar cierres/resets
+        modificarContador = contenedor.querySelectorAll('.caracteristica-item').length;
         if (modificarContador < modificarMaxCaracteristicas) {
             contenedor.appendChild(crearInputCaracteristicaMod(modificarContador++));
-            if (modificarContador === modificarMaxCaracteristicas) {
-                this.disabled = true;
-            }
         }
+        // Actualizar estado del botón
+        const total = contenedor.querySelectorAll('.caracteristica-item').length;
+        this.disabled = (total >= modificarMaxCaracteristicas);
+    });
+
+    // Al mostrar el modal de modificar, limpiar estados visuales
+    $('#modificarCategoriaModal').on('shown.bs.modal', function(){
+        $('#modificar_caracteristicasContainer .caracteristica-item input, #modificar_caracteristicasContainer .caracteristica-item select')
+            .removeClass('is-valid is-invalid');
+        const contenedor = document.getElementById('modificar_caracteristicasContainer');
+        modificarContador = contenedor ? contenedor.querySelectorAll('.caracteristica-item').length : 0;
+        if (modificarBtnAgregar) {
+            modificarBtnAgregar.disabled = (modificarContador >= modificarMaxCaracteristicas);
+        }
+        // Ajustar visibilidad de max según tipo y setear attrs si corresponde
+        $('#modificar_caracteristicasContainer .caracteristica-item').each(function(){
+            const $item = $(this);
+            const $tipo = $item.find('select[name*="[tipo]"]');
+            const $max = $item.find('input[name*="[max]"]');
+            if ($tipo.val() === 'string') {
+                $max.css('display','').prop('required', true).attr({min:1, max:100, maxlength:3, step:1});
+            } else {
+                $max.val('').css('display','none').prop('required', false);
+            }
+        });
     });
 
     // FUNCIONES UTILITARIAS
-    function mensajes(icono, tiempo, titulo, mensaje){
+    function mensajes(icono, titulo, mensaje){
         Swal.fire({
             icon: icono,
-            timer: tiempo,
             title: titulo,
             text: mensaje,
             showConfirmButton: true,

@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     $("#nombre_banco").on("keypress", function(e){
@@ -12,10 +12,10 @@ $(document).ready(function () {
 
     $("#nombre_banco").on("keyup", function(){
         validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/,
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{2,20}$/,
             $(this),
             $("#snombre_banco"),
-            "*El formato solo permite letras*"
+            "*Solo letras, de 2 a 20 caracteres*"
         );
     });
 
@@ -27,7 +27,7 @@ $(document).ready(function () {
             /^\d{4}-\d{4}-\d{2}-\d{10}$/,
             $(this),
             $("#snumero_cuenta"),
-            "*Formato válido: 01XX-XXXX-XX-XXXXXXXXXX*"
+            "*Formato válido: 0100-0000-00-0000000000*"
         );
     });
     $("#numero_cuenta").on("input", function() {
@@ -42,14 +42,14 @@ $(document).ready(function () {
     });
 
     $("#rif_cuenta").on("keypress", function(e){ 
-        validarKeyPress(/^[VEJPG0-9]$/i, e); 
+        validarKeyPress(/^[VEJPG0-9-\b]*$/i, e); 
     });
     $("#rif_cuenta").on("keyup", function(){ 
         validarKeyUp(
-            /^[VEJPG]-\d{8}-\d{1}$/,
+            /^[VEJPG]-\d{8}-\d$/,
             $(this),
             $("#srif_cuenta"),
-            "*Formato válido: J-12345678-9*"
+            "*Formato válido: (VEJPG)-12345678-9*"
         );
     });
     $("#rif_cuenta").on("input", function() {
@@ -84,7 +84,7 @@ $(document).ready(function () {
             /^\d{4}-\d{3}-\d{4}$/,
             $(this),
             $("#stelefono_cuenta"),
-            "*Formato válido: 04XX-XXX-XXXX*"
+            "*Formato válido: 0400-000-0000*"
         );
     });
     $("#telefono_cuenta").on("input", function() {
@@ -97,17 +97,26 @@ $(document).ready(function () {
     });
 
     $("#correo_cuenta").on("keypress", function (e) {
-        validarKeyPress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+        validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
     });
 
-    $("#correo_cuenta").on("keyup", function(){
+    $("#correo_cuenta").on("keyup", function () {
         validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            $(this),
-            $("#scorreo_cuenta"),
-            "*Formato válido: example@gmail.com*"
+        /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
+        $(this),
+        $("#scorreo_cuenta"),
+        "*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*"
         );
     });
+
+    $("#tipo_moneda").on("change", function(){
+        if ($(this).val()) {
+            $(this).removeClass("is-invalid").addClass("is-valid");
+        } else {
+            $(this).removeClass("is-valid").addClass("is-invalid");
+        }
+    });
+
     function verificarPermisosEnTiempoRealCuentas() {
     var datos = new FormData();
     datos.append('accion', 'permisos_tiempo_real');
@@ -164,53 +173,95 @@ $(document).ready(function() {
     verificarPermisosEnTiempoRealCuentas();
     setInterval(verificarPermisosEnTiempoRealCuentas, 10000); // 10 segundos
 });
-    function validarEnvioCuenta(){
-        let nombre = document.getElementById("nombre_banco");
-        nombre.value = space(nombre.value).trim();
 
-        if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/,
-            $("#nombre_banco"),
-            $("#snombre_banco"),
-            "*El nombre debe tener solo letras*"
-        )==0){
-            mensajes('error',4000,'Verifique el nombre del banco','Debe tener solo letras');
+    function validarEnvioCuenta(){
+        // Nombre del banco
+        let nombre = $("#nombre_banco");
+        nombre.val(space(nombre.val()).trim());
+        const nombreVal = nombre.val();
+        if (nombreVal === "") {
+            $("#snombre_banco").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el nombre del banco','El campo está vacío.');
             return false;
         }
-        else if(validarKeyUp(
-            /^\d{4}-\d{4}-\d{2}-\d{10}$/,
-            $("#numero_cuenta"),
-            $("#snumero_cuenta"),
-            "*Formato correcto: 01XX-XXXX-XX-XXXXXXXXXX*"
-        )==0){
-            mensajes('error',4000,'Verifique el número de cuenta','Debe tener 20 dígitos');
+        if (nombreVal.length < 2) {
+            $("#snombre_banco").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre del banco','Debe tener mínimo 2 caracteres.');
             return false;
         }
-        else if(validarKeyUp(
-            /^[VEJPG]-\d{8}-\d{1}$/,
-            $("#rif_cuenta"),
-            $("#srif_cuenta"),
-            "*Formato correcto: J-12345678-9*"
-        )==0){
-            mensajes('error',4000,'Verifique el RIF','Formato incorrecto');
+
+        // Número de cuenta
+        let numero = $("#numero_cuenta");
+        const numVal = numero.val().trim();
+        if (numVal === "") {
+            $("#snumero_cuenta").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el número de cuenta','El campo está vacío.');
             return false;
         }
-        else if(validarKeyUp(
-            /^\d{4}-\d{3}-\d{4}$/,
-            $("#telefono_cuenta"),
-            $("#stelefono_cuenta"),
-            "*Formato correcto: 04XX-XXX-XXXX*"
-        )==0){
-            mensajes('error',4000,'Verifique el teléfono','Debe tener 11 dígitos');
+        if (!/^\d{4}-\d{4}-\d{2}-\d{10}$/.test(numVal)) {
+            $("#snumero_cuenta").text("*Formato válido: 0100-0000-00-0000000000*");
+            mensajes('error','Verifique el número de cuenta','Formato inválido.');
             return false;
         }
-        else if(validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            $("#correo_cuenta"),
-            $("#scorreo_cuenta"),
-            "*Formato correcto: example@gmail.com*"
-        )==0){
-            mensajes('error',4000,'Verifique el correo','Correo no válido');
+
+        // RIF de la cuenta
+        let rif = $("#rif_cuenta");
+        const rifVal = rif.val().trim();
+        if (rifVal === "") {
+            $("#srif_cuenta").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el RIF','El campo está vacío.');
+            return false;
+        }
+        if (!/^[VEJPG]-\d{8}-\d$/.test(rifVal)) {
+            $("#srif_cuenta").text("*Formato válido: (VEJPG)-12345678-9*");
+            mensajes('error','Verifique el RIF','Formato inválido.');
+            return false;
+        }
+
+        // Teléfono de la cuenta
+        let tel = $("#telefono_cuenta");
+        const telVal = tel.val().trim();
+        if (telVal === "") {
+            $("#stelefono_cuenta").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el teléfono','El campo está vacío.');
+            return false;
+        }
+        if (!/^\d{4}-\d{3}-\d{4}$/.test(telVal)) {
+            $("#stelefono_cuenta").text("*Formato válido: 0400-000-0000*");
+            mensajes('error','Verifique el teléfono','Formato inválido.');
+            return false;
+        }
+
+        // Correo de la cuenta
+        let correo = $("#correo_cuenta");
+        const correoVal = correo.val().trim();
+        if (correoVal === "") {
+            $("#scorreo_cuenta").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el correo','El campo está vacío.');
+            return false;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoVal)) {
+            $("#scorreo_cuenta").text("*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*");
+            mensajes('error','Verifique el correo','Formato inválido.');
+            return false;
+        }
+
+        let tipo_moneda = $("#tipo_moneda");
+        if (!tipo_moneda.val()) {
+            tipo_moneda.addClass("is-invalid");
+            mensajes('error','Verifique el tipo de moneda','Debe seleccionar un tipo de moneda para la cuenta.');
+            return false;
+        } else {
+            tipo_moneda.removeClass("is-invalid");
+        }
+
+        // Métodos de pago
+        if ($('input[name="metodos_pago[]"]:checked').length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Verifique los métodos de pago',
+                text: 'Debe seleccionar al menos un método de pago.'
+            });
             return false;
         }
         return true;
@@ -277,7 +328,19 @@ $(document).ready(function() {
         $('#srif_cuenta').text('');
         $('#stelefono_cuenta').text('');
         $('#scorreo_cuenta').text('');
+        $("#tipo_moneda").val("");
+        $("#tipo_moneda").removeClass("is-valid is-invalid");
+        $('.metodos-bs').removeClass('d-none');
+        $('.metodos-usd').addClass('d-none');
+        $('#pagoMovil, #transferencia, #zelle').prop('checked', false);
     }
+
+    $('#registrarCuenta').on('reset', function() {
+        setTimeout(function() {
+            $("#tipo_moneda").val("");
+            $("#tipo_moneda").removeClass("is-valid is-invalid");
+        }, 0);
+    });
 
     $('#btnIncluirCuenta').on('click', function() {
         $('#registrarCuenta')[0].reset();
@@ -286,6 +349,7 @@ $(document).ready(function() {
         $('#srif_cuenta').text('');
         $('#stelefono_cuenta').text('');
         $('#scorreo_cuenta').text('');
+        $("#tipo_moneda").removeClass("is-valid is-invalid");
         $('.metodos-bs').removeClass('d-none');
         $('.metodos-usd').addClass('d-none');
         $('#pagoMovil, #transferencia, #zelle').prop('checked', false);
@@ -294,15 +358,212 @@ $(document).ready(function() {
 
     $('#registrarCuenta').on('submit', function(e) {
         e.preventDefault();
-    if ($('input[name="metodos_pago[]"]:checked').length === 0) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de validación',
-            text: 'Debe seleccionar al menos un método de pago.'
-        });
-        return false;
-    }
+
         if(validarEnvioCuenta()){
+        var formData = new FormData(this);
+        formData.append('accion', 'registrar');
+    
+        enviarAjax(formData, function(respuesta){
+            if(respuesta.status === "success" || respuesta.resultado === "success"){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: respuesta.message || respuesta.msg || 'Cuenta registrada correctamente'
+                });
+                if(respuesta.status === "success" && respuesta.cuenta){
+                    agregarFilaCuenta(respuesta.cuenta);
+                    resetCuenta();
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: respuesta.message || respuesta.msg || 'No se pudo registrar la cuenta'
+                });
+            }
+        });
+    }
+});
+
+$(document).on('click', '#registrarCuentaModal .close', function() {
+    $('#registrarCuentaModal').modal('hide');
+});
+
+function enviarAjax(datos, callback) {
+    let esFormData = (typeof datos === "object" && typeof datos.append === "function");
+    $.ajax({
+        url: '',
+        type: 'POST',
+        data: datos,
+        processData: !esFormData ? true : false,
+        contentType: !esFormData ? 'application/x-www-form-urlencoded; charset=UTF-8' : false,
+        dataType: 'json',
+        success: function (respuesta) {
+            if(callback) callback(respuesta);
+        },
+        error: function () {
+            Swal.fire('Error', 'Error en la solicitud AJAX', 'error');
+        }
+    });
+}
+
+$("#modificar_nombre_banco").on("keypress", function(e){
+    validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]*$/, e);
+    let nombre = document.getElementById("modificar_nombre_banco");
+    nombre.value = Espacios(nombre.value);
+});
+$("#modificar_nombre_banco").on("keyup", function(){
+    validarKeyUp(
+        /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/,
+        $(this),
+        $("#smnombre_banco"),
+        "*El formato solo permite letras y mínimo 3 caracteres*"
+    );
+});
+
+$("#modificar_numero_cuenta").on("keypress", function(e){
+    validarKeyPress(/^[0-9-]*$/, e);
+});
+$("#modificar_numero_cuenta").on("keyup", function(){
+    validarKeyUp(
+        /^\d{4}-\d{4}-\d{2}-\d{10}$/,
+        $(this),
+        $("#smnumero_cuenta"),
+        "*Formato válido: 0100-0000-00-0000000000*"
+    );
+});
+$("#modificar_numero_cuenta").on("input", function() {
+    let valor_nc = $(this).val().replace(/\D/g, '');
+    if(valor_nc.length > 4 && valor_nc.length <= 8)
+        valor_nc = valor_nc.slice(0,4) + '-' + valor_nc.slice(4);
+    else if(valor_nc.length > 8 && valor_nc.length <= 10)
+        valor_nc = valor_nc.slice(0,4) + '-' + valor_nc.slice(4,8) + '-' + valor_nc.slice(8,10);
+    else if(valor_nc.length > 10)
+        valor_nc = valor_nc.slice(0,4) + '-' + valor_nc.slice(4,8) + '-' + valor_nc.slice(8,10) + '-' + valor_nc.slice(10,20);
+    $(this).val(valor_nc);
+});
+
+$("#modificar_rif_cuenta").on("keypress", function(e){
+    validarKeyPress(/^[vejpg0-9-\b]*$/i, e);
+});
+$("#modificar_rif_cuenta").on("keyup", function(){
+    validarKeyUp(
+        /^[vejpg0-9-\b]*$/i,
+        $(this),
+        $("#smrif_cuenta"),
+        "*Formato válido: J-12345678-9*"
+    );
+});
+$("#modificar_rif_cuenta").on("input", function() {
+    let valor = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+    let resultado = '';
+    if (valor.length > 0) {
+        let letra = valor.charAt(0);
+        if ('VEJPG'.includes(letra)) {
+            resultado = letra;
+        } else {
+            resultado = '';
+        }
+
+        let numeros = valor.substring(1).replace(/\D/g, '');
+
+        if (numeros.length > 0) {
+            resultado += '-' + numeros.substring(0, 8);
+            if (numeros.length > 8) {
+                resultado += '-' + numeros.substring(8, 9);
+            }
+        }
+    }
+    $(this).val(resultado);
+});
+
+$("#modificar_telefono_cuenta").on("keypress", function(e){
+    validarKeyPress(/^[0-9]*$/, e);
+});
+$("#modificar_telefono_cuenta").on("keyup", function(){
+    validarKeyUp(
+        /^\d{4}-\d{3}-\d{4}$/,
+        $(this),
+        $("#smtelefono_cuenta"),
+        "*El teléfono debe tener exactamente 11 dígitos*"
+    );
+});
+$("#modificar_telefono_cuenta").on("input", function() {
+    let valor = $(this).val().replace(/\D/g, '');
+    if(valor.length > 4 && valor.length <= 7)
+        valor = valor.slice(0,4) + '-' + valor.slice(4);
+    else if(valor.length > 7)
+        valor = valor.slice(0,4) + '-' + valor.slice(4,7) + '-' + valor.slice(7,11);
+    $(this).val(valor);
+});
+
+$("#modificar_correo_cuenta").on("keypress", function (e) {
+    validarKeyPress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+});
+
+$("#modificar_correo_cuenta").on("keyup", function(){
+    validarKeyUp(
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        $(this),
+        $("#smcorreo_cuenta"),
+        "*El correo electrónico no es válido*"
+    );
+});
+
+function validarCuenta(datos) {
+    let errores = [];
+    if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/.test(datos.nombre_banco)) {
+        errores.push("El nombre debe tener solo letras.");
+    }
+    if (!/^\d{4}-\d{4}-\d{2}-\d{10}$/.test(datos.numero_cuenta)) {
+        errores.push("Formato correcto: 0100-0000-00-0000000000.");
+    }
+    if (!/^[VEJPG]-\d{8}-\d$/.test(datos.rif_cuenta)) {
+        errores.push("Formato de RIF inválido (ej: J-12345678-9).");
+    }
+    if (!/^\d{4}-\d{3}-\d{4}$/.test(datos.telefono_cuenta)) {
+        errores.push("Formato correcto: 04XX-XXX-XXXX.");
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo_cuenta)) {
+        errores.push("Formato correcto: example@gmail.com.");
+    }
+    return errores;
+}
+
+$(document).on('click', '#btnModificarCuenta', function () {
+    $('#modificar_id_cuenta').val($(this).data('id'));
+    $('#modificar_nombre_banco').val($(this).data('nombre'));
+    $('#modificar_numero_cuenta').val($(this).data('numero'));
+    $('#modificar_rif_cuenta').val($(this).data('rif'));
+    $('#modificar_telefono_cuenta').val($(this).data('telefono'));
+    $('#modificar_correo_cuenta').val($(this).data('correo'));
+
+    $('#smnombre_banco').text('');
+    $('#smnumero_cuenta').text('');
+    $('#smrif_cuenta').text('');
+    $('#smtelefono_cuenta').text('');
+    $('#smcorreo_cuenta').text('');
+
+    // Limpia selección de métodos
+    $('#pagoMovil_modificar, #transferencia_modificar, #zelle_modificar').prop('checked', false);
+
+    // Inicializa según moneda actual
+    const moneda = $('#tipo_moneda_modificar').val();
+    if (moneda === 'bs') {
+        $('.metodos-bs_modificar').removeClass('d-none');
+        $('.metodos-usd_modificar').addClass('d-none');
+    } else if (moneda === 'usd') {
+        $('.metodos-usd_modificar').removeClass('d-none');
+
+// Al presionar "Limpiar" en el formulario de cuenta, quitar estado visual
+$('#registrarCuenta').on('reset', function(){
+    setTimeout(function(){
+        $("#tipo_moneda").val("");
+        $("#tipo_moneda").removeClass("is-valid is-invalid");
+        $('#pagoMovil, #transferencia, #zelle').prop('checked', false);
+    }, 0);
+});
             var formData = new FormData(this);
             formData.append('accion', 'registrar');
         
@@ -372,7 +633,7 @@ $(document).ready(function() {
             /^\d{4}-\d{4}-\d{2}-\d{10}$/,
             $(this),
             $("#smnumero_cuenta"),
-            "*Formato válido: 01XX-XXXX-XX-XXXXXXXXXX*"
+            "*Formato válido: 0100-0000-00-0000000000*"
         );
     });
     $("#modificar_numero_cuenta").on("input", function() {
@@ -460,7 +721,7 @@ $(document).ready(function() {
             errores.push("El nombre debe tener solo letras.");
         }
         if (!/^\d{4}-\d{4}-\d{2}-\d{10}$/.test(datos.numero_cuenta)) {
-            errores.push("Formato correcto: 01XX-XXXX-XX-XXXXXXXXXX.");
+            errores.push("Formato correcto: 0100-0000-00-0000000000.");
         }
         if (!/^[VEJPG]-\d{8}-\d$/.test(datos.rif_cuenta)) {
             errores.push("Formato de RIF inválido (ej: J-12345678-9).");
@@ -509,14 +770,24 @@ $(document).ready(function() {
 
     $('#modificarCuenta').on('submit', function(e) {
         e.preventDefault();
-            if ($('#modificarCuenta input[name="metodos_pago[]"]:checked').length === 0) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de validación',
-            text: 'Debe seleccionar al menos un método de pago.'
-        });
-        return false;
-    }
+        if ($('#modificarCuenta input[name="metodos_pago[]"]:checked').length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'Debe seleccionar al menos un método de pago.'
+            });
+            return false;
+        }
+
+        // Validar tipo de moneda en modificar
+        const tipoMonedaMod = $('#tipo_moneda_modificar');
+        if (!tipoMonedaMod.val()) {
+            tipoMonedaMod.removeClass('is-valid').addClass('is-invalid');
+            mensajes('error','Verifique el tipo de moneda','Debe seleccionar un tipo de moneda.');
+            return false;
+        } else {
+            tipoMonedaMod.removeClass('is-invalid').addClass('is-valid');
+        }
 
         const datos = {
             nombre_banco: $('#modificar_nombre_banco').val(),
@@ -732,10 +1003,9 @@ $(document).ready(function() {
         });
     }
 
-    function mensajes(icono, tiempo, titulo, mensaje){
+    function mensajes(icono, titulo, mensaje){
         Swal.fire({
             icon: icono,
-            timer: tiempo,
             title: titulo,
             text: mensaje,
             showConfirmButton: true,
@@ -786,6 +1056,14 @@ $(document).ready(function() {
 
     $('#tipo_moneda').on('change', function () {
         const moneda = $(this).val();
+
+        // Estado visual similar a select de rol en usuario
+        if (moneda) {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+        } else {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+        }
+
         if (moneda === 'bs') {
             $('.metodos-bs').removeClass('d-none');
             $('.metodos-usd').addClass('d-none');

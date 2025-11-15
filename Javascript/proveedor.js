@@ -1,17 +1,17 @@
 $(document).ready(function () {
 
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     $("#nombre_proveedor").on("keypress", function (e) {
-        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s]*$/, e);
+        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]*$/, e);
         let nombre_p = document.getElementById("nombre_proveedor");
         nombre_p.value = space(nombre_p.value);
     });
     $("#nombre_proveedor").on("keyup", function () {
         validarKeyUp(
-        /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s]{2,50}$/,
+        /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,50}$/,
         $(this),
         $("#snombre_proveedor"),
         "*Solo letras, de 2 a 50 caracteres*"
@@ -103,25 +103,25 @@ $(document).ready(function () {
     });
 
     $("#correo_proveedor").on("keypress", function (e) {
-        validarKeyPress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+        validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
     });
     $("#correo_proveedor").on("keyup", function(){
         validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
             $(this),
             $("#scorreo_proveedor"),
-            "*Formato válido: ejemplo@gmail.com*"
+            "*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*"
         );
     });
 
     $("#direccion_proveedor").on("keypress", function(e){
-        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
+        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,.-\s\b]*$/, e);
         let direccion = document.getElementById("direccion_proveedor");
         direccion.value = space(direccion.value);
     });
     $("#direccion_proveedor").on("keyup", function(){
         validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,.-\s\b]{2,100}$/,
             $(this),
             $("#sdireccion_proveedor"),
             "*El formato permite letras y números*"
@@ -136,7 +136,7 @@ $(document).ready(function () {
             /^\d{4}-\d{3}-\d{4}$/,
             $(this),
             $("#stelefono_1"),
-            "*Formato válido: 0400-000-0000*"
+            "*Formato válido: 0200-000-0000*"
         );
     });
     $("#telefono_1").on("input", function() {
@@ -169,18 +169,19 @@ $(document).ready(function () {
     });
 
     $("#observacion").on("keypress", function(e){
-        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
+        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,.-\s\b]*$/, e);
         let observacion = document.getElementById("observacion");
         observacion.value = space(observacion.value);
     });
     $("#observacion").on("keyup", function(){
         validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,.-\s\b]{2,100}$/,
             $(this),
             $("#sobservacion"),
             "*El formato permite letras y números*"
         );
     });
+
 function verificarPermisosEnTiempoRealProveedores() {
     var datos = new FormData();
     datos.append('accion', 'permisos_tiempo_real');
@@ -236,107 +237,138 @@ $(document).ready(function() {
     verificarPermisosEnTiempoRealProveedores();
     setInterval(verificarPermisosEnTiempoRealProveedores, 10000); // 10 segundos
 });
+
     function validarEnvioProveedor(){
-        let nombre_p = document.getElementById("nombre_proveedor");
-        nombre_p.value = space(nombre_p.value).trim();
-
-        let nombre_r = document.getElementById("nombre_representante");
-        nombre_r.value = space(nombre_r.value).trim();
-
-        let direccion = document.getElementById("direccion_proveedor");
-        direccion.value = space(direccion.value).trim();
-
-        let observacion = document.getElementById("observacion");
-        observacion.value = space(observacion.value).trim();
-
-        if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]{3,20}$/,
-            $("#nombre_proveedor"),
-            $("#snombre_proveedor"),
-            "*El nombre debe tener letras y/o números*"
-        )==0){
-            mensajes('error',4000,'Verifique el nombre del proveedor','Debe tener letras y/o números');
+        // Nombre del proveedor
+        let nombre_p = $("#nombre_proveedor");
+        nombre_p.val(space(nombre_p.val()).trim());
+        const nombreProvVal = nombre_p.val();
+        if (nombreProvVal === "") {
+            $("#snombre_proveedor").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el nombre del proveedor','El campo está vacío.');
+            return false;
+        }
+        if (nombreProvVal.length < 2) {
+            $("#snombre_proveedor").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre del proveedor','Debe tener mínimo 2 caracteres.');
             return false;
         }
 
-        else if(validarKeyUp(
-            /^[VEJPG]-\d{8}-\d{1}$/,
-            $("#rif_proveedor"),
-            $("#srif_proveedor"),
-            "*Formato correcto: J-12345678-9*"
-        )==0){
-            mensajes('error',4000,'Verifique el RIF','Formato incorrecto');
+        // RIF del proveedor
+        let rif_p = $("#rif_proveedor");
+        const rifProvVal = rif_p.val().trim();
+        if (rifProvVal === "") {
+            $("#srif_proveedor").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el RIF del proveedor','El campo está vacío.');
+            return false;
+        }
+        if (!/^[VEJPG]-\d{8}-\d$/.test(rifProvVal)) {
+            $("#srif_proveedor").text("*Formato válido: (VEJPG)-12345678-9*");
+            mensajes('error','Verifique el RIF del proveedor','Formato inválido.');
             return false;
         }
 
-        else if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/,
-            $("#nombre_representante"),
-            $("#snombre_representante"),
-            "*El nombre debe tener solo letras*"
-        )==0){
-            mensajes('error',4000,'Verifique el nombre del representante','Debe tener solo letras');
+        // Nombre del representante
+        let nombre_r = $("#nombre_representante");
+        nombre_r.val(space(nombre_r.val()).trim());
+        const nombreRepVal = nombre_r.val();
+        if (nombreRepVal === "") {
+            $("#snombre_representante").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el nombre del representante','El campo está vacío.');
+            return false;
+        }
+        if (nombreRepVal.length < 2) {
+            $("#snombre_representante").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique el nombre del representante','Debe tener mínimo 2 caracteres.');
             return false;
         }
 
-        else if(validarKeyUp(
-            /^[VEJPG]-\d{8}-\d{1}$/,
-            $("#rif_representante"),
-            $("#srif_representante"),
-            "*Formato correcto: J-12345678-9*"
-        )==0){
-            mensajes('error',4000,'Verifique el RIF','Formato incorrecto');
+        // RIF del representante
+        let rif_r = $("#rif_representante");
+        const rifRepVal = rif_r.val().trim();
+        if (rifRepVal === "") {
+            $("#srif_representante").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el RIF del representante','El campo está vacío.');
+            return false;
+        }
+        if (!/^[VEJPG]-\d{8}-\d$/.test(rifRepVal)) {
+            $("#srif_representante").text("*Formato válido: (VEJPG)-12345678-9*");
+            mensajes('error','Verifique el RIF del representante','Formato inválido.');
             return false;
         }
 
-        else if(validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            $("#correo_proveedor"),
-            $("#scorreo_proveedor"),
-            "*Formato correcto: ejemplo@gmail.com*"
-        )==0){
-            mensajes('error',4000,'Verifique el correo','Correo no válido');
+        // Correo
+        let correo = $("#correo_proveedor");
+        const correoVal = correo.val().trim();
+        if (correoVal === "") {
+            $("#scorreo_proveedor").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el correo electrónico','El campo está vacío.');
+            return false;
+        }
+        if (!/^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(correoVal)) {
+            $("#scorreo_proveedor").text("*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*");
+            mensajes('error','Verifique el correo electrónico','Formato inválido.');
             return false;
         }
 
-        else if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
-            $("#direccion_proveedor"),
-            $("#sdireccion_proveedor"),
-            "*Puede haber letras y números*"
-        )==0){
-            mensajes('error',4000,'Verifique la dirección','Debe tener solo letras y números');
+        // Dirección
+        let direccion = $("#direccion_proveedor");
+        direccion.val(space(direccion.val()).trim());
+        const dirVal = direccion.val();
+        if (dirVal === "") {
+            $("#sdireccion_proveedor").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique la dirección','El campo está vacío.');
+            return false;
+        }
+        if (dirVal.length < 2) {
+            $("#sdireccion_proveedor").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique la dirección','Debe tener mínimo 2 caracteres.');
             return false;
         }
 
-        else if(validarKeyUp(
-            /^\d{4}-\d{3}-\d{4}$/,
-            $("#telefono_1"),
-            $("#stelefono_1"),
-            "*Formato correcto: 0400-000-0000*"
-        )==0){
-            mensajes('error',4000,'Verifique el teléfono','Debe tener 11 dígitos');
+        // Teléfono principal
+        let tel1 = $("#telefono_1");
+        const tel1Val = tel1.val().trim();
+        if (tel1Val === "") {
+            $("#stelefono_1").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el teléfono principal','El campo está vacío.');
+            return false;
+        }
+        if (!/^\d{4}-\d{3}-\d{4}$/.test(tel1Val)) {
+            $("#stelefono_1").text("*Formato válido: 0200-000-0000*");
+            mensajes('error','Verifique el teléfono principal','Formato inválido.');
             return false;
         }
 
-        else if(validarKeyUp(
-            /^\d{4}-\d{3}-\d{4}$/,
-            $("#telefono_2"),
-            $("#stelefono_2"),
-            "*Formato correcto: 0400-000-0000*"
-        )==0){
-            mensajes('error',4000,'Verifique el teléfono','Debe tener 11 dígitos');
+        // Teléfono secundario
+        let tel2 = $("#telefono_2");
+        const tel2Val = tel2.val().trim();
+        if (tel2Val === "") {
+            $("#stelefono_2").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el teléfono secundario','El campo está vacío.');
             return false;
         }
-        else if(validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
-            $("#observacion"),
-            $("#sobservacion"),
-            "*Puede haber letras y números*"
-        )==0){
-            mensajes('error',4000,'Verifique la observación','Debe tener solo letras y números');
+        if (!/^\d{4}-\d{3}-\d{4}$/.test(tel2Val)) {
+            $("#stelefono_2").text("*Formato válido: 0400-000-0000*");
+            mensajes('error','Verifique el teléfono secundario','Formato inválido.');
             return false;
         }
+
+        // Observación
+        let observacion = $("#observacion");
+        observacion.val(space(observacion.val()).trim());
+        const obsVal = observacion.val();
+        if (obsVal === "") {
+            $("#sobservacion").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique la observación','El campo está vacío.');
+            return false;
+        }
+        if (obsVal.length < 2) {
+            $("#sobservacion").text("*Mínimo 2 caracteres*");
+            mensajes('error','Verifique la observación','Debe tener mínimo 2 caracteres.');
+            return false;
+        }
+
         return true;
     }
 
@@ -659,22 +691,22 @@ $(document).ready(function() {
             errores.push("El nombre debe tener letras y/o números.");
         }
         if (!/^[VEJPG]-\d{8}-\d$/.test(datos.rif_proveedor)) {
-            errores.push("Formato válido: J-12345678-9.");
+            errores.push("Formato válido: (VEJPG)-12345678-9.");
         }
         if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,50}$/.test(datos.nombre_representante)) {
             errores.push("El nombre debe tener solo letras.");
         }
         if (!/^[VEJPG]-\d{8}-\d$/.test(datos.rif_representante)) {
-            errores.push("Formato válido: J-12345678-9.");
+            errores.push("Formato válido: (VEJPG)-12345678-9.");
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo_proveedor)) {
-            errores.push("Formato válido: ejemplo@gmail.com");
+            errores.push("Formato válido: ejemplo@gmail.com.");
         }
         if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/.test(datos.direccion_proveedor)) {
             errores.push("La dirección debe tener letras y/o números.");
         }
         if (!/^\d{4}-\d{3}-\d{4}$/.test(datos.telefono_1)) {
-            errores.push("Formato válido: 0400-000-0000.");
+            errores.push("Formato válido: 0200-000-0000.");
         }
         if (!/^\d{4}-\d{3}-\d{4}$/.test(datos.telefono_2)) {
             errores.push("Formato válido: 0400-000-0000.");
@@ -1014,10 +1046,9 @@ $(document).ready(function() {
         $('#PedidoProductoModal').modal('hide');
     });
 
-    function mensajes(icono, tiempo, titulo, mensaje){
+    function mensajes(icono, titulo, mensaje){
         Swal.fire({
             icon: icono,
-            timer: tiempo,
             title: titulo,
             text: mensaje,
             showConfirmButton: true,
