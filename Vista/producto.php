@@ -54,7 +54,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             </div>
           <?php else: ?>
             <!-- Formulario de registro de producto -->
-            <form id="incluirProductoForm" method="POST" enctype="multipart/form-data">
+            <form id="incluirProductoForm" method="POST" enctype="multipart/form-data" novalidate>
               <div class="modal-header">
                 <h5 class="titulo-form" id="registrarProductoModalLabel">Incluir Producto</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
@@ -412,7 +412,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
       aria-labelledby="modificarProductoModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-          <form id="modificarProductoForm" method="POST" enctype="multipart/form-data">
+          <form id="modificarProductoForm" method="POST" enctype="multipart/form-data" novalidate>
             <div class="modal-header">
               <h5 class="titulo-form" id="modificarProductoModalLabel">Modificar Producto</h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
