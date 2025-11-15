@@ -276,9 +276,6 @@ $(document).ready(function() {
     setInterval(verificarPermisosEnTiempoRealProductos, 10000); // 10 segundos
 });
     
-    
-
-    
     $('#modificarProductoForm').on('submit', function(e) {
         e.preventDefault();
         
@@ -617,8 +614,6 @@ function actualizarFilaEnTabla(producto) {
 
 $('#incluirProductoForm').on('submit', function(event) {
     event.preventDefault();
- 
- 
 
     // Validaciones antes del envío
     let errores = [];
