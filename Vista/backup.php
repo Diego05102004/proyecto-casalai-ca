@@ -31,35 +31,44 @@
         <thead>
             <tr>
                 <th>Archivo</th>
-                <th>Acción</th>
+                <th>Tipo</th>
+                <th>Tamaño</th>
+                <th>Fecha de Modificación</th>
+                <th>Acciones</th>
             </tr>
         </thead>
-
-<tbody>
-    <?php foreach ($backups as $backup): ?>
-    <tr>
-        <td>
-            <span class="campo-nombres">
-                <?= htmlspecialchars($backup) ?>
-            </span>
-        </td>
-        <td>
-            <ul>
-                <button class="btn-descargar"
-                    data-archivo="<?= htmlspecialchars($backup) ?>"
-                    title="Descargar Backup">
-                    <img src="img/download.svg">
-                </button>
-                <button class="btn-restaurar"
-                    data-archivo="<?= htmlspecialchars($backup) ?>"
-                    title="Restaurar Backup">
-                    <img src="img/rotate-ccw.svg">
-                </button>
-            </ul>
-        </td>
-    </tr>
-    <?php endforeach; ?>
-</tbody>
+        <tbody>
+            <?php foreach ($backups as $backup): ?>
+            <tr>
+                <td>
+                    <span class="campo-nombres">
+                        <?= htmlspecialchars($backup['nombre'] ?? '') ?>
+                    </span>
+                </td>
+                <td><?= htmlspecialchars($backup['tipo'] ?? '') ?></td>
+                <td><?= htmlspecialchars($backup['tamano'] ?? '') ?></td>
+                <td><?= htmlspecialchars($backup['fecha_modificacion'] ?? '') ?></td>
+                <td>
+                    <div class="d-flex">
+                            <button class="btn btn-sm btn-outline-primary me-2 btn-descargar"
+                                data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                title="Descargar">
+                                <i style="color: #007bff;" class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning btn-restaurar"
+                                data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                title="Restaurar">
+                                <i style="color: #FFC107;" class="fas fa-redo"></i>
+                            </button>
+                    </div>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
     </table>
 </div>
 
@@ -72,10 +81,34 @@
 <script src="public/js/datatable.js"></script>
 <script>
 $(document).ready(function() {
-    $('#tablaConsultas').DataTable({
-        order: [[0, 'desc']], // Ordena la primera columna de forma descendente
+    // Inicializar DataTable
+    var table = $('#tablaConsultas').DataTable({
+        order: [[0, 'desc']],
         language: {
             url: 'public/js/es-ES.json'
+        },
+        responsive: true
+    });
+    
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Manejar clic en botones de acción
+    $(document).on('click', '.btn-descargar, .btn-restaurar', function(e) {
+        e.preventDefault();
+        const accion = $(this).hasClass('btn-descargar') ? 'descargar' : 'restaurar';
+        const archivo = $(this).data('archivo');
+        const nombreArchivo = archivo.split('/').pop();
+        
+        if (accion === 'descargar') {
+            window.location.href = 'Controlador/backup.php?accion=descargar&archivo=' + encodeURIComponent(nombreArchivo);
+        } else {
+            if (confirm('¿Está seguro que desea restaurar el backup: ' + nombreArchivo + '?')) {
+                window.location.href = 'Controlador/backup.php?accion=restaurar&archivo=' + encodeURIComponent(nombreArchivo);
+            }
         }
     });
 });

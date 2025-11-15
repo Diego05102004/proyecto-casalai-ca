@@ -12,3 +12,390 @@
 [2025-10-26T16:35:52-04:00] MODELO: comando="C:\xampp\mysql\bin\mysqldump.exe" --user="root" --password="" --host="localhost" --databases seguridadlai --add-drop-database --add-drop-table --routines --events --triggers > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\Modelo/../db/backup/backup_seguridad_20251026_163552.sql" 2>&1
 [2025-10-26T16:35:53-04:00] MODELO: dump final ok=1, existe=1, size=118745
 [2025-10-26T16:35:53-04:00] CONTROLADOR: Acción GENERAR tipo=S, archivo=backup_seguridad_20251026_163552.sql, ok=1, ruta=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai\proyecto-casalai-ca\proyecto-casalai-ca\db\backup\backup_seguridad_20251026_163552.sql
+[2025-11-14T20:53:47-04:00] MODELO: generar tipo=P, db=casalai, archivo=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205346.sql
+[2025-11-14T20:53:47-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --add-drop-database --add-drop-table --routines --events --triggers --skip-add-locks > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205346.sql" 2>&1
+[2025-11-14T20:53:47-04:00] Resultado: 0
+[2025-11-14T20:53:47-04:00] Salida: 
+[2025-11-14T20:53:56-04:00] MODELO: generar tipo=P, db=casalai, archivo=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205355.sql
+[2025-11-14T20:53:56-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --add-drop-database --add-drop-table --routines --events --triggers --skip-add-locks > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205355.sql" 2>&1
+[2025-11-14T20:53:56-04:00] Resultado: 0
+[2025-11-14T20:53:56-04:00] Salida: 
+[2025-11-14T20:54:04-04:00] MODELO: generar tipo=P, db=casalai, archivo=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205403.sql
+[2025-11-14T20:54:04-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --add-drop-database --add-drop-table --routines --events --triggers --skip-add-locks > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205403.sql" 2>&1
+[2025-11-14T20:54:04-04:00] Resultado: 0
+[2025-11-14T20:54:04-04:00] Salida: 
+[2025-11-14T20:58:34-04:00] Iniciando generación de respaldo
+[2025-11-14T20:58:34-04:00] Tipo: Principal
+[2025-11-14T20:58:34-04:00] Base de datos: casalai
+[2025-11-14T20:58:34-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205834.sql
+[2025-11-14T20:58:34-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe"  > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_205834.sql" 2>&1
+[2025-11-14T20:58:34-04:00] Código de salida: 1
+[2025-11-14T20:58:34-04:00] Salida del comando:
+
+
+Error al generar el respaldo. Código: 1, Archivo: existe, Tamaño: 261 bytes
+Salida del comando:
+
+
+[2025-11-14T21:01:36-04:00] Iniciando generación de respaldo
+[2025-11-14T21:01:36-04:00] Tipo: Principal
+[2025-11-14T21:01:36-04:00] Base de datos: casalai
+[2025-11-14T21:01:36-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210136.sql
+[2025-11-14T21:01:36-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe"  > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210136.sql" 2>&1
+[2025-11-14T21:01:36-04:00] Código de salida: 1
+[2025-11-14T21:01:36-04:00] Salida del comando:
+
+
+Error al generar el respaldo. Código: 1, Archivo: existe, Tamaño: 261 bytes
+Salida del comando:
+
+
+[2025-11-14T21:02:45-04:00] Iniciando generación de respaldo
+[2025-11-14T21:02:45-04:00] Tipo: Principal
+[2025-11-14T21:02:45-04:00] Base de datos: casalai
+[2025-11-14T21:02:45-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210245.sql
+[2025-11-14T21:02:45-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe"  > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210245.sql" 2>&1
+[2025-11-14T21:02:45-04:00] Código de salida: 1
+[2025-11-14T21:02:45-04:00] Salida del comando:
+
+
+Error al generar el respaldo. Código: 1, Archivo: existe, Tamaño: 261 bytes
+Salida del comando:
+
+
+[2025-11-14T21:05:17-04:00] Iniciando generación de respaldo
+[2025-11-14T21:05:17-04:00] Tipo: Principal
+[2025-11-14T21:05:17-04:00] Base de datos: casalai
+[2025-11-14T21:05:17-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210517.sql
+[2025-11-14T21:05:17-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe"  > "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210517.sql" 2>&1
+[2025-11-14T21:05:17-04:00] Código de salida: 1
+[2025-11-14T21:05:17-04:00] Salida del comando:
+
+
+Error al generar el respaldo. Código: 1, Archivo: existe, Tamaño: 261 bytes
+Salida del comando:
+
+
+[2025-11-14T21:06:36-04:00] Iniciando generación de respaldo
+[2025-11-14T21:06:36-04:00] Tipo: Principal
+[2025-11-14T21:06:36-04:00] Base de datos: casalai
+[2025-11-14T21:06:36-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210636.sql
+[2025-11-14T21:06:36-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_210636.sql" 2>&1
+[2025-11-14T21:06:37-04:00] Código de salida: 0
+[2025-11-14T21:06:37-04:00] Salida del comando:
+
+
+[2025-11-14T21:50:34-04:00] Iniciando generación de respaldo
+[2025-11-14T21:50:34-04:00] Tipo: Principal
+[2025-11-14T21:50:34-04:00] Base de datos: casalai
+[2025-11-14T21:50:34-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215034.sql
+[2025-11-14T21:50:34-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215034.sql" 2>&1
+[2025-11-14T21:50:36-04:00] Código de salida: 0
+[2025-11-14T21:50:36-04:00] Salida del comando:
+
+
+[2025-11-14T21:51:59-04:00] Iniciando generación de respaldo
+[2025-11-14T21:51:59-04:00] Tipo: Principal
+[2025-11-14T21:51:59-04:00] Base de datos: casalai
+[2025-11-14T21:51:59-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215159.sql
+[2025-11-14T21:51:59-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215159.sql" 2>&1
+[2025-11-14T21:52:00-04:00] Código de salida: 0
+[2025-11-14T21:52:00-04:00] Salida del comando:
+
+
+[2025-11-14T21:52:54-04:00] Iniciando generación de respaldo
+[2025-11-14T21:52:54-04:00] Tipo: Principal
+[2025-11-14T21:52:54-04:00] Base de datos: casalai
+[2025-11-14T21:52:54-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215254.sql
+[2025-11-14T21:52:54-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215254.sql" 2>&1
+[2025-11-14T21:52:55-04:00] Código de salida: 0
+[2025-11-14T21:52:55-04:00] Salida del comando:
+
+
+[2025-11-14T21:58:59-04:00] Iniciando generación de respaldo
+[2025-11-14T21:58:59-04:00] Tipo: Principal
+[2025-11-14T21:58:59-04:00] Base de datos: casalai
+[2025-11-14T21:58:59-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215859.sql
+[2025-11-14T21:58:59-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_215859.sql" 2>&1
+[2025-11-14T21:58:59-04:00] Código de salida: 0
+[2025-11-14T21:58:59-04:00] Salida del comando:
+
+
+[2025-11-14T22:02:32-04:00] Iniciando generación de respaldo
+[2025-11-14T22:02:32-04:00] Tipo: Principal
+[2025-11-14T22:02:32-04:00] Base de datos: casalai
+[2025-11-14T22:02:32-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220232.sql
+[2025-11-14T22:02:32-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220232.sql" 2>&1
+[2025-11-14T22:02:33-04:00] Código de salida: 0
+[2025-11-14T22:02:33-04:00] Salida del comando:
+
+
+[2025-11-14T22:04:04-04:00] Iniciando generación de respaldo
+[2025-11-14T22:04:04-04:00] Tipo: Principal
+[2025-11-14T22:04:04-04:00] Base de datos: casalai
+[2025-11-14T22:04:04-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220404.sql
+[2025-11-14T22:04:04-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220404.sql" 2>&1
+[2025-11-14T22:04:05-04:00] Código de salida: 0
+[2025-11-14T22:04:05-04:00] Salida del comando:
+
+
+[2025-11-14T22:04:07-04:00] Iniciando generación de respaldo
+[2025-11-14T22:04:07-04:00] Tipo: Principal
+[2025-11-14T22:04:07-04:00] Base de datos: casalai
+[2025-11-14T22:04:07-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220407.sql
+[2025-11-14T22:04:07-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220407.sql" 2>&1
+[2025-11-14T22:04:08-04:00] Código de salida: 0
+[2025-11-14T22:04:08-04:00] Salida del comando:
+
+
+[2025-11-14T22:04:17-04:00] Iniciando generación de respaldo
+[2025-11-14T22:04:17-04:00] Tipo: Principal
+[2025-11-14T22:04:17-04:00] Base de datos: casalai
+[2025-11-14T22:04:17-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220417.sql
+[2025-11-14T22:04:17-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220417.sql" 2>&1
+[2025-11-14T22:04:18-04:00] Código de salida: 0
+[2025-11-14T22:04:18-04:00] Salida del comando:
+
+
+[2025-11-14T22:04:21-04:00] Iniciando generación de respaldo
+[2025-11-14T22:04:21-04:00] Tipo: Principal
+[2025-11-14T22:04:21-04:00] Base de datos: casalai
+[2025-11-14T22:04:21-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220421.sql
+[2025-11-14T22:04:21-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220421.sql" 2>&1
+[2025-11-14T22:04:23-04:00] Código de salida: 0
+[2025-11-14T22:04:23-04:00] Salida del comando:
+
+
+[2025-11-14T22:06:35-04:00] Iniciando generación de respaldo
+[2025-11-14T22:06:35-04:00] Tipo: Principal
+[2025-11-14T22:06:35-04:00] Base de datos: casalai
+[2025-11-14T22:06:35-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220635.sql
+[2025-11-14T22:06:35-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_220635.sql" 2>&1
+[2025-11-14T22:06:36-04:00] Código de salida: 0
+[2025-11-14T22:06:36-04:00] Salida del comando:
+
+
+[2025-11-14T22:10:07-04:00] Iniciando generación de respaldo
+[2025-11-14T22:10:07-04:00] Tipo: Principal
+[2025-11-14T22:10:07-04:00] Base de datos: casalai
+[2025-11-14T22:10:07-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_221007.sql
+[2025-11-14T22:10:07-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_221007.sql" 2>&1
+[2025-11-14T22:10:08-04:00] Código de salida: 0
+[2025-11-14T22:10:08-04:00] Salida del comando:
+
+
+[2025-11-14T22:11:16-04:00] Iniciando generación de respaldo
+[2025-11-14T22:11:16-04:00] Tipo: Principal
+[2025-11-14T22:11:16-04:00] Base de datos: casalai
+[2025-11-14T22:11:16-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_221116.sql
+[2025-11-14T22:11:16-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_221116.sql" 2>&1
+[2025-11-14T22:11:17-04:00] Código de salida: 0
+[2025-11-14T22:11:17-04:00] Salida del comando:
+
+
+[2025-11-14T22:12:15-04:00] Iniciando generación de respaldo
+[2025-11-14T22:12:15-04:00] Tipo: Principal
+[2025-11-14T22:12:15-04:00] Base de datos: casalai
+[2025-11-14T22:12:15-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_221215.sql
+[2025-11-14T22:12:15-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_221215.sql" 2>&1
+[2025-11-14T22:12:16-04:00] Código de salida: 0
+[2025-11-14T22:12:16-04:00] Salida del comando:
+
+
+[2025-11-14T22:21:51-04:00] Iniciando generación de respaldo
+[2025-11-14T22:21:51-04:00] Tipo: Principal
+[2025-11-14T22:21:51-04:00] Base de datos: casalai
+[2025-11-14T22:21:51-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222151.sql
+[2025-11-14T22:21:51-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222151.sql" 2>&1
+[2025-11-14T22:21:52-04:00] Código de salida: 0
+[2025-11-14T22:21:52-04:00] Salida del comando:
+
+
+[2025-11-14T22:23:20-04:00] Iniciando generación de respaldo
+[2025-11-14T22:23:20-04:00] Tipo: Principal
+[2025-11-14T22:23:20-04:00] Base de datos: casalai
+[2025-11-14T22:23:20-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222320.sql
+[2025-11-14T22:23:20-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222320.sql" 2>&1
+[2025-11-14T22:23:20-04:00] Código de salida: 0
+[2025-11-14T22:23:20-04:00] Salida del comando:
+
+
+[2025-11-14T22:26:35-04:00] Iniciando generación de respaldo
+[2025-11-14T22:26:35-04:00] Tipo: Principal
+[2025-11-14T22:26:35-04:00] Base de datos: casalai
+[2025-11-14T22:26:35-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222635.sql
+[2025-11-14T22:26:35-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222635.sql" 2>&1
+[2025-11-14T22:26:36-04:00] Código de salida: 0
+[2025-11-14T22:26:36-04:00] Salida del comando:
+
+
+[2025-11-14T22:27:44-04:00] Iniciando generación de respaldo
+[2025-11-14T22:27:44-04:00] Tipo: Principal
+[2025-11-14T22:27:44-04:00] Base de datos: casalai
+[2025-11-14T22:27:44-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222744.sql
+[2025-11-14T22:27:44-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_222744.sql" 2>&1
+[2025-11-14T22:27:45-04:00] Código de salida: 0
+[2025-11-14T22:27:45-04:00] Salida del comando:
+
+
+[2025-11-14T22:30:20-04:00] Iniciando generación de respaldo
+[2025-11-14T22:30:20-04:00] Tipo: Principal
+[2025-11-14T22:30:20-04:00] Base de datos: casalai
+[2025-11-14T22:30:20-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223020.sql
+[2025-11-14T22:30:20-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223020.sql" 2>&1
+[2025-11-14T22:30:21-04:00] Código de salida: 0
+[2025-11-14T22:30:21-04:00] Salida del comando:
+
+
+[2025-11-14T22:31:10-04:00] Iniciando generación de respaldo
+[2025-11-14T22:31:10-04:00] Tipo: Principal
+[2025-11-14T22:31:10-04:00] Base de datos: casalai
+[2025-11-14T22:31:10-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223110.sql
+[2025-11-14T22:31:10-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223110.sql" 2>&1
+[2025-11-14T22:31:11-04:00] Código de salida: 0
+[2025-11-14T22:31:11-04:00] Salida del comando:
+
+
+[2025-11-14T22:33:19-04:00] Iniciando generación de respaldo
+[2025-11-14T22:33:19-04:00] Tipo: Principal
+[2025-11-14T22:33:19-04:00] Base de datos: casalai
+[2025-11-14T22:33:19-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223319.sql
+[2025-11-14T22:33:19-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223319.sql" 2>&1
+[2025-11-14T22:33:21-04:00] Código de salida: 0
+[2025-11-14T22:33:21-04:00] Respaldo generado exitosamente. Tamaño: 53610 bytes
+[2025-11-14T22:33:46-04:00] Iniciando generación de respaldo
+[2025-11-14T22:33:46-04:00] Tipo: Principal
+[2025-11-14T22:33:46-04:00] Base de datos: casalai
+[2025-11-14T22:33:46-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223346.sql
+[2025-11-14T22:33:46-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223346.sql" 2>&1
+[2025-11-14T22:33:47-04:00] Código de salida: 0
+[2025-11-14T22:33:47-04:00] Respaldo generado exitosamente. Tamaño: 53610 bytes
+[2025-11-14T22:36:27-04:00] Iniciando generación de respaldo
+[2025-11-14T22:36:27-04:00] Tipo: Principal
+[2025-11-14T22:36:27-04:00] Base de datos: casalai
+[2025-11-14T22:36:27-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223627.sql
+[2025-11-14T22:36:27-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223627.sql" 2>&1
+[2025-11-14T22:36:28-04:00] Código de salida: 0
+[2025-11-14T22:36:28-04:00] Respaldo generado exitosamente. Tamaño: 53610 bytes
+[2025-11-14T22:37:53-04:00] Iniciando generación de respaldo
+[2025-11-14T22:37:53-04:00] Tipo: Principal
+[2025-11-14T22:37:53-04:00] Base de datos: casalai
+[2025-11-14T22:37:53-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223753.sql
+[2025-11-14T22:37:53-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223753.sql" 2>&1
+[2025-11-14T22:37:54-04:00] Código de salida: 0
+[2025-11-14T22:37:54-04:00] Respaldo generado exitosamente. Tamaño: 53610 bytes
+[2025-11-14T22:38:45-04:00] Iniciando generación de respaldo
+[2025-11-14T22:38:45-04:00] Tipo: Principal
+[2025-11-14T22:38:45-04:00] Base de datos: casalai
+[2025-11-14T22:38:45-04:00] Archivo de salida: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223845.sql
+[2025-11-14T22:38:45-04:00] Comando: "C:\xampp\mysql\bin\mysqldump.exe" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file="C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20251114_223845.sql" 2>&1
+[2025-11-14T22:38:46-04:00] Código de salida: 0
+[2025-11-14T22:38:46-04:00] Respaldo generado exitosamente. Tamaño: 53610 bytes
+{
+    "fecha": "2025-11-14 22:49:29",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_224929.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_224929.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:51:16",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225116.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225116.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:51:56",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225156.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225156.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:53:38",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225338.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225338.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:55:10",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225510.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225510.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:56:37",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225637.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225637.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:57:49",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225749.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225749.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:58:59",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225859.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251114_225859.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-14 22:59:03",
+    "tipo": "Seguridad",
+    "base_datos": "seguridadlai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251114_225903.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases seguridadlai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251114_225903.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 227994
+}
+

@@ -4,10 +4,19 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 
-// Incluir el autoloader de Composer
-require_once __DIR__ . '/../../vendor/autoload.php';
+// Incluir el autoloader de Composer (ruta absoluta desde la raíz del proyecto)
+$rootDir = realpath(__DIR__ . '/../..');
+require_once $rootDir . '/vendor/autoload.php';
 
-// Mostrar errores de inicio de sesión si existen
+// Incluir manualmente la clase Backup para asegurar que se cargue
+require_once $rootDir . '/Modelo/Usuario/ProyectoCasalaiCa/Clases/Backup.php';
+
+// Incluir la configuración de la base de datos
+require_once $rootDir . '/Modelo/Config/database.php';
+
+// Usar las clases necesarias
+use Usuario\ProyectoCasalaiCa\Clases\Backup as BackupClass;
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -20,18 +29,10 @@ if (!isset($_SESSION['id_usuario'])) {
 
 define('MODULO_BACKUP', 20);
 
-// Usar las clases con sus namespaces completos
-use Usuario\ProyectoCasalaiCa\Clases\Backup;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
-
-
 
 // Función simple de depuración a archivo
 function backup_debug_log($mensaje) {
-    $logDir = __DIR__ . '/../../db/respaldo/';
+    $logDir = __DIR__ . '/../Modelo/db/respaldo/';
     if (!is_dir($logDir)) { 
         @mkdir($logDir, 0775, true); 
     }
@@ -39,49 +40,76 @@ function backup_debug_log($mensaje) {
     @file_put_contents($logFile, '[' . date('c') . "] CONTROLADOR: " . $mensaje . "\n", FILE_APPEND);
 }
 
-// Capturar errores fatales y registrar en log (y devolver JSON si aplica)
-register_shutdown_function(function() {
-    $error = error_get_last();
-    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        $msg = 'FATAL: ' . $error['message'] . ' en ' . $error['file'] . ':' . $error['line'];
-        backup_debug_log($msg);
-        if (isset($_GET['accion']) && $_GET['accion'] === 'generar') {
-            if (!headers_sent()) { header('Content-Type: application/json'); }
-            echo json_encode(['success' => false, 'error' => 'Error fatal en el servidor.', 'detalle' => $msg]);
-        }
-    }
-});
+
 
 // Listar archivos de respaldo
 if (isset($_GET['accion']) && $_GET['accion'] === 'listar') {
-    $backup = new Backup();
-    $archivos = [];
-    $ruta = __DIR__ . '/../db/respaldo/';
-    
-    if (is_dir($ruta)) {
+    try {
+        $backup = new Usuario\ProyectoCasalaiCa\Clases\Backup();
+        $ruta = dirname(__DIR__, 2) . '/db/respaldo/';
+        $archivos = [];
+        
+        if (!is_dir($ruta)) {
+            if (!mkdir($ruta, 0775, true)) {
+                throw new Exception('No se pudo crear el directorio de respaldos');
+            }
+        }
+
         $files = scandir($ruta);
+        if ($files === false) {
+            throw new Exception('No se pudo leer el directorio de respaldos');
+        }
+
         foreach ($files as $file) {
-            if (preg_match('/\.sql$/', $file)) {
+            if (preg_match('/\.sql$/i', $file)) {
                 $filePath = $ruta . $file;
                 $archivos[] = [
                     'nombre' => $file,
                     'tamano' => filesize($filePath),
                     'fecha_modificacion' => date('Y-m-d H:i:s', filemtime($filePath)),
-                    'tipo' => strpos($file, 'seguridad') !== false ? 'Seguridad' : 'Principal'
+                    'tipo' => strpos(strtolower($file), 'seguridad') !== false ? 'Seguridad' : 'Principal'
                 ];
             }
         }
+        
+        header('Content-Type: application/json');
+        echo json_encode($archivos);
+        exit;
+    } catch (Exception $e) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $e->getMessage()]);
+        exit;
     }
+}
+
+// Descargar archivo de respaldo
+if (isset($_GET['accion']) && $_GET['accion'] === 'descargar' && !empty($_GET['archivo'])) {
+    $archivo = basename($_GET['archivo']); // Prevenir directory traversal
+    $ruta = dirname(__DIR__, 2) . '/db/respaldo/' . $archivo;
     
-    header('Content-Type: application/json');
-    echo json_encode($archivos);
-    exit;
+    if (file_exists($ruta) && is_file($ruta)) {
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($ruta) . '"');
+        header('Content-Length: ' . filesize($ruta));
+        header('Pragma: public');
+        header('Cache-Control: must-revalidate');
+        header('Expires: 0');
+        
+        readfile($ruta);
+        exit;
+    } else {
+        http_response_code(404);
+        echo 'Archivo no encontrado';
+        exit;
+    }
 }
 
 // Eliminar archivo de respaldo
 if (isset($_GET['accion']) && $_GET['accion'] === 'eliminar' && !empty($_GET['archivo'])) {
     $archivo = basename($_GET['archivo']); // Prevenir directory traversal
-    $ruta = __DIR__ . '/../db/respaldo/' . $archivo;
+    $ruta = dirname(__DIR__, 2) . '/db/respaldo/' . $archivo;
     
     if (file_exists($ruta) && is_file($ruta)) {
         if (unlink($ruta)) {
@@ -97,124 +125,87 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'eliminar' && !empty($_GET['ar
     exit;
 }
 
-if (isset($_GET['accion'])) {
-
-    if ($_GET['accion'] === 'generar') {
-        header('Content-Type: application/json');
-        try {
-            // asegurar dir de logs
-            backup_debug_log('--- INICIO GENERAR ---');
-            $tipo = isset($_GET['tipo']) && $_GET['tipo'] === 'S' ? 'S' : 'P';
-            $backup = new Backup($tipo);
-            $nombreArchivo = 'backup_' . ($tipo === 'S' ? 'seguridad' : 'principal') . '_' . date('Ymd_His') . '.sql';
-            $ok = $backup->generar($nombreArchivo);
-            $ruta = realpath(__DIR__ . '/../db/respaldo/' . $nombreArchivo);
-            backup_debug_log("Acción GENERAR tipo={$tipo}, archivo={$nombreArchivo}, ok=" . ($ok ? '1' : '0') . ", ruta=" . ($ruta ?: 'N/A'));
-
-            if ($ok && $ruta && file_exists($ruta)) {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    if (isset($_SESSION['id_usuario'])) {
-                        $bitacoraModel = new Bitacora();
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_BACKUP,
-                            'GENERAR',
-                            'Se generó un respaldo ' . ($tipo === 'S' ? 'de seguridad' : 'principal') . ': ' . $nombreArchivo,
-                            'media'
-                        );
-                    }
-                }
-                echo json_encode(['success' => true, 'archivo' => $nombreArchivo]);
-            } else {
-                $logFile = __DIR__ . '/../db/respaldo/backup_debug.log';
-                $logMsg = file_exists($logFile) ? @file_get_contents($logFile) : '';
-                backup_debug_log('Error al GENERAR respaldo (ok=0 o archivo no existe).');
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Error al generar el respaldo. Ver debug.',
-                    'debug' => $logMsg
-                ]);
-            }
-        } catch (Throwable $e) {
-            backup_debug_log('Excepción en GENERAR: ' . $e->getMessage());
+// Restaurar base de datos desde un respaldo
+if (isset($_GET['accion']) && $_GET['accion'] === 'restaurar' && !empty($_GET['archivo'])) {
+    try {
+        $archivo = basename($_GET['archivo']); // Prevenir directory traversal
+        $ruta = dirname(__DIR__, 2) . '/db/respaldo/' . $archivo;
+        
+        if (!file_exists($ruta)) {
+            throw new Exception('El archivo de respaldo no existe');
+        }
+        
+        // Determinar el tipo de backup (seguridad o principal)
+        $tipo = (strpos(strtolower($archivo), 'seguridad') !== false) ? 'S' : 'P';
+        $backup = new Usuario\ProyectoCasalaiCa\Clases\Backup($tipo);
+        
+        if ($backup->restaurar($archivo)) {
             echo json_encode([
-                'success' => false,
-                'error' => 'Excepción en el servidor.',
-                'detalle' => $e->getMessage()
+                'success' => true, 
+                'message' => 'Base de datos restaurada correctamente',
+                'tipo' => ($tipo === 'S') ? 'Seguridad' : 'Principal'
+            ]);
+        } else {
+            throw new Exception('Error al restaurar la base de datos');
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false, 
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// Generar respaldo
+if (isset($_GET['accion']) && $_GET['accion'] === 'generar') {
+        header('Content-Type: application/json');
+        
+        try {
+            // Validar tipo de respaldo
+            $tipo = isset($_GET['tipo']) && $_GET['tipo'] === 'S' ? 'S' : 'P';
+            $tipoTexto = $tipo === 'S' ? 'seguridad' : 'principal';
+            
+            // Crear instancia y generar respaldo
+            $backup = new Usuario\ProyectoCasalaiCa\Clases\Backup($tipo);
+            $nombreArchivo = 'backup_' . $tipoTexto . '_' . date('Ymd_His') . '.sql';
+            
+            // Generar el respaldo
+            $resultado = $backup->generar($nombreArchivo);
+            
+            if ($resultado['success']) {
+                // Respuesta exitosa
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Respaldo generado correctamente',
+                    'archivo' => $nombreArchivo,
+                    'tipo' => $tipoTexto,
+                    'fecha' => date('Y-m-d H:i:s')
+                ]);
+            } else {
+                // Error en la generación
+                throw new Exception($resultado['error'] ?? 'Error desconocido al generar el respaldo');
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false, 
+                'error' => $e->getMessage(),
+                'debug' => isset($resultado['debug']) ? $resultado['debug'] : null
             ]);
         }
         exit;
     }
 
-    // ... resto del código igual ...
-
-    if ($_GET['accion'] === 'descargar') {
-        $archivo = $_GET['archivo'] ?? '';
-        $ruta = realpath(__DIR__ . '/../db/respaldo/' . $archivo);
-        backup_debug_log('Acción DESCARGAR archivo=' . $archivo . ', existe=' . ((bool)$ruta && file_exists($ruta) ? '1' : '0'));
-        if ($archivo && file_exists($ruta)) {
-            header('Content-Type: application/sql');
-            header('Content-Disposition: attachment; filename="' . basename($archivo) . '"');
-            header('Content-Length: ' . filesize($ruta));
-            readfile($ruta);
-            exit;
-        } else {
-            echo "Archivo no encontrado";
-            exit;
-        }
-    }
-
-    switch ($_GET['accion']) {
-        case 'consultar':
-        $ruta = realpath(__DIR__ . '/../db/respaldo/' . $archivo);
-        header('Content-Type: application/json');
-        backup_debug_log('Acción RESTAURAR archivo=' . $archivo . ', existe=' . ($ruta && file_exists($ruta) ? '1' : '0'));
-        if ($archivo && file_exists($ruta)) {
-            $backup = new Backup();
-            $ok = $backup->restaurar($archivo);
-            backup_debug_log('Resultado RESTAURAR ok=' . ($ok ? '1' : '0'));
-            if ($ok) {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    if (isset($_SESSION['id_usuario'])) {
-                        $bitacoraModel = new Bitacora();
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_BACKUP,
-                            'RESTAURAR',
-                            'Se restauró el respaldo: ' . $archivo,
-                            'alta'
-                        );
-                    }
-                }
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Error al restaurar']);
-            }
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Archivo no encontrado']);
-        }
-        exit;
-    }
-}
 
 // Renderizado de la vista
 $pagina = "backup";
 if (is_file("vista/" . $pagina . ".php")) {
-    $backup = new Backup();
+    $backup = new Usuario\ProyectoCasalaiCa\Clases\Backup();
     $backups = $backup->listar();
     require_once("vista/" . $pagina . ".php");
-    if (isset($_SESSION['id_usuario'])) {
-        if (!defined('SKIP_SIDE_EFFECTS')) {
-            $bitacoraModel = new Bitacora();
-            $bitacoraModel->registrarBitacora(
-                $_SESSION['id_usuario'],
-                MODULO_BACKUP,
-                'ACCESAR',
-                'El usuario accedió al módulo de Backup',
-                'media'
-            );
-        }
-    }
 } else {
     echo "Página en construcción";
 }
