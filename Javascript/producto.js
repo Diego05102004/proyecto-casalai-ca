@@ -117,7 +117,7 @@ $(document).ready(function () {
     });
 
     $("#Seriales").on("keypress", function (e) {
-        validarkeypress(/^[A-Z0-9\b]*$/, e); 
+        validarkeypress(/^[a-zA-Z0-9\b]*$/, e); 
     });
 
     $("#Seriales").on("keyup", function () {
@@ -127,6 +127,12 @@ $(document).ready(function () {
             $("#sSeriales"),
             "*El formato solo permite letras y números*"
         );
+    });
+    $("#Seriales").on("input", function () {
+        const limpio = this.value
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, '');
+        this.value = limpio;
     });
 
     $("#Precio").on("keypress", function (e) {

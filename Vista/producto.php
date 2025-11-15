@@ -65,13 +65,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 <input type="hidden" name="accion" value="ingresar">
                 <div class="grupo-form">
                   <div class="grupo-interno">
-                    <label for="nombre_producto">Nombre del producto</label>
+                    <label for="nombre_producto">Nombre del producto*</label>
                     <input type="text" placeholder="Ej: Impresora" maxlength="20" class="control-form"
                       id="nombre_producto" name="nombre_producto" required>
                     <span class="span-value" id="snombre_producto"></span>
                   </div>
                   <div class="grupo-interno">
-                    <label for="modelo">Modelo/Marca</label>
+                    <label for="modelo">Modelo/Marca*</label>
                     <select class="form-select" id="modelo" name="modelo" required>
                       <option value="">Seleccione un modelo</option>
                       <?php foreach ($modelos as $modelo): ?>
@@ -84,7 +84,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                   </div>
                 </div>
                 <div class="envolver-form">
-                  <label for="imagen">Imagen del producto (JPG, PNG, etc)</label>
+                  <label for="imagen">Imagen del producto (JPG, PNG, etc)*</label>
                   <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*" required>
                   <span class="span-value" id="simagen"></span>
                   <div id="previewImagen" style="margin-top: 10px;">
@@ -93,39 +93,39 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                   </div>
                 </div>
                 <div class="envolver-form">
-                  <label for="descripcion_producto">Descripción del producto</label>
+                  <label for="descripcion_producto">Descripción del producto*</label>
                   <textarea maxlength="50" class="form-control" id="descripcion_producto" name="descripcion_producto"
                     rows="2" placeholder="Ej: Multifuncional a color con WiFi"></textarea>
                   <span class="span-value" id="sdescripcion_producto"></span>
                 </div>
                 <div class="envolver-form" style="display: flex; flex-wrap: wrap; gap: 1rem;">
                   <div style="flex: 1;">
-                    <label for="Stock_Actual">Stock Actual</label>
+                    <label for="Stock_Actual">Stock Actual*</label>
                     <input type="number" class="control-form" id="Stock_Actual" name="Stock_Actual" min="1" required
                       placeholder="Ej: 10" maxlength="3">
                     <span class="span-value" id="sStock_Actual"></span>
                   </div>
                   <div style="flex: 1;">
-                    <label for="Stock_Maximo">Stock Máximo</label>
+                    <label for="Stock_Maximo">Stock Máximo*</label>
                     <input type="number" class="control-form" id="Stock_Maximo" name="Stock_Maximo" min="1" required
                       placeholder="Ej: 100" maxlength="3">
                     <span class="span-value" id="sStock_Maximo"></span>
                   </div>
                   <div style="flex: 1;">
-                    <label for="Stock_Minimo">Stock Mínimo</label>
+                    <label for="Stock_Minimo">Stock Mínimo*</label>
                     <input type="number" class="control-form" id="Stock_Minimo" name="Stock_Minimo" min="1" required
                       placeholder="Ej: 5" maxlength="3">
                     <span class="span-value" id="sStock_Minimo"></span>
                   </div>
                 </div>
                 <div class="envolver-form">
-                  <label for="Clausula_garantia">Cláusula de garantía</label>
+                  <label for="Clausula_garantia">Cláusula de garantía*</label>
                   <textarea class="form-control" maxlength="50" id="Clausula_garantia" name="Clausula_garantia" rows="2"
                     placeholder="Ej: Garantía válida por 6 meses en defectos de fábrica."></textarea>
                   <span class="span-value" id="sClausula_garantia"></span>
                 </div>
                 <div class="envolver-form">
-                  <label for="Categoria">Categoría</label>
+                  <label for="Categoria">Categoría*</label>
                   <select class="form-select" id="Categoria" name="Categoria" required>
                     <option value="">Seleccione una categoría</option>
                     <?php foreach ($categoriasDinamicas as $cat): ?>
@@ -141,13 +141,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 <div id="caracteristicasCategoria"></div>
                 <div class="grupo-form">
                   <div class="grupo-interno">
-                    <label for="Seriales">Código Serial</label>
+                    <label for="Seriales">Código Serial*</label>
                     <input type="text" class="control-form" id="Seriales" name="Seriales" maxlength="10"
                       placeholder="Ej: EPSON1234" required>
                     <span class="span-value" id="sSeriales"></span>
                   </div>
                   <div class="grupo-interno">
-                    <label for="Precio">Precio ($)</label>
+                    <label for="Precio">Precio ($)*</label>
                     <input class="control-form" id="Precio" name="Precio" min="1" step="1" placeholder="Ej: 100" required>
                     <span class="span-value" id="sPrecio"></span>
                   </div>
@@ -438,13 +438,11 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
               <div class="form-group">
                 <label for="modificarImagen">Cambiar imagen</label>
                 <input type="file" class="form-control" id="modificarImagen" name="imagen" accept="image/*">
-                <small class="form-text text-muted">Seleccione una nueva imagen solo si desea reemplazar la
-                  actual.</small>
               </div>
               <div class="form-group">
                 <label for="modificarDescripcionProducto">Descripción del producto</label>
-                <input type="text" maxlength="50" class="form-control" id="modificarDescripcionProducto"
-                  name="descripcion_producto" required>
+                <textarea maxlength="50" class="form-control" id="modificarDescripcionProducto"
+                  name="descripcion_producto" rows="2" required></textarea>
               </div>
               <div class="form-group">
                 <label for="modificarModelo">Modelo</label>
@@ -455,18 +453,18 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                   <?php endforeach; ?>
                 </select>
               </div>
-              <div class="form-row">
-                <div class="form-group col-md-4">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <div class="form-group col-md-4" style="flex: 1;">
                   <label for="modificarStockActual">Stock Actual</label>
                   <input type="number" min="0" class="form-control" id="modificarStockActual" name="Stock_Actual"
                     required>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-4" style="flex: 1;">
                   <label for="modificarStockMaximo">Stock Máximo</label>
                   <input type="number" min="0" class="form-control" id="modificarStockMaximo" name="Stock_Maximo"
                     required>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-4" style="flex: 1;">
                   <label for="modificarStockMinimo">Stock Mínimo</label>
                   <input type="number" min="0" class="form-control" id="modificarStockMinimo" name="Stock_Minimo"
                     required>
@@ -475,17 +473,19 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
               <div class="form-group">
                 <label for="modificarClausulaGarantia">Cláusula de Garantía</label>
                 <textarea class="form-control" maxlength="50" id="modificarClausulaGarantia" name="Clausula_garantia"
-                  rows="3"></textarea>
+                  rows="2"></textarea>
               </div>
-              <div class="form-row">
-                <div class="form-group col-md-6">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <div class="form-group col-md-5" style="flex: 1;">
                   <label for="modificarSeriales">Código Serial</label>
                   <input type="text" maxlength="10" class="form-control" id="modificarSeriales" name="Seriales" required>
                 </div>
-                <div class="form-group col-md-3">
-                  <label for="modificarPrecio">Precio</label>
+                <div class="form-group col-md-4" style="flex: 1;">
+                  <label for="modificarPrecio">Precio ($)</label>
                   <input min="0" class="form-control" id="modificarPrecio" name="Precio" required>
                 </div>
+              </div>
+              <div class="form-row">
                 <div class="form-group">
                   <label for="modificarCategoria">Categoría</label>
                   <select class="form-select" id="modificarCategoria" name="Categoria" required>
