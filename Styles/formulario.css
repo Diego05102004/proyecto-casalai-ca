@@ -323,41 +323,6 @@ select option[value=""] [disabled]{
     cursor: not-allowed;
 }
 
-/* Mejora visual del modal de modificación */
-#modificarProductoModal .modal-content {
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(60,60,60,0.18);
-    background: #f8f9fa;
-}
-#modificarProductoModal .modal-header {
-    background: #007bff;
-    color: #fff;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-}
-#modificarProductoModal .modal-footer {
-    background: #f1f3f6;
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
-}
-#modificarProductoModal label {
-    font-weight: 600;
-    color: #333;
-}
-#modificarProductoModal input, #modificarProductoModal textarea, #modificarProductoModal select {
-    border-radius: 8px;
-    border: 1px solid #bdbdbd;
-    background: #fff;
-}
-#modificarProductoModal .form-group, #modificarProductoModal .form-row {
-    margin-bottom: 1rem;
-}
-#modificarProductoModal .btn-primary {
-    border-radius: 8px;
-    padding: 8px 24px;
-    font-weight: 600;
-}
-
 /* Estilos para el select personalizado */
 .envolver-form {
     margin-bottom: 15px;
