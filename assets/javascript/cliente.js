@@ -5,6 +5,53 @@ $(document).ready(function () {
         mensajes("warning", "Atención", $("#mensajes").html());
     }
 
+    // Inicializar DataTable de clientes y crear dinámicamente el botón Incluir en el filtro
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaClientes;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaClientes = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                columnDefs: [
+                    { orderable: false, targets: 5 } // Deshabilitar ordenamiento para columna de acciones
+                ],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirCliente').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirCliente',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Cliente'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaClientes = $tabla.DataTable();
+        }
+    }
+
     $("#nombre").on("keypress", function(e){
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]*$/, e);
         let nombre = document.getElementById("nombre");
@@ -282,7 +329,8 @@ $(document).ready(function() {
         $("#scorreo").text('');
     }
 
-    $('#btnIncluirCliente').on('click', function() {
+    // Abrir modal de registro (botón Incluir Cliente dentro del DataTable)
+    $(document).on('click', '#btnIncluirCliente', function() {
         $('#ingresarclientes')[0].reset();
         $('#snombre').text('');
         $('#scedula').text('');

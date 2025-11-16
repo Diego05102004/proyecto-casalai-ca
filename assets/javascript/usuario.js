@@ -3,33 +3,6 @@ $(document).ready(function() {
     var tablaUsuarios;
     var $tabla = $('#tablaConsultas');
 
-    // Función para mover el botón "Incluir Usuario" junto al buscador de DataTables
-    function moverBotonIncluir() {
-        var $btnWrapper = $('.space-btn-incluir');
-        if (!$btnWrapper.length) return;
-
-        // Buscar el contenedor del filtro dentro del wrapper de DataTables
-        var $wrapper = $tabla.closest('.dataTables_wrapper');
-        var $filter = $wrapper.find('.dataTables_filter');
-        if (!$filter.length) return;
-
-        // Asegurar distribución en fila
-        $filter.css({
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'flex-end',
-            gap: '10px'
-        });
-
-        // Ajustar el label del buscador
-        $filter.find('label').css({ 'margin-bottom': '0' });
-
-        // Quitar márgenes verticales del contenedor del botón
-        $btnWrapper.css({ 'margin-top': '0', 'margin-bottom': '0' });
-
-        // Añadir el botón a la derecha del buscador
-        $filter.append($btnWrapper);
-    }
     if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
         // Inicializar DataTable con configuración personalizada
         tablaUsuarios = $tabla.DataTable({
@@ -56,13 +29,38 @@ $(document).ready(function() {
                 }
             ],
             "initComplete": function () {
-                moverBotonIncluir();
+                // Crear el botón directamente dentro del filtro de DataTables
+                var $wrapper = $tabla.closest('.dataTables_wrapper');
+                var $filter = $wrapper.find('.dataTables_filter');
+                if (!$filter.length) return;
+
+                // Evitar duplicar el botón si ya existe
+                if ($filter.find('#btnIncluirUsuario').length) return;
+
+                // Estilos flex para alinear label + buscador + botón
+                $filter.css({
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'flex-end',
+                    gap: '10px'
+                });
+
+                $filter.find('label').css({ 'margin-bottom': '0' });
+
+                var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                var $btn = $('<button>', {
+                    id: 'btnIncluirUsuario',
+                    'class': 'btn-incluir',
+                    type: 'button',
+                    title: 'Incluir Usuario'
+                }).append($('<img>', { src: 'img/plus.svg' }));
+
+                $btnWrapper.append($btn);
+                $filter.append($btnWrapper);
             }
         });
     } else {
         tablaUsuarios = $tabla.DataTable();
-        // Si ya estaba inicializado, mover el botón directamente
-        moverBotonIncluir();
     }
 
     // Detectar dinámicamente el índice de la columna "Estatus" (fallback a 5)
@@ -506,7 +504,7 @@ function agregarFilaUsuario(usuario) {
     $("#sclave_confirmar").text("");
   }
 
-  $("#btnIncluirUsuario").on("click", function () {
+  $(document).on("click", "#btnIncluirUsuario", function () {
     $("#incluirusuario")[0].reset();
     $("#snombre").text("");
     $("#sapellido").text("");

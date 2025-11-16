@@ -5,7 +5,52 @@ $(document).ready(function () {
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", "Atención", $("#mensajes").html());
     }
-    
+
+    // Inicializar DataTable de categorías y crear dinámicamente el botón Incluir en el filtro
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaCategorias;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaCategorias = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirCategoria').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirCategoria',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Categoria'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaCategorias = $tabla.DataTable();
+        }
+    }
+
 
     $("#nombre_categoria").on("keypress", function(e){
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]*$/, e);
@@ -284,7 +329,7 @@ $(document).ready(function () {
         if (btnAgregar) btnAgregar.disabled = false;
     }
 
-    $('#btnIncluirCategoria').on('click', function() {
+    $(document).on('click', '#btnIncluirCategoria', function() {
         resetCategoria();
         $('#registrarCategoriaModal').modal('show');
     });

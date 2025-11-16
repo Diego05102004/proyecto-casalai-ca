@@ -10,6 +10,51 @@ if (typeof nombre_rol !== "undefined" && nombre_rol === 'SuperUsuario') {
         mensajes("warning", "Atención", $("#mensajes").html());
     }
 
+    // Inicializar DataTable de marcas y crear dinámicamente el botón Incluir en el filtro
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaMarcas;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaMarcas = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirMarca').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirMarca',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Marca'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaMarcas = $tabla.DataTable();
+        }
+    }
+
     $("#nombre_marca").on("keypress", function(e){
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9\s\b]*$/, e);
         let nombre = document.getElementById("nombre_marca");
@@ -132,7 +177,7 @@ $(document).ready(function() {
         $(rowNode).attr('data-id', marca.id_marca);
     }
 
-        $('#btnIncluirMarca').on('click', function() {
+    $(document).on('click', '#btnIncluirMarca', function() {
         $('#registrarMarca')[0].reset();
         $('#snombre_marca').text('');
         $('#registrarMarcaModal').modal('show');

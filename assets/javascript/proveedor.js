@@ -1,5 +1,49 @@
 $(document).ready(function () {
 
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaProveedores;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaProveedores = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirProveedor').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirProveedor',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Proveedor'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaProveedores = $tabla.DataTable();
+        }
+    }
+
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", "Atención", $("#mensajes").html());
     }
@@ -443,7 +487,7 @@ $(document).ready(function() {
         $("#sobservacion").text('');
     }
 
-    $('#btnIncluirProveedor').on('click', function() {
+    $(document).on('click', '#btnIncluirProveedor', function () {
         $('#incluirproveedor')[0].reset();
         $("#snombre_proveedor").text('');
         $("#srif_proveedor").text('');

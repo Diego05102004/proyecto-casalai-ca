@@ -1,4 +1,50 @@
 $(document).ready(function () {
+
+    // Inicializar DataTable de modelos y crear dinámicamente el botón Incluir en el filtro
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaModelos;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaModelos = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirModelo').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirModelo',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Modelo'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaModelos = $tabla.DataTable();
+        }
+    }
+
     // Validación select de marca (registrar)
     $("#id_marca").on("change", function(){
         if ($(this).val()) {
@@ -152,7 +198,7 @@ $(document).ready(function () {
         $("#snombre_modelo").text('');
     }
 
-    $('#btnIncluirModelo').on('click', function() {
+    $(document).on('click', '#btnIncluirModelo', function() {
         $('#registrarModelo')[0].reset();
         $('#snombre_modelo').text('');
         $('#registrarModeloModal').modal('show');

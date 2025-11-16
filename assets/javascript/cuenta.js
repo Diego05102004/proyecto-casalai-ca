@@ -4,6 +4,54 @@ $(document).ready(function () {
         mensajes("warning", "Atención", $("#mensajes").html());
     }
 
+    // Inicializar DataTable de cuentas y crear dinámicamente el botón Incluir en el filtro
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaCuentas;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaCuentas = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: 6 } // Deshabilitar ordenamiento en columna de acciones
+                ],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirCuenta').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirCuenta',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Cuenta Bancaria'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaCuentas = $tabla.DataTable();
+        }
+    }
+
     $("#nombre_banco").on("keypress", function(e){
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]*$/, e);
         let nombre = document.getElementById("nombre_banco");
@@ -342,7 +390,8 @@ $(document).ready(function() {
         }, 0);
     });
 
-    $('#btnIncluirCuenta').on('click', function() {
+    // Abrir modal de registro (botón Incluir Cuenta dentro del DataTable)
+    $(document).on('click', '#btnIncluirCuenta', function() {
         $('#registrarCuenta')[0].reset();
         $('#snombre_banco').text('');
         $('#snumero_cuenta').text('');
