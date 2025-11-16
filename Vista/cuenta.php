@@ -130,13 +130,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 
                 <h3>Lista de Cuentas <br> Bancarias</h3>
 
-                <div class="space-btn-incluir">
-                    <button id="btnIncluirCuenta"
-                        class="btn-incluir"
-                        title="Incluir Cuenta Bancaria">
-                        <img src="img/plus.svg">
-                    </button>
-                </div>
+                <div class="ghost"></div>
             </div>
             
             <table class="tablaConsultas" id="tablaConsultas">
@@ -560,16 +554,6 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             });
         </script>
 
-    <script>
-        $(document).ready(function() {
-            $('#tablaConsultas').DataTable({
-                language: {
-                    url: 'public/js/es-ES.json'
-                },
-                order: [[0, 'desc']]
-            });
-        });
-    </script>
         <button 
         class="btn-grafica"
         title="Visualizar Reportes"
