@@ -2,6 +2,34 @@ $(document).ready(function() {
     // Verificar si DataTable ya está inicializado
     var tablaUsuarios;
     var $tabla = $('#tablaConsultas');
+
+    // Función para mover el botón "Incluir Usuario" junto al buscador de DataTables
+    function moverBotonIncluir() {
+        var $btnWrapper = $('.space-btn-incluir');
+        if (!$btnWrapper.length) return;
+
+        // Buscar el contenedor del filtro dentro del wrapper de DataTables
+        var $wrapper = $tabla.closest('.dataTables_wrapper');
+        var $filter = $wrapper.find('.dataTables_filter');
+        if (!$filter.length) return;
+
+        // Asegurar distribución en fila
+        $filter.css({
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'flex-end',
+            gap: '10px'
+        });
+
+        // Ajustar el label del buscador
+        $filter.find('label').css({ 'margin-bottom': '0' });
+
+        // Quitar márgenes verticales del contenedor del botón
+        $btnWrapper.css({ 'margin-top': '0', 'margin-bottom': '0' });
+
+        // Añadir el botón a la derecha del buscador
+        $filter.append($btnWrapper);
+    }
     if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
         // Inicializar DataTable con configuración personalizada
         tablaUsuarios = $tabla.DataTable({
@@ -26,10 +54,15 @@ $(document).ready(function() {
                     "orderable": false, 
                     "targets": [6] // Deshabilitar ordenamiento en columna de acciones
                 }
-            ]
+            ],
+            "initComplete": function () {
+                moverBotonIncluir();
+            }
         });
     } else {
         tablaUsuarios = $tabla.DataTable();
+        // Si ya estaba inicializado, mover el botón directamente
+        moverBotonIncluir();
     }
 
     // Detectar dinámicamente el índice de la columna "Estatus" (fallback a 5)
