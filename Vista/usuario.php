@@ -115,6 +115,12 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <div class="contenedor-tabla">
 
     <div class="tabla-header">
+        <div class="ghost"></div>
+        
+        <h3>LISTA DE USUARIOS</h3>
+
+        <div class="ghost"></div>
+        
         <div class="filtro-status">
             <label for="filtro-estatus">Mostrar:</label>
             <select id="filtro-estatus" class="form-select">
@@ -123,16 +129,14 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 <option value="inhabilitado">Inhabilitados</option>
             </select>
         </div>
+    </div>
 
-        <h3>LISTA DE USUARIOS</h3>
-
-        <div class="space-btn-incluir">
-            <button id="btnIncluirUsuario"
-                class="btn-incluir"
-                title="Incluir Usuario">
-                <img src="img/plus.svg">
-            </button>
-        </div>
+    <div class="space-btn-incluir">
+        <button id="btnIncluirUsuario"
+            class="btn-incluir"
+            title="Incluir Usuario">
+            <img src="img/plus.svg">
+        </button>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas" style="width:100%">

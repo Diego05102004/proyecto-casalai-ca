@@ -148,7 +148,7 @@
     text-transform: uppercase;
 }
 
-.tabla-header .space-btn-incluir {
+.space-btn-incluir {
     text-align: center;
     margin: 0%;
 }
@@ -479,7 +479,8 @@ table tfoot tr td span a i{
         height: 26px;
     }
 }
-.tabla-header .btn-incluir{
+
+.btn-incluir{
     border-radius: 80px;
     border: none;
     width: 45px;
