@@ -138,13 +138,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
         <h3>Lista de Recepciones</h3>
 
-        <div class="space-btn-incluir">
-            <button id="btnIncluirRecepcion"
-                class="btn-incluir"
-                title="Incluir Recepción">
-                <img src="assets/img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">

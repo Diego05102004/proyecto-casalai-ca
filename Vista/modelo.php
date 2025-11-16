@@ -60,13 +60,7 @@ aria-labelledby="registrarModeloModalLabel" aria-hidden="true">
     
         <h3>Lista de Modelos</h3>
 
-        <div class="space-btn-incluir">
-            <button id="btnIncluirModelo"
-                class="btn-incluir"
-                title="Incluir Modelo">
-                <img src="assets/img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
@@ -163,16 +157,6 @@ aria-labelledby="registrarModeloModalLabel" aria-hidden="true">
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
 
-<script>
-$(document).ready(function() {
-    $('#tablaConsultas').DataTable({
-        language: {
-            url: 'assets/public/js/es-ES.json'
-        },
-        order: [[0, 'desc']]
-    });
-});
-</script>
 </body>
 </html>
 <?php

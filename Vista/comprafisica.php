@@ -239,13 +239,7 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
 
         <h3>Ventas Presenciales</h3>
 
-        <div class="space-btn-incluir">
-            <button id="btnIncluirDespacho"
-                class="btn-incluir"
-                title="Incluir Compra Física">
-                <img src="assets/img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
     
     <table class="tablaConsultas" id="tablaConsultas">
@@ -846,19 +840,6 @@ $(document).on('change', '.comprobante-pago', function (e) {
     }
 });
 
-</script>
-
-<script>
-$(document).ready(function() {
-    $('#tablaConsultas').DataTable({
-        language: { url: 'assets/public/js/es-ES.json' },
-        pageLength: 10,
-        order: [[0, 'desc']],
-        columnDefs: [
-            { orderable: false, targets: [3] } // Desactiva ordenación en "DETALLES"
-        ]
-    });
-});
 </script>
 
 <?php
