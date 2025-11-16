@@ -125,7 +125,7 @@ $(document).ready(function () {
         $("#tamanocompra").removeClass("is-valid is-invalid");
     }
 
-    $('#btnIncluirRecepcion').on('click', function() {
+    $(document).on('click', '#btnIncluirRecepcion', function() {
         $('#ingresarRecepcion')[0].reset();
         $('#scorrelativo').text('');
         $("#proveedor").removeClass("is-valid is-invalid");
