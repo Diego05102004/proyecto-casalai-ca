@@ -94,7 +94,7 @@ if ((isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosU
 aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <form id="f" method="POST" enctype="multipart/form-data" onsubmit="return validarFormularioCompra()">
+            <form id="f" method="POST" enctype="multipart/form-data" onsubmit="return validarFormularioCompra()" novalidate>
                 <div class="modal-header">
                     <h5 class="titulo-form" id="registrarCompraFisicaModalLabel">Incluir Venta Presencial</h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Cerrar">
