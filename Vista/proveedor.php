@@ -221,11 +221,7 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
     <div class="tabla-header">
         <div class="ghost"></div>
         <h3>LISTA DE PROVEEDORES</h3>
-        <div class="space-btn-incluir">
-            <button id="btnIncluirProveedor" class="btn-incluir" title="Incluir Proveedor">
-                <img src="img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
@@ -1254,17 +1250,6 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
     });
 </script>
 
-<script>
-    $(document).ready(function() {
-        $('#tablaConsultas').DataTable({
-            language: {
-                url: 'public/js/es-ES.json'
-            },
-            order: [[0, 'desc']],
-            pageLength: 10
-        });
-    });
-</script>
     <button 
         class="btn-grafica"
         title="Visualizar Reportes"
