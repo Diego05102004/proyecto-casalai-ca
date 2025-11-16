@@ -75,13 +75,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
         <h3>Lista de Categorias</h3>
 
-        <div class="space-btn-incluir">
-            <button id="btnIncluirCategoria"
-                class="btn-incluir"
-                title="Incluir Categoria">
-                <img src="img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
@@ -172,17 +166,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <script src="public/js/jquery.dataTables.min.js"></script>
 <script src="public/js/dataTables.bootstrap5.min.js"></script>
 <script src="public/js/datatable.js"></script>
-
-<script>
-    $(document).ready(function() {
-        $('#tablaConsultas').DataTable({
-            language: {
-                url: 'public/js/es-ES.json'
-            },
-            order: [[0, 'desc']]
-        });
-    });
-</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
