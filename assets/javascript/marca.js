@@ -44,7 +44,7 @@ if (typeof nombre_rol !== "undefined" && nombre_rol === 'SuperUsuario') {
                         'class': 'btn-incluir',
                         type: 'button',
                         title: 'Incluir Marca'
-                    }).append($('<img>', { src: 'img/plus.svg' }));
+                    }).append($('<img>', { src: 'assets/img/plus.svg' }));
 
                     $btnWrapper.append($btn);
                     $filter.append($btnWrapper);

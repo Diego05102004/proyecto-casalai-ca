@@ -1019,7 +1019,7 @@ $(document).on('click', '.modal .close', function() {
                     'class': 'btn-incluir',
                     type: 'button',
                     title: 'Incluir Recepción'
-                }).append($('<img>', { src: 'img/plus.svg' }));
+                }).append($('<img>', { src: 'assets/img/plus.svg' }));
 
                 $btnWrapper.append($btn);
                 $filter.append($btnWrapper);

@@ -541,7 +541,7 @@ $(document).ready(function () {
                         'class': 'btn-incluir',
                         type: 'button',
                         title: 'Incluir Producto'
-                    }).append($('<img>', { src: 'img/plus.svg' }));
+                    }).append($('<img>', { src: 'assets/img/plus.svg' }));
 
                     $btnWrapper.append($btn);
                     $filter.append($btnWrapper);
