@@ -1,4 +1,49 @@
 $(document).ready(function () {
+
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaVenta;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaVenta = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirVenta').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirVenta',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Venta Presencial'
+                    }).append($('<img>', { src: 'assets/img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaVenta = $tabla.DataTable();
+        }
+    }
+
     // Formatea número a formato 1.000,50
     function formatearNumero(numero, decimales = 2, esMoneda = true) {
         if (isNaN(numero) || numero === null || numero === undefined || numero === "") {
@@ -720,8 +765,7 @@ $(document).ready(function () {
         }
     });
     
-    // Evento click para el botón de incluir despacho
-    $("#btnIncluirDespacho").on("click", function () {
+    $(document).on('click', '#btnIncluirVenta', function() {
         $("#f")[0].reset();
         $("#scorrelativo").text("");
         
@@ -917,9 +961,9 @@ function enviaAjax(datos, callback) {
             }
 
             if (permisos.incluir) {
-                $("#btnIncluirDespacho").show();
+                $("#btnIncluirVenta").show();
             } else {
-                $("#btnIncluirDespacho").hide();
+                $("#btnIncluirVenta").hide();
             }
 
             $(".btn-modificar").each(function () {
