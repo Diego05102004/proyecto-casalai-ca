@@ -131,14 +131,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         </div>
     </div>
 
-    <div class="space-btn-incluir">
-        <button id="btnIncluirUsuario"
-            class="btn-incluir"
-            title="Incluir Usuario">
-            <img src="img/plus.svg">
-        </button>
-    </div>
-
     <table class="tablaConsultas" id="tablaConsultas" style="width:100%">
         <thead>
             <tr>
