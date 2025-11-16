@@ -1,56 +1,665 @@
-$(document).ready(function () {
+// Helper functions for validation
+function validarkeypress(er, e) {
+    const key = e.key;
+    const keyCode = e.keyCode || e.which;
+    const tecla = String.fromCharCode(keyCode);
+    const specials = [8, 37, 39, 46]; // Backspace, left arrow, right arrow, delete
+    
+    if (specials.includes(keyCode)) return true;
+    
+    const regex = new RegExp(er);
+    if (!regex.test(tecla)) {
+        e.preventDefault();
+        return false;
+    }
+    return true;
+}
 
+function space(str) {
+    return str.replace(/\s+/g, ' ').trim();
+}
+
+function soloTextoPermitido(e) {
+    // Si es el campo de cláusula de garantía, permitir espacios sin restricciones
+    if (e.target.id === 'Clausula_garantia') {
+        return true; // No aplicar restricciones de caracteres
+    }
+    
+    // Para otros campos: permite letras, números, espacio, @, . y -
+    const regex = /^[a-zA-Z0-9@\.\-\s]+$/;
+    let valor = e.target.value;
+    // Si el valor no cumple, elimina el último caracter ingresado
+    if (!regex.test(valor)) {
+        e.target.value = valor.replace(/[^a-zA-Z0-9@\.\-\s]/g, '');
+    }
+}
+
+// Agregar después de la función soloTextoPermitido
+
+const regexNombreProducto = /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/;
+const regexDescripcionProducto = /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,\-\s\b]{2,50}$/;
+const regexSerialesProducto = /^[a-zA-Z0-9-]{1,20}$/;
+const regexPrecioProducto = /^\d+(\.\d{1,2})?$/;
+const regexCaracteristicasTexto = /^[a-zA-Z0-9@\.\-\sÁÉÍÓÚáéíóúñÑ]+$/;
+
+const productoFormConfigs = {
+    registrar: {
+        tipo: 'registrar',
+        formSelector: '#incluirProductoForm',
+        campos: {
+            nombre: { selector: '#nombre_producto', span: '#snombre_producto', label: 'nombre del producto' },
+            descripcion: { selector: '#descripcion_producto', span: '#sdescripcion_producto', label: 'descripción del producto' },
+            modelo: { selector: '#modelo', span: '#smodelo', label: 'modelo' },
+            imagen: { selector: '#imagen', span: '#simagen', label: 'imagen del producto' },
+            stockActual: { selector: '#Stock_Actual', span: '#sStock_Actual', label: 'stock actual' },
+            stockMaximo: { selector: '#Stock_Maximo', span: '#sStock_Maximo', label: 'stock máximo' },
+            stockMinimo: { selector: '#Stock_Minimo', span: '#sStock_Minimo', label: 'stock mínimo' },
+            clausula: { selector: '#Clausula_garantia', span: '#sClausula_garantia', label: 'cláusula de garantía' },
+            categoria: { selector: '#Categoria', span: '#sCategoria', label: 'categoría' },
+            seriales: { selector: '#Seriales', span: '#sSeriales', label: 'seriales' },
+            precio: { selector: '#Precio', span: '#sPrecio', label: 'precio' }
+        },
+        caracteristicasContenedor: '#caracteristicasCategoria',
+        tablaCategoriaHidden: '#tabla_categoria'
+    },
+    modificar: {
+        tipo: 'modificar',
+        formSelector: '#modificarProductoForm',
+        campos: {
+            nombre: { selector: '#modificarNombreProducto', span: '#smodificarNombreProducto', label: 'nombre del producto' },
+            descripcion: { selector: '#modificarDescripcionProducto', span: '#smodificarDescripcionProducto', label: 'descripción del producto' },
+            modelo: { selector: '#modificarModelo', span: '#smodificarModelo', label: 'modelo' },
+            imagen: { selector: '#modificarImagen', span: '#smodificarImagen', label: 'imagen del producto' },
+            stockActual: { selector: '#modificarStockActual', span: '#smodificarStockActual', label: 'stock actual' },
+            stockMaximo: { selector: '#modificarStockMaximo', span: '#smodificarStockMaximo', label: 'stock máximo' },
+            stockMinimo: { selector: '#modificarStockMinimo', span: '#smodificarStockMinimo', label: 'stock mínimo' },
+            clausula: { selector: '#modificarClausulaGarantia', span: '#smodificarClausulaGarantia', label: 'cláusula de garantía' },
+            categoria: { selector: '#modificarCategoria', span: '#smodificarCategoria', label: 'categoría' },
+            seriales: { selector: '#modificarSeriales', span: '#smodificarSeriales', label: 'seriales' },
+            precio: { selector: '#modificarPrecio', span: '#smodificarPrecio', label: 'precio' }
+        },
+        caracteristicasContenedor: '#caracteristicasCategoriaModificar',
+        tablaCategoriaHidden: '#modificar_tabla_categoria'
+    }
+};
+
+function obtenerCampoConfig(campoConfig) {
+    return {
+        $campo: $(campoConfig.selector),
+        $span: campoConfig.span ? $(campoConfig.span) : $()
+    };
+}
+
+function marcarCampoValido($campo, $span) {
+    $campo.removeClass('is-invalid').addClass('is-valid');
+    if ($span.length) $span.text('');
+}
+
+function marcarCampoInvalido($campo, $span, mensaje) {
+    $campo.removeClass('is-valid').addClass('is-invalid');
+    if ($span.length) $span.text(mensaje);
+}
+
+function validarNombreProductoCampo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val().trim();
+    let error = null;
+
+    if (valor === '') {
+        marcarCampoInvalido($campo, $span, '*El nombre del producto es obligatorio*');
+        error = 'El nombre del producto es obligatorio';
+    } else if (!regexNombreProducto.test(valor)) {
+        marcarCampoInvalido($campo, $span, '*Solo letras, de 3 a 20 caracteres*');
+        error = 'El nombre del producto solo puede contener letras y espacios (3-20 caracteres)';
+    } else {
+        marcarCampoValido($campo, $span);
+    }
+
+    return error;
+}
+
+function validarDescripcionProductoCampo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val().trim();
+    let error = null;
+
+    if (valor === '') {
+        marcarCampoInvalido($campo, $span, '*La descripción es obligatoria*');
+        error = 'La descripción del producto es obligatoria';
+    } else if (!regexDescripcionProducto.test(valor)) {
+        marcarCampoInvalido($campo, $span, '*Máximo 50 caracteres*');
+        error = 'La descripción debe tener entre 2 y 50 caracteres';
+    } else {
+        marcarCampoValido($campo, $span);
+    }
+
+    return error;
+}
+
+function validarModeloCampo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val();
+    let error = null;
+
+    if (!valor) {
+        marcarCampoInvalido($campo, $span, '*Debe seleccionar un modelo*');
+        error = 'Debe seleccionar un modelo';
+    } else {
+        marcarCampoValido($campo, $span);
+    }
+
+    return error;
+}
+
+function validarImagenCampo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const tieneArchivo = ($campo[0] && $campo[0].files && $campo[0].files.length > 0) || ($campo.val() && $campo.val().trim() !== '');
+    let error = null;
+
+    if (!tieneArchivo) {
+        marcarCampoInvalido($campo, $span, '*Debe seleccionar una imagen*');
+        error = 'Debe seleccionar una imagen';
+    } else {
+        marcarCampoValido($campo, $span);
+    }
+
+    return error;
+}
+
+function validarNumeroNoNegativo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val().trim();
+    const numero = parseInt(valor, 10);
+
+    if (valor === '' || isNaN(numero) || numero < 0) {
+        marcarCampoInvalido($campo, $span, '*Ingrese un valor válido (0 o mayor)*');
+        return `El ${campoConfig.label} debe ser un número válido (0 o mayor)`;
+    }
+
+    marcarCampoValido($campo, $span);
+    return { numero, error: null };
+}
+
+function validarStockCampo(campoConfig, extra = {}) {
+    const resultado = validarNumeroNoNegativo(campoConfig);
+
+    if (typeof resultado === 'string') {
+        return resultado;
+    }
+
+    if (extra.compare && typeof extra.compare === 'function') {
+        const compareResult = extra.compare(resultado.numero);
+        if (compareResult) {
+            const { $campo, $span } = obtenerCampoConfig(campoConfig);
+            marcarCampoInvalido($campo, $span, compareResult.spanMensaje || '*Valor inválido*');
+            return compareResult.errorMensaje || `El ${campoConfig.label} es inválido`;
+        }
+    }
+
+    return null;
+}
+
+function validarClausulaCampo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val();
+    const longitud = valor.trim().length;
+    let error = null;
+
+    if (valor === '') {
+        marcarCampoInvalido($campo, $span, '*La cláusula de garantía es obligatoria*');
+        error = 'La cláusula de garantía es obligatoria';
+    } else if (longitud < 10 || longitud > 200) {
+        marcarCampoInvalido($campo, $span, '*La cláusula debe tener entre 10 y 200 caracteres*');
+        error = 'La cláusula de garantía debe tener entre 10 y 200 caracteres';
+    } else {
+        marcarCampoValido($campo, $span);
+    }
+
+    return error;
+}
+
+function validarCategoriaCampo(campoConfig, hiddenSelector) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val();
+    let error = null;
+
+    if (!valor) {
+        marcarCampoInvalido($campo, $span, '*Debe seleccionar una categoría*');
+        error = 'Debe seleccionar una categoría';
+    } else {
+        marcarCampoValido($campo, $span);
+        if (hiddenSelector) {
+            $(hiddenSelector).val(valor);
+        }
+    }
+
+    return error;
+}
+
+function validarSerialesCampo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val().trim();
+    let error = null;
+
+    if (valor === '') {
+        marcarCampoInvalido($campo, $span, '*El campo de seriales es obligatorio*');
+        error = 'El campo de seriales es obligatorio';
+    } else if (!regexSerialesProducto.test(valor)) {
+        marcarCampoInvalido($campo, $span, '*Solo letras, números y guiones*');
+        error = 'Los seriales solo pueden contener letras, números y guiones (máx. 20 caracteres)';
+    } else {
+        marcarCampoValido($campo, $span);
+    }
+
+    return error;
+}
+
+function validarPrecioCampo(campoConfig) {
+    const { $campo, $span } = obtenerCampoConfig(campoConfig);
+    const valor = $campo.val().trim().replace(',', '.');
+    const numero = parseFloat(valor);
+    let error = null;
+
+    if (valor === '') {
+        marcarCampoInvalido($campo, $span, '*El precio es obligatorio*');
+        error = 'El precio es obligatorio';
+    } else if (isNaN(numero) || !regexPrecioProducto.test(valor) || numero <= 0) {
+        marcarCampoInvalido($campo, $span, '*Ingrese un precio válido (ej: 10.99)*');
+        error = 'Ingrese un precio válido (ej: 10.99)';
+    } else {
+        marcarCampoValido($campo, $span);
+    }
+
+    return error;
+}
+
+function validarCaracteristicasProducto(config, errores = null) {
+    const contenedor = $(config.caracteristicasContenedor);
+    if (!contenedor.length) return;
+
+    let numerosInvalidos = false;
+    let textosInvalidos = false;
+
+    contenedor.find('input[type="number"]').each(function() {
+        const $input = $(this);
+        const valor = $input.val().trim();
+        const numero = parseFloat(valor);
+        const $span = $('#s' + $input.attr('id'));
+
+        if (valor === '' || isNaN(numero) || numero < 0) {
+            $input.removeClass('is-valid').addClass('is-invalid');
+            if ($span.length) $span.text('*Ingrese un valor válido (0 o mayor)*');
+            numerosInvalidos = true;
+        } else {
+            $input.removeClass('is-invalid').addClass('is-valid');
+            if ($span.length) $span.text('');
+        }
+    });
+
+    contenedor.find('input[type="text"]').each(function() {
+        const $input = $(this);
+        const valor = $input.val().trim();
+        const $span = $('#s' + $input.attr('id'));
+
+        if (valor === '') {
+            $input.removeClass('is-valid').addClass('is-invalid');
+            if ($span.length) $span.text('*Este campo es obligatorio*');
+            textosInvalidos = true;
+        } else if (!regexCaracteristicasTexto.test(valor)) {
+            $input.removeClass('is-valid').addClass('is-invalid');
+            if ($span.length) $span.text('*Solo letras, números, espacios, @, punto y guion*');
+            textosInvalidos = true;
+        } else {
+            $input.removeClass('is-invalid').addClass('is-valid');
+            if ($span.length) $span.text('');
+        }
+    });
+
+    if (errores) {
+        if (numerosInvalidos && !errores.includes('Hay campos de características con valores numéricos inválidos')) {
+            errores.push('Hay campos de características con valores numéricos inválidos');
+        }
+        if (textosInvalidos && !errores.includes('Los campos de características de texto solo permiten letras, números, espacios, @, punto y guion')) {
+            errores.push('Los campos de características de texto solo permiten letras, números, espacios, @, punto y guion');
+        }
+    }
+}
+
+function validarFormularioProducto(config) {
+    if (!config) {
+        return { valido: true, errores: [] };
+    }
+
+    const errores = [];
+    const campos = config.campos;
+
+    if (campos.nombre) {
+        const error = validarNombreProductoCampo(campos.nombre);
+        if (error) errores.push(error);
+    }
+
+    if (campos.descripcion) {
+        const error = validarDescripcionProductoCampo(campos.descripcion);
+        if (error) errores.push(error);
+    }
+
+    if (campos.modelo) {
+        const error = validarModeloCampo(campos.modelo);
+        if (error) errores.push(error);
+    }
+
+    if (campos.imagen) {
+        const error = validarImagenCampo(campos.imagen);
+        if (error) errores.push(error);
+    }
+
+    if (campos.stockActual) {
+        const error = validarStockCampo(campos.stockActual);
+        if (error) errores.push(error);
+    }
+
+    if (campos.stockMinimo) {
+        const error = validarStockCampo(campos.stockMinimo);
+        if (error) errores.push(error);
+    }
+
+    if (campos.stockMaximo) {
+        const error = validarStockCampo(campos.stockMaximo, {
+            compare: (valorActual) => {
+                const minimo = parseInt($(campos.stockMinimo.selector).val(), 10);
+                if (!isNaN(minimo) && valorActual <= minimo) {
+                    return {
+                        spanMensaje: '*Debe ser mayor al stock mínimo*',
+                        errorMensaje: 'El stock máximo debe ser mayor al stock mínimo'
+                    };
+                }
+                return null;
+            }
+        });
+        if (error) errores.push(error);
+    }
+
+    if (campos.clausula) {
+        const error = validarClausulaCampo(campos.clausula);
+        if (error) errores.push(error);
+    }
+
+    if (campos.categoria) {
+        const error = validarCategoriaCampo(campos.categoria, config.tablaCategoriaHidden);
+        if (error) errores.push(error);
+    }
+
+    if (campos.seriales) {
+        const error = validarSerialesCampo(campos.seriales);
+        if (error) errores.push(error);
+    }
+
+    if (campos.precio) {
+        const error = validarPrecioCampo(campos.precio);
+        if (error) errores.push(error);
+    }
+
+    if (config.caracteristicasContenedor) {
+        validarCaracteristicasProducto(config, errores);
+    }
+
+    return {
+        valido: errores.length === 0,
+        errores
+    };
+}
+
+function configurarValidacionesTiempoRealProducto() {
+    Object.values(productoFormConfigs).forEach((config) => {
+        if (!config || !$(config.formSelector).length) return;
+        const campos = config.campos;
+
+        if (campos.nombre) {
+            $(campos.nombre.selector).on('input blur', () => validarNombreProductoCampo(campos.nombre));
+        }
+
+        if (campos.descripcion) {
+            $(campos.descripcion.selector).on('input blur', () => validarDescripcionProductoCampo(campos.descripcion));
+        }
+
+        if (campos.modelo) {
+            $(campos.modelo.selector).on('change blur', () => validarModeloCampo(campos.modelo));
+        }
+
+        if (campos.imagen) {
+            $(campos.imagen.selector).on('change blur', () => validarImagenCampo(campos.imagen));
+        }
+
+        if (campos.stockActual) {
+            $(campos.stockActual.selector).on('input blur', () => validarStockCampo(campos.stockActual));
+        }
+
+        if (campos.stockMinimo) {
+            $(campos.stockMinimo.selector).on('input blur', () => {
+                validarStockCampo(campos.stockMinimo);
+                if (campos.stockMaximo) {
+                    validarStockCampo(campos.stockMaximo, {
+                        compare: (valorActual) => {
+                            const minimo = parseInt($(campos.stockMinimo.selector).val(), 10);
+                            if (!isNaN(minimo) && valorActual <= minimo) {
+                                return {
+                                    spanMensaje: '*Debe ser mayor al stock mínimo*',
+                                    errorMensaje: 'El stock máximo debe ser mayor al stock mínimo'
+                                };
+                            }
+                            return null;
+                        }
+                    });
+                }
+            });
+        }
+
+        if (campos.stockMaximo) {
+            $(campos.stockMaximo.selector).on('input blur', () => {
+                validarStockCampo(campos.stockMaximo, {
+                    compare: (valorActual) => {
+                        const minimo = parseInt($(campos.stockMinimo.selector).val(), 10);
+                        if (!isNaN(minimo) && valorActual <= minimo) {
+                            return {
+                                spanMensaje: '*Debe ser mayor al stock mínimo*',
+                                errorMensaje: 'El stock máximo debe ser mayor al stock mínimo'
+                            };
+                        }
+                        return null;
+                    }
+                });
+            });
+        }
+
+        if (campos.clausula) {
+            $(campos.clausula.selector).on('input blur', () => validarClausulaCampo(campos.clausula));
+        }
+
+        if (campos.categoria) {
+            $(campos.categoria.selector).on('change blur', () => validarCategoriaCampo(campos.categoria, config.tablaCategoriaHidden));
+        }
+
+        if (campos.seriales) {
+            $(campos.seriales.selector).on('input blur', () => validarSerialesCampo(campos.seriales));
+        }
+
+        if (campos.precio) {
+            $(campos.precio.selector).on('input blur', () => validarPrecioCampo(campos.precio));
+        }
+
+        if (config.caracteristicasContenedor) {
+            $(document).on('input blur', `${config.caracteristicasContenedor} input`, () => validarCaracteristicasProducto(config));
+        }
+    });
+}
+
+function limpiarValidacionesFormulario(config) {
+    if (!config) return;
+    Object.values(config.campos).forEach((campo) => {
+        const { $campo, $span } = obtenerCampoConfig(campo);
+        $campo.removeClass('is-valid is-invalid');
+        if ($span.length) $span.text('');
+    });
+
+    if (config.caracteristicasContenedor) {
+        const $contenedor = $(config.caracteristicasContenedor);
+        $contenedor.find('input').removeClass('is-valid is-invalid');
+        $contenedor.find('.span-value').text('');
+    }
+}
+
+$(document).ready(function () {
     const regexTexto = /^[a-zA-Z0-9@\.\-\sÁÉÍÓÚáéíóúñÑ]+$/;
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", 4000, "Atención", $("#mensajes").html());
     }
 
+    configurarValidacionesTiempoRealProducto();
+
+    // Warranty clause validation - sin trim() para permitir espacios
+    $("#Clausula_garantia").on("keyup blur", function() {
+        const value = $(this).val(); // Eliminado trim() para preservar espacios
+        if (value === '') {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sClausula_garantia").text('*La cláusula de garantía es obligatoria*');
+        } else if (value.trim().length < 10 || value.trim().length > 200) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sClausula_garantia").text('*La cláusula debe tener entre 10 y 200 caracteres (sin contar espacios al inicio/fin)*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#sClausula_garantia").text('');
+        }
+    });
+
+    // Stock fields validation
+    $("#Stock_Actual, #Stock_Minimo, #Stock_Maximo").on("keyup blur", function() {
+        const value = $(this).val().trim();
+        const id = $(this).attr('id');
+        const spanId = 's' + id;
+        
+        if (value === '') {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#" + spanId).text('*Campo obligatorio*');
+        } else if (!/^\d+$/.test(value)) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#" + spanId).text('*Solo números enteros*');
+        } else {
+            const numValue = parseInt(value);
+            if (numValue < 0) {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+                $("#" + spanId).text('*El valor no puede ser negativo*');
+            } else {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+                $("#" + spanId).text('');
+            }
+        }
+    });
+
+    // Price field validation
+    $("#Precio").on("keyup blur", function() {
+        const value = $(this).val().trim().replace(',', '.');
+        if (value === '') {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sPrecio").text('*El precio es obligatorio*');
+        } else if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sPrecio").text('*Formato inválido (ej: 10.99)*');
+        } else if (parseFloat(value) <= 0) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sPrecio").text('*El precio debe ser mayor a 0*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#sPrecio").text('');
+        }
+    });
+
+    // Category validation on change
+    $("#Categoria").on("change", function() {
+        const value = $(this).val();
+        if (!value) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sCategoria").text('*Debe seleccionar una categoría*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#sCategoria").text('');
+        }
+    });
+
+    // Serial number validation
+    $("#Seriales").on("keyup blur", function() {
+        const value = $(this).val().trim();
+        if (value === '') {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sSeriales").text('*Campo obligatorio*');
+        } else if (!/^[a-zA-Z0-9-]+$/.test(value)) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sSeriales").text('*Solo letras, números y guiones*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#sSeriales").text('');
+        }
+    });
+
+    // Product name validation
     $("#nombre_producto").on("keypress", function(e){
-        validarkeypress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]*$/, e);
-        let nombre = document.getElementById("nombre_producto");
-        nombre.value = space(nombre.value);
+        return validarkeypress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]*$/, e);
     });
 
     $("#nombre_producto").on("keyup", function(){
-        validarkeyup(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/,
-            $(this),
-            $("#snombre_producto"),
-            "*El formato solo permite letras*"
-        );
+        const value = $(this).val().trim();
+        if (value === '') {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#snombre_producto").text('*El nombre del producto es obligatorio*');
+        } else if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/.test(value)) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#snombre_producto").text('*Solo letras, de 3 a 20 caracteres*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#snombre_producto").text('');
+        }
     });
 
+    // Model validation
     $("#modelo").on("change blur", function() {
-        validarkeyup(
-            /^.+$/,
-            $(this),
-            $("#smodelo"),
-            "*Debe seleccionar un modulo y marca*"
-        );
+        const value = $(this).val();
+        if (!value) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#smodelo").text('*Debe seleccionar un modelo*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#smodelo").text('');
+        }
     });
 
+    // Image validation
     $("#imagen").on("change blur", function() {
-        validarkeyup(
-            /^.+$/,
-            $(this),
-            $("#simagen"),
-            "*Debe seleccionar una imagen*"
-        );
+        const value = $(this).val();
+        if (!value) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#simagen").text('*Debe seleccionar una imagen*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#simagen").text('');
+        }
     });
 
+    // Description validation
     $("#descripcion_producto").on("keypress", function(e){
-        validarkeypress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
-        let descripcion = document.getElementById("descripcion_producto");
-        descripcion.value = space(descripcion.value);
+        return validarkeypress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
     });
 
     $("#descripcion_producto").on("keyup", function(){
-        validarkeyup(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,50}$/,
-            $(this),
-            $("#sdescripcion_producto"),
-            "*El formato permite letras y números*"
-        );
+        const value = $(this).val().trim();
+        if (value === '') {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sdescripcion_producto").text('*La descripción es obligatoria*');
+        } else if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,50}$/.test(value)) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+            $("#sdescripcion_producto").text('*Máximo 50 caracteres*');
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+            $("#sdescripcion_producto").text('');
+        }
     });
 
     $("#Stock_Actual").on("keypress", function (e) {
@@ -95,14 +704,13 @@ $(document).ready(function () {
     $("#Clausula_garantia").on("keypress", function(e){
         validarkeypress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
         let descripcion = document.getElementById("Clausula_garantia");
-        descripcion.value = space(descripcion.value);
     });
 
     $("#Clausula_garantia").on("keyup", function(){
         validarkeyup(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,50}$/,
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,\-\s]{2,50}$/,
             $(this),
-            $("#sClausula_garantia"),
+            $("#smodificarClausulaGarantia"),
             "*El formato permite letras y números*"
         );
     });
@@ -146,6 +754,21 @@ $(document).ready(function () {
             $("#sPrecio"),
             "*El formato solo permite números*"
         );
+    });
+
+    // Abrir modal de registro
+    $('#btnIncluirProducto').on('click', function() {
+        const config = productoFormConfigs.registrar;
+        if (config) {
+            $('#incluirProductoForm')[0].reset();
+            limpiarValidacionesFormulario(config);
+            validarFormularioProducto(config);
+        }
+        $('#registrarProductoModal').modal('show');
+    });
+
+    $(document).on('click', '#registrarProductoModal .close, #registrarProductoModal [data-dismiss="modal"]', function() {
+        $('#registrarProductoModal').modal('hide');
     });
 
     // Al abrir el modal de modificar, carga los datos del producto y sus características
@@ -282,467 +905,45 @@ $(document).ready(function() {
     setInterval(verificarPermisosEnTiempoRealProductos, 10000); // 10 segundos
 });
     
-    $('#modificarProductoForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Mostrar indicador de carga
-        Swal.fire({
-            title: 'Procesando...',
-            text: 'Por favor espere',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // Actualizar el valor de la tabla de categoría
-        $('#modificar_tabla_categoria').val($('#modificarCategoria').val());
-        
-        // Validar características numéricas
-        let caracteristicasInvalidas = [];
-        $('#caracteristicasCategoria input[type="number"]').each(function() {
-            const valor = parseFloat($(this).val());
-            if (isNaN(valor) || valor < 0) {
-                caracteristicasInvalidas.push($(this).attr('name'));
-                $(this).addClass('is-invalid');
-            } else {
-                $(this).removeClass('is-invalid');
-            }
-        });
-
-        // Validar características de texto
-        let caracteristicasTextoInvalidas = [];
-        $('#caracteristicasCategoriaModificar input[type="text"]').each(function() {
-            const valor = $(this).val().trim();
-            if (valor !== '' && !regexTexto.test(valor)) {
-                caracteristicasTextoInvalidas.push($(this).attr('name'));
-                $(this).addClass('is-invalid');
-            } else {
-                $(this).removeClass('is-invalid');
-            }
-        });
-
-        // Mostrar errores de validación si los hay
-        if (caracteristicasTextoInvalidas.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error en características',
-                text: 'Las características de texto solo pueden contener letras, números, espacios, @, punto y guion.'
-            });
-            return;
-        }
-
-        if (caracteristicasInvalidas.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error en características',
-                text: 'Las características numéricas deben ser valores positivos.'
-            });
-            return;
-        }
-
-        // Preparar datos del formulario
-        var formData = new FormData(this);
-        formData.append('accion', 'modificar');
-
-        // Enviar petición AJAX
-        $.ajax({
-            url: '', 
-            type: 'POST',
-            processData: false,
-            contentType: false,
-            cache: false,
-            data: formData,
-            success: function(response) {
-                Swal.close();
-                console.log('Respuesta del servidor:', response);
-                
-                // Parsear respuesta
-                let res;
-                try {
-                    res = typeof response === 'string' ? JSON.parse(response) : response;
-                } catch (e) {
-                    // Intentar extraer JSON de respuesta mal formada
-                    try {
-                        const txt = String(response).trim();
-                        const first = txt.indexOf('{');
-                        const last = txt.lastIndexOf('}');
-                        if (first !== -1 && last !== -1 && last > first) {
-                            res = JSON.parse(txt.substring(first, last + 1));
-                        } else {
-                            throw new Error('Respuesta no válida del servidor');
-                        }
-                    } catch (parseError) {
-                        console.error('Error al parsear respuesta:', parseError);
-                        throw new Error('Error al procesar la respuesta del servidor');
-                    }
-                }
-
-                if (res && res.status === 'success') {
-                    // Mostrar mensaje de éxito
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: res.message || res.mensaje || 'El producto se ha modificado correctamente',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        // Cerrar modal
-                        $('#modificarProductoModal').modal('hide');
-                        
-                        // Actualizar la fila de la tabla si hay datos del producto
-                        if (res.producto) {
-                            actualizarFilaEnTabla(res.producto);
-                        } else {
-                            // Recargar como último recurso si no hay datos del producto
-                            location.reload();
-                        }
-                    });
-                } else {
-                    // Mostrar mensaje de error
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: (res && (res.message || res.mensaje)) || 'Error al modificar el producto',
-                        confirmButtonText: 'Aceptar'
-                    });
-                }
-            },
-            error: function(xhr, status, error) {
-                Swal.close();
-                console.error('Error al modificar el producto:', status, error, xhr.responseText);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de conexión',
-                    text: 'No se pudo conectar con el servidor. Por favor, intente nuevamente.',
-                    confirmButtonText: 'Aceptar'
-                });
-            }
-        });
-    });
-
-$(document).on('click', '.eliminar', function (e) {
+$('#modificarProductoForm').on('submit', function(e) {
     e.preventDefault();
-    var id_producto = $(this).data('id');
     
-    Swal.fire({
-        title: '¿Está seguro?',
-        text: "¡No podrás revertir esto!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminarlo!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            var datos = new FormData();
-            datos.append('accion', 'eliminar');
-            datos.append('id_producto', id_producto);
-            
-            $.ajax({
-                url: '',
-                type: 'POST',
-                data: datos,
-                contentType: false,
-                processData: false,
-                success: function(response) {
-                    try {
-                        // Si ya es objeto, úsalo. Si es string, intenta parsear.
-                        var res = response;
-                        if (typeof response === 'string') {
-                            var txt = response.trim();
-                            try {
-                                res = JSON.parse(txt);
-                            } catch (err) {
-                                // Intentar extraer JSON si hay HTML/texto envolvente
-                                var first = txt.indexOf('{');
-                                var last = txt.lastIndexOf('}');
-                                if (first !== -1 && last !== -1 && last > first) {
-                                    var sub = txt.substring(first, last + 1);
-                                    res = JSON.parse(sub);
-                                } else {
-                                    throw err;
-                                }
-                            }
-                        }
+    const config = productoFormConfigs.modificar;
+    const resultado = validarFormularioProducto(config);
 
-                        console.log('Respuesta eliminar (parsed):', res);
-
-                        if (res && res.status === 'success') {
-                            Swal.fire(
-                                'Eliminado!',
-                                res.message || 'El producto ha sido eliminado.',
-                                'success'
-                            ).then(function() {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire(
-                                'Error!',
-                                (res && (res.message || res.msg)) || 'Error al eliminar el producto',
-                                'error'
-                            );
-                        }
-                    } catch (e) {
-                        console.error('Error procesando respuesta eliminar:', e, response);
-                        Swal.fire(
-                            'Error!',
-                            'Error al procesar la respuesta del servidor. Revisa la consola para más detalles.',
-                            'error'
-                        );
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX eliminar error:', status, error, xhr.responseText);
-                    Swal.fire(
-                        'Error!',
-                        'Error en la solicitud AJAX: ' + (error || status),
-                        'error'
-                    );
-                }
-            });
-        }
-    });
-});
-
-/**
- * Actualiza una fila en la tabla de productos con los nuevos datos
- * @param {Object} producto - Objeto con los datos actualizados del producto
- */
-function actualizarFilaEnTabla(producto) {
-    const fila = $(`tr[data-id="${producto.id_producto}"]`);
-    if (!fila.length) {
-        console.warn('No se encontró la fila del producto a actualizar');
-        location.reload(); // Recargar como último recurso
-        return;
-    }
-
-    try {
-        // Actualizar datos visibles en la fila
-        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
-        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
-        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
-        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
-        fila.find('td:eq(6) span').text(producto.seriales || '');
-        
-        // Formatear y actualizar precio
-        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
-        fila.find('.precio').text(precioFormateado);
-        
-        // Actualizar botón de edición
-        const botonEditar = fila.find('.btn-modificar');
-        if (botonEditar.length) {
-            // Actualizar atributos data-* para futuras ediciones
-            const datosActualizar = {
-                'data-nombre': producto.nombre_producto || '',
-                'data-descripcion': producto.descripcion_producto || '',
-                'data-modelo': producto.nombre_modelo || '',
-                'data-marca': producto.nombre_marca || '',
-                'data-stockactual': producto.stock_actual || '0',
-                'data-stockmaximo': producto.stock_maximo || '0',
-                'data-stockminimo': producto.stock_minimo || '0',
-                'data-seriales': producto.seriales || '',
-                'data-clausula': producto.clausula_garantia || '',
-                'data-precio': precioFormateado,
-                'data-categoria': producto.categoria_id || '',
-                'data-tabla_categoria': producto.tabla_categoria || ''
-            };
-
-            // Aplicar los cambios a los atributos data-*
-            Object.entries(datosActualizar).forEach(([key, value]) => {
-                botonEditar.attr(key, value);
-            });
-
-            // Actualizar características dinámicas si existen
-            if (producto.caracteristicas) {
-                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
-                    if (value !== null && value !== undefined) {
-                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
-                        botonEditar.attr(dataKey, value);
-                    }
-                });
-            }
+    if (!resultado.valido) {
+        const $primerError = $(`${config.formSelector} .is-invalid`).first();
+        if ($primerError.length) {
+            $('html, body').animate({ scrollTop: $primerError.offset().top - 120 }, 500);
+            $primerError.focus();
         }
 
-        // Actualizar botón de detalles si existe
-        const botonDetalle = fila.find('.btn-detalle');
-        if (botonDetalle.length) {
-            botonDetalle.attr({
-                'data-nombredtl': producto.nombre_producto || '',
-                'data-modelodtl': producto.nombre_modelo || '',
-                'data-marcadtl': producto.nombre_marca || '',
-                'data-descripciondtl': producto.descripcion_producto || '',
-                'data-stockactualdtl': producto.stock_actual || '0',
-                'data-stockmaximodtl': producto.stock_maximo || '0',
-                'data-stockminimodtl': producto.stock_minimo || '0',
-                'data-serialdtl': producto.seriales || '',
-                'data-clausuladtl': producto.clausula_garantia || '',
-                'data-categoriadtl': producto.nombre_categoria || '',
-                'data-preciodtl': precioFormateado
-            });
-        }
-
-        // Mostrar notificación de éxito
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Producto actualizado',
-            showConfirmButton: false,
-            timer: 1500
-        });
-
-    } catch (error) {
-        console.error('Error al actualizar la fila del producto:', error);
-        // Si hay un error, recargar la página para asegurar consistencia
-        location.reload();
-    }
-}
-// ...existing code...
-
-    $('#btnIncluirProducto').on('click', function() {
-        $('#incluirProductoForm')[0].reset();
-        $('#registrarProductoModal').modal('show');
-    });
-
-    function soloTextoPermitido(e) {
-    // Permite: letras, números, espacio, @, . y -
-    const regex = /^[a-zA-Z0-9@\.\-\s]+$/;
-    let valor = e.target.value;
-    // Si el valor no cumple, elimina el último caracter ingresado
-    if (!regex.test(valor)) {
-        e.target.value = valor.replace(/[^a-zA-Z0-9@\.\-\s]/g, '');
-    }
-}
-    $(document).on('click', '#registrarProductoModal .close', function() {
-        $('#registrarProductoModal').modal('hide');
-    });
-
-$('#incluirProductoForm').on('submit', function(event) {
-    event.preventDefault();
-
-    // Validaciones antes del envío
-    let errores = [];
-
-    const nombre = $('#nombre_producto').val().trim();
-    const descripcion = $('#descripcion_producto').val().trim();
-    const modelo = $('#modelo').val();
-    const stockActual = parseInt($('#Stock_Actual').val());
-    const stockMinimo = parseInt($('#Stock_Minimo').val());
-    const stockMaximo = parseInt($('#Stock_Maximo').val());
-    const categoria = $('#Categoria').val();
-    const seriales = $('#Seriales').val().trim();
-    const precioInput = $('#Precio').val().trim().replace(',', '.');
-    const precio = Number(precioInput);
-    const precioRegex = /^\d+(\.\d{0,2})?$/;
-
-    // Validación de texto usando regexTexto global
-    let caracteristicasInvalidas = [];
-    $('#caracteristicasCategoria input[type="number"]').each(function() {
-        if (parseFloat($(this).val()) < 0) {
-            caracteristicasInvalidas.push($(this).attr('name'));
-            $(this).addClass('is-invalid');
-        } else {
-            $(this).removeClass('is-invalid');
-        }
-    });
-
-    if (caracteristicasInvalidas.length > 0) {
         Swal.fire({
             icon: 'error',
-            title: 'Error en características',
-            text: 'Las características numéricas no pueden tener valores negativos.'
-        });
-        return;
-    }
-
-    if (!regexTexto.test(nombre)) {
-        errores.push("El nombre del producto solo puede contener letras, números y espacios.");
-    }
-    if (descripcion && !regexTexto.test(descripcion)) {
-        errores.push("La descripción solo puede contener letras, números y espacios.");
-    }
-    if (nombre.length < 3) {
-        errores.push("El nombre del producto debe tener al menos 3 caracteres.");
-    }
-
-    if (!modelo) {
-        errores.push("Debe seleccionar un modelo.");
-    }
-
-    if (isNaN(stockActual) || stockActual <= 0) {
-        errores.push("El Stock Actual debe ser mayor a 0.");
-    }
-
-    if (isNaN(stockMinimo) || stockMinimo <= 0) {
-        errores.push("El Stock Mínimo debe ser mayor a 0.");
-    }
-
-    if (isNaN(stockMaximo) || stockMaximo <= 0) {
-        errores.push("El Stock Máximo debe ser mayor a 0.");
-    }
-
-    if (!isNaN(stockMinimo) && !isNaN(stockMaximo) && stockMinimo >= stockMaximo) {
-        errores.push("El Stock Mínimo debe ser menor al Stock Máximo.");
-    }
-
-    if (isNaN(stockActual) || stockActual < 0) {
-    errores.push("El Stock Actual debe ser mayor o igual a 0.");
-}
-
-    if (!categoria) {
-        errores.push("Debe seleccionar una categoría.");
-    }
-
-    if (seriales.length === 0) {
-        errores.push("Debe ingresar el código serial.");
-    }
-    let caracteristicasTextoInvalidas = [];
-$('#caracteristicasCategoria input[type="text"]').each(function() {
-    if (!regexTexto.test($(this).val())) {
-        caracteristicasTextoInvalidas.push($(this).attr('name'));
-        $(this).addClass('is-invalid');
-    } else {
-        $(this).removeClass('is-invalid');
-    }
-});
-if (caracteristicasTextoInvalidas.length > 0) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error en características',
-        text: 'Las características de texto solo pueden contener letras, números, espacios, @, punto y guion.'
-    });
-    return;
-}
-
-    if (!precioRegex.test(precioInput)) {
-    errores.push("El precio debe ser un número válido con hasta 2 decimales.");
-} else if (precio <= 0) {
-    errores.push("El precio debe ser mayor a 0.");
-}
-
-$('#Precio').val($('#Precio').val().replace(',', '.'));
-
-    // VALIDACIONES ADICIONALES POR CATEGORÍA
- 
-
-    if (errores.length > 0) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Errores en el formulario',
-            html: errores.join("<br>"),
+            title: 'Error en el formulario',
+            html: resultado.errores.join('<br>'),
             confirmButtonText: 'Aceptar'
         });
         return;
     }
 
-    // Si pasa validación, continuar con el envío AJAX
-    const formData = new FormData(this);
-    let datos = {};
-    for (let [key, value] of formData.entries()) {
-        datos[key] = value;
-    }
+    $(config.tablaCategoriaHidden).val($(config.campos.categoria.selector).val());
 
+    Swal.fire({
+        title: 'Procesando...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Preparar datos del formulario
+    var formData = new FormData(this);
+    formData.append('accion', 'modificar');
+
+
+    // Enviar petición AJAX
     $.ajax({
         url: '',
         type: 'POST',
