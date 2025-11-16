@@ -399,3 +399,39 @@ Salida del comando:
     "tamano_archivo": 227994
 }
 
+{
+    "fecha": "2025-11-15 17:51:30",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_175130.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_175130.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-15 17:51:58",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_175158.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_175158.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-15 17:52:21",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_175221.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_175221.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+

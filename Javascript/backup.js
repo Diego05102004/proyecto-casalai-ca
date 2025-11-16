@@ -122,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <p>El respaldo se generó correctamente:</p>
                                     <ul class="mt-2">
                                         <li><strong>Archivo:</strong> ${data.archivo}</li>
-                                        <li><strong>Tamaño:</strong> ${formatBytes(data.tamano)}</li>
                                         <li><strong>Fecha:</strong> ${data.fecha || 'N/A'}</li>
                                     </ul>
                                 </div>
