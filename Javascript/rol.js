@@ -4,6 +4,54 @@ $(document).ready(function () {
         mensajes("warning", "Atención", $("#mensajes").html());
     }
 
+    // Inicializar DataTable de roles y crear dinámicamente el botón Incluir en el filtro
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaRoles;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaRoles = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: 2 } // Deshabilitar ordenamiento en columna de acciones
+                ],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirRol').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirRol',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Rol'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaRoles = $tabla.DataTable();
+        }
+    }
+
     $("#nombre_rol").on("keypress", function(e){
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]*$/, e);
         let nombre = document.getElementById("nombre_rol");
@@ -17,61 +65,62 @@ $(document).ready(function () {
             "*El formato solo permite letras*"
         );
     });
-function verificarPermisosEnTiempoRealRoles() {
-    var datos = new FormData();
-    datos.append('accion', 'permisos_tiempo_real');
-    enviarAjax(datos, function(permisos) {
-        // Si no tiene permiso de consultar
-        if (!permisos.consultar) {
-            $('#tablaConsultas').hide();
-            $('.space-btn-incluir').hide();
-            if ($('#mensaje-permiso').length === 0) {
-                $('.contenedor-tabla').prepend('<div id="mensaje-permiso" style="color:red; text-align:center; margin:20px 0;">No tiene permiso para consultar los registros.</div>');
-            }
-            return;
-        } else {
-            $('#tablaConsultas').show();
-            $('.space-btn-incluir').show();
-            $('#mensaje-permiso').remove();
-        }
 
-        // Mostrar/ocultar botón de incluir
-        if (permisos.incluir) {
-            $('#btnIncluirRol').show();
-        } else {
-            $('#btnIncluirRol').hide();
-        }
-
-        // Mostrar/ocultar botones de modificar/eliminar
-        $('.btn-modificar').each(function() {
-            if (permisos.modificar) {
-                $(this).show();
+    function verificarPermisosEnTiempoRealRoles() {
+        var datos = new FormData();
+        datos.append('accion', 'permisos_tiempo_real');
+        enviarAjax(datos, function(permisos) {
+            // Si no tiene permiso de consultar
+            if (!permisos.consultar) {
+                $('#tablaConsultas').hide();
+                $('.space-btn-incluir').hide();
+                if ($('#mensaje-permiso').length === 0) {
+                    $('.contenedor-tabla').prepend('<div id="mensaje-permiso" style="color:red; text-align:center; margin:20px 0;">No tiene permiso para consultar los registros.</div>');
+                }
+                return;
             } else {
-                $(this).hide();
+                $('#tablaConsultas').show();
+                $('.space-btn-incluir').show();
+                $('#mensaje-permiso').remove();
+            }
+
+            // Mostrar/ocultar botón de incluir
+            if (permisos.incluir) {
+                $('#btnIncluirRol').show();
+            } else {
+                $('#btnIncluirRol').hide();
+            }
+
+            // Mostrar/ocultar botones de modificar/eliminar
+            $('.btn-modificar').each(function() {
+                if (permisos.modificar) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            $('.btn-eliminar').each(function() {
+                if (permisos.eliminar) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // Ocultar columna Acciones si ambos permisos son falsos
+            if (!permisos.modificar && !permisos.eliminar) {
+                $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').hide();
+            } else {
+                $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').show();
             }
         });
-        $('.btn-eliminar').each(function() {
-            if (permisos.eliminar) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
-        });
+    }
 
-        // Ocultar columna Acciones si ambos permisos son falsos
-        if (!permisos.modificar && !permisos.eliminar) {
-            $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').hide();
-        } else {
-            $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').show();
-        }
+    // Llama la función al cargar la página y luego cada 10 segundos
+    $(document).ready(function() {
+        verificarPermisosEnTiempoRealRoles();
+        setInterval(verificarPermisosEnTiempoRealRoles, 10000); // 10 segundos
     });
-}
-
-// Llama la función al cargar la página y luego cada 10 segundos
-$(document).ready(function() {
-    verificarPermisosEnTiempoRealRoles();
-    setInterval(verificarPermisosEnTiempoRealRoles, 10000); // 10 segundos
-});
     function validarEnvioRol(){
         let nombre = $("#nombre_rol");
         nombre.val(space(nombre.val()).trim());
@@ -125,7 +174,8 @@ $(document).ready(function() {
         $("#snombre_rol").text('');
     }
 
-    $('#btnIncluirRol').on('click', function() {
+    // Abrir modal de registro (botón Incluir Rol dentro del DataTable)
+    $(document).on('click', '#btnIncluirRol', function() {
         $('#registrarRol')[0].reset();
         $('#snombre_rol').text('');
         $('#registrarRolModal').modal('show');
