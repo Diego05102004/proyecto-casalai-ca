@@ -334,8 +334,6 @@ unset($compra);
             </td>
         </tr>
     <?php endforeach; ?>
-<?php else: ?>
-    <tr><td colspan="4" class="text-center">No hay registros de compras</td></tr>
 <?php endif; ?>
 </tbody>
     </table>
