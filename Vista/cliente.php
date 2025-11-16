@@ -75,13 +75,7 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
 
         <h3>Lista de Clientes</h3>
 
-        <div class="space-btn-incluir">
-            <button id="btnIncluirCliente"
-                class="btn-incluir"
-                title="Incluir Cliente">
-                <img src="img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
@@ -257,18 +251,7 @@ aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
 <script src="public/js/jquery.dataTables.min.js"></script>
 <script src="public/js/dataTables.bootstrap5.min.js"></script>
 <script src="public/js/datatable.js"></script>
-<script>
-$(document).ready(function() {
-    $('#tablaConsultas').DataTable({
-        language: {
-            url: 'public/js/es-ES.json'
-        },
-        columnDefs: [
-            { orderable: false, targets: 5 } // Deshabilitar ordenamiento para columna de acciones
-        ]
-    });
-});
-</script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
