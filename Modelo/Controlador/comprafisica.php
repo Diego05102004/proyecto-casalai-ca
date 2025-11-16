@@ -128,7 +128,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     if (!empty($_FILES['pagos']['name'][$idx]['comprobante'])) {
                         $tmpName = $_FILES['pagos']['tmp_name'][$idx]['comprobante'];
                         $fileName = time() . '_' . basename($_FILES['pagos']['name'][$idx]['comprobante']);
-                        $uploadDir = "uploads/comprobantes/";
+                        $uploadDir = "assets/img/uploads/comprobantes/";
                         if (!file_exists($uploadDir)) {
                             mkdir($uploadDir, 0777, true);
                         }
@@ -137,13 +137,13 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     } else {
                         // asignar imágenes por defecto segun tipo
                         if ($detalle['tipo'] === 'Efectivo') {
-                            $detalle['comprobante'] = 'uploads/comprobantes/bolivar.png';
+                            $detalle['comprobante'] = 'assets/img/uploads/comprobantes/bolivar.png';
                             $detalle['cuenta'] = 0;
                         } elseif ($detalle['tipo'] === 'Efectivo en $') {
-                            $detalle['comprobante'] = 'uploads/comprobantes/dolar.png';
+                            $detalle['comprobante'] = 'assets/img/uploads/comprobantes/dolar.png';
                             $detalle['cuenta'] = 1;
                         } elseif ($detalle['tipo'] === 'Zelle') {
-                            $detalle['comprobante'] = 'uploads/comprobantes/zelle.png';
+                            $detalle['comprobante'] = 'assets/img/uploads/comprobantes/zelle.png';
                         } else {
                             $detalle['comprobante'] = null;
                         }

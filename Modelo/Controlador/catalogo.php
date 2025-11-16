@@ -156,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     if (!empty($producto['imagen'])) {
                         $html .= '<img src="' . htmlspecialchars($producto['imagen']) . '" class="product-image"
                                     alt="' . htmlspecialchars($producto['nombre_producto']) . '"
-                                    onerror="this.src=\'img/placeholder-product.png\'">';
+                                    onerror="this.src=\'assets/img/placeholder-product.png\'">';
                     } else {
                         $html .= '<div class="product-image img-placeholder">
                                     <i class="bi bi-image"></i>

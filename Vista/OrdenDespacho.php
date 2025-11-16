@@ -13,7 +13,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     <title>Gestionar Orden de Despacho</title>
 </head>
 
-<body class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>
 
@@ -119,19 +119,19 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
                             data-cliente="<?= htmlspecialchars($orden['cliente']) ?>"
                             data-cedula="<?= htmlspecialchars($orden['cedula']) ?>"
                             data-fecha="<?= htmlspecialchars($orden['fecha_despacho']) ?>">
-                            <img src="img/eye.svg">
+                            <img src="assets/img/eye.svg">
                         </button>
                         <?php if ($orden['estado'] !== 'Entregada'): ?>
                             <button
                                 class="btn-marcar"
                                 title="Marcar como Entregada">
-                                <img src="img/check.svg">
+                                <img src="assets/img/check.svg">
                             </button>
                         <?php endif; ?>
                         <form method="post" name="DescargarOrdenDespacho">
                             <button class="btn-descargar" name="DescargarOrdenDespacho" type="submit"
                                 title="Descargar Orden de Despacho" value="<?php echo $orden['id_orden_despachos']; ?>">
-                                <img src="img/download.svg">
+                                <img src="assets/img/download.svg">
                             </button>
                         </form>
                         <?php if ($orden['estado'] !== 'Entregada'): ?>
@@ -139,7 +139,7 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
                                 <button class="btn-anular"
                                     title="Anular Orden de Despacho"
                                     data-id-orden="<?= htmlspecialchars($orden['id_orden_despachos']) ?>">
-                                    <img src="img/circle-x.svg">
+                                    <img src="assets/img/circle-x.svg">
                                 </button>
                             <?php endif; ?>
                         <?php endif; ?>
@@ -193,15 +193,15 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
 
 <?php include 'footer.php'; ?>
 
-<script src="public/bootstrap/js/sidebar.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
-<script src="javascript/sweetalert2.all.min.js"></script>
-<script src="javascript/usuario.js"></script>
-<script src="javascript/validaciones.js"></script>
+<script src="assets/public/bootstrap/js/sidebar.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
+<script src="assets/javascript/sweetalert2.all.min.js"></script>
+<script src="assets/javascript/usuario.js"></script>
+<script src="assets/javascript/validaciones.js"></script>
 <script>
     class PDF extends FPDF {
     function Header() {
@@ -318,11 +318,11 @@ echo json_encode(array_map(function($factura) {
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteVentas'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     </button>
 
     <!-- Nuestro archivo JS -->
-    <script src="javascript/ordendespacho.js"></script>
+    <script src="assets/javascript/ordendespacho.js"></script>
     
     <!-- Inicialización de componentes -->
     <script>

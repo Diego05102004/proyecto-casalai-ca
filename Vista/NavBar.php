@@ -16,7 +16,7 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
             <div class="d-flex align-items-center" style="flex-grow: 1;">
                 <!-- Logo y nombre -->
                 <a class="navbar-brand d-flex align-items-center" href="#" style="margin-left: 15px;">
-                    <img src="img/logotipo.png" alt="Logo" width="50" height="40" style="margin-right: 12px; filter: brightness(0) invert(1);">
+                    <img src="assets/img/logotipo.png" alt="Logo" width="50" height="40" style="margin-right: 12px; filter: brightness(0) invert(1);">
                     <h3 style="color: white; margin: 0; font-size: 1.4rem; font-weight: 500;">Bienvenido a Casa Lai Tu Tienda Virtual</h3>
                 </a>
             </div>
@@ -31,7 +31,7 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
                     <!-- Botón de tasa de cambio -->
                     <li class="nav-item me-3">
                         <button class="icon-btn" id="tasa-cambio-btn-guest" style="background: transparent; border: none; padding: 8px;">
-                            <img src="img/currency-exchange.svg" alt="Tasa BCV" class="local-icon" style="filter: brightness(0) invert(1); width: 24px; height: 24px;">
+                            <img src="assets/img/currency-exchange.svg" alt="Tasa BCV" class="local-icon" style="filter: brightness(0) invert(1); width: 24px; height: 24px;">
                         </button>
                     </li>
                     
@@ -50,7 +50,7 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
 
 <!-- Panel de Tasa de Cambio para usuarios no logeados -->
 <div class="tasa-cambio-panel guest" id="tasa-cambio-panel-guest">
-    <h2>Tipo de Cambio <img src="img/currency-exchange.svg" alt="Tasa" class="local-icon" style="width: 20px; height: 20px;"></h2>
+    <h2>Tipo de Cambio <img src="assets/img/currency-exchange.svg" alt="Tasa" class="local-icon" style="width: 20px; height: 20px;"></h2>
     <div class="tasa-info">
         <div class="tasa-valor">
             <strong>1 USD = <?= $tasaBCVFormateada ?> BS</strong>
@@ -158,9 +158,9 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
 <!-- Scripts -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-<script src="public/js/jquery.min.js"></script>
-<script src="public/js/popper.min.js"></script>
-<script src="javascript/js/bootstrap.min.js"></script>
+<script src="assets/public/js/jquery.min.js"></script>
+<script src="assets/public/js/popper.min.js"></script>
+<script src="assets/javascript/js/bootstrap.min.js"></script>
 
 <script>
     // Efecto de scroll para el navbar

@@ -8,9 +8,9 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 <head>
     <meta charset="UTF-8">
     <title>Bitácora del Sistema</title>
-    <link rel="stylesheet" href="public/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="public/js/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="styles/tabla_consulta.css">
+    <link rel="stylesheet" href="assets/public/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/public/js/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="assets/styles/tabla_consulta.css">
     <?php include 'header.php'; ?>
     <style>
         .contenedor-tabla {
@@ -21,7 +21,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         }
     </style>
 </head>
-<body class="fondo" style="background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh;">
+<body class="fondo" style="background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh;">
 <?php include 'newnavbar.php'; ?>
 
 <div class="contenedor-tabla">
@@ -90,11 +90,11 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 </div>
 
 <?php include 'footer.php'; ?>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="javascript/bitacora.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/javascript/bitacora.js"></script>
 </body>
 </html>
 

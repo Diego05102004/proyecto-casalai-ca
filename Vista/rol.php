@@ -11,7 +11,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     <title>Gestionar Roles</title>
     <?php include 'header.php'; ?>
 </head>
-<body class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>
 
@@ -53,7 +53,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             <button id="btnIncluirRol"
                 class="btn-incluir"
                 title="Incluir Rol">
-                <img src="img/plus.svg">
+                <img src="assets/img/plus.svg">
             </button>
         </div>
     </div>
@@ -87,18 +87,18 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                     title="Modificar Rol"
                                     data-id="<?php echo $rol['id_rol']; ?>"
                                     data-nombre="<?php echo htmlspecialchars($rol['nombre_rol']); ?>">
-                                    <img src="img/pencil.svg">
+                                    <img src="assets/img/pencil.svg">
                                 </button>
                                 <a href="?pagina=permiso">
                                     <button class="btn-permisos"
                                         title="Gestionar Permisos">
-                                        <img src="img/comprobacion-de-lista.svg">
+                                        <img src="assets/img/comprobacion-de-lista.svg">
                                     </button>
                                 </a>
                                 <button class="btn-eliminar"
                                     title="Eliminar Rol"
                                     data-id="<?php echo $rol['id_rol']; ?>">
-                                    <img src="img/circle-x.svg">
+                                    <img src="assets/img/circle-x.svg">
                                 </button>
                             <?php endif; ?>
                         </ul>
@@ -137,19 +137,19 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
 <?php include 'footer.php'; ?>
 
-<script src="javascript/rol.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/sidebar.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
+<script src="assets/javascript/rol.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/sidebar.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
 
 <script>
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({
         language: {
-            url: 'public/js/es-ES.json'
+            url: 'assets/public/js/es-ES.json'
         },
         order: [[0, 'desc']]
     });

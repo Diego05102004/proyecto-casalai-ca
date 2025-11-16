@@ -20,11 +20,11 @@ body {
     </style>
 </head>
 
-<body class="fondo" style="height:100vh; background-image:url(img/fondo.jpg); background-size:cover;">
+<body class="fondo" style="height:100vh; background-image:url(assets/img/fondo.jpg); background-size:cover;">
 <?php include 'newnavbar.php'; ?>
-    <body  class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <body  class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 <div class="main-content">  
-<?php require_once("public/modal.php"); ?>
+<?php require_once("assets/public/modal.php"); ?>
 
 <!--<div class="container">  todo el contenido ira dentro de esta etiqueta-->
 
@@ -54,17 +54,17 @@ body {
 
     <?php include 'footer.php'; ?>
         <!-- Bootstrap JS -->
-    <script src="javascript/factura.js"></script>
-    <script src='public/bootstrap/js/bootstrap.bundle.min.js'></script>
-    <script src='public/bootstrap/css/bootstrap.min.css'></script>
-    <script src="javascript/validaciones.js"></script>
+    <script src="assets/javascript/factura.js"></script>
+    <script src='assets/public/bootstrap/js/bootstrap.bundle.min.js'></script>
+    <script src='assets/public/bootstrap/css/bootstrap.min.css'></script>
+    <script src="assets/javascript/validaciones.js"></script>
 
 
     <button 
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteVentas'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     
     </button>
 </body>

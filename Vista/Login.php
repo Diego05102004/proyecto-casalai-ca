@@ -8,9 +8,9 @@
     ></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/login-darckort.css">
-    <link rel="stylesheet" href="styles/formulario.css">
-    <script src="public/js/sweetalert2.js"></script>
+    <link rel="stylesheet" href="assets/styles/login-darckort.css">
+    <link rel="stylesheet" href="assets/styles/formulario.css">
+    <script src="assets/public/js/sweetalert2.js"></script>
     <title>Iniciar Sesión</title>
   </head>
 
@@ -20,7 +20,7 @@
     data-tipo="<?php echo (isset($resultado['status']) && $resultado['status'] == 'success') ? 'success' : 'error'; ?>">
 </div>
 
-  <body class="fondo" style="height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+  <body class="fondo" style="height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
     <div class="container">
       <div class="forms-container">
         <div class="inicio-registro">
@@ -147,7 +147,7 @@
               Registrate
             </button>
           </div>
-          <img src="img/log.svg" class="image" alt="" />
+          <img src="assets/img/log.svg" class="image" alt="" />
         </div>
         <div class="panel right-panel">
           <div class="content">
@@ -159,13 +159,13 @@
               Iniciar Sesión
             </button>
           </div>
-          <img src="img/register.svg" class="image" alt="" />
+          <img src="assets/img/register.svg" class="image" alt="" />
         </div>
       </div>
     </div>
     <?php include 'footer.php'; ?>
-    <script src="javascript/darckort-login.js"></script>
-    <script src="javascript/login.js"></script>
+    <script src="assets/javascript/darckort-login.js"></script>
+    <script src="assets/javascript/login.js"></script>
     <script>
       // Evitar reenvío del formulario al recargar (PRG ligero en frontend)
       if (window.history && window.history.replaceState) {

@@ -53,14 +53,14 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <!-- Scripts consolidados (elimina duplicados) -->
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/sweetalert2.js"></script>
-<script src="javascript/tabla.js"></script>
-<script src="javascript/new_menu.js"></script>
-<script src="public/js/chart.js"></script>
-<script src="public/js/html2canvas.min.js"></script>
-<script src="public/js/jspdf.umd.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/sweetalert2.js"></script>
+<script src="assets/javascript/tabla.js"></script>
+<script src="assets/javascript/new_menu.js"></script>
+<script src="assets/public/js/chart.js"></script>
+<script src="assets/public/js/html2canvas.min.js"></script>
+<script src="assets/public/js/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

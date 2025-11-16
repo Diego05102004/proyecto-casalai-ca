@@ -53,25 +53,27 @@ class Backup {
      *     'debug' => string|null
      * ]
      */
-    public function generar($nombreArchivo) {
-        $config = $this->config;
-        $resultado = [
-            'success' => false,
-            'message' => '',
-            'archivo' => $nombreArchivo,
-            'tamano' => 0,
-            'error' => null,
-            'debug' => null
-        ];
-        
-        // Configurar la ruta del archivo de respaldo
-        $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
-        if (!str_ends_with($nombreArchivo, '.sql')) {
-            $nombreArchivo .= '.sql';
-            $resultado['archivo'] = $nombreArchivo;
-        }
-        $rutaArchivo = $rutaCarpeta . $nombreArchivo;
+/**
+ * Genera un respaldo de la base de datos
+ */
+public function generar($nombreArchivo) {
+    $config = $this->config;
+    $resultado = [
+        'success' => false,
+        'message' => '',
+        'archivo' => $nombreArchivo,
+        'tamano' => 0,
+        'error' => null
+    ];
     
+    // Configurar la ruta del archivo de respaldo
+    $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
+    if (!str_ends_with($nombreArchivo, '.sql')) {
+        $nombreArchivo .= '.sql';
+        $resultado['archivo'] = $nombreArchivo;
+    }
+    $rutaArchivo = $rutaCarpeta . $nombreArchivo;
+
     // Crear directorio si no existe
     if (!is_dir($rutaCarpeta)) {
         if (!mkdir($rutaCarpeta, 0775, true)) {
@@ -85,8 +87,11 @@ class Backup {
     
     // Verificar permisos de escritura
     if (!is_writable($rutaCarpeta)) {
-        error_log("El directorio no tiene permisos de escritura: $rutaCarpeta");
-        return false;
+        $errorMsg = "El directorio no tiene permisos de escritura: $rutaCarpeta";
+        error_log($errorMsg);
+        $resultado['error'] = $errorMsg;
+        $resultado['message'] = 'Error de permisos en el directorio de respaldos';
+        return $resultado;
     }
     
     // Configurar el comando mysqldump
@@ -102,63 +107,109 @@ class Backup {
     }
     
     // Configurar opciones de mysqldump
-    $opciones = "--user={$config['user']} --password={$config['pass']} --host={$config['host']} --databases {$config['dbname']} --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"$rutaArchivo\" 2>&1";
+    $opciones = [
+        '--user=' . escapeshellarg($config['user']),
+        '--password=' . escapeshellarg($config['pass']),
+        '--host=' . escapeshellarg($config['host']),
+        '--default-character-set=utf8mb4',
+        '--add-drop-database',
+        '--add-drop-table',
+        '--add-locks',
+        '--create-options',
+        '--disable-keys',
+        '--extended-insert',
+        '--lock-tables',
+        '--quick',
+        '--routines',
+        '--triggers',
+        '--events',
+        '--set-charset',
+        '--single-transaction',
+        '--result-file=' . escapeshellarg($rutaArchivo),
+        escapeshellarg($config['dbname']),
+        '2>&1'
+    ];
     
-    // Asegurar que las comillas estén correctamente escapadas para Windows
-    $comando = '"'.$mysqldump.'" '.$opciones;
+    // Construir el comando
+    $comando = '"' . $mysqldump . '" ' . implode(' ', $opciones);
+    
+    // Ejecutar el comando
+    $output = [];
+    $exitCode = 0;
+    exec($comando, $output, $exitCode);
+    
+    // Verificar si el archivo se creó correctamente
+    $archivoExiste = file_exists($rutaArchivo);
+    $tamanoArchivo = $archivoExiste ? filesize($rutaArchivo) : 0;
+    
+    if ($archivoExiste && $tamanoArchivo > 0) {
+        // Agregar encabezado SQL al inicio del archivo
+        $header = $this->getSqlHeader($config['dbname']);
+        $currentContent = file_get_contents($rutaArchivo);
+        file_put_contents($rutaArchivo, $header . $currentContent);
         
-        // Preparar información de depuración
-        $debugInfo = [
-            'fecha' => date('Y-m-d H:i:s'),
-            'tipo' => $this->tipo === 'S' ? 'Seguridad' : 'Principal',
-            'base_datos' => $config['dbname'],
-            'archivo_salida' => $rutaArchivo,
-            'comando' => $comando,
-            'salida' => []
-        ];
+        // Actualizar el tamaño después de agregar el encabezado
+        $tamanoArchivo = filesize($rutaArchivo);
         
-        // Ejecutar el comando
-        $output = [];
-        $exitCode = 0;
-        exec($comando, $output, $exitCode);
-        
-        // Agregar salida a la información de depuración
-        $debugInfo['salida'] = $output;
-        $debugInfo['codigo_salida'] = $exitCode;
-        
-        // Verificar si el archivo se creó correctamente
-        $archivoExiste = file_exists($rutaArchivo);
-        $tamanoArchivo = $archivoExiste ? filesize($rutaArchivo) : 0;
-        
-        // Actualizar información del resultado
+        $resultado['success'] = true;
+        $resultado['message'] = 'Respaldo generado correctamente';
         $resultado['tamano'] = $tamanoArchivo;
-        $resultado['debug'] = json_encode($debugInfo, JSON_PRETTY_PRINT);
-        
-        if ($archivoExiste && $tamanoArchivo > 0) {
-            // Éxito
-            $resultado['success'] = true;
-            $resultado['message'] = 'Respaldo generado correctamente';
-            $debugInfo['estado'] = 'éxito';
-            $debugInfo['tamano_archivo'] = $tamanoArchivo;
-        } else {
-            // Error
-            $errorMsg = $archivoExiste ? 'El archivo de respaldo está vacío' : 'No se pudo crear el archivo de respaldo';
-            $resultado['error'] = $errorMsg . ' (Código: ' . $exitCode . ')';
-            $resultado['message'] = 'Error al generar el respaldo';
-            $debugInfo['error'] = $errorMsg;
-            $debugInfo['tamano_archivo'] = 0;
-        }
-        
-        // Guardar registro de depuración
-        $logFile = $rutaCarpeta . 'backup_debug.log';
-        file_put_contents(
-            $logFile, 
-            json_encode($debugInfo, JSON_PRETTY_PRINT) . "\n\n", 
-            FILE_APPEND
-        );
-        
-        return $resultado;
+    } else {
+        $errorMsg = $archivoExiste ? 'El archivo de respaldo está vacío' : 'No se pudo crear el archivo de respaldo';
+        $resultado['error'] = $errorMsg . ' (Código: ' . $exitCode . ')';
+        $resultado['message'] = 'Error al generar el respaldo';
+        error_log(implode("\n", $output));
     }
+    
+    return $resultado;
+}
+
+
+
+/**
+ * Devuelve el encabezado SQL para el respaldo
+ */
+private function getSqlHeader($dbName) {
+    $header = "-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)\n";
+    $header .= "--\n";
+    $header .= "-- Host: localhost    Database: {$dbName}\n";
+    $header .= "-- ------------------------------------------------------\n";
+    $header .= "-- Server version\t10.4.32-MariaDB\n\n";
+    $header .= "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n";
+    $header .= "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;\n";
+    $header .= "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;\n";
+    $header .= "/*!40101 SET NAMES utf8mb4 */;\n";
+    $header .= "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;\n";
+    $header .= "/*!40103 SET TIME_ZONE='+00:00' */;\n";
+    $header .= "/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;\n";
+    $header .= "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;\n";
+    $header .= "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;\n";
+    $header .= "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;\n\n";
+    $header .= "--\n";
+    $header .= "-- Current Database: `{$dbName}`\n";
+    $header .= "--\n\n";
+    $header .= "USE `{$dbName}`;\n\n";
+    
+    return $header;
+}
+
+/**
+ * Devuelve el pie de página SQL para el respaldo
+ */
+private function getSqlFooter() {
+    $footer = "\n--\n";
+    $footer .= "-- Dump completed on " . date('Y-m-d H:i:s') . "\n";
+    $footer .= "/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;\n";
+    $footer .= "/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;\n";
+    $footer .= "/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;\n";
+    $footer .= "/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;\n";
+    $footer .= "/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;\n";
+    $footer .= "/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;\n";
+    $footer .= "/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;\n";
+    $footer .= "/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;\n";
+    
+    return $footer;
+}
 
     /**
      * Restaura un respaldo de la base de datos

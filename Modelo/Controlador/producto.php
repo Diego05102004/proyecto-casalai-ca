@@ -69,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         // Procesar imagen si fue enviada
                         if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
-                            $directorio = "../img/productos/";
+                            $directorio = "../assets/img/productos/";
                             if (!is_dir($directorio)) {
                                 mkdir($directorio, 0755, true);
                             }
@@ -153,7 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($Producto->modificarProducto($id, $_POST)) {
                     // Procesar imagen si existe
                     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
-                        $directorio = "../img/productos/";
+                        $directorio = "../assets/img/productos/";
                         if (!is_dir($directorio)) {
                             mkdir($directorio, 0755, true);
                         }

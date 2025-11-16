@@ -13,7 +13,7 @@ if (!isset($_SESSION['name'])) {
 
 <html>
 	<?php include 'header.php'; ?>
-	<link rel="stylesheet" href="styles/pdf.css">
+	<link rel="stylesheet" href="assets/styles/pdf.css">
 <body>
 
 
@@ -52,11 +52,11 @@ if (!isset($_SESSION['name'])) {
 	
 </div> <!-- fin de container -->
 
-<script src="javascript/sweetalert2.all.min.js"></script>
-<script src="public/js/jquery.min.js"></script>
-<script src="javascript/js/jquery-3.5.1.min.js"></script>
-<script src="javascript/js/popper.min.js"></script>
-<script src="javascript/js/boostrap.min.js"></script>
+<script src="assets/javascript/sweetalert2.all.min.js"></script>
+<script src="assets/public/js/jquery.min.js"></script>
+<script src="assets/javascript/js/jquery-3.5.1.min.js"></script>
+<script src="assets/javascript/js/popper.min.js"></script>
+<script src="assets/javascript/js/boostrap.min.js"></script>
 
 
 </body>

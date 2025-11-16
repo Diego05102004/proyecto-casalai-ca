@@ -53,7 +53,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     </style>
 </head>
 
-<body class="fondo" style="height:100vh; background-image:url(img/fondo.jpg); background-size:cover;">
+<body class="fondo" style="height:100vh; background-image:url(assets/img/fondo.jpg); background-size:cover;">
 <?php include 'newnavbar.php'; ?>
 
 <div class="main-content">
@@ -118,7 +118,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                                         class="btn-seleccionar-todos btn-incluir"
                                         title="Marcar todos"
                                         data-modulo="<?= $modulo['id_modulo'] ?>">
-                                        <img src="img/mouse-pointer-click.svg">
+                                        <img src="assets/img/mouse-pointer-click.svg">
                                     </button>
                                 </td>
                             </tr>

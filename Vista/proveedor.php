@@ -137,7 +137,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     </style>
 </head>
 
-<body class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>
 
@@ -223,7 +223,7 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
         <h3>LISTA DE PROVEEDORES</h3>
         <div class="space-btn-incluir">
             <button id="btnIncluirProveedor" class="btn-incluir" title="Incluir Proveedor">
-                <img src="img/plus.svg">
+                <img src="assets/img/plus.svg">
             </button>
         </div>
     </div>
@@ -297,7 +297,7 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
                             data-telefono1dtl="<?php echo htmlspecialchars($proveedor['telefono_1']); ?>"
                             data-telefono2dtl="<?php echo htmlspecialchars($proveedor['telefono_2']); ?>"
                             data-observaciondtl="<?php echo htmlspecialchars($proveedor['observacion']); ?>">
-                            <img src="img/eye.svg">
+                            <img src="assets/img/eye.svg">
                         </button>
                         <button class="btn-modificar"
                             id="btnModificarProveedor"
@@ -312,12 +312,12 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
                             data-telefono-1="<?php echo htmlspecialchars($proveedor['telefono_1']); ?>"
                             data-telefono-2="<?php echo htmlspecialchars($proveedor['telefono_2']); ?>"
                             data-observacion="<?php echo htmlspecialchars($proveedor['observacion']); ?>">
-                            <img src="img/pencil.svg">
+                            <img src="assets/img/pencil.svg">
                         </button>
                         <button class="btn-eliminar" 
                             title="Eliminar Proveedor"
                             data-id="<?php echo $proveedor['id_proveedor']; ?>">
-                            <img src="img/circle-x.svg">
+                            <img src="assets/img/circle-x.svg">
                         </button>
                     </ul>
                 </td>
@@ -606,14 +606,14 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
 </div>
 
 <?php include 'footer.php'; ?>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="javascript/proveedor.js"></script>
+<script src="assets/javascript/proveedor.js"></script>
 
 <script>
     // Datos parametrizados desde PHP
@@ -1258,7 +1258,7 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
     $(document).ready(function() {
         $('#tablaConsultas').DataTable({
             language: {
-                url: 'public/js/es-ES.json'
+                url: 'assets/public/js/es-ES.json'
             },
             order: [[0, 'desc']],
             pageLength: 10
@@ -1269,7 +1269,7 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteProveedores'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     
     </button>
 </body>

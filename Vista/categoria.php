@@ -29,7 +29,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     </head>
 
     <body class="fondo"
-        style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+        style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
         <?php include 'newnavbar.php'; ?>
 
@@ -79,7 +79,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             <button id="btnIncluirCategoria"
                 class="btn-incluir"
                 title="Incluir Categoria">
-                <img src="img/plus.svg">
+                <img src="assets/img/plus.svg">
             </button>
         </div>
     </div>
@@ -113,12 +113,12 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                 title="Modificar Categoria"
                                 data-id="<?php echo $categoria['id_categoria']; ?>"
                                 data-nombre="<?php echo htmlspecialchars($categoria['nombre_categoria']); ?>">
-                                <img src="img/pencil.svg">
+                                <img src="assets/img/pencil.svg">
                             </button>
                             <button class="btn-eliminar"
                                 title="Eliminar Categoria"
                                 data-id="<?php echo $categoria['id_categoria']; ?>">
-                                <img src="img/circle-x.svg">
+                                <img src="assets/img/circle-x.svg">
                             </button>
                         </ul>
                     </td>
@@ -165,19 +165,19 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
 <?php include 'footer.php'; ?>
 
-<script src="javascript/categoria.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/sidebar.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
+<script src="assets/javascript/categoria.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/sidebar.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
 
 <script>
     $(document).ready(function() {
         $('#tablaConsultas').DataTable({
             language: {
-                url: 'public/js/es-ES.json'
+                url: 'assets/public/js/es-ES.json'
             },
             order: [[0, 'desc']]
         });

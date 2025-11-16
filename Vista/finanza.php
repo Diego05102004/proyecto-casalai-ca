@@ -13,7 +13,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     <?php include 'header.php'; ?>
 </head>
 
-<body  class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body  class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 <?php include 'newnavbar.php'; ?>
 
 <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
@@ -60,10 +60,10 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 </div>
 
 <?php include 'footer.php'; ?>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="javascript/finanza.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/javascript/finanza.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', generarReporte);
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteFinanzas'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     
     </button>
 </body>

@@ -435,3 +435,256 @@ Salida del comando:
     "tamano_archivo": 53610
 }
 
+{
+    "fecha": "2025-11-15 21:26:57",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_212657.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_212657.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 59035
+}
+
+{
+    "fecha": "2025-11-15 21:33:59",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_213359.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_213359.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 59567
+}
+
+{
+    "fecha": "2025-11-15 21:49:31",
+    "tipo": "Seguridad",
+    "base_datos": "seguridadlai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_214931.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases seguridadlai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_214931.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 256079
+}
+
+{
+    "fecha": "2025-11-15 21:49:39",
+    "tipo": "Seguridad",
+    "base_datos": "seguridadlai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_214939.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases seguridadlai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_214939.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 256079
+}
+
+{
+    "fecha": "2025-11-15 21:55:44",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_215544.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_215544.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 61239
+}
+
+{
+    "fecha": "2025-11-15 21:55:52",
+    "tipo": "Seguridad",
+    "base_datos": "seguridadlai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_215552.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases seguridadlai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_215552.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 256079
+}
+
+{
+    "fecha": "2025-11-15 22:03:34",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220334.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220334.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 61771
+}
+
+{
+    "fecha": "2025-11-15 22:04:02",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220402.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220402.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 61847
+}
+
+{
+    "fecha": "2025-11-15 22:05:41",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220541.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220541.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 61999
+}
+
+{
+    "fecha": "2025-11-15 22:05:52",
+    "tipo": "Seguridad",
+    "base_datos": "seguridadlai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_220552.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases seguridadlai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_seguridad_20251115_220552.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 256079
+}
+
+{
+    "fecha": "2025-11-15 22:06:44",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220644.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_220644.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 62075
+}
+
+{
+    "fecha": "2025-11-15 22:10:01",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_221001.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_221001.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 62303
+}
+
+{
+    "fecha": "2025-11-15 22:17:41",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_221741.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_221741.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 62911
+}
+
+{
+    "fecha": "2025-11-15 22:41:36",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_224136.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_224136.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 306943
+}
+
+{
+    "fecha": "2025-11-15 22:52:09",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_225209.sql",
+    "comando": "\"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=root --password= --host=localhost --databases casalai --skip-add-drop-table --skip-comments --skip-set-charset --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251115_225209.sql\" 2>&1",
+    "salida": [],
+    "codigo_salida": 0,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 53610
+}
+
+{
+    "fecha": "2025-11-16 08:23:56",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251116_082356.sql",
+    "comando": "type \"C:\\Users\\Usuario\\AppData\\Local\\Temp\\sql3DAE.tmp\" && \"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=\"root\" --password=\"\" --host=\"localhost\" --no-tablespaces --skip-comments --skip-set-charset --skip-triggers --routines --no-create-info --no-data --skip-add-drop-table --skip-lock-tables --single-transaction --result-file=\"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251116_082356.sql\" 2>&1 \"casalai\" >> \"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251116_082356.sql\" 2>&1",
+    "salida": [
+        "-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)",
+        "--",
+        "-- Host: localhost    Database: casalai",
+        "-- ------------------------------------------------------",
+        "-- Server version\t10.4.32-MariaDB",
+        "",
+        "\/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT *\/;",
+        "\/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS *\/;",
+        "\/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION *\/;",
+        "\/*!40101 SET NAMES utf8mb4 *\/;",
+        "\/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE *\/;",
+        "\/*!40103 SET TIME_ZONE='+00:00' *\/;",
+        "\/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 *\/;",
+        "\/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 *\/;",
+        "\/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' *\/;",
+        "\/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 *\/;",
+        "",
+        "--",
+        "-- Current Database: `casalai`",
+        "--",
+        "",
+        "USE `casalai`;",
+        ""
+    ],
+    "codigo_salida": 1,
+    "estado": "\u00e9xito",
+    "tamano_archivo": 287
+}
+
+{
+    "fecha": "2025-11-16 08:36:09",
+    "tipo": "Principal",
+    "base_datos": "casalai",
+    "archivo_salida": "C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251116_083609.sql",
+    "comando": "type \"C:\\Users\\Usuario\\AppData\\Local\\Temp\\sql6A28.tmp\" && \"C:\\xampp\\mysql\\bin\\mysqldump.exe\" --user=\"root\" --password=\"\" --host=\"localhost\" --default-character-set=utf8mb4 --single-transaction --quick --routines --triggers --events --set-gtid-purged=OFF --hex-blob \"casalai\" >> \"C:\\xampp\\htdocs\\Repositorio de GITHUB\\proyecto-casalai-main\\proyecto-casalai-ca\\Modelo\\Usuario\\ProyectoCasalaiCa\\Clases\/..\/..\/..\/..\/Modelo\/db\/respaldo\/backup_principal_20251116_083609.sql\" 2>&1",
+    "salida": [
+        "-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)",
+        "--",
+        "-- Host: localhost    Database: casalai",
+        "-- ------------------------------------------------------",
+        "-- Server version\t10.4.32-MariaDB",
+        "",
+        "\/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT *\/;",
+        "\/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS *\/;",
+        "\/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION *\/;",
+        "\/*!40101 SET NAMES utf8mb4 *\/;",
+        "\/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE *\/;",
+        "\/*!40103 SET TIME_ZONE='+00:00' *\/;",
+        "\/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 *\/;",
+        "\/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 *\/;",
+        "\/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' *\/;",
+        "\/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 *\/;",
+        "",
+        "--",
+        "-- Current Database: `casalai`",
+        "--",
+        "",
+        "USE `casalai`;",
+        ""
+    ],
+    "codigo_salida": 7,
+    "error": "El archivo de respaldo est\u00e1 vac\u00edo o hubo errores",
+    "tamano_archivo": 74
+}
+
+[2025-11-16T08:36:09-04:00] Error generar respaldo: El archivo de respaldo está vacío o hubo errores (Código: 7) - debug:"{\n    \"fecha\": \"2025-11-16 08:36:09\",\n    \"tipo\": \"Principal\",\n    \"base_datos\": \"casalai\",\n    \"archivo_salida\": \"C:\\\\xampp\\\\htdocs\\\\Repositorio de GITHUB\\\\proyecto-casalai-main\\\\proyecto-casalai-ca\\\\Modelo\\\\Usuario\\\\ProyectoCasalaiCa\\\\Clases\\\/..\\\/..\\\/..\\\/..\\\/Modelo\\\/db\\\/respaldo\\\/backup_principal_20251116_083609.sql\",\n    \"comando\": \"type \\\"C:\\\\Users\\\\Usuario\\\\AppData\\\\Local\\\\Temp\\\\sql6A28.tmp\\\" && \\\"C:\\\\xampp\\\\mysql\\\\bin\\\\mysqldump.exe\\\" --user=\\\"root\\\" --password=\\\"\\\" --host=\\\"localhost\\\" --default-character-set=utf8mb4 --single-transaction --quick --routines --triggers --events --set-gtid-purged=OFF --hex-blob \\\"casalai\\\" >> \\\"C:\\\\xampp\\\\htdocs\\\\Repositorio de GITHUB\\\\proyecto-casalai-main\\\\proyecto-casalai-ca\\\\Modelo\\\\Usuario\\\\ProyectoCasalaiCa\\\\Clases\\\/..\\\/..\\\/..\\\/..\\\/Modelo\\\/db\\\/respaldo\\\/backup_principal_20251116_083609.sql\\\" 2>&1\",\n    \"salida\": [\n        \"-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)\",\n        \"--\",\n        \"-- Host: localhost    Database: casalai\",\n        \"-- ------------------------------------------------------\",\n        \"-- Server version\\t10.4.32-MariaDB\",\n        \"\",\n        \"\\\/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT *\\\/;\",\n        \"\\\/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS *\\\/;\",\n        \"\\\/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION *\\\/;\",\n        \"\\\/*!40101 SET NAMES utf8mb4 *\\\/;\",\n        \"\\\/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE *\\\/;\",\n        \"\\\/*!40103 SET TIME_ZONE='+00:00' *\\\/;\",\n        \"\\\/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 *\\\/;\",\n        \"\\\/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 *\\\/;\",\n        \"\\\/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' *\\\/;\",\n        \"\\\/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 *\\\/;\",\n        \"\",\n        \"--\",\n        \"-- Current Database: `casalai`\",\n        \"--\",\n        \"\",\n        \"USE `casalai`;\",\n        \"\"\n    ],\n    \"codigo_salida\": 7\n}"

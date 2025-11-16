@@ -252,7 +252,7 @@
         }
     </style>
 </head>
-<body class="fondo" style="background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style="background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
     <?php include 'newnavbar.php'; ?>
     <script>
 // Solución robusta para prevenir retroceso en la pasarela
@@ -390,11 +390,11 @@
     <?php include 'footer.php'; ?>
     
     <!-- Scripts -->
-    <script src="public/bootstrap/js/sidebar.js"></script>
-    <script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="public/js/jquery-3.7.1.min.js"></script>
-    <script src="javascript/sweetalert2.all.min.js"></script>
-    <script src="javascript/pago.js"></script>
+    <script src="assets/public/bootstrap/js/sidebar.js"></script>
+    <script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/public/js/jquery-3.7.1.min.js"></script>
+    <script src="assets/javascript/sweetalert2.all.min.js"></script>
+    <script src="assets/javascript/pago.js"></script>
 
     <script>
     $(document).ready(function() {

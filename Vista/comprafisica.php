@@ -87,7 +87,7 @@ if ((isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosU
 
 <?php include 'newnavbar.php'; ?>
 <input type="number" id="tasa" value="<?php echo $data['monitors']['bcv']['price'];?>" hidden>
-<body class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <!-- ...código anterior... -->
 <div class="modal fade modal-registrar" id="registrarCompraFisicaModal" tabindex="-1" role="dialog" 
@@ -243,7 +243,7 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
             <button id="btnIncluirDespacho"
                 class="btn-incluir"
                 title="Incluir Compra Física">
-                <img src="img/plus.svg">
+                <img src="assets/img/plus.svg">
             </button>
         </div>
     </div>
@@ -334,7 +334,7 @@ unset($compra);
                         data-telefono="<?= htmlspecialchars($compra['telefono'] ?? '') ?>"  
                         data-correo="<?= htmlspecialchars($compra['correo'] ?? '') ?>"
                         data-fecha="<?= htmlspecialchars($compra['fecha_factura']) ?>">
-                        <img src="img/eye.svg">
+                        <img src="assets/img/eye.svg">
                     </button>
                 </ul>
             </td>
@@ -564,7 +564,7 @@ $(document).on('click', '.btn-eliminar-producto', function () {
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteVentas'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     
     </button>
 </body>
@@ -576,16 +576,16 @@ $(document).on('click', '.btn-eliminar-producto', function () {
 <!-- jQuery primero -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="javascript/comprafisica.js"></script>
-<script src="public/js/chart.js"></script>
-<script src="public/js/html2canvas.min.js"></script>
-<script src="public/js/jspdf.umd.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
-<script src="javascript/validaciones.js"></script>
+<script src="assets/javascript/comprafisica.js"></script>
+<script src="assets/public/js/chart.js"></script>
+<script src="assets/public/js/html2canvas.min.js"></script>
+<script src="assets/public/js/jspdf.umd.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
+<script src="assets/javascript/validaciones.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -731,7 +731,7 @@ function camposPorTipo(tipo, idx) {
     <label for="comprobante_${idx}">Comprobante (imagen)</label>
 
     <!-- Imagen por defecto -->
-    <img src="uploads/comprobantes/bolivar.png" 
+    <img src="assets/img/uploads/comprobantes/bolivar.png" 
          alt="Comprobante por defecto" 
          id="preview_${idx}" 
          style="max-width:150px; display:block;">
@@ -743,7 +743,7 @@ function camposPorTipo(tipo, idx) {
            name="pagos[${idx}][comprobante]" 
            id="comprobante_${idx}" 
            accept="image/*" 
-           value="uploads/comprobantes/bolivar.png"
+           value="assets/img/uploads/comprobantes/bolivar.png"
            required>
 </div>
 
@@ -851,7 +851,7 @@ $(document).on('change', '.comprobante-pago', function (e) {
 <script>
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({
-        language: { url: 'public/js/es-ES.json' },
+        language: { url: 'assets/public/js/es-ES.json' },
         pageLength: 10,
         order: [[0, 'desc']],
         columnDefs: [

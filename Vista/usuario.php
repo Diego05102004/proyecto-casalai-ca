@@ -14,7 +14,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     </head>
 
     <body class="fondo"
-        style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+        style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
         <?php include 'newnavbar.php'; ?>
 
@@ -135,7 +135,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <button id="btnIncluirUsuario"
             class="btn-incluir"
             title="Incluir Usuario">
-            <img src="img/plus.svg">
+            <img src="assets/img/plus.svg">
         </button>
     </div>
 
@@ -206,14 +206,14 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                     data-telefono="<?php echo htmlspecialchars($usuario['telefono']); ?>"
                                     data-clave="<?php echo htmlspecialchars($usuario['password']); ?>"
                                     data-rango="<?php echo htmlspecialchars($usuario['id_rol']); ?>">
-                                    <img src="img/pencil.svg">
+                                    <img src="assets/img/pencil.svg">
                                 </button>
                             <?php endif; ?>
                             <?php if (strtolower($usuario['nombre_rol']) !== 'superusuario'): ?>
                                 <button class="btn-eliminar"
                                     title="Eliminar Usuario"
                                     data-id="<?php echo $usuario['id_usuario']; ?>">
-                                    <img src="img/circle-x.svg">
+                                    <img src="assets/img/circle-x.svg">
                                 </button>
                             <?php endif; ?>
                         </ul>
@@ -408,14 +408,14 @@ document.getElementById('descargarPDFUsuarios').addEventListener('click', functi
         <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
         
         <!-- Cargar lógica del módulo al final, con todas las dependencias listas -->
-        <script src="javascript/usuario.js"></script>
-        <script src="public/bootstrap/js/sidebar.js"></script>
+        <script src="assets/javascript/usuario.js"></script>
+        <script src="assets/public/bootstrap/js/sidebar.js"></script>
 
         <button 
             class="btn-grafica"
             title="Visualizar Reportes"
             onclick="window.location.href='?pagina=reporteUsuario'">
-            <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+            <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
         </button>
     </body>
 

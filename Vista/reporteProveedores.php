@@ -159,7 +159,7 @@
     </style>
 </head>
 
-<body class="fondo" style="height: auto; min-height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style="height: auto; min-height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>
 
@@ -711,16 +711,16 @@
 </script>
 
 <!-- Scripts locales -->
-<script src="javascript/proveedor.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/javascript/proveedor.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
 
 <script>
     $(document).ready(function() {
         $('#tablaConsultas').DataTable({
-            language: { url: 'public/js/es-ES.json' },
+            language: { url: 'assets/public/js/es-ES.json' },
             pageLength: 10,
             order: [[0, 'asc']]
         });

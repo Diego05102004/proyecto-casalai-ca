@@ -7,7 +7,7 @@
     <?php include 'header.php'; ?>
 
 </head>
-<body class="fondo" style="height:100vh; background-image:url(img/fondo.jpg); background-size:cover;">
+<body class="fondo" style="height:100vh; background-image:url(assets/img/fondo.jpg); background-size:cover;">
 <?php include 'NewNavBar.php'; ?>
 
 
@@ -22,7 +22,7 @@
                     <?php endif; ?>
                 </div>
                 <div class="avatar-edit" id="btn-change-avatar">
-                    <img src="img/camera.svg" alt="Cambiar foto">
+                    <img src="assets/img/camera.svg" alt="Cambiar foto">
                 </div>
             </div>
             <div class="user-info">
@@ -38,7 +38,7 @@
                 <div class="section-header">
                     <h2 class="section-title">Información Personal</h2>
                     <button class="btn-perfil" id="btn-edit-personal">
-                        <img src="img/edit.svg" alt="Editar" class="btn-icon">
+                        <img src="assets/img/edit.svg" alt="Editar" class="btn-icon">
                         Editar
                     </button>
                 </div>
@@ -109,11 +109,11 @@
                         
                         <div class="action-buttons">
                             <button type="submit" class="btn btn-success">
-                                <img src="img/save.svg" alt="Guardar" class="btn-icon">
+                                <img src="assets/img/save.svg" alt="Guardar" class="btn-icon">
                                 Guardar
                             </button>
                             <button type="button" class="btn btn-secondary" id="btn-cancel-personal">
-                                <img src="img/close.svg" alt="Cancelar" class="btn-icon">
+                                <img src="assets/img/close.svg" alt="Cancelar" class="btn-icon">
                                 Cancelar
                             </button>
                         </div>
@@ -133,7 +133,7 @@
                         <label>Correo Electrónico</label>
                         <div class="info-value"><?php echo htmlspecialchars($usuario['correo']); ?></div>
                         <button class="btn-perfil" style="margin-top: 10px;" id="btn-change-email">
-                            <img src="img/email.svg" alt="Cambiar correo" class="btn-icon">
+                            <img src="assets/img/email.svg" alt="Cambiar correo" class="btn-icon">
                             Cambiar Correo Electrónico
                         </button>
                     </div>
@@ -161,11 +161,11 @@
                         
                         <div class="action-buttons">
                             <button type="submit" class="btn btn-success">
-                                <img src="img/save.svg" alt="Guardar" class="btn-icon">
+                                <img src="assets/img/save.svg" alt="Guardar" class="btn-icon">
                                 Actualizar Correo
                             </button>
                             <button type="button" class="btn btn-secondary" id="btn-cancel-email">
-                                <img src="img/close.svg" alt="Cancelar" class="btn-icon">
+                                <img src="assets/img/close.svg" alt="Cancelar" class="btn-icon">
                                 Cancelar
                             </button>
                         </div>
@@ -177,7 +177,7 @@
                     <div class="info-display">
                         <label>Contraseña</label>
                         <button class="btn-perfil" id="btn-change-password">
-                            <img src="img/lock.svg" alt="Cambiar contraseña" class="btn-icon">
+                            <img src="assets/img/lock.svg" alt="Cambiar contraseña" class="btn-icon">
                             Cambiar Contraseña
                         </button>
                     </div>
@@ -206,11 +206,11 @@
                         
                         <div class="action-buttons">
                             <button type="submit" class="btn btn-success">
-                                <img src="img/save.svg" alt="Guardar" class="btn-icon">
+                                <img src="assets/img/save.svg" alt="Guardar" class="btn-icon">
                                 Actualizar Contraseña
                             </button>
                             <button type="button" class="btn btn-secondary" id="btn-cancel-password">
-                                <img src="img/close.svg" alt="Cancelar" class="btn-icon">
+                                <img src="assets/img/close.svg" alt="Cancelar" class="btn-icon">
                                 Cancelar
                             </button>
                         </div>
@@ -239,7 +239,7 @@
                 <form id="form-avatar">
                     <div class="file-input-wrapper">
                         <div class="file-input-btn">
-                            <img src="img/upload.svg" alt="Subir" class="btn-icon">
+                            <img src="assets/img/upload.svg" alt="Subir" class="btn-icon">
                             Seleccionar Imagen
                         </div>
                         <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*">
@@ -248,11 +248,11 @@
                     
                     <div class="action-buttons" style="margin-top: 20px;">
                         <button type="submit" class="btn btn-success">
-                            <img src="img/save.svg" alt="Guardar" class="btn-icon">
+                            <img src="assets/img/save.svg" alt="Guardar" class="btn-icon">
                             Guardar Foto
                         </button>
                         <button type="button" class="btn btn-secondary" id="cancelAvatarModal">
-                            <img src="img/close.svg" alt="Cancelar" class="btn-icon">
+                            <img src="assets/img/close.svg" alt="Cancelar" class="btn-icon">
                             Cancelar
                         </button>
                     </div>
@@ -261,7 +261,7 @@
         </div>
     </div>
 
-    <script src="Javascript/perfil.js"></script>
+    <script src="assets/javascript/perfil.js"></script>
 
 </body>
 </html>

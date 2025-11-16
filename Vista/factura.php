@@ -8,13 +8,13 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <?php include 'header.php'; ?>
-        <link rel="stylesheet" href="styles/darckort.css">
+        <link rel="stylesheet" href="assets/styles/darckort.css">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <title>Gestionar Despachos</title>
     </head>
 
     <body>
-        <?php require_once("public/modal.php"); ?>
+        <?php require_once("assets/public/modal.php"); ?>
 
 
         <?php include 'NavBar.php'; ?>
@@ -180,13 +180,13 @@
 
         </div>
         <!--fin de seccion modal-->
-        <script src="javascript/factura.js"></script>
+        <script src="assets/javascript/factura.js"></script>
 
 
 
 
         <?php include 'footer.php'; ?>
-        <script src="javascript/validaciones.js"></script>
+        <script src="assets/javascript/validaciones.js"></script>
     </body>
 
     </html>

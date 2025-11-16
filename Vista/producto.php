@@ -40,7 +40,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
   </head>
 
   <body class="fondo"
-    style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
     <?php include 'newnavbar.php'; ?>
 
@@ -174,7 +174,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
           <button id="btnIncluirProducto"
             class="btn-incluir"
             title="Incluir Producto">
-            <img src="img/plus.svg">
+            <img src="assets/img/plus.svg">
           </button>
         </div>
       </div>
@@ -197,30 +197,8 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <tbody>
 
               <?php foreach ($productos as $producto): ?>
-              <?php
-                $id = $producto['id_producto'];
-                $ruta_base = 'img/productos/';
-                $ruta_imagen = '';
-
-                // Preferir el campo 'imagen' de la tabla si existe
-                if (!empty($producto['imagen'])) {
-                    $ruta_posible = $producto['imagen'];
-                    if (file_exists($ruta_posible)) {
-                        $ruta_imagen = $ruta_posible;
-                    }
-                }
-
-                // Fallback: buscar por nombre producto_{id}.ext si no se encontró en BD
-                if (empty($ruta_imagen)) {
-                    $extensiones = ['png', 'jpg', 'jpeg', 'webp'];
-                    foreach ($extensiones as $ext) {
-                      if (file_exists($ruta_base . 'producto_' . $id . '.' . $ext)) {
-                        $ruta_imagen = $ruta_base . 'producto_' . $id . '.' . $ext;
-                        break;
-                      }
-                    }
-                }
-              ?>
+              
+   
               
             <tr>
               <td>
@@ -230,11 +208,9 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
               </td>
               <td>
                 <?php
-                if (!empty($ruta_imagen)) {
-                  echo '<img src="' . htmlspecialchars($ruta_imagen) . '" alt="Foto del producto" class="foto-producto">';
-                } else {
-                  echo '<img src="img/no-disponible.png" alt="No disponible" class="foto-producto">';
-                }
+               
+                  echo '<img src="' . htmlspecialchars($producto['imagen']) . '" alt="Foto del producto" class="foto-producto">';
+                
                 ?>
               </td>
               <td>
@@ -303,7 +279,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                         data-categoriadtl="<?= htmlspecialchars($producto['nombre_categoria']); ?>"
                         data-preciodtl="<?= htmlspecialchars($producto['precio']); ?>"
                         data-estatusdtl="<?php echo htmlspecialchars($producto['estado']); ?>">
-                        <img src="img/eye.svg">
+                        <img src="assets/img/eye.svg">
                     </button>
                     <button class="btn-modificar"
                         title="Modificar Producto"
@@ -323,12 +299,12 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                         data-precio="<?= htmlspecialchars($producto['precio']); ?>"
                         data-imagen="<?= htmlspecialchars($ruta_imagen); ?>"
                         <?= $atributosExtra; ?>>
-                        <img src="img/pencil.svg">
+                        <img src="assets/img/pencil.svg">
                     </button>
                     <button class="btn-eliminar eliminar"
                         title="Eliminar Producto"
                         data-id="<?php echo $producto['id_producto']; ?>">
-                        <img src="img/circle-x.svg">
+                        <img src="assets/img/circle-x.svg">
                     </button>
                 </ul>
               </td>
@@ -583,17 +559,17 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
 <?php include 'footer.php'; ?>
 
-<script src="javascript/sweetalert2.all.min.js"></script>
-<script src="javascript/validaciones.js"></script>
-<script src="public/js/chart.js"></script>
-<script src="public/js/html2canvas.min.js"></script>
-<script src="public/js/jspdf.umd.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
-<script src="javascript/producto.js"></script>
+<script src="assets/javascript/sweetalert2.all.min.js"></script>
+<script src="assets/javascript/validaciones.js"></script>
+<script src="assets/public/js/chart.js"></script>
+<script src="assets/public/js/html2canvas.min.js"></script>
+<script src="assets/public/js/jspdf.umd.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
+<script src="assets/javascript/producto.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 <script>
@@ -889,7 +865,7 @@ if (carac.tipo === 'int' || carac.tipo === 'float') {
 <script>
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({
-        language: { url: 'public/js/es-ES.json' },
+        language: { url: 'assets/public/js/es-ES.json' },
         pageLength: 10,
         order: [[0, 'desc']],
         columnDefs: [
@@ -902,7 +878,7 @@ $(document).ready(function() {
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteProductos'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     
     </button>
   </body>

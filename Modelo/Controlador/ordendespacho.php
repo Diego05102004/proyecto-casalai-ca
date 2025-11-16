@@ -1,6 +1,6 @@
 <?php
 ob_start();
-require __DIR__ . '/../../public/fpdf/fpdf.php';
+require __DIR__ . '/../../assets/public/fpdf/fpdf.php';
 use Usuario\ProyectoCasalaiCa\Clases\OrdenDespacho;
 use Usuario\ProyectoCasalaiCa\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Clases\Bitacora;

@@ -12,7 +12,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     <title>Gestionar Marcas</title>
     <?php include 'header.php'; ?>
 </head>
-<body  class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body  class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>
 
@@ -57,7 +57,7 @@ aria-labelledby="registrarMarcaModalLabel" aria-hidden="true">
             <button id="btnIncluirMarca"
                 class="btn-incluir"
                 title="Incluir Marca">
-                <img src="img/plus.svg">
+                <img src="assets/img/plus.svg">
             </button>
             <?php endif; ?>
         </div>
@@ -91,12 +91,12 @@ aria-labelledby="registrarMarcaModalLabel" aria-hidden="true">
                                 title="Modificar Marca"
                                 data-id="<?php echo $marca['id_marca']; ?>"
                                 data-nombre="<?php echo htmlspecialchars($marca['nombre_marca']); ?>">
-                                <img src="img/pencil.svg">
+                                <img src="assets/img/pencil.svg">
                             </button>
                             <button class="btn-eliminar"
                                 title="Eliminar Marca"
                                 data-id="<?php echo $marca['id_marca']; ?>">
-                                <img src="img/circle-x.svg">
+                                <img src="assets/img/circle-x.svg">
                             </button>
                         </ul>
                     </td>
@@ -133,18 +133,18 @@ aria-labelledby="registrarMarcaModalLabel" aria-hidden="true">
 </div>
 
 <?php include 'footer.php'; ?>
-<script src="javascript/marca.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
+<script src="assets/javascript/marca.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
 
 <script>
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({
         language: {
-            url: 'public/js/es-ES.json'
+            url: 'assets/public/js/es-ES.json'
         },
         order: [[0, 'desc']]
     });

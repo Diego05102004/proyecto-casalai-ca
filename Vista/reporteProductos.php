@@ -39,7 +39,7 @@ canvas {
   </head>
 
   <body class="fondo"
-    style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
     <?php include 'newnavbar.php'; ?>
 
@@ -100,17 +100,17 @@ canvas {
 
 <?php include 'footer.php'; ?>
 
-<script src="javascript/sweetalert2.all.min.js"></script>
-<script src="javascript/validaciones.js"></script>
-<script src="public/js/chart.js"></script>
-<script src="public/js/html2canvas.min.js"></script>
-<script src="public/js/jspdf.umd.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
-<script src="javascript/producto.js"></script>
+<script src="assets/javascript/sweetalert2.all.min.js"></script>
+<script src="assets/javascript/validaciones.js"></script>
+<script src="assets/public/js/chart.js"></script>
+<script src="assets/public/js/html2canvas.min.js"></script>
+<script src="assets/public/js/jspdf.umd.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
+<script src="assets/javascript/producto.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 <script>

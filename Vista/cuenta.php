@@ -38,7 +38,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 
     <?php include 'newnavbar.php'; ?>
 
-    <body class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
         <div class="modal fade modal-registrar" id="registrarCuentaModal" tabindex="-1" role="dialog"
             aria-labelledby="registrarCuentaModalLabel" aria-hidden="true">
@@ -134,7 +134,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                     <button id="btnIncluirCuenta"
                         class="btn-incluir"
                         title="Incluir Cuenta Bancaria">
-                        <img src="img/plus.svg">
+                        <img src="assets/img/plus.svg">
                     </button>
                 </div>
             </div>
@@ -201,7 +201,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                                         data-correodtl="<?php echo htmlspecialchars($cuenta['correo_cuenta']); ?>"
                                         data-metodosdtl="<?php echo htmlspecialchars($cuenta['metodos']); ?>"
                                         data-estatusdtl="<?php echo htmlspecialchars($cuenta['estado']); ?>">
-                                        <img src="img/eye.svg">
+                                        <img src="assets/img/eye.svg">
                                     </button>
                                     <button class="btn-modificar" 
                                         id="btnModificarCuenta"
@@ -213,12 +213,12 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                                         data-telefono="<?php echo htmlspecialchars($cuenta['telefono_cuenta']); ?>"
                                         data-correo="<?php echo htmlspecialchars($cuenta['correo_cuenta']); ?>"
                                         data-metodos="<?php echo htmlspecialchars($cuenta['metodos']); ?>">
-                                        <img src="img/pencil.svg">
+                                        <img src="assets/img/pencil.svg">
                                     </button>
                                     <button class="btn-eliminar"
                                         title="Eliminar Cuenta"
                                         data-id="<?php echo $cuenta['id_cuenta']; ?>">
-                                        <img src="img/circle-x.svg">
+                                        <img src="assets/img/circle-x.svg">
                                     </button>
                                 </ul>
                             </td>
@@ -391,12 +391,12 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         </div>
 
         <?php include 'footer.php'; ?>
-        <script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <script src="public/js/jquery-3.7.1.min.js"></script>
-        <script src="javascript/cuenta.js"></script>
-        <script src="public/js/jquery.dataTables.min.js"></script>
-        <script src="public/js/dataTables.bootstrap5.min.js"></script>
-        <script src="public/js/datatable.js"></script>
+        <script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/public/js/jquery-3.7.1.min.js"></script>
+        <script src="assets/javascript/cuenta.js"></script>
+        <script src="assets/public/js/jquery.dataTables.min.js"></script>
+        <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+        <script src="assets/public/js/datatable.js"></script>
 
         <script>
             const cuentasReportes = <?= json_encode($cuentasReportes ?? []); ?>;
@@ -564,7 +564,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         $(document).ready(function() {
             $('#tablaConsultas').DataTable({
                 language: {
-                    url: 'public/js/es-ES.json'
+                    url: 'assets/public/js/es-ES.json'
                 },
                 order: [[0, 'desc']]
             });
@@ -574,7 +574,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteFinanzas'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     
     </button>
     </body>

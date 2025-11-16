@@ -68,41 +68,41 @@ if (!isset($_SESSION['name'])) {
 </head>
 
 <body class="fondo"
-  style="height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+  style="height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php
 include 'newnavbar.php';
 
 // AGREGAR MÓDULOS DE REPORTES AL ARRAY PRINCIPAL (igual que en navbar)
 $modulos = [
-    'Usuario' => ['Gestionar Usuario', 'img/users-round.svg', '?pagina=usuario'],
-    'Recepcion' => ['Gestionar Recepcion', 'img/package-open.svg', '?pagina=recepcion'],
-    'Despacho' => ['Gestionar Despacho', 'img/package-check.svg', '?pagina=despacho'],
-    'Marcas' => ['Gestionar Marcas', 'img/package-search.svg', '?pagina=marca'],
-    'Modelos' => ['Gestionar Modelos', 'img/package-search.svg', '?pagina=modelo'],
-    'Productos' => ['Gestionar Productos', 'img/package-search.svg', '?pagina=producto'],
-    'Categorias' => ['Gestionar Categorias', 'img/package-search.svg', '?pagina=categoria'],
-    'Compra Física' => ['Gestionar Ventas Presenciales', 'img/files.svg', '?pagina=comprafisica'],
-    'Proveedores' => ['Gestionar Proveedores', 'img/truck.svg', '?pagina=proveedor'],
-    'Clientes' => ['Gestionar Clientes', 'img/users-round.svg', '?pagina=cliente'],
-    'Catalogo' => ['Gestionar Catálogo', 'img/book-open.svg', '?pagina=catalogo'],
-    'pasarela' => ['Gestionar Pagos', 'img/credit-card.svg', '?pagina=pasarela'],
-    'Pedidos' => ['Gestionar Pedidos', 'img/receipt-text.svg', '?pagina=gestionarfactura'],
-    'Ordenes de despacho' => ['Gestionar Ordenes de Despacho', 'img/list-ordered.svg', '?pagina=ordendespacho'],
-    'Cuentas bancarias' => ['Gestionar Cuentas Bancarias', 'img/landmark.svg', '?pagina=cuenta'],
-    'Finanzas' => ['Gestionar Ingresos y Egresos', 'img/dollar-sign.svg', '?pagina=finanza'],
-    'permisos' => ['Gestionar Permisos', 'img/key-round.svg', '?pagina=permiso'],
-    'Roles' => ['Gestionar Roles', 'img/user-round-search.svg', '?pagina=rol'],
-    'bitacora' => ['Gestionar Bitácora', 'img/notebook.svg', '?pagina=bitacora'],
-    'Backup' => ['Gestionar Backup', 'img/files.svg', '?pagina=backup'],
+    'Usuario' => ['Gestionar Usuario', 'assets/img/users-round.svg', '?pagina=usuario'],
+    'Recepcion' => ['Gestionar Recepcion', 'assets/img/package-open.svg', '?pagina=recepcion'],
+    'Despacho' => ['Gestionar Despacho', 'assets/img/package-check.svg', '?pagina=despacho'],
+    'Marcas' => ['Gestionar Marcas', 'assets/img/package-search.svg', '?pagina=marca'],
+    'Modelos' => ['Gestionar Modelos', 'assets/img/package-search.svg', '?pagina=modelo'],
+    'Productos' => ['Gestionar Productos', 'assets/img/package-search.svg', '?pagina=producto'],
+    'Categorias' => ['Gestionar Categorias', 'assets/img/package-search.svg', '?pagina=categoria'],
+    'Compra Física' => ['Gestionar Ventas Presenciales', 'assets/img/files.svg', '?pagina=comprafisica'],
+    'Proveedores' => ['Gestionar Proveedores', 'assets/img/truck.svg', '?pagina=proveedor'],
+    'Clientes' => ['Gestionar Clientes', 'assets/img/users-round.svg', '?pagina=cliente'],
+    'Catalogo' => ['Gestionar Catálogo', 'assets/img/book-open.svg', '?pagina=catalogo'],
+    'pasarela' => ['Gestionar Pagos', 'assets/img/credit-card.svg', '?pagina=pasarela'],
+    'Pedidos' => ['Gestionar Pedidos', 'assets/img/receipt-text.svg', '?pagina=gestionarfactura'],
+    'Ordenes de despacho' => ['Gestionar Ordenes de Despacho', 'assets/img/list-ordered.svg', '?pagina=ordendespacho'],
+    'Cuentas bancarias' => ['Gestionar Cuentas Bancarias', 'assets/img/landmark.svg', '?pagina=cuenta'],
+    'Finanzas' => ['Gestionar Ingresos y Egresos', 'assets/img/dollar-sign.svg', '?pagina=finanza'],
+    'permisos' => ['Gestionar Permisos', 'assets/img/key-round.svg', '?pagina=permiso'],
+    'Roles' => ['Gestionar Roles', 'assets/img/user-round-search.svg', '?pagina=rol'],
+    'bitacora' => ['Gestionar Bitácora', 'assets/img/notebook.svg', '?pagina=bitacora'],
+    'Backup' => ['Gestionar Backup', 'assets/img/files.svg', '?pagina=backup'],
     
     // MÓDULOS DE REPORTES (AGREGADOS)
-    'reporteUsuario' => ['Reporte de Perfiles', 'img/chart-bar.svg', '?pagina=reporteUsuario'],
-    'reporteInventario' => ['Reporte de Inventario', 'img/chart-bar.svg', '?pagina=reporteInventario'],
-    'reporteProductos' => ['Reporte de Productos', 'img/chart-bar.svg', '?pagina=reporteProductos'],
-    'reporteProveedores' => ['Reporte de Proveedores', 'img/chart-bar.svg', '?pagina=reporteProveedores'],
-    'reporteVentas' => ['Reporte de Ventas', 'img/chart-bar.svg', '?pagina=reporteVentas'],
-    'reporteFinanzas' => ['Reporte de Finanzas', 'img/chart-bar.svg', '?pagina=reporteFinanzas'],
+    'reporteUsuario' => ['Reporte de Perfiles', 'assets/img/chart-bar.svg', '?pagina=reporteUsuario'],
+    'reporteInventario' => ['Reporte de Inventario', 'assets/img/chart-bar.svg', '?pagina=reporteInventario'],
+    'reporteProductos' => ['Reporte de Productos', 'assets/img/chart-bar.svg', '?pagina=reporteProductos'],
+    'reporteProveedores' => ['Reporte de Proveedores', 'assets/img/chart-bar.svg', '?pagina=reporteProveedores'],
+    'reporteVentas' => ['Reporte de Ventas', 'assets/img/chart-bar.svg', '?pagina=reporteVentas'],
+    'reporteFinanzas' => ['Reporte de Finanzas', 'assets/img/chart-bar.svg', '?pagina=reporteFinanzas'],
 ];
 
 // Define los grupos de módulos y su icono (ACTUALIZADO CON CONDICIONALES)
@@ -110,21 +110,21 @@ $grupos = [
     'Administrar Perfiles' => [
         'modulos' => ['Usuario'],
         'reportes' => ['reporteUsuario'],
-        'icon' => 'img/users-round.svg',
+        'icon' => 'assets/img/users-round.svg',
         'color' => '#4e73df',
         'condicion' => !empty($permisosConsulta['Usuario']) && $nombre_rol !== 'Cliente'
     ],
     'Administrar Inventario' => [
         'modulos' => ['Recepcion'],
         'reportes' => ['reporteInventario'],
-        'icon' => 'img/package-open.svg',
+        'icon' => 'assets/img/package-open.svg',
         'color' => '#1cc88a',
         'condicion' => !empty($permisosConsulta['Recepcion']) && $nombre_rol !== 'Cliente'
     ],
     'Administrar Productos' => [
         'modulos' => ['Marcas', 'Modelos', 'Productos', 'Categorias'],
         'reportes' => ['reporteProductos'],
-        'icon' => 'img/package-search.svg',
+        'icon' => 'assets/img/package-search.svg',
         'color' => '#36b9cc',
         'condicion' => ($nombre_rol !== 'Cliente') && (
             !empty($permisosConsulta['Marcas']) || 
@@ -137,21 +137,21 @@ $grupos = [
     'Administrar Proveedores' => [
         'modulos' => ['Proveedores'],
         'reportes' => ['reporteProveedores'],
-        'icon' => 'img/truck.svg',
+        'icon' => 'assets/img/truck.svg',
         'color' => '#f6c23e',
         'condicion' => !empty($permisosConsulta['Proveedores']) && $nombre_rol !== 'Cliente'
     ],
     'Administrar Clientes' => [
         'modulos' => ['Clientes'],
         'reportes' => [],
-        'icon' => 'img/users-round.svg',
+        'icon' => 'assets/img/users-round.svg',
         'color' => '#e74a3b',
         'condicion' => !empty($permisosConsulta['Clientes']) && $nombre_rol !== 'Cliente'
     ],
     'Administrar Ventas' => [
         'modulos' => ['Catalogo', 'Compra Física', 'pasarela', 'Pedidos', 'Ordenes de despacho', 'Despacho'],
         'reportes' => ['reporteVentas'],
-        'icon' => 'img/shopping-cart.svg',
+        'icon' => 'assets/img/shopping-cart.svg',
         'color' => '#858796',
         'condicion' => !empty($permisosConsulta['Catalogo']) || 
                       !empty($permisosConsulta['Compra Física']) || 
@@ -164,14 +164,14 @@ $grupos = [
     'Administrar Finanzas' => [
         'modulos' => ['Cuentas bancarias', 'Finanzas'],
         'reportes' => ['reporteFinanzas'],
-        'icon' => 'img/dollar-sign.svg',
+        'icon' => 'assets/img/dollar-sign.svg',
         'color' => '#20c997',
         'condicion' => ((!empty($permisosConsulta['Cuentas bancarias']) || !empty($permisosConsulta['Finanzas'])) && $nombre_rol !== 'Cliente')
     ],
     'Administrar Seguridad' => [
         'modulos' => ['permisos', 'Roles', 'bitacora', 'Backup'],
         'reportes' => [],
-        'icon' => 'img/key-round.svg',
+        'icon' => 'assets/img/key-round.svg',
         'color' => '#fd7e14',
         'condicion' => !empty($permisosConsulta['permisos']) || 
                       !empty($permisosConsulta['Roles']) || 

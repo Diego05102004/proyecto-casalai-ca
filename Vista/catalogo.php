@@ -8,11 +8,11 @@
     <title>Catálogo de Productos</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles/catalogo.css">
+    <link rel="stylesheet" href="assets/styles/catalogo.css">
     <?php $exclude_buttons_css = true; include 'header.php'; ?>
 </head>
 
-<body class="fondo" style="background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style="background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
     <?php 
     if (session_status() === PHP_SESSION_NONE) {
@@ -34,7 +34,7 @@
 
         <!-- Pestañas de navegación -->
         <div class="catalogo-tabs">
-            <!-- Campo oculto para tasa de cambio (usado por javascript/catalogo.js) -->
+            <!-- Campo oculto para tasa de cambio (usado por assets/javascript/catalogo.js) -->
             <input type="hidden" id="tasa" value="<?= htmlspecialchars($data['monitors']['bcv']['price'] ?? 0) ?>">
             <ul class="nav nav-tabs" id="catalogoTabs" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -104,7 +104,7 @@
                                     <IMG src="<?= htmlspecialchars($producto['imagen']) ?>" 
                                          class="producto-imagen"
                                          alt="<?= htmlspecialchars($producto['imagen']) ?>"
-                                         onerror="this.src='img/placeholder-product.png'">
+                                         onerror="this.src='assets/img/placeholder-product.png'">
                                 <?php else: ?>
                                     <div class="producto-imagen-container IMG-placeholder">
                                         <i class="bi bi-image" style="font-size: 3rem; color: #6b7280;"></i>
@@ -197,7 +197,7 @@
                                         <IMG src="<?= htmlspecialchars($producto['imagen']) ?>" 
                                              class="combo-imagen <?= $imagenesMostradas == 1 ? 'principal' : '' ?>"
                                              alt="<?= htmlspecialchars($producto['imagen']) ?>"
-                                             onerror="this.src='img/placeholder-product.png'">
+                                             onerror="this.src='assets/img/placeholder-product.png'">
                                 <?php
                                     endif;
                                 endforeach;
@@ -293,12 +293,12 @@
 
     <!--footer-->
 
-    <script src="public/js/jquery-3.7.1.min.js"></script>
+    <script src="assets/public/js/jquery-3.7.1.min.js"></script>
     
-    <script src="javascript/sweetalert2.all.min.js"></script>
-    <script src="javascript/catalogo.js"></script>
-    <script src="public/js/jquery.dataTables.min.js"></script>
-    <script src="public/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/javascript/sweetalert2.all.min.js"></script>
+    <script src="assets/javascript/catalogo.js"></script>
+    <script src="assets/public/js/jquery.dataTables.min.js"></script>
+    <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
     
     <script>
         function MensajeInicio() {
@@ -312,7 +312,7 @@
                 background: '#f8f9fa',
                 backdrop: `
                     rgba(0,0,0,0.4)
-                    url("/Public/img/cart.gif")
+                    url("/Public/assets/img/cart.gif")
                     center top
                     no-repeat
                 `

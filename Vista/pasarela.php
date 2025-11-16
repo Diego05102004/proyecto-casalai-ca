@@ -7,7 +7,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 <title>Gestión de Pagos Realizados</title>
 <?php include 'header.php'; ?>
 </head>
-<body class="fondo" style="height:100vh; background-image:url(img/fondo.jpg); background-size:cover; background-position:center; background-repeat:no-repeat;">
+<body class="fondo" style="height:100vh; background-image:url(assets/img/fondo.jpg); background-size:cover; background-position:center; background-repeat:no-repeat;">
 <?php include 'newnavbar.php'; ?>
 
 <div class="contenedor-tabla">
@@ -90,10 +90,10 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                  data-factura="<?= htmlspecialchars($dato['id_factura']); ?>"
                  data-referencia="<?= htmlspecialchars($dato['referencia']); ?>">
         <?php else: ?>
-            <img src="img/no-disponible.png" alt="No disponible" style="max-width:80px;max-height:80px;border-radius:6px;border:1px solid #ccc;padding:3px;object-fit:contain;background:#fff;">
+            <img src="assets/img/no-disponible.png" alt="No disponible" style="max-width:80px;max-height:80px;border-radius:6px;border:1px solid #ccc;padding:3px;object-fit:contain;background:#fff;">
         <?php endif; ?>
     <?php else: ?>
-        <img src="img/no-disponible.png" alt="No disponible" style="max-width:80px;max-height:80px;border-radius:6px;border:1px solid #ccc;padding:3px;object-fit:contain;background:#fff;">
+        <img src="assets/img/no-disponible.png" alt="No disponible" style="max-width:80px;max-height:80px;border-radius:6px;border:1px solid #ccc;padding:3px;object-fit:contain;background:#fff;">
     <?php endif; ?>
 </td>
 <?php if ($_SESSION['nombre_rol'] != 'Cliente') {
@@ -187,15 +187,15 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 </div>
 
 <?php include 'footer.php'; ?>
-<script src="public/bootstrap/js/sidebar.js"></script>
-<script src="public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
-<script src="javascript/sweetalert2.all.min.js"></script>
-<script src="javascript/validaciones.js"></script>
-<script src="javascript/pasarela.js"></script>
+<script src="assets/public/bootstrap/js/sidebar.js"></script>
+<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
+<script src="assets/javascript/sweetalert2.all.min.js"></script>
+<script src="assets/javascript/validaciones.js"></script>
+<script src="assets/javascript/pasarela.js"></script>
 
 <script>
 function estatusAClase(estatus) {
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const factura = this.getAttribute('data-factura');
             const referencia = this.getAttribute('data-referencia');
             
-            if (src && src !== 'img/no-disponible.png') {
+            if (src && src !== 'assets/img/no-disponible.png') {
                 mostrarComprobanteModal(src, factura, referencia);
             }
         });
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({
-        language: { url: 'public/js/es-ES.json' }
+        language: { url: 'assets/public/js/es-ES.json' }
     });
 });
 </script>
@@ -319,7 +319,7 @@ $(document).ready(function() {
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteVentas'">
-        <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     
     </button>
 </body>

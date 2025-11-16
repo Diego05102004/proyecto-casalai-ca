@@ -19,9 +19,9 @@ unset($cat);
 <head>
     <meta charset="UTF-8">
     <title>Reporte de Productos por Categoría</title>
-<script src="public/js/chart.js"></script>
-<script src="public/js/html2canvas.min.js"></script>
-<script src="public/js/jspdf.umd.min.js"></script>
+<script src="assets/public/js/chart.js"></script>
+<script src="assets/public/js/html2canvas.min.js"></script>
+<script src="assets/public/js/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;

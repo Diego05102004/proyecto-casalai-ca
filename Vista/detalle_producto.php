@@ -32,7 +32,7 @@
         @media (max-width: 992px) { .product-hero { grid-template-columns: 1fr; } }
     </style>
 </head>
-<body class="fondo" style="background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body class="fondo" style="background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
@@ -59,9 +59,9 @@ if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) { include
             <div>
                 <?php 
                 $img = $producto['imagen'] ?? '';
-                $imgSrc = (!empty($img)) ? htmlspecialchars($img) : 'img/placeholder-product.png';
+                $imgSrc = (!empty($img)) ? htmlspecialchars($img) : 'assets/img/placeholder-product.png';
                 ?>
-                <img src="<?= $imgSrc ?>" alt="<?= htmlspecialchars($producto['nombre_producto']) ?>" class="product-image" onerror="this.src='img/placeholder-product.png'">
+                <img src="<?= $imgSrc ?>" alt="<?= htmlspecialchars($producto['nombre_producto']) ?>" class="product-image" onerror="this.src='assets/img/placeholder-product.png'">
             </div>
             <div>
                 <h1 class="product-title"><?= htmlspecialchars($producto['nombre_producto']) ?></h1>
@@ -126,14 +126,14 @@ if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) { include
             <div class="row g-3">
                 <?php foreach ($relacionados as $rel): 
                     $relImg = $rel['imagen'] ?? '';
-                    $relSrc = (!empty($relImg)) ? htmlspecialchars($relImg) : 'img/placeholder-product.png';
+                    $relSrc = (!empty($relImg)) ? htmlspecialchars($relImg) : 'assets/img/placeholder-product.png';
                     $relBs  = isset($data['monitors']['bcv']['price']) && isset($rel['precio']) ? ($rel['precio'] * $data['monitors']['bcv']['price']) : 0;
                     $relStock = intval($rel['stock'] ?? 0);
                     ?>
                 <div class="col-6 col-md-3">
                     <div class="card h-100 rel-card">
                         <a href="?pagina=detalle_producto&id=<?= (int)$rel['id_producto'] ?>" class="text-decoration-none">
-                            <img src="<?= $relSrc ?>" class="card-img-top" alt="<?= htmlspecialchars($rel['nombre_producto']) ?>" onerror="this.src='img/placeholder-product.png'">
+                            <img src="<?= $relSrc ?>" class="card-img-top" alt="<?= htmlspecialchars($rel['nombre_producto']) ?>" onerror="this.src='assets/img/placeholder-product.png'">
                             <div class="card-body">
                                 <div class="fw-semibold text-truncate" title="<?= htmlspecialchars($rel['nombre_producto']) ?>"><?= htmlspecialchars($rel['nombre_producto']) ?></div>
                                 <div class="text-muted small"><?= htmlspecialchars($rel['nombre_marca'] ?? '') ?></div>
@@ -153,8 +153,8 @@ if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) { include
     <?php endif; ?>
 </div>
 
-<script src="public/js/jquery-3.7.1.min.js"></script>
-<script src="javascript/sweetalert2.all.min.js"></script>
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/javascript/sweetalert2.all.min.js"></script>
 <script>
 function solicitarLogin() {
     Swal.fire({
@@ -167,7 +167,7 @@ function solicitarLogin() {
     }).then(res => { if (res.isConfirmed) window.location.href='?pagina=login'; });
 }
 </script>
-<script src="javascript/detalle_producto.js"></script>
+<script src="assets/javascript/detalle_producto.js"></script>
 <?php include 'footer.php'; ?>
 </body>
 </html>

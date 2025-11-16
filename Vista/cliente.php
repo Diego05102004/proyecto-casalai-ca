@@ -12,7 +12,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     <title>Gestionar Clientes</title>
     <?php include 'header.php'; ?>
 </head>
-<body  class="fondo" style=" height: 100vh; background-image: url(img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<body  class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>
 
@@ -79,7 +79,7 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
             <button id="btnIncluirCliente"
                 class="btn-incluir"
                 title="Incluir Cliente">
-                <img src="img/plus.svg">
+                <img src="assets/img/plus.svg">
             </button>
         </div>
     </div>
@@ -135,12 +135,12 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
                                 data-direccion="<?php echo htmlspecialchars($cliente['direccion']); ?>"
                                 data-telefono="<?php echo htmlspecialchars($cliente['telefono']); ?>"
                                 data-correo="<?php echo htmlspecialchars($cliente['correo']); ?>">
-                                <img src="img/pencil.svg">
+                                <img src="assets/img/pencil.svg">
                             </button>
                             <button class="btn-eliminar"
                                 title="Eliminar Cliente"
                                 data-id="<?php echo $cliente['id_clientes']; ?>">
-                                <img src="img/circle-x.svg">
+                                <img src="assets/img/circle-x.svg">
                             </button>
                         </ul>
                     </td>
@@ -248,20 +248,20 @@ aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
 
 </div>
 
-<script src="javascript/js/jquery.min.js"></script>
-<script src="javascript/js/jquery-3.5.1.min.js"></script>
-<script src="public/js/popper.min.js"></script>
-<script src="javascript/js/bootstrap.min.js"></script>
+<script src="assets/javascript/js/jquery.min.js"></script>
+<script src="assets/javascript/js/jquery-3.5.1.min.js"></script>
+<script src="assets/public/js/popper.min.js"></script>
+<script src="assets/javascript/js/bootstrap.min.js"></script>
 
-<script src="javascript/cliente.js"></script>
-<script src="public/js/jquery.dataTables.min.js"></script>
-<script src="public/js/dataTables.bootstrap5.min.js"></script>
-<script src="public/js/datatable.js"></script>
+<script src="assets/javascript/cliente.js"></script>
+<script src="assets/public/js/jquery.dataTables.min.js"></script>
+<script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+<script src="assets/public/js/datatable.js"></script>
 <script>
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({
         language: {
-            url: 'public/js/es-ES.json'
+            url: 'assets/public/js/es-ES.json'
         },
         columnDefs: [
             { orderable: false, targets: 5 } // Deshabilitar ordenamiento para columna de acciones
@@ -324,7 +324,7 @@ document.getElementById('descargarPDFClientes').addEventListener('click', functi
     class="btn-grafica"
     title="Visualizar Reportes"
     onclick="window.location.href='?pagina=reporteCliente'">
-    <img src="img/grafic.png" alt="Reportes" width="30" height="30">
+    <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
 </button>
 </body>
 </html>
