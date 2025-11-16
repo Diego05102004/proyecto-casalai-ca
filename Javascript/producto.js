@@ -509,6 +509,48 @@ function limpiarValidacionesFormulario(config) {
 }
 
 $(document).ready(function () {
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaProductos;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaProductos = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirProducto').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirProducto',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Producto'
+                    }).append($('<img>', { src: 'img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+            tablaProductos = $tabla.DataTable();
+        }
+    }
+
     const regexTexto = /^[a-zA-Z0-9@\.\-\sÁÉÍÓÚáéíóúñÑ]+$/;
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", 4000, "Atención", $("#mensajes").html());
@@ -756,8 +798,8 @@ $(document).ready(function () {
         );
     });
 
-    // Abrir modal de registro
-    $('#btnIncluirProducto').on('click', function() {
+    // Abrir modal de registro (botón Incluir Producto dentro del DataTable)
+    $(document).on('click', '#btnIncluirProducto', function() {
         const config = productoFormConfigs.registrar;
         if (config) {
             $('#incluirProductoForm')[0].reset();
@@ -772,26 +814,26 @@ $(document).ready(function () {
     });
 
     // Al abrir el modal de modificar, carga los datos del producto y sus características
-$(document).on('click', '.btn-modificar', function () {
-    // 1. Resetear el formulario primero
-    $('#modificarProductoForm')[0].reset();
+    $(document).on('click', '.btn-modificar', function () {
+        // 1. Resetear el formulario primero
+        $('#modificarProductoForm')[0].reset();
     
     // 2. Datos generales
-    const $this = $(this);
-    const dataset = $this.data();
+        const $this = $(this);
+        const dataset = $this.data();
     
-    // Establecer los valores de los campos
-    $('#modificarIdProducto').val(dataset.id);
-    $('#modificarNombreProducto').val(dataset.nombre);
-    $('#modificarDescripcionProducto').val(dataset.descripcion);
-    $('#modificarMarca').val(dataset.marca);
-    $('#modificarStockActual').val(dataset.stockactual);
-    $('#modificarStockMaximo').val(dataset.stockmaximo);
-    $('#modificarStockMinimo').val(dataset.stockminimo);
-    $('#modificarClausulaGarantia').val(dataset.clausula);
-    $('#modificarSeriales').val(dataset.seriales);
-    $('#modificarPrecio').val(dataset.precio);
-    
+        // Establecer los valores de los campos
+        $('#modificarIdProducto').val(dataset.id);
+        $('#modificarNombreProducto').val(dataset.nombre);
+        $('#modificarDescripcionProducto').val(dataset.descripcion);
+        $('#modificarMarca').val(dataset.marca);
+        $('#modificarStockActual').val(dataset.stockactual);
+        $('#modificarStockMaximo').val(dataset.stockmaximo);
+        $('#modificarStockMinimo').val(dataset.stockminimo);
+        $('#modificarClausulaGarantia').val(dataset.clausula);
+        $('#modificarSeriales').val(dataset.seriales);
+        $('#modificarPrecio').val(dataset.precio);
+        
     // Establecer el valor del modelo usando el ID del modelo
     setTimeout(() => {
         const $selectModelo = $('#modificarModelo');

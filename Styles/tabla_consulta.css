@@ -93,18 +93,11 @@
     padding: 12px 24px;
 }
 
-.ghost {
-    background: transparent;
-    box-shadow: none;
-    width: 45px;
-    height: 35px;
-}
-
 .tabla-header .filtro-status {
     background: #fff;
     border-radius: 12px;
     box-shadow: none;
-    margin-left: -150px;
+    margin-right: -150px;
     padding: 10px;
     align-items: center;
 }
@@ -129,6 +122,13 @@
 .filtro-status select:focus {
     border: 1.5px solid #5995fd;
     outline: none;
+}
+
+.ghost {
+    background: transparent;
+    box-shadow: none;
+    width: 45px;
+    height: 35px;
 }
 
 .contenedor-tabla h3 {

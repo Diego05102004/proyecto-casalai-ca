@@ -169,14 +169,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <div class="ghost"></div>
       
         <h3>Listado de Productos</h3>
-
-        <div class="space-btn-incluir">
-          <button id="btnIncluirProducto"
-            class="btn-incluir"
-            title="Incluir Producto">
-            <img src="img/plus.svg">
-          </button>
-        </div>
+        <div class="ghost"></div>
       </div>
 
       <table class="tablaConsultas" id="tablaConsultas">
@@ -878,18 +871,7 @@ if (carac.tipo === 'int' || carac.tipo === 'float') {
 });
 
     </script>
-<script>
-$(document).ready(function() {
-    $('#tablaConsultas').DataTable({
-        language: { url: 'public/js/es-ES.json' },
-        pageLength: 10,
-        order: [[0, 'desc']],
-        columnDefs: [
-            { orderable: false, targets: [3] } // Desactiva ordenación en "DETALLES"
-        ]
-    });
-});
-</script>
+
     <button 
         class="btn-grafica"
         title="Visualizar Reportes"

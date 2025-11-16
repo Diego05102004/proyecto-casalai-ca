@@ -118,8 +118,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <div class="ghost"></div>
         
         <h3>LISTA DE USUARIOS</h3>
-
-        <div class="ghost"></div>
         
         <div class="filtro-status">
             <label for="filtro-estatus">Mostrar:</label>
