@@ -312,9 +312,7 @@ $(document).ready(function() {
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Éxito!',
-                                text: 'La marca se ha actualizado correctamente',
-                                timer: 2000,
-                                showConfirmButton: false
+                                text: 'La marca se ha actualizado correctamente'
                             });
                         } else {
                             // Si no se encuentra la fila, recargar la tabla

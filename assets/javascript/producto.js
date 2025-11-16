@@ -1139,7 +1139,7 @@ function actualizarFilaEnTabla(producto) {
             icon: 'success',
             title: 'Producto actualizado',
             showConfirmButton: false,
-            timer: 1500
+            timer: 2000
         });
 
     } catch (error) {
@@ -1311,7 +1311,7 @@ function actualizarFilaEnTabla(producto) {
             icon: 'success',
             title: 'Producto actualizado',
             showConfirmButton: false,
-            timer: 1500
+            timer: 2000
         });
 
     } catch (error) {
@@ -1369,7 +1369,7 @@ function cambiarEstatus(idUsuario) {
                     icon: 'success',
                     title: '¡Estatus actualizado!',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 2000
                 });
             } else {
                 // Revertir visualmente
@@ -1522,7 +1522,7 @@ function actualizarFilaEnTabla(producto) {
             icon: 'success',
             title: 'Producto actualizado',
             showConfirmButton: false,
-            timer: 1500
+            timer: 2000
         });
 
     } catch (error) {

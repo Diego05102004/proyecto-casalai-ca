@@ -199,7 +199,7 @@ $(document).ready(function () {
                         icon: 'success',
                         title: '¡Éxito!',
                         text: respuesta.message || 'Recepción registrada correctamente',
-                        showConfirmButton: false,
+                        showConfirmButton: true,
                     });
                     
                     // Limpiar el formulario

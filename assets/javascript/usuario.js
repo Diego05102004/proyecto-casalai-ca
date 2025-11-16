@@ -884,8 +884,7 @@ function agregarFilaUsuario(usuario) {
       Swal.fire({
         icon: "success",
         title: "¡Éxito!",
-        text: "El usuario se ha modificado correctamente",
-        showConfirmButton: false
+        text: "El usuario se ha modificado correctamente"
       });
 
 if (fila.length) {
@@ -983,13 +982,12 @@ if (fila.length) {
               title: "¡Eliminado!",
               text: "El usuario ha sido eliminado correctamente.",
               icon: "success",
-              showConfirmButton: false
             });
           } else {
             Swal.fire({
               title: "Error",
               text: respuesta.message || "No se pudo eliminar el usuario",
-              icon: "error"
+              icon: "error",
             });
           }
         });
@@ -1071,6 +1069,7 @@ if (fila.length) {
           Swal.fire({
             icon: "success",
             title: "¡Estatus actualizado!",
+            timer: 2000,
             showConfirmButton: false,
           });
           // Actualizar DataTable y aplicar el filtro activo inmediatamente

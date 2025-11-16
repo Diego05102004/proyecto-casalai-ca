@@ -865,7 +865,7 @@ $(document).ready(function() {
                         icon: 'success',
                         title: '¡Estatus actualizado!',
                         showConfirmButton: false,
-                        timer: 1500
+                        timer: 2000
                     });
                 } else {
                     span.text(estadoActual);
