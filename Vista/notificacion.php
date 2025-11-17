@@ -10,8 +10,9 @@ $error = $error ?? null;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consultar Historial de Notificaciones</title>
     <?php include 'header.php'; ?>
-    <link href="css/notificacion.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles/notificacion.css">
 </head>
+
 <body class="fondo" style="min-height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>
@@ -20,8 +21,8 @@ $error = $error ?? null;
     <div class="row justify-content-center">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Mis Notificaciones</h4>
+                <div class="card-header">
+                    <h4 style="color: #1f66df; font-weight: bold; text-align: center; margin: 0;">Mis Notificaciones</h4>
                 </div>
                 <div class="card-body p-0">
                     <?php if ($error): ?>
@@ -46,7 +47,7 @@ $error = $error ?? null;
     </div>
 </div>
 
-<script src="js/notificacion.js"></script>
+<script src="assets/javascript/notificacion.js"></script>
 
 <?php include 'footer.php'; ?>
 </body>

@@ -53,7 +53,7 @@ $(document).ready(function () {
         if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
             tablaVenta = $tabla.DataTable({
                 language: {
-                    url: 'public/js/es-ES.json'
+                    url: 'assets/public/js/es-ES.json'
                 },
                 order: [[0, 'desc']],
                 initComplete: function () {
