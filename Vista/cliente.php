@@ -75,13 +75,7 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
 
         <h3>Lista de Clientes</h3>
 
-        <div class="space-btn-incluir">
-            <button id="btnIncluirCliente"
-                class="btn-incluir"
-                title="Incluir Cliente">
-                <img src="assets/img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
@@ -257,21 +251,10 @@ aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
 <script src="assets/public/js/jquery.dataTables.min.js"></script>
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
-<script>
-$(document).ready(function() {
-    $('#tablaConsultas').DataTable({
-        language: {
-            url: 'assets/public/js/es-ES.json'
-        },
-        columnDefs: [
-            { orderable: false, targets: 5 } // Deshabilitar ordenamiento para columna de acciones
-        ]
-    });
-});
-</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
 const labelsClientes = <?= json_encode(array_column($reporteComprasClientes, 'nombre')) ?>;
 const dataClientes = <?= json_encode(array_column($reporteComprasClientes, 'cantidad')) ?>;

@@ -1,3 +1,50 @@
+function protegerSelects(selectIds, interval = 1000) {
+    const originales = {};
+
+    // Guardar opciones originales de cada select
+    selectIds.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        originales[id] = Array.from(select.options).map(opt => ({
+            value: opt.value,
+            text: opt.textContent
+        }));
+    });
+
+    // Monitorear periódicamente cambios en las opciones
+    setInterval(() => {
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            const opsActuales = Array.from(select.options);
+            const opsOriginales = originales[id];
+            if (!opsOriginales) return;
+
+            const alterado =
+                opsActuales.length !== opsOriginales.length ||
+                opsActuales.some((o, i) =>
+                    !opsOriginales[i] ||
+                    o.value !== opsOriginales[i].value ||
+                    o.textContent !== opsOriginales[i].text
+                );
+
+            if (alterado) {
+                select.innerHTML = "";
+                opsOriginales.forEach(optData => {
+                    const opt = document.createElement("option");
+                    opt.value = optData.value;
+                    opt.textContent = optData.text;
+                    select.appendChild(opt);
+                });
+
+                console.warn(`⚠ Opciones del <select id="${id}"> fueron alteradas. Restauradas automáticamente.`);
+            }
+        });
+    }, interval);
+}
+
 // Helper functions for validation
 function validarkeypress(er, e) {
     const key = e.key;
@@ -550,6 +597,8 @@ $(document).ready(function () {
             tablaProductos = $tabla.DataTable();
         }
     }
+
+    protegerSelects(['marca', 'categoria', 'modificar_marca', 'modificar_categoria']);
 
     const regexTexto = /^[a-zA-Z0-9@\.\-\sÁÉÍÓÚáéíóúñÑ]+$/;
     if($.trim($("#mensajes").text()) != ""){
@@ -1139,7 +1188,7 @@ function actualizarFilaEnTabla(producto) {
             icon: 'success',
             title: 'Producto actualizado',
             showConfirmButton: false,
-            timer: 1500
+            timer: 2000
         });
 
     } catch (error) {
@@ -1311,7 +1360,7 @@ function actualizarFilaEnTabla(producto) {
             icon: 'success',
             title: 'Producto actualizado',
             showConfirmButton: false,
-            timer: 1500
+            timer: 2000
         });
 
     } catch (error) {
@@ -1369,7 +1418,7 @@ function cambiarEstatus(idUsuario) {
                     icon: 'success',
                     title: '¡Estatus actualizado!',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 2000
                 });
             } else {
                 // Revertir visualmente
@@ -1522,7 +1571,7 @@ function actualizarFilaEnTabla(producto) {
             icon: 'success',
             title: 'Producto actualizado',
             showConfirmButton: false,
-            timer: 1500
+            timer: 2000
         });
 
     } catch (error) {

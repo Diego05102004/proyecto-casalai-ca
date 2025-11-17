@@ -130,13 +130,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 
                 <h3>Lista de Cuentas <br> Bancarias</h3>
 
-                <div class="space-btn-incluir">
-                    <button id="btnIncluirCuenta"
-                        class="btn-incluir"
-                        title="Incluir Cuenta Bancaria">
-                        <img src="assets/img/plus.svg">
-                    </button>
-                </div>
+                <div class="ghost"></div>
             </div>
             
             <table class="tablaConsultas" id="tablaConsultas">
@@ -560,23 +554,12 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             });
         </script>
 
-    <script>
-        $(document).ready(function() {
-            $('#tablaConsultas').DataTable({
-                language: {
-                    url: 'assets/public/js/es-ES.json'
-                },
-                order: [[0, 'desc']]
-            });
-        });
-    </script>
         <button 
-        class="btn-grafica"
-        title="Visualizar Reportes"
-        onclick="window.location.href='?pagina=reporteFinanzas'">
-        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    
-    </button>
+            class="btn-grafica"
+            title="Visualizar Reportes"
+            onclick="window.location.href='?pagina=reporteFinanzas'">
+            <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
+        </button>
     </body>
 
     </html>

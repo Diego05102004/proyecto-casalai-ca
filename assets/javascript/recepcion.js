@@ -1,4 +1,97 @@
+function protegerSelects(selectIds, interval = 1000) {
+    const originales = {};
+
+    // Guardar opciones originales de cada select
+    selectIds.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        originales[id] = Array.from(select.options).map(opt => ({
+            value: opt.value,
+            text: opt.textContent
+        }));
+    });
+
+    // Monitorear periódicamente cambios en las opciones
+    setInterval(() => {
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            const opsActuales = Array.from(select.options);
+            const opsOriginales = originales[id];
+            if (!opsOriginales) return;
+
+            const alterado =
+                opsActuales.length !== opsOriginales.length ||
+                opsActuales.some((o, i) =>
+                    !opsOriginales[i] ||
+                    o.value !== opsOriginales[i].value ||
+                    o.textContent !== opsOriginales[i].text
+                );
+
+            if (alterado) {
+                select.innerHTML = "";
+                opsOriginales.forEach(optData => {
+                    const opt = document.createElement("option");
+                    opt.value = optData.value;
+                    opt.textContent = optData.text;
+                    select.appendChild(opt);
+                });
+
+                console.warn(`⚠ Opciones del <select id="${id}"> fueron alteradas. Restauradas automáticamente.`);
+            }
+        });
+    }, interval);
+}
+
 $(document).ready(function () {
+
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaRecepcion;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaRecepcion = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirRecepcion').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirRecepcion',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Recepción'
+                    }).append($('<img>', { src: 'assets/img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaRecepcion = $tabla.DataTable();
+        }
+    }
+
+    protegerSelects(['proveedor', 'tamanocompra']);
 
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", "Atención", $("#mensajes").html());
@@ -155,7 +248,7 @@ $(document).ready(function () {
                         icon: 'success',
                         title: '¡Éxito!',
                         text: respuesta.message || 'Recepción registrada correctamente',
-                        showConfirmButton: false,
+                        showConfirmButton: true,
                     });
                     
                     // Limpiar el formulario

@@ -1,3 +1,50 @@
+function protegerSelects(selectIds, interval = 1000) {
+    const originales = {};
+
+    // Guardar opciones originales de cada select
+    selectIds.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        originales[id] = Array.from(select.options).map(opt => ({
+            value: opt.value,
+            text: opt.textContent
+        }));
+    });
+
+    // Monitorear periódicamente cambios en las opciones
+    setInterval(() => {
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            const opsActuales = Array.from(select.options);
+            const opsOriginales = originales[id];
+            if (!opsOriginales) return;
+
+            const alterado =
+                opsActuales.length !== opsOriginales.length ||
+                opsActuales.some((o, i) =>
+                    !opsOriginales[i] ||
+                    o.value !== opsOriginales[i].value ||
+                    o.textContent !== opsOriginales[i].text
+                );
+
+            if (alterado) {
+                select.innerHTML = "";
+                opsOriginales.forEach(optData => {
+                    const opt = document.createElement("option");
+                    opt.value = optData.value;
+                    opt.textContent = optData.text;
+                    select.appendChild(opt);
+                });
+
+                console.warn(`⚠ Opciones del <select id="${id}"> fueron alteradas. Restauradas automáticamente.`);
+            }
+        });
+    }, interval);
+}
+
 $(document).ready(function () {
 
     // Inicializar DataTable de modelos y crear dinámicamente el botón Incluir en el filtro
@@ -44,6 +91,8 @@ $(document).ready(function () {
             tablaModelos = $tabla.DataTable();
         }
     }
+
+    protegerSelects(['id_marca', 'modificar_marca_modelo']);
 
     // Validación select de marca (registrar)
     $("#id_marca").on("change", function(){

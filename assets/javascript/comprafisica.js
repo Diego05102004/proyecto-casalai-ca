@@ -1,4 +1,49 @@
 $(document).ready(function () {
+
+    var $tabla = $('#tablaConsultas');
+    if ($tabla.length) {
+        var tablaVenta;
+        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
+            tablaVenta = $tabla.DataTable({
+                language: {
+                    url: 'public/js/es-ES.json'
+                },
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
+                    // Evitar duplicar el botón si ya existe
+                    if ($filter.find('#btnIncluirVenta').length) return;
+
+                    // Estilos flex para alinear label + buscador + botón
+                    $filter.css({
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'flex-end',
+                        gap: '10px'
+                    });
+
+                    $filter.find('label').css({ 'margin-bottom': '0' });
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirVenta',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Venta Presencial'
+                    }).append($('<img>', { src: 'assets/img/plus.svg' }));
+
+                    $btnWrapper.append($btn);
+                    $filter.append($btnWrapper);
+                }
+            });
+        } else {
+            tablaVenta = $tabla.DataTable();
+        }
+    }
+
     // Formatea número a formato 1.000,50
     function formatearNumero(numero, decimales = 2, esMoneda = true) {
         if (isNaN(numero) || numero === null || numero === undefined || numero === "") {
@@ -417,7 +462,7 @@ $(document).ready(function () {
     }
 
     if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        mensajes("warning", "Atención", $("#mensajes").html());
     }
 
     // Validación del campo cliente (usando el nuevo sistema)
@@ -634,7 +679,7 @@ $(document).ready(function () {
             icon: 'success',
             title: '¡Producto agregado!',
             text: 'El producto ha sido agregado a la lista de venta.',
-            timer: 1500,
+            timer: 2000,
             showConfirmButton: false,
             position: 'top-end'
         });
@@ -720,8 +765,7 @@ $(document).ready(function () {
         }
     });
     
-    // Evento click para el botón de incluir despacho
-    $("#btnIncluirDespacho").on("click", function () {
+    $(document).on('click', '#btnIncluirVenta', function() {
         $("#f")[0].reset();
         $("#scorrelativo").text("");
         
@@ -799,23 +843,23 @@ $("#registrar").on("click", function () {
                     // Registro exitoso
                     if (respuesta.venta) {
                         agregarFilaVenta(respuesta.venta);
-                        muestraMensaje("success", 6000, "REGISTRAR", respuesta.mensaje);
+                        muestraMensaje("success", "REGISTRAR", respuesta.mensaje);
                         resetModalCompraFisica();
                     } else {
                         console.error("No se recibió objeto venta:", respuesta);
-                        muestraMensaje("error", 6000, "Error", "No se recibieron los datos de la venta");
+                        muestraMensaje("error", "Error", "No se recibieron los datos de la venta");
                     }
                 } else if (respuesta.resultado === "error") {
                     // Error
-                    muestraMensaje("error", 6000, "Error", respuesta.mensaje);
+                    muestraMensaje("error", "Error", respuesta.mensaje);
                 } else {
                     // Respuesta inesperada
                     console.error("Respuesta inesperada:", respuesta);
-                    muestraMensaje("warning", 6000, "Aviso", "Respuesta inesperada del servidor");
+                    muestraMensaje("warning", "Aviso", "Respuesta inesperada del servidor");
                 }
             });
         } else {
-            muestraMensaje("info", 4000, "Debe colocar algun producto");
+            muestraMensaje("info", "Debe colocar algun producto");
         }
     }
 });
@@ -847,13 +891,13 @@ function enviaAjax(datos, callback) {
                 
             } catch (e) {
                 console.error("Error parseando JSON:", e);
-                muestraMensaje("error", 7000, "Error", "Error procesando respuesta del servidor");
+                muestraMensaje("error", "Error", "Error procesando respuesta del servidor");
             }
             console.groupEnd();
         },
         error: function (xhr, status, error) {
             console.error("Error AJAX:", status, error);
-            muestraMensaje("error", 7000, "Error AJAX", "Error en la comunicación con el servidor");
+            muestraMensaje("error", "Error AJAX", "Error en la comunicación con el servidor");
         }
     });
 }
@@ -917,9 +961,9 @@ function enviaAjax(datos, callback) {
             }
 
             if (permisos.incluir) {
-                $("#btnIncluirDespacho").show();
+                $("#btnIncluirVenta").show();
             } else {
-                $("#btnIncluirDespacho").hide();
+                $("#btnIncluirVenta").hide();
             }
 
             $(".btn-modificar").each(function () {
@@ -1106,7 +1150,6 @@ function enviaAjax(datos, callback) {
     // Función para mostrar mensajes
     function muestraMensaje(
         tipo = "success",
-        tiempo = 4000,
         titulo = "",
         mensaje = ""
     ) {
@@ -1114,8 +1157,8 @@ function enviaAjax(datos, callback) {
             icon: tipo,
             title: titulo,
             text: mensaje,
-            timer: tiempo,
-            showConfirmButton: false,
+            showConfirmButton: true,
+            confirmButtonText: 'Aceptar',
         });
     }
 
@@ -1176,29 +1219,29 @@ function enviaAjax(datos) {
                         break;
 
                     case "registrar":
-                        muestraMensaje("success", 6000, "REGISTRAR", lee.mensaje);
+                        muestraMensaje("success", "REGISTRAR", lee.mensaje);
                         resetModalCompraFisica();
                         console.info("✅ Registro completado correctamente.");
                         break;
 
                     case "encontro":
-                        muestraMensaje("warning", 6000, "Atención", lee.mensaje);
+                        muestraMensaje("warning", "Atención", lee.mensaje);
                         console.warn("⚠️ Duplicado detectado:", lee.mensaje);
                         break;
 
                     case "error":
-                        muestraMensaje("error", 6000, "Error", lee.mensaje);
+                        muestraMensaje("error", "Error", lee.mensaje);
                         console.error("❌ Error recibido desde PHP:", lee.mensaje);
                         break;
 
                     default:
                         console.warn("⚠️ Resultado desconocido:", lee.resultado);
-                        muestraMensaje("warning", 6000, "Aviso", "Respuesta inesperada del servidor.");
+                        muestraMensaje("warning", "Aviso", "Respuesta inesperada del servidor.");
                 }
             } catch (e) {
                 console.groupEnd();
                 console.error("❌ Error al parsear JSON:", e);
-                muestraMensaje("error", 7000, "Error en JSON", "El servidor devolvió una respuesta no válida. Revisa la consola.");
+                muestraMensaje("error", "Error en JSON", "El servidor devolvió una respuesta no válida. Revisa la consola.");
                 console.log("Posible causa: echo o var_dump en PHP que rompe el JSON.");
             }
 
@@ -1217,7 +1260,7 @@ function enviaAjax(datos) {
             else if (xhr.status === 500) mensaje = "Error interno del servidor (500). Revise los logs PHP.";
             else if (xhr.status === 0) mensaje = "No hay conexión con el servidor. Verifique su red.";
 
-            muestraMensaje("error", 7000, "Error AJAX", mensaje);
+            muestraMensaje("error", "Error AJAX", mensaje);
             console.groupEnd();
         },
 

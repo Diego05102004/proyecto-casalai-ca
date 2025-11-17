@@ -138,13 +138,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
         <h3>Lista de Recepciones</h3>
 
-        <div class="space-btn-incluir">
-            <button id="btnIncluirRecepcion"
-                class="btn-incluir"
-                title="Incluir Recepción">
-                <img src="assets/img/plus.svg">
-            </button>
-        </div>
+        <div class="ghost"></div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
@@ -984,48 +978,6 @@ $(document).on('click', '.modal .close', function() {
     eliminarBackdropSeguro();
 });
 
-</script>
-
-<script>
-    $(document).ready(function() {
-        var $tabla = $('#tablaConsultas');
-
-        $tabla.DataTable({
-            language: {
-                url: 'assets/public/js/es-ES.json'
-            },
-            order: [[0, 'desc']],
-            initComplete: function () {
-                var $wrapper = $tabla.closest('.dataTables_wrapper');
-                var $filter = $wrapper.find('.dataTables_filter');
-                if (!$filter.length) return;
-
-                // Evitar duplicar el botón si ya existe
-                if ($filter.find('#btnIncluirRecepcion').length) return;
-
-                // Estilos flex para alinear label + buscador + botón
-                $filter.css({
-                    display: 'flex',
-                    'align-items': 'center',
-                    'justify-content': 'flex-end',
-                    gap: '10px'
-                });
-
-                $filter.find('label').css({ 'margin-bottom': '0' });
-
-                var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
-                var $btn = $('<button>', {
-                    id: 'btnIncluirRecepcion',
-                    'class': 'btn-incluir',
-                    type: 'button',
-                    title: 'Incluir Recepción'
-                }).append($('<img>', { src: 'assets/img/plus.svg' }));
-
-                $btnWrapper.append($btn);
-                $filter.append($btnWrapper);
-            }
-        });
-    });
 </script>
 
     <button 
