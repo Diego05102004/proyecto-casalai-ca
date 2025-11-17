@@ -918,46 +918,48 @@ $(document).ready(function () {
         });
     });
 
-// ... (resto del código)
+    function agregarFilaVenta(compra) {
+        let montoTotal = 0;
+        if (compra.productos && Array.isArray(compra.productos)) {
+            compra.productos.forEach(p => {
+                montoTotal += (Number(p.precio) || 0) * (Number(p.cantidad) || 0);
+            });
+        }
 
-function agregarFilaVenta(compra) {
-    let montoTotal = 0;
-    if (compra.productos && Array.isArray(compra.productos)) {
-        compra.productos.forEach(p => {
-            montoTotal += (Number(p.precio) || 0) * (Number(p.cantidad) || 0);
-        });
+        const fechaOriginal = compra.fecha_factura || compra.fecha || '';
+        const fechaMostrada = fechaOriginal ? formatearFecha(fechaOriginal) : '';
+
+        const nuevaFila = [
+            `<span class="campo-numeros">${fechaMostrada}</span>`,
+            `<span class="campo-nombres">${compra.nombre_cliente}</span>
+            <span class="campo-numeros">(${compra.cedula})</span>`,
+            `<span class="campo-numeros">${formatearNumero(montoTotal)}</span>`,
+            `<ul>
+                <button class="btn-detalle ver-detalles"
+                    title="Detallar"
+                    data-id="${compra.id_factura}"
+                    data-productos='${JSON.stringify(compra.productos)}'
+                    data-pagos='${JSON.stringify(compra.pagos)}'
+                    data-cliente="${compra.nombre_cliente}"
+                    data-cedula="${compra.cedula}"
+                    data-telefono="${compra.telefono ?? ''}"
+                    data-correo="${compra.correo ?? ''}"
+                    data-fecha="${compra.fecha_factura || compra.fecha || ''}">
+                    <img src="assets/img/eye.svg">
+                </button>
+            </ul>`
+        ];
+
+        const tabla = $('#tablaConsultas').DataTable();
+        const rowIdx = tabla.row.add(nuevaFila).draw(false).index();
+
+        // Agregar atributo identificador a la fila
+        $(tabla.row(rowIdx).node()).attr('data-id', compra.id_factura);
+
+        // Mostrar siempre la última página
+        tabla.page('last').draw('page');
     }
 
-    const nuevaFila = [
-        `<span class="campo-numeros">${compra.fecha_factura || compra.fecha || ''}</span>`,
-        `<span class="campo-nombres">${compra.nombre_cliente}</span>
-        <span class="campo-numeros">(${compra.cedula})</span>`,
-        `<span class="campo-numeros">${formatearNumero(montoTotal)}</span>`,
-        `<ul>
-            <button class="btn-detalle ver-detalles"
-                title="Detallar"
-                data-id="${compra.id_factura}"
-                data-productos='${JSON.stringify(compra.productos)}'
-                data-pagos='${JSON.stringify(compra.pagos)}'
-                data-cliente="${compra.nombre_cliente}"
-                data-cedula="${compra.cedula}"
-                data-telefono="${compra.telefono ?? ''}"
-                data-correo="${compra.correo ?? ''}"
-                data-fecha="${compra.fecha_factura || compra.fecha || ''}">
-                <img src="assets/img/eye.svg">
-            </button>
-        </ul>`
-    ];
-
-    const tabla = $('#tablaConsultas').DataTable();
-    const rowIdx = tabla.row.add(nuevaFila).draw(false).index();
-
-    // Agregar atributo identificador a la fila
-    $(tabla.row(rowIdx).node()).attr('data-id', compra.id_factura);
-
-    // Mostrar siempre la última página
-    tabla.page('last').draw('page');
-}
     // Función para verificar permisos en tiempo real
     function verificarPermisosEnTiempoRealRecepcion() {
         var datos = new FormData();
