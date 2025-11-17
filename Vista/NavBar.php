@@ -82,10 +82,6 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
     .tasa-cambio-panel {
         top: 75px;
     }
-
-    .catalogo-tabs {
-        top: 75px;
-    }
 </style>
 
 <!-- Scripts -->
