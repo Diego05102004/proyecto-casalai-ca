@@ -852,8 +852,9 @@ $(document).ready(function () {
         const config = productoFormConfigs.registrar;
         if (config) {
             $('#incluirProductoForm')[0].reset();
-            limpiarValidacionesFormulario(config);
+            
             validarFormularioProducto(config);
+            limpiarValidacionesFormulario(config);
         }
         $('#registrarProductoModal').modal('show');
     });
@@ -1103,7 +1104,113 @@ error: function(xhr, status, error) {
 }
     });
 });
+$('#registrarProductoModal').on('submit', function(e) {
+    e.preventDefault();
+    
+    const config = productoFormConfigs.registrar;
+    const resultado = validarFormularioProducto(config);
 
+    if (!resultado.valido) {
+        const $primerError = $(`${config.formSelector} .is-invalid`).first();
+        if ($primerError.length) {
+            $('html, body').animate({ scrollTop: $primerError.offset().top - 120 }, 500);
+            $primerError.focus();
+        }
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error en el formulario',
+            html: resultado.errores.join('<br>'),
+            confirmButtonText: 'Aceptar'
+        });
+        return;
+    }
+
+    $(config.tablaCategoriaHidden).val($(config.campos.categoria.selector).val());
+
+    Swal.fire({
+        title: 'Procesando...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Preparar datos del formulario
+    var formData = new FormData(this);
+    formData.append('accion', 'registrar');
+
+
+    // Enviar petición AJAX
+    $.ajax({
+        url: '',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        cache: false,
+        success: function(response) {
+            try {
+                var data = (typeof response === 'string') ? JSON.parse(response) : response;
+                if (data && data.status === 'success') {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Producto ingresado exitosamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    console.error('Error al registrar producto:', data && data.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: (data && data.message) || 'No se pudo registrar el producto'
+                    });
+                }
+            } catch (e) {
+                console.error('Error al parsear respuesta:', e, response);
+                // Fallback: intentar extraer JSON embebido en texto
+                try {
+                    var txt = String(response).trim();
+                    var first = txt.indexOf('{');
+                    var last = txt.lastIndexOf('}');
+                    if (first !== -1 && last !== -1 && last > first) {
+                        var sub = txt.substring(first, last + 1);
+                        var data2 = JSON.parse(sub);
+                        if (data2 && data2.status === 'success') {
+                            Swal.fire({
+                                title: 'Éxito',
+                                text: 'Producto ingresado exitosamente',
+                                icon: 'success',
+                                confirmButtonText: 'Aceptar'
+                            }).then(() => {
+                                location.reload();
+                            });
+                            return;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: (data2 && data2.message) || 'No se pudo registrar el producto'
+                        });
+                        return;
+                    }
+                } catch (ignore) {}
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Respuesta del servidor no válida'
+                });
+            }
+        },
+error: function(xhr, status, error) {
+    console.error("Error AJAX:", status, error, xhr.responseText);
+}
+    });
+});
 /**
  * Actualiza una fila en la tabla de productos con los nuevos datos
  * @param {Object} producto - Objeto con los datos actualizados del producto

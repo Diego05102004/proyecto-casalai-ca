@@ -445,15 +445,15 @@ CREATE TABLE `tbl_detalles_pago` (
 --
 
 INSERT INTO `tbl_detalles_pago` (`id_detalles`, `id_factura`, `id_cuenta`, `observaciones`, `referencia`, `fecha`, `tipo`, `monto`, `comprobante`, `estatus`) VALUES
-(43, 33, 29, '', '2423452', '2025-08-28', 'Pago Movil', 170000.00, 'comprobante_1756429769_0.jpg', 'En Proceso'),
-(44, 33, 25, '', '123456', '2025-08-28', 'Transferencia', 615.70, 'comprobante_1756428648_0.jpg', 'En Proceso'),
-(45, 35, 25, '', '1253257578', '2025-09-01', 'Pago Movil', 148444.00, 'assets/img/uploads/comprobantes/1756772165_imagen_2025-09-01_201134160.png', 'Pago Procesado'),
-(46, 36, 27, '', '098098', '2025-09-01', 'Transferencia', 448.40, 'assets/img/uploads/comprobantes/1756773692_Imagen_de_WhatsApp_2025-08-06_a_las_20.29.40_9e358cd4-removebg-previ', 'Pago Procesado'),
-(47, 33, 30, '', '998787', '2025-10-12', 'Pago Movil', 226488.95, 'comprobante_1760307198_0.png', 'En Proceso'),
-(48, 33, 10, '', '0979633', '2025-10-12', 'Pago Movil', 226488.95, 'comprobante_1760308540_0.png', 'En Proceso'),
-(49, 33, 28, '', '754353', '2025-10-12', 'Pago Movil', 226488.95, 'comprobante_1760308787_0.png', 'En Proceso'),
-(50, 60, 30, '', '884675465463', '2025-10-13', 'Pago Movil', 686.41, 'assets/img/uploads/comprobantes/1760406723_Grafico_Despachos_Estado.png', 'En Proceso'),
-(52, 62, 30, '', '8747857544', '2025-10-13', 'Pago Movil', 686.00, 'assets/img/uploads/comprobantes/1760407024_Grafico_Despachos_Estado.png', 'En Proceso');
+(43, 33, 29, '', '2423452', '2025-08-28', 'Pago Movil', 170000.00, 'assets/img/comprobantes/comprobante_1756429769_0.jpg', 'En Proceso'),
+(44, 33, 25, '', '123456', '2025-08-28', 'Transferencia', 615.70, 'assets/img/comprobantes/comprobante_1756428648_0.jpg', 'En Proceso'),
+(45, 35, 25, '', '1253257578', '2025-09-01', 'Pago Movil', 148444.00, 'assets/img/comprobantes/1756772165_imagen_2025-09-01_201134160.png', 'Pago Procesado'),
+(46, 36, 27, '', '098098', '2025-09-01', 'Transferencia', 448.40, 'assets/img/comprobantes/1756773692_Imagen_de_WhatsApp_2025-08-06_a_las_20.29.40_9e358cd4-removebg-previ', 'Pago Procesado'),
+(47, 33, 30, '', '998787', '2025-10-12', 'Pago Movil', 226488.95, 'assets/img/comprobantes/comprobante_1760307198_0.png', 'En Proceso'),
+(48, 33, 10, '', '0979633', '2025-10-12', 'Pago Movil', 226488.95, 'assets/img/comprobantes/comprobante_1760308540_0.png', 'En Proceso'),
+(49, 33, 28, '', '754353', '2025-10-12', 'Pago Movil', 226488.95, 'assets/img/comprobantes/comprobante_1760308787_0.png', 'En Proceso'),
+(50, 60, 30, '', '884675465463', '2025-10-13', 'Pago Movil', 686.41, 'assets/img/comprobantes/1760406723_Grafico_Despachos_Estado.png', 'En Proceso'),
+(52, 62, 30, '', '8747857544', '2025-10-13', 'Pago Movil', 686.00, 'assets/img/comprobantes/1760407024_Grafico_Despachos_Estado.png', 'En Proceso');
 
 -- --------------------------------------------------------
 
@@ -835,20 +835,20 @@ CREATE TABLE `tbl_productos` (
 --
 
 INSERT INTO `tbl_productos` (`id_producto`, `serial`, `nombre_producto`, `descripcion_producto`, `id_modelo`, `id_categoria`, `stock`, `stock_minimo`, `stock_maximo`, `clausula_garantia`, `precio`, `estado`, `imagen`) VALUES
-(28, '0001', 'EPSON EcoTank L3250', 'Impresora multifuncional imprime, copia, escanea y Wi‑Fi', 16, 11, 50, 10, 100, 'Garantia Valida hasta los 3 meses ', 372.66, 'habilitado', 'img\\productos\\producto_29.jpg'),
-(29, '0002', 'HP DeskJet 2775', 'Imprime, copia y escanea. Garantía de 1 año. Imprime desde el teléfono. Recarga fácil.', 24, 11, 50, 10, 100, 'Garantía para 1 mes', 243.33, 'habilitado', 'img\\productos\\producto_31.jpg'),
-(30, '0003', 'Cutter 360', 'Corta en todas direcciones. Ideal para manualidades.', 31, 15, 50, 10, 100, 'Garantía valida en los primeros 365 días', 10.75, 'habilitado', 'img\\productos\\producto_42.jpg'),
-(31, '0004', 'Pegamento Simbi para', 'Pegamento para papel. Ideal para reparar billetes.', 32, 15, 20, 10, 50, 'Sin Garantía', 7.16, 'habilitado', 'img\\productos\\producto_43.jpg'),
-(32, '0005', 'Cortadoras de papel', 'Cortadoras especiales para papelería.', 33, 15, 20, 5, 50, 'Sin Garantía', 8.00, 'habilitado', 'img\\productos\\producto_44.jpg'),
-(33, '0006', 'Resma de papel HP ca', 'Resmas de papel originales HP. Calidad en cada hoja, perfecta para oficina (tamaño carta).', 31, 15, 30, 10, 70, 'Sin Garantía', 7.16, 'habilitado', 'img\\productos\\producto_45.jpg'),
-(34, '0007', 'Pendrive Kingston 64', 'Unidad flash USB 3.2 Gen 1. Compatible y de alto rendimiento.', 31, 15, 10, 5, 20, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'img\\productos\\producto_46.jpg'),
-(35, '0008', 'Tarjeta SD Kingston ', 'Tarjeta microSD con adaptador. Velocidades de hasta 150MB/s en lectura.', 31, 15, 7, 5, 20, 'Garantía de 1 mes de duración', 8.84, 'habilitado', 'img\\productos\\producto_47.jpg'),
-(36, '0009', 'Pendrive Kingston 12', 'Unidad flash USB 3.2 Gen 1. Gran capacidad para tus archivos.', 31, 15, 10, 5, 25, 'Garantía de 1 mes de duración', 10.96, 'habilitado', 'img\\productos\\producto_48.jpg'),
-(37, '0010', 'Cable USB para impre', 'Cable USB para impresoras, dos metros de largo.', 31, 11, 12, 10, 40, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'img\\productos\\producto_49.jpg'),
-(38, '0011', 'Auriculares Redmi Bu', 'Sonido de alta fidelidad con cancelación de ruido.', 31, 15, 16, 5, 20, 'Garantía de 1 mes de duración', 37.97, 'habilitado', 'img\\productos\\producto_50.jpg'),
-(39, '0012', 'Cinta Epson S0156312', 'Cinta original para impresoras Epson LX300 y LX350.', 31, 15, 7, 3, 15, 'Garantía de 1 mes de duración', 20.00, 'habilitado', 'img\\productos\\producto_51.jpg'),
-(40, '0013', 'Tinta HP Original GT', 'Botella de tinta negra original HP GT52/GT53.', 39, 12, 20, 10, 100, 'Garantía de 1 mes de duración', 31.52, 'habilitado', 'img\\productos\\producto_52.jpg'),
-(41, '0014', 'Kit de tintas CasaLa', 'Kit de tintas para impresoras con sistema adaptado en CasaLai.', 55, 12, 15, 5, 50, 'Sin Garantia', 57.32, 'habilitado', 'img\\productos\\producto_53.jpg');
+(28, '0001', 'EPSON EcoTank L3250', 'Impresora multifuncional imprime, copia, escanea y Wi‑Fi', 16, 11, 50, 10, 100, 'Garantia Valida hasta los 3 meses ', 372.66, 'habilitado', 'assets\\img\\productos\\producto_29.jpg'),
+(29, '0002', 'HP DeskJet 2775', 'Imprime, copia y escanea. Garantía de 1 año. Imprime desde el teléfono. Recarga fácil.', 24, 11, 50, 10, 100, 'Garantía para 1 mes', 243.33, 'habilitado', 'assets\\img\\productos\\producto_31.jpg'),
+(30, '0003', 'Cutter 360', 'Corta en todas direcciones. Ideal para manualidades.', 31, 15, 50, 10, 100, 'Garantía valida en los primeros 365 días', 10.75, 'habilitado', 'assets\\img\\productos\\producto_42.jpg'),
+(31, '0004', 'Pegamento Simbi para', 'Pegamento para papel. Ideal para reparar billetes.', 32, 15, 20, 10, 50, 'Sin Garantía', 7.16, 'habilitado', 'assets\\img\\productos\\producto_43.jpg'),
+(32, '0005', 'Cortadoras de papel', 'Cortadoras especiales para papelería.', 33, 15, 20, 5, 50, 'Sin Garantía', 8.00, 'habilitado', 'assets\\img\\productos\\producto_44.jpg'),
+(33, '0006', 'Resma de papel HP ca', 'Resmas de papel originales HP. Calidad en cada hoja, perfecta para oficina (tamaño carta).', 31, 15, 30, 10, 70, 'Sin Garantía', 7.16, 'habilitado', 'assets\\img\\productos\\producto_45.jpg'),
+(34, '0007', 'Pendrive Kingston 64', 'Unidad flash USB 3.2 Gen 1. Compatible y de alto rendimiento.', 31, 15, 10, 5, 20, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'assets\\img\\productos\\producto_46.jpg'),
+(35, '0008', 'Tarjeta SD Kingston ', 'Tarjeta microSD con adaptador. Velocidades de hasta 150MB/s en lectura.', 31, 15, 7, 5, 20, 'Garantía de 1 mes de duración', 8.84, 'habilitado', 'assets\\img\\productos\\producto_47.jpg'),
+(36, '0009', 'Pendrive Kingston 12', 'Unidad flash USB 3.2 Gen 1. Gran capacidad para tus archivos.', 31, 15, 10, 5, 25, 'Garantía de 1 mes de duración', 10.96, 'habilitado', 'assets\\img\\productos\\producto_48.jpg'),
+(37, '0010', 'Cable USB para impre', 'Cable USB para impresoras, dos metros de largo.', 31, 11, 12, 10, 40, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'assets\\img\\productos\\producto_49.jpg'),
+(38, '0011', 'Auriculares Redmi Bu', 'Sonido de alta fidelidad con cancelación de ruido.', 31, 15, 16, 5, 20, 'Garantía de 1 mes de duración', 37.97, 'habilitado', 'assets\\img\\productos\\producto_50.jpg'),
+(39, '0012', 'Cinta Epson S0156312', 'Cinta original para impresoras Epson LX300 y LX350.', 31, 15, 7, 3, 15, 'Garantía de 1 mes de duración', 20.00, 'habilitado', 'assets\\img\\productos\\producto_51.jpg'),
+(40, '0013', 'Tinta HP Original GT', 'Botella de tinta negra original HP GT52/GT53.', 39, 12, 20, 10, 100, 'Garantía de 1 mes de duración', 31.52, 'habilitado', 'assets\\img\\productos\\producto_52.jpg'),
+(41, '0014', 'Kit de tintas CasaLa', 'Kit de tintas para impresoras con sistema adaptado en CasaLai.', 55, 12, 15, 5, 50, 'Sin Garantia', 57.32, 'habilitado', 'assets\\img\\productos\\producto_53.jpg');
 
 -- --------------------------------------------------------
 
