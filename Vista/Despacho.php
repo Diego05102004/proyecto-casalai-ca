@@ -1054,6 +1054,7 @@ $(function() {
     const $row = $(this).closest('tr');
     const id = $row.data('id');
     const estadoActual = $row.find('td:nth-child(4) .campo-rango').text().trim();
+
     $.post('?pagina=despacho', {
       accion: 'cambiar_estado_despacho',
       id: id,
@@ -1064,10 +1065,12 @@ $(function() {
         $row.find('td:nth-child(4) .campo-rango').text(resp.nuevo_estado);
         if (resp.nuevo_estado === 'Despachado') {
           $row.find('.btn-marcar').remove();
+          $row.find('.btn-anular').remove();
         }
         const tabla = $('#tablaConsultas').DataTable();
         tabla.order([[4, 'asc'], [0, 'asc']]).draw();
         Swal.fire('Estado cambiado', 'Nuevo estado: ' + resp.nuevo_estado, 'success');
+
       } else {
         Swal.fire('Error', (resp && resp.message) || 'No se pudo cambiar el estado', 'error');
       }

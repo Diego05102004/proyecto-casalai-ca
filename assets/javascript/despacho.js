@@ -355,7 +355,12 @@ $(document).ready(function () {
                 let r = JSON.parse(resp);
                 if (r.status === 'success') {
                     $fila.find('.campo-rango').text(r.nuevo_estado);
-                    $boton.remove();
+
+                    if (r.nuevo_estado === 'Despachado') {
+                        $fila.find('.btn-marcar').remove();
+                        $fila.find('.btn-anular').remove();
+                    }
+
                     Swal.fire('Estado cambiado a "' + r.nuevo_estado + '"');
 
                     const tabla = $('#tablaConsultas').DataTable();
