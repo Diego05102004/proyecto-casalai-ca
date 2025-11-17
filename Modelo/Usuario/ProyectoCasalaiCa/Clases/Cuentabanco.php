@@ -126,6 +126,27 @@ class Cuentabanco extends BD {
         }
     }
 
+    public function existeRifCuenta($rif_cuenta, $excluir_id = null) {
+        return $this->exis_rif_cuenta($rif_cuenta, $excluir_id); 
+    }
+    private function exis_rif_cuenta($rif_cuenta, $excluir_id) {
+        $conexion = new BD('P');
+        $db = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_cuentas WHERE rif_cuenta = ?";
+            $params = [$rif_cuenta];
+            if ($excluir_id !== null) {
+                $sql .= " AND id_cuenta != ?";
+                $params[] = $excluir_id;
+            }
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchColumn() > 0;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+
     public function obtenerUltimaCuenta() {
         return $this->obtUltimaCuenta(); 
     }

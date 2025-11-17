@@ -41,14 +41,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
             $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
             if ($_POST['numero_cuenta'] != ''){
-            if ($cuentabanco->existeNumeroCuenta($_POST['numero_cuenta'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El número de cuenta ya existe'
-                ]);
-                exit;
+                if ($cuentabanco->existeNumeroCuenta($_POST['numero_cuenta'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El número de cuenta ya existe'
+                    ]);
+                    exit;
+                }
             }
-        }
+            if ($_POST['rif_cuenta'] != ''){
+                if ($cuentabanco->existeRifCuenta($_POST['rif_cuenta'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El RIF de la cuenta ya existe'
+                    ]);
+                    exit;
+                }
+            }
             if ($cuentabanco->registrarCuentabanco()) {
                 $cuentaRegistrada = $cuentabanco->obtenerUltimaCuenta();
                 if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -115,6 +124,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'El número de cuenta ya existe'
+                ]);
+                exit;
+            }
+            if ($cuentabanco->existeRifCuenta($_POST['rif_cuenta'], $id_cuenta)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El RIF de la cuenta ya existe'
                 ]);
                 exit;
             }
