@@ -30,7 +30,7 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
                 <ul class="navbar-nav align-items-center">
                     <!-- Botón de tasa de cambio -->
                     <li class="nav-item me-3">
-                        <button class="icon-btn" id="tasa-cambio-btn-guest" style="background: transparent; border: none; padding: 8px;">
+                        <button class="icon-btn" id="tasa-cambio-btn-guest" style="border: none; padding: 8px;">
                             <img src="assets/img/currency-exchange.svg" alt="Tasa BCV" class="local-icon" style="filter: brightness(0) invert(1); width: 24px; height: 24px;">
                         </button>
                     </li>
@@ -50,7 +50,7 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
 
 <!-- Panel de Tasa de Cambio para usuarios no logeados -->
 <div class="tasa-cambio-panel guest" id="tasa-cambio-panel-guest">
-    <h2>Tipo de Cambio <img src="assets/img/currency-exchange.svg" alt="Tasa" class="local-icon" style="width: 20px; height: 20px;"></h2>
+    <h2>Tipo de Cambio <img src="assets/img/currency-exchange.svg" alt="Tasa" class="local-icon"></h2>
     <div class="tasa-info">
         <div class="tasa-valor">
             <strong>1 USD = <?= $tasaBCVFormateada ?> BS</strong>
@@ -71,87 +71,20 @@ $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtot
     }
     
     .btn-outline-light:hover {
-        background-color: rgba(255,255,255,0.2);
+        background-color: #0863b8;
+        color: white;
     }
     
     .navbar-brand:hover {
         opacity: 0.9;
     }
     
-    .top-bar {
-        position: sticky;
-        top: 0;
-        z-index: 1030;
-    }
-    
-    /* Estilos para el panel de tasa de cambio */
     .tasa-cambio-panel {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    width: 280px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1002;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-    padding: 0;
-}
+        top: 75px;
+    }
 
-.tasa-cambio-panel.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-    
-    .tasa-cambio-panel h2 {
-        padding: 15px;
-        margin: 0;
-        border-bottom: 1px solid #eee;
-        font-size: 1.1rem;
-        background-color: #f8f9fa;
-        border-radius: 8px 8px 0 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .tasa-info {
-        padding: 20px 15px;
-    }
-    
-    .tasa-valor {
-        font-size: 1.2rem;
-        margin-bottom: 10px;
-        color: #0863b8;
-    }
-    
-    .tasa-actualizacion {
-        margin-bottom: 8px;
-    }
-    
-    .tasa-fuente {
-        color: #666;
-    }
-    
-    .tasa-no-disponible {
-        text-align: center;
-        color: #666;
-    }
-    
-    .tasa-no-disponible i {
-        font-size: 2rem;
-        margin-bottom: 10px;
-        display: block;
-        color: #ffc107;
-    }
-    
-    /* Para el panel de invitados */
-    .tasa-cambio-panel.guest {
-        top: 80px;
+    .catalogo-tabs {
+        top: 75px;
     }
 </style>
 
