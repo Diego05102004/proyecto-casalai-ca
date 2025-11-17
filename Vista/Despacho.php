@@ -996,7 +996,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         $(document).ready(function() {
             $('#tablaConsultas').DataTable({
                 language: {
-                    url: 'assets/public/js/es-ES.json'
+                    "url": "assets/public/js/es-ES.json"
                 },
                 columnDefs: [
                     {

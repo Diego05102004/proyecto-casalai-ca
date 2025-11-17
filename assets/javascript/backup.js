@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     $('#tablaConsultas').DataTable({
                         order: [[0, 'desc']],
                         responsive: true,
-                        language: { url: 'assets/public/js/es-ES.json' }
+                        language: { "url": "assets/public/js/es-ES.json" }
                     });
                 }, 10);
             }

@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const table = $('#tablaConsultas').DataTable({
                 "language": {
-                    "url": 'assets/public/js/es-ES.json'
+                    "url": "assets/public/js/es-ES.json"
                 },
                 "order": [[0, "desc"]],
                 "pageLength": 10,

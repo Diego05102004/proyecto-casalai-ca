@@ -54,7 +54,7 @@ $(document).ready(function() {
         // Inicializar DataTable con configuración personalizada
         tablaUsuarios = $tabla.DataTable({
             "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+                "url": "assets/public/js/es-ES.json"
             },
             "responsive": true,
             "columnDefs": [

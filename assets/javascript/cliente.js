@@ -12,7 +12,7 @@ $(document).ready(function () {
         if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
             tablaClientes = $tabla.DataTable({
                 language: {
-                    url: 'public/js/es-ES.json'
+                    "url": "assets/public/js/es-ES.json"
                 },
                 columnDefs: [
                     { orderable: false, targets: 5 } // Deshabilitar ordenamiento para columna de acciones
