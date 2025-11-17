@@ -232,7 +232,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
     $_SESSION['id_usuario'],
     '12',
     'ACCESAR',
-    'El usuario accedió al módulo de Pasarela de pagos',
+    'El usuario accedió al módulo de Pagos',
     'media'
 );}
 } else {
