@@ -1228,7 +1228,7 @@ function enviaAjax(datos, callback) {
         data: datos,
         processData: false,
         cache: false,
-        timeout: 20000, // ⏱️ ampliamos un poco el tiempo
+        timeout: 4000,
         beforeSend: function () {
             console.log("%c[AJAX] Enviando datos al servidor...", "color: #007bff; font-weight: bold;");
         },
