@@ -54,12 +54,13 @@ class Comprafisica extends BD{
             $this->conex->beginTransaction();
 
             // 1️⃣ Insertar despacho
-            $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, activo) 
-                            VALUES (:id_cliente, :fecha, 1)";
+            $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, activo) 
+                            VALUES (:id_cliente, :fecha, :tipocompra, 1)";
             $stmt = $this->conex->prepare($sqlDespacho);
             $stmt->execute([
                 ':id_cliente' => $datos['cliente'],
                 ':fecha' => date('Y-m-d'),
+                ':tipocompra' => 'Presencial',
             ]);
             $idDespacho = $this->conex->lastInsertId();
 
