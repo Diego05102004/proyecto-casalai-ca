@@ -872,137 +872,92 @@ $(document).ready(function () {
         );
     });
 
-    // Evento keyup para buscar producto por código
-    $("#codigoproducto").on("keyup", function () {
-        var codigo = $(this).val();
-        $("#listadop tr").each(function () {
-            if (codigo == $(this).find("td:eq(1)").text()) {
-                colocaproducto($(this));
+    // Evento click para registrar la venta presencial
+    $("#registrar").on("click", function () {
+        if (!validarFormularioCompra()) {
+            return;
+        }
+
+        if (!verificaproductos()) {
+            muestraMensaje("info", "Debe colocar algun producto");
+            return;
+        }
+
+        if (!validarPagos()) {
+            return;
+        }
+
+        // Normalizar montos antes de enviar: quitar separadores y dejar punto decimal
+        $('input[name^="pagos"][name$="[monto]"]').each(function () {
+            const limpio = parsearNumeroFormateado($(this).val()) || 0;
+            $(this).val(limpio.toFixed(2));
+        });
+
+        $("#accion").val("registrar");
+        var datos = new FormData($("#f")[0]);
+        datos.append("descripcion", $("#descripcion").val());
+
+        enviaAjax(datos, function (respuesta) {
+            console.log("Respuesta completa:", respuesta);
+
+            if (respuesta.resultado === "registrar") {
+                if (respuesta.venta) {
+                    agregarFilaVenta(respuesta.venta);
+                    muestraMensaje("success", "REGISTRAR", respuesta.mensaje);
+                    resetModalCompraFisica();
+                } else {
+                    console.error("No se recibió objeto venta:", respuesta);
+                    muestraMensaje("error", "Error", "No se recibieron los datos de la venta");
+                }
+            } else if (respuesta.resultado === "error") {
+                muestraMensaje("error", "Error", respuesta.mensaje);
+            } else {
+                console.error("Respuesta inesperada:", respuesta);
+                muestraMensaje("warning", "Aviso", "Respuesta inesperada del servidor");
             }
         });
     });
 
-$("#registrar").on("click", function () {
-    if (validarFormularioCompra()) {
-        if (verificaproductos()) {
-            if (!validarPagos()) {
-                return;
-            }
-            
-            // Normalizar montos antes de enviar: quitar separadores y dejar punto decimal
-            $('input[name^="pagos"][name$="[monto]"]').each(function () {
-                const limpio = parsearNumeroFormateado($(this).val()) || 0;
-                $(this).val(limpio.toFixed(2));
-            });
+// ... (resto del código)
 
-            $("#accion").val("registrar");
-            var datos = new FormData($("#f")[0]);
-            datos.append("descripcion", $("#descripcion").val());
-
-            enviaAjax(datos, function(respuesta) {
-                console.log("Respuesta completa:", respuesta);
-                
-                if (respuesta.resultado === "registrar") {
-                    // Registro exitoso
-                    if (respuesta.venta) {
-                        agregarFilaVenta(respuesta.venta);
-                        muestraMensaje("success", "REGISTRAR", respuesta.mensaje);
-                        resetModalCompraFisica();
-                    } else {
-                        console.error("No se recibió objeto venta:", respuesta);
-                        muestraMensaje("error", "Error", "No se recibieron los datos de la venta");
-                    }
-                } else if (respuesta.resultado === "error") {
-                    // Error
-                    muestraMensaje("error", "Error", respuesta.mensaje);
-                } else {
-                    // Respuesta inesperada
-                    console.error("Respuesta inesperada:", respuesta);
-                    muestraMensaje("warning", "Aviso", "Respuesta inesperada del servidor");
-                }
-            });
-        } else {
-            muestraMensaje("info", "Debe colocar algun producto");
-        }
+function agregarFilaVenta(compra) {
+    let montoTotal = 0;
+    if (compra.productos && Array.isArray(compra.productos)) {
+        compra.productos.forEach(p => {
+            montoTotal += (Number(p.precio) || 0) * (Number(p.cantidad) || 0);
+        });
     }
-});
 
-// Función enviaAjax mejorada para debug
-function enviaAjax(datos, callback) {
-    $.ajax({
-        async: true,
-        url: "",
-        type: "POST",
-        contentType: false,
-        data: datos,
-        processData: false,
-        cache: false,
-        timeout: 20000,
-        beforeSend: function () {
-            console.log("%c[AJAX] Enviando datos...", "color: #007bff; font-weight: bold;");
-        },
-        success: function (respuesta) {
-            console.group("%c[AJAX] Respuesta recibida", "color: green; font-weight: bold;");
-            console.log("Respuesta bruta:", respuesta);
-            
-            try {
-                // Parsear respuesta
-                var respuestaParseada = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
-                console.log("Respuesta parseada:", respuestaParseada);
-                
-                if (callback) callback(respuestaParseada);
-                
-            } catch (e) {
-                console.error("Error parseando JSON:", e);
-                muestraMensaje("error", "Error", "Error procesando respuesta del servidor");
-            }
-            console.groupEnd();
-        },
-        error: function (xhr, status, error) {
-            console.error("Error AJAX:", status, error);
-            muestraMensaje("error", "Error AJAX", "Error en la comunicación con el servidor");
-        }
-    });
+    const nuevaFila = [
+        `<span class="campo-numeros">${compra.fecha_factura || compra.fecha || ''}</span>`,
+        `<span class="campo-nombres">${compra.nombre_cliente}</span>
+        <span class="campo-numeros">(${compra.cedula})</span>`,
+        `<span class="campo-numeros">${formatearNumero(montoTotal)}</span>`,
+        `<ul>
+            <button class="btn-detalle ver-detalles"
+                title="Detallar"
+                data-id="${compra.id_factura}"
+                data-productos='${JSON.stringify(compra.productos)}'
+                data-pagos='${JSON.stringify(compra.pagos)}'
+                data-cliente="${compra.nombre_cliente}"
+                data-cedula="${compra.cedula}"
+                data-telefono="${compra.telefono ?? ''}"
+                data-correo="${compra.correo ?? ''}"
+                data-fecha="${compra.fecha_factura || compra.fecha || ''}">
+                <img src="assets/img/eye.svg">
+            </button>
+        </ul>`
+    ];
+
+    const tabla = $('#tablaConsultas').DataTable();
+    const rowIdx = tabla.row.add(nuevaFila).draw(false).index();
+
+    // Agregar atributo identificador a la fila
+    $(tabla.row(rowIdx).node()).attr('data-id', compra.id_factura);
+
+    // Mostrar siempre la última página
+    tabla.page('last').draw('page');
 }
-
-        function agregarFilaVenta(compra) {
-        let montoTotal = 0;
-        if (compra.productos && Array.isArray(compra.productos)) {
-            compra.productos.forEach(p => {
-                montoTotal += (Number(p.precio) || 0) * (Number(p.cantidad) || 0);
-            });
-        }
-
-        const nuevaFila = [
-            `<span class="campo-numeros">${compra.fecha ? formatearFecha(compra.fecha) : ''}</span>`,
-            `<span class="campo-nombres">${compra.nombre_cliente}</span>
-            <span class="campo-numeros">(${compra.cedula})</span>`,
-            `<span class="campo-numeros">${formatearNumero(montoTotal)}</span>`,
-            `<ul>
-                <button class="btn-detalle ver-detalles"
-                    title="Detallar"
-                    data-id="${compra.id_factura}"
-                    data-productos='${JSON.stringify(compra.productos)}'
-                    data-pagos='${JSON.stringify(compra.pagos)}'
-                    data-cliente="${compra.nombre_cliente}"
-                    data-cedula="${compra.cedula}"
-                    data-telefono="${compra.telefono ?? ''}"
-                    data-correo="${compra.correo ?? ''}"
-                    data-fecha="${compra.fecha}">
-                    <img src="assets/img/eye.svg">
-                </button>
-            </ul>`
-        ];
-
-        const tabla = $('#tablaConsultas').DataTable();
-        const rowIdx = tabla.row.add(nuevaFila).draw(false).index();
-
-        // Agregar atributo identificador a la fila
-        $(tabla.row(rowIdx).node()).attr('data-id', compra.id_factura);
-
-        // Mostrar siempre la última página
-        tabla.page('last').draw('page');
-    }
     // Función para verificar permisos en tiempo real
     function verificarPermisosEnTiempoRealRecepcion() {
         var datos = new FormData();
@@ -1262,7 +1217,7 @@ function enviaAjax(datos, callback) {
     }
 
     // Función para enviar AJAX
-function enviaAjax(datos) {
+function enviaAjax(datos, callback) {
     $.ajax({
         async: true,
         url: "", // Verifica que este valor se esté seteando dinámicamente antes de llamar a enviaAjax
@@ -1284,34 +1239,38 @@ function enviaAjax(datos) {
                 var lee = (typeof respuesta === "object") ? respuesta : JSON.parse(respuesta);
                 console.log("JSON parseado:", lee);
 
-                switch (lee.resultado) {
-                    case "listado":
-                        $("#listadop").html(lee.mensaje);
-                        $("#modalp .modal-dialog")
-                            .removeClass("modal-md modal-lg modal-xl")
-                            .addClass(lee.modalSize);
-                        console.info("✅ Listado cargado correctamente.");
-                        break;
+                if (typeof callback === "function") {
+                    callback(lee);
+                } else {
+                    switch (lee.resultado) {
+                        case "listado":
+                            $("#listadop").html(lee.mensaje);
+                            $("#modalp .modal-dialog")
+                                .removeClass("modal-md modal-lg modal-xl")
+                                .addClass(lee.modalSize);
+                            console.info("✅ Listado cargado correctamente.");
+                            break;
 
-                    case "registrar":
-                        muestraMensaje("success", "REGISTRAR", lee.mensaje);
-                        resetModalCompraFisica();
-                        console.info("✅ Registro completado correctamente.");
-                        break;
+                        case "registrar":
+                            muestraMensaje("success", "REGISTRAR", lee.mensaje);
+                            resetModalCompraFisica();
+                            console.info("✅ Registro completado correctamente.");
+                            break;
 
-                    case "encontro":
-                        muestraMensaje("warning", "Atención", lee.mensaje);
-                        console.warn("⚠️ Duplicado detectado:", lee.mensaje);
-                        break;
+                        case "encontro":
+                            muestraMensaje("warning", "Atención", lee.mensaje);
+                            console.warn("⚠️ Duplicado detectado:", lee.mensaje);
+                            break;
 
-                    case "error":
-                        muestraMensaje("error", "Error", lee.mensaje);
-                        console.error("❌ Error recibido desde PHP:", lee.mensaje);
-                        break;
+                        case "error":
+                            muestraMensaje("error", "Error", lee.mensaje);
+                            console.error("❌ Error recibido desde PHP:", lee.mensaje);
+                            break;
 
-                    default:
-                        console.warn("⚠️ Resultado desconocido:", lee.resultado);
-                        muestraMensaje("warning", "Aviso", "Respuesta inesperada del servidor.");
+                        default:
+                            console.warn("⚠️ Resultado desconocido:", lee.resultado);
+                            muestraMensaje("warning", "Aviso", "Respuesta inesperada del servidor.");
+                    }
                 }
             } catch (e) {
                 console.groupEnd();
@@ -1324,6 +1283,8 @@ function enviaAjax(datos) {
         },
 
         error: function (xhr, status, error) {
+            console.error("Error AJAX:", status, error);
+            muestraMensaje("error", "Error AJAX", "Error en la comunicación con el servidor");
             console.group("%c[AJAX] Error detectado", "color: red; font-weight: bold;");
             console.error("🧩 Estado:", status);
             console.error("🧩 Error:", error);
