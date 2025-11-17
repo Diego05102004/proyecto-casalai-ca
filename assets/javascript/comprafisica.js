@@ -526,6 +526,20 @@ $(document).ready(function () {
         }
     }
 
+    // Validación de entrada para el campo buscarCliente (solo letras con o sin acento y espacios)
+    $("#buscarCliente").on("keypress", function (e) {
+        validarKeyPress(/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]*$/, e);
+    });
+
+    $("#buscarCliente").on("keyup", function () {
+        validarKeyUp(
+            /^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/,
+            $(this),
+            $("#scliente"),
+            "*Solo letras, de 2 a 50 caracteres*"
+        );
+    });
+
     // Evento para formatear cantidades al perder foco
     $(document).on('blur', 'input[name="cantidad[]"]', function() {
         aplicarFormatoNumerico($(this));
@@ -579,18 +593,18 @@ $(document).ready(function () {
         );
     });
 
-    // Referencia (10 a 15 dígitos)
+    // Referencia (solo números, 10 a 15 dígitos)
     $(document).on("keypress", "input[id^='referencia_']", function (e) {
-        validarKeyPress(/^[0-9]*$/, e);
-        let referencia = document.getElementById("input[id^='referencia_']");
-        referencia.value = space(referencia.value);
+        // Solo dígitos 0-9
+        validarKeyPress(/^[0-9]$/, e);
     });
     $(document).on("keyup blur", "input[id^='referencia_']", function () {
+        // Solo números y longitud entre 10 y 15
         validarKeyUp(
             /^[0-9]{10,15}$/,
             $(this),
             $("#sreferencia"),
-            "*Debe contener entre 10 y 15 dígitos*"
+            "*Solo números, entre 10 y 15 dígitos*"
         );
     });
 
@@ -603,18 +617,18 @@ $(document).ready(function () {
         }
     });
 
-    // Monto (numérico mayor que 0) - permitir números, coma y punto
+    // Monto (solo números)
     $(document).on("keypress", "input[id^='monto_']", function (e) {
-        validarKeyPress(/^[0-9.,]*$/, e);
+        // Solo dígitos 0-9
+        validarKeyPress(/^[0-9]$/, e);
     });
     $(document).on("keyup blur", "input[id^='monto_']", function () {
-        // Acepta miles con coma o punto y decimales con coma o punto
-        const regexMonto = /^(?!0*(?:[.,]0+)?$)(\d{1,3}(?:[.,]?\d{3})*|\d+)([.,]\d{1,2})?$/;
+        // Solo números (al menos 1 dígito)
         validarKeyUp(
-            regexMonto,
+            /^[0-9]+$/,
             $(this),
             $("#smonto"),
-            "*Debe ingresar un monto válido*"
+            "*Solo se permiten números*"
         );
     });
 
@@ -1084,12 +1098,24 @@ function enviaAjax(datos, callback) {
 
     // Función para validar el envío del formulario
     function validarFormularioRegistro() {
+
+        let cliente = $("#cliente");
+        if (!cliente.val()) {
+            cliente.addClass("is-invalid");
+            $("#scliente").text("*Este campo es obligatorio*");
+            mensajes('error','Verifique el cliente','Debe seleccionar un cliente.');
+            return false;
+        } else {
+            cliente.removeClass("is-invalid");
+            $("#scliente").text("");
+        }
+
         let formValido = true;
         let mensajesError = [];
 
         // 1. Validar campos obligatorios básicos
         if (!validarCliente()) {
-            mensajesError.push("El campo Cliente es obligatorio.");
+            mensajesError.push("El campo cliente es obligatorio.");
             formValido = false;
         }
 
@@ -1521,7 +1547,7 @@ function validarFormularioCompra() {
 function validarCamposObligatorios() {
     const clienteId = $('#cliente_id').val();
     if (!clienteId) {
-        Swal.fire('Error', 'El campo Cliente es obligatorio', 'error');
+        Swal.fire('Error', 'El campo cliente es obligatorio', 'error');
         $('#buscarCliente').focus();
         return false;
     }
@@ -1648,28 +1674,21 @@ function validarPagos() {
         // Validar tipo de pago
         if (!tipo) {
             esValido = false;
-            mensajeError = `Debe seleccionar el tipo de pago en el pago ${idx + 1}.`;
-            return false;
-        }
-
-        // Validar monto
-        if (!monto || parsearNumeroFormateado(monto) <= 0) {
-            esValido = false;
-            mensajeError = `El monto del pago ${idx + 1} debe ser mayor que 0.`;
+            mensajeError = `Debe seleccionar el tipo de pago en el pago #${idx + 1}.`;
             return false;
         }
 
         // Validar cuenta solo si el método lo requiere
         if (["Pago Movil", "Transferencia", "Zelle"].includes(tipo) && !cuenta) {
             esValido = false;
-            mensajeError = `Debe seleccionar una cuenta para el pago ${idx + 1}.`;
+            mensajeError = `Debe seleccionar una cuenta para el pago #${idx + 1}.`;
             return false;
         }
 
         // Validar referencia solo si el método lo requiere
         if (["Pago Movil", "Transferencia", "Zelle"].includes(tipo) && (!referencia || referencia.trim() === "")) {
             esValido = false;
-            mensajeError = `Debe ingresar la referencia para el pago ${idx + 1}.`;
+            mensajeError = `Debe ingresar la referencia para el pago #${idx + 1}.`;
             return false;
         }
 
@@ -1677,9 +1696,16 @@ function validarPagos() {
         if (["Pago Movil", "Transferencia", "Zelle"].includes(tipo)) {
             if (!comprobante || !comprobante.files || comprobante.files.length === 0) {
                 esValido = false;
-                mensajeError = `Debe adjuntar el comprobante para el pago ${idx + 1}.`;
+                mensajeError = `Debe adjuntar el comprobante para el pago #${idx + 1}.`;
                 return false;
             }
+        }
+
+        // Validar monto
+        if (!monto || parsearNumeroFormateado(monto) <= 0) {
+            esValido = false;
+            mensajeError = `El monto del pago #${idx + 1} debe ser mayor que 0.`;
+            return false;
         }
         // Para efectivo y efectivo en $, no se valida comprobante ni referencia ni cuenta
     });

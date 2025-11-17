@@ -105,13 +105,14 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
                     <input type="hidden" name="accion" value="registrar">
                     
                     <div class="envolver-form">
-                        <label for="buscarCliente">Cliente (Buscar por nombre o cédula)</label>
+                        <label for="buscarCliente">Cliente (Buscar por nombre o cédula)*</label>
                         <div class="input-group">
                             <input type="text" id="buscarCliente" placeholder="Escriba para buscar..." class="control-form" maxlength="50" autocomplete="off">
                             <button type="button" id="btnNuevoCliente" title="Registrar nuevo cliente">
                                 <i class="fas fa-plus"></i> Nuevo
                             </button>
                         </div>
+                        <span id="scliente" class="span-value"></span>
                         
                         <!-- Este será nuestro dropdown personalizado -->
                         <div id="clientesDropdown" class="custom-dropdown" style="display: none;">
@@ -601,7 +602,7 @@ function crearBloquePago(idx) {
 
         <!-- Primero seleccionar el tipo de pago -->
         <div class="envolver-form">
-            <label for="tipo_${idx}">Tipo de pago</label>
+            <label for="tipo_${idx}">Tipo de pago*</label>
             <select class="form-select tipo-pago" name="pagos[${idx}][tipo]" id="tipo_${idx}" required>
                 <option value="" disabled selected>Seleccione</option>
                 ${todosMetodos.map(m => `<option value="${m}">${m}</option>`).join('')}
@@ -620,60 +621,65 @@ function crearBloquePago(idx) {
 function camposPorTipo(tipo, idx) {
     let montoField = `
         <input type="text" class="control-form monto-input" 
-       name="pagos[${idx}][monto]" id="monto_${idx}" required>
+       name="pagos[${idx}][monto]" id="monto_${idx}" maxlength="10" required>
         <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
     `;
 
     if (tipo === "Pago Movil") {
         return `
             <div class="envolver-form">
-                <label for="cuenta_${idx}">Cuenta</label>
+                <label for="cuenta_${idx}">Cuenta*</label>
                 <select class="form-select cuenta-pago" name="pagos[${idx}][cuenta]" id="cuenta_${idx}" required disabled>
                     <option value="" disabled selected>Seleccione</option>
                 </select>
             </div>
             <div class="envolver-form">
-                <label for="referencia_${idx}">Referencia</label>
+                <label for="referencia_${idx}">Referencia*</label>
                 <input type="text" class="control-form" name="pagos[${idx}][referencia]" id="referencia_${idx}" maxlength="15" required>
+                <span class="span-value" id="sreferencia"></span>
             </div>
             <div class="envolver-form">
-                <label for="comprobante_${idx}">Comprobante (imagen)</label>
+                <label for="comprobante_${idx}">Comprobante (imagen)*</label>
                 <input type="file" class="control-form comprobante-pago" name="pagos[${idx}][comprobante]" id="comprobante_${idx}" accept="image/*" required>
             </div>
             <div class="envolver-form">
-                <label for="monto_${idx}">Monto Recibido (Bs)</label>
+                <label for="monto_${idx}">Monto Recibido (Bs)*</label>
                 ${montoField}
+                <span class="span-value" id="smonto"></span>
             </div>
         `;
     } 
     else if (tipo === "Transferencia") {
         return `
             <div class="envolver-form">
-                <label for="cuenta_${idx}">Cuenta</label>
+                <label for="cuenta_${idx}">Cuenta*</label>
                 <select class="form-select cuenta-pago" name="pagos[${idx}][cuenta]" id="cuenta_${idx}" required disabled>
                     <option value="" disabled selected>Seleccione</option>
                 </select>
             </div>
             <div class="envolver-form">
-                <label for="referencia_${idx}">Referencia</label>
+                <label for="referencia_${idx}">Referencia*</label>
                 <input type="text" class="control-form" name="pagos[${idx}][referencia]" id="referencia_${idx}" maxlength="15" required>
+                <span class="span-value" id="sreferencia"></span>
             </div>
             <div class="envolver-form">
-                <label for="comprobante_${idx}">Comprobante (imagen)</label>
+                <label for="comprobante_${idx}">Comprobante (imagen)*</label>
                 <input type="file" class="control-form comprobante-pago" name="pagos[${idx}][comprobante]" id="comprobante_${idx}" accept="image/*" required>
             </div>
             <div class="envolver-form">
-                <label for="monto_${idx}">Monto Recibido (Bs)</label>
+                <label for="monto_${idx}">Monto Recibido (Bs)*</label>
                 ${montoField}
+                <span class="span-value" id="smonto"></span>
             </div>
         `;
     }
     else if (tipo === "Efectivo en $") {
         return `
             <div class="envolver-form">
-                <label for="monto_${idx}">Monto Recibido ($)</label>
+                <label for="monto_${idx}">Monto Recibido ($)*</label>
                 <input type="text" class="control-form monto-input-dolar" 
-                     name="pagos[${idx}][monto_dolar]" id="monto_${idx}" required>
+                     name="pagos[${idx}][monto_dolar]" id="monto_${idx}" maxlength="10"required>
+                <span class="span-value" id="smonto"></span>
                 <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
                 <input type="hidden" name="pagos[${idx}][monto]" id="monto_bs_${idx}">
                 <small class="text-muted">Se convertirá automáticamente a Bs con la tasa del día.</small>
@@ -685,29 +691,31 @@ function camposPorTipo(tipo, idx) {
     else if (tipo === "Zelle") {
         return `
                     <div class="envolver-form">
-                <label for="cuenta_${idx}">Cuenta</label>
+                <label for="cuenta_${idx}">Cuenta*</label>
                 <select class="form-select cuenta-pago" name="pagos[${idx}][cuenta]" id="cuenta_${idx}" required disabled>
                     <option value="" disabled selected>Seleccione</option>
                 </select>
             </div>
             <div class="envolver-form">
-                <label for="referencia_${idx}">Propietario del Zelle</label>
+                <label for="referencia_${idx}">Propietario del Zelle*</label>
                 <input type="text" class="control-form" name="pagos[${idx}][descripcion]" id="referencia_${idx}" placeholder="Nombre del Propietario" required>
             </div>
             <div class="envolver-form">
-                <label for="monto_${idx}">Monto Recibido ($)</label>
+                <label for="monto_${idx}">Monto Recibido ($)*</label>
                 <input type="number" step="0.01" class="control-form monto-input-dolar" min="0" 
-                    name="pagos[${idx}][monto_dolar]" id="monto_${idx}" required>
+                    name="pagos[${idx}][monto_dolar]" id="monto_${idx}" maxlength="10" required>
+                <span class="span-value" id="smonto"></span>
                 <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
                 <input type="hidden" name="pagos[${idx}][monto]" id="monto_bs_${idx}">
                 <small class="text-muted">Se convertirá automáticamente a Bs con la tasa del día.</small>
             </div>
             <div class="envolver-form">
-                <label for="referencia_${idx}">Referencia</label>
+                <label for="referencia_${idx}">Referencia*</label>
                 <input type="text" class="control-form" name="pagos[${idx}][referencia]" id="referencia_${idx}" maxlength="15" placeholder="Referencia del Zelle" required>
+                <span class="span-value" id="sreferencia"></span>
             </div>
             <div class="envolver-form">
-                <label for="comprobante_${idx}">Comprobante (imagen)</label>
+                <label for="comprobante_${idx}">Comprobante (imagen)*</label>
                 <input type="file" class="control-form comprobante-pago" name="pagos[${idx}][comprobante]" id="comprobante_${idx}" accept="image/*" required>
             </div>
         `;
@@ -715,12 +723,12 @@ function camposPorTipo(tipo, idx) {
     else if (tipo === "Efectivo") {
         return `
             <div class="envolver-form">
-                <label for="monto_${idx}">Monto Recibido (Bs)</label>
+                <label for="monto_${idx}">Monto Recibido (Bs)*</label>
                 ${montoField}
-
+                <span class="span-value" id="smonto"></span>
             </div>
                        <div class="envolver-form">
-    <label for="comprobante_${idx}">Comprobante (imagen)</label>
+    <label for="comprobante_${idx}">Comprobante (imagen)*</label>
 
     <!-- Imagen por defecto -->
     <img src="assets/img/uploads/comprobantes/bolivar.png" 
