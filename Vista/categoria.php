@@ -168,9 +168,76 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <script src="assets/public/js/datatable.js"></script>
 
 <script>
+    /**
+ * Protege todos los <select> cuyo id comience con "caracteristicas[".
+ * Funciona con selects creados dinámicamente.
+ * @param {number} interval - Intervalo de verificación (ms)
+ */
+function protegerSelectsDinamicos(interval = 1000) {
+
+    const originales = new Map();
+
+    // Función para registrar un nuevo select
+    const registrarSelect = (select) => {
+        if (!select || originales.has(select)) return;
+
+        const opciones = [...select.options].map(opt => ({
+            value: opt.value,
+            text: opt.textContent
+        }));
+
+        originales.set(select, opciones);
+    };
+
+    // Registrar los selects existentes al cargar
+    document.querySelectorAll("select[id^='caracteristicas[']").forEach(registrarSelect);
+
+    // Observer para detectar nuevos selects
+    const observer = new MutationObserver(() => {
+        document.querySelectorAll("select[id^='caracteristicas[']").forEach(registrarSelect);
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Protección continua
+    setInterval(() => {
+        originales.forEach((opsOriginales, select) => {
+            if (!document.body.contains(select)) {
+                // El select ya no existe → eliminar de la protección
+                originales.delete(select);
+                return;
+            }
+
+            const opsActuales = [...select.options];
+
+            const alterado =
+                opsActuales.length !== opsOriginales.length ||
+                opsActuales.some((o, i) =>
+                    o.value !== opsOriginales[i].value ||
+                    o.textContent !== opsOriginales[i].text
+                );
+
+            if (alterado) {
+                // Restaurar
+                select.innerHTML = "";
+                opsOriginales.forEach(optData => {
+                    const opt = document.createElement("option");
+                    opt.value = optData.value;
+                    opt.textContent = optData.text;
+                    select.appendChild(opt);
+                });
+
+                console.warn(`⚠ Opciones del <select id="${select.id}"> fueron alteradas y se restauraron.`);
+            }
+        });
+    }, interval);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const contenedor = document.getElementById('caracteristicasContainer');
   const btnAgregar = document.getElementById('agregarCaracteristica');
+    protegerSelectsDinamicos(800);
+
 
   let contador = 0;
   const maxCaracteristicas = 5;
@@ -182,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 div.innerHTML = `
   <input type="text" name="caracteristicas[${id}][nombre]" placeholder="Nombre" class="form-control" maxlength="20" required> 
-  <select name="caracteristicas[${id}][tipo]" class="form-select" required>
+  <select id="caracteristicas[${id}]" name="caracteristicas[${id}][tipo]" class="form-select" required>
     <option value="" disable hidden>Tipo</option>
     <option value="int">Entero</option>
     <option value="float">Decimal</option>
