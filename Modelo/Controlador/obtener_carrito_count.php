@@ -2,6 +2,13 @@
 session_start();        
 ini_set('display_errors', 1);
 ini_set('error_reporting', E_ALL);
+
+// Incluir manualmente el archivo de configuración de la base de datos
+require_once __DIR__ . '/../Config/database.php';
+// Incluir manualmente los archivos de las clases necesarias
+require_once __DIR__ . '/../Config/Config.php';
+require_once __DIR__ . '/../Usuario/ProyectoCasalaiCa/Clases/Carrito.php';
+
 use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 use Usuario\ProyectoCasalaiCa\Clases\Carrito;
 

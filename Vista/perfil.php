@@ -16,7 +16,7 @@
             <div class="avatar-container">
                 <div class="avatar">
                     <?php if (!empty($usuario['foto_perfil'])): ?>
-                        <img src="uploads/<?php echo htmlspecialchars($usuario['foto_perfil']); ?>" alt="Foto de perfil" class="avatar-img">
+                        <img src="assets/img/uploads/<?php echo htmlspecialchars($usuario['foto_perfil']); ?>" alt="Foto de perfil" class="avatar-img">
                     <?php else: ?>
                         <?php echo substr($usuario['nombres'], 0, 1); ?>
                     <?php endif; ?>
@@ -262,6 +262,6 @@
     </div>
 
     <script src="assets/javascript/perfil.js"></script>
-
+        <?php include 'footer.php'; ?>                
 </body>
 </html>

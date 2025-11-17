@@ -9,9 +9,8 @@ header('Expires: 0');
 // Para producción, puedes desactivar los errores:
 // error_reporting(0);
 // ini_set('display_errors', 0);
-
-require_once 'Modelo/usuario.php';
-require_once 'Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Clases\Usuarios;
 define('MODULO_PERFIL', 22);
 
 if (!isset($_SESSION['id_usuario'])) {
@@ -124,13 +123,29 @@ function handleAvatarUpdate($usuarioModel, $bitacoraModel, $usuario) {
             return ['status' => 'error', 'message' => 'La imagen debe ser menor a 2MB'];
         }
         
-        $nombreArchivo = uniqid('avatar_') . '_' . basename($_FILES['foto_perfil']['name']);
-        $rutaDestino = __DIR__ . '/../uploads/' . $nombreArchivo;
+        // Asegurar que el directorio de subidas exista
+        $uploadDir = __DIR__ . '/../../assets/img/uploads/';
+        
+        // Crear directorio si no existe
+        if (!file_exists($uploadDir)) {
+            if (!mkdir($uploadDir, 0777, true)) {
+                return ['status' => 'error', 'message' => 'No se pudo crear el directorio de carga'];
+            }
+        }
+        
+        // Validar que el directorio sea escribible
+        if (!is_writable($uploadDir)) {
+            return ['status' => 'error', 'message' => 'El directorio de carga no tiene permisos de escritura'];
+        }
+        
+        // Generar nombre de archivo seguro
+        $nombreArchivo = uniqid('avatar_') . '_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', basename($_FILES['foto_perfil']['name']));
+        $rutaDestino = $uploadDir . $nombreArchivo;
         
         if (move_uploaded_file($_FILES['foto_perfil']['tmp_name'], $rutaDestino)) {
             // Eliminar foto anterior si existe
-            if (!empty($usuario['foto_perfil']) && file_exists(__DIR__ . '/../uploads/' . $usuario['foto_perfil'])) {
-                unlink(__DIR__ . '/../uploads/' . $usuario['foto_perfil']);
+            if (!empty($usuario['foto_perfil']) && file_exists($uploadDir . $usuario['foto_perfil'])) {
+                unlink($uploadDir . $usuario['foto_perfil']);
             }
             
             if ($usuarioModel->actualizarPerfil($_SESSION['id_usuario'], ['foto_perfil' => $nombreArchivo])) {
