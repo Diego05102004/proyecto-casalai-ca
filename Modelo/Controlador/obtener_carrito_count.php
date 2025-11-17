@@ -1,5 +1,7 @@
 <?php
-session_start();
+session_start();        
+ini_set('display_errors', 1);
+ini_set('error_reporting', E_ALL);
 use Usuario\ProyectoCasalaiCa\Config\Config\BD;
 use Usuario\ProyectoCasalaiCa\Clases\Carrito;
 

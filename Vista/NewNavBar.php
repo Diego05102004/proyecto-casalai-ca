@@ -778,7 +778,7 @@ if (isset($_SESSION['id_usuario'])) {
     }
 
     function actualizarNotificaciones() {
-        fetch('Vista/Modelo/Controlador/obtener_notificaciones.php')
+        fetch('Modelo/Controlador/obtener_notificaciones.php')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Error en la respuesta del servidor');

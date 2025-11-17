@@ -191,7 +191,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <tbody>
 
               <?php foreach ($productos as $producto): ?>
-              
+              <?php $ruta_imagen = $producto['imagen'] ?>
    
               
             <tr>
