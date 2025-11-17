@@ -71,7 +71,7 @@ $(document).ready(function () {
             /^[VEJPG]-\d{8}-\d$/,
             $(this),
             $("#srif_proveedor"),
-            "*Formato válido: J-12345678-9*"
+            "*Formato válido: (VEJPG)-12345678-9*"
         );
     });
     $("#rif_proveedor").on("input", function() {
@@ -120,7 +120,7 @@ $(document).ready(function () {
             /^[VEJPG]-\d{8}-\d$/,
             $(this),
             $("#srif_representante"),
-            "*Formato válido: J-12345678-9*"
+            "*Formato válido: (VEJPG)-12345678-9*"
         );
     });
     $("#rif_representante").on("input", function() {

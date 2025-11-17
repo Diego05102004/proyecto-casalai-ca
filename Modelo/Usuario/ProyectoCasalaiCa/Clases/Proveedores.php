@@ -127,6 +127,54 @@ class Proveedores extends BD {
         }
     }
 
+    public function existeRifProveedor($rif, $excluir_id = null) {
+        return $this->existeRifProv($rif, $excluir_id);
+    }
+    private function existeRifProv($rif, $excluir_id) {
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE rif_proveedor = ?";
+            $params = [$rif];
+            if ($excluir_id !== null) {
+                $sql .= " AND id_proveedor != ?";
+                $params[] = $excluir_id;
+            }
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchColumn() > 0;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+
+    public function existeRifRepresentante($rif, $excluir_id = null) {
+        return $this->existeRifRep($rif, $excluir_id);
+    }
+    private function existeRifRep($rif, $excluir_id) {
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE rif_representante = ?";
+            $params = [$rif];
+            if ($excluir_id !== null) {
+                $sql .= " AND id_proveedor != ?";
+                $params[] = $excluir_id;
+            }
+            $stmt = $this->conex->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchColumn() > 0;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+
     public function registrarProveedor() {
         return $this->r_proveedor();
     }

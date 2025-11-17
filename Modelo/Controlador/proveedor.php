@@ -54,6 +54,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
+            if ($proveedor->existeRifProveedor($_POST['rif_proveedor'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El RIF del proveedor ya está registrado'
+                ]);
+                exit;
+            }
+
+            if ($proveedor->existeRifRepresentante($_POST['rif_representante'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El RIF del representante ya está registrado'
+                ]);
+                exit;
+            }
+
             if ($proveedor->registrarProveedor()) {
                 $proveedorRegistrado = $proveedor->obtenerUltimoProveedor();
                 
@@ -118,6 +134,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'El nombre del proveedor ya existe'
+                ]);
+                exit;
+            }
+
+            if ($proveedor->existeRifProveedor($_POST['rif_proveedor'], $id_proveedor)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El RIF del proveedor ya está registrado'
+                ]);
+                exit;
+            }
+
+            if ($proveedor->existeRifRepresentante($_POST['rif_representante'], $id_proveedor)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El RIF del representante ya está registrado'
                 ]);
                 exit;
             }
