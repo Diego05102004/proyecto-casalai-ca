@@ -673,60 +673,71 @@ if (isset($_SESSION['id_usuario'])) {
                 e.stopPropagation();
 
                 const idNotificacion = button.getAttribute('data-id');
-                
-                fetch('Modelo/Controlador/marcar_notificacion.php', {
+                if (!idNotificacion) return;
+
+                const body = new URLSearchParams();
+                body.append('id_notificacion', idNotificacion);
+
+                fetch('?pagina=notificacion&accion=marcar_leida', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: 'id_notificacion=' + encodeURIComponent(idNotificacion)
+                    body
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success) {
-                        // Eliminar la notificación del DOM
-                        const notificacionItem = button.closest('.item-notificacion');
-                        if (notificacionItem) {
-                            notificacionItem.remove();
-                        }
+                    // El backend responde con { exito: bool, mensaje: string }
+                    if (!data || !data.exito) {
+                        console.error('Error al marcar como leída:', data && data.mensaje ? data.mensaje : data);
+                        return;
+                    }
 
-                        // Actualizar contadores
-                        const countElement = document.querySelector('.notification-badge');
-                        const titleCountElement = document.querySelector('.notificacion-panel .notification-count');
-                        
-                        let newCount = 0;
-                        if (countElement && countElement.textContent) {
-                            newCount = Math.max(0, parseInt(countElement.textContent) - 1);
-                            countElement.textContent = newCount;
-                            if (newCount <= 0) {
-                                countElement.style.display = 'none';
-                            }
-                        }
+                    // Eliminar la notificación del DOM
+                    const notificacionItem = button.closest('.item-notificacion');
+                    if (notificacionItem) {
+                        notificacionItem.remove();
+                    }
 
-                        if (titleCountElement) {
-                            // Si no pudimos leer del badge, usamos el número actual de items
-                            if (!newCount) {
-                                newCount = document.querySelectorAll('.notificacion-panel .item-notificacion').length;
-                            }
-                            titleCountElement.textContent = newCount;
-                        }
+                    // Actualizar contadores (campana y número en el header del panel)
+                    const countElement = document.querySelector('.notification-badge');
+                    const titleCountElement = document.querySelector('.notificacion-panel .notification-count');
 
-                        // Si ya no quedan notificaciones, mostrar mensaje vacío en la lista
-                        const notificationsList = document.getElementById('notifications-list');
-                        if (notificationsList && notificationsList.querySelectorAll('.item-notificacion').length === 0) {
-                            notificationsList.innerHTML = `
-                                <div class="item-notificacion">
-                                    <div class="texto">
-                                        <p>No hay notificaciones recientes</p>
-                                    </div>
+                    let newCount = 0;
+                    if (countElement && countElement.textContent) {
+                        newCount = Math.max(0, parseInt(countElement.textContent) - 1);
+                        countElement.textContent = newCount;
+                        if (newCount <= 0) {
+                            countElement.style.display = 'none';
+                        }
+                    }
+
+                    if (titleCountElement) {
+                        // Si no pudimos leer del badge, usamos el número actual de items
+                        if (!newCount) {
+                            newCount = document.querySelectorAll('.notificacion-panel .item-notificacion').length;
+                        }
+                        titleCountElement.textContent = newCount;
+                    }
+
+                    // Si ya no quedan notificaciones, mostrar mensaje vacío en la lista
+                    const notificationsList = document.getElementById('notifications-list');
+                    if (notificationsList && notificationsList.querySelectorAll('.item-notificacion').length === 0) {
+                        notificationsList.innerHTML = `
+                            <div class="item-notificacion">
+                                <div class="texto">
+                                    <p>No hay notificaciones recientes</p>
                                 </div>
-                            `;
-                        }
-                    } else {
-                        console.error('Error:', data.error);
+                            </div>
+                        `;
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => console.error('Error al marcar notificación como leída:', error));
             });
         }
         
