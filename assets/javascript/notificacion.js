@@ -107,65 +107,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para marcar una notificación como leída
     function marcarComoLeida(idNotificacion, elemento) {
-        if (!idNotificacion) {
-            console.error('ID de notificación no válido');
-            return;
-        }
-
-        // Mostrar indicador de carga
-        if (elemento && elemento.classList) {
-            const originalHTML = elemento.innerHTML;
-            elemento.disabled = true;
-            elemento.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Procesando...';
-        }
-
-        const formData = new FormData();
-        formData.append('id_notificacion', idNotificacion);
-        
-        fetch('?pagina=notificacion&accion=marcar_leida', {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.exito) {
-                // Actualizar la interfaz
-                if (elemento) {
-                    const item = elemento.closest ? 
-                        elemento.closest('.list-group-item') : 
-                        document.querySelector(`.list-group-item[data-id="${idNotificacion}"]`);
-                    
-                    if (item) {
-                        item.classList.remove('notificacion-no-leida');
-                        item.classList.add('notificacion-leida');
-                        const botonMarcarLeido = item.querySelector('.btn-marcar-leido');
-                        if (botonMarcarLeido) botonMarcarLeido.remove();
-                    }
-                }
-                // Actualizar contador en la barra de navegación
-                const contador = document.getElementById('contador-notificaciones');
-                if (contador) {
-                    const nuevoContador = Math.max(0, parseInt(contador.textContent) - 1);
-                    contador.textContent = nuevoContador > 0 ? nuevoContador : '0';
-                }
-                
-                mostrarMensaje('Notificación marcada como leída', 'success');
-            } else {
-                throw new Error(data.mensaje || 'Error al marcar como leída');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarError('Error al marcar la notificación como leída: ' + error.message);
-        });
+        // Vista "Mis Notificaciones" ahora es solo de consulta.
+        // Esta función se mantiene por compatibilidad pero no realiza ninguna acción.
+        return;
     }
     
     // Función para mostrar notificaciones
@@ -247,6 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Agregar manejadores de eventos
     function agregarManejadoresEventos() {
+        return;
         // Marcar como leída al hacer clic en el botón
         document.querySelectorAll('.btn-marcar-leido').forEach(btn => {
             btn.addEventListener('click', function(e) {
