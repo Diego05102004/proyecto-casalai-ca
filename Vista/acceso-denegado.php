@@ -16,7 +16,11 @@
         <h1>Acceso Denegado</h1>
         <p>No tienes permisos para acceder a esta sección.</p>
         <p>Si crees que esto es un error, por favor contacta al administrador.</p>
-        <a href="?pagina=Dashboard" class="btn btn-primary">Volver al inicio</a>
+        <?php if($_SESSION['nombre_rol'] == 'Cliente'){ ?>
+        <a href="?pagina=catalogo" class="btn btn-primary">Volver al inicio</a>
+        <?php } else { ?>
+          <a href="?pagina=Dashboard" class="btn btn-primary">Volver al inicio</a>
+                 <?php } ?>
     </div>
 </div>
 

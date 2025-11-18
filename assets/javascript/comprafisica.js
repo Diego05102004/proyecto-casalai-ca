@@ -1723,10 +1723,18 @@ function validarReferenciasNumericas() {
     let esValido = true;
     
     $('input[name$="[referencia]"]').each(function() {
-        const referencia = $(this).val().trim();
+        const $input = $(this);
+        const tipoPago = $input.closest('.bloque-pago').find('.tipo-pago').val();
+        
+        // No validar si es pago con Zelle
+        if (tipoPago === 'Zelle') {
+            return true; // Continuar con la siguiente iteración
+        }
+        
+        const referencia = $input.val().trim();
         if (referencia && !/^\d+$/.test(referencia)) {
-            Swal.fire('Error', 'Las referencias de pago solo pueden contener números', 'error');
-            $(this).focus();
+            Swal.fire('Error', 'Las referencias de pago solo pueden contener números (excepto para Zelle)', 'error');
+            $input.focus();
             esValido = false;
             return false; // Salir del each
         }
