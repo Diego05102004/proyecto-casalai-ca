@@ -8,6 +8,7 @@ $tasaBCV = isset($registroDolar['precio']) ? (float)$registroDolar['precio'] : $
 $tasaBCVFormateada = number_format($tasaBCV, 2);
 $tasaFechaFormateada = isset($registroDolar['fecha']) ? date('d/m/Y H:i', strtotime($registroDolar['fecha'])) : date('d/m/Y H:i');
 ?>
+<link rel="icon" type="image/png" href="assets/img/LOGO.png">
 
 <div class="top-bar">
     <nav class="navbar navbar-expand-lg navbar-dark">

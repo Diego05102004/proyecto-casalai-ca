@@ -41,166 +41,199 @@ class Comprafisica extends BD{
     return $this->r_compraFisica($datos);
     }
 
-    private function r_compraFisica($datos) {
-        $d = [];
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+private function r_compraFisica($datos) {
+    $d = [];
+    $conexion = null;
 
-        try {
-            $this->conex->beginTransaction();
+    if ($this->conex === null) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+    }
+    $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            // 1️⃣ Insertar despacho
-            $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, activo) 
-                            VALUES (:id_cliente, :fecha, :tipocompra, 1)";
-            $stmt = $this->conex->prepare($sqlDespacho);
-            $stmt->execute([
-                ':id_cliente' => $datos['cliente'],
-                ':fecha' => date('Y-m-d'),
-                ':tipocompra' => 'Presencial',
+    try {
+        $this->conex->beginTransaction();
+
+        // 1️⃣ Crear despacho
+        $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, activo) 
+                        VALUES (:id_cliente, :fecha, :tipocompra, 1)";
+        $stmt = $this->conex->prepare($sqlDespacho);
+        $stmt->execute([
+            ':id_cliente' => $datos['cliente'],
+            ':fecha' => date('Y-m-d'),
+            ':tipocompra' => 'Presencial',
+        ]);
+        $idDespacho = $this->conex->lastInsertId();
+
+        $descripcion = "Venta: ";
+        $monto_total = 0;
+        $productosVenta = [];
+
+        // 2️⃣ Insertar productos en despacho + preparar para factura
+        foreach ($datos['productos'] as $p) {
+            $cantidad = $this->parsearCantidadFormateada($p['cantidad']);
+
+            // Insertar detalle de despacho
+            $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
+                           VALUES (:id_despacho, :id_producto, :cantidad)";
+            $stmtDet = $this->conex->prepare($sqlDetalle);
+            $stmtDet->execute([
+                ':id_despacho' => $idDespacho,
+                ':id_producto' => $p['id_producto'],
+                ':cantidad' => $cantidad
             ]);
-            $idDespacho = $this->conex->lastInsertId();
 
-            $descripcion = "Venta: ";
-            $monto_total = 0;
-            $productosVenta = [];
-
-            // 2️⃣ Insertar productos en tbl_despacho_detalle y preparar para factura_detalle
-            foreach ($datos['productos'] as $p) {
-                $cantidad = $this->parsearCantidadFormateada($p['cantidad']);
-                
-                // Insertar en despacho_detalle
-                $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
-                            VALUES (:id_despacho, :id_producto, :cantidad)";
-                $stmtDet = $this->conex->prepare($sqlDetalle);
-                $stmtDet->execute([
-                    ':id_despacho' => $idDespacho,
-                    ':id_producto' => $p['id_producto'],
-                    ':cantidad' => $cantidad
-                ]);
-
-                // Obtener información del producto
-                $stmtProd = $this->conex->prepare("
-                    SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial, p.precio
-                    FROM tbl_productos p
-                    INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
-                    INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
-                    WHERE p.id_producto = ?
-                ");
-                $stmtProd->execute([$p['id_producto']]);
-                $prod = $stmtProd->fetch(PDO::FETCH_ASSOC);
-
-                if ($prod) {
-                    $subtotal = floatval($prod['precio']) * $cantidad;
-                    $monto_total += $subtotal;
-                    $descripcion .= "{$prod['nombre_producto']} (x{$cantidad}), ";
-
-                    $productosVenta[] = [
-                        'id_producto' => $prod['id_producto'],
-                        'codigo' => $prod['id_producto'],
-                        'nombre' => $prod['nombre_producto'],
-                        'modelo' => $prod['nombre_modelo'],
-                        'marca' => $prod['nombre_marca'],
-                        'serial' => $prod['serial'],
-                        'precio' => $prod['precio'],
-                        'cantidad' => $cantidad,
-                        'subtotal' => $subtotal
-                    ];
-                }
-            }
-
-            $descripcion = rtrim($descripcion, ', ');
-
-            // 3️⃣ Insertar en tbl_facturas
-            $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento) 
-                        VALUES (:cliente, :fecha, 0)";
-            $stmtFactura = $this->conex->prepare($sqlFactura);
-            $stmtFactura->execute([
-                ':cliente' => $datos['cliente'],
-                ':fecha' => date('Y-m-d'),
-            ]);
-            $idFactura = $this->conex->lastInsertId();
-
-            // 4️⃣ Insertar en tbl_factura_detalle
-            foreach ($productosVenta as $prod) {
-                $sqlFacturaDet = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
-                                VALUES (:factura_id, :id_producto, :cantidad)";
-                $stmtFacturaDet = $this->conex->prepare($sqlFacturaDet);
-                $stmtFacturaDet->execute([
-                    ':factura_id' => $idFactura,
-                    ':id_producto' => $prod['id_producto'],
-                    ':cantidad' => $prod['cantidad']
-                ]);
-            }
-
-            // 5️⃣ Obtener datos del cliente
-            $stmtCliente = $this->conex->prepare("
-                SELECT id_clientes, nombre, cedula, telefono, correo 
-                FROM tbl_clientes 
-                WHERE id_clientes = ?
+            // Consultar producto
+            $stmtProd = $this->conex->prepare("
+                SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca,
+                       p.serial, p.precio
+                FROM tbl_productos p
+                INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
+                INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
+                WHERE p.id_producto = ?
             ");
-            $stmtCliente->execute([$datos['cliente']]);
-            $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+            $stmtProd->execute([$p['id_producto']]);
+            $prod = $stmtProd->fetch(PDO::FETCH_ASSOC);
 
-            // 6️⃣ Insertar pagos si existen
-            $pagosVenta = [];
-            if (!empty($datos['pagos'])) {
-                foreach ($datos['pagos'] as $pago) {
-                    // Insertar en tbl_detalles_pago
-                    $sqlPago = "INSERT INTO tbl_detalles_pago (id_factura, tipo, id_cuenta, referencia, monto, comprobante, fecha) 
-                                VALUES (:id_factura, :tipo, :id_cuenta, :referencia, :monto, :comprobante, NOW())";
-                    $stmtPago = $this->conex->prepare($sqlPago);
-                    $stmtPago->execute([
-                        ':id_factura' => $idFactura,
-                        ':tipo' => $pago['tipo'],
-                        ':id_cuenta' => $pago['cuenta'] ?? null,
-                        ':referencia' => $pago['referencia'] ?? null,
-                        ':monto' => $pago['monto'],
-                        ':comprobante' => $pago['comprobante'] ?? null
-                    ]);
+            if ($prod) {
+                $subtotal = floatval($prod['precio']) * $cantidad;
+                $monto_total += $subtotal;
 
-                    $pagosVenta[] = [
-                        'tipo' => $pago['tipo'] ?? '',
-                        'monto' => $pago['monto'] ?? 0,
-                        'referencia' => $pago['referencia'] ?? '',
-                        'id_cuenta' => $pago['id_cuenta'] ?? '',
-                        'comprobante' => $pago['comprobante'] ?? '',
-                        'estatus' => 'Aprobado'
-                    ];
-                }
+                // DESCRIPCIÓN → nombre (xCantidad)
+                $descripcion .= "{$prod['nombre_producto']} ({$cantidad}), ";
+
+                $productosVenta[] = [
+                    'id_producto' => $prod['id_producto'],
+                    'codigo' => $prod['id_producto'],
+                    'nombre' => $prod['nombre_producto'],
+                    'modelo' => $prod['nombre_modelo'],
+                    'marca' => $prod['nombre_marca'],
+                    'serial' => $prod['serial'],
+                    'precio' => $prod['precio'],
+                    'cantidad' => $cantidad,
+                    'subtotal' => $subtotal
+                ];
             }
+        }
 
-            // 7️⃣ Preparar datos para retornar al AJAX - ESTRUCTURA CORRECTA
-            $resultado = [
-                'id_factura' => $idFactura,
-                'fecha_factura' => date('Y-m-d'),
-                'nombre_cliente' => $cliente['nombre'] ?? '',
-                'cedula' => $cliente['cedula'] ?? '',
-                'telefono' => $cliente['telefono'] ?? '',
-                'correo' => $cliente['correo'] ?? '',
-                'productos' => $productosVenta,
-                'pagos' => $pagosVenta,
-                'total' => $monto_total
-            ];
+        $descripcion = rtrim($descripcion, ', ');
 
-            $this->conex->commit();
-            return $resultado;
+        // 3️⃣ Crear factura
+        $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento) 
+                       VALUES (:cliente, :fecha, 0)";
+        $stmtFactura = $this->conex->prepare($sqlFactura);
+        $stmtFactura->execute([
+            ':cliente' => $datos['cliente'],
+            ':fecha' => date('Y-m-d')
+        ]);
+        $idFactura = $this->conex->lastInsertId();
 
-        } catch (Exception $e) {
-            if ($this->conex->inTransaction()) {
-                $this->conex->rollBack();
+        // 4️⃣ Factura detalle
+        foreach ($productosVenta as $prod) {
+            $sqlFacturaDet = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad)
+                              VALUES (:factura_id, :id_producto, :cantidad)";
+            $stmtFacturaDet = $this->conex->prepare($sqlFacturaDet);
+            $stmtFacturaDet->execute([
+                ':factura_id' => $idFactura,
+                ':id_producto' => $prod['id_producto'],
+                ':cantidad' => $prod['cantidad']
+            ]);
+        }
+
+        // 5️⃣ Cliente
+        $stmtCliente = $this->conex->prepare("
+            SELECT id_clientes, nombre, cedula, telefono, correo 
+            FROM tbl_clientes 
+            WHERE id_clientes = ?
+        ");
+        $stmtCliente->execute([$datos['cliente']]);
+        $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+
+        // 6️⃣ Registrar pagos
+        $pagosVenta = [];
+        if (!empty($datos['pagos'])) {
+            foreach ($datos['pagos'] as $pago) {
+                $sqlPago = "INSERT INTO tbl_detalles_pago 
+                            (id_factura, tipo, id_cuenta, referencia, monto, comprobante, fecha) 
+                            VALUES (:id_factura, :tipo, :id_cuenta, :referencia, :monto, :comprobante, NOW())";
+                $stmtPago = $this->conex->prepare($sqlPago);
+                $stmtPago->execute([
+                    ':id_factura' => $idFactura,
+                    ':tipo' => $pago['tipo'],
+                    ':id_cuenta' => $pago['cuenta'] ?? null,
+                    ':referencia' => $pago['referencia'] ?? null,
+                    ':monto' => $pago['monto'],
+                    ':comprobante' => $pago['comprobante'] ?? null
+                ]);
+
+                $pagosVenta[] = [
+                    'tipo' => $pago['tipo'] ?? '',
+                    'monto' => $pago['monto'] ?? 0,
+                    'referencia' => $pago['referencia'] ?? '',
+                    'id_cuenta' => $pago['id_cuenta'] ?? '',
+                    'comprobante' => $pago['comprobante'] ?? '',
+                    'estatus' => 'Procesado'
+                ];
             }
-            return [
-                'status' => 'error',
-                'mensaje' => $e->getMessage()
-            ];
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+
+        // 7️⃣ Ingresos → CORREGIDO COMPLETAMENTE
+        $sqlFinanzas = "INSERT INTO tbl_ingresos_egresos (
+            id_despacho,
+            tipo,
+            monto,
+            descripcion,
+            fecha,
+            estado
+        ) VALUES (
+            :id_despacho,
+            :tipo,
+            :monto,
+            :descripcion,
+            NOW(),
+            1
+        )";
+
+        $stmtFinanzas = $this->conex->prepare($sqlFinanzas);
+        $stmtFinanzas->execute([
+            ':id_despacho' => $idDespacho,
+            ':tipo' => 'ingreso',
+            ':monto' => $monto_total,
+            ':descripcion' => 'Venta presencial #' . $idFactura . ' - ' . $descripcion
+        ]);
+
+        // 8️⃣ Respuesta para AJAX
+        $resultado = [
+            'id_factura' => $idFactura,
+            'fecha_factura' => date('Y-m-d'),
+            'nombre_cliente' => $cliente['nombre'] ?? '',
+            'cedula' => $cliente['cedula'] ?? '',
+            'telefono' => $cliente['telefono'] ?? '',
+            'correo' => $cliente['correo'] ?? '',
+            'productos' => $productosVenta,
+            'pagos' => $pagosVenta,
+            'total' => $monto_total
+        ];
+
+        $this->conex->commit();
+        return $resultado;
+
+    } catch (Exception $e) {
+        if ($this->conex->inTransaction()) {
+            $this->conex->rollBack();
+        }
+        return [
+            'status' => 'error',
+            'mensaje' => $e->getMessage()
+        ];
+    } finally {
+        if ($conexion) { 
+            $conexion->cerrar(); 
+            $this->conex = null; 
         }
     }
+}
+
 
     public function parsearCantidadFormateada($cantidadFormateada) {
         return $this->parsearCantidadForm($cantidadFormateada);

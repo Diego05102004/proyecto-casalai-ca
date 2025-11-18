@@ -582,6 +582,34 @@ $(document).on('click', '.btn-eliminar-producto', function () {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+// Funciones de validación
+function validarPropietarioZelle(input) {
+    input.value = input.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, '');
+    if (input.validity.patternMismatch) {
+        input.setCustomValidity('Por favor, ingrese solo letras y espacios');
+    } else {
+        input.setCustomValidity('');
+    }
+}
+
+function validarMontoZelle(input) {
+    const value = parseFloat(input.value);
+    if (isNaN(value) || value <= 0) {
+        input.setCustomValidity('Por favor, ingrese un monto válido mayor a 0');
+    } else {
+        input.setCustomValidity('');
+    }
+}
+
+function validarReferenciaZelle(input) {
+    input.value = input.value.replace(/[^A-Za-z0-9\s]/g, '');
+    if (input.validity.patternMismatch) {
+        input.setCustomValidity('Solo se permiten letras y números, sin caracteres especiales');
+    } else {
+        input.setCustomValidity('');
+    }
+}
+
 const cuentas = <?php echo json_encode($listadocuentas); ?>;
 const todosMetodos = ['Pago Movil', 'Transferencia', 'Efectivo', 'Efectivo en $', 'Zelle'];
  // Lista de todos los métodos posibles
@@ -677,8 +705,11 @@ function camposPorTipo(tipo, idx) {
         return `
             <div class="envolver-form">
                 <label for="monto_${idx}">Monto Recibido ($)*</label>
-                <input type="text" class="control-form monto-input-dolar" 
-                     name="pagos[${idx}][monto_dolar]" id="monto_${idx}" maxlength="10"required>
+                <input type="text" 
+                     class="control-form monto-input-dolar" 
+                     name="pagos[${idx}][monto_dolar]" 
+                     id="monto_${idx}" 
+                     maxlength="10"required>
                 <span class="span-value" id="smonto"></span>
                 <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
                 <input type="hidden" name="pagos[${idx}][monto]" id="monto_bs_${idx}">
@@ -697,13 +728,28 @@ function camposPorTipo(tipo, idx) {
                 </select>
             </div>
             <div class="envolver-form">
-                <label for="referencia_${idx}">Propietario del Zelle*</label>
-                <input type="text" class="control-form" name="pagos[${idx}][descripcion]" id="referencia_${idx}" placeholder="Nombre del Propietario" required>
+                <label for="propietario_${idx}">Propietario del Zelle*</label>
+                <input type="text" 
+                       class="control-form" 
+                       name="pagos[${idx}][descripcion]" 
+                       id="propietario_${idx}" 
+                       placeholder="Nombre del Propietario" 
+                       pattern="^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+" 
+                       title="Solo se permiten letras y espacios"
+                       oninput="validarPropietarioZelle(this)"
+                       required>
+                <small class="text-muted">Solo letras y espacios</small>
             </div>
             <div class="envolver-form">
                 <label for="monto_${idx}">Monto Recibido ($)*</label>
-                <input type="number" step="0.01" class="control-form monto-input-dolar" min="0" 
-                    name="pagos[${idx}][monto_dolar]" id="monto_${idx}" maxlength="10" required>
+                <input type="number" 
+                       step="0.01" 
+                       class="control-form monto-input-dolar" 
+                       min="0.01" 
+                       name="pagos[${idx}][monto_dolar]" 
+                       id="zellemonto_${idx}" 
+                       oninput="validarMontoZelle(this); actualizarConversionDolar(this.value, '${idx}');"
+                       required>
                 <span class="span-value" id="smonto"></span>
                 <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
                 <input type="hidden" name="pagos[${idx}][monto]" id="monto_bs_${idx}">
@@ -711,7 +757,17 @@ function camposPorTipo(tipo, idx) {
             </div>
             <div class="envolver-form">
                 <label for="referencia_${idx}">Referencia*</label>
-                <input type="text" class="control-form" name="pagos[${idx}][referencia]" id="referencia_${idx}" maxlength="15" placeholder="Referencia del Zelle" required>
+                <input type="text" 
+                       class="control-form" 
+                       name="pagos[${idx}][referencia]" 
+                       id="refzelle_${idx}" 
+                       maxlength="20" 
+                       placeholder="Referencia del Zelle" 
+                       pattern="^[A-Za-z0-9\s]+"
+                       title="Solo letras y números, sin caracteres especiales"
+                       oninput="validarReferenciaZelle(this)"
+                       required>
+                <small class="text-muted">Solo letras y números, sin caracteres especiales</small>
                 <span class="span-value" id="sreferencia"></span>
             </div>
             <div class="envolver-form">
@@ -751,21 +807,101 @@ function camposPorTipo(tipo, idx) {
     }
 }
 
-// Obtener la tasa
-const tasa = parseFloat(document.getElementById('tasa').textContent) || 0;
+// Función para formatear números con separadores de miles
+function formatearNumero(num, decimales = 2, esMoneda = false) {
+    if (isNaN(num)) return '0,00';
+    num = parseFloat(num);
+    const opciones = {
+        minimumFractionDigits: decimales,
+        maximumFractionDigits: decimales
+    };
+    let resultado = num.toLocaleString('es-VE', opciones);
+    return esMoneda ? `Bs. ${resultado}` : resultado;
+}
 
-// Evento para actualizar la conversión a bolívares
-$(document).on('input', '.monto-input-dolar', function () {
-    const idx = $(this).attr('id').split('_')[1];
-    const montoDolar = parseFloat($(this).val()) || 0;
+// Función para parsear números con formato
+function parsearNumeroFormateado(numStr) {
+    if (!numStr) return 0;
+    return parseFloat(numStr.toString()
+        .replace(/\./g, '')
+        .replace(',', '.')
+    ) || 0;
+}
+
+// Obtener la tasa de cambio actual
+function obtenerTasa() {
+    const tasaElement = document.getElementById('tasa');
+    if (!tasaElement) return 0;
+    
+    let tasa = tasaElement.textContent || tasaElement.value || '0';
+    return parseFloat(tasa) || 0;
+}
+
+// Actualizar la conversión de dólares a bolívares
+function actualizarConversionDolar(input) {
+    const idx = input.id.split('_')[1];
+    const montoDolar = parseFloat(input.value) || 0;
+    const tasa = obtenerTasa();
     const montoBs = (montoDolar * tasa).toFixed(2);
 
-    // Mostrar conversión
-    $('#bolivares_' + idx).text('Equivalente: Bs. ' + montoBs);
+    // Actualizar el campo oculto con el valor calculado
+    const montoBsInput = document.getElementById(`monto_bs_${idx}`);
+    if (montoBsInput) {
+        montoBsInput.value = montoBs;
+    }
 
-    // Guardar el valor convertido en el input hidden
-    $('#monto_bs_' + idx).val(montoBs);
+    // Mostrar el monto en bolívares
+    const bolivaresSpan = document.getElementById(`bolivares_${idx}`);
+    if (bolivaresSpan) {
+        bolivaresSpan.textContent = `Equivalente: Bs. ${montoBs}`;
+    }
+
+    // Recalcular totales si la función existe
+    if (typeof recalcularTotales === 'function') {
+        recalcularTotales();
+    }
+}
+
+// Manejador de eventos mejorado
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.matches('.monto-input-dolar')) {
+        // Formatear el valor mientras se escribe
+        let value = e.target.value.replace(/[^\d,.-]/g, '');
+        
+        // Reemplazar comas por puntos para el cálculo
+        const parts = value.split(',');
+        if (parts.length > 1) {
+            value = parts[0].replace(/\D/g, '') + '.' + parts[1].replace(/\D/g, '');
+        }
+        
+        // Actualizar el valor formateado
+        e.target.value = value;
+        
+        // Actualizar la conversión
+        actualizarConversionDolar(e.target);
+    }
 });
+
+// Inicialización de los campos de monto
+function inicializarCamposMonto() {
+    document.querySelectorAll('.monto-input-dolar').forEach(input => {
+        input.addEventListener('blur', function() {
+            const value = parsearNumeroFormateado(this.value);
+            this.value = value.toFixed(2).replace('.', ',');
+            actualizarConversionDolar(this);
+        });
+    });
+}
+
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializarCamposMonto);
+} else {
+    inicializarCamposMonto();
+}
+
+// Actualizar conversiones para campos existentes
+document.querySelectorAll('.monto-input-dolar').forEach(actualizarConversionDolar);
 
 // 🔹 Función para bloquear signos + y - en montos
 function validarTeclaMonto(e) {

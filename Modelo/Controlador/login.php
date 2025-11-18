@@ -1,6 +1,16 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ⚠️ Si ya hay una sesión activa, redirigir a acceso-denegado
+if (isset($_SESSION['id_usuario']) && !empty($_SESSION['id_usuario'])) {
+    header('Location: ?pagina=acceso-denegado');
+    exit;
+}
 
 use Usuario\ProyectoCasalaiCa\Clases\Login;
+
 // Verificar si se ha enviado el formulario
 if (!empty($_POST)) {
     $o = new Login();
@@ -12,8 +22,11 @@ if (!empty($_POST)) {
         $m = $o->existe();
         
         if ($m['resultado'] == 'existe') {
+
+            // Reiniciar la sesión por seguridad
             session_destroy();
             session_start();
+
             $_SESSION['name'] = $m['mensaje'] ?? '';
             $_SESSION['nombre_rol'] = $m['nombre_rol'] ?? '';
             $_SESSION['id_usuario'] = $m['id_usuario'] ?? '';
@@ -27,19 +40,19 @@ if (!empty($_POST)) {
         }
     }
 
-    // Resto del código para recuperación de contraseña y registro...
+    // Recuperación de contraseña
     if ($h == 'solicitar_recuperacion') {
         $email = $_POST['email'] ?? '';
         $resultado = $o->solicitarRecuperacion($email);
         
         if ($resultado['status'] == 'success') {
-            // Código de envío de correo...
             $mensaje = "Se ha enviado un enlace de recuperación a tu correo electrónico.";
         } else {
             $mensaje = $resultado['mensaje'] ?? 'Error al procesar la solicitud';
         }
     }
 
+    // Registro de usuario
     if ($h == 'registrar') {
         $datos = [
             'nombre_usuario' => $_POST['nombre_usuario'] ?? '',
