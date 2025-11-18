@@ -29,6 +29,22 @@ try {
             $stmt->execute();
             $notificaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Formatear fecha para cada notificación en formato d/m/Y H:i:s
+            foreach ($notificaciones as &$notif) {
+                $src = $notif['fecha_hora'] ?? $notif['fecha_creacion'] ?? null;
+                if ($src) {
+                    $timestamp = strtotime($src);
+                    if ($timestamp !== false) {
+                        $notif['fecha_formateada'] = date('d/m/Y H:i:s', $timestamp);
+                    } else {
+                        $notif['fecha_formateada'] = $src; // fallback
+                    }
+                } else {
+                    $notif['fecha_formateada'] = '';
+                }
+            }
+            unset($notif);
+
             $response['notificaciones'] = $notificaciones;
             $response['count'] = count($notificaciones);
             $response['success'] = true;

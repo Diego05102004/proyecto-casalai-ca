@@ -448,8 +448,11 @@ if (isset($_SESSION['id_usuario'])) {
                             <?php if ($notif['tipo'] == 'pago' && !empty($notif['detalle_pago'])): ?>
                                 <small>Referencia: <?= htmlspecialchars($notif['detalle_pago']['referencia']) ?></small>
                             <?php endif; ?>
-                            <small class="fecha-notificacion"><?= date('d/m/Y H:i', strtotime($notif['fecha_creacion'] ?? $notif['fecha_hora'])) ?></small>
+                            <small class="fecha-notificacion"><?= date('d/m/Y H:i:s', strtotime($notif['fecha_creacion'] ?? $notif['fecha_hora'])) ?></small>
                         </div>
+                        <button class="marcar-leido" data-id="<?= $notif['id_notificacion'] ?>">
+                            <IMG src="assets/img/check.svg" alt="Marcar leído" class="local-icon">
+                        </button>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -520,15 +523,10 @@ if (isset($_SESSION['id_usuario'])) {
             
     // JavaScript para el menú lateral
     document.addEventListener('DOMContentLoaded', function() {
-        // Prevenir clics solo en las notificaciones individuales, no en el panel completo
-        document.querySelectorAll('.item-notificacion').forEach(element => {
-            element.style.pointerEvents = 'none';
-            element.style.cursor = 'default';
-        });
-        
         // Elementos del menú lateral
         const hamburgerBtn = document.getElementById('hamburger-btn');
         const sideMenu = document.getElementById('side-menu');
+        
         const closeMenuBtn = document.getElementById('close-menu');
         const overlay = document.getElementById('overlay');
         
@@ -667,66 +665,68 @@ if (isset($_SESSION['id_usuario'])) {
             });
         }
         
-        // Manejar marcado de notificaciones como leídas
-        const marcarLeidoButtons = document.querySelectorAll('.marcar-leido');
-        if (marcarLeidoButtons.length > 0) {
-            marcarLeidoButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const idNotificacion = this.getAttribute('data-id');
-                    
-                    fetch('Modelo/Controlador/marcar_notificacion.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'id_notificacion=' + idNotificacion
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Eliminar la notificación del DOM
-                            const notificacionItem = this.closest('.item-notificacion');
-                            if (notificacionItem) {
-                                notificacionItem.remove();
-                                
-                                // Actualizar el contador
-                                const countElement = document.querySelector('.notification-badge');
-                                const titleCountElement = document.querySelector('.notificacion-panel h2 span');
-                                
-                                if (countElement) {
-                                    const newCount = parseInt(countElement.textContent) - 1;
-                                    countElement.textContent = newCount;
-                                    
-                                    if (titleCountElement) {
-                                        titleCountElement.textContent = newCount;
-                                    }
-                                    
-                                    if (newCount <= 0) {
-                                        countElement.style.display = 'none';
-                                        
-                                        // Si no hay más notificaciones, mostrar mensaje
-                                        if (document.querySelectorAll('.notificacion-panel .item-notificacion').length === 0) {
-                                            if (notificationsPanel) {
-                                                notificationsPanel.innerHTML = `
-                                                    <h2>Notificaciones <span>0</span></h2>
-                                                    <div class="item-notificacion">
-                                                        <div class="texto">
-                                                            <p>No hay notificaciones recientes</p>
-                                                        </div>
-                                                    </div>
-                                                `;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            console.error('Error:', data.error);
+        // Manejar marcado de notificaciones como leídas (delegación de eventos)
+        if (notificationsPanel) {
+            notificationsPanel.addEventListener('click', function(e) {
+                const button = e.target.closest('.marcar-leido');
+                if (!button) return;
+                e.stopPropagation();
+
+                const idNotificacion = button.getAttribute('data-id');
+                
+                fetch('Modelo/Controlador/marcar_notificacion.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id_notificacion=' + encodeURIComponent(idNotificacion)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Eliminar la notificación del DOM
+                        const notificacionItem = button.closest('.item-notificacion');
+                        if (notificacionItem) {
+                            notificacionItem.remove();
                         }
-                    })
-                    .catch(error => console.error('Error:', error));
-                });
+
+                        // Actualizar contadores
+                        const countElement = document.querySelector('.notification-badge');
+                        const titleCountElement = document.querySelector('.notificacion-panel .notification-count');
+                        
+                        let newCount = 0;
+                        if (countElement && countElement.textContent) {
+                            newCount = Math.max(0, parseInt(countElement.textContent) - 1);
+                            countElement.textContent = newCount;
+                            if (newCount <= 0) {
+                                countElement.style.display = 'none';
+                            }
+                        }
+
+                        if (titleCountElement) {
+                            // Si no pudimos leer del badge, usamos el número actual de items
+                            if (!newCount) {
+                                newCount = document.querySelectorAll('.notificacion-panel .item-notificacion').length;
+                            }
+                            titleCountElement.textContent = newCount;
+                        }
+
+                        // Si ya no quedan notificaciones, mostrar mensaje vacío en la lista
+                        const notificationsList = document.getElementById('notifications-list');
+                        if (notificationsList && notificationsList.querySelectorAll('.item-notificacion').length === 0) {
+                            notificationsList.innerHTML = `
+                                <div class="item-notificacion">
+                                    <div class="texto">
+                                        <p>No hay notificaciones recientes</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        console.error('Error:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             });
         }
         
@@ -788,18 +788,20 @@ if (isset($_SESSION['id_usuario'])) {
             .then(data => {
                 if (data.success) {
                     const notificationsPanel = document.getElementById('notifications-panel');
-                    if (notificationsPanel) {
-                        let html = `<h2>Notificaciones <span>${data.count}</span></h2>`;
+                    const notificationsList = document.getElementById('notifications-list');
+                    if (notificationsPanel && notificationsList) {
+                        let html = '';
                         
                         if (data.notificaciones.length > 0) {
                             data.notificaciones.forEach(notif => {
+                                const fecha = notif.fecha_formateada || notif.fecha_hora || '';
                                 html += `
                                     <div class="item-notificacion">
                                         <div class="texto">
                                             <h4>${notif.titulo}</h4>
                                             <p>${notif.mensaje}</p>
                                             ${notif.referencia ? `<small>Referencia: ${notif.referencia}</small>` : ""}
-                                            <small>${notif.fecha_hora}</small>
+                                            <small>${fecha}</small>
                                         </div>
                                         <button class="marcar-leido" data-id="${notif.id_notificacion}">
                                             <IMG src="assets/img/check.svg" alt="Marcar leído" class="local-icon">
@@ -808,14 +810,14 @@ if (isset($_SESSION['id_usuario'])) {
                                 `;
                             });
                         } else {
-                            html += `
+                            html = `
                                 <div class="item-notificacion">
                                     <div class="texto"><p>No hay notificaciones recientes</p></div>
                                 </div>
                             `;
                         }
 
-                        notificationsPanel.innerHTML = html;
+                        notificationsList.innerHTML = html;
                     }
                 }
             })
