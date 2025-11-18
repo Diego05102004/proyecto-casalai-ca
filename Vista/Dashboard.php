@@ -103,6 +103,7 @@ $modulos = [
     'reporteProveedores' => ['Reporte de Proveedores', 'assets/img/chart-bar.svg', '?pagina=reporteProveedores'],
     'reporteVentas' => ['Reporte de Ventas', 'assets/img/chart-bar.svg', '?pagina=reporteVentas'],
     'reporteFinanzas' => ['Reporte de Finanzas', 'assets/img/chart-bar.svg', '?pagina=reporteFinanzas'],
+    'reporteCliente' => ['Reporte de Clientes', 'assets/img/chart-bar.svg', '?pagina=reporteCliente'],
 ];
 
 // Define los grupos de módulos y su icono (ACTUALIZADO CON CONDICIONALES)
@@ -143,7 +144,7 @@ $grupos = [
     ],
     'Administrar Clientes' => [
         'modulos' => ['Clientes'],
-        'reportes' => [],
+        'reportes' => ['reporteCliente'],
         'icon' => 'assets/img/users-round.svg',
         'color' => '#e74a3b',
         'condicion' => !empty($permisosConsulta['Clientes']) && $nombre_rol !== 'Cliente'
@@ -238,6 +239,9 @@ function mostrarModulo($modulo, $permisosConsulta, $nombre_rol) {
                     break;
                 case 'reporteFinanzas':
                     $mostrarReporte = ((!empty($permisosConsulta['Cuentas bancarias']) || !empty($permisosConsulta['Finanzas'])) && $nombre_rol !== 'Cliente');
+                    break;
+                case 'reporteCliente':
+                    $mostrarReporte = !empty($permisosConsulta['Clientes']) && $nombre_rol !== 'Cliente';
                     break;
                 default:
                     $mostrarReporte = !empty($permisosConsulta[$reporte]);
