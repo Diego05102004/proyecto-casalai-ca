@@ -274,24 +274,6 @@ $(document).on('click', '.modificarEstado', function (e) {
   $('#modificarEstadoModal').modal('show');
 });
 
-
-    function estatusAClase(estatus) {
-        return estatus
-            .toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // elimina tildes
-            .replace(/\s+/g, '-') // espacios por guiones
-            .replace(/[^a-z\-]/g, ''); // elimina caracteres no válidos
-    }
-
-    function aplicarClasesEstatus() {
-        const elementos = document.querySelectorAll('.campo-rango');
-
-        elementos.forEach(el => {
-            const estatus = el.dataset.estatus;
-            const clase = estatusAClase(estatus);
-            el.classList.add(clase);
-        });
-    }
 function actualizarFilaPago(pago) {
     const tabla = $('#tablaConsultas').DataTable();
 
@@ -359,8 +341,6 @@ function actualizarFilaPago(pago) {
                     </button>`
                 ]).draw(false);
 
-                aplicarClasesEstatus();
-
                 // Reasignar evento de abrir modal
                 document.querySelectorAll('.img-comprobante').forEach(img => {
                     img.addEventListener('click', function (e) {
@@ -380,13 +360,6 @@ function actualizarFilaPago(pago) {
         console.warn('No se encontró la fila para el pago con ID:', pago.id_detalles);
     }
 }
-
-
-
-    // Ejecutar al cargar la página
-    document.addEventListener('DOMContentLoaded', aplicarClasesEstatus);
-
-
    
     $('#incluirProductoForm').on('submit', function(event) {
         event.preventDefault();
