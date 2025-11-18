@@ -83,7 +83,7 @@ class Finanza extends BD {
         $conexion = new BD('P');
         $db = $conexion->getConexion();
         try {
-            $sql = "SELECT * FROM tbl_ingresos_egresos WHERE tipo='ingreso' ORDER BY fecha DESC";
+            $sql = "SELECT * FROM tbl_ingresos_egresos WHERE tipo='ingreso' and estado='1' ORDER BY fecha DESC";
             $stmt = $db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {
@@ -99,7 +99,7 @@ class Finanza extends BD {
         $conexion = new BD('P');
         $db = $conexion->getConexion();
         try {
-            $sql = "SELECT * FROM tbl_ingresos_egresos WHERE tipo='egreso' ORDER BY fecha DESC";
+            $sql = "SELECT * FROM tbl_ingresos_egresos WHERE tipo='egreso' and estado='1' ORDER BY fecha DESC";
             $stmt = $db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } finally {

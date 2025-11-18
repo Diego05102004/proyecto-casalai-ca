@@ -517,6 +517,10 @@
             });
             
             $(`#bloque-pago-${id} .btn-quitar-pago`).on('click', function() {
+                const selectId = `cuenta-${id}`;
+                // Remover protección al eliminar el bloque
+                selectProtection.removerProteccion(selectId);
+                
                 $(this).closest('.bloque-pago').remove();
                 $(`#panel-datos-${id}`).remove();
                 actualizarResumenPagos();
@@ -526,16 +530,25 @@
         
         // Cargar cuentas según el método de pago seleccionado
         function cargarCuentasPorMetodo(id, tipoPago) {
-            const $cuentaSelect = $(`#cuenta-${id}`);
+            const selectId = `cuenta-${id}`;
+            const $cuentaSelect = $(`#${selectId}`);
+            
+            // Limpiar select temporalmente
             $cuentaSelect.empty().append('<option value="" disabled selected>Seleccione una cuenta</option>');
             
-            cuentas.forEach(cuenta => {
-                if (cuenta.metodos && cuenta.metodos.includes(tipoPago)) {
-                    $cuentaSelect.append(
-                        `<option value="${cuenta.id_cuenta}">${cuenta.nombre_banco} - ${cuenta.numero_cuenta}</option>`
-                    );
-                }
-            });
+            // Filtrar cuentas según el método de pago
+            const cuentasFiltradas = cuentas.filter(cuenta => 
+                cuenta.metodos && cuenta.metodos.includes(tipoPago)
+            ).map(cuenta => ({
+                value: cuenta.id_cuenta,
+                texto: `${cuenta.nombre_banco} - ${cuenta.numero_cuenta}`
+            }));
+
+            // Usar el sistema de protección para actualizar el select de manera segura
+            selectProtection.actualizarSelectSeguro(selectId, cuentasFiltradas);
+            
+            // Mostrar el contenedor de cuenta
+            $(`#contenedor-cuenta-${id}`).show();
         }
         
         // Mostrar datos de la cuenta en el panel superior
@@ -955,6 +968,221 @@
         
     });
     </script>
+    <script>
+// Sistema de protección mejorado para selects
+const selectProtection = {
+    // Almacena los selects protegidos
+    protectedSelects: new Map(),
+    
+    // Proteger un select individual
+    protegerSelect: function(selectId) {
+        const select = document.getElementById(selectId);
+        if (!select || this.protectedSelects.has(selectId)) return;
+
+        console.log(`🔒 Aplicando protección al select: ${selectId}`);
+        
+        // Guardar estado original
+        const estadoOriginal = {
+            options: Array.from(select.options).map(opt => ({
+                value: opt.value,
+                text: opt.textContent,
+                selected: opt.selected
+            })),
+            selectedValue: select.value
+        };
+        
+        this.protectedSelects.set(selectId, {
+            estadoOriginal,
+            intervalo: null,
+            ultimaActualizacion: Date.now()
+        });
+
+        // Iniciar monitoreo
+        this.iniciarMonitoreo(selectId);
+    },
+    
+    // Iniciar monitoreo del select
+    iniciarMonitoreo: function(selectId) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        const proteccion = this.protectedSelects.get(selectId);
+        if (!proteccion) return;
+
+        // Limpiar intervalo anterior si existe
+        if (proteccion.intervalo) {
+            clearInterval(proteccion.intervalo);
+        }
+
+        // Configurar nuevo intervalo
+        proteccion.intervalo = setInterval(() => {
+            this.verificarIntegridad(selectId);
+        }, 800);
+    },
+    
+    // Verificar integridad del select
+    verificarIntegridad: function(selectId) {
+        const select = document.getElementById(selectId);
+        const proteccion = this.protectedSelects.get(selectId);
+        
+        if (!select || !proteccion) return;
+
+        const opcionesActuales = Array.from(select.options);
+        const opcionesOriginales = proteccion.estadoOriginal.options;
+
+        // Verificar si hay cambios no autorizados
+        const cambiosDetectados = 
+            opcionesActuales.length !== opcionesOriginales.length ||
+            opcionesActuales.some((opt, i) => {
+                const original = opcionesOriginales[i];
+                return !original || 
+                       opt.value !== original.value || 
+                       opt.textContent !== original.text;
+            });
+
+        if (cambiosDetectados && !select._cambioAutorizado) {
+            console.warn(`⚠ Select ${selectId} fue manipulado. Restaurando...`);
+            this.restaurarSelect(selectId);
+        }
+        
+        // Resetear flag de cambio autorizado después de la verificación
+        if (select._cambioAutorizado) {
+            select._cambioAutorizado = false;
+        }
+    },
+    
+    // Restaurar select a su estado original
+    restaurarSelect: function(selectId) {
+        const select = document.getElementById(selectId);
+        const proteccion = this.protectedSelects.get(selectId);
+        
+        if (!select || !proteccion) return;
+
+        // Guardar valor actualmente seleccionado si existe en las opciones originales
+        const valorActual = select.value;
+        const existeEnOriginal = proteccion.estadoOriginal.options.some(opt => opt.value === valorActual);
+        
+        // Restaurar opciones
+        select.innerHTML = '';
+        proteccion.estadoOriginal.options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.text;
+            if (opt.selected || (existeEnOriginal && opt.value === valorActual)) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        proteccion.ultimaActualizacion = Date.now();
+    },
+    
+    // Actualizar select de manera segura (para cambios programáticos)
+    actualizarSelectSeguro: function(selectId, nuevasOpciones) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        console.log(`🔄 Actualización segura del select: ${selectId}`, nuevasOpciones);
+        
+        // Marcar cambio como autorizado
+        select._cambioAutorizado = true;
+        
+        // Guardar valor seleccionado actual
+        const valorAnterior = select.value;
+        
+        // Limpiar y reconstruir opciones
+        select.innerHTML = '';
+        
+        // Agregar opción por defecto
+        const opcionDefault = document.createElement('option');
+        opcionDefault.value = '';
+        opcionDefault.textContent = 'Seleccione una cuenta';
+        opcionDefault.disabled = true;
+        opcionDefault.selected = true;
+        select.appendChild(opcionDefault);
+        
+        // Agregar nuevas opciones
+        nuevasOpciones.forEach(opcion => {
+            const option = document.createElement('option');
+            option.value = opcion.value;
+            option.textContent = opcion.texto;
+            select.appendChild(option);
+        });
+        
+        // Intentar restaurar selección anterior si existe
+        if (valorAnterior && nuevasOpciones.some(op => op.value === valorAnterior)) {
+            select.value = valorAnterior;
+        }
+        
+        // Actualizar estado de protección
+        this.actualizarEstadoProteccion(selectId, nuevasOpciones);
+    },
+    
+    // Actualizar estado de protección después de cambio autorizado
+    actualizarEstadoProteccion: function(selectId, nuevasOpciones) {
+        const proteccion = this.protectedSelects.get(selectId);
+        if (!proteccion) {
+            // Si no existe protección, crear una nueva
+            this.protegerSelect(selectId);
+            return;
+        }
+        
+        // Actualizar estado original con las nuevas opciones
+        proteccion.estadoOriginal = {
+            options: nuevasOpciones.map(opcion => ({
+                value: opcion.value,
+                text: opcion.texto,
+                selected: false
+            })),
+            selectedValue: ''
+        };
+        
+        proteccion.ultimaActualizacion = Date.now();
+        
+        // Reiniciar monitoreo
+        this.iniciarMonitoreo(selectId);
+    },
+    
+    // Remover protección de un select
+    removerProteccion: function(selectId) {
+        const proteccion = this.protectedSelects.get(selectId);
+        if (proteccion && proteccion.intervalo) {
+            clearInterval(proteccion.intervalo);
+        }
+        this.protectedSelects.delete(selectId);
+        
+        const select = document.getElementById(selectId);
+        if (select) {
+            delete select._cambioAutorizado;
+        }
+        
+        console.log(`🔓 Removiendo protección del select: ${selectId}`);
+    },
+    
+    // Limpiar todas las protecciones
+    limpiarTodasProtecciones: function() {
+        this.protectedSelects.forEach((proteccion, selectId) => {
+            if (proteccion.intervalo) {
+                clearInterval(proteccion.intervalo);
+            }
+        });
+        this.protectedSelects.clear();
+    }
+};
+
+// Aplicar protección inicial a los selects de tipo de pago
+$(document).ready(function() {
+    // Proteger los selects de tipo de pago inmediatamente
+    $('select[id^="tipo-"]').each(function() {
+        selectProtection.protegerSelect(this.id);
+    });
+    
+    // Limpiar protecciones al recargar la página
+    $(window).on('beforeunload', function() {
+        selectProtection.limpiarTodasProtecciones();
+    });
+});
+</script>
 </body>
 </html>
 <?php
@@ -962,3 +1190,4 @@
     header("Location: ?pagina=acceso-denegado");
     exit;
 }
+?>

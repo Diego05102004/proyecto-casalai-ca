@@ -12,7 +12,32 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     <?php include 'header.php'; ?>
     <title>Gestionar Recepcion</title>
 </head>
+<style>
+            #modalp .tablaConsultas tr.agregado {
+            background: #d1e7dd !important;
+            color: #155724;
+            font-weight: bold;
+            cursor: not-allowed;
+        }
+        #modalp .tablaConsultas tr:hover:not(.agregado) {
+            background: #f1f3f5;
+            cursor: pointer;
+        }
+        .tr-seleccionado {
+    background-color: #d4edda !important;
+    border-left: 4px solid #28a745 !important;
+    transition: all 0.3s ease;
+}
 
+.tr-seleccionado:hover {
+    background-color: #c3e6cb !important;
+}
+
+.agregado {
+    background-color: #f8d7da !important;
+    opacity: 0.6;
+}
+</style>
 <body  class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php include 'newnavbar.php'; ?>

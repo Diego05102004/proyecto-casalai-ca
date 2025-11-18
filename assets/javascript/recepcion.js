@@ -1,3 +1,4 @@
+// Sistema de protección de selects
 function protegerSelects(selectIds, interval = 1000) {
     const originales = {};
 
@@ -43,6 +44,28 @@ function protegerSelects(selectIds, interval = 1000) {
             }
         });
     }, interval);
+}
+
+// Función para marcar productos agregados
+function marcarProductosAgregados() {
+    // Obtener IDs de productos ya en la lista principal
+    let idsAgregados = [];
+    $('#recepcion1 input[name="producto[]"]').each(function() {
+        idsAgregados.push($(this).val());
+    });
+
+    // Marcar filas en el modal
+    $('#modalp #listadop tr').each(function() {
+        const idProducto = $(this).find('td:eq(0)').text().trim(); // ID del producto
+        if (idsAgregados.includes(idProducto)) {
+            $(this).addClass('agregado');
+            $(this).find('.btn-agregar-prod').prop('disabled', true).text('Agregado');
+            $(this).removeClass('tr-seleccionado'); // Remover selección verde si ya está agregado
+        } else {
+            $(this).removeClass('agregado');
+            $(this).find('.btn-agregar-prod').prop('disabled', false).text('Agregar');
+        }
+    });
 }
 
 $(document).ready(function () {
@@ -231,7 +254,14 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '#modalp .close-2', function() {
+        // Limpiar selección verde al cerrar el modal
+        $('#listadop tr').removeClass('tr-seleccionado');
         $('#modalp').modal('hide');
+    });
+
+    // Limpiar selección cuando se cierra el modal haciendo clic fuera
+    $(document).on('hidden.bs.modal', '#modalp', function() {
+        $('#listadop tr').removeClass('tr-seleccionado');
     });
 
     $('#ingresarRecepcion').on('submit', function(e) {
@@ -496,6 +526,7 @@ carga_productos();    //boton para levantar modal de productos
 
 $("#codigoproducto").on("keyup",function(){
     var codigo = $(this).val();
+    $(this).addClass('agregado')
     $("#listadop tr").each(function(){
         if(codigo == $(this).find("td:eq(1)").text()){
             colocaproducto($(this));
@@ -549,10 +580,18 @@ function borrar(){
     $("#descripcion").val('');
 }
 
-//funcion para colocar los productos
+//funcion para colocar los productos - MODIFICADA PARA APLICAR COLOR VERDE
 function colocaproducto(linea){
     var id = $(linea).find("td:eq(0)").text();
     var encontro = false;
+    
+    // Aplicar estilo verde a la línea seleccionada
+    $(linea).addClass('tr-seleccionado');
+    
+    // Remover el estilo después de 2 segundos (opcional)
+    setTimeout(function() {
+        $(linea).removeClass('tr-seleccionado');
+    }, 2000);
     
     $("#recepcion1 tr").each(function(){
         if(id*1 == $(this).find("td:eq(1)").text()*1){
@@ -600,13 +639,19 @@ function colocaproducto(linea){
             </tr>`;
         $("#recepcion1").append(l);
     }
+    
+    // Actualizar el estado de productos agregados
+    marcarProductosAgregados();
 }
 //fin de funcion modifica subtotal
 
 //funcion para eliminar linea de detalle de ventas
 function borrarp(boton){
     $(boton).closest('tr').remove();
+    // Actualizar el estado de productos agregados después de eliminar
+    marcarProductosAgregados();
 }
+
 const tabla = document.getElementById('tablaConsultas');
 const modal = document.getElementById('modalDetallesRecepcion');
 const cerrar = document.getElementById('cerrarModalDetallesRecepcion');
