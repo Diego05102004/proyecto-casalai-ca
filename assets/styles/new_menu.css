@@ -568,7 +568,7 @@ body {
     margin: 0;
     border-bottom: 1px solid #eee;
     font-size: 1.1rem;
-    background-color: #0863b8;
+    background-color: #0863b8 !important;
     color: white;
     border-radius: 8px 8px 0 0;
     display: flex;
