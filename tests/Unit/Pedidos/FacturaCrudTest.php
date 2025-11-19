@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Modelo/Factura.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
 
 class FacturaCrudTest extends TestCase {
     private PDO $pdo;

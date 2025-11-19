@@ -9,8 +9,8 @@ require_once __DIR__ . '/../Config/database.php';
 require_once __DIR__ . '/../Config/Config.php';
 require_once __DIR__ . '/../Usuario/ProyectoCasalaiCa/Clases/Carrito.php';
 
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
-use Usuario\ProyectoCasalaiCa\Clases\Carrito;
+use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Carrito;
 
 header('Content-Type: application/json');
 

@@ -1,9 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Config/database.php';
-require_once __DIR__ . '/../../../Config/config.php';
-require_once __DIR__ . '/../../../Modelo/usuario.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Perfil;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Usuarios;
 
 /*
  * Pruebas unitarias del módulo Perfil (usa el modelo Usuarios).

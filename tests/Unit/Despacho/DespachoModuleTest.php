@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../modelo/Despacho.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Despacho;
 
 final class DespachoModuleTest extends TestCase
 {

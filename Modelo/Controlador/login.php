@@ -9,7 +9,7 @@ if (isset($_SESSION['id_usuario']) && !empty($_SESSION['id_usuario'])) {
     exit;
 }
 
-use Usuario\ProyectoCasalaiCa\Clases\Login;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Login;
 
 // Verificar si se ha enviado el formulario
 if (!empty($_POST)) {
@@ -32,6 +32,7 @@ if (!empty($_POST)) {
             $_SESSION['id_usuario'] = $m['id_usuario'] ?? '';
             $_SESSION['id_rol'] = $m['id_rol'] ?? '';
             $_SESSION['cedula'] = $m['cedula'] ?? '';
+            $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
             
             header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
             exit;

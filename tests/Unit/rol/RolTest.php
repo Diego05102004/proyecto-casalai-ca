@@ -1,9 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Config/database.php';
-require_once __DIR__ . '/../../../Config/config.php';
-require_once __DIR__ . '/../../../Modelo/rol.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Rol;
 
 /*
  * Pruebas unitarias del módulo de Roles.

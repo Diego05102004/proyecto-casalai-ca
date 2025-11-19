@@ -2,10 +2,10 @@
 ob_start();
 
 // Requires
-use Usuario\ProyectoCasalaiCa\Clases\Cuentabanco;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Cuentabanco;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 
 // Constantes de módulo
 define('MODULO_CUENTA_BANCARIA', 15);

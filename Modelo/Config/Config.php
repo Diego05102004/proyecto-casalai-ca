@@ -1,8 +1,9 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Config\Config;
+namespace Usuario\ProyectoCasalaiCa\Config;
 
 use PDO;
 use PDOException;
+
 class BD extends PDO{
     private $pdo = null;
 

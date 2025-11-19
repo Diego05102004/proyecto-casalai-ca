@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../modelo/finanza.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Finanza;
 
 final class FinanzaModuleTest extends TestCase
 {

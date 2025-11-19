@@ -1,9 +1,9 @@
 <?php
 ob_start();
-use Usuario\ProyectoCasalaiCa\Clases\Cuentabanco;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\Finanza;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Cuentabanco;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Finanza;
 
 $id_rol = $_SESSION['id_rol'];
 

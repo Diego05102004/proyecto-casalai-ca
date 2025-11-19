@@ -1,9 +1,9 @@
 <?php  
-use Usuario\ProyectoCasalaiCa\Clases\Recepcion;
-use Usuario\ProyectoCasalaiCa\Clases\Despacho;
-use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
-use Usuario\ProyectoCasalaiCa\Clases\Permiso;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Recepcion;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Despacho;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permiso;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
 $reporteDespacho = new Despacho();
 $despachoEstado = $reporteDespacho->getDespachosEstado();

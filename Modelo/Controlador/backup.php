@@ -18,7 +18,7 @@ if (!class_exists('Usuario\\ProyectoCasalaiCa\\Clases\\Backup')) {
 
 require_once $rootDir . '/Modelo/Config/database.php';
 
-use Usuario\ProyectoCasalaiCa\Clases\Backup as BackupClass;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Backup as BackupClass;
 
 // Constantes
 define('MODULO_BACKUP', 20);

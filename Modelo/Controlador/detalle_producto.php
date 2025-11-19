@@ -4,9 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-use Usuario\ProyectoCasalaiCa\Clases\Productos;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
 
 $productosModel = new Productos();
 $bitacoraModel = new Bitacora();

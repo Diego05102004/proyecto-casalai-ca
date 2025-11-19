@@ -1,9 +1,9 @@
 <?php
 ob_start();
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-use Usuario\ProyectoCasalaiCa\Clases\Rol;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Rol;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
 define('MODULO_ROLES', 18);
 

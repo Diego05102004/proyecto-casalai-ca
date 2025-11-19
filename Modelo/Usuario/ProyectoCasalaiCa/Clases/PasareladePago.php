@@ -1,8 +1,8 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Clases;
-use Usuario\ProyectoCasalaiCa\Clases\Factura;
-use Usuario\ProyectoCasalaiCa\Clases\OrdenDeDespacho;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\OrdenDeDespacho;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -361,3 +361,4 @@ private function pagoProcesar() {
 
 }
 ?>
+

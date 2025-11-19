@@ -1,9 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Config/database.php';
-require_once __DIR__ . '/../../../Config/config.php';
-require_once __DIR__ . '/../../../Modelo/cliente.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\cliente;
 
 /*
  * Pruebas unitarias del módulo de Clientes.

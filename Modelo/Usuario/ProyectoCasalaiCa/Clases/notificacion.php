@@ -1,8 +1,8 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Clases;
+namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 
 use PDO;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 
 class NotificacionModel {
     private $pdo;

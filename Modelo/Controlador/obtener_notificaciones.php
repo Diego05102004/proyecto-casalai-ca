@@ -8,8 +8,8 @@ require_once __DIR__ . '/../Config/database.php';
 // Incluir manualmente el archivo de la clase BD
 require_once __DIR__ . '/../Config/Config.php';
 
-use Usuario\ProyectoCasalaiCa\Clases\Notificaciones;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Notificaciones;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 
 header('Content-Type: application/json');
 

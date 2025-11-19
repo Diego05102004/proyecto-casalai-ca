@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Usuario\ProyectoCasalaiCa\Clases;
+namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 use PDO;
 use PDOException;
 use RuntimeException;
@@ -71,7 +71,8 @@ class Login extends BD
     r.nombre_rol, 
     u.username, 
     u.password,
-    u.cedula
+    u.cedula,
+    u.foto_perfil
 FROM 
     tbl_usuarios u 
 INNER JOIN 
@@ -93,6 +94,7 @@ WHERE username = :username");
                 $r['id_usuario'] = $fila['id_usuario']; 
                 $r['id_rol'] = $fila['id_rol']; 
                 $r['cedula'] = $fila['cedula'];
+                $r['foto_perfil'] = $fila['foto_perfil'];
             } else {
                 $r['resultado'] = 'noexiste';
                 $r['mensaje'] = "Error en usuario o contraseña!!!";
@@ -233,3 +235,4 @@ public function registrarUsuarioYCliente($datos) {
     return $respuesta;
 }
 }
+

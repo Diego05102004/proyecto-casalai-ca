@@ -1,7 +1,7 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Clases;
+namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -1617,5 +1617,6 @@ ORDER BY tbl_productos.id_producto DESC;
         }
     }
 }
+
 
 

@@ -1,6 +1,6 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Clases;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 use PDO;
 use PDOException;
 
@@ -374,6 +374,11 @@ class OrdenDespacho extends BD {
             }
             $clienteId = (int)$row['id_cliente'];
             $clienteNombre = $row['nombre_cliente'];
+            
+            // Si el nombre del cliente es null, usar un valor por defecto
+            if ($clienteNombre === null || $clienteNombre === '') {
+                $clienteNombre = 'Cliente Desconocido';
+            }
 
             // Insertar orden
             $sqlIns = "INSERT INTO tbl_orden_despachos (id_factura, cliente, fecha_despacho, estado, activo)

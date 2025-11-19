@@ -1,6 +1,6 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 use PDO;
 use PDOException;
 

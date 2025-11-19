@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Modelo/permiso.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 
 class PermisosReadTest extends TestCase {
     private Permisos $perm;

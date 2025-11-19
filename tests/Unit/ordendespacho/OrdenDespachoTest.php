@@ -1,9 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Config/database.php';
-require_once __DIR__ . '/../../../Config/config.php';
-require_once __DIR__ . '/../../../Modelo/OrdenDespacho.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\OrdenDespacho;
 
 /*
  * Pruebas unitarias del módulo Orden de Despacho.

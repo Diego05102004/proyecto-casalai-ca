@@ -1,7 +1,7 @@
 <?php
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\Carrito;
+use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Carrito;
 $id_rol = $_SESSION['id_rol'];
 $nombre_rol = $_SESSION['nombre_rol'] ?? '';
 $id_usuario = $_SESSION['id_usuario'] ?? 0;
@@ -9,7 +9,7 @@ $id_usuario = $_SESSION['id_usuario'] ?? 0;
 $permisosObj = new Permisos();
 $carritoObj = new Carrito();
 // Obtener datos de la tasa BCV (registro del día)
-use Usuario\ProyectoCasalaiCa\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
 $dolarService = new DolarService();
 $registroDolar = $dolarService->obtenerRegistroDelDia();
 $tasaBCV = isset($registroDolar['precio']) ? (float)$registroDolar['precio'] : $dolarService->obtenerPrecioDelDia();
@@ -169,7 +169,25 @@ if (isset($_SESSION['id_usuario'])) {
             
             <!-- Botón de perfil -->
             <button class="icon-btn" id="profile-btn">
-                <div class="user-avatar"><?php echo substr($_SESSION['name'] ?? 'U', 0, 1); ?></div>
+<?php  
+$inicial = substr($_SESSION['name'] ?? 'U', 0, 1);
+
+// Validar si hay una imagen real en sesión
+if (!empty($_SESSION['foto_perfil'])) { 
+?>
+    <div class="user-avatar">
+        <img src="assets/img/uploads/<?php echo $_SESSION['foto_perfil']; ?>" alt="User Avatar">
+    </div>
+<?php 
+} else { 
+?>
+    <div class="user-avatar">
+        <?php echo $inicial; ?>
+    </div>
+<?php 
+} 
+?>
+
                 <div class="user-info">
                     <div class="user-name"><?php echo htmlspecialchars($_SESSION['name'] ?? 'Usuario'); ?></div>
                     <div class="user-role"><?php echo htmlspecialchars($_SESSION['nombre_rol'] ?? 'Rol'); ?></div>
@@ -470,8 +488,24 @@ if (isset($_SESSION['id_usuario'])) {
     <div class="profile-panel" id="profile-panel">
         <h2>Mi Cuenta</h2>
         <div class="profile-info">
-            <div class="profile-avatar"><?php echo substr($_SESSION['name'] ?? 'U', 0, 1); ?></div>
-            <div class="profile-details">
+            <?php  
+$inicial = substr($_SESSION['name'] ?? 'U', 0, 1);
+
+// Validar si hay una imagen real en sesión
+if (!empty($_SESSION['foto_perfil'])) { 
+?>
+    <div class="user-avatar">
+        <img src="assets/img/uploads/<?php echo $_SESSION['foto_perfil']; ?>" alt="User Avatar">
+    </div>
+<?php 
+} else { 
+?>
+    <div class="user-avatar">
+        <?php echo $inicial; ?>
+    </div>
+<?php 
+} 
+?><div class="profile-details">
                 <div class="profile-name"><?php echo htmlspecialchars($_SESSION['name'] ?? 'Usuario'); ?></div>
                 <div class="profile-role"><?php echo htmlspecialchars($_SESSION['nombre_rol'] ?? 'Rol'); ?></div>
             </div>

@@ -1,8 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Modelo/PasareladePago.php';
-require_once __DIR__ . '/../../../Modelo/Factura.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\PasareladePago;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
 
 class PagosCrudTest extends TestCase {
     private PDO $pdo;
@@ -85,12 +84,27 @@ class PagosCrudTest extends TestCase {
     }
 
     private function ensureFacturaId(): ?int {
-        $cedula = $this->anyClienteCedula();
+        // Usar el cliente que ya existe del seedBasicoPagos
+        $cedula = 'V12345678';
         $idProd = $this->pdo->query('SELECT id_producto FROM tbl_productos LIMIT 1')->fetchColumn();
-        if (!$cedula || !$idProd) { return null; }
+        
+        if (!$idProd) {
+            $this->pdo->exec("INSERT INTO tbl_productos (nombre_producto) VALUES ('Producto Prueba')");
+            $idProd = $this->pdo->query('SELECT id_producto FROM tbl_productos LIMIT 1')->fetchColumn();
+        }
+        
+        // Obtener el id_clientes correspondiente a la cedula
+        $stmt = $this->pdo->prepare('SELECT id_clientes FROM tbl_clientes WHERE cedula = ?');
+        $stmt->execute([$cedula]);
+        $idCliente = $stmt->fetchColumn();
+        
+        if (!$idCliente) {
+            return null;
+        }
+        
         $f = new Factura();
         $f->setFecha(date('Y-m-d'));
-        $f->setCliente($cedula);
+        $f->setCliente($cedula); // Factura usará la cedula para buscar el id_clientes
         $f->setDescuento(0);
         $f->setEstatus('Borrador');
         $f->setIdProducto([(int)$idProd]);
@@ -99,7 +113,19 @@ class PagosCrudTest extends TestCase {
         if ($ok !== true && is_array($ok) && isset($ok['error'])) {
             return null;
         }
-        return (int)$this->pdo->query('SELECT MAX(id_factura) FROM tbl_facturas')->fetchColumn();
+        
+        // Verificar que la factura se creó y tiene cliente
+        $facturaId = (int)$this->pdo->query('SELECT MAX(id_factura) FROM tbl_facturas')->fetchColumn();
+        if ($facturaId) {
+            $facturaCheck = $this->pdo->prepare('SELECT cliente FROM tbl_facturas WHERE id_factura = ?');
+            $facturaCheck->execute([$facturaId]);
+            $facturaCliente = $facturaCheck->fetchColumn();
+            if (!$facturaCliente) {
+                return null;
+            }
+        }
+        
+        return $facturaId;
     }
 
     public function test_ingresar_consultar_modificar_procesar_pago(): void {

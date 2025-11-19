@@ -1,6 +1,6 @@
 <?php 
-namespace Usuario\ProyectoCasalaiCa\Clases;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 use PDO;
 use PDOException;
 class Usuarios extends BD {
@@ -504,3 +504,4 @@ class Usuarios extends BD {
         }
     }
 }
+

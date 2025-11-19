@@ -1,8 +1,8 @@
 <?php
 
-use Usuario\ProyectoCasalaiCa\Clases\Factura;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 
 $permisosObj = new Permisos();
 $permisosUsuario = $permisosObj->getPermisosPorRolModulo();

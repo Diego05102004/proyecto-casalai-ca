@@ -1,8 +1,8 @@
 <?php
 ob_start();
-use Usuario\ProyectoCasalaiCa\Clases\Categoria;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Categoria;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
 define('MODULO_CATEGORIA', 7);
 

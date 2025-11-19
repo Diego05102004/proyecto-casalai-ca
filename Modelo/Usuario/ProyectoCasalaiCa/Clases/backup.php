@@ -1,5 +1,5 @@
 <?php
-namespace Usuario\ProyectoCasalaiCa\Clases;
+namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 
 use PDO;
 use PDOException;

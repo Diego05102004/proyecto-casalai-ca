@@ -9,8 +9,8 @@ header('Expires: 0');
 // Para producción, puedes desactivar los errores:
 // error_reporting(0);
 // ini_set('display_errors', 0);
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\Usuarios;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Usuarios;
 define('MODULO_PERFIL', 22);
 
 if (!isset($_SESSION['id_usuario'])) {

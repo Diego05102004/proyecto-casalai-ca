@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../Modelo/marca.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\marca;
 
 final class MarcaModelTest extends TestCase
 {

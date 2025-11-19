@@ -5,12 +5,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
-use Usuario\ProyectoCasalaiCa\Clases\Productos;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\DolarService;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\Carrito;
-use Usuario\ProyectoCasalaiCa\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Carrito;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
 
 define('MODULO_CARRITO', 11);
 

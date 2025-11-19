@@ -1,9 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Config/database.php';
-require_once __DIR__ . '/../../../Config/config.php';
-require_once __DIR__ . '/../../../Modelo/catalogo.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Catalogo;
+use Usuario\ProyectoCasalaiCa\Config\config;
 
 /*
  * Pruebas de INTEGRACIÓN del módulo de Catálogo.
@@ -146,9 +144,12 @@ class PDODoubleCatalogoF extends PDO
 // ================================
 // Casos de prueba (Integración)
 // ================================
+/**
+ * @group catalogo
+ */
 final class CatalogoFeatureTest extends TestCase
 {
-    // Helper: crea `Catalogo` con PDO stub
+    // Helper: crea `catalogo` con PDO stub
     private function nuevoCatalogoConPDOStub(): Catalogo
     {
         $ref = new ReflectionClass(Catalogo::class);

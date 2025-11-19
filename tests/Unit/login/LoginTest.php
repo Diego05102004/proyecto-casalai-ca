@@ -1,9 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Config/database.php';
-require_once __DIR__ . '/../../../Config/config.php';
-require_once __DIR__ . '/../../../Modelo/Login.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Login;
 
 /*
  * Pruebas unitarias del módulo Login.
@@ -180,8 +177,8 @@ final class LoginTest extends TestCase
     public function testExisteLoginOk(): void
     {
         $l = $this->nuevoLoginConPDOStub();
-        $l->set_username('admin');
-        $l->set_password('secret123');
+        $l->setUsername('admin');
+        $l->setPassword('secret123');
         $r = $l->existe();
         $this->assertSame('existe', $r['resultado']);
         $this->assertSame('admin', $r['mensaje']);
@@ -192,8 +189,8 @@ final class LoginTest extends TestCase
     public function testExisteLoginFailPassword(): void
     {
         $l = $this->nuevoLoginConPDOStub();
-        $l->set_username('admin');
-        $l->set_password('wrong');
+        $l->setUsername('admin');
+        $l->setPassword('wrong');
         $r = $l->existe();
         $this->assertSame('noexiste', $r['resultado']);
     }

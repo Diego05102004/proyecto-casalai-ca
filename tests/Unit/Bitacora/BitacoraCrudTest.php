@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Modelo/bitacora.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
 class BitacoraCrudTest extends TestCase {
     private PDO $pdo;

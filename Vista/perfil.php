@@ -230,7 +230,7 @@
             <div class="modal-body-custom avatar-modal-content">
                 <div class="avatar-preview" id="avatarPreview" data-inicial="<?php echo htmlspecialchars(substr($usuario['nombres'], 0, 1)); ?>">
                     <?php if (!empty($usuario['foto_perfil'])): ?>
-                        <img src="uploads/<?php echo htmlspecialchars($usuario['foto_perfil']); ?>" alt="Vista/ previa" class="avatar-preview-img">
+                        <img src="assets/img/uploads/<?php echo htmlspecialchars($usuario['foto_perfil']); ?>" alt="Vista/ previa" class="avatar-preview-img">
                     <?php else: ?>
                         <?php echo substr($usuario['nombres'], 0, 1); ?>
                     <?php endif; ?>

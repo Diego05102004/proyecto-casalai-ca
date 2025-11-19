@@ -1,6 +1,6 @@
 <?php
 
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 $id_rol = $_SESSION['id_rol'];
 $nombre_rol = $_SESSION['nombre_rol'] ?? '';
 $id_usuario = $_SESSION['id_usuario'] ?? 0;

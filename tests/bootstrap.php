@@ -1,7 +1,14 @@
 <?php
+use Usuario\ProyectoCasalaiCa\Config\BD;
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Cargar el autoloader de composer
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Configurar variables de sesión para pruebas
 $_SESSION['id_usuario'] = $_SESSION['id_usuario'] ?? 1;
 $_SESSION['id_rol'] = $_SESSION['id_rol'] ?? 1; // Ajusta si necesitas otro rol
 
@@ -11,8 +18,6 @@ $projectRoot = __DIR__ . DIRECTORY_SEPARATOR . '..';
 $testsDoubles = __DIR__ . DIRECTORY_SEPARATOR . 'doubles';
 // Prioriza stubs/doubles en pruebas, antes que el código de producción
 set_include_path($testsDoubles . PATH_SEPARATOR . $projectRoot . PATH_SEPARATOR . get_include_path());
-
-require_once $projectRoot . '/Config/Config.php';
 
 // Evitar efectos secundarios (inclusión de vistas, redirecciones) en controladores durante pruebas
 if (!defined('SKIP_SIDE_EFFECTS')) {

@@ -1,9 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Config/database.php';
-require_once __DIR__ . '/../../../Config/config.php';
-require_once __DIR__ . '/../../../Modelo/marca.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\marca;
 
 /*
  * Pruebas unitarias del módulo de Marcas.
@@ -146,7 +143,14 @@ class PDODoubleMarca extends PDO
         }
 
         // obtenermarcasPorId
-        if (stripos($sql, 'SELECT nombre_marca FROM tbl_marcas WHERE id_marca =') !== false) {
+        if (stripos($sql, 'SELECT nombre_marca FROM tbl_marcas WHERE id_marca = ?') !== false) {
+            return new StatementDoubleMarca($sql, [
+                'row' => ['nombre_marca' => 'Canon'],
+            ]);
+        }
+
+        // obtenermarcasPorId
+        if (stripos($sql, 'SELECT nombre_marca FROM tbl_marcas WHERE id_marca = :id_marca') !== false) {
             return new StatementDoubleMarca($sql, [
                 'row' => ['nombre_marca' => 'Canon'],
             ]);
@@ -187,10 +191,13 @@ final class MarcaTest extends TestCase
         /** @var marca $m */
         $m = $ref->newInstanceWithoutConstructor();
         $pdo = new PDODoubleMarca();
-        $reflection = new ReflectionClass(get_parent_class($m));
-        $prop = $reflection->getProperty('pdo');
+        
+        // Establecer directamente la propiedad conex para que no cree una nueva BD
+        $reflection = new ReflectionClass($m);
+        $prop = $reflection->getProperty('conex');
         $prop->setAccessible(true);
         $prop->setValue($m, $pdo);
+        
         return $m;
     }
 
@@ -253,6 +260,7 @@ final class MarcaTest extends TestCase
     public function testObtenerMarcaPorId(): void
     {
         $m = $this->nuevaMarcaConPDOStub();
+        $m->setnombre_marca('Canon');
         // Mock the database connection used in obtenermarcasPorId
         $reflection = new ReflectionClass($m);
         $method = $reflection->getMethod('obtenermarcasPorId');
@@ -260,7 +268,7 @@ final class MarcaTest extends TestCase
         
         $row = $method->invoke($m, 3);
         $this->assertIsArray($row);
-        $this->assertSame('NuevaMarca', $row['nombre_marca']);
+        $this->assertSame('Canon', $row['nombre_marca']);
     }
 
     // MRK-UNIT-008: Test tieneModelosAsociados method

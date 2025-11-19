@@ -3,8 +3,8 @@ ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 
 define('MODULO_BITACORA', 1);
 

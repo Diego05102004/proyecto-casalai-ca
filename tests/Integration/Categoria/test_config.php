@@ -1,4 +1,5 @@
 <?php
+
 // Prevent multiple inclusions
 if (!defined('DB_PRINCIPAL_DEFINED')) {
     // Test database configuration

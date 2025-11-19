@@ -1,13 +1,13 @@
 <?php
 ob_start();
-use Usuario\ProyectoCasalaiCa\Clases\PasareladePago;
-use Usuario\ProyectoCasalaiCa\Clases\Cuentabanco;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\DolarService;
-use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
-use Usuario\ProyectoCasalaiCa\Clases\OrdenDespacho;
-use Usuario\ProyectoCasalaiCa\Config\Config\BD;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\PasareladePago;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Cuentabanco;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\OrdenDespacho;
+use Usuario\ProyectoCasalaiCa\Config\BD;
 
 define('MODULO_PASARELA_PAGOS', 16); // Define el ID
 $bitacoraModel = new Bitacora();

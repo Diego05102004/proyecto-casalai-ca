@@ -3,8 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-use Usuario\ProyectoCasalaiCa\Clases\NotificacionModel;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
 function getNotificacionesUsuario($id_usuario) {
     try {

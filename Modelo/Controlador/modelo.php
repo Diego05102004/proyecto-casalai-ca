@@ -1,8 +1,8 @@
 <?php
 ob_start();
-use Usuario\ProyectoCasalaiCa\Clases\modelo;
-use Usuario\ProyectoCasalaiCa\Clases\Permisos;
-use Usuario\ProyectoCasalaiCa\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\modelo;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 

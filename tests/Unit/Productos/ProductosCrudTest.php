@@ -1,7 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../../Modelo/producto.php';
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 
 class ProductosCrudTest extends TestCase {
     private PDO $pdo;
