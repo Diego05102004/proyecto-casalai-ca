@@ -26,7 +26,7 @@ class FacturaCrudTest extends TestCase {
         return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 
-    public function test_incluir_consultar_cancelar_procesar_factura(): void {
+    private function crearFacturaBase(): array {
         $cedula = $this->anyClienteCedula();
         $ids = $this->someProductosIds(2);
         if (!$cedula || count($ids) === 0) {
@@ -41,32 +41,56 @@ class FacturaCrudTest extends TestCase {
         $f->setIdProducto($ids);
         $f->setCantidad(array_fill(0, count($ids), 1));
 
-        // Incluir
         $resIngresar = $f->facturaTransaccion('Ingresar');
-        $this->assertTrue($resIngresar === true || (is_array($resIngresar) && !isset($resIngresar['error'])), 'Debe poder ingresar factura.');
+        $this->assertTrue(
+            $resIngresar === true || (is_array($resIngresar) && !isset($resIngresar['error'])),
+            'Debe poder ingresar factura.'
+        );
 
-        // Obtener última factura creada
         $idFactura = (int)$this->pdo->query('SELECT MAX(id_factura) FROM tbl_facturas')->fetchColumn();
         $this->assertGreaterThan(0, $idFactura);
 
-        // Consultar por cédula
-        $f->setCedula($cedula);
-        $resConsulta = $f->facturaTransaccion('Consultar');
+        return [$f, $idFactura, $cedula];
+    }
+
+    public function testIncluirFactura(): void {
+        [$f, $idFactura, $cedula] = $this->crearFacturaBase();
+        $this->assertGreaterThan(0, $idFactura);
+    }
+
+    public function testConsultarFactura(): void {
+        [$f, $idFactura, $cedula] = $this->crearFacturaBase();
+
+        $consulta = new Factura();
+        $consulta->setCedula($cedula);
+        $resConsulta = $consulta->facturaTransaccion('Consultar');
+
         $this->assertIsArray($resConsulta);
         $this->assertArrayHasKey('resultado', $resConsulta);
+    }
 
-        // Procesar estatus
+    public function testProcesarFactura(): void {
+        [$f, $idFactura, $cedula] = $this->crearFacturaBase();
+
         $f->setId($idFactura);
         $okProcesar = $f->facturaTransaccion('Procesar');
         $this->assertTrue($okProcesar === true);
+    }
 
-        // Cancelar
+    public function testCancelarFactura(): void {
+        [$f, $idFactura, $cedula] = $this->crearFacturaBase();
+
+        // Si la lógica requiere procesar antes de cancelar, lo hacemos como precondición
+        $f->setId($idFactura);
+        $f->facturaTransaccion('Procesar');
+
         $f->setId($idFactura);
         $okCancelar = $f->facturaTransaccion('Cancelar');
         $this->assertTrue($okCancelar === true);
 
-        // Verificar en BD (estatus Cancelada)
-        $estatus = $this->pdo->query('SELECT estatus FROM tbl_facturas WHERE id_factura=' . (int)$idFactura)->fetchColumn();
+        $estatus = $this->pdo
+            ->query('SELECT estatus FROM tbl_facturas WHERE id_factura=' . (int)$idFactura)
+            ->fetchColumn();
         $this->assertNotEmpty($estatus);
     }
 }
