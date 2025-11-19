@@ -130,7 +130,14 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 
                 <h3>Lista de Cuentas <br> Bancarias</h3>
 
-                <div class="ghost"></div>
+                <div class="filtro-status">
+                    <label for="filtro-estatus-cuentas">Mostrar:</label>
+                    <select id="filtro-estatus-cuentas" class="form-select">
+                        <option value="todos" selected>Todos</option>
+                        <option value="habilitado">Habilitados</option>
+                        <option value="inhabilitado">Inhabilitados</option>
+                    </select>
+                </div>
             </div>
             
             <table class="tablaConsultas" id="tablaConsultas">

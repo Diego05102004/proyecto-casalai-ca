@@ -221,7 +221,14 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
     <div class="tabla-header">
         <div class="ghost"></div>
         <h3>LISTA DE PROVEEDORES</h3>
-        <div class="ghost"></div>
+        <div class="filtro-status">
+			<label for="filtro-estatus-proveedores">Mostrar:</label>
+			<select id="filtro-estatus-proveedores" class="form-select">
+				<option value="todos" selected>Todos</option>
+				<option value="habilitado">Habilitados</option>
+				<option value="inhabilitado">Inhabilitados</option>
+			</select>
+		</div>
     </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
