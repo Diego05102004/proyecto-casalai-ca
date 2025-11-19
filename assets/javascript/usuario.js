@@ -57,6 +57,8 @@ $(document).ready(function() {
                 "url": "assets/public/js/es-ES.json"
             },
             "responsive": true,
+            "scrollX": true,
+            "scrollCollapse": true,
             "columnDefs": [
                 { 
                     "targets": 5, // Índice de la columna de estatus
@@ -76,8 +78,12 @@ $(document).ready(function() {
                 }
             ],
             "initComplete": function () {
+                var api = this.api();
+                var $wrapper = $(api.table().container());
+
+                api.columns.adjust();
+
                 // Crear el botón directamente dentro del filtro de DataTables
-                var $wrapper = $tabla.closest('.dataTables_wrapper');
                 var $filter = $wrapper.find('.dataTables_filter');
                 if (!$filter.length) return;
 
