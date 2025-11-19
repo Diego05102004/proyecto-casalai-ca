@@ -19,9 +19,15 @@ if (typeof nombre_rol !== "undefined" && nombre_rol === 'SuperUsuario') {
                 language: {
                     "url": "assets/public/js/es-ES.json"
                 },
+                scrollX: true,
+                scrollCollapse: true,
                 order: [[0, 'desc']],
                 initComplete: function () {
-                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var api = this.api();
+                    var $wrapper = $(api.table().container());
+
+                    api.columns.adjust();
+
                     var $filter = $wrapper.find('.dataTables_filter');
                     if (!$filter.length) return;
 
