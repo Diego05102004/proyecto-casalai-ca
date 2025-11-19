@@ -132,6 +132,24 @@
     min-width: 100% !important;
 }
 
+/* Mantener el thead clonado dentro del cuerpo scrolleable
+   para que DataTables pueda alinear anchos, pero sin que se vea
+   como una fila extra encima de los datos. */
+.dataTables_scrollBody thead tr {
+    height: 0 !important;
+}
+
+.dataTables_scrollBody thead th,
+.dataTables_scrollBody thead td {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border: 0 !important;
+    height: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+}
+
 /* Contenedor del encabezado */
 .dataTables_scrollHeadInner {
     width: auto !important;
