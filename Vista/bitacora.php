@@ -10,83 +10,74 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     <title>Bitácora del Sistema</title>
     <link rel="stylesheet" href="assets/public/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/public/js/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="assets/styles/tabla_consulta.css">
     <?php include 'header.php'; ?>
-    <style>
-        .contenedor-tabla {
-            margin-top: 40px;
-        }
-        .table-responsive {
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body class="fondo" style="background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh;">
 <?php include 'newnavbar.php'; ?>
 
 <div class="contenedor-tabla">
+
     <div class="tabla-header">
         <div class="ghost"></div>
         <h3>Bitácora del Sistema</h3>
         <div class="ghost"></div>
     </div>
 
-    <div class="table-responsive">
-        <table class="tablaConsultas" id="tablaBitacora">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Fecha y Hora</th>
-                    <th>Usuario</th>
-                    <th>Acción Realizada</th>
-                    <th>Módulo</th>
-                    <th>Descripcion</th>
-                </tr>
-            </thead>
-            <tbody id="tbodyBitacora">
-                <?php if (!empty($registros)): ?>
-                    <?php foreach ($registros as $registro): ?>
-                        <tr>
-                            <td>
-                                <span class="campo-numeros">
-                                    <?= htmlspecialchars($registro['id_bitacora']) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="campo-numeros">
-                                    <?= date('d/m/Y h:i:s A', strtotime($registro['fecha_hora'])) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="campo-nombres">
-                                    <?= htmlspecialchars($registro['username']) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="campo-tex-num">
-                                    <?= htmlspecialchars($registro['accion']) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="campo-tex-num">
-                                    <?= htmlspecialchars($registro['modulo']) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="campo-nombres">
-                                    <?= htmlspecialchars($registro['descripcion']) ?>
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
+    <table class="tablaConsultas" id="tablaBitacora">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha y Hora</th>
+                <th>Usuario</th>
+                <th>Acción <br> Realizada</th>
+                <th>Módulo</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($registros)): ?>
+                <?php foreach ($registros as $registro): ?>
                     <tr>
-                        <td colspan="5" class="text-center">No hay registros en la bitácora.</td>
+                        <td>
+                            <span class="campo-numeros">
+                                <?= htmlspecialchars($registro['id_bitacora']) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="campo-numeros">
+                                <?= date('d/m/Y h:i:s A', strtotime($registro['fecha_hora'])) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="campo-nombres">
+                                <?= htmlspecialchars($registro['username']) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="campo-tex-num">
+                                <?= htmlspecialchars($registro['accion']) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="campo-tex-num">
+                                <?= htmlspecialchars($registro['modulo']) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="campo-nombres">
+                                <?= htmlspecialchars($registro['descripcion']) ?>
+                            </span>
+                        </td>
                     </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="5" class="text-center">No hay registros en la bitácora.</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
 </div>
 
 <?php include 'footer.php'; ?>
@@ -95,10 +86,6 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 <script src="assets/public/js/jquery.dataTables.min.js"></script>
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/javascript/bitacora.js"></script>
-</body>
-</html>
-
-</script>
 </body>
 </html>
 <?php } else {
