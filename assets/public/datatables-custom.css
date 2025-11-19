@@ -159,6 +159,7 @@
    Dejamos que DataTables ajuste el width por JS para que el
    encabezado se alinee exactamente con el cuerpo. */
 .dataTables_scrollHeadInner {
+    width: 100% !important;
 }
 
 /* Estilo del encabezado */
