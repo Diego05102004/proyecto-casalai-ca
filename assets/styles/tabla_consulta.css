@@ -51,6 +51,7 @@
     width: 100%;
     max-height: 70vh;
     overflow-y: auto;
+    overflow-x: auto;
     scrollbar-gutter: stable;
     position: relative;
     z-index: 1; /* Nivel base */
@@ -191,8 +192,7 @@ table tr th {
     text-align: center;
     padding: 10px;
     white-space: nowrap;
-    width: auto !important;
-    max-width: none !important;
+    width: auto;
 }
 
 table thead tr th i {
@@ -206,8 +206,7 @@ table tbody tr td {
     min-width: 50px;
     border-bottom: 1px solid var(--primary-800 ); 
     white-space: nowrap;
-    width: auto !important;
-    max-width: none !important;
+    width: auto;
 }
 
 table tbody tr td ul {
@@ -522,21 +521,16 @@ table tfoot tr td span a i{
     filter: brightness(0) invert(1);
 }
 
-.tabla-scroll {
-    position: relative;
-    z-index: 1;
-}
-
-.tabla-scroll {
-    overflow-y: overlay;
-}
-
 .dataTables_wrapper {
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     padding: 24px 16px 16px 16px;
     font-family: 'Segoe UI', sans-serif;
+    display: block !important;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .dataTables_wrapper .dataTables_length,

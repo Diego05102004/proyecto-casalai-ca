@@ -9,9 +9,12 @@ $(document).ready(function () {
                     url: 'assets/public/js/es-ES.json'
                 },
 
+                scrollX: true,
+                scrollCollapse: true,
                 order: [[0, 'desc']],
                 initComplete: function () {
                     var $wrapper = $tabla.closest('.dataTables_wrapper');
+
                     var $filter = $wrapper.find('.dataTables_filter');
                     if (!$filter.length) return;
 

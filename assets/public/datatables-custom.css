@@ -100,11 +100,10 @@
 }
 
 /* Estilo de la tabla */
+/* Dejamos que DataTables calcule el ancho de la tabla (sobre todo cuando
+   se usa scrollX), sin forzar width/table-layout aquí. */
 .dataTables_wrapper table {
-    width: auto !important;
-    max-width: none !important;
     margin: 0 !important;
-    table-layout: auto !important;
     background: white !important;
     border-collapse: collapse !important;
     border: 1px solid #e9ecef !important;
