@@ -135,36 +135,60 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ---------------------------
        Render fila backup (HTML)
+       Formato alineado con la vista backup.php
        --------------------------- */
     function crearFilaBackupHtml(backup) {
-        const tipoBadge = (backup.tipo && backup.tipo.toLowerCase().includes('seguridad')) ? 'bg-warning text-dark' : 'bg-info text-dark';
         const tamano = backup.tamano ? formatBytes(backup.tamano) : (backup.tamano_text || 'N/A');
         const fecha = backup.fecha_modificacion || backup.fecha || '';
         const nombre = backup.nombre || '';
+        const tipo = backup.tipo || 'Principal';
 
         return `
             <tr>
                 <td>
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-database me-2 text-primary"></i>
-                        <span class="fw-medium">${nombre}</span>
-                    </div>
+                    <span class="campo-nombres">
+                        ${nombre}
+                    </span>
                 </td>
-                <td><span class="badge ${tipoBadge}">${backup.tipo || 'Principal'}</span></td>
-                <td>${tamano}</td>
-                <td>${fecha}</td>
                 <td>
-                    <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-primary btn-descargar" data-archivo="${nombre}" title="Descargar Backup">
-                            <img src="assets/img/download.svg" alt="Descargar" width="18" height="18">
+                    <span class="campo-rango">
+                        ${tipo}
+                    </span>
+                </td>
+                <td>
+                    <span class="campo-numeros">
+                        ${tamano}
+                    </span>
+                </td>
+                <td>
+                    <span class="campo-numeros">
+                        ${fecha}
+                    </span>
+                </td>
+                <td>
+                    <ul>
+                        <button class="btn-descargar"
+                            data-archivo="${nombre}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Descargar">
+                            <img src="assets/img/download.svg" alt="Descargar">
                         </button>
-                        <button type="button" class="btn btn-warning btn-restaurar" data-archivo="${nombre}" title="Restaurar Backup">
-                            <img src="assets/img/rotate-ccw.svg" alt="Restaurar" width="18" height="18">
+                        <button class="btn-restaurar"
+                            data-archivo="${nombre}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Restaurar">
+                            <img src="assets/img/rotate-ccw.svg" alt="Restaurar">
                         </button>
-                        <button type="button" class="btn btn-danger btn-eliminar" data-archivo="${nombre}" title="Eliminar Backup">
-                            <img src="assets/img/circle-x.svg" alt="Eliminar" width="18" height="18">
+                        <button class="btn-eliminar"
+                            data-archivo="${nombre}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Eliminar">
+                            <img src="assets/img/circle-x.svg" alt="Eliminar">
                         </button>
-                    </div>
+                    </ul>
                 </td>
             </tr>
         `;
@@ -219,7 +243,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     $('#tablaConsultas').DataTable({
                         order: [[0, 'desc']],
                         responsive: true,
-                        language: { "url": "assets/public/js/es-ES.json" }
+                        scrollX: true,
+                        scrollCollapse: true,
+                        language: { "url": "assets/public/js/es-ES.json" },
+                        initComplete: function () {
+                            var api = this.api();
+                            api.columns.adjust();
+                        }
                     });
                 }, 10);
             }

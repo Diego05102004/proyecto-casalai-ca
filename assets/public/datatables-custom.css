@@ -100,13 +100,13 @@
 }
 
 /* Estilo de la tabla */
+/* Dejamos que DataTables calcule el ancho de la tabla (sobre todo cuando
+   se usa scrollX), sin forzar width/table-layout aquí. */
 .dataTables_wrapper table {
-    width: auto !important;
-    max-width: none !important;
     margin: 0 !important;
-    table-layout: auto !important;
     background: white !important;
-    border-collapse: collapse !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
     border: 1px solid #e9ecef !important;
     border-radius: 8px !important;
 }
@@ -133,9 +133,33 @@
     min-width: 100% !important;
 }
 
-/* Contenedor del encabezado */
+/* Mantener el thead clonado dentro del cuerpo scrolleable
+   para que DataTables pueda alinear anchos, pero sin que se vea
+   como una fila extra encima de los datos. */
+.dataTables_scrollBody table thead {
+    height: 0 !important;
+}
+
+.dataTables_scrollBody table thead tr {
+    height: 0 !important;
+}
+
+.dataTables_scrollBody table thead th,
+.dataTables_scrollBody table thead td {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border: 0 !important;
+    height: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+}
+
+/* Contenedor del encabezado
+   Dejamos que DataTables ajuste el width por JS para que el
+   encabezado se alinee exactamente con el cuerpo. */
 .dataTables_scrollHeadInner {
-    width: auto !important;
+    width: 100% !important;
 }
 
 /* Estilo del encabezado */

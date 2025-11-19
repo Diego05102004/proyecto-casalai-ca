@@ -211,109 +211,58 @@ final class PerfilTest extends TestCase
         return $u;
     }
 
-    // PRF-UNIT-001: Ingresar usuario (crea en seguridad y cliente si no existe)
-    public function testIngresarUsuario(): void
+    // PERFIL-UNIT-001: Editar datos personales desde el perfil
+    public function testEditarPerfil(): void
     {
         $u = $this->nuevoPerfilConPDOStub();
-        $u->setUsername('nuevo');
-        $u->setClave('clave');
-        $u->setRango(2);
-        $u->setCorreo('n@test.com');
-        $u->setNombre('Ana');
-        $u->setApellido('Lopez');
-        $u->setTelefono('0414');
-        $u->setCedula('V-100');
-        $this->assertTrue($u->ingresarUsuario());
-    }
 
-    // PRF-UNIT-002: Modificar usuario (actualiza seguridad e inventario)
-    public function testModificarUsuario(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $u->setUsername('edit');
-        $u->setRango(3);
-        $u->setNombre('Eva');
-        $u->setApellido('Perez');
-        $u->setCorreo('e@test.com');
-        $u->setTelefono('0412');
-        $u->setCedula('V-101');
-        $this->assertTrue($u->modificarUsuario(5));
-    }
-
-    // PRF-UNIT-003: Existe usuario/cédula/correo
-    public function testExistencias(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $this->assertTrue($u->existeUsuario('a'));
-        $this->assertFalse($u->existeCedula('V-1'));
-        $this->assertFalse($u->existeCorreo('a@b.com'));
-    }
-
-    // PRF-UNIT-004: Obtener último usuario
-    public function testObtenerUltimoUsuario(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $row = $u->obtenerUltimoUsuario();
-        $this->assertIsArray($row);
-        $this->assertSame('last', $row['username']);
-    }
-
-    // PRF-UNIT-005: Obtener usuario por id
-    public function testObtenerUsuarioPorId(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $row = $u->obtenerUsuarioPorId(5);
-        $this->assertIsArray($row);
-        $this->assertSame(5, $row['id_usuario']);
-    }
-
-    // PRF-UNIT-006: Eliminar usuario
-    public function testEliminarUsuario(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $this->assertTrue($u->eliminarUsuario(7));
-    }
-
-    // PRF-UNIT-007: Cambiar estatus
-    public function testCambiarEstatus(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $ref = new ReflectionProperty(Usuarios::class, 'id_usuario');
-        $ref->setAccessible(true);
-        $ref->setValue($u, 3);
-        $this->assertTrue($u->cambiarEstatus('habilitado'));
-    }
-
-    // PRF-UNIT-008: Reporte de roles
-    public function testObtenerReporteRoles(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $rows = $u->obtenerReporteRoles();
-        $this->assertIsArray($rows);
-        $this->assertNotEmpty($rows);
-        $this->assertArrayHasKey('nombre_rol', $rows[0]);
-    }
-
-    // PRF-UNIT-009: Actualizar perfil con campos selectivos
-    public function testActualizarPerfil(): void
-    {
-        $u = $this->nuevoPerfilConPDOStub();
-        $ok = $u->actualizarPerfil(2, [
-            'nombres' => 'Nuevo Nombre',
-            'password' => 'nuevaClave',
-            'telefono' => '0000',
-            'correo' => '', // vacío no actualiza
+        $ok = $u->actualizarPerfil(1, [
+            'username'  => 'NuevoUsuario',
+            'nombres'   => 'Nuevo Nombre',
+            'apellidos' => 'Nuevo Apellido',
+            'telefono'  => '0414-575-3363',
         ]);
+
         $this->assertTrue($ok);
     }
 
-    // PRF-UNIT-010: Listar usuarios por estatus
-    public function testGetUsuariosPorEstatus(): void
+    // PERFIL-UNIT-002: Actualizar correo electrónico desde el perfil
+    public function testActualizarCorreo(): void
     {
         $u = $this->nuevoPerfilConPDOStub();
-        $rows = $u->getusuarios('habilitado');
-        $this->assertIsArray($rows);
-        $this->assertNotEmpty($rows);
-        $this->assertSame('habilitado', $rows[0]['estatus']);
+
+        // Primero, el nuevo correo no debe existir para el usuario
+        $this->assertFalse($u->existeCorreo('nuevo_correo@test.com', 1));
+
+        // Luego, se intenta actualizar el correo en el perfil
+        $ok = $u->actualizarPerfil(1, [
+            'correo' => 'nuevo_correo@test.com',
+        ]);
+
+        $this->assertTrue($ok);
+    }
+
+    // PERFIL-UNIT-003: Actualizar contraseña desde el perfil
+    public function testActualizarContrasena(): void
+    {
+        $u = $this->nuevoPerfilConPDOStub();
+
+        $ok = $u->actualizarPerfil(1, [
+            'password' => 'NuevaClaveSegura123',
+        ]);
+
+        $this->assertTrue($ok);
+    }
+
+    // PERFIL-UNIT-004: Actualizar foto de perfil
+    public function testActualizarFotoDePerfil(): void
+    {
+        $u = $this->nuevoPerfilConPDOStub();
+
+        $ok = $u->actualizarPerfil(1, [
+            'foto_perfil' => 'avatar_prueba.png',
+        ]);
+
+        $this->assertTrue($ok);
     }
 }

@@ -36,6 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 "language": {
                     "url": "assets/public/js/es-ES.json"
                 },
+                "scrollX": true,
+                "scrollCollapse": true,
                 "order": [[0, "desc"]],
                 "pageLength": 10,
                 "lengthMenu": [10, 25, 50, 100],
@@ -48,6 +50,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 ],
                 "initComplete": function() {
+                    var api = this.api();
+                    var $wrapper = $(api.table().container());
+
+                    api.columns.adjust();
+
+                    var $filter = $wrapper.find('.dataTables_filter');
+                    if (!$filter.length) return;
+
                     console.log('DataTable inicializada correctamente');
                 }
             });

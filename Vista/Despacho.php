@@ -998,6 +998,8 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 language: {
                     "url": "assets/public/js/es-ES.json"
                 },
+                scrollX: true,
+                scrollCollapse: true,
                 columnDefs: [
                     {
                         targets: 4, // Columna ESTATUS
@@ -1013,7 +1015,11 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     [4, 'asc'], // Primero pendientes
                     [0, 'asc']  // Luego por fecha (antiguas primero)
                 ],
-                pageLength: 10
+                pageLength: 10,
+                initComplete: function () {
+                    var api = this.api();
+                    api.columns.adjust();
+                }
             });
         });
     });

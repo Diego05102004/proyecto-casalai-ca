@@ -448,8 +448,16 @@ class Usuarios extends BD {
         return $this->a_actualizarPerfil($id_usuario, $datos);
     }
     private function a_actualizarPerfil($id_usuario, $datos) {
-        $conexion = new BD('S');
-        $pdo = $conexion->getConexion();
+        // Usar conexión inyectada (doble de pruebas) si existe; de lo contrario crear una BD real
+        $conexion = null;
+        $created = false;
+        if ($this->conex instanceof PDO) {
+            $pdo = $this->conex;
+        } else {
+            $conexion = new BD('S');
+            $pdo = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $pdo->beginTransaction();
             $sql = "UPDATE tbl_usuarios SET ";
@@ -479,7 +487,9 @@ class Usuarios extends BD {
             error_log("Error al actualizar perfil: " . $e->getMessage());
             return false;
         } finally {
-            $conexion->cerrar();
+            if ($created && $conexion !== null) {
+                $conexion->cerrar();
+            }
         }
     }
 

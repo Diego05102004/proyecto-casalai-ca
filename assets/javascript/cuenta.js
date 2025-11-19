@@ -60,12 +60,19 @@ $(document).ready(function () {
                 language: {
                     "url": "assets/public/js/es-ES.json"
                 },
+
+                scrollX: true,
+                scrollCollapse: true,
                 order: [[0, 'desc']],
                 columnDefs: [
                     { orderable: false, targets: 6 } // Deshabilitar ordenamiento en columna de acciones
                 ],
                 initComplete: function () {
-                    var $wrapper = $tabla.closest('.dataTables_wrapper');
+                    var api = this.api();
+                    var $wrapper = $(api.table().container());
+
+                    api.columns.adjust();
+
                     var $filter = $wrapper.find('.dataTables_filter');
                     if (!$filter.length) return;
 

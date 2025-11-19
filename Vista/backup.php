@@ -40,14 +40,14 @@
     </div>
     <h3 class="tabla-titulo-2" style="margin-bottom: 20px;">Backups Disponibles</h3>
 
-    <table class="tablaConsultas table table-hover align-middle" id="tablaConsultas" style="width:100%">
+    <table class="tablaConsultas" id="tablaConsultas" style="width:100%">
         <thead>
             <tr>
                 <th>Archivo</th>
                 <th>Tipo</th>
                 <th>Tamaño</th>
                 <th>Fecha de Modificación</th>
-                <th class="text-center">Acciones</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -55,43 +55,49 @@
                 <?php foreach ($backups as $backup): ?>
                 <tr>
                     <td>
-                        <span class="campo-nombres fw-semibold">
-                            <i class="fas fa-database text-primary me-2"></i>
+                        <span class="campo-nombres">
                             <?= htmlspecialchars($backup['nombre'] ?? '') ?>
                         </span>
                     </td>
                     <td>
-                        <span class="badge <?= (isset($backup['tipo']) && $backup['tipo'] === 'Seguridad') ? 'bg-warning text-dark' : 'bg-info text-dark'; ?>">
-                            <i class="fas fa-shield-alt tipo-icono"></i>
+                        <span class="campo-rango <?= (isset($backup['tipo']) && $backup['tipo'] === 'Seguridad')?>">
                             <?= htmlspecialchars($backup['tipo'] ?? '') ?>
                         </span>
                     </td>
-                    <td><?= htmlspecialchars($backup['tamano'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($backup['fecha_modificacion'] ?? '') ?></td>
-                    <td class="col-acciones text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-primary btn-sm btn-descargar"
+                    <td>
+                        <span class="campo-numeros">
+                            <?= htmlspecialchars($backup['tamano'] ?? '') ?>
+                        </span>
+                    </td>
+                    <td>
+                        <span class="campo-numeros">
+                            <?= htmlspecialchars($backup['fecha_modificacion'] ?? '') ?>
+                        </span>
+                    </td>
+                    <td>
+                        <ul>
+                            <button class="btn-descargar"
                                 data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
                                 data-bs-toggle="tooltip"
                                 data-bs-placement="top"
                                 title="Descargar">
                                 <img src="assets/img/download.svg" alt="Descargar">
                             </button>
-                            <button class="btn btn-warning btn-sm btn-restaurar"
+                            <button class="btn-restaurar"
                                 data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
                                 data-bs-toggle="tooltip"
                                 data-bs-placement="top"
                                 title="Restaurar">
                                 <img src="assets/img/rotate-ccw.svg" alt="Restaurar">
                             </button>
-                            <button class="btn btn-danger btn-sm btn-eliminar"
+                            <button class="btn-eliminar"
                                 data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
                                 data-bs-toggle="tooltip"
                                 data-bs-placement="top"
                                 title="Eliminar">
                                 <img src="assets/img/circle-x.svg" alt="Eliminar">
                             </button>
-                        </div>
+                        </ul>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -119,11 +125,15 @@
                 url: 'assets/public/js/es-ES.json'
             },
             responsive: true,
+            scrollX: true,
+            scrollCollapse: true,
             columnDefs: [
                 { orderable: false, targets: 4 }, // Disable sorting on Actions column
                 { width: '15%', targets: 4 } // Set width for Actions column
             ],
             initComplete: function() {
+                var api = this.api();
+                api.columns.adjust();
                 // Reinitialize tooltips after table is initialized
                 $('[data-bs-toggle="tooltip"]').tooltip();
             }
