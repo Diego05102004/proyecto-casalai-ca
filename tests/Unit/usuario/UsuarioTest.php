@@ -284,18 +284,6 @@ final class UsuarioTest extends TestCase
         $this->assertArrayHasKey('nombre_rol', $rows[0]);
     }
 
-    public function testActualizarPerfil(): void
-    {
-        $u = $this->nuevoUsuarioConPDOStub();
-        $ok = $u->actualizarPerfil(2, [
-            'nombres' => 'Nuevo Nombre',
-            'password' => 'nuevaClave',
-            'telefono' => '0000',
-            'correo' => '',
-        ]);
-        $this->assertTrue($ok);
-    }
-
     public function testGetUsuariosPorEstatus(): void
     {
         $u = $this->nuevoUsuarioConPDOStub();

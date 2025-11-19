@@ -262,9 +262,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 $(document).ready(function() {
     $('#tablaConsultas').DataTable({
-        language: { url: 'assets/public/js/es-ES.json' }
+        language: { url: 'assets/public/js/es-ES.json' },
+        scrollX: true,
+        scrollCollapse: true,
+        order: [[0, 'desc']],
+        initComplete: function () {
+            var api = this.api();
+            api.columns.adjust();
+        }
     });
 });
+
 </script>
 
 <style>
