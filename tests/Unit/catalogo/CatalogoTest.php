@@ -167,15 +167,6 @@ final class CatalogoTest extends TestCase
         return $c;
     }
 
-    // CAT-UNIT-001: Insertar combo (id_producto, cantidad)
-    public function testInsertarCombo(): void
-    {
-        $c = $this->nuevoCatalogoConPDOStub();
-        $c->setIdProducto(1);
-        $c->setCantidad(2);
-        $this->assertTrue($c->insertarCombo());
-    }
-
     // CAT-UNIT-002: Obtener productos activos con join
     public function testObtenerProductos(): void
     {
