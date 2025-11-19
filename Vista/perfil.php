@@ -134,7 +134,7 @@
                         <div class="info-value"><?php echo htmlspecialchars($usuario['correo']); ?></div>
                         <button class="btn-perfil" style="margin-top: 10px;" id="btn-change-email">
                             <img src="assets/img/email.svg" alt="Cambiar correo" class="btn-icon">
-                            Cambiar Correo Electrónico
+                            Actualizar Correo Electrónico
                         </button>
                     </div>
                 </div>
@@ -178,7 +178,7 @@
                         <label>Contraseña</label>
                         <button class="btn-perfil" id="btn-change-password">
                             <img src="assets/img/lock.svg" alt="Cambiar contraseña" class="btn-icon">
-                            Cambiar Contraseña
+                            Actualizar Contraseña
                         </button>
                     </div>
                 </div>
