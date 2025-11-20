@@ -2,7 +2,7 @@ $(document).ready(function() {
     console.log('perfil.js cargado correctamente');
     
     // Asegurarnos de que el modal esté oculto al cargar la página
-    $('#avatarModal').hide();
+    $('#avatarModal').removeClass('show');
     
     // Toggle para edición de información personal
     $('#btn-edit-personal').click(function() {
@@ -44,11 +44,11 @@ $(document).ready(function() {
     
     // Modal para foto de perfil
     $('#btn-change-avatar').click(function() {
-        $('#avatarModal').show();
+        $('#avatarModal').addClass('show');
     });
     
     $('#closeAvatarModal, #cancelAvatarModal').click(function() {
-        $('#avatarModal').hide();
+        $('#avatarModal').removeClass('show');
         $('#form-avatar')[0].reset();
         const inicial = $('#avatarPreview').data('inicial') || '';
         $('#avatarPreview').html(inicial);
@@ -57,7 +57,7 @@ $(document).ready(function() {
     // Cerrar modal al hacer clic fuera
     $(window).click(function(e) {
         if ($(e.target).is('#avatarModal')) {
-            $('#avatarModal').hide();
+            $('#avatarModal').removeClass('show');
             $('#form-avatar')[0].reset();
             const inicial = $('#avatarPreview').data('inicial') || '';
             $('#avatarPreview').html(inicial);
@@ -360,7 +360,7 @@ $(document).ready(function() {
                                 $('#sconfirm_password').text('');
                                 break;
                             case 'avatar':
-                                $('#avatarModal').hide();
+                                $('#avatarModal').removeClass('show');
                                 $('#form-avatar')[0].reset();
                                 const inicial = $('#avatarPreview').data('inicial') || '';
                                 $('#avatarPreview').html(inicial);
