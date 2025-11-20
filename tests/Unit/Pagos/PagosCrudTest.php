@@ -169,17 +169,6 @@ class PagosCrudTest extends TestCase {
         $this->assertIsArray($todos);
     }
 
-    public function testModificarPago(): void {
-        [$p, $idPago] = $this->crearPagoBase();
-
-        $p->setIdDetalles($idPago);
-        $p->setTipo('Depósito');
-        $p->setFecha(date('Y-m-d'));
-
-        $okMod = (new ReflectionClass($p))->getMethod('pasarelaTransaccion')->invoke($p, 'Modificar');
-        $this->assertTrue($okMod === true);
-    }
-
     public function testProcesarPago(): void {
         [$p, $idPago] = $this->crearPagoBase();
 

@@ -589,6 +589,9 @@ private function facturaConsultar() {
             </form>';
         }
 
+        // Definir tasa de conversión (1.0 por defecto para mantener los valores originales)
+        $tasa = 1.0;
+        
         $contenido = '<div class="w-100">' . $datosCliente . $mensajePago;
         $contenido .= '<div class="table-responsive w-100">';
         $contenido .= '<table class="table table-bordered w-100">';
@@ -596,15 +599,15 @@ private function facturaConsultar() {
 
         $total = 0;
         foreach ($items as $item) {
-            $subtotal = $item['precio']*$tasa * $item['cantidad'];
+            $subtotal = $item['precio'] * $tasa * $item['cantidad'];
             $total += $subtotal;
 
             $contenido .= '<tr>';
-            $contenido .= '<td>' . htmlspecialchars($item['producto']) . '</td>';
-            $contenido .= '<td>' . htmlspecialchars($item['nombre_modelo']) . '</td>';
-            $contenido .= '<td>' . htmlspecialchars($item['nombre_marca']) . '</td>';
-            $contenido .= '<td>' . $item['cantidad'] . '</td>';
-            $contenido .= '<td>' . number_format($item['precio']*$tasa, 2) . 'BS</td>';
+            $contenido .= '<td>' . htmlspecialchars($item['producto'] ?? '') . '</td>';
+            $contenido .= '<td>' . htmlspecialchars($item['nombre_modelo'] ?? '') . '</td>';
+            $contenido .= '<td>' . htmlspecialchars($item['nombre_marca'] ?? '') . '</td>';
+            $contenido .= '<td>' . ($item['cantidad'] ?? '0') . '</td>';
+            $contenido .= '<td>' . number_format(($item['precio'] ?? 0) * $tasa, 2) . ' BS</td>';
             $contenido .= '</tr>';
         }
 

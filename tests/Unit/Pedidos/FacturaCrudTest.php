@@ -59,14 +59,32 @@ class FacturaCrudTest extends TestCase {
     }
 
     public function testConsultarFactura(): void {
+        // Crear una factura de prueba
         [$f, $idFactura, $cedula] = $this->crearFacturaBase();
-
+        
+        // Verificar que la factura se creó correctamente
+        $this->assertGreaterThan(0, $idFactura, 'La factura no se creó correctamente');
+        
+        // Consultar la factura
         $consulta = new Factura();
         $consulta->setCedula($cedula);
         $resConsulta = $consulta->facturaTransaccion('Consultar');
 
-        $this->assertIsArray($resConsulta);
-        $this->assertArrayHasKey('resultado', $resConsulta);
+        // Verificaciones básicas
+        $this->assertIsArray($resConsulta, 'La consulta no devolvió un array');
+        $this->assertArrayHasKey('resultado', $resConsulta, 'La clave "resultado" no existe en la respuesta');
+        $this->assertArrayHasKey('mensaje', $resConsulta, 'La clave "mensaje" no existe en la respuesta');
+        
+        // Verificar que el resultado es 'listado' y el mensaje contiene HTML
+        $this->assertSame('listado', $resConsulta['resultado']);
+        $this->assertStringContainsString('Pedido #', $resConsulta['mensaje'], 'El mensaje no contiene el formato esperado');
+        
+        // Verificar que la factura existe en la base de datos
+        $facturaEnBD = $this->pdo->query(
+            "SELECT COUNT(*) FROM tbl_facturas WHERE id_factura = " . (int)$idFactura
+        )->fetchColumn();
+        
+        $this->assertEquals(1, (int)$facturaEnBD, 'La factura no existe en la base de datos');
     }
 
     public function testProcesarFactura(): void {
