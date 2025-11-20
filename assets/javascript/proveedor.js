@@ -1039,6 +1039,9 @@ $(document).ready(function() {
                         showConfirmButton: false,
                         timer: 2000
                     });
+                    var table = $('#tablaConsultas').DataTable();
+                    table.row(span.closest('tr')).invalidate();
+                    table.draw(false);
                 } else {
                     span.text(estatusActual);
                     span.removeClass('habilitado inhabilitado').addClass(estatusActual);
