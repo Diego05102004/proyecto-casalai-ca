@@ -9,7 +9,7 @@ function plantilla($nombre, $datos = [])
 function renderImagen($id, $nombre)
 {
     return <<<HTML
-<img class="img-thumbnail my-3" src="assets/img/{$id}/{$nombre}">
+<img class="img-thumbnail my-3" src="img/{$id}/{$nombre}">
 HTML;
 }
 

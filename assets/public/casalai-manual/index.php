@@ -15,7 +15,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="icon" href="assets/img/logo.png">
+    <link rel="icon" href="img/logo.png">
     <title>Manual de Usuario - Casa Lai.Ca</title>
     <style>
         .section-card {
@@ -47,7 +47,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
     <main class="tarjeta card p-5">
         <header class="d-flex justify-content-between align-items-center border-bottom py-4">
             <h1 class="fw-bold">Manual de Usuario</h1>
-            <img style="height: 85px;" src="assets/img/logo-lg.png">
+            <img style="height: 85px;" src="img/logo-lg.png">
         </header>
 
         <section class="mb-5">
@@ -71,7 +71,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
             <h2 class="text-primary" id="principal">Dashboard</h2>
 
             <p>Una vez <strong>iniciado sesión</strong> sera llevado a la <strong>pagina
-                    principal</strong>:</p>
+                    principal </strong>(para los clientes estos seran llevados a la pagina de catalogo)</strong>:</p>
 
             <table class="table table-bordered table-striped">
                 <thead>
@@ -83,38 +83,66 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
 
                 <tbody>
                     <tr>
-                        <td><?= renderImagen("dashboard", "barra.png") ?></td>
-                        <td><?= renderImagen("dashboard", "vista.png") ?></td>
+                        <td><?= renderImagen("dashboard", "barra-lateral.png") ?></td>
+                        <td><?= renderImagen("dashboard", "vista2.png") ?></td>
                     </tr>
                 </tbody>
             </table>
 
             <p>
-                Puede acceder al resto de opciones a traves de la <strong>barra lateral</strong>. Dependiendo de su
+                Dentro del Dashboard vas a encontrar Cartas que te llevaran a cualquier seccion del sistema al que tengas permitido entrar.
+                Fuera de este puede acceder al resto de opciones a traves de la <strong>barra lateral</strong>. Dependiendo de su
                 <strong>Rol</strong> sera capaz de acceder a una o más opciones.
             </p>
 
             <p>
-                En la <strong>parte inferior</strong> de la <strong>Barra lateral</strong> encontrara su perfil
+                En la <strong>parte superior derecha</strong> de la <strong>Barra Superior</strong> encontrara su perfil
                 indicando
-                su <strong>rol</strong> actual.
+                su <strong>rol</strong> actual. Ademas se muestra su nombre de usuario junto con 3 iconos, el primero es el icono de <strong>conversion dolar</strong>  y el segundo es el icono de <strong>notificaciones</strong> y el tercero es el icono de <strong>ayuda el cual te trae aqui al manuel de ayuda</strong>.
             </p>
+            </p>
+            <td><?= renderImagen("dashboard", "perfil2.png") ?></td>
+            <p>
+                Al lado va a poder encontrar 2 iconos muy utiles, el primero es el icono de <strong>notificaciones</strong> y el segundo es el icono de <strong>conversion dolar</strong>.
+            </p>
+            <h2 class="text-primary">Conversion dolar</h2><td><?= renderImagen("dashboard", "conversion-dolar.png") ?></td>
+            <p>Al dar clic en el icono de <strong>conversion dolar</strong> se mostrara el valor de las divisas segun la tasa del Banco Central de Venezuela.</p>
+            <td><?= renderImagen("dashboard", "conversion-dolar-abierto.png") ?></td>
+            <br>
+            <h2 class="text-primary">Notificaciones</h2><td><?= renderImagen("dashboard", "notificaciones.png") ?></td>
 
-            <td><?= renderImagen("dashboard", "perfil.png") ?></td>
+            <p>
+                Al dar clic en el icono de <strong>notificaciones</strong> se mostrara una lista de las notificaciones que tenga el usuario.
+            </p>
+            
+            <td><?= renderImagen("dashboard", "notificaciones-abiertas.png") ?></td>
 
-            <p>En este ejemplo, su <strong>rol</strong> es <strong>Almacenista</strong>.</p>
+            <p>En este ejemplo, su <strong>rol</strong> es <strong>Administrador</strong> y al darle en la palomilla se marcara la notificacion como leida y se reducira el contador de notificaciones y al presionar en <strong>Ver Mas</strong> el usuario sera levado a la central de notificaciones donde veria todas las notificaciones que ha recibido
+            <td><?= renderImagen("dashboard", "notificaciones-central.png") ?></td>.</p>
         </section>
 
         <section class="mb-5">
-            <h2 class="text-primary">Cerrar sesión</h2>
+            <h2 class="text-primary">Mi Cuenta</h2>
+            <?= renderImagen("dashboard", "mi-cuenta.png") ?>
 
             <p>
-                En la <strong>parte inferior</strong> de la <strong>Barra lateral</strong> encontrara el boton
-                <strong>Cerrar Sesion</strong>. Dar clic <strong>cerrara su sesión actual</strong> y lo devolvera al
-                <strong>Inicio de sesión</strong>.
+                En la <strong>parte superior derecha</strong> de la <strong>Barra lateral</strong> al presionar sobre los datos del usuario, se le dara la opcion de dirigirse a <strong>Mi Perfil</strong> en donde el usuario puede editar su perfil y cambiar su información personal
+
+                <br>
+                <?= renderImagen("perfil", "perfil.png") ?>
+                <br>
+                aqui se le permite al usuario cambiar su informacion personal a travez de la seccion de mi perfil al presionar en los botones de editar, el usuario puedo cambiar su contraseña y su correo electronico con el requerimiento de ingresar su contraseña actual, pero la informacion personal se puede cambiar sin necesidad de ingresar la contraseña actual, ademas no se guardaran los cambios hasta que el usuario presione el boton de guardar.
+                <br>
+                <?= renderImagen("perfil", "perfil-informacion-personal.png") ?>
+                <br>
+                <?= renderImagen("perfil", "perfil-cuenta.png") ?>
+                <br>
+                <?= renderImagen("perfil", "perfil-password.png") ?>
+                <br>
+                y tambien puede dar clic en <strong>Cerrar Sesion</strong>. Dar clic en este boton cerrara la sesion del usuario y lo llevara de nuevo a la seccion del catalogo.
             </p>
 
-            <?= renderImagen("dashboard", "cerrar-sesion.png") ?>
+            <?= renderImagen("dashboard", "cerrar.png") ?>
         </section>
 
         <?php if ($esCliente || $esAdministrador): ?>
@@ -218,7 +246,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
 
                     plantilla("inicio", $datos);
                     plantilla("incluir", $datos);
-                    plantilla("modificar", $datos);
+                    plantilla("detallar", $datos);
                     ?>
                 </section>
 
@@ -244,9 +272,8 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                     ];
 
                     plantilla("inicio", $datos);
-                    plantilla("incluir", $datos);
-                    plantilla("modificar", $datos);
                     plantilla("reporte", $datos);
+                    plantilla("detallar", $datos);
                     ?>
                 </section>
 
@@ -566,13 +593,11 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                         ],
                     ];
 
-                    plantilla("inicio", $datos);
-                    plantilla("mostrar", $datos);
-                    
-                   
-                    plantilla("reporte", $datos);
+                    plantilla("inicio", $datos);bo
+
                     ?>
                 </section>
+                <section class="mb-5">
 
                 
             </div>

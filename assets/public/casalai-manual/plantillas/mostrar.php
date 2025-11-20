@@ -10,11 +10,6 @@
 
 <p><?= renderImagen($id, "vista.png") ?></p>
 
-
-<p>Al hacer <strong>clic</strong> en el botón <strong>Agregar</strong> se desplegara una ventana donde podrá seleccionar la contidad 
-de productos que desea adquirir:</p>
-<p><?= renderImagen($id, "cantidad.png") ?></p>
-
 <p>Al presionar el botón <strong>Agregar al carrito</strong> el producto sera añadido al carrito de compras</p>
 <p><?= renderImagen($id, "agregar-producto-carrito.png") ?></p>
 <p><strong>Deberá introducir los datos indicados:</strong></p>
