@@ -1565,6 +1565,9 @@ function cambiarEstatus(idUsuario) {
                     showConfirmButton: false,
                     timer: 2000
                 });
+                var table = $('#tablaConsultas').DataTable();
+                table.row(span.closest('tr')).invalidate();
+                table.draw(false);
             } else {
                 // Revertir visualmente
                 span.text(estatusActual);
