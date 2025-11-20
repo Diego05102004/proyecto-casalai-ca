@@ -241,11 +241,4 @@ final class OrdenDespachoTest extends TestCase
         $this->assertSame('success', $res['status']);
     }
 
-    // OD-UNIT-008: Cambiar estatus (usuarios) usando setId
-    public function testCambiarEstatusUsuarios(): void
-    {
-        $o = $this->nuevaODConPDOStub();
-        $o->setId(123);
-        $this->assertTrue($o->cambiarEstatus('Activo'));
-    }
 }

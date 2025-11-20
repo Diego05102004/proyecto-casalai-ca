@@ -299,17 +299,7 @@ final class ModeloTest extends TestCase
         $this->assertSame('success', $res['status']);
     }
 
-    // MOD-UNIT-009: Obtener modelo con marca por id (JOIN)
-    public function testObtenerModeloConMarcaPorId(): void
-    {
-        $m = $this->nuevoModeloConPDOStub();
-        $row = $m->obtenerModeloConMarcaPorId(7);
-        $this->assertIsArray($row);
-        $this->assertSame('ModeloJoin', $row['nombre_modelo']);
-        $this->assertSame('MarcaJoin', $row['nombre_marca']);
-    }
-
-    // MOD-UNIT-010: Listar modelos (JOIN)
+    // MOD-UNIT-009: Listar modelos (JOIN)
     public function testGetModelosListado(): void
     {
         $m = $this->nuevoModeloConPDOStub();

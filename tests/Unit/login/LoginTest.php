@@ -91,6 +91,7 @@ class PDODoubleLogin extends PDO
                     'username' => 'admin',
                     'password' => $hash,
                     'cedula' => 'V-10',
+                    'foto_perfil' => null, // Asegurarse de que esta clave existe
                 ],
             ]);
         }
@@ -180,6 +181,7 @@ final class LoginTest extends TestCase
         $l->setUsername('admin');
         $l->setPassword('secret123');
         $r = $l->existe();
+        
         $this->assertSame('existe', $r['resultado']);
         $this->assertSame('admin', $r['mensaje']);
         $this->assertSame('Supervisor', $r['nombre_rol']);
