@@ -47,13 +47,6 @@
                         <i class="bi bi-collection"></i> Combos Promocionales
                     </button>
                 </li>
-                <?php if ($esAdmin): ?>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="reportes-tab">
-                        <i class="bi bi-bar-chart"></i> Reportes Estadísticos
-                    </button>
-                </li>
-                <?php endif; ?>
             </ul>
         </div>
 
@@ -285,10 +278,99 @@
             <?php endif; ?>
         </div>
 
-        <!-- Los modales y contenido de reportes se mantienen igual -->
-        <!-- ... (mantener el mismo código de modales y reportes) ... -->
+        <!-- Modal para gestión de combos -->
+        <div class="modal fade" id="comboModal" tabindex="-1" aria-labelledby="comboModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="comboModalLabel">Nuevo Combo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="comboForm">
+                            <input type="hidden" id="id_combo" name="id_combo" value="">
+                            <div class="mb-3">
+                                <label for="nombre_combo" class="form-label">Nombre del Combo</label>
+                                <input type="text" class="form-control" id="nombre_combo" name="nombre_combo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6>Productos del Combo</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <select class="form-select" id="producto_combo">
+                                                <option value="">Seleccionar producto</option>
+                                                <?php foreach ($productos as $producto): ?>
+                                                    <option value="<?= $producto['id_producto'] ?>">
+                                                        <?= htmlspecialchars($producto['nombre_producto']) ?> (Stock: <?= $producto['stock'] ?? 0 ?>)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="number" class="form-control" id="cantidad_producto" min="1" value="1">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-primary w-100" id="agregar_producto">
+                                                <i class="bi bi-plus-circle"></i> Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Producto</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="productos_combo">
+                                                <!-- Los productos se agregarán aquí dinámicamente -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="guardar_combo">
+                            <i class="bi bi-save"></i> Guardar Combo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    </section>
+    <!-- Modal para confirmar cambio de estado -->
+    <div class="modal fade" id="cambioEstadoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambiar Estado del Combo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea <span id="accionEstado">habilitar</span> este combo?</p>
+                    <input type="hidden" id="combo_id_estado" value="">
+                    <input type="hidden" id="nuevo_estado" value="1">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirmarCambioEstado">Confirmar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!--footer-->
