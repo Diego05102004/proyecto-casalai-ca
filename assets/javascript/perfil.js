@@ -64,9 +64,11 @@ $(document).ready(function() {
         }
     });
 
-    // Validaciones
+    // Validaciones (alineadas con usuario.js)
     $('#nombres').on('keypress', function(e) {
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]*$/, e);
+        let nombre = document.getElementById('nombres');
+        nombre.value = space(nombre.value);
     }).on('keyup', function() {
         validarKeyUp(
             /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,50}$/,
@@ -78,6 +80,8 @@ $(document).ready(function() {
     
     $('#apellidos').on('keypress', function(e) {
         validarKeyPress(/^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]*$/, e);
+        let apell = document.getElementById('apellidos');
+        apell.value = space(apell.value);
     }).on('keyup', function() {
         validarKeyUp(
             /^[a-zA-ZÁÉÍÓÚÑáéíóúüÜ\s]{2,50}$/,
@@ -91,52 +95,60 @@ $(document).ready(function() {
         validarKeyPress(/^[a-zA-Z0-9_]*$/, e);
     }).on('keyup', function() {
         validarKeyUp(
-            /^[a-zA-Z0-9_]{3,20}$/,
+            /^[a-zA-Z0-9_]{4,20}$/,
             $(this),
             $('#susername'),
-            '*Solo letras, números y guiones bajos, de 3 a 20 caracteres*'
+            '*El usuario debe tener entre 4 y 20 caracteres alfanuméricos*'
         );
     });
     
     $('#new_email').on('keypress', function(e) {
-        validarKeyPress(/^[a-zA-ZñÑ_0-9@,.\b]*$/, e);
+        validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
     }).on('keyup', function() {
         validarKeyUp(
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
             $(this),
             $('#snew_email'),
-            '*Formato válido: ejemplo@gmail.com*'
+            '*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*'
         );
     });
     
     $('#new_password').on('keypress', function(e) {
-        validarKeyPress(/^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]*$/, e);
-    }).on('keyup', function() {
-        if ($(this).val().length > 0) {
-            validarKeyUp(
-                /^[A-Za-z0-9\b\u00f1\u00d1\u00E0-\u00FC]{6,15}$/,
-                $(this),
-                $('#snew_password'),
-                '*Solo letras y números, de 6 a 15 caracteres*'
-            );
-        } else {
-            $('#snew_password').text('');
-        }
-    });
-    
-    $('#confirm_password').on('keyup', function() {
-        if ($(this).val().length > 0) {
-            if ($(this).val() !== $('#new_password').val()) {
-                $('#sconfirm_password').text('*Las contraseñas no coinciden*');
-            } else {
-                $('#sconfirm_password').text('');
-            }
-        } else {
-            $('#sconfirm_password').text('');
-        }
+        validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
+    }).on('keyup', function () {
+        validarKeyUp(
+            /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
+            $(this),
+            $('#snew_password'),
+            '*6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial*'
+        );
     });
 
-     $('#telefono').on('input', function() {
+    $('#confirm_password').on('keypress', function(e) {
+        validarKeyPress(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]*$/, e);
+    }).on('keyup', function () {
+        validarKeyUp(
+            /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\])[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\]{6,15}$/,
+            $(this),
+            $('#sconfirm_password'),
+            '*Debe ingresar la contraseña nuevamente*'
+        );
+    });
+
+    $('#telefono').on('keypress', function (e) {
+        validarKeyPress(/^[0-9-]*$/, e);
+    });
+
+    $('#telefono').on('keyup', function () {
+        validarKeyUp(
+            /^\d{4}-\d{3}-\d{4}$/,
+            $(this),
+            $('#stelefono'),
+            '*Formato válido: 0400-000-0000*'
+        );
+    });
+
+    $('#telefono').on('input', function() {
         let valor = $(this).val().replace(/\D/g, '');
         if(valor.length > 4 && valor.length <= 7) {
             valor = valor.slice(0,4) + '-' + valor.slice(4);
@@ -145,7 +157,7 @@ $(document).ready(function() {
         }
         $(this).val(valor);
     });
-
+    
     
     
      $('#foto_perfil').on('change', function(e) {
@@ -396,3 +408,32 @@ $(document).ready(function() {
         });
     }
 });
+
+// Helpers de validación (copiados de usuario.js)
+function validarKeyPress(er, e) {
+    key = e.keyCode;
+    tecla = String.fromCharCode(key);
+    a = er.test(tecla);
+
+    if (!a) {
+        e.preventDefault();
+    }
+}
+
+function validarKeyUp(er, etiqueta, etiquetamensaje, mensaje) {
+    a = er.test(etiqueta.val());
+
+    if (a) {
+        etiquetamensaje.text("");
+        return 1;
+    } else {
+        etiquetamensaje.text(mensaje);
+        return 0;
+    }
+}
+
+function space(str) {
+    str = (str || "").toString();
+    const regex = /\s{2,}/g;
+    return str.replace(regex, " ");
+}

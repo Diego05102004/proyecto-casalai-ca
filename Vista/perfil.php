@@ -78,33 +78,33 @@
                 <div id="personal-edit-form" class="hidden-section">
                     <div id="personal-message"></div>
                     
-                    <form id="form-personal">
+                    <form id="form-personal" novalidate>
                         <input type="hidden" id="clave_actual_personal" name="clave_actual">
                         
                         <div class="form-group">
                             <label for="username">Nombre de Usuario</label>
-                            <input type="text" id="username" name="username" class="form-control" value="<?php echo htmlspecialchars($usuario['username']); ?>">
-                            <span id="susername" class="error-message"></span>
+                            <input type="text" id="username" name="username" class="form-control" placeholder="Mínimo 4 caracteres" value="<?php echo htmlspecialchars($usuario['username']); ?>">
+                            <span id="susername" class="span-value error-message"></span>
                         </div>
                         
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="nombres">Nombres</label>
-                                <input type="text" id="nombres" name="nombres" class="form-control" value="<?php echo htmlspecialchars($usuario['nombres']); ?>">
-                                <span id="snombres" class="error-message"></span>
+                                <input type="text" id="nombres" name="nombres" class="form-control" placeholder="2 primeros nombres" value="<?php echo htmlspecialchars($usuario['nombres']); ?>">
+                                <span id="snombres" class="span-value error-message"></span>
                             </div>
                             
                             <div class="form-group">
                                 <label for="apellidos">Apellidos</label>
-                                <input type="text" id="apellidos" name="apellidos" class="form-control" value="<?php echo htmlspecialchars($usuario['apellidos']); ?>">
-                                <span id="sapellidos" class="error-message"></span>
+                                <input type="text" id="apellidos" name="apellidos" class="form-control" placeholder="2 primeros Apellidos" value="<?php echo htmlspecialchars($usuario['apellidos']); ?>">
+                                <span id="sapellidos" class="span-value error-message"></span>
                             </div>
                         </div>
                         
                         <div class="form-group">
                             <label for="telefono">Teléfono</label>
-                            <input type="text" id="telefono" name="telefono" class="form-control" value="<?php echo htmlspecialchars($usuario['telefono']); ?>">
-                            <span id="stelefono" class="error-message"></span>
+                            <input type="text" id="telefono" name="telefono" class="form-control" placeholder="Fomato: 0400-000-0000" value="<?php echo htmlspecialchars($usuario['telefono']); ?>">
+                            <span id="stelefono" class="span-value error-message"></span>
                         </div>
                         
                         <div class="action-buttons">
@@ -142,7 +142,7 @@
                 <div id="email-change-form" class="hidden-section">
                     <div id="email-message"></div>
                     
-                    <form id="form-email">
+                    <form id="form-email" novalidate>
                         <div class="form-group">
                             <label for="current_email">Correo Actual</label>
                             <input type="email" id="current_email" class="form-control" value="<?php echo htmlspecialchars($usuario['correo']); ?>" disabled>
@@ -150,8 +150,8 @@
                         
                         <div class="form-group">
                             <label for="new_email">Nuevo Correo</label>
-                            <input type="email" id="new_email" name="new_email" class="form-control" placeholder="Ingresa tu nuevo correo">
-                            <span id="snew_email" class="error-message"></span>
+                            <input type="email" id="new_email" name="new_email" class="form-control" placeholder="Formato: correo@gmail.com">
+                            <span id="snew_email" class="span-value error-message"></span>
                         </div>
                         
                         <div class="form-group">
@@ -186,7 +186,7 @@
                 <div id="password-change-form" class="hidden-section">
                     <div id="password-message"></div>
                     
-                    <form id="form-password">
+                    <form id="form-password" novalidate>
                         <div class="form-group">
                             <label for="current_password">Contraseña Actual</label>
                             <input type="password" id="current_password" name="current_password" class="form-control" placeholder="Ingresa tu contraseña actual">
@@ -194,14 +194,14 @@
                         
                         <div class="form-group">
                             <label for="new_password">Nueva Contraseña</label>
-                            <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Ingresa tu nueva contraseña">
-                            <span id="snew_password" class="error-message"></span>
+                            <input type="password" id="new_password" name="new_password" class="form-control" placeholder="6-15 caracteres (May, Num, C.Especial) x1">
+                            <span id="snew_password" class="span-value error-message"></span>
                         </div>
                         
                         <div class="form-group">
                             <label for="confirm_password">Confirmar Nueva Contraseña</label>
                             <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirma tu nueva contraseña">
-                            <span id="sconfirm_password" class="error-message"></span>
+                            <span id="sconfirm_password" class="span-value error-message"></span>
                         </div>
                         
                         <div class="action-buttons">
