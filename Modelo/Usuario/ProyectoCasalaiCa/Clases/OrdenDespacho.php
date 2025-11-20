@@ -195,69 +195,116 @@ class OrdenDespacho extends BD {
 }
 
     public function DescargarOrdenDespacho($id) {
+        error_log("DescargarOrdenDespacho - ID recibido: " . $id);
         return $this->d_OrdenDespacho($id); 
     }
+
     private function d_OrdenDespacho($id) {
         $created = false;
+        error_log("Iniciando búsqueda de orden con ID: " . $id);
+        
+    error_log("Iniciando d_OrdenDespacho para ID: {$id}");
+
+    $ordendespacho = [];
+    $nuevaConexion = false;
+
+    try {
+        // Crear conexión solo si no existe
         if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-            $created = true;
+            $bd = new BD('P');
+            $this->conex = $bd->getConexion();
+            $nuevaConexion = true;
         }
-        try {
-            $query = "
-        SELECT 
-            od.id_orden_despachos,
-            od.id_factura,
-            c.cedula,
-            od.cliente,
-            od.fecha_despacho,
-            od.estado,
-            od.activo
-        FROM tbl_orden_despachos AS od
-        INNER JOIN tbl_facturas f ON f.id_factura = od.id_factura
-        INNER JOIN tbl_clientes c ON c.id_clientes = f.cliente
-        WHERE od.id_orden_despachos = :id
-        ORDER BY od.fecha_despacho DESC, od.id_orden_despachos DESC;
-    ";
 
-    $stmt = $this->conex->prepare($query);
-    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-    $stmt->execute();
-
-    $ordendespacho = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // obtener los productos por cada orden de despacho
-    foreach ($ordendespacho as &$despacho) {
-        $sqlProd = "
+        // Consulta principal
+        $query = "
             SELECT 
-            p.imagen,
-                p.id_producto AS codigo,
-                p.nombre_producto AS producto,
-                m.nombre_modelo AS modelo,
-                mar.nombre_marca AS marca,
-                p.serial,
-                d.cantidad,
-                d.id AS id_detalle,
-                p.precio AS precio_unitario,
-                (d.cantidad * p.precio) AS subtotal
-            FROM tbl_factura_detalle AS d
-            INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
-            INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo
-            INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
-            WHERE d.factura_id = ?
+                od.id_orden_despachos,
+                od.id_factura,
+                c.cedula,
+                od.cliente,
+                od.fecha_despacho,
+                od.estado,
+                od.activo
+            FROM tbl_orden_despachos AS od
+            INNER JOIN tbl_facturas f ON f.id_factura = od.id_factura
+            INNER JOIN tbl_clientes c ON c.id_clientes = f.cliente
+            WHERE od.id_orden_despachos = :id
+            LIMIT 1;
         ";
-        $stmtProd = $this->conex->prepare($sqlProd);
-        $stmtProd->execute([$despacho['id_factura']]); // corregido
-        $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
-    }
 
-    return $ordendespacho;
-        } finally {
-            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
+        $stmt = $this->conex->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        if (!$stmt->execute()) {
+            return json_encode([
+                "status" => "error",
+                "message" => "Error en consulta principal",
+                "detalle" => $stmt->errorInfo()
+            ]);
+        }
+
+        $ordendespacho = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($ordendespacho)) {
+            return json_encode([
+                "status" => "error",
+                "message" => "No existe la orden solicitada"
+            ]);
+        }
+
+        // Consulta de productos
+        foreach ($ordendespacho as &$despacho) {
+            $sqlProd = "
+                SELECT 
+                    p.id_producto AS codigo,
+                    p.nombre_producto AS producto,
+                    COALESCE(m.nombre_modelo, 'Sin modelo') AS modelo,
+                    COALESCE(mar.nombre_marca, 'Sin marca') AS marca,
+                    COALESCE(p.serial, 'N/A') AS serial,
+                    d.cantidad,
+                    p.precio,
+                    (d.cantidad * p.precio) AS subtotal
+                FROM tbl_factura_detalle AS d
+                INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
+                INNER JOIN tbl_facturas AS f ON f.id_factura = d.factura_id
+                LEFT JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo
+                LEFT JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
+                WHERE d.factura_id = :factura_id
+            ";
+
+            $stmtProd = $this->conex->prepare($sqlProd);
+            $stmtProd->bindParam(':factura_id', $despacho['id_factura'], PDO::PARAM_INT);
+
+            if ($stmtProd->execute()) {
+                $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                $despacho['productos'] = [];
+            }
+        }
+
+        // Retorno JSON
+        return json_encode([
+            "status" => "success",
+            "data" => $ordendespacho
+        ]);
+
+    } catch (\Exception $e) {
+        return json_encode([
+            "status" => "error",
+            "message" => $e->getMessage(),
+            "trace" => $e->getTraceAsString()
+        ]);
+
+    } finally {
+        if ($nuevaConexion) {
+            if (isset($bd)) $bd->cerrar();
+            $this->conex = null;
         }
     }
+}
+
+
 
     public function getDetallesCompra($idDespacho) {
         return $this->g_detallesCompra($idDespacho); 

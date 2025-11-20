@@ -128,12 +128,10 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
                                 <img src="assets/img/check.svg">
                             </button>
                         <?php endif; ?>
-                        <form method="post" name="DescargarOrdenDespacho">
-                            <button class="btn-descargar" name="DescargarOrdenDespacho" type="submit"
-                                title="Descargar Orden de Despacho" value="<?php echo $orden['id_orden_despachos']; ?>">
-                                <img src="assets/img/download.svg">
-                            </button>
-                        </form>
+                        <button class="btn-descargar" title="Descargar Orden de Despacho" 
+                            onclick="descargarOrdenDespacho(<?php echo $orden['id_orden_despachos']; ?>)">
+                            <img src="assets/img/download.svg">
+                        </button>
                         <?php if ($orden['estado'] !== 'Entregada'): ?>
                             <?php if ($_SESSION['id_rol'] !== 1): ?>
                                 <button class="btn-anular"
@@ -203,108 +201,6 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
 <script src="assets/javascript/usuario.js"></script>
 <script src="assets/javascript/validaciones.js"></script>
 <script>
-    class PDF extends FPDF {
-    function Header() {
-        $this->SetFont('Arial', 'B', 14);
-        $this->Cell(0, 7, utf8_decode('MULTISERVICIOS CASA LAI, C.A.'), 0, 1, 'C');
-        $this->SetFont('Arial', '', 10);
-        $this->Cell(0, 5, utf8_decode('CARRERA 32 ENTRE CALLES 32 Y 33 Nº 32-42 BARQUISIMETO ESTADO LARA'), 0, 1, 'C');
-        $this->Cell(0, 5, utf8_decode('04245483493, 04123661369, 04245483493, 04123661369.'), 0, 1, 'C');
-        $this->Cell(0, 5, utf8_decode('SERVICIO TÉCNICO A IMPRESORAS GARANTIZADO'), 0, 1, 'C');
-        $this->Ln(5);
-    }
-
-    function Footer() {
-        $this->SetY(-15);
-        $this->SetFont('Arial', 'I', 10);
-        $this->Cell(0, 10, utf8_decode('Página ') . $this->PageNo(), 0, 0, 'C');
-    }
-}
-
-// Crear PDF
-$pdf = new PDF();
-$pdf->AddPage();
-$pdf->SetFont('Arial', '', 10);
-
-// Datos del cliente
-if (!empty($orden) && isset($orden[0])) {
-    $ordenDespacho = $orden[0]; // Datos generales de la orden
-
-    $pdf->Cell(50, 5, utf8_decode('CÓDIGO DE ORDEN DE DESPACHO: ' . $ordenDespacho['id_orden_despachos']), 0, 1);
-    $pdf->Cell(50, 5, utf8_decode('NOMBRE: ' . ($ordenDespacho['cliente'] ?? '')), 0, 1);
-    $pdf->Cell(50, 5, utf8_decode('C.I.: V' . ($ordenDespacho['cedula'] ?? '')), 0, 1);
-    // Si tienes dirección y teléfono, agrégalos aquí
-    // $pdf->Cell(50, 5, utf8_decode('DIRECCIÓN: ' . ($ordenDespacho['direccion'] ?? '')), 0, 1);
-    // $pdf->Cell(50, 5, utf8_decode('TELÉFONO: ' . ($ordenDespacho['telefono'] ?? '')), 0, 1);
-    $pdf->Ln(5);
-    $pdf->Cell(50, 5, utf8_decode('FECHA DOCUMENTO: ' . ($ordenDespacho["fecha_despacho"] ?? '')), 0, 1);
-    $pdf->Ln(5);
-}
-
-// Encabezado tabla
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(130, 7, utf8_decode('DESCRIPCIÓN'), 1);
-$pdf->Cell(20, 7, utf8_decode('CANT.'), 1, 0, 'C');
-$pdf->Cell(20, 7, utf8_decode('PRECIO'), 1, 0, 'C');
-$pdf->Cell(20, 7, utf8_decode('TOTAL'), 1, 0, 'C');
-$pdf->Ln();
-
-$pdf->SetFont('Arial', '', 10);
-$total_documento = 0;
-
-// Recorrer productos de la orden
-if (!empty($orden) && isset($orden[0]['productos'])) {
-    foreach ($orden[0]['productos'] as $item) {
-        $descripcion = $item['producto'] . ' ' . $item['modelo'] . ' ' . $item['marca'];
-        $cantidad = $item['cantidad'];
-        $precio_unitario = $item['precio_unitario'];
-        $subtotal = $item['subtotal'];
-
-        $pdf->Cell(130, 7, utf8_decode($descripcion), 1);
-        $pdf->Cell(20, 7, utf8_decode($cantidad), 1, 0, 'C');
-        $pdf->Cell(20, 7, utf8_decode(number_format($precio_unitario, 2) . ' BS'), 1, 0, 'C');
-        $pdf->Cell(20, 7, utf8_decode(number_format($subtotal, 2) . ' BS'), 1, 0, 'C');
-        $pdf->Ln();
-
-        $total_documento += $subtotal;
-    }
-}
-
-// Totales
-$pdf->Ln(5);
-// Si tienes descuento y otros datos, agrégalos aquí
-$descuento = 0; // Puedes obtenerlo de la orden si existe
-$iva = ($total_documento - $descuento) * 0.16;
-$total_final = ($total_documento - $descuento) + $iva;
-
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(130, 7, utf8_decode('SUB-TOTAL'), 1);
-$pdf->Cell(60, 7, utf8_decode(number_format($total_documento, 2) . ' BS'), 1);
-$pdf->Ln();
-$pdf->Cell(130, 7, utf8_decode('DESCUENTO'), 1);
-$pdf->Cell(60, 7, utf8_decode(number_format($descuento, 2) . ' BS'), 1);
-$pdf->Ln();
-$pdf->Cell(130, 7, utf8_decode('DELIVERY'), 1);
-$pdf->Cell(60, 7, utf8_decode('0.00 BS'), 1);
-$pdf->Ln();
-$pdf->Cell(130, 7, utf8_decode('I.V.A 16%'), 1);
-$pdf->Cell(60, 7, utf8_decode(number_format($iva, 2) . ' BS'), 1);
-$pdf->Ln();
-$pdf->Cell(130, 7, utf8_decode('TOTAL DOCUMENTO'), 1);
-$pdf->Cell(60, 7, utf8_decode(number_format($total_final, 2) . ' BS'), 1);
-$pdf->Ln(10);
-
-// Limpiar el buffer
-ob_end_clean();
-
-// Nombre del archivo
-$nombre_archivo = ($ordenDespacho['cliente'] ?? 'cliente') . '_' . ($ordenDespacho['cedula'] ?? '') . '_orden_' . ($ordenDespacho['id_orden_despachos'] ?? '') . '_' . date('Y-m-d', strtotime($ordenDespacho['fecha_despacho'] ?? date('Y-m-d'))) . '.pdf';
-
-// Descargar el archivo
-$pdf->Output('D', utf8_decode($nombre_archivo));
-exit;
-</script>
-<script>
 window.facturasDisponibles = <?php
 echo json_encode(array_map(function($factura) {
     return [
@@ -332,10 +228,172 @@ echo json_encode(array_map(function($factura) {
             $('#registrarOrdenModal').modal('show');
         });
     });
+
+    // Función para descargar la orden de despacho en PDF
+    function descargarOrdenDespacho(idOrden) {
+        // Mostrar mensaje de carga
+        Swal.fire({
+            title: 'Generando PDF',
+            text: 'Por favor espere...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Obtener los datos de la orden
+        const formData = new FormData();
+        formData.append('obtenerDatosOrden', idOrden);
+
+        fetch('index.php?pagina=ordendespacho', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Cerrar el mensaje de carga
+                Swal.close();
+                
+                // Crear el PDF
+                generarPDF(data.orden);
+            } else {
+                throw new Error(data.message || 'Error al obtener los datos de la orden');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Ocurrió un error al generar el PDF',
+                confirmButtonText: 'Aceptar'
+            });
+        });
+    }
+
+    // Función para generar el PDF con jsPDF
+    function generarPDF(orden) {
+        try {
+            // Crear un nuevo documento PDF
+            const doc = new jspdf.jsPDF();
+            
+            // Configuración de fuentes y estilos
+            doc.setFont('helvetica');
+            
+            // Logo de la empresa (opcional)
+            // doc.addImage('ruta/al/logo.png', 'PNG', 10, 10, 30, 30);
+            
+            // Encabezado
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('MULTISERVICIOS CASA LAI, C.A.', 105, 15, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('CARRERA 32 ENTRE CALLES 32 Y 33 Nº 32-42 BARQUISIMETO ESTADO LARA', 105, 22, { align: 'center' });
+            doc.text('04245483493, 04123661369, 04245483493, 04123661369.', 105, 27, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ORDEN DE DESPACHO', 105, 37, { align: 'center' });
+            
+            // Datos de la orden
+            let y = 47;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
+            doc.text('Número de Orden:', 20, y);
+            doc.text(orden.id_orden_despachos.toString(), 60, y);
+            y += 7;
+            
+            doc.text('Número de Factura:', 20, y);
+            doc.text(orden.id_factura.toString(), 60, y);
+            y += 7;
+            
+            doc.text('Cliente:', 20, y);
+            doc.text(orden.cliente, 60, y);
+            y += 7;
+            
+            doc.text('Cédula/RIF:', 20, y);
+            doc.text(orden.cedula, 60, y);
+            y += 7;
+            
+            doc.text('Fecha de Despacho:', 20, y);
+            doc.text(orden.fecha_despacho, 60, y);
+            y += 10;
+            
+            // Tabla de productos
+            doc.setFont('helvetica', 'bold');
+            doc.text('DESCRIPCIÓN', 20, y);
+            doc.text('MODELO', 80, y);
+            doc.text('CANT.', 120, y, { align: 'right' });
+            doc.text('PRECIO', 150, y, { align: 'right' });
+            doc.text('TOTAL', 180, y, { align: 'right' });
+            y += 5;
+            
+            // Línea separadora
+            doc.line(20, y, 190, y);
+            y += 7;
+            
+            // Productos
+            let total = 0;
+            doc.setFont('helvetica', 'normal');
+            
+            if (orden.productos && orden.productos.length > 0) {
+                orden.productos.forEach(producto => {
+                    // Asegurarse de que no se salga de la página
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    // Descripción (con salto de línea si es necesario)
+                    const descripcion = doc.splitTextToSize(producto.producto, 50);
+                    const alturaDescripcion = descripcion.length * 5;
+                    
+                    doc.text(descripcion, 20, y);
+                    doc.text(producto.modelo || '-', 80, y);
+                    doc.text(producto.cantidad.toString(), 120, y, { align: 'right' });
+                    doc.text(parseFloat(producto.precio_unitario).toFixed(2) + ' BS', 150, y, { align: 'right' });
+                    doc.text((parseFloat(producto.precio_unitario) * parseFloat(producto.cantidad)).toFixed(2) + ' BS', 180, y, { align: 'right' });
+                    
+                    total += parseFloat(producto.precio_unitario) * parseFloat(producto.cantidad);
+                    y += Math.max(alturaDescripcion, 7);
+                });
+            }
+            
+            // Línea separadora
+            y += 5;
+            doc.line(20, y, 190, y);
+            y += 7;
+            
+            // Total
+            doc.setFont('helvetica', 'bold');
+            doc.text('TOTAL:', 120, y, { align: 'right' });
+            doc.text(total.toFixed(2) + ' BS', 180, y, { align: 'right' });
+            
+            // Pie de página
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(8);
+            doc.text('Documento generado el ' + orden.fecha_generacion, 105, 285, { align: 'center' });
+            
+            // Guardar el PDF
+            doc.save(`OrdenDespacho_${orden.id_orden_despachos}_${new Date().toISOString().split('T')[0]}.pdf`);
+            
+        } catch (error) {
+            console.error('Error al generar el PDF:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un error al generar el PDF: ' + error.message,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    }
     </script>
     
 </body>
-
 
 </html>
 

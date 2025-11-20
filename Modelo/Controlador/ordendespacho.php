@@ -178,16 +178,42 @@ function getordendespacho() {
 }
 
 
-    if (isset($_POST['DescargarOrdenDespacho'])) {
-        $idOrden = $_POST['DescargarOrdenDespacho'];
+    if (isset($_POST['obtenerDatosOrden'])) {
+        error_log("Solicitud de datos de orden recibida. ID de orden: " . $_POST['obtenerDatosOrden']);
+        $idOrden = $_POST['obtenerDatosOrden'];
         $ordenModel = new OrdenDespacho();
         $orden = $ordenModel->DescargarOrdenDespacho($idOrden);
-    
-        if ($orden) {
-            ob_start(); // Iniciar buffer de salida
-   
+        
+        if (!empty($orden) && is_array($orden)) {
+            $datosOrden = reset($orden);
+            
+            // Formatear los datos para la respuesta JSON
+            $response = [
+                'success' => true,
+                'orden' => [
+                    'id_orden_despachos' => $datosOrden['id_orden_despachos'],
+                    'id_factura' => $datosOrden['id_factura'],
+                    'cliente' => $datosOrden['cliente'],
+                    'cedula' => $datosOrden['cedula'],
+                    'fecha_despacho' => date('d/m/Y H:i:s', strtotime($datosOrden['fecha_despacho'])),
+                    'productos' => isset($datosOrden['productos']) ? $datosOrden['productos'] : [],
+                    'fecha_generacion' => date('d/m/Y H:i:s')
+                ]
+            ];
+            
+            // Enviar la respuesta como JSON
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit;
         } else {
-            echo "<script>alert('No se encontró la Orden de Despacho.');</script>";
+            $response = [
+                'success' => false,
+                'message' => 'No se encontró la Orden de Despacho.'
+            ];
+            
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit;
         }
     }
 

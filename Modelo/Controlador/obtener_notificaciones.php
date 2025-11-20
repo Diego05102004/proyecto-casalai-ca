@@ -18,7 +18,7 @@ $response = ['success' => false, 'count' => 0, 'notificaciones' => []];
 try {
     if (isset($_SESSION['id_usuario'])) {
         $id_usuario = $_SESSION['id_usuario'];
-        $bd_seguridad = new \Usuario\ProyectoCasalaiCa\Config\Config\BD('S');
+        $bd_seguridad = new BD('S');
         $pdo_seguridad = $bd_seguridad->getConexion();
         try {
             $query = "SELECT * FROM tbl_notificaciones 
