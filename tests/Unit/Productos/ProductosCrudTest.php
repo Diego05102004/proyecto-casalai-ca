@@ -60,36 +60,53 @@ class ProductosCrudTest extends TestCase {
         return [$p, $tablaCategoria];
     }
 
-    public function test_incluir_modificar_listar_eliminar_producto(): void {
+    private function crearProductoIngresado(): array {
         [$p, $tablaCategoria] = $this->crearProductoBasico();
 
-        
         $idProducto = $p->ingresarProducto([
             'tabla_categoria' => $tablaCategoria,
             'carac' => []
         ]);
         $this->assertIsNumeric($idProducto, 'Se debe crear y devolver id de producto.');
 
-        
-        $row = $p->obtenerProductoPorId((int)$idProducto);
+        return [$p, (int)$idProducto, $tablaCategoria];
+    }
+
+    public function testIncluirProducto(): void {
+        [$p, $idProducto, $tablaCategoria] = $this->crearProductoIngresado();
+
+        $row = $p->obtenerProductoPorId($idProducto);
         $this->assertIsArray($row);
         $this->assertEquals($idProducto, $row['id_producto']);
+    }
 
-        
+    public function testModificarProducto(): void {
+        [$p, $idProducto, $tablaCategoria] = $this->crearProductoIngresado();
+
+        $row = $p->obtenerProductoPorId($idProducto);
+        $this->assertIsArray($row);
+
         $p->setNombreP($row['nombre_producto'] . ' Editado');
         $p->setStockActual(((int)$row['stock']) + 5);
-        $ok = $p->modificarProducto((int)$idProducto, [
+
+        $ok = $p->modificarProducto($idProducto, [
             'Categoria' => $tablaCategoria,
             'carac' => []
         ]);
         $this->assertTrue($ok, 'Debe poder modificar el producto.');
+    }
 
-       
+    public function testListarProducto(): void {
+        [$p, $idProducto, $tablaCategoria] = $this->crearProductoIngresado();
+
         $lista = $p->obtenerProductoStock();
         $this->assertIsArray($lista);
+    }
 
-       
-        $res = $p->eliminarProducto((int)$idProducto);
+    public function testEliminarProducto(): void {
+        [$p, $idProducto, $tablaCategoria] = $this->crearProductoIngresado();
+
+        $res = $p->eliminarProducto($idProducto);
         $this->assertIsArray($res);
         $this->assertTrue($res['success'] ?? false, $res['message'] ?? 'Eliminación fallida');
     }

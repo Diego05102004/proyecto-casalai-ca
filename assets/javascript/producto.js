@@ -557,8 +557,9 @@ function limpiarValidacionesFormulario(config) {
 
 $(document).ready(function () {
     var $tabla = $('#tablaConsultas');
+    var tablaProductos;
+
     if ($tabla.length) {
-        var tablaProductos;
         if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
             tablaProductos = $tabla.DataTable({
                 language: {
@@ -600,15 +601,46 @@ $(document).ready(function () {
                     $filter.append($btnWrapper);
                 }
             });
+        } else {
             tablaProductos = $tabla.DataTable();
         }
-    }
 
-    protegerSelects(['marca', 'categoria', 'modificar_marca', 'modificar_categoria']);
+        // Filtro de estatus (Todos / habilitado / inhabilitado)
+        var estatusColIndex = $tabla.find('thead th').filter(function () {
+            return $(this).text().trim().toLowerCase() === 'estatus';
+        }).index();
+        if (estatusColIndex < 0) estatusColIndex = 8;
 
-    const regexTexto = /^[a-zA-Z0-9@\.\-\sÁÉÍÓÚáéíóúñÑ]+$/;
-    if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", 4000, "Atención", $("#mensajes").html());
+        if (!$tabla.data('estatusFilterAdded')) {
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                if (!settings.nTable || settings.nTable !== $tabla.get(0)) return true;
+                var desired = ($tabla.data('estatusFilterValue') || 'todos').toLowerCase();
+                if (desired === 'todos') return true;
+                var row = settings.aoData && settings.aoData[dataIndex];
+                var cell = row && row.anCells ? row.anCells[estatusColIndex] : null;
+                var text = cell ? $(cell).text().trim().toLowerCase() : '';
+                return text === desired;
+            });
+            $tabla.data('estatusFilterAdded', true);
+        }
+
+        var $filtroEstatus = $('#filtro-estatus-productos');
+        if ($filtroEstatus.length) {
+            $filtroEstatus.off('change.estatus').on('change.estatus', function () {
+                var val = ($(this).val() || 'todos').toLowerCase();
+                $tabla.data('estatusFilterValue', val);
+                if (!tablaProductos) {
+                    tablaProductos = $tabla.DataTable();
+                }
+                tablaProductos.draw();
+            });
+
+            $tabla.data('estatusFilterValue', ($filtroEstatus.val() || 'todos').toLowerCase());
+            if (!tablaProductos) {
+                tablaProductos = $tabla.DataTable();
+            }
+            tablaProductos.draw();
+        }
     }
 
     configurarValidacionesTiempoRealProducto();

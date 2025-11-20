@@ -49,6 +49,43 @@ $(document).ready(function () {
         } else {
             tablaProveedores = $tabla.DataTable();
         }
+
+        // Filtro de estatus (Todos / habilitado / inhabilitado)
+        var estatusColIndex = $tabla.find('thead th').filter(function () {
+            return $(this).text().trim().toLowerCase() === 'estatus';
+        }).index();
+        if (estatusColIndex < 0) estatusColIndex = 6;
+
+        if (!$tabla.data('estatusFilterAdded')) {
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                if (!settings.nTable || settings.nTable !== $tabla.get(0)) return true;
+                var desired = ($tabla.data('estatusFilterValue') || 'todos').toLowerCase();
+                if (desired === 'todos') return true;
+                var row = settings.aoData && settings.aoData[dataIndex];
+                var cell = row && row.anCells ? row.anCells[estatusColIndex] : null;
+                var text = cell ? $(cell).text().trim().toLowerCase() : '';
+                return text === desired;
+            });
+            $tabla.data('estatusFilterAdded', true);
+        }
+
+        var $filtroEstatus = $('#filtro-estatus-proveedores');
+        if ($filtroEstatus.length) {
+            $filtroEstatus.off('change.estatus').on('change.estatus', function () {
+                var val = ($(this).val() || 'todos').toLowerCase();
+                $tabla.data('estatusFilterValue', val);
+                if (!tablaProveedores) {
+                    tablaProveedores = $tabla.DataTable();
+                }
+                tablaProveedores.draw();
+            });
+
+            $tabla.data('estatusFilterValue', ($filtroEstatus.val() || 'todos').toLowerCase());
+            if (!tablaProveedores) {
+                tablaProveedores = $tabla.DataTable();
+            }
+            tablaProveedores.draw();
+        }
     }
 
     if($.trim($("#mensajes").text()) != ""){

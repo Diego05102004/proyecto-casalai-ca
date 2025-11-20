@@ -127,10 +127,10 @@ class PagosCrudTest extends TestCase {
         
         return $facturaId;
     }
-
-    public function test_ingresar_consultar_modificar_procesar_pago(): void {
+    private function crearPagoBase(): array {
         $idCuenta = $this->anyCuentaId();
         $idFactura = $this->ensureFacturaId();
+
         // Asumimos datos sembrados de forma determinista
         $this->assertNotEmpty($idCuenta);
         $this->assertNotEmpty($idFactura);
@@ -146,30 +146,49 @@ class PagosCrudTest extends TestCase {
         $p->setComprobante('N/A');
         $p->setMonto(100.50);
 
-        // Ingresar
         $okIng = $p->pasarelaTransaccion('Ingresar');
         $this->assertTrue($okIng === true, 'Debe poder registrar pago.');
 
         $idPago = (int)$this->pdo->query('SELECT MAX(id_detalles) FROM tbl_detalles_pago')->fetchColumn();
         $this->assertGreaterThan(0, $idPago);
 
-        // Consultar todos
+        return [$p, $idPago, $idFactura, $idCuenta];
+    }
+
+    public function testIngresarPago(): void {
+        [$p, $idPago] = $this->crearPagoBase();
+        $this->assertGreaterThan(0, $idPago);
+    }
+
+    public function testConsultarPagos(): void {
+        // Precondición: al menos un pago registrado
+        $this->crearPagoBase();
+
+        $p = new PasareladePago();
         $todos = $p->pasarelaTransaccion('ConsultarTodos');
         $this->assertIsArray($todos);
+    }
 
-        // Modificar
+    public function testModificarPago(): void {
+        [$p, $idPago] = $this->crearPagoBase();
+
         $p->setIdDetalles($idPago);
         $p->setTipo('Depósito');
         $p->setFecha(date('Y-m-d'));
+
         $okMod = (new ReflectionClass($p))->getMethod('pasarelaTransaccion')->invoke($p, 'Modificar');
         $this->assertTrue($okMod === true);
+    }
 
-        // Procesar (cambia estatus de pago y factura)
+    public function testProcesarPago(): void {
+        [$p, $idPago] = $this->crearPagoBase();
+
+        $p->setIdDetalles($idPago);
         $p->setEstatus('Pago Procesado');
+
         $okProc = $p->pasarelaTransaccion('Procesar');
         $this->assertTrue($okProc === true);
 
-        // Verificar estatus actualizado del pago
         $row = $p->obtenerPagoPorId($idPago);
         $this->assertEquals('Pago Procesado', $row['estatus']);
     }

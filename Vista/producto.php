@@ -170,7 +170,14 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
       
         <h3>Listado de Productos</h3>
 
-        <div class="ghost"></div>
+        <div class="filtro-status">
+            <label for="filtro-estatus-productos">Mostrar:</label>
+            <select id="filtro-estatus-productos" class="form-select">
+                <option value="todos" selected>Todos</option>
+                <option value="habilitado">Habilitados</option>
+                <option value="inhabilitado">Inhabilitados</option>
+            </select>
+        </div>
       </div>
 
       <table class="tablaConsultas" id="tablaConsultas">
@@ -181,7 +188,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             <th>Producto</th>
             <th>Modelo</th>
             <th>Marca</th>
-            <th>Stock Actual</th>
+            <th>Stock <br> Actual</th>
             <th>Serial</th>
             <th>Precio</th>
             <th>Estatus</th>
