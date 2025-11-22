@@ -241,6 +241,8 @@ echo json_encode(array_map(function($factura) {
             }
         });
 
+        const startTime = Date.now();
+
         // Obtener los datos de la orden
         const formData = new FormData();
         formData.append('obtenerDatosOrden', idOrden);
@@ -252,15 +254,26 @@ echo json_encode(array_map(function($factura) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Cerrar el mensaje de carga
-                Swal.close();
-                
-                // Crear el PDF
-                generarPDF(data.orden);
+                const minDuration = 1200; // milisegundos mínimos que se muestra el mensaje
+                const elapsed = Date.now() - startTime;
+
+                const generarYCerrar = () => {
+                    // Crear el PDF
+                    generarPDF(data.orden);
+                    // Cerrar el mensaje de carga una vez iniciado el guardado
+                    Swal.close();
+                };
+
+                if (elapsed < minDuration) {
+                    setTimeout(generarYCerrar, minDuration - elapsed);
+                } else {
+                    generarYCerrar();
+                }
             } else {
                 throw new Error(data.message || 'Error al obtener los datos de la orden');
             }
         })
+
         .catch(error => {
             console.error('Error:', error);
             Swal.fire({
