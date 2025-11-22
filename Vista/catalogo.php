@@ -308,7 +308,9 @@
                                             <select class="form-select" id="producto_combo">
                                                 <option value="">Seleccionar producto</option>
                                                 <?php foreach ($productos as $producto): ?>
-                                                    <option value="<?= $producto['id_producto'] ?>">
+                                                    <option value="<?= $producto['id_producto'] ?>"
+                                                            data-precio="<?= htmlspecialchars($producto['precio']) ?>"
+                                                            data-stock="<?= htmlspecialchars($producto['stock'] ?? 0) ?>">
                                                         <?= htmlspecialchars($producto['nombre_producto']) ?> (Stock: <?= $producto['stock'] ?? 0 ?>)
                                                     </option>
                                                 <?php endforeach; ?>

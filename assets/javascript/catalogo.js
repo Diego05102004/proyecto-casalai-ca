@@ -695,11 +695,11 @@ function confirmarCantidad() {
 
     // Agregar producto al combo en edición
     function agregarProductoACombo() {
-        const idProducto = $('#producto_select').val();
-        const productoTexto = $('#producto_select option:selected').text();
-        const cantidad = $('#producto_cantidad').val();
-        const precio = $('#producto_select option:selected').data('precio')*tasa;
-        const stock = $('#producto_select option:selected').data('stock');
+        const idProducto = $('#producto_combo').val();
+        const productoTexto = $('#producto_combo option:selected').text();
+        const cantidad = $('#cantidad_producto').val();
+        const precio = $('#producto_combo option:selected').data('precio')*tasa;
+        const stock = $('#producto_combo option:selected').data('stock');
 
         if (!idProducto) {
             Swal.fire('Error', 'Debes seleccionar un producto', 'error');
@@ -735,8 +735,8 @@ function confirmarCantidad() {
         actualizarTablaProductosCombo();
 
         // Resetear controles
-        $('#producto_select').val('');
-        $('#producto_cantidad').val(1);
+        $('#producto_combo').val('');
+        $('#cantidad_producto').val(1);
     }
 
     // Eliminar producto del combo en edición
@@ -748,7 +748,7 @@ function confirmarCantidad() {
 
     // Actualizar tabla de productos del combo
     function actualizarTablaProductosCombo() {
-        const tbody = $('#productos_combo_table tbody');
+        const tbody = $('#productos_combo');
         tbody.empty();
 
         if (productosSeleccionados.length === 0) {

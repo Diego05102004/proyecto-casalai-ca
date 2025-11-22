@@ -376,8 +376,12 @@ private function a_actualizarstockProducto($id_producto, $cantidad) {
         return $this->o_productoPorId($id);
     }
     private function o_productoPorId($id) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
         try {
             $query = "SELECT * FROM tbl_productos WHERE id_producto = ?";
             $stmt = $this->conex->prepare($query);
@@ -385,8 +389,8 @@ private function a_actualizarstockProducto($id_producto, $cantidad) {
             $producto = $stmt->fetch(PDO::FETCH_ASSOC);
             return $producto;
         } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 
@@ -1035,9 +1039,6 @@ public function agregarComboAlCarrito($id_cliente, $id_combo) {
     return $this->a_agregarComboAlCarrito($id_cliente, $id_combo);
 }
 private function a_agregarComboAlCarrito($id_cliente, $id_combo) {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
-    $this->conex->beginTransaction();
     try {
         $combo = $this->obtenerComboPorId($id_combo);
         if (!$combo) {
@@ -1050,21 +1051,20 @@ private function a_agregarComboAlCarrito($id_cliente, $id_combo) {
         foreach ($productosCombo as $producto) {
             $productoInfo = $this->obtenerProductoPorId($producto['id_producto']);
             if (!$productoInfo || $productoInfo['stock'] < $producto['cantidad']) {
-                throw new PDOException("El producto {$productoInfo['nombre_producto']} no tiene suficiente stock");
+                $nombre = $productoInfo['nombre_producto'] ?? ('ID: ' . $producto['id_producto']);
+                throw new PDOException("El producto {$nombre} no tiene suficiente stock");
             }
         }
-        $id_carrito = $this->obtenerOCrearCarrito($id_cliente);
         foreach ($productosCombo as $producto) {
-            $this->agregarProductoAlCarrito($id_cliente, $producto['id_producto'], $producto['cantidad']);
+            $resultado = $this->agregarProductoAlCarrito($id_cliente, $producto['id_producto'], $producto['cantidad']);
+            if ($resultado !== true) {
+                $mensaje = is_string($resultado) ? $resultado : 'Error al agregar producto del combo al carrito';
+                throw new PDOException($mensaje);
+            }
         }
-        $this->conex->commit();
         return true;
     } catch (PDOException $e) {
-        $this->conex->rollBack();
         throw $e;
-    } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
     }
 }
 
@@ -1182,8 +1182,12 @@ public function agregarProductoACombo($id_combo, $id_producto, $cantidad) {
     return $this->a_agregarProductoACombo($id_combo, $id_producto, $cantidad);
 }
 private function a_agregarProductoACombo($id_combo, $id_producto, $cantidad) {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $created = false;
+    if (!($this->conex instanceof PDO)) {
+        $bd = new BD('P');
+        $this->conex = $bd->getConexion();
+        $created = true;
+    }
     try {
         // Verificar que el producto existe
         $producto = $this->obtenerProductoPorId($id_producto);
@@ -1199,8 +1203,8 @@ private function a_agregarProductoACombo($id_combo, $id_producto, $cantidad) {
         $stmt->bindParam(':cantidad', $cantidad);
         return $stmt->execute();
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
+        if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
+        if (isset($created) && $created) { $this->conex = null; }
     }
 }
 
@@ -1208,27 +1212,33 @@ public function crearCombo($nombre, $descripcion, $productos) {
     return $this->c_crearCombo($nombre, $descripcion, $productos);
 }
 private function c_crearCombo($nombre, $descripcion, $productos) {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
-    $this->conex->beginTransaction();
+    $bd = new BD('P');
+    $this->conex = $bd->getConexion();
     try {
+        $this->conex->beginTransaction();
+
         $sql = "INSERT INTO tbl_combo (nombre_combo, descripcion) 
                 VALUES (:nombre, :descripcion)";
         $stmt = $this->conex->prepare($sql);
         $stmt->bindParam(':nombre', $nombre);
         $stmt->bindParam(':descripcion', $descripcion);
         $stmt->execute();
+
         $id_combo = $this->conex->lastInsertId();
+
         foreach ($productos as $producto) {
             $this->agregarProductoACombo($id_combo, $producto['id'], $producto['cantidad']);
         }
+
         $this->conex->commit();
         return $id_combo;
     } catch (PDOException $e) {
-        $this->conex->rollBack();
+        if ($this->conex instanceof PDO && $this->conex->inTransaction()) {
+            $this->conex->rollBack();
+        }
         throw $e;
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
+        if (isset($bd)) { $bd->cerrar(); }
         $this->conex = null;
     }
 }
@@ -1237,10 +1247,11 @@ public function actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
     return $this->a_actualizarCombo($id_combo, $nombre, $descripcion, $productos);
 }
 private function a_actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
-    $this->conex->beginTransaction();
+    $bd = new BD('P');
+    $this->conex = $bd->getConexion();
     try {
+        $this->conex->beginTransaction();
+
         $sql = "UPDATE tbl_combo 
                 SET nombre_combo = :nombre, 
                     descripcion = :descripcion
@@ -1250,20 +1261,25 @@ private function a_actualizarCombo($id_combo, $nombre, $descripcion, $productos)
         $stmt->bindParam(':descripcion', $descripcion);
         $stmt->bindParam(':id_combo', $id_combo);
         $stmt->execute();
+
         $sql = "DELETE FROM tbl_combo_detalle WHERE id_combo = :id_combo";
         $stmt = $this->conex->prepare($sql);
         $stmt->bindParam(':id_combo', $id_combo);
         $stmt->execute();
+
         foreach ($productos as $producto) {
             $this->agregarProductoACombo($id_combo, $producto['id'], $producto['cantidad']);
         }
+
         $this->conex->commit();
         return true;
     } catch (PDOException $e) {
-        $this->conex->rollBack();
+        if ($this->conex instanceof PDO && $this->conex->inTransaction()) {
+            $this->conex->rollBack();
+        }
         throw $e;
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
+        if (isset($bd)) { $bd->cerrar(); }
         $this->conex = null;
     }
 }
