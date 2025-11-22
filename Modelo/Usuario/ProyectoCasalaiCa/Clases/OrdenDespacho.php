@@ -237,20 +237,13 @@ class OrdenDespacho extends BD {
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
         if (!$stmt->execute()) {
-            return json_encode([
-                "status" => "error",
-                "message" => "Error en consulta principal",
-                "detalle" => $stmt->errorInfo()
-            ]);
+            return [];
         }
 
         $ordendespacho = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($ordendespacho)) {
-            return json_encode([
-                "status" => "error",
-                "message" => "No existe la orden solicitada"
-            ]);
+            return [];
         }
 
         // Consulta de productos
@@ -263,7 +256,7 @@ class OrdenDespacho extends BD {
                     COALESCE(mar.nombre_marca, 'Sin marca') AS marca,
                     COALESCE(p.serial, 'N/A') AS serial,
                     d.cantidad,
-                    p.precio,
+                    p.precio AS precio_unitario,
                     (d.cantidad * p.precio) AS subtotal
                 FROM tbl_factura_detalle AS d
                 INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
@@ -283,18 +276,11 @@ class OrdenDespacho extends BD {
             }
         }
 
-        // Retorno JSON
-        return json_encode([
-            "status" => "success",
-            "data" => $ordendespacho
-        ]);
+        return $ordendespacho;
 
     } catch (\Exception $e) {
-        return json_encode([
-            "status" => "error",
-            "message" => $e->getMessage(),
-            "trace" => $e->getTraceAsString()
-        ]);
+        error_log('Error en d_OrdenDespacho: ' . $e->getMessage());
+        return [];
 
     } finally {
         if ($nuevaConexion) {
