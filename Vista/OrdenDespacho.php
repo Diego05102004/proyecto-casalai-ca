@@ -128,8 +128,9 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
                                 <img src="assets/img/check.svg">
                             </button>
                         <?php endif; ?>
-                        <button class="btn-descargar" title="Descargar Orden de Despacho" 
-                            onclick="descargarOrdenDespacho(<?php echo $orden['id_orden_despachos']; ?>)">
+                        <button class="btn-descargar" 
+                                title="Descargar Orden de Despacho" 
+                                onclick="descargarOrdenDespacho(<?php echo $orden['id_orden_despachos']; ?>, event)">
                             <img src="assets/img/download.svg">
                         </button>
                         <?php if ($orden['estado'] !== 'Entregada'): ?>

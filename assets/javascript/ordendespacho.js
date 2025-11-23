@@ -1,3 +1,74 @@
+function descargarOrdenDespacho(idOrden, event) {
+    console.log('=== INICIO DE DESCARGA DE ORDEN ===');
+    console.log('ID de Orden:', idOrden);
+    
+    // Obtener el botón que activó el evento
+    const btn = event.target.closest('.btn-descargar');
+    if (!btn) {
+        console.error('No se encontró el botón .btn-descargar');
+        return;
+    }
+    
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Generando...';
+    btn.disabled = true;
+
+    // Crear formulario para enviar la solicitud
+    const formData = new FormData();
+    formData.append('accion', 'descargar_pdf');
+    formData.append('id', idOrden);
+
+    console.log('Enviando solicitud al servidor...');
+    
+    // Enviar solicitud
+    fetch('Modelo/Controlador/ordendespacho.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Respuesta recibida. Estado:', response.status, response.statusText);
+        console.log('Headers:', Object.fromEntries(response.headers.entries()));
+        
+        if (!response.ok) {
+            console.error('Error en la respuesta del servidor:', response.status, response.statusText);
+            return response.text().then(text => {
+                console.error('Contenido de la respuesta de error:', text);
+                throw new Error(`Error del servidor: ${response.status} - ${response.statusText}\n${text}`);
+            });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        if (!blob || blob.size === 0) {
+            throw new Error('El archivo PDF recibido está vacío');
+        }
+        console.log('Tamaño del archivo recibido:', blob.size, 'bytes');
+        console.log('Tipo MIME del archivo:', blob.type);
+        
+        // Crear enlace de descarga
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orden_despacho_${idOrden}.pdf`;
+        document.body.appendChild(a);
+        console.log('Iniciando descarga...');
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+    })
+    .catch(error => {
+        console.error('Error en la descarga:', error);
+        console.error('Stack:', error.stack);
+        alert('Error al generar el PDF: ' + error.message);
+    })
+    .finally(() => {
+        console.log('=== FIN DEL PROCESO DE DESCARGA ===');
+        // Restaurar botón
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    });
+}
+
 // Esperar a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function() {
     // Verificar si la tabla existe

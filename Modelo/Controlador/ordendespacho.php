@@ -61,6 +61,84 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
             }
             break;
+
+            // En el switch case, reemplaza el caso 'descargar_pdf' con este código:
+case 'descargar_pdf':
+    $idOrden = $_POST['id'] ?? null;
+    
+    if (!$idOrden) {
+        echo json_encode(['status' => 'error', 'message' => 'ID de orden no proporcionado']);
+        exit;
+    }
+
+    $ordenModel = new OrdenDespacho();
+    $ordenData = $ordenModel->obtenerDatosParaPDF($idOrden);
+    
+    if (empty($ordenData)) {
+        echo json_encode(['status' => 'error', 'message' => 'No se encontró la orden']);
+        exit;
+    }
+
+    // Incluir la clase FPDF
+    require_once __DIR__ . '/../../assets/public/fpdf/fpdf.php';
+
+    // Crear instancia de PDF
+    $pdf = new FPDF();
+    $pdf->AddPage();
+    $pdf->SetFont('Arial','B',16);
+    
+    // Título
+    $pdf->Cell(0,10,'ORDEN DE DESPACHO',0,1,'C');
+    $pdf->Ln(10);
+    
+    // Datos de la orden
+    $pdf->SetFont('Arial','',12);
+    $pdf->Cell(50,10,'Nro. Orden:',0,0);
+    $pdf->Cell(0,10,$ordenData['id_orden_despachos'],0,1);
+    
+    $pdf->Cell(50,10,'Cliente:',0,0);
+    $pdf->Cell(0,10,utf8_decode($ordenData['cliente']),0,1);
+    
+    $pdf->Cell(50,10,'Cedula/RIF:',0,0);
+    $pdf->Cell(0,10,$ordenData['cedula'],0,1);
+    
+    $pdf->Cell(50,10,'Fecha:',0,0);
+    $pdf->Cell(0,10,$ordenData['fecha_despacho'],0,1);
+    $pdf->Ln(10);
+    
+    // Encabezado de la tabla
+    $pdf->SetFont('Arial','B',10);
+    $pdf->Cell(30,10,'Codigo',1,0,'C');
+    $pdf->Cell(60,10,'Producto',1,0,'C');
+    $pdf->Cell(30,10,'Marca',1,0,'C');
+    $pdf->Cell(20,10,'Cant.',1,0,'C');
+    $pdf->Cell(25,10,'Precio',1,0,'C');
+    $pdf->Cell(25,10,'Total',1,1,'C');
+    
+    // Productos
+    $pdf->SetFont('Arial','',10);
+    foreach ($ordenData['productos'] as $producto) {
+        $pdf->Cell(30,8,$producto['codigo'],1,0,'C');
+        $pdf->Cell(60,8,utf8_decode($producto['producto']),1,0);
+        $pdf->Cell(30,8,utf8_decode($producto['marca']),1,0,'C');
+        $pdf->Cell(20,8,$producto['cantidad'],1,0,'C');
+        $pdf->Cell(25,8,number_format($producto['precio'], 2, ',', '.'),1,0,'R');
+        $pdf->Cell(25,8,number_format($producto['subtotal'], 2, ',', '.'),1,1,'R');
+    }
+    
+    // Total
+    $pdf->SetFont('Arial','B',12);
+    $pdf->Cell(140,10,'TOTAL:',0,0,'R');
+    $pdf->Cell(30,10,number_format($ordenData['total'], 2, ',', '.'),1,1,'R');
+    
+    // Generar el PDF
+    $filename = 'Orden_Despacho_'.$ordenData['id_orden_despachos'].'.pdf';
+    $pdf->Output('D', $filename);
+    exit;
+
+
+break;
+            
             
         // Cambiar estatus
         case 'cambiar_estatus':

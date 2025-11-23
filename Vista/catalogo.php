@@ -305,15 +305,22 @@
                                 <div class="card-body">
                                     <div class="row mb-3">
                                         <div class="col-md-8">
-                                            <select class="form-select" id="producto_combo">
-                                                <option value="">Seleccionar producto</option>
-                                                <?php foreach ($productos as $producto): ?>
-                                                    <option value="<?= $producto['id_producto'] ?>">
-                                                        <?= htmlspecialchars($producto['nombre_producto']) ?> (Stock: <?= $producto['stock'] ?? 0 ?>)
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
+    <select class="form-select" id="producto_combo">
+        <option value="">Seleccionar producto</option>
+        <?php foreach ($productos as $producto): 
+            $precioBs = isset($data['monitors']['bcv']['price']) ? 
+                       $producto['precio'] * $data['monitors']['bcv']['price'] : 0;
+        ?>
+            <option value="<?= $producto['id_producto'] ?>" 
+                    data-stock="<?= $producto['stock'] ?? 0 ?>"
+                    data-precio="<?= $precioBs ?>">
+                <?= htmlspecialchars($producto['nombre_producto']) ?> 
+                (Stock: <?= $producto['stock'] ?? 0 ?>) - 
+                <?= number_format($precioBs, 2) ?> BS
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
                                         <div class="col-md-2">
                                             <input type="number" class="form-control" id="cantidad_producto" min="1" value="1">
                                         </div>
@@ -333,7 +340,7 @@
                                                     <th>Acciones</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="productos_combo">
+                                            <tbody id="productos_combo_table">
                                                 <!-- Los productos se agregarán aquí dinámicamente -->
                                             </tbody>
                                         </table>
@@ -382,7 +389,69 @@
     <script src="assets/javascript/catalogo.js"></script>
     <script src="assets/public/js/jquery.dataTables.min.js"></script>
     <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
-    
+<script>
+/**
+ * Protege uno o varios selects contra modificaciones en DevTools.
+ * @param {string[]} selectIds - Array con los IDs de los selects a proteger.
+ * @param {number} interval  - Tiempo de verificación (ms), default 1000ms.
+ */
+function protegerSelects(selectIds, interval = 1000) {
+    const originales = {};
+
+    // Esperar a que el DOM cargue
+    document.addEventListener("DOMContentLoaded", () => {
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            // Guardar las opciones originales
+            originales[id] = [...select.options].map(opt => ({
+                value: opt.value,
+                text: opt.textContent.trim()
+            }));
+        });
+    });
+
+    // Monitorear cambios
+    setInterval(() => {
+        selectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+
+            const opsActuales = [...select.options].map(opt => ({
+                value: opt.value,
+                text: opt.textContent.trim()
+            }));
+
+            const opsOriginales = originales[id];
+            if (!opsOriginales) return;
+
+            const alterado =
+                opsActuales.length !== opsOriginales.length ||
+                opsActuales.some((o, i) =>
+                    o.value !== opsOriginales[i].value ||
+                    o.text !== opsOriginales[i].text
+                );
+
+            if (alterado) {
+                // Restaurar opciones originales
+                select.innerHTML = "";
+                opsOriginales.forEach(optData => {
+                    const opt = document.createElement("option");
+                    opt.value = optData.value;
+                    opt.textContent = optData.text;
+                    select.appendChild(opt);
+                });
+
+                console.warn(`⚠ Opciones del <select id="${id}"> fueron alteradas. Restauradas automáticamente.`);
+            }
+        });
+    }, interval);
+}
+
+protegerSelects(["producto_combo"]);
+</script>
+
     <script>
         function MensajeInicio() {
             Swal.fire({

@@ -1,6 +1,7 @@
 // catalogo.js - controlador principal del módulo de catálogo
 
 $(document).ready(function () {
+    
     // Variables globales
     const tasaEl = document.getElementById('tasa');
     let tasa = 0;
@@ -694,50 +695,127 @@ function confirmarCantidad() {
     }
 
     // Agregar producto al combo en edición
-    function agregarProductoACombo() {
-        const idProducto = $('#producto_select').val();
-        const productoTexto = $('#producto_select option:selected').text();
-        const cantidad = $('#producto_cantidad').val();
-        const precio = $('#producto_select option:selected').data('precio')*tasa;
-        const stock = $('#producto_select option:selected').data('stock');
+function agregarProductoACombo() {
+    console.group('=== DEPURACIÓN: agregarProductoACombo ===');
+    
+    // 1. Obtener valores del formulario - USANDO LOS IDs CORRECTOS DE TU HTML
+    const $selectProducto = $('#producto_combo'); // ID que tienes en tu HTML
+    const idProducto = $selectProducto.val();
+    const productoSeleccionado = $selectProducto.find('option:selected');
+    const productoTexto = productoSeleccionado.text().trim();
+    const cantidad = parseInt($('#cantidad_producto').val()); // ID que tienes en tu HTML
+    const stock = parseInt(productoSeleccionado.data('stock') || 0);
+    
+    // OBTENER PRECIO - Buscar en los datos del producto
+    const precio = parseFloat(productoSeleccionado.data('precio') || 0);
 
-        if (!idProducto) {
-            Swal.fire('Error', 'Debes seleccionar un producto', 'error');
-            return;
-        }
+    console.log('Datos del producto:', { 
+        idProducto, 
+        productoTexto, 
+        cantidad, 
+        stock,
+        precio,
+        selectedOption: productoSeleccionado
+    });
 
-        if (cantidad < 1) {
-            Swal.fire('Error', 'La cantidad debe ser al menos 1', 'error');
-            return;
-        }
-
-        if (parseInt(cantidad) > parseInt(stock)) {
-            Swal.fire('Error', 'La cantidad no puede ser mayor al stock disponible', 'error');
-            return;
-        }
-
-        // Verificar si el producto ya está agregado
-        const index = productosSeleccionados.findIndex(p => p.id == idProducto);
-
-        if (index >= 0) {
-            // Actualizar cantidad si ya existe
-            productosSeleccionados[index].cantidad = cantidad;
-        } else {
-            // Agregar nuevo producto
-            productosSeleccionados.push({
-                id: idProducto,
-                nombre: productoTexto,
-                cantidad: cantidad,
-                precio: precio
-            });
-        }
-
-        actualizarTablaProductosCombo();
-
-        // Resetear controles
-        $('#producto_select').val('');
-        $('#producto_cantidad').val(1);
+    // 2. Validaciones mejoradas
+    if (!idProducto || idProducto === '' || idProducto === '0') {
+        console.error('Error: No se ha seleccionado ningún producto');
+        console.log('Valor del select:', idProducto);
+        console.log('Texto seleccionado:', productoTexto);
+        
+        // Mostrar todas las opciones para debug
+        console.log('Opciones disponibles:', $selectProducto.find('option').map((i, o) => ({
+            value: $(o).val(),
+            text: $(o).text().trim(),
+            selected: $(o).is(':selected')
+        })).get());
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Producto no seleccionado',
+            text: 'Debes seleccionar un producto de la lista desplegable',
+            confirmButtonText: 'Entendido'
+        });
+        console.groupEnd();
+        return;
     }
+
+    if (isNaN(cantidad) || cantidad < 1) {
+        console.error('Error: Cantidad inválida', { cantidad });
+        Swal.fire('Error', 'La cantidad debe ser un número mayor a 0', 'error');
+        console.groupEnd();
+        return;
+    }
+
+    if (cantidad > stock) {
+        console.error('Error: Stock insuficiente', { cantidad, stock });
+        Swal.fire('Error', `La cantidad (${cantidad}) no puede ser mayor al stock disponible (${stock})`, 'error');
+        console.groupEnd();
+        return;
+    }
+
+    // 3. Verificar si el producto ya está en el combo
+    const productoExistente = productosSeleccionados.find(p => p.id == idProducto);
+    console.log('Producto existente:', productoExistente);
+    console.log('Lista actual de productos:', productosSeleccionados);
+
+    if (productoExistente) {
+        const nuevaCantidad = productoExistente.cantidad + cantidad;
+        console.log('Producto ya existe. Cantidad actual:', productoExistente.cantidad, 'Nueva cantidad a sumar:', cantidad);
+        
+        if (nuevaCantidad > stock) {
+            console.error('Error: Stock insuficiente al actualizar', { 
+                cantidadActual: productoExistente.cantidad, 
+                cantidadASumar: cantidad, 
+                stockDisponible: stock 
+            });
+            Swal.fire('Error', `La cantidad total (${nuevaCantidad}) no puede superar el stock disponible (${stock})`, 'error');
+            console.groupEnd();
+            return;
+        }
+        
+        // Actualizar cantidad del producto existente
+        console.log(`Actualizando cantidad del producto ${idProducto} de ${productoExistente.cantidad} a ${nuevaCantidad}`);
+        productoExistente.cantidad = nuevaCantidad;
+        Swal.fire({
+            icon: 'success',
+            title: 'Cantidad actualizada',
+            text: `Se actualizó la cantidad del producto a ${nuevaCantidad}`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } else {
+        // Agregar nuevo producto
+        const nuevoProducto = {
+            id: idProducto,
+            nombre: productoTexto,
+            cantidad: cantidad,
+            precio: precio,
+            stock: stock
+        };
+        console.log('Agregando nuevo producto:', nuevoProducto);
+        productosSeleccionados.push(nuevoProducto);
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Producto agregado',
+            text: 'Producto añadido al combo correctamente',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    // 4. Actualizar interfaz
+    console.log('Productos después de actualizar:', productosSeleccionados);
+    actualizarTablaProductosCombo();
+
+    // 5. Resetear controles
+    $selectProducto.val('').trigger('change');
+    $('#cantidad_producto').val(1);
+    
+    console.groupEnd();
+}
 
     // Eliminar producto del combo en edición
     function eliminarProductoDeCombo() {
@@ -952,6 +1030,18 @@ function confirmarCantidad() {
         });
     }
 
+    function verificarTodo() {
+    console.log('=== VERIFICACIÓN COMPLETA ===');
+    console.log('1. Elemento tabla:', $('#productos_combo_table').length);
+    console.log('2. Array productosSeleccionados:', window.productosSeleccionados);
+    console.log('3. HTML de la tabla:', $('#productos_combo_table').html());
+    console.log('4. Botón agregar_producto:', $('#agregar_producto').length);
+    
+    // Verificar si la función existe
+    console.log('5. Función actualizarTablaProductosCombo:', typeof actualizarTablaProductosCombo);
+}
+
+verificarTodo();
     // Crear gráfico de usuarios más activos
     function crearGraficoUsuarios(usuarios) {
         if (usuariosActivosChart) {
