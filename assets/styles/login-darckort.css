@@ -346,9 +346,42 @@ form.iniciar-sesion-form {
     flex: 1 1 100%;
     max-width: 100%;
   }
+  
+  /* Apply scroll to entire registration view on mobile */
+  .container.registrar-mode {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  /* Keep right panel moving with scroll in registration mode */
+  .container.registrar-mode .right-panel {
+    transform: translateY(0px);
+    padding: 20px 8%;
+  }
+  
+  .container.registrar-mode .right-panel .content {
+    transform: translateY(0);
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
 }
 
-/* Dos columnas en pantallas medianas/grandes para filas del registro */
 @media (min-width: 768px) {
   .registrar-form .input-row {
     display: flex;
@@ -541,8 +574,8 @@ a{
   }
   .inicio-registro {
     width: 100%;
-    top: 95%;
-    transform: translate(-50%, -100%);
+    top: 50%;
+    transform: translate(-50%, -50%);
     transition: 1s 0.8s ease-in-out;
   }
 
@@ -641,6 +674,40 @@ a{
   form {
     padding: 0 1.5rem;
   }
+  
+  /* Apply scroll to entire registration view on small mobile */
+  .container.registrar-mode {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  /* Keep right panel moving with scroll in registration mode */
+  .container.registrar-mode .right-panel {
+    transform: translateY(0px);
+    padding: 15px 5%;
+  }
+  
+  .container.registrar-mode .right-panel .content {
+    transform: translateY(0);
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
 
   .image {
     display: none;
@@ -660,5 +727,65 @@ a{
   .container.registrar-mode:before {
     bottom: 28%;
     left: 50%;
+  }
+
+  .inicio-registro {
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  /* Apply scroll to entire registration view on very small mobile */
+  .container.registrar-mode {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  /* Keep right panel moving with scroll in registration mode */
+  .container.registrar-mode .right-panel {
+    transform: translateY(0px);
+    padding: 12px 4%;
+  }
+  
+  .container.registrar-mode .right-panel .content {
+    transform: translateY(0);
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  .container.registrar-mode::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+  }
+
+  .inicio-registro {
+    width: 100%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .input-field {
+    height: 50px;
+    margin: 8px 0;
+  }
+
+  .btn {
+    width: 100%;
   }
 }

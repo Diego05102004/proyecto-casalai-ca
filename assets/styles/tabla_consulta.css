@@ -653,3 +653,77 @@ table tfoot tr td span a i{
         margin-bottom: 8px;
     }
 }
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .contenedor-tabla {
+        max-width: 100%;
+        padding: 20px 24px;
+    }
+
+    .tabla-header {
+        width: 60%;
+        padding: 12px 20px;
+    }
+
+    .dataTables_wrapper {
+        padding: 24px 20px 16px 20px;
+    }
+
+    .btn-grafica {
+        top: 90px;
+        right: 30px;
+        width: 56px;
+        height: 56px;
+    }
+}
+
+@media (max-width: 480px) {
+    .contenedor-tabla {
+        padding: 10px;
+    }
+
+    .tabla-header {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .contenedor-tabla h3,
+    .tabla-titulo-2 {
+        font-size: 18px;
+    }
+
+    .tabla-scroll {
+        width: 100vw;
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+
+    .dataTables_wrapper {
+        padding: 16px 10px 12px 10px;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        width: 100%;
+    }
+
+    .btn-generar-p,
+    .btn-generar-s {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .btn-grafica {
+        top: auto;
+        right: auto;
+        bottom: 16px;
+        left: 16px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .btn-grafica img {
+        width: 24px;
+        height: 24px;
+    }
+}

@@ -315,3 +315,29 @@
         font-size: 0.75rem;
     }
 }
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .notificacion-panel {
+        width: 360px;
+        right: 24px;
+    }
+
+    #lista-notificaciones {
+        max-width: 700px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notificacion-panel {
+        top: 56px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+    }
+
+    #lista-notificaciones {
+        width: 100%;
+        max-width: none;
+        border-radius: 0;
+    }
+}
