@@ -607,6 +607,12 @@ table tfoot tr td span a i{
         max-width: 100%;
         padding: 10px;
     }
+    
+    .tabla-header .filtro-status {
+        margin-right: 0;
+        width: 100%;
+        max-width: 300px;
+    }
 }
 @media (max-width: 700px) {
     .tabla-header {
@@ -614,13 +620,35 @@ table tfoot tr td span a i{
         align-items: stretch;
         gap: 10px;
         padding: 10px;
+        width: 100%;
     }
+    
     .tabla-header h3 {
         font-size: 18px;
     }
+    
     .tabla-header .btn-incluir {
         width: 100%;
         margin-left: 0;
+    }
+    
+    .tabla-header .filtro-status {
+        margin-right: 0;
+        width: 100%;
+        max-width: none;
+        padding: 8px;
+    }
+    
+    .filtro-status label {
+        font-size: 14px;
+        margin-right: 6px;
+    }
+    
+    .filtro-status select {
+        width: 100%;
+        max-width: 200px;
+        font-size: 14px;
+        padding: 6px 8px;
     }
 }
 @media (max-width: 600px) {
@@ -628,15 +656,41 @@ table tfoot tr td span a i{
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
-        padding: 10px;
+        padding: 8px;
+        width: 100%;
     }
+    
     .tabla-header h3 {
-        font-size: 18px;
+        font-size: 16px;
     }
+    
     .tabla-header .btn-incluir {
         width: 100%;
         margin-left: 0;
     }
+    
+    .tabla-header .filtro-status {
+        margin-right: 0;
+        width: 100%;
+        max-width: none;
+        padding: 6px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filtro-status label {
+        font-size: 13px;
+        margin-right: 0;
+        margin-bottom: 4px;
+    }
+    
+    .filtro-status select {
+        width: 100%;
+        max-width: none;
+        font-size: 13px;
+        padding: 6px;
+    }
+    
     .dataTables_wrapper .dataTables_length,
     .dataTables_wrapper .dataTables_filter {
         float: none !important;
@@ -645,9 +699,11 @@ table tfoot tr td span a i{
         margin-bottom: 8px;
         display: block;
     }
+    
     .dataTables_wrapper .dataTables_paginate {
         justify-content: center;
     }
+    
     .dataTables_info {
         display: block;
         margin-bottom: 8px;
@@ -679,27 +735,51 @@ table tfoot tr td span a i{
 
 @media (max-width: 480px) {
     .contenedor-tabla {
-        padding: 10px;
+        padding: 8px;
     }
 
     .tabla-header {
         width: 100%;
-        padding: 10px;
+        padding: 6px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .tabla-header .filtro-status {
+        margin-right: 0;
+        width: 100%;
+        max-width: none;
+        padding: 4px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filtro-status label {
+        font-size: 12px;
+        margin-right: 0;
+        margin-bottom: 3px;
+    }
+    
+    .filtro-status select {
+        width: 100%;
+        max-width: none;
+        font-size: 12px;
+        padding: 4px 6px;
     }
 
     .contenedor-tabla h3,
     .tabla-titulo-2 {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .tabla-scroll {
         width: 100vw;
-        margin-left: -10px;
-        margin-right: -10px;
+        margin-left: -8px;
+        margin-right: -8px;
     }
 
     .dataTables_wrapper {
-        padding: 16px 10px 12px 10px;
+        padding: 12px 8px 10px 8px;
     }
 
     .dataTables_wrapper .dataTables_length,
@@ -718,12 +798,12 @@ table tfoot tr td span a i{
         right: auto;
         bottom: 16px;
         left: 16px;
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
     }
 
     .btn-grafica img {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
     }
 }

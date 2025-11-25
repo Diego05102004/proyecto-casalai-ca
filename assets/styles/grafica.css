@@ -33,15 +33,17 @@
 /* En pantallas pequeñas, ajustamos tamaño */
 @media (max-width: 768px) {
     .btn-grafica {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         bottom: 20px;
         left: 20px;
+        top: auto;
+        right: auto;
     }
 
     .btn-grafica img {
-        width: 26px;
-        height: 26px;
+        width: 22px;
+        height: 22px;
     }
 }
 
@@ -60,12 +62,26 @@
         right: auto;
         bottom: 16px;
         left: 16px;
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
     }
 
     .btn-grafica img {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 360px) {
+    .btn-grafica {
+        bottom: 12px;
+        left: 12px;
+        width: 36px;
+        height: 36px;
+    }
+
+    .btn-grafica img {
+        width: 18px;
+        height: 18px;
     }
 }
