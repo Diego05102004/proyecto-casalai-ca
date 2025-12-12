@@ -509,7 +509,18 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
     .navbar {
-        padding: 10px 15px;
+        padding: 8px 15px;
+        height: 60px;
+    }
+    
+    .nav-left {
+        gap: 10px;
+        margin-left: 5px;
+    }
+    
+    .nav-icons {
+        gap: 8px;
+        margin-right: 5px;
     }
     
     .user-info {
@@ -528,15 +539,113 @@ body {
     }
     
     .company-name {
-        display: none;
+        font-size: 1rem;
+    }
+    
+    .icon-btn {
+        padding: 6px;
+    }
+    
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
     }
 }
 
 @media (max-width: 480px) {
+    .navbar {
+        height: 56px;
+        padding: 6px 10px;
+    }
+    
+    .nav-left {
+        gap: 8px;
+        margin-left: 3px;
+    }
+    
+    .nav-icons {
+        gap: 5px;
+        margin-right: 3px;
+    }
+    
+    .company-name {
+        font-size: 0.9rem;
+    }
+    
+    .icon-btn {
+        padding: 5px;
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 11px;
+    }
+    
+    .menu-icon,
+    .local-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
     .notificacion-panel,
     .profile-panel {
-        width: calc(100vw - 40px);
-        right: 20px;
+        width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+    }
+    
+    .tasa-cambio-panel {
+        width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .navbar {
+        height: 52px;
+        padding: 5px 8px;
+    }
+    
+    .nav-left {
+        gap: 5px;
+    }
+    
+    .nav-icons {
+        gap: 3px;
+    }
+    
+    .company-name {
+        font-size: 0.85rem;
+    }
+    
+    .icon-btn {
+        padding: 4px;
+    }
+    
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 10px;
+    }
+    
+    .menu-icon,
+    .local-icon {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 320px) {
+    .navbar {
+        height: 48px;
+        padding: 4px 6px;
+    }
+    
+    .company-name {
+        display: none;
     }
 }
 
@@ -618,5 +727,60 @@ body {
     .tasa-cambio-panel {
         width: calc(100vw - 40px);
         right: 20px;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .navbar {
+        height: 68px;
+        padding: 10px 30px;
+    }
+
+    .nav-left {
+        gap: 20px;
+    }
+
+    .nav-icons {
+        gap: 18px;
+    }
+
+    .side-menu {
+        width: 320px;
+        left: -320px;
+    }
+}
+
+@media (max-width: 360px) {
+    .navbar {
+        height: 52px;
+        padding: 5px 8px;
+    }
+    
+    .nav-left {
+        gap: 5px;
+    }
+    
+    .nav-icons {
+        gap: 3px;
+    }
+    
+    .company-name {
+        font-size: 0.85rem;
+    }
+    
+    .icon-btn {
+        padding: 4px;
+    }
+    
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 10px;
+    }
+    
+    .menu-icon,
+    .local-icon {
+        width: 16px;
+        height: 16px;
     }
 }

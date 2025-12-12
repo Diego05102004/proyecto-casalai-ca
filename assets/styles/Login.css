@@ -112,3 +112,42 @@ button:hover {
 .button-text1 {
     font-size: inherit; /* Hereda el tamaño del texto del botón */
 }
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .form-wrapper {
+        max-width: 380px;
+        padding: 24px;
+        margin: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        height: auto;
+        min-height: 100vh;
+        padding: 20px 10px;
+        align-items: flex-start;
+    }
+
+    .form-wrapper {
+        margin: 40px 10px;
+        padding: 15px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    input {
+        font-size: 14px;
+    }
+
+    .oval-button,
+    .oval-button1 {
+        width: 100%;
+        max-width: none;
+        font-size: 18px;
+    }
+}

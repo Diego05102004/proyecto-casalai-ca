@@ -434,3 +434,71 @@ body {
 .swal2-cancel {
     background-color: #6c757d !important;
 }
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .profile-container {
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 0 24px;
+    }
+
+    .profile-header {
+        padding: 24px 28px;
+    }
+
+    .profile-section {
+        padding: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-container {
+        margin: 20px auto;
+        padding: 0 12px;
+    }
+
+    .profile-header {
+        padding: 20px;
+    }
+
+    .avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 36px;
+    }
+
+    .user-info h1 {
+        font-size: 22px;
+    }
+
+    .profile-section {
+        padding: 18px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-buttons .btn-perfil,
+    .action-buttons .btn-secondary,
+    .action-buttons .btn-success,
+    .action-buttons .btn-danger {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .modal-content-custom {
+        width: 95%;
+        max-width: 95%;
+    }
+
+    .modal-body-custom {
+        padding: 16px;
+    }
+}

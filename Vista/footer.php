@@ -1,7 +1,7 @@
 <!-- Footer de la página -->
 <footer class="footer-fijo text-center text-lg-start bg-light text-muted">
   <div class="text-center p-4" style="background-color: #f1f1f1;">
-    © 2023 Copyright: CasaLai C.A/ Paula R - Braynt M - Simon F - Diego L - Gabriel M
+    © 2023 Copyright: CasaLai C.A/ Paula R - Braynt M - Simon F - Diego L
   </div>
 </footer>
 

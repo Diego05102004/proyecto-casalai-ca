@@ -698,3 +698,59 @@ select option[value=""] [disabled]{
     border-radius: 4px;
     margin-top: 10px;
 }
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .modal-content {
+        width: 650px;
+        padding: 24px 30px;
+    }
+
+    .modal-content form {
+        padding: 20px 40px;
+    }
+
+    .grupo-form {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 12px;
+    }
+
+    .modal-registrar {
+        align-items: flex-start;
+        padding: 16px;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-width: 100%;
+        margin: 20px 10px;
+        padding: 20px 15px;
+    }
+
+    .modal-content form {
+        padding: 10px 15px;
+    }
+
+    .modal-content h3 {
+        font-size: 28px;
+    }
+
+    .grupo-form {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .grupo-interno {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .boton-form,
+    .boton-reset {
+        width: 100%;
+    }
+}

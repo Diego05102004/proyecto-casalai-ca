@@ -97,3 +97,53 @@
     bottom: 0;
 
 }
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+  .navbar {
+    height: 72px;
+    margin: 16px 20px;
+    padding: 0.5rem 1.5rem;
+  }
+
+  .navbar-brand {
+    font-size: 22px;
+  }
+
+  .login-button {
+    font-size: 14px;
+    padding: 8px 18px;
+  }
+
+  .dashboard-section {
+    height: 90vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    height: auto;
+    margin: 10px;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+  }
+
+  .navbar-brand {
+    font-size: 20px;
+  }
+
+  .login-button {
+    width: 100%;
+    text-align: center;
+    padding: 8px 16px;
+    margin-top: 8px;
+  }
+
+  .nav-link {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .dashboard-section {
+    height: 70vh;
+  }
+}

@@ -63,7 +63,104 @@ if (!isset($_SESSION['name'])) {
       filter: brightness(1.1);
     }
 
-    .hamburger-menu { display: none !important; }
+    /* Mobile Responsive for Dashboard Cards */
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px auto;
+        padding: 0 15px;
+      }
+
+      .card-dashboard {
+        flex: 1 1 100%;
+        min-width: 100%;
+        max-width: 100%;
+        padding: 20px 16px;
+        margin-bottom: 20px;
+      }
+
+      .card-dashboard h4 {
+        max-width: 100%;
+        margin-bottom: 16px;
+        font-size: 1.1rem;
+      }
+
+      .modulos-dashboard {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+        margin-top: 16px;
+      }
+
+      .btn-dashboard {
+        width: 100%;
+        max-width: 200px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+
+      .card-dashboard img {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        margin: 15px auto;
+        padding: 0 10px;
+      }
+
+      .card-dashboard {
+        padding: 16px 12px;
+        margin-bottom: 15px;
+      }
+
+      .card-dashboard h4 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+      }
+
+      .modulos-dashboard {
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .btn-dashboard {
+        max-width: 180px;
+        padding: 10px 14px;
+        font-size: 12px;
+      }
+
+      .card-dashboard img {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .card-dashboard {
+        padding: 12px 8px;
+      }
+
+      .card-dashboard h4 {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+
+      .btn-dashboard {
+        max-width: 160px;
+        padding: 8px 12px;
+        font-size: 11px;
+      }
+
+      .card-dashboard img {
+        width: 36px;
+        height: 36px;
+        margin-bottom: 8px;
+      }
+    }
   </style>
 </head>
 

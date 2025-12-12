@@ -641,3 +641,86 @@
 .card.rel-card {
     justify-content: flex-end;
 }
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .catalogo-container {
+        max-width: 1200px;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    .catalogo-header {
+        padding: 1.75rem 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .catalogo-header h1 {
+        font-size: 2.25rem;
+    }
+
+    .productos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.75rem;
+    }
+
+    .combos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+
+    .filters-inline {
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .catalogo-container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .catalogo-header {
+        padding: 1.25rem 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .catalogo-header h1 {
+        font-size: 1.75rem;
+        line-height: 1.2;
+    }
+
+    .catalogo-header p {
+        font-size: 0.95rem;
+    }
+
+    .filtros-container {
+        padding: 1rem;
+    }
+
+    .filters-inline {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .filters-inline select,
+    .filters-inline input[type="text"] {
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .productos-grid {
+        gap: 0.75rem;
+    }
+
+    .producto-content {
+        padding: 1rem;
+    }
+
+    .producto-precio {
+        font-size: 1.1rem;
+    }
+
+    .combo-content {
+        padding: 1.25rem 1rem;
+    }
+}
