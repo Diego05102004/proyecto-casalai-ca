@@ -21,9 +21,9 @@
 
     // Determinar qué navbar incluir basado en la sesión
     if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) {
-        include 'newnavbar.php';
+        include 'NewNavBar.php';
     } else {
-        include 'navbar.php';
+        include 'NavBar.php';
     }
     ?>
     <br>

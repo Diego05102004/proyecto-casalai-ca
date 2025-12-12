@@ -36,7 +36,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 </style>
     </head>
 
-    <?php include 'newnavbar.php'; ?>
+    <?php include 'NewNavBar.php'; ?>
 
     <body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 

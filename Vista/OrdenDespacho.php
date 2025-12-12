@@ -15,7 +15,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
 <body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
-<?php include 'newnavbar.php'; ?>
+<?php include 'NewNavBar.php'; ?>
 
 <!-- Modal para registrar orden de despacho -->
 <div class="modal fade modal-registrar" id="registrarOrdenModal" tabindex="-1" role="dialog"

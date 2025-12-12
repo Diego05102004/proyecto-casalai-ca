@@ -71,7 +71,7 @@ if (!isset($_SESSION['name'])) {
   style="height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
 <?php
-include 'newnavbar.php';
+include 'NewNavBar.php';
 
 // AGREGAR MÓDULOS DE REPORTES AL ARRAY PRINCIPAL (igual que en navbar)
 $modulos = [

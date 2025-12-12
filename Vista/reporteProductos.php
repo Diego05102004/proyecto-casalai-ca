@@ -41,7 +41,7 @@ canvas {
   <body class="fondo"
     style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
-    <?php include 'newnavbar.php'; ?>
+    <?php include 'NewNavBar.php'; ?>
 
   <div class="container mt-4">
     <!-- Formulario de parámetros para el reporte -->

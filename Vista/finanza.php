@@ -14,7 +14,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 </head>
 
 <body  class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
-<?php include 'newnavbar.php'; ?>
+<?php include 'NewNavBar.php'; ?>
 
 <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
     <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center;">

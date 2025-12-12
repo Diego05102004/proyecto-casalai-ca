@@ -36,7 +36,7 @@
 
 <?php 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) { include 'newnavbar.php'; } else { include 'navbar.php'; }
+if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) { include 'NewNavBar.php'; } else { include 'NavBar.php'; }
 ?>
 
 <div class="container py-4">

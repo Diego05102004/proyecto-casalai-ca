@@ -16,7 +16,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <body class="fondo"
     style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
-    <?php include 'newnavbar.php'; ?>
+    <?php include 'NewNavBar.php'; ?>
 
     <div class="report-container" style="max-width: 1100px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
         <h2 class="titulo-form" style="text-align:center">Reportes de Usuarios</h2>

@@ -17,7 +17,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
-    function toast(titulo, mensaje, tipo = 'success', tiempo = 3000) {
+    async function toast(titulo, mensaje, tipo = 'success', tiempo = 3000) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+ 
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -32,13 +34,14 @@ document.addEventListener('DOMContentLoaded', function () {
         Toast.fire({ icon: tipo, title: titulo, text: mensaje });
     }
 
-    function mostrarDialogoResultado(resultado = {}, opciones = {}) {
+    async function mostrarDialogoResultado(resultado = {}, opciones = {}) {
         const success = Boolean(resultado.success);
         const titulo = success ? (opciones.tituloExito || 'Operación completada') : (opciones.tituloError || 'Error');
         const mensaje = resultado.message || resultado.error || (success ? (opciones.mensajeExito || 'La acción se realizó correctamente') : (opciones.mensajeError || 'Ocurrió un error inesperado'));
         const icono = success ? 'success' : 'error';
         const botonClase = success ? 'btn btn-success' : 'btn btn-danger';
-
+        await new Promise(resolve => setTimeout(resolve, 50));
+ 
         return Swal.fire({
             icon: icono,
             title: titulo,
@@ -105,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
        Verificar errores de clase no encontrada
        (cuando backend deja warnings en pantalla)
        --------------------------- */
-    function verificarErroresClaseNoEncontrada() {
+   async function verificarErroresClaseNoEncontrada() {
         const urlParams = new URLSearchParams(window.location.search);
         const errorUrl = urlParams.get('error');
         const errorStorage = localStorage.getItem('backupError');

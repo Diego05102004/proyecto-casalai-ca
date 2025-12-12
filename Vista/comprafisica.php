@@ -85,7 +85,7 @@ if ((isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosU
     <title>Gestionar Ventas Presenciales</title>
 </head>
 
-<?php include 'newnavbar.php'; ?>
+<?php include 'NewNavBar.php'; ?>
 <input type="number" id="tasa" value="<?php echo $data['monitors']['bcv']['price'];?>" hidden>
 <body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 

@@ -13,7 +13,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     <?php include 'header.php'; ?>
 </head>
 <body class="fondo" style="background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 100vh;">
-<?php include 'newnavbar.php'; ?>
+<?php include 'NewNavBar.php'; ?>
 
 <div class="contenedor-tabla">
 

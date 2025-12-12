@@ -253,7 +253,7 @@
     </style>
 </head>
 <body class="fondo" style="background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
-    <?php include 'newnavbar.php'; ?>
+    <?php include 'NewNavBar.php'; ?>
     <script>
 // Solución robusta para prevenir retroceso en la pasarela
 (function() {

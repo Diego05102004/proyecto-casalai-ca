@@ -15,7 +15,7 @@ $error = $error ?? null;
 
 <body class="fondo" style="min-height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
-<?php include 'newnavbar.php'; ?>
+<?php include 'NewNavBar.php'; ?>
 
 <div class="container my-4" style="max-width: 800px;">
     <div class="row justify-content-center">
