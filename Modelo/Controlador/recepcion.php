@@ -53,6 +53,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $k->settamanocompra($_POST['tamanocompra']);
             $k->setestado('habilitado');
 
+            // Validar datos principales de la recepción
+            $erroresPrincipales = $k->validarDatos();
+            if (!empty($erroresPrincipales)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la recepción',
+                    'errors' => $erroresPrincipales
+                ]);
+                exit;
+            }
+
+            // Validar detalle de productos
+            $erroresProductos = $k->validarDetalleProductos(
+                $_POST['producto'],
+                $_POST['cantidad'],
+                $_POST['costo']
+            );
+            if (!empty($erroresProductos)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de los productos',
+                    'errors' => $erroresProductos
+                ]);
+                exit;
+            }
+
             // Verifica si el correlativo ya existe
             if ($k->existeCorrelativo($_POST['correlativo'])) {
                 echo json_encode([
@@ -133,7 +159,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         case 'anular':
             header('Content-Type: application/json; charset=utf-8');
-            $correlativo = $_POST['correlativo'];
+            $correlativo = $_POST['correlativo'] ?? '';
+            
+            // Validar correlativo
+            $correlativo = trim($correlativo);
+            if ($correlativo === '') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El N° de Factura es obligatorio para anular'
+                ]);
+                exit;
+            }
+            
+            // Verificar que la recepción exista antes de anular
+            $k->setcorrelativo($correlativo);
+            $recepcionExistente = $k->buscar();
+            if (!$recepcionExistente || $recepcionExistente['resultado'] !== 'encontró') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La recepción no existe o ya fue anulada'
+                ]);
+                exit;
+            }
+            
             $resultado = $k->anularRecepcion($correlativo);
 
             // Registrar en bitácora

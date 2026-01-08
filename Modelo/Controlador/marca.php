@@ -26,6 +26,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $marca = new marca();
             $marca->setnombre_marca($_POST['nombre_marca']);
 
+            // Validar datos de la marca
+            $errores = $marca->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la marca',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             // En entorno de pruebas, omitir validación de duplicado para estabilizar tests
             if ((getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? '')) !== 'testing') {
                 if ($marca->existeNombreMarca($_POST['nombre_marca'])) {
@@ -80,10 +91,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'modificar':
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
-            $id_marca = $_POST['id_marca'];
+            $id_marca = $_POST['id_marca'] ?? '';
+            $nombre_marca = $_POST['nombre_marca'] ?? '';
+
+            // Validar ID de la marca
+            $id_marca = (int)$id_marca;
+            if ($id_marca <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El ID de la marca no es válido'
+                ]);
+                exit;
+            }
+
             $marca = new marca();
             $marca->setIdMarca($id_marca);
-            $marca->setnombre_marca($_POST['nombre_marca']);
+            $marca->setnombre_marca($nombre_marca);
+
+            // Validar datos de la marca
+            $errores = $marca->validarDatos(true); // true = es modificación
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la marca',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
+            // Verificar que la marca exista antes de modificar
+            $marcaExistente = $marca->obtenermarcasPorId($id_marca);
+            if (!$marcaExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La marca que intenta modificar no existe'
+                ]);
+                exit;
+            }
 
             if ((getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? '')) !== 'testing') {
                 if ($marca->existeNombreMarca($_POST['nombre_marca'], $id_marca)) {
@@ -119,8 +163,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id_marca = $_POST['id_marca'];
+            $id_marca = $_POST['id_marca'] ?? '';
+            
+            // Validar ID de la marca
+            $id_marca = (int)$id_marca;
+            if ($id_marca <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El ID de la marca no es válido'
+                ]);
+                exit;
+            }
+            
             $marca = new marca();
+            
+            // Verificar que la marca exista antes de eliminar
+            $marcaExistente = $marca->obtenermarcasPorId($id_marca);
+            if (!$marcaExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La marca que intenta eliminar no existe'
+                ]);
+                exit;
+            }
 
             // Verificar si la marca tiene modelos asociados
             if ($marca->tieneModelosAsociados($id_marca)) {

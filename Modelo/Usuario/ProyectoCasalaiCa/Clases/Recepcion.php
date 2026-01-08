@@ -67,6 +67,89 @@ class Recepcion extends BD{
         $this->estado = $estado;
     }
 
+    public function validarDatos() {
+        $errores = [];
+
+        // Validar proveedor
+        $idproveedor = (int)$this->idproveedor;
+        if ($idproveedor <= 0) {
+            $errores['proveedor'] = 'Debe seleccionar un proveedor válido';
+        }
+
+        // Validar correlativo
+        $correlativo = trim((string)$this->correlativo);
+        if ($correlativo === '') {
+            $errores['correlativo'] = 'El N° de Factura es obligatorio';
+        } elseif (mb_strlen($correlativo) < 3 || mb_strlen($correlativo) > 50) {
+            $errores['correlativo'] = 'El N° de Factura debe tener entre 3 y 50 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $correlativo)) {
+            $errores['correlativo'] = 'El N° de Factura solo puede contener letras, números y guiones';
+        }
+
+        // Validar tamaño de compra
+        $tamanocompra = trim((string)$this->tamanocompra);
+        if ($tamanocompra === '') {
+            $errores['tamanocompra'] = 'El tamaño de compra es obligatorio';
+        } elseif (mb_strlen($tamanocompra) < 2 || mb_strlen($tamanocompra) > 100) {
+            $errores['tamanocompra'] = 'El tamaño de compra debe tener entre 2 y 100 caracteres';
+        }
+
+        // Validar estado
+        $estado = trim((string)$this->estado);
+        if ($estado === '') {
+            $errores['estado'] = 'El estado es obligatorio';
+        } elseif (!in_array($estado, ['habilitado', 'anulado', 'deshabilitado'])) {
+            $errores['estado'] = 'El estado no es válido';
+        }
+
+        return $errores;
+    }
+
+    public function validarDetalleProductos($idproducto, $cantidad, $costo) {
+        $errores = [];
+
+        // Validar que los arrays no estén vacíos
+        if (empty($idproducto) || !is_array($idproducto)) {
+            $errores['productos'] = 'Debe agregar al menos un producto';
+            return $errores;
+        }
+
+        // Validar que todos los arrays tengan la misma cantidad de elementos
+        if (count($idproducto) !== count($cantidad) || count($idproducto) !== count($costo)) {
+            $errores['productos'] = 'La información de productos está incompleta';
+            return $errores;
+        }
+
+        // Validar cada producto
+        for ($i = 0; $i < count($idproducto); $i++) {
+            $index = $i + 1; // Para mostrar en mensajes de error
+
+            // Validar ID de producto
+            $idProd = (int)$idproducto[$i];
+            if ($idProd <= 0) {
+                $errores["producto_{$i}"] = "El producto {$index} no es válido";
+            }
+
+            // Validar cantidad
+            $cant = (int)$cantidad[$i];
+            if ($cant <= 0) {
+                $errores["cantidad_{$i}"] = "La cantidad del producto {$index} debe ser mayor a 0";
+            } elseif ($cant > 99999) {
+                $errores["cantidad_{$i}"] = "La cantidad del producto {$index} es muy grande";
+            }
+
+            // Validar costo
+            $cost = (float)$costo[$i];
+            if ($cost <= 0) {
+                $errores["costo_{$i}"] = "El costo del producto {$index} debe ser mayor a 0";
+            } elseif ($cost > 999999.99) {
+                $errores["costo_{$i}"] = "El costo del producto {$index} es muy grande";
+            }
+        }
+
+        return $errores;
+    }
+
     public function registrarRecepcion($idproducto, $cantidad, $costo) {
         return $this->r_recepcion($idproducto, $cantidad, $costo); 
     }
