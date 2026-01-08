@@ -197,7 +197,135 @@ public function setCapacidad($capacidad) { $this->capacidad = $capacidad; }
 public function getCapacidad() { return $this->capacidad; }
 
 public function setDescripcionOtros($descripcion) { $this->descripcion_otros = $descripcion; }
-public function getDescripcionOtros() { return $this->descripcion_otros; }
+    public function getDescripcionOtros() { return $this->descripcion_otros; }
+
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre del producto
+        $nombre_producto = trim((string)$this->nombre_producto);
+        if ($nombre_producto === '') {
+            $errores['nombre_producto'] = 'El nombre del producto es obligatorio';
+        } elseif (mb_strlen($nombre_producto) < 2 || mb_strlen($nombre_producto) > 200) {
+            $errores['nombre_producto'] = 'El nombre del producto debe tener entre 2 y 200 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_producto)) {
+            $errores['nombre_producto'] = 'El nombre del producto solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar descripción
+        $descripcion = trim((string)$this->descripcion_p);
+        if ($descripcion !== '' && mb_strlen($descripcion) > 1000) {
+            $errores['descripcion_producto'] = 'La descripción no debe exceder los 1000 caracteres';
+        }
+
+        // Validar modelo
+        $id_modelo = (int)$this->id_modelo;
+        if ($id_modelo <= 0) {
+            $errores['modelo'] = 'Debe seleccionar un modelo válido';
+        }
+
+        // Validar stock actual
+        $stock_actual = (int)$this->stock_actual;
+        if ($stock_actual < 0) {
+            $errores['stock_actual'] = 'El stock actual no puede ser negativo';
+        } elseif ($stock_actual > 999999) {
+            $errores['stock_actual'] = 'El stock actual es muy grande';
+        }
+
+        // Validar stock máximo
+        $stock_max = (int)$this->stock_max;
+        if ($stock_max <= 0) {
+            $errores['stock_maximo'] = 'El stock máximo debe ser mayor a 0';
+        } elseif ($stock_max > 999999) {
+            $errores['stock_maximo'] = 'El stock máximo es muy grande';
+        }
+
+        // Validar stock mínimo
+        $stock_min = (int)$this->stock_min;
+        if ($stock_min < 0) {
+            $errores['stock_minimo'] = 'El stock mínimo no puede ser negativo';
+        } elseif ($stock_min > 999999) {
+            $errores['stock_minimo'] = 'El stock mínimo es muy grande';
+        }
+
+        // Validar relación entre stocks
+        if (empty($errores['stock_actual']) && empty($errores['stock_maximo']) && empty($errores['stock_minimo'])) {
+            if ($stock_min > $stock_max) {
+                $errores['stock_minimo'] = 'El stock mínimo no puede ser mayor al stock máximo';
+            }
+            if ($stock_actual > $stock_max) {
+                $errores['stock_actual'] = 'El stock actual no puede ser mayor al stock máximo';
+            }
+            if ($stock_actual < $stock_min) {
+                $errores['stock_actual'] = 'El stock actual no puede ser menor al stock mínimo';
+            }
+        }
+
+        // Validar cláusula de garantía
+        $clausula = trim((string)$this->clausula_garantia);
+        if ($clausula !== '' && mb_strlen($clausula) > 1000) {
+            $errores['clausula_garantia'] = 'La cláusula de garantía no debe exceder los 1000 caracteres';
+        }
+
+        // Validar código/serial
+        $codigo = trim((string)$this->serial);
+        if ($codigo !== '' && mb_strlen($codigo) > 100) {
+            $errores['codigo'] = 'El código/serial no debe exceder los 100 caracteres';
+        }
+
+        // Validar categoría
+        $categoria = trim((string)$this->categoria);
+        if ($categoria !== '' && mb_strlen($categoria) > 100) {
+            $errores['categoria'] = 'La categoría no debe exceder los 100 caracteres';
+        }
+
+        // Validar precio
+        $precio = (float)$this->precio;
+        if ($precio <= 0) {
+            $errores['precio'] = 'El precio debe ser mayor a 0';
+        } elseif ($precio > 999999.99) {
+            $errores['precio'] = 'El precio es muy grande';
+        }
+
+        // Validar dimensiones (peso, largo, alto, ancho)
+        $peso = (float)$this->peso;
+        if ($peso < 0) {
+            $errores['peso'] = 'El peso no puede ser negativo';
+        } elseif ($peso > 999999.99) {
+            $errores['peso'] = 'El peso es muy grande';
+        }
+
+        $largo = (float)$this->largo;
+        if ($largo < 0) {
+            $errores['largo'] = 'El largo no puede ser negativo';
+        } elseif ($largo > 999999.99) {
+            $errores['largo'] = 'El largo es muy grande';
+        }
+
+        $alto = (float)$this->alto;
+        if ($alto < 0) {
+            $errores['alto'] = 'El alto no puede ser negativo';
+        } elseif ($alto > 999999.99) {
+            $errores['alto'] = 'El alto es muy grande';
+        }
+
+        $ancho = (float)$this->ancho;
+        if ($ancho < 0) {
+            $errores['ancho'] = 'El ancho no puede ser negativo';
+        } elseif ($ancho > 999999.99) {
+            $errores['ancho'] = 'El ancho es muy grande';
+        }
+
+        // Validar ID del producto (solo para modificaciones)
+        if ($esModificacion) {
+            $id = (int)$this->id;
+            if ($id <= 0) {
+                $errores['id_producto'] = 'El ID del producto no es válido';
+            }
+        }
+
+        return $errores;
+    }
 
 public function setVoltajeEntrada($voltaje_entrada) { $this->voltaje_entrada = $voltaje_entrada; }
 public function getVoltajeEntrada() { return $this->voltaje_entrada; }

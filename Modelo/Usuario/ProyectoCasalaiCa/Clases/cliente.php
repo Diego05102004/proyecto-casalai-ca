@@ -69,6 +69,64 @@ class cliente extends BD {
         $this->id = $id;
     }
 
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre del cliente
+        $nombre = trim((string)$this->nombre);
+        if ($nombre === '') {
+            $errores['nombre'] = 'El nombre del cliente es obligatorio';
+        } elseif (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 200) {
+            $errores['nombre'] = 'El nombre del cliente debe tener entre 2 y 200 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre)) {
+            $errores['nombre'] = 'El nombre del cliente solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar cédula (formato: 1.234.567 o 12.345.678)
+        $cedula = trim((string)$this->cedula);
+        if ($cedula === '') {
+            $errores['cedula'] = 'La cédula del cliente es obligatoria';
+        } elseif (!preg_match('/^(?:\d{1,2}\.\d{3}\.\d{3})$/', $cedula)) {
+            $errores['cedula'] = 'La cédula debe tener el formato 1.234.567 o 12.345.678';
+        }
+
+        // Validar teléfono (opcional pero si se proporciona debe ser válido)
+        $telefono = trim((string)$this->telefono);
+        if ($telefono !== '') {
+            if (mb_strlen($telefono) < 7 || mb_strlen($telefono) > 20) {
+                $errores['telefono'] = 'El teléfono debe tener entre 7 y 20 caracteres';
+            } elseif (!preg_match('/^[0-9\-\+\(\)\s]+$/', $telefono)) {
+                $errores['telefono'] = 'El teléfono solo puede contener números, guiones, paréntesis y el signo +';
+            }
+        }
+
+        // Validar dirección (opcional)
+        $direccion = trim((string)$this->direccion);
+        if ($direccion !== '' && mb_strlen($direccion) > 500) {
+            $errores['direccion'] = 'La dirección no debe exceder los 500 caracteres';
+        }
+
+        // Validar correo electrónico (opcional pero si se proporciona debe ser válido)
+        $correo = trim((string)$this->correo);
+        if ($correo !== '') {
+            if (mb_strlen($correo) > 255) {
+                $errores['correo'] = 'El correo electrónico no debe exceder los 255 caracteres';
+            } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                $errores['correo'] = 'El formato del correo electrónico no es válido';
+            }
+        }
+
+        // Validar ID del cliente (solo para modificaciones)
+        if ($esModificacion) {
+            $id = (int)$this->id;
+            if ($id <= 0) {
+                $errores['id_cliente'] = 'El ID del cliente no es válido';
+            }
+        }
+
+        return $errores;
+    }
+
     public function ingresarclientes() {
         return $this->r_cliente();
     }

@@ -25,6 +25,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->setdireccion($_POST['direccion']);
             $cliente->setcorreo($_POST['correo']);
             
+            // Validar datos del cliente
+            $errores = $cliente->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del cliente',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
             if ($cliente->existeNumeroCedula($_POST['cedula'])) {
                 echo json_encode([
                     'status' => 'error',
@@ -91,6 +102,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->setdireccion($_POST['direccion']);
             $cliente->setcorreo($_POST['correo']);
             
+            // Validar datos del cliente
+            $errores = $cliente->validarDatos(true); // true = es modificación
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del cliente',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            // Verificar que el cliente exista antes de modificar
+            $clienteExistente = $cliente->obtenerclientesPorId($id);
+            if (!$clienteExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El cliente que intenta modificar no existe'
+                ]);
+                exit;
+            }
+            
             if ($cliente->existeNumeroCedula($_POST['cedula'], $id)) {
                 echo json_encode([
                     'status' => 'error',
@@ -123,8 +155,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id = $_POST['id_clientes'];
+            $id = $_POST['id_clientes'] ?? null;
+            
+            // Validar ID del cliente
+            if ($id === null) {
+                echo json_encode(['status' => 'error', 'message' => 'ID del Cliente no proporcionado']);
+                exit;
+            }
+            
+            $id = (int)$id;
+            if ($id <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'El ID del cliente no es válido']);
+                exit;
+            }
+            
             $clientesModel = new cliente();
+            
+            // Verificar que el cliente exista antes de eliminar
+            $clienteExistente = $clientesModel->obtenerclientesPorId($id);
+            if (!$clienteExistente) {
+                echo json_encode(['status' => 'error', 'message' => 'El cliente que intenta eliminar no existe']);
+                exit;
+            }
+            
             if ($clientesModel->eliminarclientes($id)) {
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacoraModel = new Bitacora();

@@ -103,6 +103,102 @@ class Proveedores extends BD {
         $this->id_proveedor = $id_proveedor;
     }
 
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre del proveedor
+        $nombre = trim((string)$this->nombre);
+        if ($nombre === '') {
+            $errores['nombre_proveedor'] = 'El nombre del proveedor es obligatorio';
+        } elseif (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 200) {
+            $errores['nombre_proveedor'] = 'El nombre del proveedor debe tener entre 2 y 200 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre)) {
+            $errores['nombre_proveedor'] = 'El nombre del proveedor solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar RIF del proveedor
+        $rif1 = trim((string)$this->rif1);
+        if ($rif1 === '') {
+            $errores['rif_proveedor'] = 'El RIF del proveedor es obligatorio';
+        } elseif (mb_strlen($rif1) < 5 || mb_strlen($rif1) > 20) {
+            $errores['rif_proveedor'] = 'El RIF del proveedor debe tener entre 5 y 20 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $rif1)) {
+            $errores['rif_proveedor'] = 'El RIF del proveedor solo puede contener letras, números y guiones';
+        }
+
+        // Validar nombre del representante
+        $representante = trim((string)$this->representante);
+        if ($representante === '') {
+            $errores['nombre_representante'] = 'El nombre del representante es obligatorio';
+        } elseif (mb_strlen($representante) < 2 || mb_strlen($representante) > 200) {
+            $errores['nombre_representante'] = 'El nombre del representante debe tener entre 2 y 200 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $representante)) {
+            $errores['nombre_representante'] = 'El nombre del representante solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar RIF del representante
+        $rif2 = trim((string)$this->rif2);
+        if ($rif2 === '') {
+            $errores['rif_representante'] = 'El RIF del representante es obligatorio';
+        } elseif (mb_strlen($rif2) < 5 || mb_strlen($rif2) > 20) {
+            $errores['rif_representante'] = 'El RIF del representante debe tener entre 5 y 20 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $rif2)) {
+            $errores['rif_representante'] = 'El RIF del representante solo puede contener letras, números y guiones';
+        }
+
+        // Validar correo electrónico (opcional pero si se proporciona debe ser válido)
+        $correo = trim((string)$this->correo);
+        if ($correo !== '') {
+            if (mb_strlen($correo) > 255) {
+                $errores['correo_proveedor'] = 'El correo electrónico no debe exceder los 255 caracteres';
+            } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                $errores['correo_proveedor'] = 'El formato del correo electrónico no es válido';
+            }
+        }
+
+        // Validar dirección (opcional)
+        $direccion = trim((string)$this->direccion);
+        if ($direccion !== '' && mb_strlen($direccion) > 500) {
+            $errores['direccion_proveedor'] = 'La dirección no debe exceder los 500 caracteres';
+        }
+
+        // Validar teléfono 1 (opcional pero si se proporciona debe ser válido)
+        $telefono1 = trim((string)$this->telefono1);
+        if ($telefono1 !== '') {
+            if (mb_strlen($telefono1) < 7 || mb_strlen($telefono1) > 20) {
+                $errores['telefono_1'] = 'El teléfono 1 debe tener entre 7 y 20 caracteres';
+            } elseif (!preg_match('/^[0-9\-\+\(\)\s]+$/', $telefono1)) {
+                $errores['telefono_1'] = 'El teléfono 1 solo puede contener números, guiones, paréntesis y el signo +';
+            }
+        }
+
+        // Validar teléfono 2 (opcional)
+        $telefono2 = trim((string)$this->telefono2);
+        if ($telefono2 !== '') {
+            if (mb_strlen($telefono2) < 7 || mb_strlen($telefono2) > 20) {
+                $errores['telefono_2'] = 'El teléfono 2 debe tener entre 7 y 20 caracteres';
+            } elseif (!preg_match('/^[0-9\-\+\(\)\s]+$/', $telefono2)) {
+                $errores['telefono_2'] = 'El teléfono 2 solo puede contener números, guiones, paréntesis y el signo +';
+            }
+        }
+
+        // Validar observación (opcional)
+        $observacion = trim((string)$this->observacion);
+        if ($observacion !== '' && mb_strlen($observacion) > 1000) {
+            $errores['observacion'] = 'La observación no debe exceder los 1000 caracteres';
+        }
+
+        // Validar ID del proveedor (solo para modificaciones)
+        if ($esModificacion) {
+            $id_proveedor = (int)$this->id_proveedor;
+            if ($id_proveedor <= 0) {
+                $errores['id_proveedor'] = 'El ID del proveedor no es válido';
+            }
+        }
+
+        return $errores;
+    }
+
     public function existeNombreProveedor($nombre, $excluir_id = null) {
         return $this->existeNomProveedor($nombre, $excluir_id); 
     }

@@ -46,6 +46,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $proveedor->setTelefono2($_POST['telefono_2']);
             $proveedor->setObservacion($_POST['observacion']);
             
+            // Validar datos del proveedor
+            $errores = $proveedor->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del proveedor',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             if ($proveedor->existeNombreProveedor($_POST['nombre_proveedor'])) {
                 echo json_encode([
                     'status' => 'error',
@@ -130,6 +141,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $proveedor->setTelefono2($_POST['telefono_2']);
             $proveedor->setObservacion($_POST['observacion']);
             
+            // Validar datos del proveedor
+            $errores = $proveedor->validarDatos(true); // true = es modificación
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del proveedor',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
+            // Verificar que el proveedor exista antes de modificar
+            $proveedorExistente = $proveedor->obtenerProveedorPorId($id_proveedor);
+            if (!$proveedorExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El proveedor que intenta modificar no existe'
+                ]);
+                exit;
+            }
+            
             if ($proveedor->existeNombreProveedor($_POST['nombre_proveedor'], $id_proveedor)) {
                 echo json_encode([
                     'status' => 'error',
@@ -180,13 +212,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id_proveedor = $_POST['id_proveedor'];
+            $id_proveedor = $_POST['id_proveedor'] ?? null;
+            
+            // Validar ID del proveedor
             if ($id_proveedor === null) {
                 echo json_encode(['status' => 'error', 'message' => 'ID del Proveedor no proporcionado']);
                 exit;
             }
             
+            $id_proveedor = (int)$id_proveedor;
+            if ($id_proveedor <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'El ID del proveedor no es válido']);
+                exit;
+            }
+            
             $proveedor = new Proveedores();
+            
+            // Verificar que el proveedor exista antes de eliminar
+            $proveedorExistente = $proveedor->obtenerProveedorPorId($id_proveedor);
+            if (!$proveedorExistente) {
+                echo json_encode(['status' => 'error', 'message' => 'El proveedor que intenta eliminar no existe']);
+                exit;
+            }
+            
             // Obtener datos del proveedor antes de eliminarlo
             $proveedorAEliminar = $proveedor->obtenerProveedorPorId($id_proveedor);
             
@@ -210,11 +258,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'cambiar_estado':
-            $id_proveedor = $_POST['id_proveedor'];
-            $nuevoEstatus = $_POST['nuevo_estatus'];
+            $id_proveedor = $_POST['id_proveedor'] ?? null;
+            $nuevoEstatus = $_POST['nuevo_estatus'] ?? null;
+
+            if ($id_proveedor === null || !ctype_digit((string)$id_proveedor)) {
+                echo json_encode(['status' => 'error', 'message' => 'ID de proveedor no válido']);
+                exit;
+            }
 
             if (!in_array($nuevoEstatus, ['habilitado', 'inhabilitado'])) {
-                echo json_encode(['status' => 'error', 'message' => 'Estado no válido']);
+                echo json_encode(['status' => 'error', 'message' => 'Estatus no válido']);
                 exit;
             }
 

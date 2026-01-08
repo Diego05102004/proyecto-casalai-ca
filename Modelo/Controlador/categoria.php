@@ -27,6 +27,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $categoria->setNombreCategoria($_POST['nombre_categoria']);
             $caracteristicas = isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : [];
 
+            // Validar datos de la categoría
+            $errores = $categoria->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la categoría',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             if ($categoria->existeNombreCategoria($_POST['nombre_categoria'])) {
                 echo json_encode([
                     'status' => 'error',
@@ -163,7 +174,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             error_log('Iniciando modificación de categoría: ' . $nuevo_nombre);
             
-            // Verificar si el nombre ya existe
+            // Validar datos de la categoría
+            $errores = $categoria->validarDatos(true); // true = es modificación
+            if (!empty($errores)) {
+                error_log('Errores de validación: ' . print_r($errores, true));
+                
+                // Capturar cualquier salida de depuración
+                $debugOutput = ob_get_clean();
+                
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la categoría',
+                    'errors' => $errores,
+                    'debug' => [
+                        'id_categoria' => $id_categoria,
+                        'nombre_categoria' => $nuevo_nombre,
+                        'caracteristicas' => $caracteristicas,
+                        'debug_output' => $debugOutput
+                    ]
+                ]);
+                exit;
+            }
+            
+            // Verificar si el nombre ya existe (excluyendo la categoría actual)
             if ($categoria->existeNombreCategoria($nuevo_nombre, $id_categoria)) {
                 $error = 'El nombre de la categoria ya existe';
                 error_log('Error: ' . $error);
@@ -177,6 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'debug' => [
                         'id_categoria' => $id_categoria,
                         'nombre_categoria' => $nuevo_nombre,
+                        'caracteristicas' => $caracteristicas,
                         'debug_output' => $debugOutput
                     ]
                 ]);
@@ -254,8 +288,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id_categoria = $_POST['id_categoria'];
+            $id_categoria = $_POST['id_categoria'] ?? null;
+            
+            // Validar ID de la categoría
+            if ($id_categoria === null) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de la categoría no proporcionado'
+                ]);
+                exit;
+            }
+            
+            $id_categoria = (int)$id_categoria;
+            if ($id_categoria <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El ID de la categoría no es válido'
+                ]);
+                exit;
+            }
+            
             $categoria = new Categoria();
+            
+            // Verificar que la categoría exista antes de eliminar
+            $categoriaExistente = $categoria->obtenerCategoriaPorId($id_categoria);
+            if (!$categoriaExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La categoría que intenta eliminar no existe'
+                ]);
+                exit;
+            }
+
+            // Intentar eliminar la categoría
             $resultado = $categoria->eliminarCategoria($id_categoria);
 
             if ($resultado['status'] === 'error') {

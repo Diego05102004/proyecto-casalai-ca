@@ -1014,9 +1014,10 @@ $(document).ready(function() {
 
     function cambiarEstatus(id_proveedor) {
         const span = $(`span.campo-estatus[data-id="${id_proveedor}"]`);
-        const estatusActual = span.text().trim();
+        const estatusActualTexto = span.text().trim();
+        const estatusActual = estatusActualTexto.toLowerCase();
         const nuevoEstatus = estatusActual === 'habilitado' ? 'inhabilitado' : 'habilitado';
-        
+
         span.addClass('cambiando');
             
         $.ajax({
@@ -1033,6 +1034,7 @@ $(document).ready(function() {
                 if (data.status === 'success') {
                     span.text(nuevoEstatus);
                     span.removeClass('habilitado inhabilitado').addClass(nuevoEstatus);
+
                     Swal.fire({
                         icon: 'success',
                         title: '¡Estatus actualizado!',
@@ -1040,18 +1042,22 @@ $(document).ready(function() {
                         timer: 2000
                     });
                     var table = $('#tablaConsultas').DataTable();
-                    table.row(span.closest('tr')).invalidate();
+                    // Releer los datos desde el DOM actualizado para que DataTables
+                    // no reemplace el nuevo estatus con el valor antiguo en memoria
+                    table.row(span.closest('tr')).invalidate('dom');
                     table.draw(false);
                 } else {
-                    span.text(estatusActual);
+                    span.text(estatusActualTexto);
                     span.removeClass('habilitado inhabilitado').addClass(estatusActual);
+
                     Swal.fire('Error', data.message || 'Error al cambiar el estatus', 'error');
                 }
             },
             error: function(xhr, status, error) {
                 span.removeClass('cambiando');
-                span.text(estatusActual);
+                span.text(estatusActualTexto);
                 span.removeClass('habilitado inhabilitado').addClass(estatusActual);
+
                 Swal.fire('Error', 'Error en la conexión', 'error');
             }
         });

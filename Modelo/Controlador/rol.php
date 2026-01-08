@@ -31,9 +31,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $rol = new Rol();
             $rol->setNombreRol($_POST['nombre_rol']);
 
-            if ($rol->existeNombreRol($_POST['nombre_rol'])) {
+            // Validar datos del rol
+            $errores = $rol->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del rol',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
 
-                
+            if ($rol->existeNombreRol($_POST['nombre_rol'])) {
 
                 echo json_encode([
                     'status' => 'error',
@@ -97,6 +106,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $rol->setIdRol($id_rol);
             $rol->setNombreRol($_POST['nombre_rol']);
             
+            // Validar datos del rol
+            $errores = $rol->validarDatos(true); // true = es modificación
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del rol',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            // Verificar que el rol exista antes de modificar
+            $rolExistente = $rol->obtenerRolPorId($id_rol);
+            if (!$rolExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El rol que intenta modificar no existe'
+                ]);
+                exit;
+            }
+            
             if ($rol->existeNombreRol($_POST['nombre_rol'], $id_rol)) {
                 echo json_encode([
                     'status' => 'error',
@@ -128,8 +158,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id_rol = $_POST['id_rol'];
+            $id_rol = $_POST['id_rol'] ?? null;
+            
+            // Validar ID del rol
+            if ($id_rol === null) {
+                echo json_encode(['status' => 'error', 'message' => 'ID de rol no proporcionado']);
+                exit;
+            }
+            
+            $id_rol = (int)$id_rol;
+            if ($id_rol <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'El ID del rol no es válido']);
+                exit;
+            }
+            
             $rol = new Rol();
+            
+            // Verificar que el rol exista antes de eliminar
+            $rolExistente = $rol->obtenerRolPorId($id_rol);
+            if (!$rolExistente) {
+                echo json_encode(['status' => 'error', 'message' => 'El rol que intenta eliminar no existe']);
+                exit;
+            }
+            
             if ($rol->tieneUsuariosAsignados($id_rol)) {
                 echo json_encode(['status' => 'error', 'message' => 'No se puede eliminar el rol porque tiene usuarios asignados']);
                 exit;
