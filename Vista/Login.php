@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/styles/login-darckort.css">
     <link rel="stylesheet" href="assets/styles/formulario.css">
     <link rel="icon" type="image/png" href="assets/img/LOGO.png">
-
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="assets/public/js/sweetalert2.js"></script>
     <title>Iniciar Sesión</title>
   </head>
@@ -46,6 +46,7 @@
               </div>
               <span class="span-v" id="spassword"></span>
             </div>
+            <div class="g-recaptcha" data-sitekey="6Le6TT8sAAAAAJYMWOjHmexCagrE-fxJKO-4aK2q"></div>
             <button class="btn btn-vino w-100" id="acceder" name="acceder">Iniciar Sesión</button>
             <!-- Dentro del formulario de inicio de sesión, después del botón -->
               <div class="forgot-password">

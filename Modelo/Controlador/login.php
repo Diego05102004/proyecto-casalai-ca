@@ -16,13 +16,28 @@ if (!empty($_POST)) {
     $o = new Login();
     $h = $_POST['accion'] ?? '';
 
-    if ($h == 'acceder') {
-        $o->setUsername($_POST['username'] ?? '');
-        $o->setPassword($_POST['password'] ?? '');
+if ($h == 'acceder') {
+    $o->setUsername($_POST['username'] ?? '');
+    $o->setPassword($_POST['password'] ?? '');
+    $captcha = $_POST['g-recaptcha-response'] ?? '';
+    $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
+    $response = file_get_contents($url);
+    $responseKeys = json_decode($response, true);
+    
+    // Mostrar el resultado de la validación en un alert
+    echo "<script>alert('Resultado de reCAPTCHA: " . json_encode($responseKeys) . "');</script>";
+    
+    // Si el reCAPTCHA no es válido, mostrar mensaje y detener la ejecución
+    if(!$responseKeys['success']) {
+        echo "<script>alert('Error en reCAPTCHA: " . ($responseKeys['error-codes'][0] ?? 'Error desconocido') . "');</script>";
+        $m = ['resultado' => 'error', 'mensaje' => 'Error en la verificación del reCAPTCHA'];
+    } else {
         $m = $o->existe();
+    }
         
         if ($m['resultado'] == 'existe') {
-
             // Reiniciar la sesión por seguridad
             session_destroy();
             session_start();

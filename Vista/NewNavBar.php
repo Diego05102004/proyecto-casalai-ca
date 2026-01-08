@@ -709,74 +709,22 @@ if (!empty($_SESSION['foto_perfil'])) {
                 const idNotificacion = button.getAttribute('data-id');
                 if (!idNotificacion) return;
 
-                const body = new URLSearchParams();
-                body.append('id_notificacion', idNotificacion);
+                console.log('Click marcar-leido. idNotificacion =', idNotificacion, 'WS disponible =', !!window.notificacionesWS);
 
-                fetch('?pagina=notificacion&accion=marcar_leida', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // El backend responde con { exito: bool, mensaje: string }
-                    if (!data || !data.exito) {
-                        console.error('Error al marcar como leída:', data && data.mensaje ? data.mensaje : data);
-                        return;
-                    }
-
-                    // Eliminar la notificación del DOM
-                    const notificacionItem = button.closest('.item-notificacion');
-                    if (notificacionItem) {
-                        notificacionItem.remove();
-                    }
-
-                    // Actualizar contadores (campana y número en el header del panel)
-                    const countElement = document.querySelector('.notification-badge');
-                    const titleCountElement = document.querySelector('.notificacion-panel .notification-count');
-
-                    let newCount = 0;
-                    if (countElement && countElement.textContent) {
-                        newCount = Math.max(0, parseInt(countElement.textContent) - 1);
-                        countElement.textContent = newCount;
-                        if (newCount <= 0) {
-                            countElement.style.display = 'none';
-                        }
-                    }
-
-                    if (titleCountElement) {
-                        // Si no pudimos leer del badge, usamos el número actual de items
-                        if (!newCount) {
-                            newCount = document.querySelectorAll('.notificacion-panel .item-notificacion').length;
-                        }
-                        titleCountElement.textContent = newCount;
-                    }
-
-                    // Si ya no quedan notificaciones, mostrar mensaje vacío en la lista
-                    const notificationsList = document.getElementById('notifications-list');
-                    if (notificationsList && notificationsList.querySelectorAll('.item-notificacion').length === 0) {
-                        notificationsList.innerHTML = `
-                            <div class="item-notificacion">
-                                <div class="texto">
-                                    <p>No hay notificaciones recientes</p>
-                                </div>
-                            </div>
-                        `;
-                    }
-                })
-                .catch(error => console.error('Error al marcar notificación como leída:', error));
+                if (window.notificacionesWS) {
+                    window.notificacionesWS.marcarComoLeida(idNotificacion);
+                } else {
+                    console.error('WebSocket de notificaciones no está disponible');
+                }
             });
         }
         
-        // Actualizar notificaciones periódicamente
-        setInterval(actualizarNotificaciones, 6000);
+        // Actualizar notificaciones periódicamente vía WebSocket (reemplaza al fetch comentado)
+        setInterval(() => {
+            if (window.notificacionesWS) {
+                window.notificacionesWS.enviar({ tipo: 'ping_nuevas' });
+            }
+        }, 6000);
         
         // Actualizar contador del carrito periódicamente
         setInterval(actualizarCarritoCount, 5000);
@@ -822,8 +770,8 @@ if (!empty($_SESSION['foto_perfil'])) {
             .catch(err => console.error('Error actualizando tasa de cambio:', err));
     }
 
-    function actualizarNotificaciones() {
-        fetch('Modelo/Controlador/obtener_notificaciones.php')
+    function actualizarCarritoCount() {
+        fetch('Modelo/Controlador/obtener_carrito_count.php')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Error en la respuesta del servidor');
@@ -831,75 +779,243 @@ if (!empty($_SESSION['foto_perfil'])) {
                 return response.json();
             })
             .then(data => {
-                if (data.success) {
-                    const notificationsPanel = document.getElementById('notifications-panel');
-                    const notificationsList = document.getElementById('notifications-list');
-                    if (notificationsPanel && notificationsList) {
-                        let html = '';
-                        
-                        if (data.notificaciones.length > 0) {
-                            data.notificaciones.forEach(notif => {
-                                const fecha = notif.fecha_formateada || notif.fecha_hora || '';
-                                html += `
-                                    <div class="item-notificacion">
-                                        <div class="texto">
-                                            <h4>${notif.titulo}</h4>
-                                            <p>${notif.mensaje}</p>
-                                            ${notif.referencia ? `<small>Referencia: ${notif.referencia}</small>` : ""}
-                                            <small>${fecha}</small>
-                                        </div>
-                                        <button class="marcar-leido" data-id="${notif.id_notificacion}">
-                                            <IMG src="assets/img/check.svg" alt="Marcar leído" class="local-icon">
-                                        </button>
-                                    </div>
-                                `;
-                            });
-                        } else {
-                            html = `
-                                <div class="item-notificacion">
-                                    <div class="texto"><p>No hay notificaciones recientes</p></div>
-                                </div>
-                            `;
+                if (data && data.success) {
+                    const cartBadge = document.querySelector('.cart-count-badge');
+                    const cartBtn = document.getElementById('cart-btn');
+                    
+                    if (data.count > 0) {
+                        if (cartBadge) {
+                            cartBadge.textContent = data.count;
+                            cartBadge.style.display = 'flex';
+                        } else if (cartBtn) {
+                            // Crear badge si no existe
+                            const newBadge = document.createElement('span');
+                            newBadge.className = 'cart-count-badge';
+                            newBadge.textContent = data.count;
+                            cartBtn.appendChild(newBadge);
                         }
-
-                        notificationsList.innerHTML = html;
+                    } else if (cartBadge) {
+                        cartBadge.style.display = 'none';
                     }
                 }
             })
-            .catch(err => console.error('Error actualizando notificaciones:', err));
+            .catch(err => console.error('Error actualizando carrito:', err));
     }
 
-    function actualizarCarritoCount() {
-    fetch('Modelo/Controlador/obtener_carrito_count.php')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.success) {
-                const cartBadge = document.querySelector('.cart-count-badge');
-                const cartBtn = document.getElementById('cart-btn');
+    class NotificacionesWebSocket {
+        constructor(usuarioId) {
+            this.usuarioId = usuarioId;
+            this.socket = null;
+            this.reconectarTimeout = null;
+            this.conectar();
+        }
+
+        conectar() {
+            // Asegúrate de que la URL apunte a tu servidor WebSocket
+            this.socket = new WebSocket('ws://localhost:8080');
+            
+            this.socket.onopen = () => {
+                console.log('Conexión WebSocket establecida');
+                // Autenticar al usuario
+                this.enviar({ 
+                    tipo: 'autenticar',
+                    usuario_id: this.usuarioId 
+                });
                 
-                if (data.count > 0) {
-                    if (cartBadge) {
-                        cartBadge.textContent = data.count;
-                        cartBadge.style.display = 'flex';
-                    } else if (cartBtn) {
-                        // Crear badge si no existe
-                        const newBadge = document.createElement('span');
-                        newBadge.className = 'cart-count-badge';
-                        newBadge.textContent = data.count;
-                        cartBtn.appendChild(newBadge);
+                // Limpiar cualquier intento de reconexión pendiente
+                clearTimeout(this.reconectarTimeout);
+            };
+
+            this.socket.onmessage = (event) => {
+                console.log('WS mensaje recibido bruto:', event.data);
+                const data = JSON.parse(event.data);
+                this.manejarMensaje(data);
+            };
+
+            this.socket.onclose = () => {
+                console.log('Conexión WebSocket cerrada. Reconectando...');
+                // Intentar reconectar después de 5 segundos
+                this.reconectarTimeout = setTimeout(() => this.conectar(), 5000);
+            };
+
+            this.socket.onerror = (error) => {
+                console.error('Error en WebSocket:', error);
+                this.socket.close();
+            };
+        }
+
+        enviar(mensaje) {
+            console.log('WS enviar llamado con', mensaje, 'readyState =', this.socket ? this.socket.readyState : null);
+            if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(JSON.stringify(mensaje));
+                console.log('WS mensaje enviado');
+            } else {
+                console.warn('WS no envía: socket no está abierto. readyState =', this.socket ? this.socket.readyState : null);
+            }
+        }
+
+        manejarMensaje(data) {
+            // Manejar diferentes tipos de mensajes recibidos
+            switch(data.tipo) {
+                case 'sync_inicial':
+                    this.renderizarListaNotificaciones(data.notificaciones || []);
+                    break;
+                case 'nueva_notificacion':
+                    this.renderizarListaNotificaciones(data.notificaciones || []);
+                    break;
+
+                case 'marcar_leida':
+                    if (data.ok) {
+                        this.actualizarNotificacionUI(data.id_notificacion);
+                    } else {
+                        console.error('Error al marcar notificación como leída (WS):', data.error || data);
                     }
-                } else if (cartBadge) {
-                    cartBadge.style.display = 'none';
+                    break;
+                // Agregar más casos según sea necesario
+            }
+        }
+
+        mostrarNotificacion(notificacion) {
+            // Método mantenido por compatibilidad; no se usa directamente en la
+            // nueva versión basada en sync_inicial / nueva_notificacion.
+            console.log('Nueva notificación (no usada directamente):', notificacion);
+            this.actualizarContadorNotificaciones();
+        }
+
+        renderizarListaNotificaciones(notificaciones) {
+            const notificationsList = document.getElementById('notifications-list');
+            const countElement = document.querySelector('.notification-badge');
+            const titleCountElement = document.querySelector('.notificacion-panel .notification-count');
+
+            if (!notificationsList) {
+                return;
+            }
+
+            let html = '';
+
+            if (Array.isArray(notificaciones) && notificaciones.length > 0) {
+                notificaciones.forEach(notif => {
+                    const fecha = notif.fecha_formateada || notif.fecha_hora || '';
+                    html += `
+                        <div class="item-notificacion notificacion-no-leida" data-id="${notif.id_notificacion}">
+                            <div class="texto">
+                                <h4>${notif.titulo}</h4>
+                                <p>${notif.mensaje}</p>
+                                ${notif.referencia ? `<small>Referencia: ${notif.referencia}</small>` : ""}
+                                <small>${fecha}</small>
+                            </div>
+                            <button class="marcar-leido" data-id="${notif.id_notificacion}">
+                                <IMG src="assets/img/check.svg" alt="Marcar leído" class="local-icon">
+                            </button>
+                        </div>
+                    `;
+                });
+            } else {
+                html = `
+                    <div class="item-notificacion">
+                        <div class="texto"><p>No hay notificaciones recientes</p></div>
+                    </div>
+                `;
+            }
+
+            notificationsList.innerHTML = html;
+
+            const newCount = Array.isArray(notificaciones) ? notificaciones.length : 0;
+
+            if (countElement) {
+                if (newCount > 0) {
+                    countElement.textContent = newCount;
+                    countElement.style.display = 'block';
+                } else {
+                    countElement.textContent = '';
+                    countElement.style.display = 'none';
                 }
             }
-        })
-        .catch(err => console.error('Error actualizando carrito:', err));
+
+            if (titleCountElement) {
+                titleCountElement.textContent = newCount;
+            }
+        }
+
+        marcarComoLeida(idNotificacion) {
+            console.log('WS marcarComoLeida para id', idNotificacion);
+            this.enviar({
+                tipo: 'marcar_leida',
+                id_notificacion: idNotificacion
+            });
+        }
+
+        actualizarNotificacionUI(idNotificacion) {
+            // Actualizar la UI para marcar la notificación como leída
+            const notificacionItem = document.querySelector(`.item-notificacion[data-id="${idNotificacion}"]`);
+            if (!notificacionItem) {
+                return;
+            }
+
+            // Eliminar la notificación del DOM
+            notificacionItem.remove();
+
+            // Actualizar contadores (campana y número en el header del panel)
+            const countElement = document.querySelector('.notification-badge');
+            const titleCountElement = document.querySelector('.notificacion-panel .notification-count');
+
+            let newCount = 0;
+            if (countElement && countElement.textContent) {
+                newCount = Math.max(0, parseInt(countElement.textContent) - 1);
+                countElement.textContent = newCount;
+                if (newCount <= 0) {
+                    countElement.style.display = 'none';
+                }
+            }
+
+            if (titleCountElement) {
+                // Si no pudimos leer del badge, usamos el número actual de items
+                if (!newCount) {
+                    newCount = document.querySelectorAll('.notificacion-panel .item-notificacion').length;
+                }
+                titleCountElement.textContent = newCount;
+            }
+
+            // Si ya no quedan notificaciones, mostrar mensaje vacío en la lista
+            const notificationsList = document.getElementById('notifications-list');
+            if (notificationsList && notificationsList.querySelectorAll('.item-notificacion').length === 0) {
+                notificationsList.innerHTML = `
+                    <div class="item-notificacion">
+                        <div class="texto">
+                            <p>No hay notificaciones recientes</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        actualizarContadorNotificaciones() {
+            // Actualizar el contador de notificaciones no leídas
+            const contadorCampana = document.querySelector('.notification-badge');
+            const contadorPanel = document.querySelector('.notificacion-panel .notification-count');
+            let actual = 0;
+
+            if (contadorCampana && contadorCampana.textContent) {
+                actual = parseInt(contadorCampana.textContent) || 0;
+                contadorCampana.textContent = actual + 1;
+                contadorCampana.style.display = 'block';
+            }
+
+            if (contadorPanel) {
+                const valorActual = parseInt(contadorPanel.textContent) || 0;
+                contadorPanel.textContent = valorActual + 1;
+            }
+        }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const usuarioId = '<?php echo isset($_SESSION['id_usuario']) ? $_SESSION['id_usuario'] : ''; ?>';
+        
+        if (usuarioId && usuarioId !== '0') {
+            window.notificacionesWS = new NotificacionesWebSocket(usuarioId);
+        }
+    });
+
     </script>
 </body>
 </html>

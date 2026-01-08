@@ -261,6 +261,9 @@ $(document).ready(function(){
         $("#password"),$("#spassword"),"*El formato es de 6 y 15 caracteres*")==0){
          muestraMensaje("error","¡ERROR!","La contraseña es incorrecta, ingrese la contraseña nuevamente");
         return false;
+      } else if ($("#g-recaptcha-response").val() == "") {
+        muestraMensaje("error","¡ERROR!","Debes verificar que no eres un robot");
+        return false;
       }
       
       return true;
