@@ -22,6 +22,16 @@ function protegerSelects(selectIds, interval = 1000) {
             const opsOriginales = originales[id];
             if (!opsOriginales) return;
 
+            // Si originalmente no tenía opciones y ahora sí, tomar este
+            // estado como base en lugar de considerar que fue alterado.
+            if (opsOriginales.length === 0 && opsActuales.length > 0) {
+                originales[id] = opsActuales.map(opt => ({
+                    value: opt.value,
+                    text: opt.textContent
+                }));
+                return;
+            }
+
             const alterado =
                 opsActuales.length !== opsOriginales.length ||
                 opsActuales.some((o, i) =>
