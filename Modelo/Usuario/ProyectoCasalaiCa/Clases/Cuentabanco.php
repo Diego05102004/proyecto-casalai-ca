@@ -91,11 +91,10 @@ class Cuentabanco extends BD {
             $errores['nombre_banco'] = 'El nombre del banco debe tener entre 3 y 100 caracteres';
         }
 
-        $numero = preg_replace('/\s+/', '', (string)$this->numero_cuenta);
+        $numeroOriginal = (string)$this->numero_cuenta;
+        $numero = preg_replace('/\D+/', '', $numeroOriginal);
         if ($numero === '') {
             $errores['numero_cuenta'] = 'El número de cuenta es obligatorio';
-        } elseif (!ctype_digit($numero)) {
-            $errores['numero_cuenta'] = 'El número de cuenta solo puede contener dígitos';
         } elseif (strlen($numero) < 10 || strlen($numero) > 30) {
             $errores['numero_cuenta'] = 'El número de cuenta debe tener entre 10 y 30 dígitos';
         }
