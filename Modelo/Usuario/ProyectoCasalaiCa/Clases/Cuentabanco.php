@@ -80,6 +80,57 @@ class Cuentabanco extends BD {
     public function setEstado($estado) {
         $this->estado = $estado;
     }
+    
+    public function validarDatos() {
+        $errores = [];
+
+        $nombre = trim((string)$this->nombre_banco);
+        if ($nombre === '') {
+            $errores['nombre_banco'] = 'El nombre del banco es obligatorio';
+        } elseif (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100) {
+            $errores['nombre_banco'] = 'El nombre del banco debe tener entre 3 y 100 caracteres';
+        }
+
+        $numero = preg_replace('/\s+/', '', (string)$this->numero_cuenta);
+        if ($numero === '') {
+            $errores['numero_cuenta'] = 'El número de cuenta es obligatorio';
+        } elseif (!ctype_digit($numero)) {
+            $errores['numero_cuenta'] = 'El número de cuenta solo puede contener dígitos';
+        } elseif (strlen($numero) < 10 || strlen($numero) > 30) {
+            $errores['numero_cuenta'] = 'El número de cuenta debe tener entre 10 y 30 dígitos';
+        }
+
+        $rif = strtoupper(trim((string)$this->rif_cuenta));
+        if ($rif === '') {
+            $errores['rif_cuenta'] = 'El RIF de la cuenta es obligatorio';
+        } else {
+            $rifLimpio = str_replace(['-', ' '], '', $rif);
+            if (!preg_match('/^[VEJGCP][0-9]{8,9}$/', $rifLimpio)) {
+                $errores['rif_cuenta'] = 'El formato del RIF no es válido';
+            }
+        }
+
+        $telefono = preg_replace('/\D+/', '', (string)$this->telefono_cuenta);
+        if ($telefono === '') {
+            $errores['telefono_cuenta'] = 'El teléfono de la cuenta es obligatorio';
+        } elseif (strlen($telefono) < 7 || strlen($telefono) > 15) {
+            $errores['telefono_cuenta'] = 'El teléfono de la cuenta debe tener entre 7 y 15 dígitos';
+        }
+
+        $correo = trim((string)$this->correo_cuenta);
+        if ($correo === '') {
+            $errores['correo_cuenta'] = 'El correo de la cuenta es obligatorio';
+        } elseif (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            $errores['correo_cuenta'] = 'El correo de la cuenta no es válido';
+        }
+
+        $metodos = $this->metodos_pago;
+        if ($metodos === null || $metodos === '') {
+            $errores['metodos_pago'] = 'Debe seleccionar al menos un método de pago';
+        }
+
+        return $errores;
+    }
 
     public function registrarCuentabanco() {
         return $this->r_cuentabanco(); 

@@ -40,6 +40,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cuentabanco->setTelefonoCuenta($_POST['telefono_cuenta']);
             $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
             $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
+            $errores = $cuentabanco->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Errores de validación',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
             if ($_POST['numero_cuenta'] != ''){
                 if ($cuentabanco->existeNumeroCuenta($_POST['numero_cuenta'])) {
                     echo json_encode([
@@ -85,19 +94,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'obtener_cuenta':
-            $id_cuenta = $_POST['id_cuenta'];
+            $id_cuenta = $_POST['id_cuenta'] ?? null;
 
-            if ($id_cuenta !== null) {
-                $cuentabanco = new Cuentabanco();
-                $cuenta_obt = $cuentabanco->obtenerCuentaPorId($id_cuenta);
+            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
+                echo json_encode(['status' => 'error', 'message' => 'ID de cuenta no válido']);
+                exit;
+            }
 
-                if ($cuenta_obt !== null) {
-                    echo json_encode($cuenta_obt);
-                } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Cuenta no encontrado']);
-                }
+            $cuentabanco = new Cuentabanco();
+            $cuenta_obt = $cuentabanco->obtenerCuentaPorId($id_cuenta);
+
+            if ($cuenta_obt !== null) {
+                echo json_encode($cuenta_obt);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'ID de cuenta no proporcionado']);
+                echo json_encode(['status' => 'error', 'message' => 'Cuenta no encontrado']);
             }
             exit;
         
@@ -112,6 +122,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
             $id_cuenta = $_POST['id_cuenta'];
+            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de cuenta no válido'
+                ]);
+                exit;
+            }
             $cuentabanco = new Cuentabanco();
             $cuentabanco->setIdCuenta($id_cuenta);
             $cuentabanco->setNombreBanco($_POST['nombre_banco']);
@@ -120,6 +137,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cuentabanco->setTelefonoCuenta($_POST['telefono_cuenta']);
             $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
             $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
+            $errores = $cuentabanco->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Errores de validación',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
             if ($cuentabanco->existeNumeroCuenta($_POST['numero_cuenta'], $id_cuenta)) {
                 echo json_encode([
                     'status' => 'error',
@@ -159,6 +185,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             $id_cuenta = $_POST['id_cuenta'];
+            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de cuenta no válido'
+                ]);
+                exit;
+            }
             $cuentabanco = new Cuentabanco();
 
             $resultado = $cuentabanco->eliminarCuentabanco($id_cuenta);
@@ -205,6 +238,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'cambiar_estado':
             $id_cuenta = $_POST['id_cuenta'];
             $nuevoEstado = $_POST['estado'];
+            
+            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
+                echo json_encode(['status' => 'error', 'message' => 'ID de cuenta no válido']);
+                exit;
+            }
             
             if (!in_array($nuevoEstado, ['habilitado', 'inhabilitado'])) {
                 echo json_encode(['status' => 'error', 'message' => 'Estado no válido']);
