@@ -937,9 +937,9 @@ $(document).ready(function() {
         const span = $(`span.campo-estatus[data-id="${id_cuenta}"]`);
         const estadoActual = span.text().trim();
         const nuevoEstado = estadoActual === 'habilitado' ? 'inhabilitado' : 'habilitado';
-        
+
         span.addClass('cambiando');
-            
+
         $.ajax({
             url: '',
             type: 'POST',
@@ -952,39 +952,41 @@ $(document).ready(function() {
             success: function(data) {
                 span.removeClass('cambiando');
                 if (data.status === 'success') {
+                    // Actualizar el texto y las clases del span visible
                     span.text(nuevoEstado);
                     span.removeClass('habilitado inhabilitado').addClass(nuevoEstado);
+
+                    // Sincronizar también los datos internos del DataTable para esta fila
+                    const table = $('#tablaConsultas').DataTable();
+                    const row = table.row(span.closest('tr'));
+                    const rowData = row.data();
+                    if (Array.isArray(rowData) && rowData.length > 5) {
+                        // La columna de estatus es la 6ª (índice 5) en agregarFilaCuenta
+                        rowData[5] = span.prop('outerHTML');
+                        row.data(rowData).draw(false);
+                    } else {
+                        // Como respaldo, invalidar la fila para que tome el contenido actual del DOM
+                        table.row(span.closest('tr')).invalidate().draw(false);
+                    }
+
                     Swal.fire({
                         icon: 'success',
-                        title: '¡Estatus actualizado!',
+                        title: '\u00a1Estatus actualizado!',
                         showConfirmButton: false,
                         timer: 2000
                     });
-                    var table = $('#tablaConsultas').DataTable();
-                    table.row(span.closest('tr')).invalidate();
-                    table.draw(false);
                 } else {
                     span.text(estadoActual);
                     span.removeClass('habilitado inhabilitado').addClass(estadoActual);
                     Swal.fire('Error', data.message || 'Error al cambiar el estatus', 'error');
                 }
             },
-            error: function(xhr, status, error) {
+            error: function() {
                 span.removeClass('cambiando');
                 span.text(estadoActual);
                 span.removeClass('habilitado inhabilitado').addClass(estadoActual);
-                Swal.fire('Error', 'Error en la conexión', 'error');
+                Swal.fire('Error', 'Error en la conexi\u00f3n', 'error');
             }
-        });
-    }
-
-    function mensajes(icono, titulo, mensaje){
-        Swal.fire({
-            icon: icono,
-            title: titulo,
-            text: mensaje,
-            showConfirmButton: true,
-            confirmButtonText: 'Aceptar',
         });
     }
 

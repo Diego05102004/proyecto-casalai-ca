@@ -13,6 +13,143 @@ class Permisos extends BD {
         $this->conex = null;
     }
 
+    public function validarDatos($permisosForm, $roles, $modulos, $acciones) {
+        $errores = [];
+
+        // Validar que los datos de entrada sean arrays
+        if (!is_array($permisosForm)) {
+            $errores['permisos_form'] = 'Los datos de permisos deben ser un arreglo';
+        }
+
+        if (!is_array($roles)) {
+            $errores['roles'] = 'Los datos de roles deben ser un arreglo';
+        }
+
+        if (!is_array($modulos)) {
+            $errores['modulos'] = 'Los datos de módulos deben ser un arreglo';
+        }
+
+        if (!is_array($acciones)) {
+            $errores['acciones'] = 'Los datos de acciones deben ser un arreglo';
+        }
+
+        // Validar que no estén vacíos
+        if (empty($roles)) {
+            $errores['roles_vacios'] = 'Debe existir al menos un rol';
+        }
+
+        if (empty($modulos)) {
+            $errores['modulos_vacios'] = 'Debe existir al menos un módulo';
+        }
+
+        if (empty($acciones)) {
+            $errores['acciones_vacias'] = 'Debe existir al menos una acción';
+        }
+
+        // Validar estructura de roles
+        if (is_array($roles)) {
+            foreach ($roles as $rol) {
+                if (!is_array($rol) || !isset($rol['id_rol']) || !isset($rol['nombre_rol'])) {
+                    $errores['roles_estructura'] = 'La estructura de los roles es inválida';
+                    break;
+                }
+
+                $id_rol = (int)$rol['id_rol'];
+                if ($id_rol <= 0) {
+                    $errores['rol_id_invalido'] = 'El ID del rol debe ser un número positivo';
+                }
+
+                $nombre_rol = trim((string)$rol['nombre_rol']);
+                if ($nombre_rol === '') {
+                    $errores['rol_nombre_vacio'] = 'El nombre del rol no puede estar vacío';
+                } elseif (mb_strlen($nombre_rol) > 100) {
+                    $errores['rol_nombre_largo'] = 'El nombre del rol no debe exceder los 100 caracteres';
+                }
+            }
+        }
+
+        // Validar estructura de módulos
+        if (is_array($modulos)) {
+            foreach ($modulos as $modulo) {
+                if (!is_array($modulo) || !isset($modulo['id_modulo']) || !isset($modulo['nombre_modulo'])) {
+                    $errores['modulos_estructura'] = 'La estructura de los módulos es inválida';
+                    break;
+                }
+
+                $id_modulo = (int)$modulo['id_modulo'];
+                if ($id_modulo <= 0) {
+                    $errores['modulo_id_invalido'] = 'El ID del módulo debe ser un número positivo';
+                }
+
+                $nombre_modulo = trim((string)$modulo['nombre_modulo']);
+                if ($nombre_modulo === '') {
+                    $errores['modulo_nombre_vacio'] = 'El nombre del módulo no puede estar vacío';
+                } elseif (mb_strlen($nombre_modulo) > 100) {
+                    $errores['modulo_nombre_largo'] = 'El nombre del módulo no debe exceder los 100 caracteres';
+                }
+            }
+        }
+
+        // Validar estructura de acciones
+        if (is_array($acciones)) {
+            $acciones_validas = ['ingresar', 'consultar', 'incluir', 'modificar', 'eliminar', 'generar reporte'];
+            foreach ($acciones as $accion) {
+                if (!is_string($accion)) {
+                    $errores['accion_tipo'] = 'Las acciones deben ser cadenas de texto';
+                    break;
+                }
+
+                $accion = trim($accion);
+                if ($accion === '') {
+                    $errores['accion_vacia'] = 'Las acciones no pueden estar vacías';
+                } elseif (!in_array($accion, $acciones_validas)) {
+                    $errores['accion_invalida'] = "La acción '$accion' no es válida";
+                }
+            }
+        }
+
+        // Validar estructura de permisos del formulario
+        if (is_array($permisosForm)) {
+            foreach ($permisosForm as $id_rol => $permisosRol) {
+                if (!is_numeric($id_rol) || (int)$id_rol <= 0) {
+                    $errores['permiso_rol_id'] = 'El ID del rol en los permisos debe ser un número positivo';
+                    break;
+                }
+
+                if (!is_array($permisosRol)) {
+                    $errores['permiso_rol_estructura'] = 'Los permisos por rol deben ser un arreglo';
+                    break;
+                }
+
+                foreach ($permisosRol as $id_modulo => $permisosModulo) {
+                    if (!is_numeric($id_modulo) || (int)$id_modulo <= 0) {
+                        $errores['permiso_modulo_id'] = 'El ID del módulo en los permisos debe ser un número positivo';
+                        break 2;
+                    }
+
+                    if (!is_array($permisosModulo)) {
+                        $errores['permiso_modulo_estructura'] = 'Los permisos por módulo deben ser un arreglo';
+                        break 2;
+                    }
+
+                    foreach ($permisosModulo as $accion => $valor) {
+                        if (!in_array($accion, $acciones_validas)) {
+                            $errores['permiso_accion_invalida'] = "La acción '$accion' en los permisos no es válida";
+                            break 3;
+                        }
+
+                        if (!is_string($valor) || !in_array($valor, ['on', 'off'])) {
+                            $errores['permiso_valor_invalido'] = 'El valor del permiso debe ser "on" u "off"';
+                            break 3;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $errores;
+    }
+
     public function getRoles() {
         return $this->o_roles();
     }

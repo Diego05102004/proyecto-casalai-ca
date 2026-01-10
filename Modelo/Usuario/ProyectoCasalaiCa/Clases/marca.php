@@ -28,6 +28,30 @@ class marca extends BD {
         $this->id_marca = $id_marca;
     }
 
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre de la marca
+        $nombre_marca = trim((string)$this->nombre_marca);
+        if ($nombre_marca === '') {
+            $errores['nombre_marca'] = 'El nombre de la marca es obligatorio';
+        } elseif (mb_strlen($nombre_marca) < 2 || mb_strlen($nombre_marca) > 100) {
+            $errores['nombre_marca'] = 'El nombre de la marca debe tener entre 2 y 100 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_marca)) {
+            $errores['nombre_marca'] = 'El nombre de la marca solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar ID de la marca (solo para modificaciones)
+        if ($esModificacion) {
+            $id_marca = (int)$this->id_marca;
+            if ($id_marca <= 0) {
+                $errores['id_marca'] = 'El ID de la marca no es válido';
+            }
+        }
+
+        return $errores;
+    }
+
     public function existeNombreMarca($nombre_marca, $excluir_id = null) {
         return $this->existeNomMarca($nombre_marca, $excluir_id); 
     }

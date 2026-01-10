@@ -38,6 +38,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $Producto->setCategoria($_POST['Categoria'] ?? '');
             $Producto->setPrecio($_POST['Precio'] ?? 0);
 
+            // Validar datos del producto
+            $errores = $Producto->validarDatos();
+            if (!empty($errores)) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del producto',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
+            // Validar que el modelo exista antes de registrar
+            if ($_POST['modelo'] ?? null) {
+                $modeloValido = false;
+                // Aquí deberías tener una función para verificar si el modelo existe
+                // Por ahora, asumimos que si hay un ID, es válido
+                $idModelo = (int)$_POST['modelo'];
+                if ($idModelo > 0) {
+                    $modeloValido = true;
+                }
+                
+                if (!$modeloValido) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El modelo seleccionado no es válido'
+                    ]);
+                    exit;
+                }
+            }
+
             if (!$Producto->validarNombreProducto()) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode(['status' => 'error', 'message' => 'Este Producto ya existe'], JSON_UNESCAPED_UNICODE);
@@ -147,6 +179,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $Producto->setCodigo($_POST['Seriales'] ?? '');
             $Producto->setPrecio($_POST['Precio'] ?? 0);
 
+            // Validar datos del producto
+            $errores = $Producto->validarDatos(true); // true = es modificación
+            if (!empty($errores)) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del producto',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
+            // Verificar que el producto exista antes de modificar
+            $productoExistente = $Producto->obtenerProductoPorId($id);
+            if (!$productoExistente) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El producto que intenta modificar no existe'
+                ]);
+                exit;
+            }
+
+            // Validar que el modelo exista antes de modificar
+            if ($_POST['modelo'] ?? null) {
+                $modeloValido = false;
+                $idModelo = (int)$_POST['modelo'];
+                if ($idModelo > 0) {
+                    $modeloValido = true;
+                }
+                
+                if (!$modeloValido) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El modelo seleccionado no es válido'
+                    ]);
+                    exit;
+                }
+            }
+
             $productoViejo = $Producto->obtenerProductoPorId($id);
 
             try {
@@ -220,7 +293,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'ID del Producto no proporcionado'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
+            
+            // Validar ID del producto
+            $id_producto = (int)$id_producto;
+            if ($id_producto <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El ID del producto no es válido'
+                ]);
+                exit;
+            }
+            
             $producto = new Productos();
+            
+            // Verificar que el producto exista antes de eliminar
+            $productoExistente = $producto->obtenerProductoPorId($id_producto);
+            if (!$productoExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El producto que intenta eliminar no existe'
+                ]);
+                exit;
+            }
+            
             $response = $producto->eliminarProducto($id_producto);
             if (is_array($response) && ($response['success'] ?? false)) {
                 if (!defined('SKIP_SIDE_EFFECTS')) {

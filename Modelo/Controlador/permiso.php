@@ -30,6 +30,17 @@ $permisosActuales = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
+    // Validar datos antes de guardar
+    $permisosForm = $_POST['permisos'] ?? [];
+    $errores = $permisos->validarDatos($permisosForm, $roles, $modulos_permiso, $acciones);
+    
+    if (!empty($errores)) {
+        // Si hay errores, mostrar mensaje de error y redirigir
+        $_SESSION['error_permisos'] = $errores;
+        header("Location: ?pagina=permiso&error=1");
+        exit;
+    }
+    
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(

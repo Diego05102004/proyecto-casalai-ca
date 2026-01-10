@@ -65,6 +65,76 @@ class Usuarios extends BD {
     public function setCedula($cedula) { $this->cedula = $cedula; }
 
     
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        $username = trim((string)$this->username);
+        if ($username === '') {
+            $errores['username'] = 'El nombre de usuario es obligatorio';
+        } elseif (mb_strlen($username) < 3 || mb_strlen($username) > 50) {
+            $errores['username'] = 'El nombre de usuario debe tener entre 3 y 50 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+            $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+        }
+
+        $clave = (string)$this->clave;
+        if (!$esModificacion || $clave !== '') {
+            if ($clave === '') {
+                $errores['clave'] = 'La contraseña es obligatoria';
+            } elseif (mb_strlen($clave) < 8) {
+                $errores['clave'] = 'La contraseña debe tener al menos 8 caracteres';
+            } elseif (!preg_match('/[A-Z]/', $clave)) {
+                $errores['clave'] = 'La contraseña debe incluir al menos una letra mayúscula';
+            } elseif (!preg_match('/[a-z]/', $clave)) {
+                $errores['clave'] = 'La contraseña debe incluir al menos una letra minúscula';
+            } elseif (!preg_match('/[0-9]/', $clave)) {
+                $errores['clave'] = 'La contraseña debe incluir al menos un número';
+            }
+        }
+
+        $nombre = trim((string)$this->nombre);
+        if ($nombre === '') {
+            $errores['nombre'] = 'El nombre es obligatorio';
+        } elseif (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100) {
+            $errores['nombre'] = 'El nombre debe tener entre 2 y 100 caracteres';
+        }
+
+        $apellido = trim((string)$this->apellido);
+        if ($apellido === '') {
+            $errores['apellido'] = 'El apellido es obligatorio';
+        } elseif (mb_strlen($apellido) < 2 || mb_strlen($apellido) > 100) {
+            $errores['apellido'] = 'El apellido debe tener entre 2 y 100 caracteres';
+        }
+
+        $correo = trim((string)$this->correo);
+        if ($correo === '') {
+            $errores['correo'] = 'El correo es obligatorio';
+        } elseif (mb_strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            $errores['correo'] = 'El correo no es válido';
+        }
+
+        $telefono = preg_replace('/\D+/', '', (string)$this->telefono);
+        if ($telefono === '') {
+            $errores['telefono'] = 'El teléfono es obligatorio';
+        } elseif (strlen($telefono) < 7 || strlen($telefono) > 15) {
+            $errores['telefono'] = 'El teléfono debe tener entre 7 y 15 dígitos';
+        }
+
+        $cedula = preg_replace('/\D+/', '', (string)$this->cedula);
+        if ($cedula === '') {
+            $errores['cedula'] = 'La cédula es obligatoria';
+        } elseif (strlen($cedula) < 6 || strlen($cedula) > 10) {
+            $errores['cedula'] = 'La cédula debe tener entre 6 y 10 dígitos';
+        }
+
+        $rango = (int)$this->id_rol;
+        if ($rango <= 0) {
+            $errores['rango'] = 'Debe seleccionar un rol válido';
+        }
+
+        return $errores;
+    }
+
     public function verificarCampoEstatus() {
         $this->v_CampoEstatus();
     }

@@ -38,6 +38,36 @@ class modelo extends BD{
         $this->id_modelo = $id_modelo;
     }
 
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre del modelo
+        $nombre_modelo = trim((string)$this->nombre_modelo);
+        if ($nombre_modelo === '') {
+            $errores['nombre_modelo'] = 'El nombre del modelo es obligatorio';
+        } elseif (mb_strlen($nombre_modelo) < 2 || mb_strlen($nombre_modelo) > 100) {
+            $errores['nombre_modelo'] = 'El nombre del modelo debe tener entre 2 y 100 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_modelo)) {
+            $errores['nombre_modelo'] = 'El nombre del modelo solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar ID de la marca
+        $id_marca = (int)$this->id_marca;
+        if ($id_marca <= 0) {
+            $errores['id_marca'] = 'Debe seleccionar una marca válida';
+        }
+
+        // Validar ID del modelo (solo para modificaciones)
+        if ($esModificacion) {
+            $id_modelo = (int)$this->id_modelo;
+            if ($id_modelo <= 0) {
+                $errores['id_modelo'] = 'El ID del modelo no es válido';
+            }
+        }
+
+        return $errores;
+    }
+
     public function existeNombreModelo($nombre_modelo, $excluir_id = null) {
         return $this->existeNomModelo($nombre_modelo, $excluir_id);
     }

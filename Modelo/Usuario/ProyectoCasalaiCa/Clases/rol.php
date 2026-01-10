@@ -25,6 +25,30 @@ class Rol extends BD {
     }
     public function setNombreRol($nombre_rol) { 
         $this->nombre_rol = $nombre_rol; 
+    }
+
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre del rol
+        $nombre_rol = trim((string)$this->nombre_rol);
+        if ($nombre_rol === '') {
+            $errores['nombre_rol'] = 'El nombre del rol es obligatorio';
+        } elseif (mb_strlen($nombre_rol) < 2 || mb_strlen($nombre_rol) > 100) {
+            $errores['nombre_rol'] = 'El nombre del rol debe tener entre 2 y 100 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_rol)) {
+            $errores['nombre_rol'] = 'El nombre del rol solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar ID del rol (solo para modificaciones)
+        if ($esModificacion) {
+            $id_rol = (int)$this->id_rol;
+            if ($id_rol <= 0) {
+                $errores['id_rol'] = 'El ID del rol no es válido';
+            }
+        }
+
+        return $errores;
     } 
 
     public function registrarRol() {

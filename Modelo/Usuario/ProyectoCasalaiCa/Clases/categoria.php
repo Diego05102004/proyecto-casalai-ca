@@ -33,6 +33,82 @@ class Categoria extends BD
     {
         $this->nombre_categoria = $nombre_categoria;
     }
+
+    public function validarDatos($esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre de la categoría
+        $nombre_categoria = trim((string)$this->nombre_categoria);
+        if ($nombre_categoria === '') {
+            $errores['nombre_categoria'] = 'El nombre de la categoría es obligatorio';
+        } elseif (mb_strlen($nombre_categoria) < 2 || mb_strlen($nombre_categoria) > 100) {
+            $errores['nombre_categoria'] = 'El nombre de la categoría debe tener entre 2 y 100 caracteres';
+        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_categoria)) {
+            $errores['nombre_categoria'] = 'El nombre de la categoría solo puede contener letras, números, espacios y caracteres especiales comunes';
+        }
+
+        // Validar características si existen
+        if (isset($this->caracteristicas) && is_array($this->caracteristicas)) {
+            foreach ($this->caracteristicas as $index => $caracteristica) {
+                $nombre_carac = trim((string)($caracteristica['nombre'] ?? ''));
+                if ($nombre_carac === '') {
+                    $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica es obligatorio';
+                } elseif (mb_strlen($nombre_carac) < 2 || mb_strlen($nombre_carac) > 100) {
+                    $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica debe tener entre 2 y 100 caracteres';
+                } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_carac)) {
+                    $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica solo puede contener letras, números, espacios y caracteres especiales comunes';
+                }
+
+                // Validar tipo
+                $tipo = strtolower(trim((string)($caracteristica['tipo'] ?? '')));
+                if (!in_array($tipo, ['int', 'float', 'string'])) {
+                    $errores["caracteristica_{$index}_tipo"] = 'El tipo de característica debe ser: int, float o string';
+                }
+
+                // Validar valor según tipo
+                $valor = trim((string)($caracteristica['valor'] ?? ''));
+                if ($valor === '') {
+                    $errores["caracteristica_{$index}_valor"] = 'El valor de la característica es obligatorio';
+                } else {
+                    switch ($tipo) {
+                        case 'int':
+                            if (!is_numeric($valor) || (int)$valor < 0 || (int)$valor > 999999) {
+                                $errores["caracteristica_{$index}_valor"] = 'El valor entero debe estar entre 0 y 999999';
+                            }
+                            break;
+                        case 'float':
+                            if (!is_numeric($valor) || (float)$valor < 0 || (float)$valor > 999999.99) {
+                                $errores["caracteristica_{$index}_valor"] = 'El valor decimal debe estar entre 0 y 999999.99';
+                            }
+                            break;
+                        case 'string':
+                            if (mb_strlen($valor) > 1000) {
+                                $errores["caracteristica_{$index}_valor"] = 'El valor de texto no debe exceder los 1000 caracteres';
+                            }
+                            break;
+                    }
+                }
+
+                // Validar longitud máxima (string)
+                if ($tipo === 'string' && isset($caracteristica['max'])) {
+                    $max = (int)$caracteristica['max'];
+                    if ($max <= 0 || $max > 255) {
+                        $errores["caracteristica_{$index}_max"] = 'La longitud máxima debe estar entre 1 y 255 caracteres';
+                    }
+                }
+            }
+        }
+
+        // Validar ID de la categoría (solo para modificaciones)
+        if ($esModificacion) {
+            $id_categoria = (int)$this->id_categoria;
+            if ($id_categoria <= 0) {
+                $errores['id_categoria'] = 'El ID de la categoría no es válido';
+            }
+        }
+
+        return $errores;
+    }
     
     public function existeNombreCategoria($nombre, $excluirId = null)
     {

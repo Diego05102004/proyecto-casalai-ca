@@ -46,6 +46,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $usuario->setTelefono($_POST['telefono_usuario']);
             $usuario->setRango($_POST['rango']);
             $usuario->setCedula($_POST['cedula']);
+            
+            $errores = $usuario->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Errores de validación',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
 
             if ($usuario->existeUsuario($_POST['nombre_usuario'])) {
                 echo json_encode([
@@ -108,23 +118,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'obtener_usuario':
-            $id_usuario = $_POST['id_usuario'];
-            if ($id_usuario !== null) {
-                $usuario = new Usuarios();
-                $usuarioData = $usuario->obtenerUsuarioPorId($id_usuario);
-                
-                if ($usuarioData !== null) {
-                    echo json_encode($usuarioData);
-                } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Usuario no encontrado']);
-                }
+            $id_usuario = $_POST['id_usuario'] ?? null;
+            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
+                echo json_encode(['status' => 'error', 'message' => 'ID de usuario no válido']);
+                exit;
+            }
+            $usuario = new Usuarios();
+            $usuarioData = $usuario->obtenerUsuarioPorId($id_usuario);
+            
+            if ($usuarioData !== null) {
+                echo json_encode($usuarioData);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'ID del Usuario no proporcionado']);
+                echo json_encode(['status' => 'error', 'message' => 'Usuario no encontrado']);
             }
             exit;
 
         case 'modificar':
             $id_usuario = $_POST['id_usuario'];
+            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de usuario no válido'
+                ]);
+                exit;
+            }
             $usuario = new Usuarios();
             $usuario->setId($id_usuario);
             $usuario->setUsername($_POST['nombre_usuario']);
@@ -134,6 +151,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $usuario->setTelefono($_POST['telefono_usuario']);
             $usuario->setRango($_POST['rango']);
             $usuario->setCedula($_POST['cedula']);
+            $usuario->setClave($_POST['clave_usuario'] ?? '');
+            
+            $errores = $usuario->validarDatos(true);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Errores de validación',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
             
             if ($usuario->existeUsuario($_POST['nombre_usuario'], $id_usuario)) {
                 echo json_encode([
@@ -192,6 +220,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             $id_usuario = $_POST['id_usuario'];
+            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de usuario no válido'
+                ]);
+                exit;
+            }
             $usuarioModel = new Usuarios();
             
             // Obtener datos del usuario antes de eliminarlo
@@ -219,6 +254,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'cambiar_estatus':
             $id_usuario = $_POST['id_usuario'];
             $nuevoEstatus = $_POST['nuevo_estatus'];
+            
+            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
+                echo json_encode(['status' => 'error', 'message' => 'ID de usuario no válido']);
+                exit;
+            }
             
             if (!in_array($nuevoEstatus, ['habilitado', 'inhabilitado'])) {
                 echo json_encode(['status' => 'error', 'message' => 'Estatus no válido']);

@@ -32,6 +32,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $modelo->setnombre_modelo($_POST['nombre_modelo']);
             $modelo->setid_marca($_POST['id_marca']);
 
+            // Validar datos del modelo
+            $errores = $modelo->validarDatos();
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del modelo',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
+            // Validar que la marca exista antes de registrar
+            $marcas = $modelo->getmarcas();
+            $marcaExiste = false;
+            foreach ($marcas as $marca) {
+                if ($marca['id_marca'] == $_POST['id_marca']) {
+                    $marcaExiste = true;
+                    break;
+                }
+            }
+            if (!$marcaExiste) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La marca seleccionada no existe'
+                ]);
+                exit;
+            }
+
             if ($modelo->existeNombreModelo($_POST['nombre_modelo'])) {
                 
                 echo json_encode([
@@ -85,11 +113,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
-            $id_modelo = $_POST['id_modelo'];
+            $id_modelo = $_POST['id_modelo'] ?? '';
+            $nombre_modelo = $_POST['nombre_modelo'] ?? '';
+            $id_marca = $_POST['id_marca'] ?? '';
+            
+            // Validar ID del modelo
+            $id_modelo = (int)$id_modelo;
+            if ($id_modelo <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El ID del modelo no es válido'
+                ]);
+                exit;
+            }
+            
             $modelo = new modelo();
             $modelo->setIdModelo($id_modelo);
-            $modelo->setnombre_modelo($_POST['nombre_modelo']);
-            $modelo->setid_marca($_POST['id_marca']);
+            $modelo->setnombre_modelo($nombre_modelo);
+            $modelo->setid_marca($id_marca);
+
+            // Validar datos del modelo
+            $errores = $modelo->validarDatos(true); // true = es modificación
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos del modelo',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
+            // Verificar que el modelo exista antes de modificar
+            $modeloExistente = $modelo->obtenerModeloPorId($id_modelo);
+            if (!$modeloExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El modelo que intenta modificar no existe'
+                ]);
+                exit;
+            }
+
+            // Validar que la marca exista antes de modificar
+            $marcas = $modelo->getmarcas();
+            $marcaExiste = false;
+            foreach ($marcas as $marca) {
+                if ($marca['id_marca'] == $id_marca) {
+                    $marcaExiste = true;
+                    break;
+                }
+            }
+            if (!$marcaExiste) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La marca seleccionada no existe'
+                ]);
+                exit;
+            }
             
             if ($modelo->existeNombreModelo($_POST['nombre_modelo'], $id_modelo)) {
                 
@@ -129,8 +208,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id_modelo = $_POST['id_modelo'];
+            $id_modelo = $_POST['id_modelo'] ?? '';
+            
+            // Validar ID del modelo
+            $id_modelo = (int)$id_modelo;
+            if ($id_modelo <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El ID del modelo no es válido'
+                ]);
+                exit;
+            }
+            
             $modelo = new modelo();
+            
+            // Verificar que el modelo exista antes de eliminar
+            $modeloExistente = $modelo->obtenerModeloPorId($id_modelo);
+            if (!$modeloExistente) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El modelo que intenta eliminar no existe'
+                ]);
+                exit;
+            }
+            
             $resultado = $modelo->eliminarModelo($id_modelo);
 
             if (is_array($resultado) && $resultado['status'] === 'error') {
