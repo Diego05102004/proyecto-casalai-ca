@@ -340,7 +340,7 @@ $(document).ready(function () {
 
     function sincronizarCarritoNavbar() {
         $.ajax({
-            url: 'Controlador/obtener_carrito_count.php',
+            url: '/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/Modelo/Controlador/obtener_carrito_count.php',
             method: 'GET',
             dataType: 'json',
             success: function (data) {
@@ -1137,24 +1137,39 @@ verificarTodo();
     });
 }
 
-    // Actualizar contador del carrito
+    // Actualizar contador del carrito usando WebSocket
     function updateCartCount() {
-        $.ajax({
-            url: '?pagina=carrito',
-            type: 'POST',
-            data: {accion: 'obtener_cantidad_carrito'},
-            dataType: 'json',
-            success: function (data) {
-                if (data.cantidad > 0) {
-                    $('.cart-count').text(data.cantidad).removeClass('d-none');
-                } else {
-                    $('.cart-count').addClass('d-none');
+        // Si tenemos WebSocket disponible, lo usamos
+        if (window.notificacionesWS) {
+            // Enviamos una solicitud para actualizar el contador
+            window.notificacionesWS.enviar({ 
+                tipo: 'obtener_carrito_count' 
+            });
+        } else {
+            // Fallback a AJAX si WebSocket no está disponible
+            $.ajax({
+                url: '?pagina=carrito',
+                type: 'POST',
+                data: {accion: 'obtener_cantidad_carrito'},
+                dataType: 'json',
+                success: function (data) {
+                    actualizarContadorCarritoUI(data.cantidad || 0);
+                },
+                error: function (xhr) {
+                    console.error('Error al obtener cantidad del carrito:', xhr.status, xhr.statusText);
                 }
-            },
-            error: function (xhr) {
-                console.error('Error al obtener cantidad del carrito:', xhr.status, xhr.statusText);
-            }
-        });
+            });
+        }
+    }
+    
+    // Función para actualizar la UI del contador del carrito
+    function actualizarContadorCarritoUI(cantidad) {
+        const cartCountElement = $('.cart-count-badge');
+        if (cantidad > 0) {
+            cartCountElement.text(cantidad).show();
+        } else {
+            cartCountElement.hide();
+        }
     }
 
     function numberFormat(num, decimals = 0) {

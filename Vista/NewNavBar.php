@@ -719,87 +719,40 @@ if (!empty($_SESSION['foto_perfil'])) {
             });
         }
         
-        // Actualizar notificaciones periódicamente vía WebSocket (reemplaza al fetch comentado)
-        setInterval(() => {
-            if (window.notificacionesWS) {
+        // Inicializar WebSocket para notificaciones, tasa de cambio y carrito
+        if (window.notificacionesWS) {
+            // Configurar intervalos para actualizaciones periódicas
+            setInterval(() => {
                 window.notificacionesWS.enviar({ tipo: 'ping_nuevas' });
-            }
-        }, 6000);
-        
-        // Actualizar contador del carrito periódicamente
-        setInterval(actualizarCarritoCount, 5000);
-        
-        // Actualizar tasa de cambio periódicamente (cada 5 minutos)
-        setInterval(actualizarTasaCambio, 300000);
+            }, 6000);
+            
+            // Actualizar contador del carrito cada 5 segundos
+            setInterval(() => {
+                window.notificacionesWS.solicitarCarritoCount();
+            }, 5000);
+            
+            // Actualizar tasa de cambio cada 5 minutos
+            setInterval(() => {
+                window.notificacionesWS.solicitarTasaCambio();
+            }, 300000);
+            
+            // Solicitar datos iniciales
+            window.notificacionesWS.solicitarTasaCambio();
+            window.notificacionesWS.solicitarCarritoCount();
+        }
     });
 
+    // Estas funciones se mantienen por compatibilidad, pero ya no se usan directamente
     function actualizarTasaCambio() {
-        fetch('Modelo/Controlador/obtener_tasa_cambio.php')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const tasaPanel = document.getElementById('tasa-cambio-panel');
-                    if (tasaPanel) {
-                        let html = `<h2>Tipo de Cambio <i class="bi bi-currency-exchange"></i></h2>`;
-                        
-                        if (data.tasa) {
-                            html += `
-                                <div class="tasa-info">
-                                    <div class="tasa-valor">
-                                        <strong>1 USD = ${data.tasa} BS</strong>
-                                    </div>
-                                    <div class="tasa-actualizacion">
-                                        <small>Actualizado: ${data.actualizado}</small>
-                                    </div>
-                                    <div class="tasa-fuente">
-                                        <small>Fuente: Banco Central de Venezuela</small>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        
-                        tasaPanel.innerHTML = html;
-                    }
-                }
-            })
-            .catch(err => console.error('Error actualizando tasa de cambio:', err));
+        if (window.notificacionesWS) {
+            window.notificacionesWS.solicitarTasaCambio();
+        }
     }
 
     function actualizarCarritoCount() {
-        fetch('Modelo/Controlador/obtener_carrito_count.php')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.success) {
-                    const cartBadge = document.querySelector('.cart-count-badge');
-                    const cartBtn = document.getElementById('cart-btn');
-                    
-                    if (data.count > 0) {
-                        if (cartBadge) {
-                            cartBadge.textContent = data.count;
-                            cartBadge.style.display = 'flex';
-                        } else if (cartBtn) {
-                            // Crear badge si no existe
-                            const newBadge = document.createElement('span');
-                            newBadge.className = 'cart-count-badge';
-                            newBadge.textContent = data.count;
-                            cartBtn.appendChild(newBadge);
-                        }
-                    } else if (cartBadge) {
-                        cartBadge.style.display = 'none';
-                    }
-                }
-            })
-            .catch(err => console.error('Error actualizando carrito:', err));
+        if (window.notificacionesWS) {
+            window.notificacionesWS.solicitarCarritoCount();
+        }
     }
 
     class NotificacionesWebSocket {
@@ -863,13 +816,18 @@ if (!empty($_SESSION['foto_perfil'])) {
                 case 'nueva_notificacion':
                     this.renderizarListaNotificaciones(data.notificaciones || []);
                     break;
-
                 case 'marcar_leida':
                     if (data.ok) {
                         this.actualizarNotificacionUI(data.id_notificacion);
                     } else {
                         console.error('Error al marcar notificación como leída (WS):', data.error || data);
                     }
+                    break;
+                case 'actualizar_tasa_cambio':
+                    this.actualizarTasaCambioUI(data);
+                    break;
+                case 'actualizar_carrito_count':
+                    this.actualizarCarritoCountUI(data.count);
                     break;
                 // Agregar más casos según sea necesario
             }
@@ -1005,6 +963,61 @@ if (!empty($_SESSION['foto_perfil'])) {
                 const valorActual = parseInt(contadorPanel.textContent) || 0;
                 contadorPanel.textContent = valorActual + 1;
             }
+        }
+
+        // Nuevos métodos para manejar la tasa de cambio y el contador del carrito
+        actualizarTasaCambioUI(data) {
+            const tasaPanel = document.getElementById('tasa-cambio-panel');
+            if (tasaPanel) {
+                let html = `<h2>Tipo de Cambio <i class="bi bi-currency-exchange"></i></h2>`;
+                
+                if (data.tasa) {
+                    html += `
+                        <div class="tasa-info">
+                            <div class="tasa-valor">
+                                <strong>1 USD = ${data.tasa} BS</strong>
+                            </div>
+                            <div class="tasa-actualizacion">
+                                <small>Actualizado: ${data.actualizado}</small>
+                            </div>
+                            <div class="tasa-fuente">
+                                <small>Fuente: Banco Central de Venezuela</small>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                tasaPanel.innerHTML = html;
+            }
+        }
+
+        actualizarCarritoCountUI(count) {
+            const cartBadge = document.querySelector('.cart-count-badge');
+            const cartBtn = document.getElementById('cart-btn');
+            
+            if (count > 0) {
+                if (cartBadge) {
+                    cartBadge.textContent = count;
+                    cartBadge.style.display = 'flex';
+                } else if (cartBtn) {
+                    // Crear badge si no existe
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'cart-count-badge';
+                    newBadge.textContent = count;
+                    cartBtn.appendChild(newBadge);
+                }
+            } else if (cartBadge) {
+                cartBadge.style.display = 'none';
+            }
+        }
+
+        // Métodos para solicitar actualizaciones
+        solicitarTasaCambio() {
+            this.enviar({ tipo: 'obtener_tasa_cambio' });
+        }
+
+        solicitarCarritoCount() {
+            this.enviar({ tipo: 'obtener_carrito_count' });
         }
     }
 

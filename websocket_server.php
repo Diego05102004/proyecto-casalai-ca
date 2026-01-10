@@ -50,6 +50,19 @@ class NotificacionWebSocket implements MessageComponentInterface {
                 $this->procesarPingNuevas($from);
                 return;
             }
+
+            if ($data['tipo'] === 'obtener_tasa_cambio') {
+                $this->obtenerTasaCambio($from);
+                return;
+            }
+
+            if ($data['tipo'] === 'obtener_carrito_count') {
+                $usuarioId = array_search($from, $this->usuarios, true);
+                if ($usuarioId !== false) {
+                    $this->obtenerCarritoCount($from, $usuarioId);
+                }
+                return;
+            }
         }
 
         if (isset($data['para_usuario_id']) && isset($this->usuarios[$data['para_usuario_id']])) {
@@ -136,6 +149,87 @@ class NotificacionWebSocket implements MessageComponentInterface {
         } finally {
             if (isset($bd_seguridad)) {
                 $bd_seguridad->cerrar();
+            }
+        }
+    }
+
+    protected function obtenerTasaCambio(ConnectionInterface $from): void
+    {
+        try {
+            // Obtener la tasa de cambio de la base de datos
+            $bd = new BD('S');
+            $pdo = $bd->getConexion();
+            
+            $stmt = $pdo->query("SELECT * FROM tbl_tasa_cambio ORDER BY fecha_actualizacion DESC LIMIT 1");
+            $tasa = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($tasa) {
+                $from->send(json_encode([
+                    'tipo' => 'actualizar_tasa_cambio',
+                    'tasa' => $tasa['tasa'],
+                    'actualizado' => date('d/m/Y H:i', strtotime($tasa['fecha_actualizacion']))
+                ]));
+            } else {
+                $from->send(json_encode([
+                    'tipo' => 'actualizar_tasa_cambio',
+                    'tasa' => 1.00,
+                    'actualizado' => date('d/m/Y H:i')
+                ]));
+            }
+        } catch (\Exception $e) {
+            echo "Error al obtener tasa de cambio: " . $e->getMessage() . "\n";
+            // Enviar valor por defecto en caso de error
+            $from->send(json_encode([
+                'tipo' => 'actualizar_tasa_cambio',
+                'tasa' => 1.00,
+                'actualizado' => date('d/m/Y H:i'),
+                'error' => 'No se pudo obtener la tasa de cambio actual'
+            ]));
+        } finally {
+            if (isset($bd)) {
+                $bd->cerrar();
+            }
+        }
+    }
+
+    protected function obtenerCarritoCount(ConnectionInterface $from, int $usuarioId): void
+    {
+        try {
+            $bd = new BD('S');
+            $pdo = $bd->getConexion();
+            
+            // Obtener el ID del carrito activo del usuario
+            $stmt = $pdo->prepare("SELECT id_carrito FROM tbl_carritos WHERE id_usuario = :usuario_id AND estado = 'activo'");
+            $stmt->bindParam(':usuario_id', $usuarioId, \PDO::PARAM_INT);
+            $stmt->execute();
+            $carrito = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            $count = 0;
+            if ($carrito) {
+                // Contar los productos en el carrito
+                $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tbl_carrito_detalle WHERE id_carrito = :carrito_id");
+                $stmt->bindParam(':carrito_id', $carrito['id_carrito'], \PDO::PARAM_INT);
+                $stmt->execute();
+                $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+                $count = (int)$result['total'];
+            }
+            
+            $from->send(json_encode([
+                'tipo' => 'actualizar_carrito_count',
+                'count' => $count
+            ]));
+            
+        } catch (\Exception $e) {
+            echo "Error al obtener conteo de carrito: " . $e->getMessage() . "\n";
+            // Enviar 0 en caso de error
+            $from->send(json_encode([
+                'tipo' => 'actualizar_carrito_count',
+                'count' => 0,
+                'error' => 'No se pudo obtener el conteo del carrito'
+            ]));
+        } finally {
+            if (isset($bd)) {
+                $bd->cerrar();
             }
         }
     }
