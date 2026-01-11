@@ -152,14 +152,26 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     $detallePagos[] = $detalle;
                 }
 
-                // Registrar en el modelo
-                $resultado = $k->registrarCompraFisica([
+                $datosVenta = [
                     'cliente' => $idCliente,
                     'monto_total' => $montoTotal,
                     'cambio' => $cambio,
                     'productos' => $detalleProductos,
                     'pagos' => $detallePagos
-                ]);
+                ];
+
+                $errores = $k->validarDatosVenta($datosVenta);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'Error en los datos de la venta',
+                        'errores' => $errores
+                    ]);
+                    exit;
+                }
+
+                // Registrar en el modelo
+                $resultado = $k->registrarCompraFisica($datosVenta);
 
                 // Verificar si el registro fue exitoso
                 if (isset($resultado['status']) && $resultado['status'] === 'error') {

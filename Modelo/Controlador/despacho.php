@@ -42,23 +42,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         break;
 
         case 'obtener_detalles':
-            $idDespacho = $_POST['id_despachos'] ?? null;
-            if ($idDespacho) {
+            $idDespacho = isset($_POST['id_despachos']) ? (int)$_POST['id_despachos'] : 0;
+            if ($idDespacho > 0) {
                 $respuesta = $k->obtenerDetallesPorDespacho($idDespacho);
                 echo json_encode($respuesta);
             } else {
-                echo json_encode(['error' => true, 'mensaje' => 'ID de recepción no recibido']);
+                echo json_encode(['error' => true, 'mensaje' => 'ID de despacho no válido']);
             }
         break;
 
         case 'cambiar_estado_despacho':
-            $id = $_POST['id'];
-            $estado_actual = $_POST['estado_actual'];
+            $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+            $estado_actual = isset($_POST['estado_actual']) ? trim($_POST['estado_actual']) : '';
+
+            if ($id <= 0 || !in_array($estado_actual, ['Por Despachar', 'Despachado'], true)) {
+                echo json_encode(['status' => 'error', 'message' => 'Datos inválidos para cambiar el estado del despacho']);
+                break;
+            }
+
             $nuevo_estado = ($estado_actual === 'Por Despachar') ? 'Despachado' : 'Por Despachar';
             $despachoModel = new Despacho();
             if ($despachoModel->cambiarEstadoDespacho($id, $nuevo_estado)) {
                 if (!defined('SKIP_SIDE_EFFECTS')) {
-                    // Bitácora
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
                         $_SESSION['id_usuario'],
@@ -68,7 +73,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         'media'
                     );
 
-                    // Notificación
                     $bd_seguridad = new BD('S');
                     $pdo_seguridad = $bd_seguridad->getConexion();
                     $notificacionModel = new NotificacionModel($pdo_seguridad);
@@ -90,13 +94,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'anular':
-            $idDespacho = $_POST['id_despachos'];
+            $idDespacho = isset($_POST['id_despachos']) ? (int)$_POST['id_despachos'] : 0;
+            if ($idDespacho <= 0) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de despacho no válido'
+                ]);
+                break;
+            }
+
             $resultado = $k->anularDespacho($idDespacho);
 
-            // Bitácora y Notificación (similar a Recepción)
             if ($resultado['status'] === 'success') {
                 if (!defined('SKIP_SIDE_EFFECTS')) {
-                    // Bitácora
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
@@ -106,7 +117,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         'media'
                     );
 
-                    // Notificación
                     $bd_seguridad = new BD('S');
                     $pdo_seguridad = $bd_seguridad->getConexion();
                     $notificacionModel = new NotificacionModel($pdo_seguridad);
