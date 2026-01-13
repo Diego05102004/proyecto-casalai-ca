@@ -1523,12 +1523,31 @@ private function v_verificarStock($id_producto, $cantidad) {
 public function cambiarEstadoCombo($id_combo) {
     return $this->c_EstadoCombo($id_combo);
 }
+
 private function c_EstadoCombo($id_combo) {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
+    $conexion = null;
+    $stmt = null;
+    
     try {
-        // Verificar que el combo existe
-        $combo = $this->obtenerComboPorId($id_combo);
+        // Inicializar conexión
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        
+        if (!$this->conex) {
+            throw new PDOException('No se pudo establecer conexión a la base de datos');
+        }
+
+        // Obtener el estado actual del combo
+        $sql = "SELECT activo FROM tbl_combo WHERE id_combo = :id_combo";
+        $stmt = $this->conex->prepare($sql);
+        $stmt->bindParam(':id_combo', $id_combo, PDO::PARAM_INT);
+        
+        if (!$stmt->execute()) {
+            $error = $stmt->errorInfo();
+            throw new PDOException('Error al obtener el estado actual del combo: ' . $error[2]);
+        }
+        
+        $combo = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$combo) {
             throw new PDOException('Combo no encontrado');
         }
@@ -1536,24 +1555,42 @@ private function c_EstadoCombo($id_combo) {
         // Determinar el nuevo estado (alternar entre 1 y 0)
         $nuevoEstado = $combo['activo'] ? 0 : 1;
         
-        // Preparar y ejecutar la consulta
+        // Preparar y ejecutar la consulta de actualización
         $sql = "UPDATE tbl_combo SET activo = :activo WHERE id_combo = :id_combo";
         $stmt = $this->conex->prepare($sql);
+        
+        if (!$stmt) {
+            $error = $this->conex->errorInfo();
+            throw new PDOException('Error al preparar la consulta: ' . $error[2]);
+        }
+        
         $stmt->bindParam(':activo', $nuevoEstado, PDO::PARAM_INT);
         $stmt->bindParam(':id_combo', $id_combo, PDO::PARAM_INT);
         
         if (!$stmt->execute()) {
-            throw new PDOException('Error al actualizar el estado del combo');
+            $error = $stmt->errorInfo();
+            throw new PDOException('Error al ejecutar la actualización: ' . $error[2]);
         }
         
         return true;
+        
+    } catch (PDOException $e) {
+        error_log('Error en c_EstadoCombo: ' . $e->getMessage());
+        throw $e;
+    } catch (Exception $e) {
+        error_log('Error general en c_EstadoCombo: ' . $e->getMessage());
+        throw $e;
     } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
+        // Cerrar la conexión
+        if ($stmt) {
+            $stmt = null;
+        }
+        if ($conexion) {
+            $conexion->cerrar();
+        }
         $this->conex = null;
     }
 }
-
-
     // 1. Productos más vendidos (Top 10)
     public function getProductosMasVendidos() {
         return $this->g_productosMasVendidos();

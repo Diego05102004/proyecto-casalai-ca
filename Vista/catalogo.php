@@ -332,19 +332,20 @@
                                     </div>
                                     
                                     <div class="table-responsive">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Producto</th>
-                                                    <th>Cantidad</th>
-                                                    <th>Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="productos_combo_table">
-                                                <!-- Los productos se agregarán aquí dinámicamente -->
-                                            </tbody>
-                                        </table>
-                                    </div>
+    <table id="productos_combo_table" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Los productos se insertarán aquí dinámicamente -->
+        </tbody>
+    </table>
+</div>
                                 </div>
                             </div>
                         </form>

@@ -538,59 +538,67 @@ function confirmarCantidad() {
     }
 
     // Editar combo existente
-    function editarCombo() {
-        const idCombo = $(this).data('id-combo');
-        currentComboId = idCombo;
+function editarCombo() {
+    const idCombo = $(this).data('id-combo');
+    currentComboId = idCombo;
 
-        $.ajax({
-            url: '?pagina=catalogo',
-            type: 'POST',
-            data: {
-                accion: 'obtener_detalles_combo',
-                id_combo: idCombo
-            },
-            beforeSend: function () {
-                $('#comboModal').modal('show');
-                $('#comboModalLabel').html('<span class="spinner-border spinner-border-sm" role="status"></span> Cargando combo...');
-            },
-            success: function (response) {
-                try {
-                    const data = typeof response === 'object' ? response : JSON.parse(response);
+    $.ajax({
+        url: '?pagina=catalogo',
+        type: 'POST',
+        data: {
+            accion: 'obtener_detalles_combo',
+            id_combo: idCombo
+        },
+        beforeSend: function() {
+            $('#comboModal').modal('show');
+            $('#comboModalLabel').html('<span class="spinner-border spinner-border-sm" role="status"></span> Cargando combo...');
+        },
+        success: function(response) {
+            try {
+                const data = typeof response === 'object' ? response : JSON.parse(response);
+                console.log('Datos del combo recibidos:', data); // Para depuración
 
-                    if (data.status === 'success') {
-                        $('#comboModalLabel').text('Editar Combo: ' + data.combo.nombre_combo);
-                        $('#id_combo').val(idCombo);
-                        $('#nombre_combo').val(data.combo.nombre_combo);
-                        $('#descripcion').val(data.combo.descripcion);
+                if (data.status === 'success') {
+                    // Actualizar el formulario con los datos del combo
+                    $('#comboModalLabel').text('Editar Combo: ' + data.combo.nombre_combo);
+                    $('#id_combo').val(idCombo);
+                    $('#nombre_combo').val(data.combo.nombre_combo);
+                    $('#descripcion').val(data.combo.descripcion);
 
-                        // Cargar productos del combo
-                        productosSeleccionados = data.detalles.map(item => {
-                            return {
+                    // Limpiar productos seleccionados
+                    productosSeleccionados = [];
+
+                    // Procesar los detalles del combo
+                    if (data.detalles && Array.isArray(data.detalles)) {
+                        data.detalles.forEach(item => {
+                            productosSeleccionados.push({
                                 id: item.id_producto,
-                                nombre: item.nombre_producto,
-                                cantidad: item.cantidad,
-                                precio: item.precio*tasa
-                            };
+                                nombre: item.nombre_producto || `Producto ${item.id_producto}`,
+                                cantidad: parseInt(item.cantidad) || 1,
+                                precio: parseFloat(item.precio) || 0
+                            });
                         });
-
-                        actualizarTablaProductosCombo();
-                    } else {
-                        Swal.fire('Error', data.message || 'Error al cargar el combo', 'error');
-                        $('#comboModal').modal('hide');
                     }
-                } catch (e) {
-                    console.error('Error parsing response:', e);
-                    Swal.fire('Error', 'Error al procesar la respuesta', 'error');
+
+                    // Actualizar la tabla de productos
+                    actualizarTablaProductosCombo();
+                } else {
+                    Swal.fire('Error', data.message || 'Error al cargar el combo', 'error');
                     $('#comboModal').modal('hide');
                 }
-            },
-            error: function (xhr) {
-                console.error('AJAX Error:', xhr.status, xhr.statusText);
-                Swal.fire('Error', 'Error al cargar el combo', 'error');
+            } catch (e) {
+                console.error('Error al procesar la respuesta:', e, 'Respuesta:', response);
+                Swal.fire('Error', 'Error al procesar la respuesta del servidor', 'error');
                 $('#comboModal').modal('hide');
             }
-        });
-    }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error en la solicitud AJAX:', status, error);
+            Swal.fire('Error', 'No se pudo cargar el combo. Intente nuevamente.', 'error');
+            $('#comboModal').modal('hide');
+        }
+    });
+}
 
     // Mostrar modal para cambiar estado de combo
     function mostrarModalCambioEstado() {
@@ -619,81 +627,189 @@ function confirmarCantidad() {
     }
 
     // Cambiar estado de combo (habilitar/deshabilitar)
-    function cambiarEstadoCombo() {
-        const idCombo = $('#comboIdEstado').val();
-        const btn = $(this);
+function cambiarEstadoCombo() {
+    console.group('=== DEPURACIÓN: cambiarEstadoCombo ===');
+    
+    try {
+        // 1. Obtener referencias a los elementos del modal
+        const $modal = $('#cambioEstadoModal');
+        const idCombo = $modal.find('#combo_id_estado').val();
+        const $btnConfirmar = $('#confirmarCambioEstado');
+        const $accionEstado = $('#accionEstado');
+        
+        console.log('ID del combo a modificar:', idCombo);
+        
+        if (!idCombo) {
+            throw new Error('No se proporcionó un ID de combo válido');
+        }
 
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Procesando...');
+        // 2. Obtener el botón que disparó el evento
+        const $btnEstado = $(`.btn-cambiar-estado[data-id-combo="${idCombo}"]`);
+        console.log('Botón de estado encontrado:', $btnEstado.length > 0 ? 'Sí' : 'No');
+        
+        if ($btnEstado.length === 0) {
+            throw new Error('No se pudo encontrar el botón de cambio de estado');
+        }
 
+        // 3. Obtener datos actuales
+        const nombreCombo = $btnEstado.data('nombre-combo') || 'el combo';
+        const estadoActual = $btnEstado.data('estado-actual') === 1;
+        const nuevoEstado = !estadoActual;
+        
+        console.log('Datos del combo:', {
+            nombre: nombreCombo,
+            estadoActual: estadoActual ? 'Habilitado' : 'Deshabilitado',
+            nuevoEstado: nuevoEstado ? 'Habilitado' : 'Deshabilitado'
+        });
+
+        // 4. Deshabilitar botón y mostrar indicador de carga
+        $btnConfirmar
+            .prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm" role="status"></span> Procesando...');
+
+        console.log('Enviando solicitud AJAX...');
+        
+        // 5. Realizar la petición AJAX
         $.ajax({
             url: '?pagina=catalogo',
             type: 'POST',
             dataType: 'json',
             data: {
                 accion: 'cambiar_estado_combo',
-                id_combo: idCombo
+                id_combo: idCombo,
+                nuevo_estado: nuevoEstado ? 1 : 0  // Enviar el nuevo estado al servidor
             },
-            success: function (data) {
-                if (data.status === 'success') {
-                    // Actualizar la interfaz sin recargar
-                    const comboCard = $(`.btn-cambiar-estado[data-id-combo="${idCombo}"]`).closest('.combo-card');
-                    const estadoBtn = $(`.btn-cambiar-estado[data-id-combo="${idCombo}"]`);
-                    const btnAgregarCombo = comboCard.find('.btn-agregar-combo');
-                    const esActivo = data.nuevo_estado;
-
-                    // Cambiar clases y apariencia
-                    comboCard.toggleClass('disabled-combo', !esActivo);
-
-                    // Actualizar botón de cambiar estado
-                    estadoBtn
-                        .toggleClass('btn-outline-warning btn-outline-success', esActivo)
-                        .toggleClass('btn-outline-success btn-outline-warning', !esActivo)
+            context: { 
+                btnEstado: $btnEstado,
+                btnConfirmar: $btnConfirmar,
+                modal: $modal,
+                accionEstado: $accionEstado
+            },
+            success: function(response) {
+                console.log('Respuesta del servidor:', response);
+                
+                if (response.status === 'success') {
+                    // 6. Actualizar la interfaz
+                    const $comboCard = this.btnEstado.closest('.combo-card');
+                    const $btnAgregarCombo = $comboCard.find('.btn-agregar-combo');
+                    const esActivo = response.nuevo_estado;
+                    
+                    console.log('Actualizando interfaz con nuevo estado:', 
+                               esActivo ? 'Habilitado' : 'Deshabilitado');
+                    
+                    // Actualizar tarjeta del combo
+                    $comboCard.toggleClass('disabled-combo', !esActivo);
+                    
+                    // Actualizar botón de estado
+                    this.btnEstado
+                        .toggleClass('btn-outline-warning', !esActivo)
+                        .toggleClass('btn-outline-success', esActivo)
                         .html(`<i class="bi ${esActivo ? 'bi-eye-slash' : 'bi-eye'}"></i> ${esActivo ? 'Deshabilitar' : 'Habilitar'}`)
                         .data('estado-actual', esActivo ? 1 : 0);
-
-                    // Habilitar o deshabilitar el botón "Agregar Combo"
-                    if (esActivo) {
-                        btnAgregarCombo.prop('disabled', false)
-                            .removeClass('btn-secondary')
-                            .addClass('btn-success')
-                            .html('<i class="bi bi-cart-plus"></i> Agregar Combo');
+                    
+                    // Actualizar botón de agregar al carrito
+                    if ($btnAgregarCombo.length > 0) {
+                        $btnAgregarCombo
+                            .prop('disabled', !esActivo)
+                            .toggleClass('btn-secondary', !esActivo)
+                            .toggleClass('btn-success', esActivo)
+                            .html(`<i class="bi bi-cart-plus"></i> ${esActivo ? 'Agregar Combo' : 'Combo no disponible'}`);
                     } else {
-                        btnAgregarCombo.prop('disabled', true)
-                            .removeClass('btn-success')
-                            .addClass('btn-secondary')
-                            .html('<i class="bi bi-cart-plus"></i> Combo no disponible');
+                        console.warn('No se encontró el botón de agregar al carrito');
                     }
-
+                    
                     // Mostrar notificación
                     Swal.fire({
                         icon: 'success',
-                        title: 'Estado actualizado',
-                        text: data.message,
-                        timer: 1500,
+                        title: '¡Éxito!',
+                        text: response.message || 'Estado del combo actualizado correctamente',
+                        timer: 2000,
                         showConfirmButton: false
                     });
-
-                    $('#estadoComboModal').modal('hide');
+                    
+                    console.log('Interfaz actualizada correctamente');
                 } else {
-                    Swal.fire('Error', data.message, 'error');
+                    throw new Error(response.message || 'Error al actualizar el estado del combo');
                 }
             },
-            error: function (xhr) {
-                console.error('AJAX Error:', xhr.status, xhr.statusText);
+            error: function(xhr, status, error) {
+                console.error('Error en la solicitud AJAX:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    responseText: xhr.responseText,
+                    error: error
+                });
+                
                 let errorMsg = 'Error al cambiar el estado del combo';
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    if (response.message) errorMsg = response.message;
-                } catch (e) {}
-
-                Swal.fire('Error', errorMsg, 'error');
+                    errorMsg = response.message || errorMsg;
+                } catch (e) {
+                    errorMsg = xhr.statusText || errorMsg;
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMsg,
+                    confirmButtonText: 'Aceptar'
+                });
             },
-            complete: function () {
-                btn.prop('disabled', false).html('Confirmar');
+            complete: function() {
+                // Restaurar botón de confirmación
+                this.btnConfirmar
+                    .prop('disabled', false)
+                    .html('Confirmar');
+                
+                // Cerrar modal
+                if (this.modal && typeof this.modal.modal === 'function') {
+                    this.modal.modal('hide');
+                }
+                
+                console.log('Proceso de cambio de estado completado');
             }
         });
+    } catch (error) {
+        console.error('Error en cambiarEstadoCombo:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Ocurrió un error inesperado',
+            confirmButtonText: 'Aceptar'
+        });
+    } finally {
+        console.groupEnd();
     }
+}
 
+// Función para mostrar el modal de confirmación
+function mostrarModalCambioEstado() {
+    const $btn = $(this);
+    const idCombo = $btn.data('id-combo');
+    const estadoActual = $btn.data('estado-actual');
+    const nuevoEstado = !estadoActual;
+    
+    // Actualizar el modal con los datos del combo
+    const $modal = $('#cambioEstadoModal');
+    $modal.find('#combo_id_estado').val(idCombo);
+    $modal.find('#nuevo_estado').val(nuevoEstado ? 1 : 0);
+    
+    // Actualizar el texto del modal
+    const $accionEstado = $('#accionEstado');
+    $accionEstado.text(nuevoEstado ? 'habilitar' : 'deshabilitar');
+    
+    // Mostrar el modal
+    $modal.modal('show');
+}
+
+// Asignar manejador de eventos al botón de confirmación
+$(document).on('click', '#confirmarCambioEstado', cambiarEstadoCombo);
+
+// Asignar manejador de eventos a los botones de cambio de estado
+$(document).on('click', '.btn-cambiar-estado', function(e) {
+    e.preventDefault();
+    mostrarModalCambioEstado.call(this);
+});
     // Agregar producto al combo en edición
 function agregarProductoACombo() {
     console.group('=== DEPURACIÓN: agregarProductoACombo ===');
@@ -823,23 +939,42 @@ function agregarProductoACombo() {
         productosSeleccionados = productosSeleccionados.filter(p => p.id != idProducto);
         actualizarTablaProductosCombo();
     }
-
+console.log('productosSeleccionados:', JSON.stringify(productosSeleccionados, null, 2));
+actualizarTablaProductosCombo();
     // Actualizar tabla de productos del combo
-    function actualizarTablaProductosCombo() {
-        const tbody = $('#productos_combo_table tbody');
-        tbody.empty();
+function actualizarTablaProductosCombo() {
+    console.log('Ejecutando actualizarTablaProductosCombo');
+    console.log('productosSeleccionados:', productosSeleccionados);
+    
+    const tbody = $('#productos_combo_table tbody');
+    tbody.empty();
 
-        if (productosSeleccionados.length === 0) {
-            tbody.append('<tr><td colspan="4" class="text-center py-3 text-muted">No hay productos agregados</td></tr>');
-            return;
-        }
+    if (!productosSeleccionados || productosSeleccionados.length === 0) {
+        tbody.append('<tr><td colspan="4" class="text-center py-3 text-muted">No hay productos en este combo</td></tr>');
+        return;
+    }
 
-        productosSeleccionados.forEach(producto => {
+    try {
+        // Asegurarse de que los datos tengan el formato correcto
+        const productosFormateados = productosSeleccionados.map(item => ({
+            id: item.id_producto || item.id,
+            nombre: item.nombre_producto || item.nombre || `Producto ${item.id_producto || item.id}`,
+            cantidad: parseFloat(item.cantidad) || 1,
+            precio: parseFloat(item.precio) || 0
+        }));
+
+        console.log('Productos formateados:', productosFormateados);
+
+        // Generar las filas de la tabla
+        productosFormateados.forEach(producto => {
+            const total = (producto.cantidad * producto.precio).toFixed(2);
+            console.log(`Agregando producto: ${producto.nombre}, Cantidad: ${producto.cantidad}, Precio: ${producto.precio}`);
+            
             tbody.append(`
                 <tr>
                     <td>${producto.nombre}</td>
                     <td>${producto.cantidad}</td>
-                    <td>${(producto.precio * producto.cantidad).toFixed(2)} BS</td>
+                    <td>${total} BS</td>
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-danger btn-eliminar-producto" 
                                 data-id-producto="${producto.id}">
@@ -849,7 +984,14 @@ function agregarProductoACombo() {
                 </tr>
             `);
         });
+    } catch (e) {
+        console.error('Error al actualizar la tabla de productos:', e);
+        tbody.html('<tr><td colspan="4" class="text-center text-danger">Error al cargar los productos</td></tr>');
     }
+    
+    // Forzar actualización del DOM
+    $('#productos_combo_table').trigger('update');
+}
 
     // Guardar combo (crear o actualizar)
     function guardarCombo() {

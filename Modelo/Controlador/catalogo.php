@@ -307,51 +307,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
             exit;
         }
 
-        if ($accion == 'cambiar_estado_combo') {
-            try {
-                header('Content-Type: application/json');
-                
-                $id_combo = $_POST['id_combo'] ?? 0;
-                
-                if (empty($id_combo)) {
-                    throw new Exception('ID de combo no especificado');
-                }
-                
-                // Obtener info del combo para registro
-                $combo = $productosModel->obtenerComboPorId($id_combo);
-                
-                // Cambiar el estado usando el modelo
-                $resultado = $productosModel->cambiarEstadoCombo($id_combo);
-                
-                // Registrar cambio de estado
-                if ($resultado) {
-                    $nuevoEstado = $productosModel->obtenerComboPorId($id_combo)['activo'];
-                    $accionEstado = $nuevoEstado ? 'habilitó' : 'deshabilitó';
-                    if (!defined('SKIP_SIDE_EFFECTS')) {
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_CATALOGO,
-                            'CAMBIAR_ESTADO',
-                            "El usuario $accionEstado el combo: {$combo['nombre_combo']} (ID: $id_combo)",
-                            'media'
-                        );
-                    }
-                }
-                
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Estado del combo actualizado correctamente',
-                    'nuevo_estado' => $productosModel->obtenerComboPorId($id_combo)['activo']
-                ]);
-                
-            } catch (Exception $e) {
-                    echo json_encode([
-                    'status' => 'error',
-                    'message' => $e->getMessage()
-                ]);
-            }
-            exit;
+if ($accion == 'cambiar_estado_combo') {
+    try {
+        header('Content-Type: application/json');
+        
+        $idCombo = $_POST['id_combo'] ?? 0;
+        
+        if (empty($idCombo)) {
+            throw new Exception('ID de combo no especificado');
         }
+        
+        // Cambiar el estado usando el modelo
+        $resultado = $productosModel->cambiarEstadoCombo($idCombo);
+        
+        if ($resultado) {
+            // Obtener el estado actualizado para la respuesta
+            $combo = $productosModel->obtenerComboPorId($idCombo);
+            
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Estado del combo actualizado correctamente',
+                'nuevo_estado' => $combo['activo'] ? 1 : 0
+            ]);
+        } else {
+            throw new Exception('No se pudo actualizar el estado del combo');
+        }
+        
+    } catch (Exception $e) {
+        error_log('Error en cambiar_estado_combo: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
 
         if ($accion == 'actualizar_combo') {
             try {
