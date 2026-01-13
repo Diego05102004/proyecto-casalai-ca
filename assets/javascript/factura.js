@@ -89,9 +89,13 @@ function enviarAjax(datos, callback) {
         data: datos,
         processData: false,
         cache: false,
+        dataType: 'json',
         success: function (respuesta) {
             console.log("Respuesta del servidor: ", respuesta); 
-            callback(JSON.parse(respuesta));
+
+            // Permitir que la respuesta ya venga como objeto (cuando el backend
+            // envía Content-Type: application/json) o como texto plano JSON.
+            callback(respuesta);
         },
         error: function () {
             console.error('Error en la solicitud AJAX');
@@ -261,10 +265,11 @@ function enviaAjax(datos) {
         processData: false,
         cache: false,
         timeout: 10000, // Tiempo máximo de espera por la respuesta del servidor
+        dataType: 'json', // jQuery convierte automáticamente la respuesta JSON en objeto
         success: function (respuesta) {
             console.log(respuesta);
             try {
-                var lee = JSON.parse(respuesta);
+                var lee = respuesta; // Ya es un objeto JSON parseado
                 if (lee.resultado === 'listado') {
 
                     $('#listado').html(lee.mensaje);

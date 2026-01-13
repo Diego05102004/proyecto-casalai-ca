@@ -103,7 +103,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     <?php if (isset($dato['estatus']) && $dato['estatus'] === 'Pago Procesado'): ?>
       <span class="text-success">Pago procesado. No es posible cambiar estatus.</span>
     <?php else: ?>
-      <button class="btn btn-success modificarEstado" 
+      <button class="btn btn-primary modificarEstado" 
               data-id="<?= htmlspecialchars($dato['id_detalles']); ?>"
               data-factura="<?= htmlspecialchars($dato['id_factura']); ?>"
               data-estatus="Pago No Encontrado"

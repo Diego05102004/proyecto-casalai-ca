@@ -50,85 +50,154 @@ try {
     error_log('Error obteniendo precio dólar: ' . $e->getMessage());
 }
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    header('Content-Type: application/json; charset=utf-8');
     $accion = $_POST['accion'] ?? '';
     
     switch ($accion) {
 
         case 'agregar_al_carrito':
-            $id_producto = $_POST['id_producto'] ?? null;
-            if ($id_producto !== null) {
-                $carrito = new Carrito();
-                $id_cliente = $_SESSION['id_usuario']; // Obtener de la sesión
-                
-                try {
-                    $carritoCliente = $carrito->obtenerCarritoPorCliente($id_cliente);
-                    
-                    if (!$carritoCliente) {
-                        $carrito->crearCarrito($id_cliente);
-                        $carritoCliente = $carrito->obtenerCarritoPorCliente($id_cliente);
-                    }
-                    
-                    $id_carrito = $carritoCliente['id_carrito'];
-                    $cantidad = 1; // Cantidad predeterminada
-                    
-                    if ($carrito->agregarProductoAlCarrito($id_carrito, $id_producto, $cantidad)) {
-                        echo json_encode([
-                            'status' => 'success',
-                            'message' => 'Producto agregado al carrito correctamente'
-                        ]);
-                    } else {
-                        echo json_encode([
-                            'status' => 'error',
-                            'message' => 'Error al agregar el producto al carrito'
-                        ]);
-                    }
-                } catch (Exception $e) {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Error: ' . $e->getMessage()
-                    ]);
-                }
-            } else {
+            $id_producto = isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0;
+
+            if ($id_producto <= 0) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'ID de producto no válido'
+                ]);
+                break;
+            }
+
+            $carrito = new Carrito();
+            $productoModel = new Productos();
+            $id_cliente = $_SESSION['id_usuario']; // Obtener de la sesión
+            
+            try {
+                $producto = $productoModel->obtenerProductoPorId($id_producto);
+                if (!$producto) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El producto no existe'
+                    ]);
+                    break;
+                }
+
+                $cantidad = 1; // Cantidad predeterminada
+                
+                if ((int)($producto['stock'] ?? 0) < $cantidad) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'No hay stock suficiente para agregar el producto al carrito'
+                    ]);
+                    break;
+                }
+
+                $carritoCliente = $carrito->obtenerCarritoPorCliente($id_cliente);
+                
+                if (!$carritoCliente) {
+                    $carrito->crearCarrito($id_cliente);
+                    $carritoCliente = $carrito->obtenerCarritoPorCliente($id_cliente);
+                }
+                
+                $id_carrito = $carritoCliente['id_carrito'];
+                
+                if ($carrito->agregarProductoAlCarrito($id_carrito, $id_producto, $cantidad)) {
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Producto agregado al carrito correctamente'
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error al agregar el producto al carrito'
+                    ]);
+                }
+            } catch (Exception $e) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error: ' . $e->getMessage()
                 ]);
             }
             
             break;
 
         case 'actualizar_cantidad':
-            $id_carrito_detalle = $_POST['id_carrito_detalle'] ?? null;
-            $cantidad = $_POST['cantidad'] ?? null;
+            $id_carrito_detalle = isset($_POST['id_carrito_detalle']) ? (int)$_POST['id_carrito_detalle'] : 0;
+            $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 0;
 
-            if ($id_carrito_detalle !== null && $cantidad !== null) {
-                $carrito = new Carrito();
+            if ($id_carrito_detalle <= 0 || $cantidad <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'Datos de cantidad o detalle del carrito inválidos']);
+                break;
+            }
+
+            $carrito = new Carrito();
+            $productoModel = new Productos();
+            $id_cliente = $_SESSION['id_usuario'];
+
+            try {
+                if (method_exists($carrito, 'obtenerDetallePorId')) {
+                    $detalle = $carrito->obtenerDetallePorId($id_carrito_detalle);
+                } else {
+                    $detalle = null;
+                }
+
+                if (!$detalle || (int)$detalle['id_cliente'] !== (int)$id_cliente) {
+                    echo json_encode(['status' => 'error', 'message' => 'Detalle de carrito no encontrado']);
+                    break;
+                }
+
+                $producto = $productoModel->obtenerProductoPorId($detalle['id_producto']);
+                if (!$producto) {
+                    echo json_encode(['status' => 'error', 'message' => 'Producto asociado al carrito no existe']);
+                    break;
+                }
+
+                if ($cantidad > (int)($producto['stock'] ?? 0)) {
+                    echo json_encode(['status' => 'error', 'message' => 'No hay stock suficiente para la cantidad solicitada']);
+                    break;
+                }
+
                 if ($carrito->actualizarCantidadProducto($id_carrito_detalle, $cantidad)) {
                     echo json_encode(['status' => 'success', 'message' => 'Cantidad actualizada correctamente']);
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Error al actualizar la cantidad']);
                 }
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Datos incompletos']);
+            } catch (Exception $e) {
+                echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
             }
             break;
 
         case 'eliminar_del_carrito':
-            $id_carrito_detalle = $_POST['id_carrito_detalle'] ?? null;
-            if ($id_carrito_detalle !== null) {
-                $carrito = new Carrito();
+            $id_carrito_detalle = isset($_POST['id_carrito_detalle']) ? (int)$_POST['id_carrito_detalle'] : 0;
+            if ($id_carrito_detalle <= 0) {
+                echo json_encode(['status' => 'error', 'message' => 'ID de detalle del carrito no proporcionado o inválido']);
+                break;
+            }
+            $carrito = new Carrito();
+            $id_cliente = $_SESSION['id_usuario'];
+            try {
+                if (method_exists($carrito, 'obtenerDetallePorId')) {
+                    $detalle = $carrito->obtenerDetallePorId($id_carrito_detalle);
+                } else {
+                    $detalle = null;
+                }
+
+                if (!$detalle || (int)$detalle['id_cliente'] !== (int)$id_cliente) {
+                    echo json_encode(['status' => 'error', 'message' => 'Detalle de carrito no encontrado']);
+                    break;
+                }
+
                 if ($carrito->eliminarProductoDelCarrito($id_carrito_detalle)) {
                     echo json_encode(['status' => 'success', 'message' => 'Producto eliminado del carrito']);
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el producto del carrito']);
                 }
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'ID de detalle del carrito no proporcionado']);
+            } catch (Exception $e) {
+                echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
             }
             break;
 
         case 'eliminar_todo_carrito':
             $id_cliente = $_SESSION['id_usuario']; // Obtener de la sesión
+
             $carrito = new Carrito();
             $carritoCliente = $carrito->obtenerCarritoPorCliente($id_cliente);
 
@@ -145,16 +214,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'registrar_compra':
+            if (!isset($_SESSION['cedula'])) {
+                echo json_encode(['status' => 'error', 'message' => 'Sesión de cliente no válida']);
+                break;
+            }
+
+            $productos = $_POST['productos'] ?? [];
+            $cantidades = $_POST['cantidad'] ?? [];
+
+            if (!is_array($productos) || !is_array($cantidades) || empty($productos) || count($productos) !== count($cantidades)) {
+                echo json_encode(['status' => 'error', 'message' => 'Datos de productos o cantidades inválidos']);
+                break;
+            }
+
+            $productosValidados = [];
+            $cantidadesValidadas = [];
+            $productoModel = new Productos();
+            $errorMensaje = null;
+
+            foreach ($productos as $index => $idProductoRaw) {
+                $idProducto = (int)$idProductoRaw;
+                $cantidad = isset($cantidades[$index]) ? (int)$cantidades[$index] : 0;
+
+                if ($idProducto <= 0 || $cantidad <= 0) {
+                    $errorMensaje = 'Todos los productos deben tener un ID y cantidad válidos';
+                    break;
+                }
+
+                $producto = $productoModel->obtenerProductoPorId($idProducto);
+                if (!$producto) {
+                    $errorMensaje = 'Uno de los productos de la compra no existe';
+                    break;
+                }
+
+                if ($cantidad > (int)($producto['stock'] ?? 0)) {
+                    $errorMensaje = 'No hay stock suficiente para uno de los productos de la compra';
+                    break;
+                }
+
+                $productosValidados[] = $idProducto;
+                $cantidadesValidadas[] = $cantidad;
+            }
+
+            if ($errorMensaje !== null) {
+                echo json_encode(['status' => 'error', 'message' => $errorMensaje]);
+                break;
+            }
+
             $factura = new Factura();
             // Aquí se debe obtener el ID del cliente de la sesión
             $factura->setCliente($_SESSION['cedula']); // Obtener de la sesión
             $factura->setFecha(date('Y-m-d H:i:s'));
             $factura->setDescuento(0); // Descuento inicial
             $factura->setEstatus('Borrador'); // Estado inicial de la compra
-            $productos = $_POST['productos'] ?? [];
-            $cantidades = $_POST['cantidad'] ?? [];
-            $factura->setIdProducto($productos);
-            $factura->setCantidad($cantidades);
+            $factura->setIdProducto($productosValidados);
+            $factura->setCantidad($cantidadesValidadas);
             try {
                 $resultado = $factura->facturaTransaccion("Ingresar");
 
@@ -179,7 +293,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'filtrar_por_marca':
-            $id_marca = $_POST['id_marca'] ?? null;
+            $id_marca = isset($_POST['id_marca']) && is_numeric($_POST['id_marca']) ? (int)$_POST['id_marca'] : null;
             $producto = new Productos();
             $productos = $producto->obtenerProductosPorMarca($id_marca);
 
