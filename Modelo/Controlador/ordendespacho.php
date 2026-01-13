@@ -30,6 +30,97 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     switch ($accion) {
+        /*
+        case 'ingresar':
+            header('Content-Type: application/json; charset=utf-8');
+
+            $correlativo = $_POST['correlativo'] ?? '';
+            $idFactura = $_POST['factura'] ?? null;
+            $fecha = $_POST['fecha'] ?? null;
+
+            $ordenModel = new OrdenDespacho();
+
+            $datosOrden = [
+                'correlativo' => $correlativo,
+                'factura' => $idFactura,
+                'fecha' => $fecha
+            ];
+
+            $errores = $ordenModel->validarDatosOrden($datosOrden);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la orden de despacho',
+                    'errores' => $errores
+                ]);
+                exit;
+            }
+
+            $resultado = $ordenModel->crearPorFactura((int)$idFactura);
+
+            if (($resultado['status'] ?? '') === 'exists') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Ya existe una orden de despacho activa para esta factura'
+                ]);
+                exit;
+            } elseif (($resultado['status'] ?? '') !== 'success') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $resultado['message'] ?? 'No se pudo crear la orden de despacho'
+                ]);
+                exit;
+            }
+
+            $idOrden = (int)($resultado['id'] ?? 0);
+            $ordenCreada = $ordenModel->obtenerOrdenPorId($idOrden);
+            if (!$ordenCreada) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'No se pudo obtener la orden recién creada'
+                ]);
+                exit;
+            }
+
+            $ordenResponse = [
+                'id_orden_despachos' => $ordenCreada['id_orden_despachos'],
+                'id_factura' => $ordenCreada['id_factura'],
+                'correlativo' => $correlativo !== '' ? $correlativo : $ordenCreada['id_orden_despachos'],
+                'fecha_despacho' => date('d/m/Y', strtotime($ordenCreada['fecha_despacho']))
+            ];
+
+            if (!defined('SKIP_SIDE_EFFECTS')) {
+                $bitacora = new Bitacora();
+                $bitacora->registrarBitacora(
+                    $_SESSION['id_usuario'],
+                    MODULO_ORDEN_DESPACHO,
+                    'INCLUIR',
+                    'El usuario incluyó la orden de despacho con ID: ' . $ordenCreada['id_orden_despachos'],
+                    'alta'
+                );
+
+                $bd_seguridad = new BD('S');
+                $pdo_seguridad = $bd_seguridad->getConexion();
+                $notificacionModel = new NotificacionModel($pdo_seguridad);
+                $notificacionModel->crear(
+                    $_SESSION['id_usuario'],
+                    'orden_despacho',
+                    'Nueva orden de despacho registrada',
+                    'Se ha registrado la orden de despacho con ID ' . $ordenCreada['id_orden_despachos'] . ' para la factura ' . $ordenCreada['id_factura'] . ' por el usuario ' . ($_SESSION['name'] ?? ''),
+                    'media',
+                    MODULO_ORDEN_DESPACHO,
+                    'ingresar',
+                    $ordenCreada['id_orden_despachos']
+                );
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Orden de despacho registrada correctamente',
+                'orden' => $ordenResponse
+            ]);
+            break;
+        */
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
             $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, 'Ordenes de despacho');
@@ -172,8 +263,13 @@ break;
             break;
         
         case 'cambiar_estado_orden':
-            $id = $_POST['id'];
-            $estado_actual = $_POST['estado_actual'];
+            $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+            $estado_actual = $_POST['estado_actual'] ?? '';
+
+            if ($id <= 0 || !in_array($estado_actual, ['Por Entregar', 'Entregada'], true)) {
+                echo json_encode(['status' => 'error', 'message' => 'Datos inválidos para cambiar el estado de la orden']);
+                break;
+            }
             $nuevo_estado = ($estado_actual === 'Por Entregar') ? 'Entregada' : 'Por Entregar';
             $ordenModel = new OrdenDespacho();
             if ($ordenModel->cambiarEstadoOrden($id, $nuevo_estado)) {
@@ -211,7 +307,12 @@ break;
         
         case 'anularOrden':
             $ordenModel = new OrdenDespacho();
-            $idOrden = $_POST['id_orden_despachos'];
+            $idOrden = isset($_POST['id_orden_despachos']) ? (int)$_POST['id_orden_despachos'] : 0;
+            if ($idOrden <= 0) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['status' => 'error', 'message' => 'ID de orden de despacho no válido']);
+                break;
+            }
             $resultado = $ordenModel->anularOrdenDespacho($idOrden);
 
             if ($resultado['status'] === 'success') {

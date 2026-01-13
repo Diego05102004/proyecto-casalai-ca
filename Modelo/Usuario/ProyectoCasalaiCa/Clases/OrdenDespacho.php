@@ -55,6 +55,44 @@ class OrdenDespacho extends BD {
         $this->estado = $estado;
     }
 
+    public function validarDatosOrden(array $datos) {
+        $errores = [];
+
+        $correlativo = isset($datos['correlativo']) ? trim((string)$datos['correlativo']) : '';
+        if ($correlativo === '') {
+            $errores['correlativo'] = 'El correlativo es obligatorio';
+        } elseif (!preg_match('/^[0-9]{4,10}$/', $correlativo)) {
+            $errores['correlativo'] = 'El correlativo debe tener entre 4 y 10 dígitos numéricos';
+        }
+
+        $idFactura = null;
+        if (isset($datos['factura'])) {
+            $idFactura = (int)$datos['factura'];
+        } elseif (isset($datos['id_factura'])) {
+            $idFactura = (int)$datos['id_factura'];
+        }
+
+        if ($idFactura === null || $idFactura <= 0) {
+            $errores['factura'] = 'Debe seleccionar una factura válida';
+        }
+
+        if (!empty($datos['fecha'])) {
+            $fecha = trim((string)$datos['fecha']);
+            $dt = \DateTime::createFromFormat('Y-m-d', $fecha);
+            $errors = \DateTime::getLastErrors();
+            if (!$dt || $errors['warning_count'] > 0 || $errors['error_count'] > 0) {
+                $errores['fecha'] = 'La fecha no tiene un formato válido (AAAA-MM-DD)';
+            } else {
+                $hoy = new \DateTime('today');
+                if ($dt > $hoy) {
+                    $errores['fecha'] = 'No se permiten fechas futuras';
+                }
+            }
+        }
+
+        return $errores;
+    }
+
     public function obtenerFacturasDisponibles() {
         return $this->obt_facturasDisponibles(); 
     }

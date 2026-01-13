@@ -37,8 +37,95 @@ class Comprafisica extends BD{
         $this->desc = $desc;
     }
 
-   public function registrarCompraFisica($datos) {
-    return $this->r_compraFisica($datos);
+    public function validarDatosVenta(array $datos) {
+        $errores = [];
+
+        $idCliente = isset($datos['cliente']) ? (int)$datos['cliente'] : 0;
+        if ($idCliente <= 0) {
+            $errores['cliente'] = 'Debe seleccionar un cliente válido';
+        }
+
+        $productos = isset($datos['productos']) && is_array($datos['productos']) ? $datos['productos'] : [];
+        if (empty($productos)) {
+            $errores['productos'] = 'Debe agregar al menos un producto';
+        } else {
+            foreach ($productos as $producto) {
+                if (!is_array($producto)) {
+                    $errores['productos'] = 'El formato de los productos no es válido';
+                    break;
+                }
+
+                $idProducto = isset($producto['id_producto']) ? (int)$producto['id_producto'] : 0;
+                if ($idProducto <= 0) {
+                    $errores['productos'] = 'Todos los productos deben tener un ID válido';
+                    break;
+                }
+
+                if (!isset($producto['cantidad'])) {
+                    $errores['productos'] = 'Cada producto debe tener una cantidad';
+                    break;
+                }
+
+                $cantidad = (float)$producto['cantidad'];
+                if ($cantidad <= 0) {
+                    $errores['productos'] = 'La cantidad de cada producto debe ser mayor a 0';
+                    break;
+                } elseif ($cantidad > 999999) {
+                    $errores['productos'] = 'La cantidad de productos es muy grande';
+                    break;
+                }
+            }
+        }
+
+        $pagos = isset($datos['pagos']) && is_array($datos['pagos']) ? $datos['pagos'] : [];
+        if (empty($pagos)) {
+            $errores['pagos'] = 'Debe registrar al menos un método de pago';
+        } else {
+            foreach ($pagos as $pago) {
+                if (!is_array($pago)) {
+                    $errores['pagos'] = 'El formato de los pagos no es válido';
+                    break;
+                }
+
+                $tipo = isset($pago['tipo']) ? trim($pago['tipo']) : '';
+                if ($tipo === '') {
+                    $errores['pagos'] = 'Cada pago debe tener un tipo válido';
+                    break;
+                }
+
+                if (!isset($pago['monto'])) {
+                    $errores['pagos'] = 'Cada pago debe tener un monto';
+                    break;
+                }
+
+                $monto = (float)$pago['monto'];
+                if ($monto <= 0) {
+                    $errores['pagos'] = 'El monto de cada pago debe ser mayor a 0';
+                    break;
+                } elseif ($monto > 99999999.99) {
+                    $errores['pagos'] = 'El monto de cada pago es muy grande';
+                    break;
+                }
+
+                if (in_array($tipo, ['Transferencia', 'Zelle', 'Pago Movil'])) {
+                    $referencia = isset($pago['referencia']) ? trim($pago['referencia']) : '';
+                    if ($referencia === '') {
+                        $errores['pagos'] = 'La referencia es obligatoria para este tipo de pago';
+                        break;
+                    }
+                    if (mb_strlen($referencia) > 100) {
+                        $errores['pagos'] = 'La referencia no debe exceder los 100 caracteres';
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $errores;
+    }
+
+    public function registrarCompraFisica($datos) {
+        return $this->r_compraFisica($datos);
     }
 
 private function r_compraFisica($datos) {
