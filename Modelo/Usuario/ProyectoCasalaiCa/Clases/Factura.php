@@ -45,6 +45,70 @@ public function __construct() {
     public function setCantidad($cantidad) { $this->cantidad = $cantidad; }
     public function getCedula() { return $this->cedula; }
     public function setCedula($cedula) { $this->cedula = $cedula; }
+
+    // Validaciones de datos para registro de factura
+    public function validarDatosRegistro() {
+        $errores = [];
+
+        // Validar fecha
+        if (empty($this->fecha)) {
+            $errores[] = "La fecha de la factura es obligatoria.";
+        } else {
+            $timestamp = strtotime($this->fecha);
+            if ($timestamp === false) {
+                $errores[] = "La fecha de la factura no tiene un formato válido.";
+            }
+        }
+
+        // Validar cliente (se espera la cédula en esta propiedad)
+        if (empty($this->cliente)) {
+            $errores[] = "La cédula del cliente es obligatoria.";
+        } elseif (strlen((string)$this->cliente) < 3 || strlen((string)$this->cliente) > 20) {
+            $errores[] = "La cédula del cliente no tiene una longitud válida.";
+        }
+
+        // Validar descuento
+        if ($this->descuento === null || $this->descuento === '') {
+            $this->descuento = 0;
+        }
+        if (!is_numeric($this->descuento) || $this->descuento < 0 || $this->descuento > 100) {
+            $errores[] = "El descuento debe ser un número entre 0 y 100.";
+        }
+
+        // Validar estatus
+        if (empty($this->estatus)) {
+            $errores[] = "El estatus de la factura es obligatorio.";
+        }
+
+        // Validar productos y cantidades
+        if (!is_array($this->id_producto) || !is_array($this->cantidad)) {
+            $errores[] = "Los productos y cantidades de la factura deben enviarse en formato de lista.";
+            return $errores;
+        }
+
+        if (count($this->id_producto) === 0) {
+            $errores[] = "Debe agregar al menos un producto a la factura.";
+        }
+
+        if (count($this->id_producto) !== count($this->cantidad)) {
+            $errores[] = "La cantidad de productos no coincide con las cantidades indicadas.";
+        }
+
+        foreach ($this->id_producto as $index => $idProducto) {
+            $cantidad = $this->cantidad[$index] ?? null;
+
+            if (!is_numeric($idProducto) || (int)$idProducto <= 0) {
+                $errores[] = "El producto en la posición " . ($index + 1) . " no tiene un ID válido.";
+            }
+
+            if (!is_numeric($cantidad) || (int)$cantidad <= 0) {
+                $errores[] = "La cantidad del producto en la posición " . ($index + 1) . " no es válida.";
+            }
+        }
+
+        return $errores;
+    }
+
     public function registrar() {
         return $this->r_registrar();
     }
@@ -111,6 +175,12 @@ private function facturaIngresar() {
     $this->conex = $conexion->getConexion();
     $pdo = $this->conex;
     try {
+        // Validar datos básicos antes de iniciar la transacción
+        $erroresValidacion = $this->validarDatosRegistro();
+        if (!empty($erroresValidacion)) {
+            return ['error' => implode(' ', $erroresValidacion)];
+        }
+
         $pdo->beginTransaction();
 
         // Buscar ID del cliente por su cédula

@@ -186,6 +186,30 @@ class Carrito extends BD{
         }
     }
 
+    public function obtenerDetallePorId($id_carrito_detalle) {
+        return $this->o_detallePorId($id_carrito_detalle);
+    }
+    private function o_detallePorId($id_carrito_detalle) {
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
+        try {
+            $sql = "SELECT cd.id_carrito_detalle, cd.id_carrito, cd.id_producto, cd.cantidad, c.id_cliente
+                    FROM tbl_carritodetalle cd
+                    INNER JOIN tbl_carrito c ON cd.id_carrito = c.id_carrito
+                    WHERE cd.id_carrito_detalle = :id_carrito_detalle";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindParam(':id_carrito_detalle', $id_carrito_detalle);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } finally {
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
+        }
+    }
+
     // Métodos para combos
     public function agregarComboAlCarrito($id_carrito, $id_combo) {
         return $this->a_agregarCombo($id_carrito, $id_combo);

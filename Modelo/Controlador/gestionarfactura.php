@@ -18,6 +18,8 @@ if (is_file("Vista/gestionarfactura.php")) {
 }
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        header('Content-Type: application/json; charset=utf-8');
+
         // Obtiene la acción enviada en la solicitud POST
         if (isset($_POST['accion'])) {
             $accion = $_POST['accion'];
@@ -29,25 +31,100 @@ if (is_file("Vista/gestionarfactura.php")) {
 
             case 'registrar':
                 // Llamada al método para registrar una factura
-                $factura->setFecha($_POST['fecha']);
-                $factura->setCliente($_POST['cliente']);
-                $factura->setDescuento($_POST['descuento']);
-                $factura->setEstatus($_POST['estatus']);
-                $factura->setIdProducto($_POST['id_producto']);
-                $factura->setCantidad($_POST['cantidad']);
+                $fecha = $_POST['fecha'] ?? '';
+                $cliente = $_POST['cliente'] ?? '';
+                $descuento = $_POST['descuento'] ?? 0;
+                $estatus = $_POST['estatus'] ?? '';
+                $id_producto = $_POST['id_producto'] ?? [];
+                $cantidad = $_POST['cantidad'] ?? [];
+
+                $errores = [];
+
+                if (empty($fecha)) {
+                    $errores[] = 'La fecha de la factura es obligatoria.';
+                }
+                if (empty($cliente)) {
+                    $errores[] = 'El cliente de la factura es obligatorio.';
+                }
+                if (empty($estatus)) {
+                    $errores[] = 'El estatus de la factura es obligatorio.';
+                }
+
+                if (!is_array($id_producto) || !is_array($cantidad)) {
+                    $errores[] = 'Los productos y cantidades deben enviarse como listas.';
+                } elseif (count($id_producto) === 0) {
+                    $errores[] = 'Debe agregar al menos un producto a la factura.';
+                } elseif (count($id_producto) !== count($cantidad)) {
+                    $errores[] = 'La cantidad de productos no coincide con las cantidades indicadas.';
+                } else {
+                    foreach ($id_producto as $index => $idProdRaw) {
+                        $idProd = (int)$idProdRaw;
+                        $cant = isset($cantidad[$index]) ? (int)$cantidad[$index] : 0;
+
+                        if ($idProd <= 0) {
+                            $errores[] = 'El producto en la posición ' . ($index + 1) . ' no tiene un ID válido.';
+                        }
+                        if ($cant <= 0) {
+                            $errores[] = 'La cantidad del producto en la posición ' . ($index + 1) . ' no es válida.';
+                        }
+                    }
+                }
+
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => implode(' ', $errores)
+                    ]);
+                    break;
+                }
+
+                $factura->setFecha($fecha);
+                $factura->setCliente($cliente);
+                $factura->setDescuento($descuento);
+                $factura->setEstatus($estatus);
+                $factura->setIdProducto($id_producto);
+                $factura->setCantidad($cantidad);
                 
                 $respuesta = $factura->facturaTransaccion('Ingresar');
-                echo json_encode($respuesta);
+
+                if (is_array($respuesta) && isset($respuesta['error'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => $respuesta['error']
+                    ]);
+                } elseif ($respuesta === true) {
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Factura registrada correctamente.',
+                        'resultado' => 'registrar'
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error desconocido al registrar la factura.'
+                    ]);
+                }
                 break;
 
 
             case 'cancelar':
                 // Cancelar factura por ID
-                $factura->setId($_POST['id_factura']);
+                $id_factura_raw = $_POST['id_factura'] ?? null;
+                $id_factura = is_numeric($id_factura_raw) ? (int)$id_factura_raw : 0;
+
+                if ($id_factura <= 0) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'ID de factura no válido.'
+                    ]);
+                    break;
+                }
+
+                $factura->setId($id_factura);
                 if ($factura->facturaTransaccion('Cancelar')) {
-                    echo json_encode(['status' => 'success']);
+                    echo json_encode(['status' => 'success', 'message' => 'Factura cancelada correctamente.']);
                 } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Error al modificar el Usuario']);
+                    echo json_encode(['status' => 'error', 'message' => 'Error al cancelar la factura.']);
                 }
                 break;
 
@@ -58,6 +135,13 @@ if (is_file("Vista/gestionarfactura.php")) {
             echo json_encode($respuesta);  
             exit;
             }else {
+            if (!isset($_SESSION['cedula'])) {
+                echo json_encode([
+                    'resultado' => 'error',
+                    'mensaje' => 'No se encontró la cédula del cliente en la sesión.'
+                ]);
+                break;
+            }
             $factura->setCedula($_SESSION['cedula']); // Asegurarse de que cedula esté definida
             $respuesta = $factura->facturaTransaccion('Consultar');
             echo json_encode($respuesta);

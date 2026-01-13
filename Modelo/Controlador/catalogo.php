@@ -100,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 }
 
     try {
-        header('Content-Type: application/json');
+        header('Content-Type: application/json; charset=utf-8');
         $accion = $_POST['accion'];
 
         if ($accion == 'obtener_datos_reportes') {
@@ -126,8 +126,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
         }
 
         if ($accion == 'filtrar_por_marca') {
-            $id_marca = $_POST['id_marca'] ?? null;
-            $productos = $id_marca ? $productosModel->obtenerProductosPorMarca($id_marca) : $productosModel->obtenerProductosConMarca();
+            $id_marca_raw = $_POST['id_marca'] ?? '';
+            $id_marca = is_numeric($id_marca_raw) ? (int)$id_marca_raw : 0;
+            if ($id_marca > 0) {
+                $productos = $productosModel->obtenerProductosPorMarca($id_marca);
+            } else {
+                $productos = $productosModel->obtenerProductosConMarca();
+            }
 
             // Registrar filtrado
             if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -191,16 +196,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
         if ($accion == 'validar_stock') {
             try {
-                header('Content-Type: application/json');
-                $id_producto = $_POST['id_producto'] ?? null;
+                header('Content-Type: application/json; charset=utf-8');
+                $id_producto = isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0;
                 $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
-                if (!$id_producto) {
-                    throw new Exception('Producto no especificado');
+                if ($id_producto <= 0) {
+                    throw new Exception('Producto no especificado o inválido');
+                }
+                if ($cantidad <= 0) {
+                    throw new Exception('La cantidad debe ser mayor a cero');
                 }
                 $producto = $productosModel->obtenerProductoPorId($id_producto);
                 if (!$producto) {
                     throw new Exception('Producto no encontrado');
                 }
+
                 $stock = (int)($producto['stock'] ?? 0);
                 echo json_encode([
                     'status' => 'success',
@@ -222,21 +231,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     throw new Exception('Debe iniciar sesión para agregar productos al carrito');
                 }
 
-                $id_producto = $_POST['id_producto'] ?? null;
-                $cantidad = $_POST['cantidad'] ?? 1;
+                $id_producto = isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0;
+                $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
 
-                if (!$id_producto) {
-                    throw new Exception('Producto no especificado');
+                if ($id_producto <= 0) {
+                    throw new Exception('Producto no especificado o inválido');
                 }
 
-                // Obtener info del producto para el registro
+                if ($cantidad <= 0) {
+                    throw new Exception('La cantidad debe ser mayor a cero');
+                }
+
                 $producto = $productosModel->obtenerProductoPorId($id_producto);
-                $nombreProducto = $producto ? $producto['nombre_producto'] : 'ID: '.$id_producto;
+                if (!$producto) {
+                    throw new Exception('Producto no encontrado');
+                }
+
+                $nombreProducto = $producto['nombre_producto'];
 
                 $result = $productosModel->agregarProductoAlCarrito($_SESSION['id_usuario'], $id_producto, $cantidad);
 
-                if ($result) {
-                    // Registrar en bitácora
+                if ($result === true) {
                     if (!defined('SKIP_SIDE_EFFECTS')) {
                         $bitacoraModel->registrarBitacora(
                             $_SESSION['id_usuario'],
@@ -247,19 +262,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                         );
                     }
 
-                    // Respuesta limpia en JSON
-                    header('Content-Type: application/json');
-                        echo json_encode([
-        'status' => 'success',
-        'message' => 'Producto agregado correctamente al carrito'
-    ]);
-} else {
-    // Si $result es un string, es un mensaje de error
-    $mensaje = is_string($result) ? $result : 'Error al agregar producto al carrito';
-    throw new Exception($mensaje);
-}
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Producto agregado correctamente al carrito'
+                    ]);
+                } else {
+                    $mensaje = is_string($result) ? $result : 'Error al agregar producto al carrito';
+                    throw new Exception($mensaje);
+                }
             } catch (Exception $e) {
-                header('Content-Type: application/json');
                 echo json_encode([
                     'status' => 'error', 
                     'message' => $e->getMessage()
@@ -273,19 +284,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 $nombre = $_POST['nombre_combo'] ?? '';
                 $descripcion = $_POST['descripcion'] ?? '';
                 $productos = $_POST['productos'] ?? [];
-                $cantidades = $_POST['cantidades'] ?? [];
 
-                if (empty($nombre)) {
+                $nombre = trim($nombre);
+
+                if ($nombre === '') {
                     throw new Exception('El nombre del combo es requerido');
                 }
 
-                if (empty($productos)) {
+                if (!is_array($productos) || empty($productos)) {
                     throw new Exception('Debe seleccionar al menos un producto para el combo');
                 }
 
-                $id_combo = $productosModel->crearCombo($nombre, $descripcion, $productos);
+                $productosValidos = [];
+                foreach ($productos as $producto) {
+                    $id = isset($producto['id']) ? (int)$producto['id'] : 0;
+                    $cantidad = isset($producto['cantidad']) ? (int)$producto['cantidad'] : 0;
 
-                // Registrar creación de combo
+                    if ($id <= 0 || $cantidad <= 0) {
+                        throw new Exception('Los productos del combo deben tener un ID y una cantidad válidos');
+                    }
+
+                    $infoProducto = $productosModel->obtenerProductoPorId($id);
+                    if (!$infoProducto) {
+                        throw new Exception('Uno de los productos seleccionados para el combo no existe');
+                    }
+
+                    $productosValidos[] = [
+                        'id' => $id,
+                        'cantidad' => $cantidad
+                    ];
+                }
+
+                if (empty($productosValidos)) {
+                    throw new Exception('Debe seleccionar al menos un producto válido para el combo');
+                }
+
+                $id_combo = $productosModel->crearCombo($nombre, $descripcion, $productosValidos);
+
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
@@ -309,21 +344,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
         if ($accion == 'cambiar_estado_combo') {
             try {
-                header('Content-Type: application/json');
+                header('Content-Type: application/json; charset=utf-8');
                 
-                $id_combo = $_POST['id_combo'] ?? 0;
+                $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
                 
-                if (empty($id_combo)) {
-                    throw new Exception('ID de combo no especificado');
+                if ($id_combo <= 0) {
+                    throw new Exception('ID de combo no especificado o inválido');
                 }
                 
-                // Obtener info del combo para registro
                 $combo = $productosModel->obtenerComboPorId($id_combo);
+                if (!$combo) {
+                    throw new Exception('Combo no encontrado');
+                }
                 
-                // Cambiar el estado usando el modelo
                 $resultado = $productosModel->cambiarEstadoCombo($id_combo);
                 
-                // Registrar cambio de estado
                 if ($resultado) {
                     $nuevoEstado = $productosModel->obtenerComboPorId($id_combo)['activo'];
                     $accionEstado = $nuevoEstado ? 'habilitó' : 'deshabilitó';
@@ -345,7 +380,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 ]);
                 
             } catch (Exception $e) {
-                    echo json_encode([
+                echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
                 ]);
@@ -355,21 +390,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
         if ($accion == 'actualizar_combo') {
             try {
-                $id_combo = $_POST['id_combo'] ?? 0;
+                $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
                 $nombre = $_POST['nombre_combo'] ?? '';
                 $descripcion = $_POST['descripcion'] ?? '';
                 $productos = $_POST['productos'] ?? [];
 
-                if (empty($id_combo)) {
-                    throw new Exception('ID de combo no especificado');
+                $nombre = trim($nombre);
+
+                if ($id_combo <= 0) {
+                    throw new Exception('ID de combo no especificado o inválido');
                 }
 
-                // Obtener info del combo antes de actualizar
+                if ($nombre === '') {
+                    throw new Exception('El nombre del combo es requerido');
+                }
+
+                if (!is_array($productos) || empty($productos)) {
+                    throw new Exception('Debe seleccionar al menos un producto para el combo');
+                }
+
                 $comboAntes = $productosModel->obtenerComboPorId($id_combo);
+                if (!$comboAntes) {
+                    throw new Exception('El combo que intenta actualizar no existe');
+                }
 
-                $result = $productosModel->actualizarCombo($id_combo, $nombre, $descripcion, $productos);
+                $productosValidos = [];
+                foreach ($productos as $producto) {
+                    $id = isset($producto['id']) ? (int)$producto['id'] : 0;
+                    $cantidad = isset($producto['cantidad']) ? (int)$producto['cantidad'] : 0;
 
-                // Registrar actualización
+                    if ($id <= 0 || $cantidad <= 0) {
+                        throw new Exception('Los productos del combo deben tener un ID y una cantidad válidos');
+                    }
+
+                    $infoProducto = $productosModel->obtenerProductoPorId($id);
+                    if (!$infoProducto) {
+                        throw new Exception('Uno de los productos seleccionados para el combo no existe');
+                    }
+
+                    $productosValidos[] = [
+                        'id' => $id,
+                        'cantidad' => $cantidad
+                    ];
+                }
+
+                if (empty($productosValidos)) {
+                    throw new Exception('Debe seleccionar al menos un producto válido para el combo');
+                }
+
+                $result = $productosModel->actualizarCombo($id_combo, $nombre, $descripcion, $productosValidos);
+
                 if ($result) {
                     if (!defined('SKIP_SIDE_EFFECTS')) {
                         $bitacoraModel->registrarBitacora(
@@ -394,18 +464,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
         if ($accion == 'eliminar_combo') {
             try {
-                $id_combo = $_POST['id_combo'] ?? 0;
+                $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
 
-                if (empty($id_combo)) {
-                    throw new Exception('ID de combo no especificado');
+                if ($id_combo <= 0) {
+                    throw new Exception('ID de combo no especificado o inválido');
                 }
 
-                // Obtener info del combo antes de eliminar
                 $combo = $productosModel->obtenerComboPorId($id_combo);
+                if (!$combo) {
+                    throw new Exception('El combo que intenta eliminar no existe');
+                }
 
                 $result = $productosModel->eliminarCombo($id_combo);
 
-                // Registrar eliminación
                 if ($result) {
                     if (!defined('SKIP_SIDE_EFFECTS')) {
                         $bitacoraModel->registrarBitacora(
@@ -430,13 +501,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
         if ($accion == 'obtener_detalles_combo') {
             try {
-                $id_combo = $_POST['id_combo'] ?? 0;
+                $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
 
-                if (empty($id_combo)) {
-                    throw new Exception('ID de combo no especificado');
+                if ($id_combo <= 0) {
+                    throw new Exception('ID de combo no especificado o inválido');
                 }
 
                 $combo = $productosModel->obtenerComboPorId($id_combo);
+                if (!$combo) {
+                    throw new Exception('Combo no encontrado');
+                }
+
                 $detalles = $productosModel->obtenerDetallesCombo($id_combo);
 
                 echo json_encode([
@@ -456,18 +531,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     throw new Exception('Debe iniciar sesión para agregar combos');
                 }
 
-                $id_combo = $_POST['id_combo'] ?? null;
-                if (!$id_combo) {
-                    throw new Exception('No se especificó el combo');
+                $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
+                if ($id_combo <= 0) {
+                    throw new Exception('No se especificó el combo o el identificador es inválido');
                 }
 
-                // Obtener info del combo
                 $combo = $productosModel->obtenerComboPorId($id_combo);
+                if (!$combo || (isset($combo['activo']) && !$combo['activo'])) {
+                    throw new Exception('El combo no está disponible');
+                }
 
                 $result = $productosModel->agregarComboAlCarrito($_SESSION['id_usuario'], $id_combo);
+                if ($result !== true) {
+                    $mensaje = is_string($result) ? $result : 'Error al agregar combo al carrito';
+                    throw new Exception($mensaje);
+                }
+
                 $detalles = $productosModel->obtenerDetallesCombo($id_combo);
 
-                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
@@ -491,6 +572,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
             }
             exit;
         }
+
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
