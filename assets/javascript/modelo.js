@@ -259,9 +259,17 @@ $(document).ready(function () {
 
     function resetModelo() {
         $("#id_marca").val('');
+        $("#id_marca").prop('checked', false);
         $("#nombre_modelo").val('');
         $("#snombre_modelo").text('');
     }
+
+    $('#registrarModelo').on('reset', function() {
+        setTimeout(function() {
+            $("#id_marca").val("");
+            $("#id_marca").removeClass("is-valid is-invalid");
+        }, 0);
+    });
 
     $(document).on('click', '#btnIncluirModelo', function() {
         $('#registrarModelo')[0].reset();
