@@ -64,7 +64,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                         <div class="grupo-interno">
                             <label for="proveedor">Proveedor</label>
                             <select class="form-select" name="proveedor" id="proveedor">
-                                <option value='disabled' disabled selected>Seleccione el Proveedor</option>
+                                <option value="" hidden>Seleccione el Proveedor</option>
                                 <?php
                                 foreach ($proveedores  as $proveedor) {
                                     echo "<option value='" . $proveedor['id_proveedor'] . "'>" . $proveedor['nombre_proveedor'] . "</option>";
@@ -76,7 +76,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                         <div class="grupo-interno">
                             <label for="tamanocompra">Tamaño de la compra</label>
                             <select class="form-select" name="tamanocompra" id="tamanocompra">
-                                <option value='disabled' disabled selected>Seleccione el Tamaño</option>
+                                <option value="" hidden>Seleccione el Tamaño</option>
                                 <option value="Pequeño">Pequeño</option>
                                 <option value="Mediano">Mediano</option>
                                 <option value="Grande">Grande</option>

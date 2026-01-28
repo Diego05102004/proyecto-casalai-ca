@@ -243,15 +243,28 @@ $(document).ready(function () {
         $("#scorrelativo").text("");
         $("#proveedor").val("");
         $("#proveedor").removeClass("is-valid is-invalid");
+        $("#proveedor").prop('checked', false);
         $("#tamanocompra").val("");
         $("#tamanocompra").removeClass("is-valid is-invalid");
+        $("#tamanocompra").prop('checked', false);
     }
+
+    $('#ingresarRecepcion').on('reset', function() {
+        setTimeout(function() {
+            $("#proveedor").val("");
+            $("#proveedor").removeClass("is-valid is-invalid");
+            $("#tamanocompra").val("");
+            $("#tamanocompra").removeClass("is-valid is-invalid");
+        }, 0);
+    });
 
     $(document).on('click', '#btnIncluirRecepcion', function() {
         $('#ingresarRecepcion')[0].reset();
         $('#scorrelativo').text('');
         $("#proveedor").removeClass("is-valid is-invalid");
+        $("#proveedor").prop('checked', false);
         $("#tamanocompra").removeClass("is-valid is-invalid");
+        $("#tamanocompra").prop('checked', false);
         $('#registrarRecepcionModal').modal('show');
     });
 
