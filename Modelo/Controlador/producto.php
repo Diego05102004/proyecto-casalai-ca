@@ -25,22 +25,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'ingresar':
+            // DEPURACIÓN: Registrar datos recibidos
+            error_log("=== DEPURACIÓN: INICIANDO REGISTRO DE PRODUCTO ===");
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("FILES data: " . print_r($_FILES, true));
+            
             $Producto = new Productos();
 
-            $Producto->setNombreP($_POST['nombre_producto'] ?? '');
-            $Producto->setDescripcionP($_POST['descripcion_producto'] ?? '');
-            $Producto->setIdModelo($_POST['modelo'] ?? null);
-            $Producto->setStockActual($_POST['Stock_Actual'] ?? 0);
-            $Producto->setStockMax($_POST['Stock_Maximo'] ?? 0);
-            $Producto->setStockMin($_POST['Stock_Minimo'] ?? 0);
-            $Producto->setClausulaDeGarantia($_POST['Clausula_garantia'] ?? '');
-            $Producto->setCodigo($_POST['Seriales'] ?? '');
-            $Producto->setCategoria($_POST['Categoria'] ?? '');
-            $Producto->setPrecio($_POST['Precio'] ?? 0);
+            $nombre_producto = $_POST['nombre_producto'] ?? '';
+            $descripcion_producto = $_POST['descripcion_producto'] ?? '';
+            $modelo = $_POST['modelo'] ?? null;
+            $Stock_Actual = $_POST['Stock_Actual'] ?? 0;
+            $Stock_Maximo = $_POST['Stock_Maximo'] ?? 0;
+            $Stock_Minimo = $_POST['Stock_Minimo'] ?? 0;
+            $Clausula_garantia = $_POST['Clausula_garantia'] ?? '';
+            $Seriales = $_POST['Seriales'] ?? '';
+            $Categoria = $_POST['Categoria'] ?? '';
+            $Precio = $_POST['Precio'] ?? 0;
+            
+            error_log("Datos extraídos:");
+            error_log("  nombre_producto: " . $nombre_producto);
+            error_log("  descripcion_producto: " . $descripcion_producto);
+            error_log("  modelo: " . $modelo);
+            error_log("  Categoria: " . $Categoria);
+            error_log("  Precio: " . $Precio);
+
+            $Producto->setNombreP($nombre_producto);
+            $Producto->setDescripcionP($descripcion_producto);
+            $Producto->setIdModelo($modelo);
+            $Producto->setStockActual($Stock_Actual);
+            $Producto->setStockMax($Stock_Maximo);
+            $Producto->setStockMin($Stock_Minimo);
+            $Producto->setClausulaDeGarantia($Clausula_garantia);
+            $Producto->setCodigo($Seriales);
+            $Producto->setCategoria($Categoria);
+            $Producto->setPrecio($Precio);
 
             // Validar datos del producto
+            error_log("Validando datos del producto...");
             $errores = $Producto->validarDatos();
             if (!empty($errores)) {
+                error_log("❌ Errores de validación encontrados: " . print_r($errores, true));
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
@@ -49,6 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+            error_log("✅ Validación de datos exitosa");
 
             // Validar que el modelo exista antes de registrar
             if ($_POST['modelo'] ?? null) {
