@@ -1142,10 +1142,12 @@ error: function(xhr, status, error) {
 }
     });
 });
-$('#registrarProductoModal').on('submit', function(e) {
+$('#incluirProductoForm').on('submit', function(e) {
+    console.log('🚀 Formulario de registro enviado');
     e.preventDefault();
     
     const config = productoFormConfigs.registrar;
+    console.log('📋 Configuración del formulario:', config);
     const resultado = validarFormularioProducto(config);
 
     if (!resultado.valido) {
@@ -1177,10 +1179,16 @@ $('#registrarProductoModal').on('submit', function(e) {
 
     // Preparar datos del formulario
     var formData = new FormData(this);
-    formData.append('accion', 'registrar');
-
+    formData.append('accion', 'ingresar');
+    
+    // Depuración: mostrar datos que se enviarán
+    console.log(' Enviando datos al servidor:');
+    for (let pair of formData.entries()) {
+        console.log(`  ${pair[0]}: ${pair[1]}`);
+    }
 
     // Enviar petición AJAX
+    console.log(' Iniciando petición AJAX...');
     $.ajax({
         url: '',
         type: 'POST',
