@@ -1849,7 +1849,6 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 "nombre_singular" => "Producto en Carrito",
                                 "nombre_plural" => "Productos en Carrito",
                                 "gestionable" => [
-                                    "Agregar productos al carrito",
                                     "Ajustar cantidades",
                                     "Eliminar productos",
                                     "Ver resumen de compra"
@@ -1865,58 +1864,31 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             
                             <div class="note mt-4">
                                 <i class="bi bi-info-circle-fill me-2"></i>
-                                <strong>Nota:</strong> Los productos en el carrito se mantendrán hasta que cierre sesión o los elimine manualmente.
+                                <strong>Nota:</strong> Los productos en el carrito se mantendrán hasta que los elimine manualmente.
                             </div>
                         </section>
 
-                        <!-- Proceso de Compra -->
-                        <section id="proceso-compra" class="section-card">
-                            <h2 class="section-title">Proceso de Compra</h2>
-                            <?php
-                            $datos_compra = [
-                                "id" => "compra",
-                                "nombre_singular" => "Paso del Proceso de Compra",
-                                "nombre_plural" => "Pasos del Proceso de Compra",
-                                "gestionable" => [
-                                    "Selección de método de envío",
-                                    "Datos de facturación",
-                                    "Método de pago",
-                                    "Confirmación de pedido"
-                                ],
-                                "instrucciones" => [
-                                    "Complete sus datos de envío y facturación",
-                                    "Seleccione su método de pago preferido",
-                                    "Revise su pedido antes de confirmar",
-                                    "Recibirá un correo de confirmación con los detalles"
-                                ]
-                            ];
-                            plantilla("inicio", $datos_compra);
-                            ?>
-                            
-                            <div class="warning mt-4">
-                                <i class="bi bi-shield-lock me-2"></i>
-                                <strong>Seguridad:</strong> Todas las transacciones están protegidas con cifrado SSL.
-                            </div>
-                        </section>
 
                         <!-- Mis Pedidos -->
                         <section id="mis-pedidos" class="section-card">
-                            <h2 class="section-title">Mis Pedidos</h2>
+                            <h2 class="section-title">Pedidos Realizados</h2>
                             <?php
                             $datos_pedidos = [
                                 "id" => "pedidos",
                                 "nombre_singular" => "Pedido",
-                                "nombre_plural" => "Mis Pedidos",
+                                "nombre_plural" => "Pedidos Realizados",
                                 "gestionable" => [
                                     "Ver historial de pedidos",
-                                    "Ver estado de envío",
+                                    "Ver estado de pedido",
                                     "Descargar facturas",
-                                    "Solicitar devoluciones"
+                                    "Anular pedidos",
+                                    "Llevar a Cabo el pago por los productos pedidos"
                                 ],
                                 "instrucciones" => [
                                     "Consulte el estado de sus pedidos recientes",
-                                    "Siga el envío en tiempo real",
-                                    "Descargue sus facturas en formato PDF"
+                                    "Consulte el estatus del pedido en tiempo real",
+                                    "Descargue sus facturas en formato PDF",
+                                    "Anule el pedido si es necesario"
                                 ]
                             ];
                             plantilla("inicio", $datos_pedidos);
@@ -1928,29 +1900,6 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                         </section>
 
-                        <!-- Facturas -->
-                        <section id="facturas" class="section-card">
-                            <h2 class="section-title">Mis Facturas</h2>
-                            <?php
-                            $datos_facturas = [
-                                "id" => "facturas",
-                                "nombre_singular" => "Factura",
-                                "nombre_plural" => "Mis Facturas",
-                                "gestionable" => [
-                                    "Ver historial de facturas",
-                                    "Descargar facturas en PDF",
-                                    "Imprimir facturas",
-                                    "Solicitar factura electrónica"
-                                ],
-                                "instrucciones" => [
-                                    "Consulte sus facturas anteriores",
-                                    "Descargue o imprima copias para sus registros",
-                                    "Solicite factura electrónica si es necesario"
-                                ]
-                            ];
-                            plantilla("inicio", $datos_facturas);
-                            ?>
-                        </section>
                     <?php /* endif; */ ?>
                     
                     <!-- Sección para Administradores -->

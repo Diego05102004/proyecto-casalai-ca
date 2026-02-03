@@ -162,7 +162,7 @@ if (isset($_SESSION['id_usuario'])) {
 
             <!-- Botón de ayuda -->
             <button class="icon-btn">
-                <a href="assets/public/casalai-manual/index.php" target="_blank">
+                <a href="assets/public/casalai-manual/index-new.php" target="_blank">
                     <IMG src="assets/img/info.svg" alt="Ayuda" class="local-icon">
                 </a>
             </button>
