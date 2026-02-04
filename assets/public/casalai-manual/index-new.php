@@ -1063,6 +1063,66 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                 </section>
                 <?php /* endif; */ ?>
 
+                <!-- Carrito de Compras -->
+                <section id="carrito" class="section-card">
+                    <h2 class="section-title">Carrito de Compras</h2>
+                    <?php
+                    $datos_carrito = [
+                        "id" => "carrito",
+                        "nombre_singular" => "Producto en Carrito",
+                        "nombre_plural" => "Productos en Carrito",
+                        "gestionable" => [
+                            "Ajustar cantidades",
+                            "Eliminar productos",
+                            "Ver resumen de compra"
+                        ],
+                        "instrucciones" => [
+                            "Haga clic en 'Agregar al carrito' para incluir productos",
+                            "Ajuste las cantidades según necesite",
+                            "Revise el resumen antes de proceder al pago"
+                        ]
+                    ];
+                    plantilla("inicio", $datos_carrito);
+                    ?>
+                    
+                    <div class="note mt-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Nota:</strong> Los productos en el carrito se mantendrán hasta que los elimine manualmente.
+                    </div>
+                </section>
+
+
+                <!-- Mis Pedidos -->
+                <section id="mis-pedidos" class="section-card">
+                    <h2 class="section-title">Pedidos Realizados</h2>
+                    <?php
+                    $datos_pedidos = [
+                        "id" => "pedidos",
+                        "nombre_singular" => "Pedido",
+                        "nombre_plural" => "Pedidos Realizados",
+                        "gestionable" => [
+                            "Ver historial de pedidos",
+                            "Ver estado de pedido",
+                            "Descargar facturas",
+                            "Anular pedidos",
+                            "Llevar a Cabo el pago por los productos pedidos"
+                        ],
+                        "instrucciones" => [
+                            "Consulte el estado de sus pedidos recientes",
+                            "Consulte el estatus del pedido en tiempo real",
+                            "Descargue sus facturas en formato PDF",
+                            "Anule el pedido si es necesario"
+                        ]
+                    ];
+                    plantilla("inicio", $datos_pedidos);
+                    ?>
+                    
+                    <div class="tip mt-4">
+                        <i class="bi bi-lightbulb-fill me-2"></i>
+                        <strong>Consejo:</strong> Puede hacer seguimiento de sus pedidos en esta sección.
+                    </div>
+                </section>
+
                 <!-- Sección Almacenista -->
                 <?php /* if ($esAdministrador): */ ?>
                 <section id="seccion-almacenista" class="section-card">
@@ -2662,66 +2722,6 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     <p>Vea información detallada de cada producto.</p>
                                     <?= renderImagen("catalogo", "detalle-producto.png") ?>
                                 </div>
-                            </div>
-                        </section>
-
-                        <!-- Carrito de Compras -->
-                        <section id="carrito" class="section-card">
-                            <h2 class="section-title">Carrito de Compras</h2>
-                            <?php
-                            $datos_carrito = [
-                                "id" => "carrito",
-                                "nombre_singular" => "Producto en Carrito",
-                                "nombre_plural" => "Productos en Carrito",
-                                "gestionable" => [
-                                    "Ajustar cantidades",
-                                    "Eliminar productos",
-                                    "Ver resumen de compra"
-                                ],
-                                "instrucciones" => [
-                                    "Haga clic en 'Agregar al carrito' para incluir productos",
-                                    "Ajuste las cantidades según necesite",
-                                    "Revise el resumen antes de proceder al pago"
-                                ]
-                            ];
-                            plantilla("inicio", $datos_carrito);
-                            ?>
-                            
-                            <div class="note mt-4">
-                                <i class="bi bi-info-circle-fill me-2"></i>
-                                <strong>Nota:</strong> Los productos en el carrito se mantendrán hasta que los elimine manualmente.
-                            </div>
-                        </section>
-
-
-                        <!-- Mis Pedidos -->
-                        <section id="mis-pedidos" class="section-card">
-                            <h2 class="section-title">Pedidos Realizados</h2>
-                            <?php
-                            $datos_pedidos = [
-                                "id" => "pedidos",
-                                "nombre_singular" => "Pedido",
-                                "nombre_plural" => "Pedidos Realizados",
-                                "gestionable" => [
-                                    "Ver historial de pedidos",
-                                    "Ver estado de pedido",
-                                    "Descargar facturas",
-                                    "Anular pedidos",
-                                    "Llevar a Cabo el pago por los productos pedidos"
-                                ],
-                                "instrucciones" => [
-                                    "Consulte el estado de sus pedidos recientes",
-                                    "Consulte el estatus del pedido en tiempo real",
-                                    "Descargue sus facturas en formato PDF",
-                                    "Anule el pedido si es necesario"
-                                ]
-                            ];
-                            plantilla("inicio", $datos_pedidos);
-                            ?>
-                            
-                            <div class="tip mt-4">
-                                <i class="bi bi-lightbulb-fill me-2"></i>
-                                <strong>Consejo:</strong> Puede hacer seguimiento de sus pedidos en esta sección.
                             </div>
                         </section>
 
