@@ -375,7 +375,7 @@ public function obtenerDatosParaPDF($id) {
                     ':id_cliente' => $factura['cliente'],
                     ':fecha' => $orden['fecha_despacho'],
                     ':tipocompra' => 'Online',
-                    ':estado' => 'Despachado'
+                    ':estado' => 'Por Despachar'
                 ]);
                 $idDespacho = $this->conex->lastInsertId();
 
