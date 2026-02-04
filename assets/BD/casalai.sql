@@ -353,7 +353,7 @@ CREATE TABLE `tbl_despachos` (
 
 INSERT INTO `tbl_despachos` (`id_despachos`, `id_clientes`, `fecha_despacho`, `tipocompra`, `estado`, `activo`) VALUES
 (3, 12, '2025-07-23', 'Presencial', 'Despachado', 1),
-(4, 12, '2025-09-01', 'Online', 'Despachado', 1),
+(4, 12, '2025-09-01', 'Online', 'Por Despachar', 1),
 (5, 12, '2025-09-01', 'Presencial', 'Por Despachar', 1),
 (7, 12, '2025-10-12', 'Presencial', 'Por Despachar', 0),
 (8, 12, '2025-10-12', 'Presencial', 'Por Despachar', 0),
@@ -804,9 +804,9 @@ CREATE TABLE `tbl_orden_despachos` (
 --
 
 INSERT INTO `tbl_orden_despachos` (`id_orden_despachos`, `id_factura`, `cliente`, `fecha_despacho`, `estado`, `activo`) VALUES
-(3, 33, 'David Medina', '2025-07-23', 'Entregada', 1),
+(3, 33, 'David Medina', '2025-07-23', 'Por Entregar', 1),
 (4, 33, 'David Medina', '2025-07-24', 'Por Entregar', 1),
-(5, 33, 'David Medina', '2025-07-24', 'Entregada', 1);
+(5, 33, 'David Medina', '2025-07-24', 'Por Entregar', 1);
 
 -- --------------------------------------------------------
 
