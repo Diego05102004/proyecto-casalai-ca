@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         [0, 'asc'] 
                     ]).draw();
                 } else {
-                    Swal.fire('Error', r.message, 'error');
+                    Swal.fire('Error', r.message || 'No se pudo cambiar el estado', 'error');
                 }
             },
             error: function () {

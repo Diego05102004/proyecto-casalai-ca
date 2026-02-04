@@ -272,7 +272,9 @@ break;
             }
             $nuevo_estado = ($estado_actual === 'Por Entregar') ? 'Entregada' : 'Por Entregar';
             $ordenModel = new OrdenDespacho();
-            if ($ordenModel->cambiarEstadoOrden($id, $nuevo_estado)) {
+            $resultado = $ordenModel->cambiarEstadoOrden($id, $nuevo_estado);
+            
+            if ($resultado['status'] === 'success') {
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     // Bitácora
                     $bitacora = new Bitacora();
@@ -301,10 +303,10 @@ break;
                 }
                 echo json_encode(['status' => 'success', 'nuevo_estado' => $nuevo_estado]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se pudo cambiar el estado']);
+                echo json_encode(['status' => 'error', 'message' => $resultado['message'] ?? 'No se pudo cambiar el estado']);
             }
             break;
-        
+
         case 'anularOrden':
             $ordenModel = new OrdenDespacho();
             $idOrden = isset($_POST['id_orden_despachos']) ? (int)$_POST['id_orden_despachos'] : 0;
