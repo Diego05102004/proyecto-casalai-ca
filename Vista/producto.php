@@ -156,6 +156,9 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
               <div class="modal-footer">
                 <button class="boton-form" type="submit">Registrar</button>
                 <button class="boton-reset" type="reset">Limpiar</button>
+                <div class="mt-2" style="font-size: 12px; color: #666; text-align: center;">
+                    <strong>Paso 1:</strong> Complete campos obligatorios (*) → <strong>Paso 2:</strong> Verifique información → <strong>Paso 3:</strong> Presione "Registrar"
+                </div>
               </div>
             </form>
           <?php endif; ?>
@@ -169,6 +172,64 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <div class="ghost"></div>
       
         <h3>Listado de Productos</h3>
+
+        <div class="instrucciones-modulo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #1f66df;">
+            <h5 style="color: #1f66df; margin-bottom: 10px;">📦 Instrucciones de Uso - Módulo de Productos</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 style="color: #333;">🔹 Incluir Nuevo Producto:</h6>
+                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                        <li>Haga clic en el botón <strong>"+"</strong> (color azul) en la esquina superior derecha</li>
+                        <li>Complete todos los campos obligatorios marcados con <strong>*</strong></li>
+                        <li>Ingrese nombre del producto (3-20 caracteres, solo letras)</li>
+                        <li>Seleccione modelo/marca de la lista desplegable</li>
+                        <li>Cargue una imagen del producto (formato JPG, PNG, etc.)</li>
+                        <li>Agregue descripción breve (máximo 50 caracteres)</li>
+                        <li>Configure stock actual, máximo y mínimo</li>
+                        <li>Escriba cláusula de garantía (10-200 caracteres)</li>
+                        <li>Seleccione categoría y complete características específicas</li>
+                        <li>Ingrese código serial y precio del producto</li>
+                        <li>Haga clic en <strong>"Registrar"</strong> para guardar</li>
+                    </ol>
+                </div>
+                <div class="col-md-6">
+                    <h6 style="color: #333;">🔹 Modificar Producto:</h6>
+                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                        <li>Localice el producto en la tabla</li>
+                        <li>Haga clic en el ícono del <strong>lápiz</strong> 📝 en "Acciones"</li>
+                        <li>Edite los campos necesarios</li>
+                        <li>Puede cambiar la imagen si lo requiere</li>
+                        <li>Haga clic en <strong>"Guardar cambios"</strong> para confirmar</li>
+                    </ol>
+                    <h6 style="color: #333; margin-top: 15px;">🔹 Eliminar/Anular Producto:</h6>
+                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                        <li>Encuentre el producto que desea eliminar</li>
+                        <li>Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones"</li>
+                        <li>Confirme la eliminación en el mensaje de advertencia</li>
+                    </ol>
+                    <h6 style="color: #333; margin-top: 15px;">🔹 Cambiar Estatus:</h6>
+                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                        <li>Haga clic en el estatus (habilitado/inhabilitado) del producto</li>
+                        <li>El estatus cambiará automáticamente</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <h6 style="color: #333;">🔹 Generar Reportes:</h6>
+                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                        <li>Use el filtro de estatus para mostrar: Todos/Habilitados/Inhabilitados</li>
+                        <li>En la sección de reportes abajo, seleccione tipo de reporte:</li>
+                        <li>• <strong>Top Productos Más Vendidos:</strong> Configure "Top N" y tipo de gráfica</li>
+                        <li>• <strong>Stock Alto vs Bajo:</strong> Seleccione categoría o "Todas"</li>
+                        <li>• <strong>Rotación de Productos:</strong> Muestra días promedio de rotación</li>
+                        <li>Elija tipo de gráfica: Barras, Pastel, Líneas, Rosca, Área Polar</li>
+                        <li>Haga clic en <strong>"Generar"</strong> para visualizar</li>
+                        <li>Use <strong>"Descargar PDF"</strong> para guardar el reporte</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
 
         <div class="filtro-status">
             <label for="filtro-estatus-productos">Mostrar:</label>
@@ -385,119 +446,122 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     </div>
 
     <!-- Modal de modificación -->
-<!-- Reemplazar el contenido del modal de modificación con esto -->
-<div class="modal fade modal-modificar" id="modificarProductoModal" tabindex="-1" role="dialog"
-  aria-labelledby="modificarProductoModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-    <div class="modal-content">
-      <form id="modificarProductoForm" method="POST" enctype="multipart/form-data" novalidate>
-        <div class="modal-header">
-          <h5 class="titulo-form" id="modificarProductoModalLabel">Modificar Producto</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+    <div class="modal fade modal-modificar" id="modificarProductoModal" tabindex="-1" role="dialog"
+      aria-labelledby="modificarProductoModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <form id="modificarProductoForm" method="POST" enctype="multipart/form-data" novalidate>
+            <div class="modal-header">
+              <h5 class="titulo-form" id="modificarProductoModalLabel">Modificar Producto</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="accion" value="modificar">
+              <input type="hidden" id="modificarIdProducto" name="id_producto">
+              <input type="hidden" id="modificar_tabla_categoria" name="tabla_categoria">
+
+              <div class="form-group">
+                <label for="modificarNombreProducto">Nombre del producto*</label>
+                <input type="text" class="form-control" id="modificarNombreProducto" name="nombre_producto" required>
+                <span class="span-value" id="smodificarNombreProducto"></span>
+              </div>
+
+              <div class="form-group">
+                <label>Imagen actual</label><br>
+                <img id="modificarImagenPreview" src="#" alt="Imagen actual"
+                  style="max-height: 120px; border-radius: 8px; border: 1px solid #ccc; padding: 5px; margin-bottom: 10px;">
+              </div>
+
+              <div class="form-group">
+                <label for="modificarImagen">Cambiar imagen</label>
+                <input type="file" class="form-control" id="modificarImagen" name="imagen" accept="image/*">
+                <span class="span-value" id="smodificarImagen"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="modificarDescripcionProducto">Descripción del producto*</label>
+                <textarea class="form-control" id="modificarDescripcionProducto" name="descripcion_producto" rows="2" required></textarea>
+                <span class="span-value" id="smodificarDescripcionProducto"></span>
+              </div>
+
+              <div class="form-group">
+                  <label for="modificarModelo">Modelo*</label>
+                  <select class="form-select" id="modificarModelo" name="modelo" required>
+                    <option value="">Seleccionar modelo</option>
+                    <?php foreach ($modelos as $modelo): ?>
+                      <option value="<?= $modelo['tbl_modelos'] ?>"><?= $modelo['nombre_modelo'] ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                  <span class="span-value" id="smodificarModelo"></span>
+              </div>
+
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <div class="form-group col-md-4" style="flex: 1;">
+                  <label for="modificarStockActual">Stock Actual</label>
+                  <input type="number" min="0" class="form-control" id="modificarStockActual" name="Stock_Actual"
+                    required>
+                </div>
+                <div class="form-group col-md-4" style="flex: 1;">
+                  <label for="modificarStockMaximo">Stock Máximo</label>
+                  <input type="number" min="0" class="form-control" id="modificarStockMaximo" name="Stock_Maximo"
+                    required>
+                </div>
+                <div class="form-group col-md-4" style="flex: 1;">
+                  <label for="modificarStockMinimo">Stock Mínimo</label>
+                  <input type="number" min="0" class="form-control" id="modificarStockMinimo" name="Stock_Minimo"
+                    required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="modificarClausulaGarantia">Cláusula de Garantía*</label>
+                <textarea class="form-control" id="modificarClausulaGarantia" name="Clausula_garantia" rows="2" required></textarea>
+                <span class="span-value" id="smodificarClausulaGarantia"></span>
+              </div>
+
+              <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <div class="form-group col-md-5" style="flex: 1;">
+                  <label for="modificarSeriales">Código Serial</label>
+                  <input type="text" maxlength="10" class="form-control" id="modificarSeriales" name="Seriales" required>
+                </div>
+                <div class="form-group col-md-4" style="flex: 1;">
+                  <label for="modificarPrecio">Precio ($)</label>
+                  <input min="0" class="form-control" id="modificarPrecio" name="Precio" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                  <label for="modificarCategoria">Categoría*</label>
+                  <select class="form-select" id="modificarCategoria" name="Categoria" required>
+                    <option value="">Seleccionar Categoría</option>
+                    <?php foreach ($categoriasDinamicas as $cat): ?>
+                      <option value="<?= $cat['tabla'] ?>" data-tabla="<?= $cat['tabla'] ?>">
+                        <?= htmlspecialchars($cat['nombre_categoria']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                  <span class="span-value" id="smodificarCategoria"></span>
+              </div>
+
+              <div id="caracteristicasCategoriaModificar"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Guardar cambios</button>
+              <div class="mt-2" style="font-size: 12px; color: #666; text-align: center;">
+                  <strong>Nota:</strong> Los cambios se aplicarán inmediatamente tras guardar
+              </div>
+            </div>
+          </form>
         </div>
-        <div class="modal-body">
-          <input type="hidden" name="accion" value="modificar">
-          <input type="hidden" id="modificarIdProducto" name="id_producto">
-          <input type="hidden" id="modificar_tabla_categoria" name="tabla_categoria">
-
-          <div class="form-group">
-            <label for="modificarNombreProducto">Nombre del producto*</label>
-            <input type="text" class="form-control" id="modificarNombreProducto" name="nombre_producto" required>
-            <span class="span-value" id="smodificarNombreProducto"></span>
-          </div>
-
-          <div class="form-group">
-            <label>Imagen actual</label><br>
-            <img id="modificarImagenPreview" src="#" alt="Imagen actual"
-              style="max-height: 120px; border-radius: 8px; border: 1px solid #ccc; padding: 5px; margin-bottom: 10px;">
-          </div>
-
-          <div class="form-group">
-            <label for="modificarImagen">Cambiar imagen</label>
-            <input type="file" class="form-control" id="modificarImagen" name="imagen" accept="image/*">
-            <span class="span-value" id="smodificarImagen"></span>
-          </div>
-
-          <div class="form-group">
-            <label for="modificarDescripcionProducto">Descripción del producto*</label>
-            <textarea class="form-control" id="modificarDescripcionProducto" name="descripcion_producto" rows="2" required></textarea>
-            <span class="span-value" id="smodificarDescripcionProducto"></span>
-          </div>
-
-          <div class="form-group">
-              <label for="modificarModelo">Modelo*</label>
-              <select class="form-select" id="modificarModelo" name="modelo" required>
-                <option value="">Seleccionar modelo</option>
-                <?php foreach ($modelos as $modelo): ?>
-                  <option value="<?= $modelo['tbl_modelos'] ?>"><?= $modelo['nombre_modelo'] ?></option>
-                <?php endforeach; ?>
-              </select>
-              <span class="span-value" id="smodificarModelo"></span>
-          </div>
-
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
-            <div class="form-group col-md-4" style="flex: 1;">
-              <label for="modificarStockActual">Stock Actual</label>
-              <input type="number" min="0" class="form-control" id="modificarStockActual" name="Stock_Actual"
-                required>
-            </div>
-            <div class="form-group col-md-4" style="flex: 1;">
-              <label for="modificarStockMaximo">Stock Máximo</label>
-              <input type="number" min="0" class="form-control" id="modificarStockMaximo" name="Stock_Maximo"
-                required>
-            </div>
-            <div class="form-group col-md-4" style="flex: 1;">
-              <label for="modificarStockMinimo">Stock Mínimo</label>
-              <input type="number" min="0" class="form-control" id="modificarStockMinimo" name="Stock_Minimo"
-                required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="modificarClausulaGarantia">Cláusula de Garantía*</label>
-            <textarea class="form-control" id="modificarClausulaGarantia" name="Clausula_garantia" rows="2" required></textarea>
-            <span class="span-value" id="smodificarClausulaGarantia"></span>
-          </div>
-
-          <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
-            <div class="form-group col-md-5" style="flex: 1;">
-              <label for="modificarSeriales">Código Serial</label>
-              <input type="text" maxlength="10" class="form-control" id="modificarSeriales" name="Seriales" required>
-            </div>
-            <div class="form-group col-md-4" style="flex: 1;">
-              <label for="modificarPrecio">Precio ($)</label>
-              <input min="0" class="form-control" id="modificarPrecio" name="Precio" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-              <label for="modificarCategoria">Categoría*</label>
-              <select class="form-select" id="modificarCategoria" name="Categoria" required>
-                <option value="">Seleccionar Categoría</option>
-                <?php foreach ($categoriasDinamicas as $cat): ?>
-                  <option value="<?= $cat['tabla'] ?>" data-tabla="<?= $cat['tabla'] ?>">
-                    <?= htmlspecialchars($cat['nombre_categoria']) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-              <span class="span-value" id="smodificarCategoria"></span>
-          </div>
-
-          <div id="caracteristicasCategoriaModificar"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar cambios</button>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
-</div>
-  <div class="container mt-4">
-    <!-- Formulario de parámetros para el reporte -->
-    <div class="reporte-container" style="max-width: 1000px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.1);">
+
+    <div class="container mt-4">
+      <!-- Formulario de parámetros para el reporte -->
+      <div class="reporte-container" style="max-width: 1000px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.1);">
         
         <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center;">
             <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">

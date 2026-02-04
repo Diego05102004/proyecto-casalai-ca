@@ -63,6 +63,12 @@ class NotificacionWebSocket implements MessageComponentInterface {
                 }
                 return;
             }
+
+            if ($data['tipo'] === 'ping') {
+                // Responder al ping para mantener la conexión activa
+                $from->send(json_encode(['tipo' => 'pong']));
+                return;
+            }
         }
 
         if (isset($data['para_usuario_id']) && isset($this->usuarios[$data['para_usuario_id']])) {

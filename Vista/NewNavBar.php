@@ -760,20 +760,42 @@ if (!empty($_SESSION['foto_perfil'])) {
             this.usuarioId = usuarioId;
             this.socket = null;
             this.reconectarTimeout = null;
+            this.reconectarIntentos = 0;
+            this.maxReconectarIntentos = 10;
+            this.reconectarDelay = 1000; // 1 segundo inicial
+            this.heartbeatInterval = null;
             this.conectar();
         }
 
         conectar() {
+            // Evitar múltiples conexiones simultáneas
+            if (this.socket && this.socket.readyState === WebSocket.CONNECTING) {
+                return;
+            }
+
+            // Cerrar conexión existente si la hay
+            if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+                this.socket.close();
+            }
+
+            console.log(`Intentando conectar WebSocket (intento ${this.reconectarIntentos + 1})...`);
+            
             // Asegúrate de que la URL apunte a tu servidor WebSocket
             this.socket = new WebSocket('ws://localhost:8080');
             
             this.socket.onopen = () => {
                 console.log('Conexión WebSocket establecida');
+                this.reconectarIntentos = 0;
+                this.reconectarDelay = 1000;
+                
                 // Autenticar al usuario
                 this.enviar({ 
                     tipo: 'autenticar',
                     usuario_id: this.usuarioId 
                 });
+                
+                // Iniciar heartbeat para mantener conexión activa
+                this.iniciarHeartbeat();
                 
                 // Limpiar cualquier intento de reconexión pendiente
                 clearTimeout(this.reconectarTimeout);
@@ -785,16 +807,82 @@ if (!empty($_SESSION['foto_perfil'])) {
                 this.manejarMensaje(data);
             };
 
-            this.socket.onclose = () => {
-                console.log('Conexión WebSocket cerrada. Reconectando...');
-                // Intentar reconectar después de 5 segundos
-                this.reconectarTimeout = setTimeout(() => this.conectar(), 5000);
+            this.socket.onclose = (event) => {
+                console.log('Conexión WebSocket cerrada. Código:', event.code, 'Razón:', event.reason);
+                
+                // Detener heartbeat
+                this.detenerHeartbeat();
+                
+                // Solo reconectar si no fue un cierre normal
+                if (event.code !== 1000) {
+                    this.programarReconexion();
+                }
             };
 
             this.socket.onerror = (error) => {
                 console.error('Error en WebSocket:', error);
-                this.socket.close();
+                // No cerrar aquí, dejar que onclose maneje la reconexión
             };
+        }
+
+        programarReconexion() {
+            // Evitar múltiples reconexiones programadas
+            if (this.reconectarTimeout) {
+                clearTimeout(this.reconectarTimeout);
+            }
+
+            // Calcular delay con backoff exponencial
+            const delay = Math.min(this.reconectarDelay * Math.pow(2, this.reconectarIntentos), 30000);
+            
+            console.log(`Programando reconexión en ${delay}ms (intento ${this.reconectarIntentos + 1}/${this.maxReconectarIntentos})`);
+            
+            this.reconectarTimeout = setTimeout(() => {
+                if (this.reconectarIntentos < this.maxReconectarIntentos) {
+                    this.reconectarIntentos++;
+                    this.conectar();
+                } else {
+                    console.error('Se alcanzó el máximo número de intentos de reconexión');
+                    // Mostrar notificación al usuario
+                    this.mostrarErrorConexion();
+                }
+            }, delay);
+        }
+
+        iniciarHeartbeat() {
+            // Enviar ping cada 30 segundos para mantener la conexión activa
+            this.heartbeatInterval = setInterval(() => {
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.socket.send(JSON.stringify({ tipo: 'ping' }));
+                }
+            }, 30000);
+        }
+
+        detenerHeartbeat() {
+            if (this.heartbeatInterval) {
+                clearInterval(this.heartbeatInterval);
+                this.heartbeatInterval = null;
+            }
+        }
+
+        mostrarErrorConexion() {
+            // Crear notificación visual para el usuario
+            const notificacion = document.createElement('div');
+            notificacion.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+            notificacion.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+            notificacion.innerHTML = `
+                <strong>Conexión perdida</strong><br>
+                No se puede conectar al servidor de notificaciones. 
+                Algunas funciones pueden no estar disponibles.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notificacion);
+            
+            // Auto-eliminar después de 10 segundos
+            setTimeout(() => {
+                if (notificacion.parentNode) {
+                    notificacion.parentNode.removeChild(notificacion);
+                }
+            }, 10000);
         }
 
         enviar(mensaje) {

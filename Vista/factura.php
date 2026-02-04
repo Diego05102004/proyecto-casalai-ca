@@ -25,6 +25,51 @@
                 <input type="text" name="accion" id="accion" style="display:none" />
                 <input type="hidden" name="detalle_factura" id="detalle_factura_input">
                 <h3 class="display-4 text-center">Factura</h3>
+                
+                <div class="instrucciones-modulo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #1f66df;">
+                    <h5 style="color: #1f66df; margin-bottom: 10px;">🧾 Instrucciones de Uso - Módulo de Facturas</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 style="color: #333;">🔹 Proceso de Facturación:</h6>
+                            <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                                <li>Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles</li>
+                                <li>Seleccione los productos deseados haciendo clic en ellos</li>
+                                <li>Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente</li>
+                                <li>Verifique el stock disponible (no puede exceder el stock actual)</li>
+                                <li>El subtotal se calculará automáticamente</li>
+                                <li>Complete los datos del cliente si es necesario</li>
+                                <li>Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 style="color: #333;">🔹 Gestión de Productos:</h6>
+                            <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                                <li>Para <strong>agregar productos</strong>: haga clic en la tabla del modal</li>
+                                <li>Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo</li>
+                                <li>Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong></li>
+                                <li>Los productos con stock 0 están ocultos automáticamente</li>
+                                <li>El sistema validará que no exceda el stock disponible</li>
+                            </ol>
+                            <h6 style="color: #333; margin-top: 15px;">🔹 Cancelar Factura:</h6>
+                            <ol style="font-size: 13px; color: #555; margin-left: 20px;">
+                                <li>Use el botón <strong>"Cancelar"</strong> si necesita anular la factura</li>
+                                <li>Confirme la cancelación en el mensaje de advertencia</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <h6 style="color: #333;">🔹 Validaciones y Restricciones:</h6>
+                            <ul style="font-size: 13px; color: #555; margin-left: 20px;">
+                                <li>• No puede procesar una factura sin productos</li>
+                                <li>• Las cantidades no pueden superar el stock disponible</li>
+                                <li>• Los precios se calculan automáticamente según el producto</li>
+                                <li>• El total se actualiza en tiempo real</li>
+                                <li>• Todos los campos obligatorios deben estar completos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
                 <div class="">
 
                     <div class="row">
@@ -47,6 +92,9 @@
                                     <div class="col-md-4">
                                         <button type="submit" class="btn btn-primary" id="registrar"
                                             name="registrar">Procesar<br> Pre-Factura</button>
+                                        <div class="mt-2" style="font-size: 11px; color: #666; text-align: center;">
+                                            <strong>Verifique:</strong> Productos seleccionados → Cantidades → Total
+                                        </div>
                                     </div>
                                 </div>
                             </div>

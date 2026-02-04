@@ -154,6 +154,26 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .toc::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .toc::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .toc::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .toc::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
         
         .toc-title {
@@ -179,19 +199,80 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
             text-decoration: none;
             display: flex;
             align-items: center;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-weight: 500;
         }
         
         .toc-link:hover {
             background-color: #f0f7ff;
             color: var(--secondary-color);
+            border-left-color: var(--secondary-color);
+            transform: translateX(3px);
+        }
+        
+        .toc-link.active {
+            background-color: #e3f2fd;
+            color: var(--secondary-color);
+            border-left-color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .toc-link.active::after {
+            content: " ✓";
+            color: var(--secondary-color);
+            font-weight: bold;
+            margin-left: auto;
         }
         
         .toc-link i {
             margin-right: 8px;
             color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        .toc-sublist {
+            list-style: none;
+            padding-left: 0;
+            margin: 8px 0 0 0;
+        }
+        
+        .toc-sublist .toc-link {
+            padding: 6px 12px 6px 32px;
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+        
+        /* Indicador de progreso de lectura */
+        .toc-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            background: var(--secondary-color);
+            border-radius: 3px;
+            transition: height 0.3s ease;
+            z-index: 10;
+        }
+        
+        /* Mejoras para móvil */
+        @media (max-width: 768px) {
+            .toc {
+                max-height: 200px;
+                margin-bottom: 20px;
+            }
+            
+            .toc-link {
+                padding: 6px 8px;
+                font-size: 0.85rem;
+            }
+            
+            .toc-sublist .toc-link {
+                padding: 4px 8px 4px 24px;
+                font-size: 0.8rem;
+            }
         }
         
         .card-hover {
@@ -266,6 +347,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
 <!-- Sidebar Navigation -->
 <div class="col-lg-3 mb-4">
     <div class="toc">
+        <div class="toc-progress" id="tocProgress"></div>
         <h5 class="toc-title">Tabla de Contenidos</h5>
         <ul class="toc-list">
             <li class="toc-item"><a href="#introduccion" class="toc-link"><i class="bi bi-house-door"></i> Introducción</a></li>
@@ -274,87 +356,38 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                 <li class="toc-item"><a href="#dashboard" class="toc-link"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
                 <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
                 
+                <!-- Secciones disponibles para todos los usuarios -->
+                <li class="toc-item">
+                    <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Sección para Clientes</a>
+                    <ul class="toc-sublist ms-3 mt-2">
+                        <li><a href="#carrito" class="toc-link">Carrito de Compras</a></li>
+                        <li><a href="#mis-pedidos" class="toc-link">Mis Pedidos</a></li>
+                    </ul>
+                </li>
+                
                 <?php if ($esAdministrador): ?>
-                    <!-- Módulo de Perfiles -->
+                    <!-- Secciones para Administradores -->
                     <li class="toc-item">
-                        <a href="#administrar-perfiles" class="toc-link"><i class="bi bi-people"></i> Administrar Perfiles</a>
+                        <a href="#seccion-almacenista" class="toc-link"><i class="bi bi-box-seam"></i> Sección para Almacenistas</a>
                         <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#gestion-usuarios" class="toc-link">Gestionar Usuarios</a></li>
-                            <li><a href="#gestion-roles" class="toc-link">Gestionar Roles</a></li>
-                            <li><a href="#gestion-permisos" class="toc-link">Gestionar Permisos</a></li>
+                            <li><a href="#recepcion-productos" class="toc-link">Recepción de Productos</a></li>
+                            <li><a href="#despacho-productos" class="toc-link">Despacho de Productos</a></li>
+                            <li><a href="#gestion-productos-almacenista" class="toc-link">Gestión de Productos</a></li>
+                            <li><a href="#gestion-categorias-almacenista" class="toc-link">Gestión de Categorías</a></li>
+                            <li><a href="#gestion-marcas-almacenista" class="toc-link">Gestión de Marcas</a></li>
+                            <li><a href="#gestion-modelos-almacenista" class="toc-link">Gestión de Modelos</a></li>
                         </ul>
                     </li>
-
-                    <!-- Módulo de Inventario -->
+                    
                     <li class="toc-item">
-                        <a href="#gestion-inventario" class="toc-link"><i class="bi bi-box-seam"></i> Gestión de Inventario</a>
+                        <a href="#seccion-administrador" class="toc-link"><i class="bi bi-shield-check"></i> Sección para Administradores</a>
                         <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#gestion-productos" class="toc-link">Gestionar Productos</a></li>
-                            <li><a href="#gestion-categorias" class="toc-link">Gestionar Categorías</a></li>
-                            <li><a href="#gestion-marcas" class="toc-link">Gestionar Marcas</a></li>
-                            <li><a href="#gestion-modelos" class="toc-link">Gestionar Modelos</a></li>
-                            <li><a href="#reportes-inventario" class="toc-link">Reportes de Inventario</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Módulo de Compras -->
-                    <li class="toc-item">
-                        <a href="#gestion-compras" class="toc-link"><i class="bi bi-cart-plus"></i> Gestión de Compras</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#gestion-proveedores" class="toc-link">Gestionar Proveedores</a></li>
-                            <li><a href="#reporte-proveedores" class="toc-link">Reporte de Proveedores</a></li>
-                            <li><a href="#gestion-recepcion" class="toc-link">Gestión de Recepción</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Módulo de Ventas -->
-                    <li class="toc-item">
-                        <a href="#gestion-ventas" class="toc-link"><i class="bi bi-currency-dollar"></i> Gestión de Ventas</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#catalogo" class="toc-link">Catálogo</a></li>
-                            <li><a href="#gestion-pedidos" class="toc-link">Gestión de Pedidos</a></li>
-                            <li><a href="#gestion-clientes" class="toc-link">Gestión de Clientes</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Módulo de Finanzas -->
-                    <li class="toc-item">
-                        <a href="#gestion-finanzas" class="toc-link"><i class="bi bi-cash-stack"></i> Gestión Financiera</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#gestion-cuentas" class="toc-link">Gestión de Cuentas Bancarias</a></li>
-                            <li><a href="#ingresos-egresos" class="toc-link">Ingresos y Egresos</a></li>
-                            <li><a href="#reportes-financieros" class="toc-link">Reportes Financieros</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Módulo de Logística -->
-                    <li class="toc-item">
-                        <a href="#gestion-logistica" class="toc-link"><i class="bi bi-truck"></i> Gestión Logística</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#ordenes-despacho" class="toc-link">Órdenes de Despacho</a></li>
-                            <li><a href="#gestion-despachos" class="toc-link">Gestión de Despachos</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Módulo de Seguridad -->
-                    <li class="toc-item">
-                        <a href="#gestion-seguridad" class="toc-link"><i class="bi bi-shield-lock"></i> Seguridad</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#bitacora" class="toc-link">Bitácora del Sistema</a></li>
-                            <li><a href="#copias-seguridad" class="toc-link">Copias de Seguridad</a></li>
-                        </ul>
-                    </li>
-                <?php endif; ?>
-
-                <?php if ($esCliente): ?>
-                    <!-- Módulo de Cliente -->
-                    <li class="toc-item">
-                        <a href="#cliente" class="toc-link"><i class="bi bi-person"></i> Área de Cliente</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <li><a href="#catalogo-cliente" class="toc-link">Catálogo de Productos</a></li>
-                            <li><a href="#mis-pedidos" class="toc-link">Mis Pedidos</a></li>
-                            <li><a href="#mis-facturas" class="toc-link">Mis Facturas</a></li>
-                            <li><a href="#mis-datos" class="toc-link">Mis Datos</a></li>
+                            <li><a href="#gestion-proveedores-admin" class="toc-link">Gestión de Proveedores</a></li>
+                            <li><a href="#gestion-clientes-admin" class="toc-link">Gestión de Clientes</a></li>
+                            <li><a href="#gestion-cuentas-bancarias" class="toc-link">Gestión de Cuentas Bancarias</a></li>
+                            <li><a href="#gestion-usuarios-sistema" class="toc-link">Gestión de Usuarios</a></li>
+                            <li><a href="#gestion-roles-permisos" class="toc-link">Gestión de Roles y Permisos</a></li>
+                            <li><a href="#catalogo-combos-promocionales" class="toc-link">Combos Promocionales</a></li>
                         </ul>
                     </li>
                 <?php endif; ?>
@@ -800,23 +833,154 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             <div class="card">
                                 <div class="card-body">
                                     <h5 class="card-title">
-                                        <i class="bi bi-file-earmark-text me-2"></i>Prefacturar Compra
+                                        <i class="bi bi-file-earmark-text me-2"></i>Proceso de Facturación
                                     </h5>
-                                    <p>Genere una prefactura para revisar su pedido antes de confirmar la compra.</p>
+                                    <p>Genere facturas para sus ventas con un proceso detallado paso a paso.</p>
+                                    
+                                    <!-- Pasos detallados para facturación -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Pasos para Procesar Factura</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Verifique el stock disponible (no puede exceder el stock actual)</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> El subtotal se calculará automáticamente</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Complete los datos del cliente si es necesario</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-cart-plus text-success me-2"></i>
+                                                        <strong>Agregar Productos</strong>
+                                                        <br><small>Click en producto</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-calculator me-2"></i>
+                                                        <strong>Total:</strong> Calculado automáticamente
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-box-seam me-2"></i>
+                                                        <strong>Stock:</strong> Validado automáticamente
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para gestión de productos en factura -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">Pasos para Gestión de Productos</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong></li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Los productos con stock 0 están ocultos automáticamente</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-dash-circle text-danger me-2"></i>
+                                                        <strong>Eliminar</strong>
+                                                        <br><small>Botón X rojo</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-plus-slash-minus me-2"></i>
+                                                        <strong>Cantidades:</strong> Botones +/-
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Stock 0:</strong> Ocultos automáticamente
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Validaciones y restricciones -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Validaciones y Restricciones</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ul>
+                                                        <li class="mb-2">• No puede procesar una factura sin productos</li>
+                                                        <li class="mb-2">• Las cantidades no pueden superar el stock disponible</li>
+                                                        <li class="mb-2">• Los precios se calculan automáticamente según el producto</li>
+                                                        <li class="mb-2">• El total se actualiza en tiempo real</li>
+                                                        <li class="mb-2">• Todos los campos obligatorios deben estar completos</li>
+                                                    </ul>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-shield-check text-info me-2"></i>
+                                                        <strong>Validación</strong>
+                                                        <br><small>Automática</small>
+                                                    </div>
+                                                    <div class="alert alert-danger border mt-2">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        <strong>Importante:</strong> Revise antes de procesar
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para cancelar factura -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Pasos para Cancelar Factura</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Use el botón <strong>"Cancelar"</strong> si necesita anular la factura</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Confirme la cancelación en el mensaje de advertencia</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-x-circle text-danger me-2"></i>
+                                                        <strong>Cancelar</strong>
+                                                        <br><small>Con confirmación</small>
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        <strong>Atención:</strong> Esta acción no se puede deshacer
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     <div class="row">
                                         <div class="col-md-6">
                                             <?= renderImagen("carrito", "prefacturar.png") ?>
-                                            <p class="text-muted small mt-2">Proceso de prefacturación</p>
+                                            <p class="text-muted small mt-2">Proceso de facturación detallado</p>
                                         </div>
                                         <div class="col-md-6">
-                                            <h6>Proceso de prefacturación:</h6>
+                                            <h6>Resumen del proceso:</h6>
                                             <ol>
-                                                <li>Revise los productos seleccionados</li>
-                                                <li>Confirme las cantidades</li>
-                                                <li>Verifique los totales</li>
-                                                <li>Haga clic en "Prefacturar"</li>
-                                                <li>Recibirá un resumen de su pedido</li>
+                                                <li>Seleccione productos del catálogo</li>
+                                                <li>Ajuste cantidades y verifique stock</li>
+                                                <li>Confirme datos del cliente</li>
+                                                <li>Procese pre-factura</li>
+                                                <li>Descargue factura final</li>
                                             </ol>
                                         </div>
                                     </div>
@@ -911,7 +1075,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             <p>Como almacenista, tendrá acceso completo a la gestión de inventario y control de productos del sistema.</p>
                             
                             <!-- Recepción -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="recepcion-productos">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-truck me-2"></i>Recepción de Productos
@@ -927,7 +1091,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <li>Proveedor</li>
                                                 <li>Producto</li>
                                                 <li>Cantidad recibida</li>
-                                                <li>Costo de inversión</li>
+                                                <li>Costo unitario</li>
                                             </ul>
                                         </div>
                                         <div class="col-md-6">
@@ -968,7 +1132,11 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
-                                                        <strong>Tip:</strong> Puede agregar y remover productos antes de guardar
+                                                        <strong>Correlativo:</strong> Debe ser único
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-calculator me-2"></i>
+                                                        <strong>Costo:</strong> Valor unitario requerido
                                                     </div>
                                                 </div>
                                             </div>
@@ -1014,7 +1182,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                             
                             <!-- Despacho -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="despacho-productos">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
@@ -1030,6 +1198,8 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <li>Cliente</li>
                                                 <li>Producto</li>
                                                 <li>Cantidad despachada</li>
+                                                <li>Precio unitario</li>
+                                                <li>Total del despacho</li>
                                             </ul>
                                         </div>
                                         <div class="col-md-6">
@@ -1042,6 +1212,109 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <li>Confirme el despacho</li>
                                             </ol>
                                         </div>
+                                    </div>
+                                    
+                                    <!-- Pasos detallados para incluir despacho -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Pasos para Incluir Nuevo Despacho</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nuevo Despacho"</strong> en la parte superior</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>correlativo</strong> único para el despacho</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>cliente</strong> de la lista desplegable</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Agregar Producto"</strong> y seleccione de la lista</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Ingrese la <strong>cantidad</strong> a despachar (no puede exceder stock)</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Repita el paso 4-5 para cada producto</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Revise el resumen y haga clic en <strong>"Procesar Despacho"</strong></li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-truck text-success me-2"></i>
+                                                        <strong>Nuevo Despacho</strong>
+                                                        <br><small>Botón principal</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Stock:</strong> Validado automáticamente
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        <strong>Límite:</strong> No exceder stock disponible
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para modificar despacho -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">Pasos para Modificar Despacho</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Busque el despacho en la lista principal</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>editar</strong> ✏️ junto al despacho</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Modifique los datos necesarios (cliente, productos, cantidades)</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Puede agregar nuevos productos o remover existentes</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Despacho"</strong> para guardar cambios</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-pencil text-warning me-2"></i>
+                                                        <strong>Modificar</strong>
+                                                        <br><small>Ícono editar</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Tip:</strong> Solo despachos no procesados
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para anular despacho -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Pasos para Anular Despacho</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice el despacho que desea anular</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>anular</strong> 🚫</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> El stock se devolverá automáticamente al inventario</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-x-circle text-danger me-2"></i>
+                                                        <strong>Anular</strong>
+                                                        <br><small>Ícono anular</small>
+                                                    </div>
+                                                    <div class="alert alert-danger border mt-2">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <strong>¡Cuidado!</strong> Afecta el inventario
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="note mt-3">
+                                        <i class="bi bi-info-circle-fill me-2"></i>
+                                        Los despachos reducen automáticamente el stock de productos del inventario.
                                     </div>
                                 </div>
                             </div>
@@ -1108,7 +1381,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                             
                             <!-- Productos -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="gestion-productos-almacenista">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-box me-2"></i>Gestión de Productos
@@ -1150,32 +1423,32 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nuevo Producto"</strong> en la parte superior</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Complete el <strong>nombre del producto</strong> (campo obligatorio)</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Agregue una <strong>descripción detallada</strong> del producto</li>
-                                                        <li class="mb-2"><strong>Paso 4:</strong> Suba la <strong>foto del producto</strong> (formato JPG/PNG)</li>
-                                                        <li class="mb-2"><strong>Paso 5:</strong> Seleccione la <strong>categoría</strong> correspondiente</li>
-                                                        <li class="mb-2"><strong>Paso 6:</strong> Configure el <strong>stock</strong> (actual, mínimo, máximo)</li>
-                                                        <li class="mb-2"><strong>Paso 7:</strong> Ingrese el <strong>número de serial</strong> si aplica</li>
-                                                        <li class="mb-2"><strong>Paso 8:</strong> Establezca el <strong>precio de venta</strong></li>
-                                                        <li class="mb-2"><strong>Paso 9:</strong> Agregue la <strong>cláusula de garantía</strong></li>
-                                                        <li class="mb-2"><strong>Paso 10:</strong> Seleccione el <strong>estado</strong> (activo/inactivo)</li>
-                                                        <li class="mb-2"><strong>Paso 11:</strong> Haga clic en <strong>"Guardar Producto"</strong></li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) en la esquina superior derecha</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong></li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre del producto (3-20 caracteres, solo letras)</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Seleccione modelo/marca de la lista desplegable</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Cargue una imagen del producto (formato JPG, PNG, etc.)</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Agregue descripción breve (máximo 50 caracteres)</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Configure stock actual, máximo y mínimo</li>
+                                                        <li class="mb-2"><strong>Paso 8:</strong> Escriba cláusula de garantía (10-200 caracteres)</li>
+                                                        <li class="mb-2"><strong>Paso 9:</strong> Seleccione categoría y complete características específicas</li>
+                                                        <li class="mb-2"><strong>Paso 10:</strong> Ingrese código serial y precio del producto</li>
+                                                        <li class="mb-2"><strong>Paso 11:</strong> Haga clic en <strong>"Registrar"</strong> para guardar</li>
                                                     </ol>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-plus-circle text-success me-2"></i>
                                                         <strong>Nuevo Producto</strong>
-                                                        <br><small>Botón principal</small>
+                                                        <br><small>Botón "+" azul</small>
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
-                                                        <i class="bi bi-camera me-2"></i>
-                                                        <strong>Imagen:</strong> Tamaño recomendado 500x500px
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Nombre:</strong> 3-20 caracteres
                                                     </div>
                                                     <div class="alert alert-warning border mt-2">
-                                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                                        <strong>Requerido:</strong> Nombre, categoría, precio
+                                                        <i class="bi bi-image me-2"></i>
+                                                        <strong>Imagen:</strong> JPG/PNG requerida
                                                     </div>
                                                 </div>
                                             </div>
@@ -1191,25 +1464,88 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Busque el producto en la lista usando el buscador</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>editar</strong> ✏️ en la parte izquierda</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Modifique los campos necesarios (nombre, descripción, precio, etc.)</li>
-                                                        <li class="mb-2"><strong>Paso 4:</strong> Puede cambiar la <strong>foto del producto</strong> si lo desea</li>
-                                                        <li class="mb-2"><strong>Paso 5:</strong> Actualice el <strong>stock</strong> si ha habido movimientos</li>
-                                                        <li class="mb-2"><strong>Paso 6:</strong> Modifique la <strong>cláusula de garantía</strong> si es necesario</li>
-                                                        <li class="mb-2"><strong>Paso 7:</strong> Cambie el <strong>estado</strong> (activo/inactivo) si requiere</li>
-                                                        <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Actualizar Producto"</strong></li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice el producto en la tabla</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en "Acciones"</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Puede cambiar la imagen si lo requiere</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Guardar cambios"</strong> para confirmar</li>
                                                     </ol>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-pencil text-warning me-2"></i>
                                                         <strong>Modificar</strong>
-                                                        <br><small>Ícono en parte izquierda</small>
+                                                        <br><small>Ícono lápiz</small>
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
-                                                        <strong>Tip:</strong> Puede actualizar todos los campos incluyendo la imagen
+                                                        <strong>Tip:</strong> Puede actualizar imagen
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para cambiar estatus -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Pasos para Cambiar Estatus de Producto</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del producto</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-toggle-on text-info me-2"></i>
+                                                        <strong>Cambiar Estatus</strong>
+                                                        <br><small>Click en estatus</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Instantáneo:</strong> Sin confirmación
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para generar reportes -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h6 class="mb-0">Pasos para Generar Reportes de Productos</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Use el filtro de estatus para mostrar: Todos/Habilitados/Inhabilitados</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> En la sección de reportes, seleccione tipo de reporte:</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> • <strong>Top Productos Más Vendidos:</strong> Configure "Top N" y tipo de gráfica</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> • <strong>Stock Alto vs Bajo:</strong> Seleccione categoría o "Todas"</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> • <strong>Rotación de Productos:</strong> Muestra días promedio de rotación</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Elija tipo de gráfica: Barras, Pastel, Líneas, Rosca, Área Polar</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Generar"</strong> para visualizar</li>
+                                                        <li class="mb-2"><strong>Paso 8:</strong> Use <strong>"Descargar PDF"</strong> para guardar el reporte</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                        <strong>Reportes</strong>
+                                                        <br><small>Múltiples tipos</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-pie-chart me-2"></i>
+                                                        <strong>Gráficas:</strong> 5 tipos disponibles
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-download me-2"></i>
+                                                        <strong>Exportación:</strong> PDF automático
                                                     </div>
                                                 </div>
                                             </div>
@@ -1259,7 +1595,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                             
                             <!-- Categorías -->
-                            <div class="card">
+                            <div class="card" id="gestion-categorias-almacenista">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-folder me-2"></i>Gestión de Categorías
@@ -1287,9 +1623,372 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                     </div>
                                     
+                                    <!-- Pasos detallados para incluir categoría -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Pasos para Incluir Nueva Categoría</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nueva categoría</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de la categoría</strong> (único y descriptivo)</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Agregue una <strong>descripción clara</strong> de la categoría</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Defina las <strong>características específicas</strong> para esta categoría</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Configure el <strong>estado</strong> (activo/inactivo)</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Guardar Categoría"</strong> para confirmar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-folder-plus text-success me-2"></i>
+                                                        <strong>Nueva Categoría</strong>
+                                                        <br><small>Botón "+" azul</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Nombre:</strong> Debe ser único
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-list-check me-2"></i>
+                                                        <strong>Características:</strong> Mínimo 1 requerida
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para modificar categoría -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">Pasos para Modificar Categoría</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice la categoría en la lista</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 para editar</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Modifique los campos necesarios (nombre, descripción, características)</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Actualice el estado si es necesario</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Categoría"</strong> para guardar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-pencil text-warning me-2"></i>
+                                                        <strong>Modificar</strong>
+                                                        <br><small>Ícono lápiz</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Tip:</strong> Puede agregar nuevas características
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para eliminar categoría -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Pasos para Eliminar Categoría</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Encuentre la categoría que desea eliminar</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ para eliminar</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Verifique que no haya productos asociados antes de eliminar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-trash text-danger me-2"></i>
+                                                        <strong>Eliminar</strong>
+                                                        <br><small>Ícono X rojo</small>
+                                                    </div>
+                                                    <div class="alert alert-danger border mt-2">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <strong>¡Cuidado!</strong> Verifique productos asociados
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="note mt-3">
                                         <i class="bi bi-info-circle-fill me-2"></i>
                                         Las categorías ayudan a organizar y filtrar productos en el catálogo.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Marcas -->
+                            <div class="card mt-4" id="gestion-marcas-almacenista">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="bi bi-badge me-2"></i>Gestión de Marcas
+                                    </h5>
+                                    <p>Administre las marcas de productos para organizar mejor el inventario.</p>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>Información gestionable:</h6>
+                                            <ul>
+                                                <li>Nombre de la marca</li>
+                                                <li>Descripción de la marca</li>
+                                                <li>Estado (activa/inactiva)</li>
+                                                <li>Productos asociados</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Requisitos importantes:</h6>
+                                            <ul>
+                                                <li>Nombre único de marca</li>
+                                                <li>Descripción clara y concisa</li>
+                                                <li>Estado definido</li>
+                                                <li>Al menos un producto asociado</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos detallados para incluir marca -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Pasos para Incluir Nueva Marca</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nueva marca</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de la marca</strong> (único y reconocible)</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Agregue una <strong>descripción detallada</strong> de la marca</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Configure el <strong>estado</strong> (activa/inactiva)</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Guardar Marca"</strong> para confirmar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-patch-plus text-success me-2"></i>
+                                                        <strong>Nueva Marca</strong>
+                                                        <br><small>Botón "+" azul</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Nombre:</strong> Debe ser único
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-card-text me-2"></i>
+                                                        <strong>Descripción:</strong> Máximo 200 caracteres
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para modificar marca -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">Pasos para Modificar Marca</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice la marca en la lista</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 para editar</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Modifique el nombre o descripción según necesite</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Cambie el estado si es necesario</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Marca"</strong> para guardar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-pencil text-warning me-2"></i>
+                                                        <strong>Modificar</strong>
+                                                        <br><small>Ícono lápiz</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Tip:</strong> Los cambios se aplican inmediatamente
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para eliminar marca -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Pasos para Eliminar Marca</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Encuentre la marca que desea eliminar</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ para eliminar</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Verifique que no haya productos asociados activos</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-trash text-danger me-2"></i>
+                                                        <strong>Eliminar</strong>
+                                                        <br><small>Ícono X rojo</small>
+                                                    </div>
+                                                    <div class="alert alert-danger border mt-2">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <strong>¡Cuidado!</strong> Verifique productos asociados
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="note mt-3">
+                                        <i class="bi bi-info-circle-fill me-2"></i>
+                                        Las marcas ayudan a identificar y clasificar productos por fabricante.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Modelos -->
+                            <div class="card mt-4" id="gestion-modelos-almacenista">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="bi bi-cpu me-2"></i>Gestión de Modelos
+                                    </h5>
+                                    <p>Administre los modelos de productos para especificar versiones y variantes.</p>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>Información gestionable:</h6>
+                                            <ul>
+                                                <li>Nombre del modelo</li>
+                                                <li>Marca asociada</li>
+                                                <li>Descripción técnica</li>
+                                                <li>Estado (activo/inactivo)</li>
+                                                <li>Productos relacionados</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Requisitos importantes:</h6>
+                                            <ul>
+                                                <li>Marca seleccionada obligatoriamente</li>
+                                                <li>Nombre único por marca</li>
+                                                <li>Descripción técnica clara</li>
+                                                <li>Estado definido</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos detallados para incluir modelo -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Pasos para Incluir Nuevo Modelo</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nuevo modelo</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Seleccione la <strong>marca</strong> de la lista desplegable</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>nombre del modelo</strong> (único para la marca)</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Agregue una <strong>descripción técnica</strong> detallada</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Configure el <strong>estado</strong> (activo/inactivo)</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Guardar Modelo"</strong> para confirmar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-plus-square text-success me-2"></i>
+                                                        <strong>Nuevo Modelo</strong>
+                                                        <br><small>Botón "+" azul</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Marca:</strong> Selección obligatoria
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-gear me-2"></i>
+                                                        <strong>Técnica:</strong> Descripción requerida
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para modificar modelo -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">Pasos para Modificar Modelo</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice el modelo en la lista</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 para editar</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Modifique nombre, descripción o marca si es necesario</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Actualice el estado según corresponda</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Modelo"</strong> para guardar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-pencil text-warning me-2"></i>
+                                                        <strong>Modificar</strong>
+                                                        <br><small>Ícono lápiz</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Tip:</strong> Puede cambiar de marca
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para eliminar modelo -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Pasos para Eliminar Modelo</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Encuentre el modelo que desea eliminar</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ para eliminar</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Verifique que no haya productos usando este modelo</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-trash text-danger me-2"></i>
+                                                        <strong>Eliminar</strong>
+                                                        <br><small>Ícono X rojo</small>
+                                                    </div>
+                                                    <div class="alert alert-danger border mt-2">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <strong>¡Cuidado!</strong> Verifique productos asociados
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="note mt-3">
+                                        <i class="bi bi-info-circle-fill me-2"></i>
+                                        Los modelos especifican versiones y variantes dentro de cada marca.
                                     </div>
                                 </div>
                             </div>
@@ -1391,7 +2090,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             <p>Como administrador, tendrá control total sobre el sistema incluyendo gestión de usuarios, finanzas y configuración general.</p>
                             
                             <!-- Proveedores -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="gestion-proveedores-admin">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-building me-2"></i>Gestión de Proveedores
@@ -1426,7 +2125,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                             
                             <!-- Clientes -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="gestion-clientes-admin">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-people me-2"></i>Gestión de Clientes
@@ -1457,11 +2156,137 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             </ul>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Pasos detallados para incluir cliente -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Pasos para Incluir Nuevo Cliente</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) en la esquina superior derecha</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong></li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre completo (solo letras, mínimo 2 caracteres)</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Escriba la cédula en formato: 1.234.567 o 12.345.678</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Agregue teléfono en formato: 0400-000-0000</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Proporcione una dirección completa (mínimo 4 caracteres)</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Indique un correo electrónico válido (gmail, outlook, yahoo, icloud)</li>
+                                                        <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para guardar</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-person-plus text-success me-2"></i>
+                                                        <strong>Nuevo Cliente</strong>
+                                                        <br><small>Botón "+" azul</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Formato Cédula:</strong> 1.234.567
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-phone me-2"></i>
+                                                        <strong>Teléfono:</strong> 0400-000-0000
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para modificar cliente -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">Pasos para Modificar Cliente</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice al cliente en la tabla</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones"</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-pencil text-warning me-2"></i>
+                                                        <strong>Modificar</strong>
+                                                        <br><small>Ícono lápiz</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para eliminar cliente -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Pasos para Eliminar Cliente</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Encuentre al cliente que desea eliminar</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones"</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-trash text-danger me-2"></i>
+                                                        <strong>Eliminar</strong>
+                                                        <br><small>Ícono X rojo</small>
+                                                    </div>
+                                                    <div class="alert alert-danger border mt-2">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para generar reporte -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Pasos para Generar Reporte de Clientes</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Consulte la sección <strong>"Top 10 Clientes por Productos Comprados"</strong></li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Visualice el gráfico de barras y la tabla detallada</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Haga clic en <strong>"Descargar Reporte de Compras"</strong> para obtener PDF</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                        <strong>Reporte PDF</strong>
+                                                        <br><small>Descarga automática</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-graph-up me-2"></i>
+                                                        <strong>Estadísticas:</strong> Top 10 clientes
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
                             <!-- Bancos -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="gestion-cuentas-bancarias">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-bank me-2"></i>Gestión de Cuentas Bancarias
@@ -1496,7 +2321,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                             
                             <!-- Usuarios -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="gestion-usuarios-sistema">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-person-badge me-2"></i>Gestión de Usuarios del Sistema
@@ -1641,7 +2466,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                             
                             <!-- Roles -->
-                            <div class="card mb-4">
+                            <div class="card mb-4" id="gestion-roles-permisos">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-person-badge-fill me-2"></i>Gestión de Roles y Permisos
@@ -1674,7 +2499,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                             
                             <!-- Catálogo de Combos -->
-                            <div class="card">
+                            <div class="card" id="catalogo-combos-promocionales">
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <i class="bi bi-tags-fill me-2"></i>Catálogo de Combos Promocionales
@@ -2043,15 +2868,105 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                 
                 const targetElement = document.querySelector(targetId);
                 if (targetElement) {
+                    const offset = 80; // Ajuste para el header sticky
+                    const targetPosition = targetElement.offsetTop - offset;
+                    
                     window.scrollTo({
-                        top: targetElement.offsetTop - 20,
+                        top: targetPosition,
                         behavior: 'smooth'
                     });
                     
                     // Actualizar URL sin recargar la página
                     history.pushState(null, null, targetId);
+                    
+                    // Marcar el enlace como activo
+                    updateActiveLink(targetId);
                 }
             });
+        });
+        
+        // Función para actualizar el enlace activo
+        function updateActiveLink(targetId) {
+            // Remover clase active de todos los enlaces
+            document.querySelectorAll('.toc-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Agregar clase active a todos los enlaces que apuntan al mismo target
+            const activeLinks = document.querySelectorAll(`.toc-link[href="${targetId}"]`);
+            activeLinks.forEach(link => {
+                link.classList.add('active');
+            });
+            
+            // Si hay enlaces activos, hacer scroll al primero
+            if (activeLinks.length > 0) {
+                const firstActiveLink = activeLinks[0];
+                const toc = document.querySelector('.toc');
+                const tocRect = toc.getBoundingClientRect();
+                const linkRect = firstActiveLink.getBoundingClientRect();
+                
+                if (linkRect.bottom > tocRect.bottom - 20) {
+                    toc.scrollTop += (linkRect.bottom - tocRect.bottom) + 20;
+                } else if (linkRect.top < tocRect.top + 20) {
+                    toc.scrollTop -= (tocRect.top - linkRect.top) + 20;
+                }
+            }
+        }
+        
+        // Detectar sección activa al hacer scroll
+        function updateActiveOnScroll() {
+            const sections = document.querySelectorAll('section[id]');
+            const scrollPosition = window.scrollY + 100;
+            
+            let currentSection = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    currentSection = '#' + section.getAttribute('id');
+                }
+            });
+            
+            if (currentSection) {
+                updateActiveLink(currentSection);
+            }
+        }
+        
+        // Event listener para scroll
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(updateActiveOnScroll, 100);
+        });
+        
+        // Actualizar enlace activo al cargar la página
+        window.addEventListener('load', () => {
+            const hash = window.location.hash || '#introduccion';
+            updateActiveLink(hash);
+            updateActiveOnScroll();
+            updateTocProgress();
+        });
+        
+        // Actualizar indicador de progreso
+        function updateTocProgress() {
+            const tocProgress = document.getElementById('tocProgress');
+            if (!tocProgress) return;
+            
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight - windowHeight;
+            const scrolled = window.scrollY;
+            const progress = (scrolled / documentHeight) * 100;
+            
+            const tocHeight = document.querySelector('.toc').offsetHeight;
+            const progressHeight = (progress / 100) * tocHeight;
+            
+            tocProgress.style.height = Math.min(progressHeight, tocHeight) + 'px';
+        }
+        
+        // Actualizar progreso al hacer scroll
+        window.addEventListener('scroll', () => {
+            updateTocProgress();
         });
         
         // Manejar el tema claro/oscuro
