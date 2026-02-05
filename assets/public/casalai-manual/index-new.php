@@ -2271,6 +2271,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li>N° de teléfono (Principal y Secundario)</li>
                                             <li>Observaciones</li>
                                             <li>Estatus (Habilitado/Inhabilitado)</li>
+                                            <li>Suministro de los proveedores</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
@@ -2281,7 +2282,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li><strong>Detallar</strong>: Ver información completa del proveedor</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
                                             <li><strong>Eliminar</strong>: Remover proveedor</li>
-                                            <li><strong>Reporte</strong>: Generar informes</li>
+                                            <li><strong>Reporte</strong>: Generar reportes</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -2684,9 +2685,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>N° de teléfono</strong>.</li>
                                                     <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>nombre de usuario</strong>.</li>
                                                     <li class="mb-2"><strong>Paso 7:</strong> Ingrese un <strong>correo electrónico</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 8:</strong> Ingrese una <strong>contraseña</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 9:</strong> Ingrese <strong>nuevamente</strong> la <strong>contraseña</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 10:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 8:</strong> Seleccione un <strong>rol</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 9:</strong> Ingrese una <strong>contraseña</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 10:</strong> Ingrese <strong>nuevamente</strong> la <strong>contraseña</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 11:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -2706,21 +2708,21 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <i class="bi bi-person me-2"></i>
                                                     <strong>Nombre de usuario:</strong> (único en el sistema)
                                                 </div>
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-envelope me-2"></i>
                                                     <strong>Correo:</strong> (gmail, outlook, yahoo, icloud)
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div class="row">
                                             <div class="col-md-6">
-                                                <div class="alert alert-info border mt-2">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-key me-2"></i>
                                                     <strong>Contraseña:</strong> (6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial)
                                                 </div>
@@ -2950,10 +2952,12 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <ul>
                                             <li>Nombre del banco</li>
                                             <li>Número de cuenta</li>
-                                            <li>Tipo de cuenta</li>
-                                            <li>Titular de la cuenta</li>
-                                            <li>Moneda</li>
-                                            <li>Estado</li>
+                                            <li>RIF</li>
+                                            <li>Número de teléfono</li>
+                                            <li>Correo electrónico</li>
+                                            <li>Tipo de moneda</li>
+                                            <li>Metodos de pago</li>
+                                            <li>Estatus</li>
                                             <li>Saldo actual</li>
                                         </ul>
                                     </div>
@@ -2961,11 +2965,176 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Agregar</strong>: Nueva cuenta</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa de la cuenta</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
-                                            <li><strong>Eliminar</strong>: Cerrar cuenta</li>
-                                            <li><strong>Consultar</strong>: Ver movimientos</li>
+                                            <li><strong>Eliminar</strong>: Remover cuenta</li>
                                             <li><strong>Conciliación</strong>: Balance de cuentas</li>
                                         </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos detallados para incluir cuenta bancaria -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Incluir Nueva Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>nombre del banco</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de cuenta</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>RIF</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de teléfono</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 7:</strong> Ingrese un <strong>correo electrónico</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 8:</strong> Seleccione un tipo de <strong>moneda</strong> (Bolívares o Dolares).</li>
+                                                    <li class="mb-2"><strong>Paso 9:</strong> Seleccione el o los <strong>métodos de pago</strong> (Pago Móvil, Transferencia y/o Zelle).</li>
+                                                    <li class="mb-2"><strong>Paso 10:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-person-plus text-success me-2"></i>
+                                                    <strong>Nuevo Usuario:</strong><br> Botón "+" verde
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-bank me-2"></i>
+                                                    <strong>N° de Cuenta:</strong><br> 0100-0000-00-0000000000
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>RIF:</strong> (VEJPG)-12345678-9
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-phone me-2"></i>
+                                                    <strong>Teléfono:</strong> 0400-000-0000
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-envelope me-2"></i>
+                                                    <strong>Correo:</strong> (gmail, outlook, yahoo, icloud)
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para modificar cuenta bancaria -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Modificar Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la cuenta bancaria en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para eliminar cuenta bancaria -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Eliminar Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la cuenta bancaria que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) de la cuenta bancaria.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Click en estatus
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para generar reportes de cuentas bancarias -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Cuentas Bancarias</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de reporte: Usuarios por (Rol, Estatus, Dominio de Correo, Inicial de Nombre, Inicial de Apellido o Prefijo Telefónico).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elige el rol de los usuarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
