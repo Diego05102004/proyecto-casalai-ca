@@ -2407,21 +2407,20 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <h6>Información gestionable:</h6>
                                             <ul>
                                                 <li>Nombre completo</li>
-                                                <li>Cédula/RIF</li>
-                                                <li>Teléfono y correo</li>
-                                                <li>Dirección de entrega</li>
+                                                <li>Cédula</li>
+                                                <li>N° de teléfono</li>
+                                                <li>Dirección (Estado/Ciudad/Calle o Avenida)</li>
+                                                <li>Correo electrónico</li>
                                                 <li>Historial de compras</li>
-                                                <li>Estado de cuenta</li>
-                                                <li>Preferencias</li>
                                             </ul>
                                         </div>
                                         <div class="col-md-6">
                                             <h6>Operaciones disponibles:</h6>
                                             <ul>
                                                 <li><strong>Registrar</strong>: Nuevo cliente</li>
+                                                <li><strong>Consultar</strong>: Ver lista completa</li>
                                                 <li><strong>Modificar</strong>: Actualizar datos</li>
                                                 <li><strong>Eliminar</strong>: Remover cliente</li>
-                                                <li><strong>Consultar</strong>: Ver historial</li>
                                                 <li><strong>Reporte</strong>: Estadísticas de compras</li>
                                             </ul>
                                         </div>
@@ -2436,14 +2435,14 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong></li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre completo (solo letras, mínimo 2 caracteres)</li>
-                                                        <li class="mb-2"><strong>Paso 4:</strong> Escriba la cédula en formato: 1.234.567 o 12.345.678</li>
-                                                        <li class="mb-2"><strong>Paso 5:</strong> Agregue teléfono en formato: 0400-000-0000</li>
-                                                        <li class="mb-2"><strong>Paso 6:</strong> Proporcione una dirección completa (mínimo 4 caracteres)</li>
-                                                        <li class="mb-2"><strong>Paso 7:</strong> Indique un correo electrónico válido (gmail, outlook, yahoo, icloud)</li>
-                                                        <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para guardar</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre completo (solo letras, mínimo 2 caracteres).</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Ingrese la cédula en formato: <strong>1.234.567</strong> o <strong>12.345.678</strong>.</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Ingrese el teléfono en formato: <strong>0400-000-0000</strong>.</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Ingrese una dirección completa (mínimo 4 caracteres).</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Ingrese un correo electrónico válido (gmail, outlook, yahoo, icloud).</li>
+                                                        <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para guardar.</li>
                                                     </ol>
                                                 </div>
                                                 <div class="col-md-4">
@@ -2454,7 +2453,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
-                                                        <strong>Formato Cédula:</strong> 1.234.567
+                                                        <strong>Formato Cédula:</strong> 1.234.567 o 12.345.678
                                                     </div>
                                                     <div class="alert alert-warning border mt-2">
                                                         <i class="bi bi-phone me-2"></i>
@@ -2474,10 +2473,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice al cliente en la tabla</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones"</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios</li>
-                                                        <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice al cliente en la tabla.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
                                                     </ol>
                                                 </div>
                                                 <div class="col-md-4">
@@ -2504,9 +2503,9 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Encuentre al cliente que desea eliminar</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones"</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Encuentre al cliente que desea eliminar.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
                                                     </ol>
                                                 </div>
                                                 <div class="col-md-4">
@@ -2526,27 +2525,26 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     
                                     <!-- Pasos para generar reporte -->
                                     <div class="card mt-3">
-                                        <div class="card-header bg-info text-white">
+                                        <div class="card-header bg-secondary text-white">
                                             <h6 class="mb-0">Pasos para Generar Reporte de Clientes</h6>
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Consulte la sección <strong>"Top 10 Clientes por Productos Comprados"</strong></li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Visualice el gráfico de barras y la tabla detallada</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Haga clic en <strong>"Descargar Reporte de Compras"</strong> para obtener PDF</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Consulte la sección <strong>"Top 10 Clientes por Productos Comprados"</strong>.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Visualice el gráfico de barras y la tabla detallada.</li>
                                                     </ol>
                                                 </div>
                                                 <div class="col-md-4">
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-graph-up me-2"></i>
+                                                        <strong>Estadísticas:</strong> Top 10 clientes
+                                                    </div>
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
                                                         <strong>Reporte PDF</strong>
                                                         <br><small>Descarga automática</small>
-                                                    </div>
-                                                    <div class="alert alert-info border mt-2">
-                                                        <i class="bi bi-graph-up me-2"></i>
-                                                        <strong>Estadísticas:</strong> Top 10 clientes
                                                     </div>
                                                 </div>
                                             </div>
@@ -2595,55 +2593,53 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-6">
+                                                <div>
                                                     <h6 class="text-success">Formulario de Nuevo Usuario</h6>
-                                                    <div class="text-center mb-3">
+                                                    <div class="text-center">
                                                         <?= renderImagen("usuario", "incluir-modal.png") ?>
-                                                        <p class="text-muted small mt-2">Formulario para agregar nuevo usuario</p>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <h6>Proceso paso a paso:</h6>
+                                                <div>
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nuevo Usuario"</strong> en la parte superior</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de usuario</strong> (único en el sistema)</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Proporcione el <strong>correo electrónico</strong> válido</li>
-                                                        <li class="mb-2"><strong>Paso 4:</strong> Asigne una <strong>contraseña temporal</strong> o genere una automática</li>
-                                                        <li class="mb-2"><strong>Paso 5:</strong> Seleccione el <strong>rol</strong> apropiado (Administrador, Almacenista, Vendedor, Cliente)</li>
-                                                        <li class="mb-2"><strong>Paso 6:</strong> Configure los <strong>permisos específicos</strong> según el rol</li>
-                                                        <li class="mb-2"><strong>Paso 7:</strong> Establezca el <strong>estado inicial</strong> (activo/inactivo)</li>
-                                                        <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Crear Usuario"</strong></li>
-                                                        <li class="mb-2"><strong>Paso 9:</strong> Envíe las credenciales al usuario por correo</li>
+                                                        <li><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
+                                                        <li><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
+                                                        <li><strong>Paso 3:</strong> Ingrese el <strong>nombre y apellido</strong>.</li>
+                                                        <li><strong>Paso 4:</strong> Ingrese la <strong>cédula</strong>.</li>
+                                                        <li><strong>Paso 5:</strong> Ingrese el <strong>N° de teléfono</strong>.</li>
+                                                        <li><strong>Paso 6:</strong> Ingrese el <strong>nombre de usuario</strong>.</li>
+                                                        <li><strong>Paso 7:</strong> Ingrese un <strong>correo electrónico</strong>.</li>
+                                                        <li><strong>Paso 8:</strong> Ingrese una <strong>contraseña</strong>.</li>
+                                                        <li><strong>Paso 9:</strong> Ingrese <strong>nuevamente</strong> la <strong>contraseña</strong>.</li>
+                                                        <li><strong>Paso 10:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
                                                     </ol>
-                                                    
-                                                    <div class="alert alert-success mt-3">
-                                                        <i class="bi bi-check-circle me-2"></i>
-                                                        <strong>Confirmación:</strong> Verá un SweetAlert de éxito al crear
-                                                    </div>
                                                 </div>
                                             </div>
                                             
                                             <div class="row mt-3">
-                                                <div class="col-md-6">
-                                                    <h6 class="text-success">SweetAlert de Confirmación</h6>
-                                                    <div class="text-center">
-                                                        <?= renderImagen("usuario", "sweetalert-creado.png") ?>
-                                                        <p class="text-muted small mt-2">Mensaje de éxito al crear usuario</p>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
+                                                <div>
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-person-plus text-success me-2"></i>
-                                                        <strong>Nuevo Usuario</strong>
-                                                        <br><small>Botón principal</small>
+                                                        <strong>Nuevo Usuario</strong> Botón "+" verde
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Cédula:</strong> 1.234.567 o 12.345.678
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-phone me-2"></i>
+                                                        <strong>Teléfono:</strong> 0400-000-0000
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-person me-2"></i>
+                                                        <strong>Nombre de usuario:</strong> (único en el sistema)
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-envelope me-2"></i>
+                                                        <strong>Correo:</strong> (gmail, outlook, yahoo, icloud)
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-key me-2"></i>
-                                                        <strong>Contraseña:</strong> Mínimo 8 caracteres
-                                                    </div>
-                                                    <div class="alert alert-warning border mt-2">
-                                                        <i class="bi bi-shield-check me-2"></i>
-                                                        <strong>Seguridad:</strong> Asigne solo permisos necesarios
+                                                        <strong>Contraseña:</strong> (6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial)
                                                     </div>
                                                 </div>
                                             </div>
