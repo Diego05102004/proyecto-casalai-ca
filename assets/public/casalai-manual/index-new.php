@@ -1832,34 +1832,6 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                     </div>
                                     
-                                    <!-- Pasos para cambiar estatus -->
-                                    <div class="card mt-3">
-                                        <div class="card-header bg-info text-white">
-                                            <h6 class="mb-0">Pasos para Cambiar Estatus de Producto</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-8">
-                                                    <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del producto</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente</li>
-                                                    </ol>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="alert alert-light border">
-                                                        <i class="bi bi-toggle-on text-info me-2"></i>
-                                                        <strong>Cambiar Estatus</strong>
-                                                        <br><small>Click en estatus</small>
-                                                    </div>
-                                                    <div class="alert alert-info border mt-2">
-                                                        <i class="bi bi-info-circle me-2"></i>
-                                                        <strong>Instantáneo:</strong> Sin confirmación
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
                                     <!-- Pasos para eliminar producto -->
                                     <div class="card mt-3">
                                         <div class="card-header bg-danger text-white">
@@ -1889,6 +1861,34 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-warning border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
                                                         Se eliminará la imagen asociada
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pasos para cambiar estatus -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Pasos para Cambiar Estatus de Producto</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del producto</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-toggle-on text-info me-2"></i>
+                                                        <strong>Cambiar Estatus</strong>
+                                                        <br><small>Click en estatus</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Instantáneo:</strong> Sin confirmación
                                                     </div>
                                                 </div>
                                             </div>
@@ -2323,6 +2323,69 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-danger border mt-2">
                                                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                         <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pasos para cambiar estatus -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Pasos para Cambiar Estatus de Proveedor</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del proveedor</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-toggle-on text-info me-2"></i>
+                                                        <strong>Cambiar Estatus</strong>
+                                                        <br><small>Click en estatus</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Instantáneo:</strong> Sin confirmación
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pasos para generar reportes -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h6 class="mb-0">Pasos para Generar Reportes de Proveedores</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Elije el tipo de reporte: (Todos, Suministro, Rancking, Comparación Mensual o Dependencia).</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-pie-chart me-2"></i>
+                                                        <strong>Gráficas:</strong> 5 tipos disponibles
+                                                    </div>
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                        <strong>Reportes</strong>
+                                                        <br><small>Múltiples tipos</small>
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-download me-2"></i>
+                                                        <strong>Descarga</strong> PDF o Gráfica automática
                                                     </div>
                                                 </div>
                                             </div>
