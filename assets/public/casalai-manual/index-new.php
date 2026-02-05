@@ -2330,7 +2330,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
 
                                 <!-- Pasos para detallar proveedor -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
+                                    <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Proveedor</h6>
                                     </div>
                                     <div class="card-body">
@@ -2549,7 +2549,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Pasos para modificar cliente -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-info text-dark">
+                                    <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Cliente</h6>
                                     </div>
                                     <div class="card-body">
@@ -2679,7 +2679,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <?= renderImagen("usuario", "incluir-modal.png") ?>
                                                 </div>
                                             </div>
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
@@ -2693,14 +2693,14 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <li class="mb-2"><strong>Paso 10:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-person-plus text-success me-2"></i>
-                                                    <strong>Nuevo Usuario</strong> Botón "+" verde
+                                                    <strong>Nuevo Usuario:</strong><br> Botón "+" verde
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Cédula:</strong> 1.234.567 o 12.345.678
+                                                    <strong>Cédula:</strong><br> 1.234.567 o 12.345.678
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-phone me-2"></i>
@@ -2735,32 +2735,111 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Pasos para modificar usuario -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
+                                    <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Usuario</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el usuario en la lista por nombre o correo</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>editar</strong> ✏️ junto al usuario</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Actualice los <strong>datos personales</strong> si es necesario</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Puede cambiar el <strong>rol</strong> del usuario</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Modifique los <strong>permisos específicos</strong> según requiera</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Cambie el <strong>estado</strong> (activo/inactivo) si es necesario</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Actualizar Usuario"</strong></li>
-                                                    <li class="mb-2"><strong>Paso 8:</strong> Notifique al usuario de los cambios realizados</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice al usuario en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-warning me-2"></i>
-                                                    <strong>Modificar</strong>
-                                                    <br><small>Ícono de edición</small>
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Verifique el historial de accesos antes de modificar
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para eliminar usuario -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Eliminar Usuario</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre al usuario que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Usuario</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del usuario.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Click en estatus
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para generar reportes de usuarios -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Usuarios</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de reporte: Usuarios por (Rol, Estatus, Dominio de Correo, Inicial de Nombre, Inicial de Apellido o Prefijo Telefónico).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elige el rol de los usuarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
                                         </div>
@@ -2824,11 +2903,6 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="alert alert-warning mt-3">
-                                    <i class="bi bi-shield-exclamation me-2"></i>
-                                    Solo los administradores pueden gestionar usuarios del sistema.
                                 </div>
                             </div>
                         </div>
