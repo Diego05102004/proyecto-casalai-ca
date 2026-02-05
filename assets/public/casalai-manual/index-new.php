@@ -2647,21 +2647,17 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <ul>
                                             <li>Nombre de usuario</li>
                                             <li>Contraseña</li>
-                                            <li>Correo electrónico</li>
+                                            <li>Información personal</li>
                                             <li>Rol asignado</li>
-                                            <li>Permisos específicos</li>
-                                            <li>Estado de cuenta</li>
-                                            <li>Último acceso</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Registrar</strong>: Nuevo usuario</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
-                                            <li><strong>Eliminar</strong>: Desactivar usuario</li>
-                                            <li><strong>Resetear</strong>: Cambiar contraseña</li>
-                                            <li><strong>Auditoría</strong>: Ver actividad</li>
+                                            <li><strong>Eliminar</strong>: Remover usuario</li>
                                         </ul>
                                     </div>
                                 </div>
