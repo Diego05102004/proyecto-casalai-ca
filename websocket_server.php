@@ -1,4 +1,9 @@
 <?php
+
+if (php_sapi_name() !== 'cli') {
+    die('Acceso no permitido');
+}
+
 require 'vendor/autoload.php';
 require_once __DIR__ . '/Modelo/Config/database.php';
 require_once __DIR__ . '/Modelo/Config/Config.php';
@@ -18,10 +23,10 @@ class NotificacionWebSocket implements MessageComponentInterface {
         $this->clients = new \SplObjectStorage;
     }
 
-    public function onOpen(ConnectionInterface $conn) {
-        $this->clients->attach($conn);
-        echo "Nueva conexión! ({$conn->resourceId})\n";
-    }
+public function onOpen(ConnectionInterface $conn) {
+    $this->clients->attach($conn);
+}
+
 
     public function onMessage(ConnectionInterface $from, $msg) {
         $data = json_decode($msg, true);

@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 // Cargar configuración de rutas
 require __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/Modelo/Config/paths.php';
+require_once __DIR__ . '/start_websocket.php';
 
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
