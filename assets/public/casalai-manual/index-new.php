@@ -1416,9 +1416,9 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="card-body">
                                             <div class="row">
                                                 <div class="col-md-8">
-                                                    <?php echo renderImagen('marca', 'incluir-modal.png', 'Botón "+" azul para crear nueva marca'); ?>
+                                                    <?php echo renderImagen('marca', 'incluir-modal.png', 'Botón "+" verde para crear nueva marca'); ?>
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nueva marca</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva marca</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de la marca</strong> (único y reconocible)</li>
                                                         <li class="mb-2"><strong>Paso 3:</strong> Agregue una <strong>descripción detallada</strong> de la marca</li>
                                                         <li class="mb-2"><strong>Paso 4:</strong> Configure el <strong>estado</strong> (activa/inactiva)</li>
@@ -1429,7 +1429,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-patch-plus text-success me-2"></i>
                                                         <strong>Nueva Marca</strong>
-                                                        <br><small>Botón "+" azul</small>
+                                                        <br><small>Botón "+" verde</small>
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
@@ -1559,7 +1559,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <div class="col-md-6">
                                                     <h6>Proceso paso a paso:</h6>
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nuevo modelo</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nuevo modelo</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Seleccione la <strong>marca</strong> de la lista desplegable</li>
                                                         <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>nombre del modelo</strong> (único para la marca)</li>
                                                         <li class="mb-2"><strong>Paso 4:</strong> Agregue una <strong>descripción técnica</strong> detallada</li>
@@ -1586,7 +1586,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-plus-square text-success me-2"></i>
                                                         <strong>Nuevo Modelo</strong>
-                                                        <br><small>Botón "+" azul</small>
+                                                        <br><small>Botón "+" verde</small>
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
@@ -1769,7 +1769,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) en la esquina superior derecha</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong></li>
                                                         <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre del producto (3-20 caracteres, solo letras)</li>
                                                         <li class="mb-2"><strong>Paso 4:</strong> Seleccione modelo/marca de la lista desplegable</li>
@@ -1786,7 +1786,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-plus-circle text-success me-2"></i>
                                                         <strong>Nuevo Producto</strong>
-                                                        <br><small>Botón "+" azul</small>
+                                                        <br><small>Botón "+" verde</small>
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
@@ -1978,7 +1978,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nueva categoría</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de la categoría</strong> (único y descriptivo)</li>
                                                         <li class="mb-2"><strong>Paso 3:</strong> Agregue una <strong>descripción clara</strong> de la categoría</li>
                                                         <li class="mb-2"><strong>Paso 4:</strong> Defina las <strong>características específicas</strong> para esta categoría</li>
@@ -1990,7 +1990,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-folder-plus text-success me-2"></i>
                                                         <strong>Nueva Categoría</strong>
-                                                        <br><small>Botón "+" azul</small>
+                                                        <br><small>Botón "+" verde</small>
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
@@ -2181,24 +2181,151 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="col-md-6">
                                             <h6>Información gestionable:</h6>
                                             <ul>
-                                                <li>Nombre del proveedor</li>
-                                                <li>RIF/Cédula</li>
-                                                <li>Teléfono y correo</li>
+                                                <li>Nombre del proveedor y su rerpesentante</li>
+                                                <li>RIF del proveedor y su rerpesentante</li>
+                                                <li>Correo electrónico</li>
                                                 <li>Dirección</li>
-                                                <li>Contacto principal</li>
-                                                <li>Tipo de proveedor</li>
-                                                <li>Estado (activo/inactivo)</li>
+                                                <li>N° de teléfono (Principal y Secundario)</li>
+                                                <li>Observaciones</li>
+                                                <li>Estatus (Habilitado/Inhabilitado)</li>
                                             </ul>
                                         </div>
                                         <div class="col-md-6">
                                             <h6>Operaciones disponibles:</h6>
                                             <ul>
-                                                <li><strong>Agregar</strong>: Nuevo proveedor</li>
+                                                <li><strong>Registrar</strong>: Nuevo proveedor</li>
+                                                <li><strong>Consultar</strong>: Ver lista completa</li>
+                                                <li><strong>Detallar</strong>: Ver información completa del proveedor</li>
                                                 <li><strong>Modificar</strong>: Actualizar datos</li>
                                                 <li><strong>Eliminar</strong>: Remover proveedor</li>
-                                                <li><strong>Consultar</strong>: Ver lista completa</li>
                                                 <li><strong>Reporte</strong>: Generar informes</li>
                                             </ul>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pasos detallados para incluir proveedor -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">Pasos para Incluir Nuevo Proveedor</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>"*"</strong>.</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre completo (Proveedor y Representante).</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Ingrese el RIF en formato: <strong>(VEJPG)-12345678-9</strong> (Proveedor y Representante).</li>
+                                                        <li class="mb-2"><strong>Paso 5:</strong> Ingrese un correo electrónico válido (gmail, outlook, yahoo, icloud).</li>
+                                                        <li class="mb-2"><strong>Paso 6:</strong> Ingrese una dirección completa.</li>
+                                                        <li class="mb-2"><strong>Paso 7:</strong> Ingrese el N° de teléfono en formato: <strong>0400-000-0000</strong> (Principal y Secundario).</li>
+                                                        <li class="mb-2"><strong>Paso 8:</strong> Ingrese una o varias observaciones (mínimo 4 caracteres).</li>
+                                                        <li class="mb-2"><strong>Paso 9:</strong> Haga clic en <strong>"Registrar"</strong> para guardar.</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-person-plus text-success me-2"></i>
+                                                        <strong>Nuevo Cliente</strong>
+                                                        <br><small>Botón "+" verde</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Formato RIF:</strong> (VEJPG)-12345678-9
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-phone me-2"></i>
+                                                        <strong>Teléfono:</strong> 0400-000-0000
+                                                    </div>
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Botón Limpiar</strong>
+                                                        <br><small>Resetea el formulario</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pasos para detallar proveedor -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h6 class="mb-0">Pasos para Detallar Proveedor</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del proveedor.</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-eye text-warning me-2"></i>
+                                                        <strong>Detallar</strong>
+                                                        <br><small>Ícono ojo</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para modificar proveedor -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">Pasos para Modificar Proveedor</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Localice al proveedor en la tabla.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                        <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-pencil text-warning me-2"></i>
+                                                        <strong>Modificar</strong>
+                                                        <br><small>Ícono lápiz</small>
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pasos para eliminar proveedor -->
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h6 class="mb-0">Pasos para Eliminar Proveedor</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <ol>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Encuentre al proveedor que desea eliminar.</li>
+                                                        <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="alert alert-light border">
+                                                        <i class="bi bi-trash text-danger me-2"></i>
+                                                        <strong>Eliminar</strong>
+                                                        <br><small>Ícono X rojo</small>
+                                                    </div>
+                                                    <div class="alert alert-danger border mt-2">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2228,7 +2355,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="col-md-6">
                                             <h6>Operaciones disponibles:</h6>
                                             <ul>
-                                                <li><strong>Agregar</strong>: Nuevo cliente</li>
+                                                <li><strong>Registrar</strong>: Nuevo cliente</li>
                                                 <li><strong>Modificar</strong>: Actualizar datos</li>
                                                 <li><strong>Eliminar</strong>: Remover cliente</li>
                                                 <li><strong>Consultar</strong>: Ver historial</li>
@@ -2246,7 +2373,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) en la esquina superior derecha</li>
+                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong></li>
                                                         <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre completo (solo letras, mínimo 2 caracteres)</li>
                                                         <li class="mb-2"><strong>Paso 4:</strong> Escriba la cédula en formato: 1.234.567 o 12.345.678</li>
@@ -2260,7 +2387,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-person-plus text-success me-2"></i>
                                                         <strong>Nuevo Cliente</strong>
-                                                        <br><small>Botón "+" azul</small>
+                                                        <br><small>Botón "+" verde</small>
                                                     </div>
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
@@ -2389,7 +2516,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="col-md-6">
                                             <h6>Operaciones disponibles:</h6>
                                             <ul>
-                                                <li><strong>Agregar</strong>: Nuevo usuario</li>
+                                                <li><strong>Registrar</strong>: Nuevo usuario</li>
                                                 <li><strong>Modificar</strong>: Actualizar datos</li>
                                                 <li><strong>Eliminar</strong>: Desactivar usuario</li>
                                                 <li><strong>Resetear</strong>: Cambiar contraseña</li>
