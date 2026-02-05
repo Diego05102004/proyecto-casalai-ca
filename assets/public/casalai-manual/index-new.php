@@ -1416,6 +1416,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="card-body">
                                             <div class="row">
                                                 <div class="col-md-8">
+                                                    <?php echo renderImagen('marca', 'incluir-modal.png', 'Botón "+" azul para crear nueva marca'); ?>
                                                     <ol>
                                                         <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nueva marca</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de la marca</strong> (único y reconocible)</li>
@@ -1548,7 +1549,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-8">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-success">Formulario de Ingreso</h6>
+                                                    <div class="text-center mb-3">
+                                                        <?= renderImagen("modelo", "incluir-modal.png") ?>
+                                                        <p class="text-muted small mt-2">Formulario para agregar nuevo modelo</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Proceso paso a paso:</h6>
                                                     <ol>
                                                         <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color azul) para nuevo modelo</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Seleccione la <strong>marca</strong> de la lista desplegable</li>
@@ -1557,8 +1566,23 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                         <li class="mb-2"><strong>Paso 5:</strong> Configure el <strong>estado</strong> (activo/inactivo)</li>
                                                         <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Guardar Modelo"</strong> para confirmar</li>
                                                     </ol>
+                                                    
+                                                    <div class="alert alert-success mt-3">
+                                                        <i class="bi bi-check-circle me-2"></i>
+                                                        <strong>Confirmación:</strong> Verá un SweetAlert de éxito al guardar
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-success">SweetAlert de Confirmación</h6>
+                                                    <div class="text-center">
+                                                        <?= renderImagen("modelos", "sweetalert-exito.png") ?>
+                                                        <p class="text-muted small mt-2">Mensaje de éxito al guardar modelo</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-plus-square text-success me-2"></i>
                                                         <strong>Nuevo Modelo</strong>
@@ -1584,7 +1608,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-8">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-warning">Formulario de Edición</h6>
+                                                    <div class="text-center mb-3">
+                                                        <?= renderImagen("modelo", "modificar-modal.png") ?>
+                                                        <p class="text-muted small mt-2">Formulario para editar modelo existente</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Proceso paso a paso:</h6>
                                                     <ol>
                                                         <li class="mb-2"><strong>Paso 1:</strong> Localice el modelo en la lista</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 para editar</li>
@@ -1592,8 +1624,23 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                         <li class="mb-2"><strong>Paso 4:</strong> Actualice el estado según corresponda</li>
                                                         <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Modelo"</strong> para guardar</li>
                                                     </ol>
+                                                    
+                                                    <div class="alert alert-warning mt-3">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        <strong>Confirmación:</strong> Verá un SweetAlert de confirmación al actualizar
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-warning">SweetAlert de Confirmación</h6>
+                                                    <div class="text-center">
+                                                        <?= renderImagen("modelos", "sweetalert-edicion.png") ?>
+                                                        <p class="text-muted small mt-2">Mensaje de confirmación al editar modelo</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-pencil text-warning me-2"></i>
                                                         <strong>Modificar</strong>
@@ -1602,6 +1649,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-info border mt-2">
                                                         <i class="bi bi-info-circle me-2"></i>
                                                         <strong>Tip:</strong> Puede cambiar de marca
+                                                    </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-arrow-repeat me-2"></i>
+                                                        <strong>Actualización:</strong> Inmediata al guardar
                                                     </div>
                                                 </div>
                                             </div>
@@ -1615,15 +1666,38 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-8">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-danger">SweetAlert de Confirmación</h6>
+                                                    <div class="text-center mb-3">
+                                                        <?= renderImagen("modelo", "eliminar-modal.png") ?>
+                                                        <p class="text-muted small mt-2">Mensaje de confirmación para eliminar modelo</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Proceso paso a paso:</h6>
                                                     <ol>
                                                         <li class="mb-2"><strong>Paso 1:</strong> Encuentre el modelo que desea eliminar</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ para eliminar</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el SweetAlert de advertencia</li>
                                                         <li class="mb-2"><strong>Paso 4:</strong> Verifique que no haya productos usando este modelo</li>
                                                     </ol>
+                                                    
+                                                    <div class="alert alert-danger mt-3">
+                                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                        <strong>Advertencia:</strong> Esta acción no se puede deshacer
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-danger">SweetAlert de Éxito</h6>
+                                                    <div class="text-center">
+                                                        <?= renderImagen("modelos", "sweetalert-eliminado.png") ?>
+                                                        <p class="text-muted small mt-2">Mensaje de éxito al eliminar modelo</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-trash text-danger me-2"></i>
                                                         <strong>Eliminar</strong>
@@ -1633,10 +1707,17 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                         <strong>¡Cuidado!</strong> Verifique productos asociados
                                                     </div>
+                                                    <div class="alert alert-warning border mt-2">
+                                                        <i class="bi bi-shield-exclamation me-2"></i>
+                                                        <strong>Validación:</strong> Sistema verifica dependencias
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    
+
                                     
                                     <div class="note mt-3">
                                         <i class="bi bi-info-circle-fill me-2"></i>
@@ -2324,7 +2405,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-8">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-success">Formulario de Nuevo Usuario</h6>
+                                                    <div class="text-center mb-3">
+                                                        <?= renderImagen("usuario", "incluir-modal.png") ?>
+                                                        <p class="text-muted small mt-2">Formulario para agregar nuevo usuario</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Proceso paso a paso:</h6>
                                                     <ol>
                                                         <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nuevo Usuario"</strong> en la parte superior</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de usuario</strong> (único en el sistema)</li>
@@ -2336,8 +2425,23 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                         <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Crear Usuario"</strong></li>
                                                         <li class="mb-2"><strong>Paso 9:</strong> Envíe las credenciales al usuario por correo</li>
                                                     </ol>
+                                                    
+                                                    <div class="alert alert-success mt-3">
+                                                        <i class="bi bi-check-circle me-2"></i>
+                                                        <strong>Confirmación:</strong> Verá un SweetAlert de éxito al crear
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-success">SweetAlert de Confirmación</h6>
+                                                    <div class="text-center">
+                                                        <?= renderImagen("usuario", "sweetalert-creado.png") ?>
+                                                        <p class="text-muted small mt-2">Mensaje de éxito al crear usuario</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-person-plus text-success me-2"></i>
                                                         <strong>Nuevo Usuario</strong>
@@ -2397,17 +2501,40 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-md-8">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-info">SweetAlert de Confirmación</h6>
+                                                    <div class="text-center mb-3">
+                                                        <?= renderImagen("usuarios", "sweetalert-resetear.png") ?>
+                                                        <p class="text-muted small mt-2">Mensaje de confirmación para resetear contraseña</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Proceso paso a paso:</h6>
                                                     <ol>
                                                         <li class="mb-2"><strong>Paso 1:</strong> Localice el usuario que necesita reseteo de contraseña</li>
                                                         <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>llave</strong> 🔑 junto al usuario</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme que desea resetear la contraseña</li>
+                                                        <li class="mb-2"><strong>Paso 3:</strong> Confirme que desea resetear la contraseña en el SweetAlert</li>
                                                         <li class="mb-2"><strong>Paso 4:</strong> El sistema generará una <strong>contraseña temporal</strong></li>
                                                         <li class="mb-2"><strong>Paso 5:</strong> La nueva contraseña se enviará automáticamente al correo del usuario</li>
                                                         <li class="mb-2"><strong>Paso 6:</strong> El usuario deberá cambiarla en el próximo inicio de sesión</li>
                                                     </ol>
+                                                    
+                                                    <div class="alert alert-info mt-3">
+                                                        <i class="bi bi-envelope-check me-2"></i>
+                                                        <strong>Notificación:</strong> Correo enviado automáticamente
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-6">
+                                                    <h6 class="text-info">SweetAlert de Éxito</h6>
+                                                    <div class="text-center">
+                                                        <?= renderImagen("usuarios", "sweetalert-reseteado.png") ?>
+                                                        <p class="text-muted small mt-2">Mensaje de éxito al resetear contraseña</p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
                                                     <div class="alert alert-light border">
                                                         <i class="bi bi-key text-info me-2"></i>
                                                         <strong>Resetear Contraseña</strong>
@@ -2416,6 +2543,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <div class="alert alert-warning border mt-2">
                                                         <i class="bi bi-envelope me-2"></i>
                                                         <strong>Importante:</strong> El usuario debe tener correo válido
+                                                    </div>
+                                                    <div class="alert alert-info border mt-2">
+                                                        <i class="bi bi-shield-lock me-2"></i>
+                                                        <strong>Seguridad:</strong> Contraseña temporal de un solo uso
                                                     </div>
                                                 </div>
                                             </div>
