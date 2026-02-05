@@ -336,11 +336,71 @@ public function obtenerDatosParaPDF($id) {
             $created = true;
         }
         try {
+            // Obtener datos de la orden antes de actualizar
+            $sqlOrden = "SELECT id_factura, cliente, fecha_despacho FROM tbl_orden_despachos WHERE id_orden_despachos = :id";
+            $stmtOrden = $this->conex->prepare($sqlOrden);
+            $stmtOrden->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmtOrden->execute();
+            $orden = $stmtOrden->fetch(PDO::FETCH_ASSOC);
+
+            if (!$orden) {
+                return ['status' => 'error', 'message' => 'Orden no encontrada'];
+            }
+
+            // Actualizar estado de la orden
             $sql = "UPDATE tbl_orden_despachos SET estado = :estado WHERE id_orden_despachos = :id";
             $stmt = $this->conex->prepare($sql);
             $stmt->bindParam(':estado', $nuevoEstado);
-            $stmt->bindParam(':id', $id);
-            return $stmt->execute();
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Si se cambia a "Entregada", crear el despacho correspondiente
+            if ($nuevoEstado === 'Entregada') {
+                // Obtener id_cliente desde la factura
+                $sqlCliente = "SELECT cliente FROM tbl_facturas WHERE id_factura = :id_factura";
+                $stmtCliente = $this->conex->prepare($sqlCliente);
+                $stmtCliente->bindParam(':id_factura', $orden['id_factura'], PDO::PARAM_INT);
+                $stmtCliente->execute();
+                $factura = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+
+                if (!$factura) {
+                    return ['status' => 'error', 'message' => 'Factura asociada no encontrada'];
+                }
+
+                // 1️⃣ Crear despacho
+                $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, estado, activo) 
+                                VALUES (:id_cliente, :fecha, :tipocompra, :estado, 1)";
+                $stmtDespacho = $this->conex->prepare($sqlDespacho);
+                $stmtDespacho->execute([
+                    ':id_cliente' => $factura['cliente'],
+                    ':fecha' => $orden['fecha_despacho'],
+                    ':tipocompra' => 'Online',
+                    ':estado' => 'Por Despachar'
+                ]);
+                $idDespacho = $this->conex->lastInsertId();
+
+                // 2️⃣ Insertar productos en tbl_despacho_detalle desde tbl_factura_detalle
+                $sqlDetalles = "SELECT id_producto, cantidad FROM tbl_factura_detalle WHERE factura_id = :factura_id";
+                $stmtDetalles = $this->conex->prepare($sqlDetalles);
+                $stmtDetalles->bindParam(':factura_id', $orden['id_factura'], PDO::PARAM_INT);
+                $stmtDetalles->execute();
+                $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($detalles as $detalle) {
+                    $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
+                                   VALUES (:id_despacho, :id_producto, :cantidad)";
+                    $stmtDetalle = $this->conex->prepare($sqlDetalle);
+                    $stmtDetalle->execute([
+                        ':id_despacho' => $idDespacho,
+                        ':id_producto' => $detalle['id_producto'],
+                        ':cantidad' => $detalle['cantidad']
+                    ]);
+                }
+            }
+
+            return ['status' => 'success', 'message' => 'Estado actualizado correctamente'];
+        } catch (PDOException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
         } finally {
             if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
             if (isset($created) && $created) { $this->conex = null; }

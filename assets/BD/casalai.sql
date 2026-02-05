@@ -353,29 +353,29 @@ CREATE TABLE `tbl_despachos` (
 
 INSERT INTO `tbl_despachos` (`id_despachos`, `id_clientes`, `fecha_despacho`, `tipocompra`, `estado`, `activo`) VALUES
 (3, 12, '2025-07-23', 'Presencial', 'Despachado', 1),
-(4, 12, '2025-09-01', 'Online', 'Despachado', 1),
+(4, 12, '2025-09-01', 'Online', 'Por Despachar', 1),
 (5, 12, '2025-09-01', 'Presencial', 'Por Despachar', 1),
-(7, 12, '2025-10-12', '', 'Por Despachar', 1),
-(8, 12, '2025-10-12', '', 'Por Despachar', 1),
-(9, 12, '2025-10-12', '', 'Por Despachar', 1),
-(11, 12, '2025-10-12', '', 'Por Despachar', 1),
-(12, 12, '2025-10-13', '', 'Por Despachar', 1),
-(13, 12, '2025-10-13', '', 'Por Despachar', 1),
-(14, 12, '2025-10-13', '', 'Por Despachar', 1),
-(15, 12, '2025-10-13', '', 'Por Despachar', 1),
-(16, 12, '2025-10-13', '', 'Por Despachar', 1),
-(17, 12, '2025-10-13', '', 'Por Despachar', 1),
-(18, 12, '2025-10-13', '', 'Por Despachar', 1),
-(19, 12, '2025-10-13', '', 'Por Despachar', 1),
-(20, 12, '2025-10-13', '', 'Por Despachar', 1),
-(21, 12, '2025-10-13', '', 'Por Despachar', 1),
-(22, 12, '2025-10-13', '', 'Por Despachar', 1),
-(23, 12, '2025-10-13', '', 'Por Despachar', 1),
-(24, 12, '2025-10-13', '', 'Por Despachar', 1),
-(25, 12, '2025-10-13', '', 'Por Despachar', 1),
-(26, 12, '2025-10-13', '', 'Por Despachar', 1),
-(32, 12, '2025-10-13', '', 'Por Despachar', 1),
-(34, 12, '2025-10-13', '', 'Por Despachar', 1);
+(7, 12, '2025-10-12', 'Presencial', 'Por Despachar', 0),
+(8, 12, '2025-10-12', 'Presencial', 'Por Despachar', 0),
+(9, 12, '2025-10-12', 'Presencial', 'Por Despachar', 0),
+(11, 12, '2025-10-12', 'Presencial', 'Por Despachar', 0),
+(12, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(13, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(14, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(15, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(16, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(17, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(18, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(19, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(20, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(21, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(22, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(23, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(24, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(25, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(26, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(32, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0),
+(34, 12, '2025-10-13', 'Presencial', 'Por Despachar', 0);
 
 -- --------------------------------------------------------
 
@@ -804,9 +804,9 @@ CREATE TABLE `tbl_orden_despachos` (
 --
 
 INSERT INTO `tbl_orden_despachos` (`id_orden_despachos`, `id_factura`, `cliente`, `fecha_despacho`, `estado`, `activo`) VALUES
-(3, 33, 'David Medina', '2025-07-23', 'Entregada', 1),
+(3, 33, 'David Medina', '2025-07-23', 'Por Entregar', 1),
 (4, 33, 'David Medina', '2025-07-24', 'Por Entregar', 1),
-(5, 33, 'David Medina', '2025-07-24', 'Entregada', 1);
+(5, 33, 'David Medina', '2025-07-24', 'Por Entregar', 1);
 
 -- --------------------------------------------------------
 
