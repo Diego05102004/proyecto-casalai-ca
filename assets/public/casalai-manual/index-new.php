@@ -1429,12 +1429,12 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="col-md-6">
                                         <h6>Proceso de despacho:</h6>
-                                        <ol>
+                                        <ul>
                                             <li><strong>Consultar</strong>: Ver lista completa</li>
                                             <li><strong>Detallar</strong>: Ver información completa</li>
                                             <li><strong>Anular</strong>: Remover despacho</li>
                                             <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
-                                        </ol>
+                                        </ul>
                                     </div>
                                 </div>
                                 
@@ -1578,18 +1578,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <h6>Información gestionable:</h6>
                                         <ul>
                                             <li>Nombre de la marca</li>
-                                            <li>Descripción de la marca</li>
-                                            <li>Estado (activa/inactiva)</li>
-                                            <li>Productos asociados</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
                                         <h6>Requisitos importantes:</h6>
                                         <ul>
-                                            <li>Nombre único de marca</li>
-                                            <li>Descripción clara y concisa</li>
-                                            <li>Estado definido</li>
-                                            <li>Al menos un producto asociado</li>
+                                            <li><strong>Registrar</strong>: Nueva marca</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Modificar</strong>: Actualizar datos</li>
+                                            <li><strong>Eliminar</strong>: Remover marca</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1601,29 +1598,37 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
-                                                <?php echo renderImagen('marca', 'incluir-modal.png', 'Botón "+" verde para crear nueva marca'); ?>
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Usuario</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('marca', 'incluir-modal.png', 'Botón "+" verde para crear nueva marca') ?>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva marca</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de la marca</strong> (único y reconocible)</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Agregue una <strong>descripción detallada</strong> de la marca</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Configure el <strong>estado</strong> (activa/inactiva)</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Guardar Marca"</strong> para confirmar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva marca.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-patch-plus text-success me-2"></i>
-                                                    <strong>Nueva Marca</strong>
-                                                    <br><small>Botón "+" verde</small>
+                                                    <strong>Nueva Marca:</strong><br> Botón "+" verde
                                                 </div>
-                                                <div class="alert alert-info border mt-2">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-light border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Nombre:</strong> Debe ser único
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
                                                 </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-card-text me-2"></i>
-                                                    <strong>Descripción:</strong> Máximo 200 caracteres
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Nombre de la Marca:</strong><br> (único en el sistema)
                                                 </div>
                                             </div>
                                         </div>
@@ -1632,35 +1637,33 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Pasos para modificar marca -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
-                                        <h6 class="mb-0">Pasos para Modificar Marca</h6>
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Modificar Usuario</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la marca en la lista</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 para editar</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Modifique el nombre o descripción según necesite</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Cambie el estado si es necesario</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Marca"</strong> para guardar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la marca en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-warning me-2"></i>
-                                                    <strong>Modificar</strong>
-                                                    <br><small>Ícono lápiz</small>
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Los cambios se aplican inmediatamente
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Pasos para eliminar marca -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
@@ -1668,23 +1671,21 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la marca que desea eliminar</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ para eliminar</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique que no haya productos asociados activos</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre al marca que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Eliminar</strong>
-                                                    <br><small>Ícono X rojo</small>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
                                                 </div>
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong> Verifique productos asociados
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
                                         </div>
