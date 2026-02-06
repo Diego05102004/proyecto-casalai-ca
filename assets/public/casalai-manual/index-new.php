@@ -1237,14 +1237,14 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
-                                        <h6>Proceso de recepción:</h6>
-                                        <ol>
-                                            <li>Ingrese el correlativo del producto</li>
-                                            <li>Seleccione el proveedor</li>
-                                            <li>Elija los productos de la lista</li>
-                                            <li>Registre cantidades y costos</li>
-                                            <li>Confirme la recepción</li>
-                                        </ol>
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Registrar</strong>: Nueva recepción</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Anular</strong>: Remover recepción</li>
+                                            <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
+                                        </ul>
                                     </div>
                                 </div>
                                 
@@ -1351,7 +1351,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre al Recepción que desea anular.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la recepción que desea anular.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
                                                 </ol>
@@ -1380,11 +1380,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Todos los Reportes, Recepciones por Proveedor, Productos mas Vendidos, Recepciones Mensuales).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Ingrese las fechas: (Inicio y Fin).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de reporte: (Todos los Reportes, Recepciones por Proveedor, Productos mas Vendidos, Recepciones Mensuales).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -1420,8 +1419,8 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <h6>Información gestionable:</h6>
                                         <ul>
                                             <li>Fecha de despacho</li>
-                                            <li>Correlación</li>
                                             <li>Cliente</li>
+                                            <li>Tipo de compra</li>
                                             <li>Producto</li>
                                             <li>Cantidad despachada</li>
                                             <li>Precio unitario</li>
@@ -1431,77 +1430,66 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     <div class="col-md-6">
                                         <h6>Proceso de despacho:</h6>
                                         <ol>
-                                            <li>Ingrese el correlativo</li>
-                                            <li>Seleccione el cliente</li>
-                                            <li>Elija los productos</li>
-                                            <li>Verifique el stock disponible</li>
-                                            <li>Confirme el despacho</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Anular</strong>: Remover despacho</li>
+                                            <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
                                         </ol>
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir despacho -->
+                                <!-- Pasos para detallar despacho -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nuevo Despacho</h6>
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Despacho</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nuevo Despacho"</strong> en la parte superior</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>correlativo</strong> único para el despacho</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>cliente</strong> de la lista desplegable</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Agregar Producto"</strong> y seleccione de la lista</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Ingrese la <strong>cantidad</strong> a despachar (no puede exceder stock)</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Repita el paso 4-5 para cada producto</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Revise el resumen y haga clic en <strong>"Procesar Despacho"</strong></li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del despacho.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-truck text-success me-2"></i>
-                                                    <strong>Nuevo Despacho</strong>
-                                                    <br><small>Botón principal</small>
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Stock:</strong> Validado automáticamente
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    <strong>Límite:</strong> No exceder stock disponible
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Pasos para modificar despacho -->
+
+                                <!-- Pasos para cambiar estatus -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
-                                        <h6 class="mb-0">Pasos para Modificar Despacho</h6>
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Despacho</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el despacho en la lista principal</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>editar</strong> ✏️ junto al despacho</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Modifique los datos necesarios (cliente, productos, cantidades)</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Puede agregar nuevos productos o remover existentes</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Despacho"</strong> para guardar cambios</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) del proveedor y cambiará automáticamente.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-warning me-2"></i>
-                                                    <strong>Modificar</strong>
-                                                    <br><small>Ícono editar</small>
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
                                                 </div>
-                                                <div class="alert alert-info border mt-2">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Solo despachos no procesados
+                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-danger border">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
                                         </div>
@@ -1515,23 +1503,55 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el despacho que desea anular</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>anular</strong> 🚫</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> El stock se devolverá automáticamente al inventario</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el despacho que desea anular.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-x-circle text-danger me-2"></i>
-                                                    <strong>Anular</strong>
-                                                    <br><small>Ícono anular</small>
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Anular:</strong> Ícono X rojo
                                                 </div>
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong> Afecta el inventario
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para generar reportes de despachos -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Despachos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: (Todos los reportes, Por Estatus, Mensuales, Por Cliente o Por Tipo de Compra).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-pie-chart me-2"></i>
+                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
                                         </div>
@@ -2042,16 +2062,28 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del producto</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del producto y cambiará automáticamente</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus</strong>
-                                                    <br><small>Click en estatus</small>
+                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
                                                 </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong> Sin confirmación
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Instantáneo:</strong> Sin confirmación
@@ -2499,20 +2531,23 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-7">
+                                            <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del proveedor</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del proveedor y cambiará automáticamente</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-5">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Click en estatus
+                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
                                                 </div>
-                                                <div class="alert alert-info border mt-2">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                    <strong>Instantáneo:</strong> Sin confirmación
                                                 </div>
                                             </div>
                                         </div>
@@ -2532,7 +2567,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <li class="mb-2"><strong>Paso 2:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de reporte: (Todos, Suministro, Rancking, Comparación Mensual o Dependencia).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de reporte: (Todos los Reportes, Suministro, Rancking, Comparación Mensual o Dependencia).</li>
                                                     <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
@@ -2881,20 +2916,23 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-7">
+                                            <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del usuario.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del usuario y cambiará automáticamente</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-5">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Click en estatus
+                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
                                                 </div>
-                                                <div class="alert alert-info border mt-2">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                    <strong>Instantáneo:</strong> Sin confirmación
                                                 </div>
                                             </div>
                                         </div>
@@ -3052,7 +3090,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <ul>
                                             <li><strong>Agregar</strong>: Nueva cuenta</li>
                                             <li><strong>Consultar</strong>: Ver lista completa</li>
-                                            <li><strong>Detallar</strong>: Ver información completa de la cuenta</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
                                             <li><strong>Eliminar</strong>: Remover cuenta</li>
                                             <li><strong>Conciliación</strong>: Balance de cuentas</li>
@@ -3197,20 +3235,23 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-7">
+                                            <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) de la cuenta bancaria.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> El estatus cambiará automáticamente.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) de la cuenta bancaria y cambiará automáticamente</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-5">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Click en estatus
+                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
                                                 </div>
-                                                <div class="alert alert-info border mt-2">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                    <strong>Instantáneo:</strong> Sin confirmación
                                                 </div>
                                             </div>
                                         </div>
