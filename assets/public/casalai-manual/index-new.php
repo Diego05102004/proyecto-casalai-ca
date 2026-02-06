@@ -1581,7 +1581,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
-                                        <h6>Requisitos importantes:</h6>
+                                        <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Registrar</strong>: Nueva marca</li>
                                             <li><strong>Consultar</strong>: Ver lista completa</li>
@@ -1599,7 +1599,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     <div class="card-body">
                                         <div class="row">
                                             <div>
-                                                <h6 class="text-success">Formulario de Nuevo Usuario</h6>
+                                                <h6 class="text-success">Formulario de Nueva Marca</h6>
                                                 <div class="text-center">
                                                     <?= renderImagen('marca', 'incluir-modal.png', 'Botón "+" verde para crear nueva marca') ?>
                                                 </div>
@@ -1608,7 +1608,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva marca.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-4">
@@ -1638,7 +1638,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 <!-- Pasos para modificar marca -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Modificar Usuario</h6>
+                                        <h6 class="mb-0">Pasos para Modificar Marca</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -1713,18 +1713,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <ul>
                                             <li>Nombre del modelo</li>
                                             <li>Marca asociada</li>
-                                            <li>Descripción técnica</li>
-                                            <li>Estado (activo/inactivo)</li>
-                                            <li>Productos relacionados</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
-                                        <h6>Requisitos importantes:</h6>
+                                        <h6>Operaciones disponibles:</h6>
                                         <ul>
-                                            <li>Marca seleccionada obligatoriamente</li>
-                                            <li>Nombre único por marca</li>
-                                            <li>Descripción técnica clara</li>
-                                            <li>Estado definido</li>
+                                            <li><strong>Registrar</strong>: Nuevo modelo</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Modificar</strong>: Actualizar datos</li>
+                                            <li><strong>Eliminar</strong>: Remover modelo</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1736,52 +1733,38 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="text-success">Formulario de Ingreso</h6>
-                                                <div class="text-center mb-3">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Modelo</h6>
+                                                <div class="text-center">
                                                     <?= renderImagen("modelo", "incluir-modal.png") ?>
-                                                    <p class="text-muted small mt-2">Formulario para agregar nuevo modelo</p>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <h6>Proceso paso a paso:</h6>
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nuevo modelo</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione la <strong>marca</strong> de la lista desplegable</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>nombre del modelo</strong> (único para la marca)</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Agregue una <strong>descripción técnica</strong> detallada</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Configure el <strong>estado</strong> (activo/inactivo)</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Guardar Modelo"</strong> para confirmar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nuevo modelo.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Seleccione la <strong>marca</strong> asociada.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
                                                 </ol>
-                                                
-                                                <div class="alert alert-success mt-3">
-                                                    <i class="bi bi-check-circle me-2"></i>
-                                                    <strong>Confirmación:</strong> Verá un SweetAlert de éxito al guardar
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-patch-plus text-success me-2"></i>
+                                                    <strong>Nuevo Modelo:</strong><br> Botón "+" verde
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        <div class="row mt-3">
+                                        <div class="row">
                                             <div class="col-md-6">
-                                                <h6 class="text-success">SweetAlert de Confirmación</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("modelos", "sweetalert-exito.png") ?>
-                                                    <p class="text-muted small mt-2">Mensaje de éxito al guardar modelo</p>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-plus-square text-success me-2"></i>
-                                                    <strong>Nuevo Modelo</strong>
-                                                    <br><small>Botón "+" verde</small>
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Marca:</strong> Selección obligatoria
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-gear me-2"></i>
-                                                    <strong>Técnica:</strong> Descripción requerida
+                                                    <strong>Nombre del Modelo:</strong><br> (único en el sistema)
                                                 </div>
                                             </div>
                                         </div>
@@ -1790,62 +1773,33 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Pasos para modificar modelo -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
+                                    <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Modelo</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="text-warning">Formulario de Edición</h6>
-                                                <div class="text-center mb-3">
-                                                    <?= renderImagen("modelo", "modificar-modal.png") ?>
-                                                    <p class="text-muted small mt-2">Formulario para editar modelo existente</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6>Proceso paso a paso:</h6>
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el modelo en la lista</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 para editar</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Modifique nombre, descripción o marca si es necesario</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Actualice el estado según corresponda</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Modelo"</strong> para guardar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el modelo en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
                                                 </ol>
-                                                
-                                                <div class="alert alert-warning mt-3">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    <strong>Confirmación:</strong> Verá un SweetAlert de confirmación al actualizar
-                                                </div>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="row mt-3">
-                                            <div class="col-md-6">
-                                                <h6 class="text-warning">SweetAlert de Confirmación</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("modelos", "sweetalert-edicion.png") ?>
-                                                    <p class="text-muted small mt-2">Mensaje de confirmación al editar modelo</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-warning me-2"></i>
-                                                    <strong>Modificar</strong>
-                                                    <br><small>Ícono lápiz</small>
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Puede cambiar de marca
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-arrow-repeat me-2"></i>
-                                                    <strong>Actualización:</strong> Inmediata al guardar
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Pasos para eliminar modelo -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
@@ -1853,59 +1807,26 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="text-danger">SweetAlert de Confirmación</h6>
-                                                <div class="text-center mb-3">
-                                                    <?= renderImagen("modelo", "eliminar-modal.png") ?>
-                                                    <p class="text-muted small mt-2">Mensaje de confirmación para eliminar modelo</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6>Proceso paso a paso:</h6>
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el modelo que desea eliminar</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ para eliminar</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el SweetAlert de advertencia</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique que no haya productos usando este modelo</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el modelo que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
                                                 </ol>
-                                                
-                                                <div class="alert alert-danger mt-3">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>Advertencia:</strong> Esta acción no se puede deshacer
-                                                </div>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="row mt-3">
-                                            <div class="col-md-6">
-                                                <h6 class="text-danger">SweetAlert de Éxito</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("modelos", "sweetalert-eliminado.png") ?>
-                                                    <p class="text-muted small mt-2">Mensaje de éxito al eliminar modelo</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Eliminar</strong>
-                                                    <br><small>Ícono X rojo</small>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
                                                 </div>
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong> Verifique productos asociados
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-shield-exclamation me-2"></i>
-                                                    <strong>Validación:</strong> Sistema verifica dependencias
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                
-
-                                
                                 <div class="note mt-3">
                                     <i class="bi bi-info-circle-fill me-2"></i>
                                     Los modelos especifican versiones y variantes dentro de cada marca.
@@ -1914,7 +1835,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                         </div>
 
                         <!-- Productos -->
-                        <div class="card mb-4" id="gestion-productos-almacenista">
+                        <div class="card mb-4 mt-4" id="gestion-productos-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     <i class="bi bi-box me-2"></i>Gestión de Productos
