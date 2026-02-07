@@ -302,13 +302,20 @@ $usuarioModel = new Usuarios();
 $rolModel = new Rol();
 $reporteRoles = $usuarioModel->obtenerReporteRoles();
 $selecionarRol = $rolModel->consultarRoles();
+
+// --- Datos para reportes (igual que en reporteUsuario.php) ---
+$usuariosHabilitados = $usuarioModel->getusuarios('habilitado');
+$usuariosDeshabilitados = $usuarioModel->getusuarios('deshabilitado');
+$usuariosTodos = array_merge($usuariosHabilitados ?? [], $usuariosDeshabilitados ?? []);
+
 $totalRoles = array_sum(array_column($reporteRoles, 'cantidad'));
 foreach ($reporteRoles as &$rol) {
     $rol['porcentaje'] = $totalRoles > 0 ? round(($rol['cantidad'] / $totalRoles) * 100, 2) : 0;
 }
 unset($rol);
+// -------------------------------------------------------------
 
-$pagina = "usuario";
+$usuarios = getusuarios();
 if (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();

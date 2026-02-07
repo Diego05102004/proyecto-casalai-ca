@@ -279,8 +279,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     </div>
 </div>
 
-        <!-- Reporte estadístico de usuarios por rol -->
-    <div class="report-container" style="max-width: 1100px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+     <div class="report-container" style="max-width: 1100px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
         <h2 class="titulo-form" style="text-align:center">Reportes de Usuarios</h2>
         <div class="parameters-container" style="margin: 16px 0; background:#f8f9fa; border-radius: 10px; padding: 16px;">
             <div class="row g-3 align-items-end">
@@ -479,7 +478,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     buildParametrosUsuarios();
     generarUsuarios();
     </script>
-
         <!-- Modal de eliminación -->
         <?php include 'footer.php'; ?>
         <!-- jQuery ya se carga en header.php; evitar recargarlo aquí para no perder handlers -->
