@@ -1853,17 +1853,18 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li>Cláusula de garantía</li>
                                             <li>Categoría</li>
                                             <li>Precio</li>
-                                            <li>Estado</li>
+                                            <li>Estatus</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
-                                            <li><strong>Incluir</strong>: Nuevo producto</li>
+                                            <li><strong>Registrar</strong>: Nuevo producto</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa del producto</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
                                             <li><strong>Eliminar</strong>: Remover producto</li>
-                                            <li><strong>Reporte</strong>: Generar informes</li>
-                                            <li><strong>Estado</strong>: Cambiar disponibilidad</li>
+                                            <li><strong>Reporte</strong>: Generar reportes</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1875,34 +1876,56 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong></li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese nombre del producto (3-20 caracteres, solo letras)</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Seleccione modelo/marca de la lista desplegable</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Cargue una imagen del producto (formato JPG, PNG, etc.)</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Agregue descripción breve (máximo 50 caracteres)</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Configure stock actual, máximo y mínimo</li>
-                                                    <li class="mb-2"><strong>Paso 8:</strong> Escriba cláusula de garantía (10-200 caracteres)</li>
-                                                    <li class="mb-2"><strong>Paso 9:</strong> Seleccione categoría y complete características específicas</li>
-                                                    <li class="mb-2"><strong>Paso 10:</strong> Ingrese código serial y precio del producto</li>
-                                                    <li class="mb-2"><strong>Paso 11:</strong> Haga clic en <strong>"Registrar"</strong> para guardar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>nombre</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>modelo/marca</strong> del producto.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Cargue una <strong>imagen</strong> del producto.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Ingrese una <strong>descripción</strong> breve.</li>
+                                                    <li class="mb-2"><strong>Paso 7:</strong> Ingrese el <strong>stock</strong> (Actual, Máximo y Mínimo).</li>
+                                                    <li class="mb-2"><strong>Paso 8:</strong> Redacte la <strong>cláusula de garantía</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 9:</strong> Seleccione la <strong>categoría</strong> y complete características específicas.</li>
+                                                    <li class="mb-2"><strong>Paso 10:</strong> Ingrese el <strong>código serial</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 11:</strong> Ingrese su <strong>precio</strong> de venta.</li>
+                                                    <li class="mb-2"><strong>Paso 12:</strong> Haga clic en <strong>"Registrar"</strong> para guardar.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-plus-circle text-success me-2"></i>
-                                                    <strong>Nuevo Producto</strong>
-                                                    <br><small>Botón "+" verde</small>
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Nombre:</strong> 3-20 caracteres
+                                                    <i class="bi bi-person-plus text-success me-2"></i>
+                                                    <strong>Nuevo Producto:</strong><br> Botón "+" verde
                                                 </div>
                                                 <div class="alert alert-warning border mt-2">
                                                     <i class="bi bi-image me-2"></i>
                                                     <strong>Imagen:</strong> JPG/PNG requerida
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar:</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para detallar producto -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Producto</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del producto.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
                                         </div>
@@ -1911,29 +1934,27 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Pasos para modificar producto -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
+                                    <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Producto</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el producto en la tabla</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en "Acciones"</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Puede cambiar la imagen si lo requiere</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Guardar cambios"</strong> para confirmar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice al producto en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-warning me-2"></i>
-                                                    <strong>Modificar</strong>
-                                                    <br><small>Ícono lápiz</small>
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
                                                 </div>
-                                                <div class="alert alert-info border mt-2">
+                                                <div class="alert alert-light border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Puede actualizar imagen
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
                                         </div>
@@ -1947,55 +1968,42 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el producto que desea eliminar</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>eliminar</strong> 🗑️ en la parte izquierda</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Lea el mensaje de confirmación cuidadosamente</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Confirme que desea eliminar el producto</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> El producto y todos sus datos serán eliminados permanentemente</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el producto que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Eliminar</strong>
-                                                    <br><small>Ícono en parte izquierda</small>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
                                                 </div>
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    Se eliminará la imagen asociada
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div class="alert alert-warning col-md-11 mx-auto">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        Al eliminar un producto, se eliminarán todos sus datos incluyendo la imagen asociada.
                                     </div>
                                 </div>
 
                                 <!-- Pasos para cambiar estatus -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Producto</h6>
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Proveedor</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del producto y cambiará automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del proveedor y cambiará automáticamente.</li>
                                                 </ol>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong> Sin confirmación
-                                                </div>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -2006,7 +2014,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <div class="alert alert-info border mt-2">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Instantáneo:</strong> Sin confirmación
                                                 </div>
@@ -2022,40 +2030,32 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Use el filtro de estatus para mostrar: Todos/Habilitados/Inhabilitados</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> En la sección de reportes, seleccione tipo de reporte:</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> • <strong>Top Productos Más Vendidos:</strong> Configure "Top N" y tipo de gráfica</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> • <strong>Stock Alto vs Bajo:</strong> Seleccione categoría o "Todas"</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> • <strong>Rotación de Productos:</strong> Muestra días promedio de rotación</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Elija tipo de gráfica: Barras, Pastel, Líneas, Rosca, Área Polar</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Generar"</strong> para visualizar</li>
-                                                    <li class="mb-2"><strong>Paso 8:</strong> Use <strong>"Descargar PDF"</strong> para guardar el reporte</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Top Productos Más Vendidos, Stock Alto vs Bajo, Rotación de Productos).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el top de productos.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
-                                                    <strong>Reportes</strong>
-                                                    <br><small>Múltiples tipos</small>
-                                                </div>
+                                            <div class="col-md-5">
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-pie-chart me-2"></i>
-                                                    <strong>Gráficas:</strong> 5 tipos disponibles
+                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
                                                 </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-download me-2"></i>
-                                                    <strong>Exportación:</strong> PDF automático
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="alert alert-warning mt-3">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    Al eliminar un producto, se eliminarán todos sus datos incluyendo la imagen asociada.
                                 </div>
                             </div>
                         </div>
@@ -2455,7 +2455,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del proveedor y cambiará automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del proveedor y cambiará automáticamente.</li>
                                                 </ol>
                                             </div>
                                         </div>
@@ -2840,7 +2840,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del usuario y cambiará automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del usuario y cambiará automáticamente.</li>
                                                 </ol>
                                             </div>
                                         </div>
@@ -3159,7 +3159,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) de la cuenta bancaria y cambiará automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) de la cuenta bancaria y cambiará automáticamente.</li>
                                                 </ol>
                                             </div>
                                         </div>
