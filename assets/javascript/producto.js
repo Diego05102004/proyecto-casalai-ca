@@ -1642,6 +1642,63 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+// Evento para eliminar producto
+$(document).on('click', '.btn-eliminar', function (e) {
+    e.preventDefault();
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminarlo!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var id_producto = $(this).data('id');
+            var datos = new FormData();
+            datos.append('accion', 'eliminar');
+            datos.append('id_producto', id_producto);
+            
+            $.ajax({
+                url: '',
+                type: 'POST',
+                data: datos,
+                contentType: false,
+                processData: false,
+                cache: false,
+                success: function(respuesta) {
+                    if (typeof respuesta === "string") {
+                        respuesta = JSON.parse(respuesta);
+                    }
+                    if (respuesta.status === 'success') {
+                        Swal.fire(
+                            'Eliminado!',
+                            'El producto ha sido eliminado.',
+                            'success'
+                        );
+                        eliminarFilaProducto(id_producto);
+                    } else {
+                        // Mostrar mensaje específico si hay error
+                        Swal.fire('Error', respuesta.message || 'Error al eliminar el producto', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error en la conexión', 'error');
+                }
+            });
+        }
+    });
+});
+
+// Función para eliminar la fila de la tabla
+function eliminarFilaProducto(id_producto) {
+    var table = $('#tablaConsultas').DataTable();
+    var row = table.row(`tr[data-id="${id_producto}"]`);
+    if (row) {
+        row.remove().draw(false);
+    }
+}
 
 /**
  * Actualiza una fila en la tabla de productos con los nuevos datos

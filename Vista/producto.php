@@ -173,63 +173,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
       
         <h3>Listado de Productos</h3>
 
-        <div class="instrucciones-modulo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #1f66df;">
-            <h5 style="color: #1f66df; margin-bottom: 10px;">📦 Instrucciones de Uso - Módulo de Productos</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 style="color: #333;">🔹 Incluir Nuevo Producto:</h6>
-                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                        <li>Haga clic en el botón <strong>"+"</strong> (color azul) en la esquina superior derecha</li>
-                        <li>Complete todos los campos obligatorios marcados con <strong>*</strong></li>
-                        <li>Ingrese nombre del producto (3-20 caracteres, solo letras)</li>
-                        <li>Seleccione modelo/marca de la lista desplegable</li>
-                        <li>Cargue una imagen del producto (formato JPG, PNG, etc.)</li>
-                        <li>Agregue descripción breve (máximo 50 caracteres)</li>
-                        <li>Configure stock actual, máximo y mínimo</li>
-                        <li>Escriba cláusula de garantía (10-200 caracteres)</li>
-                        <li>Seleccione categoría y complete características específicas</li>
-                        <li>Ingrese código serial y precio del producto</li>
-                        <li>Haga clic en <strong>"Registrar"</strong> para guardar</li>
-                    </ol>
-                </div>
-                <div class="col-md-6">
-                    <h6 style="color: #333;">🔹 Modificar Producto:</h6>
-                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                        <li>Localice el producto en la tabla</li>
-                        <li>Haga clic en el ícono del <strong>lápiz</strong> 📝 en "Acciones"</li>
-                        <li>Edite los campos necesarios</li>
-                        <li>Puede cambiar la imagen si lo requiere</li>
-                        <li>Haga clic en <strong>"Guardar cambios"</strong> para confirmar</li>
-                    </ol>
-                    <h6 style="color: #333; margin-top: 15px;">🔹 Eliminar/Anular Producto:</h6>
-                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                        <li>Encuentre el producto que desea eliminar</li>
-                        <li>Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones"</li>
-                        <li>Confirme la eliminación en el mensaje de advertencia</li>
-                    </ol>
-                    <h6 style="color: #333; margin-top: 15px;">🔹 Cambiar Estatus:</h6>
-                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                        <li>Haga clic en el estatus (habilitado/inhabilitado) del producto</li>
-                        <li>El estatus cambiará automáticamente</li>
-                    </ol>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-12">
-                    <h6 style="color: #333;">🔹 Generar Reportes:</h6>
-                    <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                        <li>Use el filtro de estatus para mostrar: Todos/Habilitados/Inhabilitados</li>
-                        <li>En la sección de reportes abajo, seleccione tipo de reporte:</li>
-                        <li>• <strong>Top Productos Más Vendidos:</strong> Configure "Top N" y tipo de gráfica</li>
-                        <li>• <strong>Stock Alto vs Bajo:</strong> Seleccione categoría o "Todas"</li>
-                        <li>• <strong>Rotación de Productos:</strong> Muestra días promedio de rotación</li>
-                        <li>Elija tipo de gráfica: Barras, Pastel, Líneas, Rosca, Área Polar</li>
-                        <li>Haga clic en <strong>"Generar"</strong> para visualizar</li>
-                        <li>Use <strong>"Descargar PDF"</strong> para guardar el reporte</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
 
         <div class="filtro-status">
             <label for="filtro-estatus-productos">Mostrar:</label>
@@ -262,7 +205,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
               <?php $ruta_imagen = $producto['imagen'] ?>
    
               
-            <tr>
+            <tr data-id="<?php echo $producto['id_producto']; ?>">
               <td>
                 <span class="campo-numeros">
                   <?php echo htmlspecialchars($producto['id_producto']); ?>
