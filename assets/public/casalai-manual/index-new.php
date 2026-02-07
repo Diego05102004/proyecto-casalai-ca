@@ -641,354 +641,11 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                     </h2>
                     
                     <div class="row">
-                        <div class="col-md-8">
+                        <div>
                             <p>Como cliente, tendrá acceso a las siguientes funcionalidades para realizar sus compras de manera sencilla y segura.</p>
-                            
-                            <!-- Catálogo de Productos -->
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="bi bi-grid-3x3-gap me-2"></i>Catálogo de Productos
-                                    </h5>
-                                    <p>Acceda al catálogo completo de productos disponibles para su compra.</p>
-                                    
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <?= renderImagen("catalogo", "vista.png") ?>
-                                            <p class="text-muted small mt-2">Vista principal del catálogo</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Características:</h6>
-                                            <ul>
-                                                <li>Navegación por categorías</li>
-                                                <li>Búsqueda de productos</li>
-                                                <li>Filtros avanzados</li>
-                                                <li>Visualización de precios</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="alert alert-info mt-3">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        En la parte superior encontrará pestañas para acceder a <strong>Combos Promocionales</strong> con ofertas especiales.
-                                    </div>
-                                    
-                                    <!-- Pasos para agregar productos al carrito -->
-                                    <div class="card mt-3">
-                                        <div class="card-header bg-success text-white">
-                                            <h6 class="mb-0">Pasos para Agregar Productos al Carrito</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <ol>
-                                                        <li class="mb-2">Navegue por el catálogo y encuentre el producto deseado</li>
-                                                        <li class="mb-2">Haga clic en el botón <strong>"Agregar"</strong> en la parte izquierda del producto</li>
-                                                        <li class="mb-2">El producto se añadirá automáticamente a su carrito</li>
-                                                        <li>Verá un mensaje de confirmación y el contador del carrito se actualizará</li>
-                                                    </ol>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <?= renderImagen("catalogo", "agregar.png") ?>
-                                                    <p class="text-muted small mt-2">Botón para agregar producto al carrito</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Combos Promocionales -->
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="bi bi-tags me-2"></i>Combos Promocionales
-                                    </h5>
-                                    <p>Descubra nuestras ofertas especiales y paquetes con descuento.</p>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <?= renderImagen("catalogo", "vista-2.png") ?>
-                                            <p class="text-muted small mt-2">Vista de combos promocionales</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Ventajas de los combos:</h6>
-                                            <ul>
-                                                <li>Precios especiales</li>
-                                                <li>Productos complementarios</li>
-                                                <li>Ahorro garantizado</li>
-                                                <li>Stock limitado</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Carrito de Compras -->
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="bi bi-cart3 me-2"></i>Gestión del Carrito
-                                    </h5>
-                                    <p>Administre los productos que desea comprar antes de finalizar su pedido.</p>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <?= renderImagen("carrito", "carrito.png") ?>
-                                            <p class="text-muted small mt-2">Vista del carrito de compras</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Operaciones disponibles:</h6>
-                                            <ul>
-                                                <li><strong>Ajustar cantidad</strong>: Aumentar o disminuir unidades</li>
-                                                <li><strong>Eliminar producto</strong>: Quitar items individuales</li>
-                                                <li><strong>Vaciar carrito</strong>: Eliminar todo el contenido</li>
-                                                <li><strong>Actualizar totales</strong>: Ver costos en tiempo real</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Pasos detallados para gestionar el carrito -->
-                                    <div class="card mt-3">
-                                        <div class="card-header bg-primary text-white">
-                                            <h6 class="mb-0">Pasos para Gestionar el Carrito</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6 class="text-primary">1. Ajustar Cantidad de Productos</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-8">
-                                                            <ol>
-                                                                <li>Ubique el producto que desea modificar</li>
-                                                                <li>Use los botones <strong>+</strong> y <strong>-</strong> para aumentar o disminuir la cantidad</li>
-                                                                <li>El total se actualizará automáticamente</li>
-                                                                <li>Puede ingresar directamente la cantidad deseada</li>
-                                                            </ol>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <div class="alert alert-light border">
-                                                                <i class="bi bi-plus-circle text-success me-2"></i>
-                                                                <i class="bi bi-dash-circle text-danger me-2"></i>
-                                                                Botones de cantidad
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <hr>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6 class="text-primary">2. Eliminar Productos del Carrito</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-8">
-                                                            <ol>
-                                                                <li>Encuentre el producto que desea eliminar</li>
-                                                                <li>Haga clic en el ícono de <strong>basura</strong> 🗑️ junto al producto</li>
-                                                                <li>Confirme la eliminación en el mensaje emergente</li>
-                                                                <li>El producto será removido y el total actualizado</li>
-                                                            </ol>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <div class="alert alert-light border">
-                                                                <i class="bi bi-trash text-danger me-2"></i>
-                                                                Eliminar producto
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <hr>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <h6 class="text-primary">3. Vaciar Todo el Carrito</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-8">
-                                                            <ol>
-                                                                <li>Haga clic en el botón <strong>"Vaciar Carrito"</strong></li>
-                                                                <li>Confirme que desea eliminar todos los productos</li>
-                                                                <li>El carrito quedará completamente vacío</li>
-                                                                <li>Podrá comenzar a agregar nuevos productos</li>
-                                                            </ol>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <div class="alert alert-warning border">
-                                                                <i class="bi bi-trash3 text-warning me-2"></i>
-                                                                Vaciar carrito
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Prefactura -->
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="bi bi-file-earmark-text me-2"></i>Proceso de Facturación
-                                    </h5>
-                                    <p>Genere facturas para sus ventas con un proceso detallado paso a paso.</p>
-                                    
-                                    <!-- Pasos detallados para facturación -->
-                                    <div class="card mt-3">
-                                        <div class="card-header bg-success text-white">
-                                            <h6 class="mb-0">Pasos para Procesar Factura</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-8">
-                                                    <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente</li>
-                                                        <li class="mb-2"><strong>Paso 4:</strong> Verifique el stock disponible (no puede exceder el stock actual)</li>
-                                                        <li class="mb-2"><strong>Paso 5:</strong> El subtotal se calculará automáticamente</li>
-                                                        <li class="mb-2"><strong>Paso 6:</strong> Complete los datos del cliente si es necesario</li>
-                                                        <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo</li>
-                                                    </ol>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="alert alert-light border">
-                                                        <i class="bi bi-cart-plus text-success me-2"></i>
-                                                        <strong>Agregar Productos</strong>
-                                                        <br><small>Click en producto</small>
-                                                    </div>
-                                                    <div class="alert alert-info border mt-2">
-                                                        <i class="bi bi-calculator me-2"></i>
-                                                        <strong>Total:</strong> Calculado automáticamente
-                                                    </div>
-                                                    <div class="alert alert-warning border mt-2">
-                                                        <i class="bi bi-box-seam me-2"></i>
-                                                        <strong>Stock:</strong> Validado automáticamente
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Pasos para gestión de productos en factura -->
-                                    <div class="card mt-3">
-                                        <div class="card-header bg-warning text-dark">
-                                            <h6 class="mb-0">Pasos para Gestión de Productos</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-8">
-                                                    <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo</li>
-                                                        <li class="mb-2"><strong>Paso 3:</strong> Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong></li>
-                                                        <li class="mb-2"><strong>Paso 4:</strong> Los productos con stock 0 están ocultos automáticamente</li>
-                                                        <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible</li>
-                                                    </ol>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="alert alert-light border">
-                                                        <i class="bi bi-dash-circle text-danger me-2"></i>
-                                                        <strong>Eliminar</strong>
-                                                        <br><small>Botón X rojo</small>
-                                                    </div>
-                                                    <div class="alert alert-info border mt-2">
-                                                        <i class="bi bi-plus-slash-minus me-2"></i>
-                                                        <strong>Cantidades:</strong> Botones +/-
-                                                    </div>
-                                                    <div class="alert alert-warning border mt-2">
-                                                        <i class="bi bi-info-circle me-2"></i>
-                                                        <strong>Stock 0:</strong> Ocultos automáticamente
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Validaciones y restricciones -->
-                                    <div class="card mt-3">
-                                        <div class="card-header bg-info text-white">
-                                            <h6 class="mb-0">Validaciones y Restricciones</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-8">
-                                                    <ul>
-                                                        <li class="mb-2">• No puede procesar una factura sin productos</li>
-                                                        <li class="mb-2">• Las cantidades no pueden superar el stock disponible</li>
-                                                        <li class="mb-2">• Los precios se calculan automáticamente según el producto</li>
-                                                        <li class="mb-2">• El total se actualiza en tiempo real</li>
-                                                        <li class="mb-2">• Todos los campos obligatorios deben estar completos</li>
-                                                    </ul>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="alert alert-light border">
-                                                        <i class="bi bi-shield-check text-info me-2"></i>
-                                                        <strong>Validación</strong>
-                                                        <br><small>Automática</small>
-                                                    </div>
-                                                    <div class="alert alert-danger border mt-2">
-                                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                                        <strong>Importante:</strong> Revise antes de procesar
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Pasos para cancelar factura -->
-                                    <div class="card mt-3">
-                                        <div class="card-header bg-danger text-white">
-                                            <h6 class="mb-0">Pasos para Cancelar Factura</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-8">
-                                                    <ol>
-                                                        <li class="mb-2"><strong>Paso 1:</strong> Use el botón <strong>"Cancelar"</strong> si necesita anular la factura</li>
-                                                        <li class="mb-2"><strong>Paso 2:</strong> Confirme la cancelación en el mensaje de advertencia</li>
-                                                    </ol>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="alert alert-light border">
-                                                        <i class="bi bi-x-circle text-danger me-2"></i>
-                                                        <strong>Cancelar</strong>
-                                                        <br><small>Con confirmación</small>
-                                                    </div>
-                                                    <div class="alert alert-warning border mt-2">
-                                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                                        <strong>Atención:</strong> Esta acción no se puede deshacer
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <?= renderImagen("carrito", "prefacturar.png") ?>
-                                            <p class="text-muted small mt-2">Proceso de facturación detallado</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Resumen del proceso:</h6>
-                                            <ol>
-                                                <li>Seleccione productos del catálogo</li>
-                                                <li>Ajuste cantidades y verifique stock</li>
-                                                <li>Confirme datos del cliente</li>
-                                                <li>Procese pre-factura</li>
-                                                <li>Descargue factura final</li>
-                                            </ol>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
+                        </div> 
+
+                        <div class="col-md-8 mx-auto">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
                                     <h5 class="mb-0">Guía Rápida</h5>
@@ -1032,7 +689,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                             </div>
-                            
+                        
                             <div class="card mt-4">
                                 <div class="card-header bg-success text-white">
                                     <h5 class="mb-0">Consejos de Compra</h5>
@@ -1056,6 +713,353 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             Reciba notificaciones de ofertas
                                         </li>
                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Catálogo de Productos -->
+                        <div class="card mt-4 mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-grid-3x3-gap me-2"></i>Catálogo de Productos
+                                </h5>
+                                <p>Acceda al catálogo completo de productos disponibles para su compra.</p>
+                                
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista principal del catálogo</h6>
+                                        <?= renderImagen("catalogo", "vista.png") ?>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Características:</h6>
+                                        <ul>
+                                            <li>Navegación por categorías</li>
+                                            <li>Búsqueda de productos</li>
+                                            <li>Filtros avanzados</li>
+                                            <li>Visualización de precios</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-info mt-3">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            En la parte superior encontrará pestañas para acceder a <strong>Combos Promocionales</strong> con ofertas especiales.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para agregar productos al carrito -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Agregar Productos al Carrito</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <ol>
+                                                    <li class="mb-2">Navegue por el catálogo y encuentre el producto deseado</li>
+                                                    <li class="mb-2">Haga clic en el botón <strong>"Agregar"</strong> en la parte izquierda del producto</li>
+                                                    <li class="mb-2">El producto se añadirá automáticamente a su carrito</li>
+                                                    <li>Verá un mensaje de confirmación y el contador del carrito se actualizará</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <?= renderImagen("catalogo", "agregar.png") ?>
+                                                <p class="text-muted small mt-2">Botón para agregar producto al carrito</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Combos Promocionales -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-tags me-2"></i>Combos Promocionales
+                                </h5>
+                                <p>Descubra nuestras ofertas especiales y paquetes con descuento.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <?= renderImagen("catalogo", "vista-2.png") ?>
+                                        <p class="text-muted small mt-2">Vista de combos promocionales</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Ventajas de los combos:</h6>
+                                        <ul>
+                                            <li>Precios especiales</li>
+                                            <li>Productos complementarios</li>
+                                            <li>Ahorro garantizado</li>
+                                            <li>Stock limitado</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Carrito de Compras -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-cart3 me-2"></i>Gestión del Carrito
+                                </h5>
+                                <p>Administre los productos que desea comprar antes de finalizar su pedido.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <?= renderImagen("carrito", "carrito.png") ?>
+                                        <p class="text-muted small mt-2">Vista del carrito de compras</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Ajustar cantidad</strong>: Aumentar o disminuir unidades</li>
+                                            <li><strong>Eliminar producto</strong>: Quitar items individuales</li>
+                                            <li><strong>Vaciar carrito</strong>: Eliminar todo el contenido</li>
+                                            <li><strong>Actualizar totales</strong>: Ver costos en tiempo real</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos detallados para gestionar el carrito -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pasos para Gestionar el Carrito</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">1. Ajustar Cantidad de Productos</h6>
+                                                <div class="row">
+                                                    <div class="col-md-8">
+                                                        <ol>
+                                                            <li>Ubique el producto que desea modificar</li>
+                                                            <li>Use los botones <strong>+</strong> y <strong>-</strong> para aumentar o disminuir la cantidad</li>
+                                                            <li>El total se actualizará automáticamente</li>
+                                                            <li>Puede ingresar directamente la cantidad deseada</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <i class="bi bi-dash-circle text-danger me-2"></i>
+                                                            Botones de cantidad
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Eliminar Productos del Carrito</h6>
+                                                <div class="row">
+                                                    <div class="col-md-8">
+                                                        <ol>
+                                                            <li>Encuentre el producto que desea eliminar</li>
+                                                            <li>Haga clic en el ícono de <strong>basura</strong> 🗑️ junto al producto</li>
+                                                            <li>Confirme la eliminación en el mensaje emergente</li>
+                                                            <li>El producto será removido y el total actualizado</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-trash text-danger me-2"></i>
+                                                            Eliminar producto
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">3. Vaciar Todo el Carrito</h6>
+                                                <div class="row">
+                                                    <div class="col-md-8">
+                                                        <ol>
+                                                            <li>Haga clic en el botón <strong>"Vaciar Carrito"</strong></li>
+                                                            <li>Confirme que desea eliminar todos los productos</li>
+                                                            <li>El carrito quedará completamente vacío</li>
+                                                            <li>Podrá comenzar a agregar nuevos productos</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="alert alert-warning border">
+                                                            <i class="bi bi-trash3 text-warning me-2"></i>
+                                                            Vaciar carrito
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Prefactura -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-file-earmark-text me-2"></i>Proceso de Facturación
+                                </h5>
+                                <p>Genere facturas para sus ventas con un proceso detallado paso a paso.</p>
+                                
+                                <!-- Pasos detallados para facturación -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Procesar Factura</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique el stock disponible (no puede exceder el stock actual)</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> El subtotal se calculará automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Complete los datos del cliente si es necesario</li>
+                                                    <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-cart-plus text-success me-2"></i>
+                                                    <strong>Agregar Productos</strong>
+                                                    <br><small>Click en producto</small>
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-calculator me-2"></i>
+                                                    <strong>Total:</strong> Calculado automáticamente
+                                                </div>
+                                                <div class="alert alert-warning border mt-2">
+                                                    <i class="bi bi-box-seam me-2"></i>
+                                                    <strong>Stock:</strong> Validado automáticamente
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para gestión de productos en factura -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6 class="mb-0">Pasos para Gestión de Productos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong></li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Los productos con stock 0 están ocultos automáticamente</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-dash-circle text-danger me-2"></i>
+                                                    <strong>Eliminar</strong>
+                                                    <br><small>Botón X rojo</small>
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-plus-slash-minus me-2"></i>
+                                                    <strong>Cantidades:</strong> Botones +/-
+                                                </div>
+                                                <div class="alert alert-warning border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Stock 0:</strong> Ocultos automáticamente
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Validaciones y restricciones -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Validaciones y Restricciones</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <ul>
+                                                    <li class="mb-2">• No puede procesar una factura sin productos</li>
+                                                    <li class="mb-2">• Las cantidades no pueden superar el stock disponible</li>
+                                                    <li class="mb-2">• Los precios se calculan automáticamente según el producto</li>
+                                                    <li class="mb-2">• El total se actualiza en tiempo real</li>
+                                                    <li class="mb-2">• Todos los campos obligatorios deben estar completos</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-shield-check text-info me-2"></i>
+                                                    <strong>Validación</strong>
+                                                    <br><small>Automática</small>
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                                    <strong>Importante:</strong> Revise antes de procesar
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para cancelar factura -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Cancelar Factura</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Use el botón <strong>"Cancelar"</strong> si necesita anular la factura</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Confirme la cancelación en el mensaje de advertencia</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-x-circle text-danger me-2"></i>
+                                                    <strong>Cancelar</strong>
+                                                    <br><small>Con confirmación</small>
+                                                </div>
+                                                <div class="alert alert-warning border mt-2">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                                    <strong>Atención:</strong> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <?= renderImagen("carrito", "prefacturar.png") ?>
+                                        <p class="text-muted small mt-2">Proceso de facturación detallado</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Resumen del proceso:</h6>
+                                        <ol>
+                                            <li>Seleccione productos del catálogo</li>
+                                            <li>Ajuste cantidades y verifique stock</li>
+                                            <li>Confirme datos del cliente</li>
+                                            <li>Procese pre-factura</li>
+                                            <li>Descargue factura final</li>
+                                        </ol>
+                                    </div>
                                 </div>
                             </div>
                         </div>
