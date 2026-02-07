@@ -2132,35 +2132,33 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Pasos para modificar categoría -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
+                                    <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Categoría</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la categoría en la lista</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 para editar</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Modifique los campos necesarios (nombre, descripción, características)</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Actualice el estado si es necesario</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Actualizar Categoría"</strong> para guardar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la categoría en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-warning me-2"></i>
-                                                    <strong>Modificar</strong>
-                                                    <br><small>Ícono lápiz</small>
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Puede agregar nuevas características
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Pasos para eliminar categoría -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
@@ -2168,23 +2166,21 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la categoría que desea eliminar</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ para eliminar</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique que no haya productos asociados antes de eliminar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la categoría que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Eliminar</strong>
-                                                    <br><small>Ícono X rojo</small>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
                                                 </div>
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong> Verifique productos asociados
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
                                         </div>
