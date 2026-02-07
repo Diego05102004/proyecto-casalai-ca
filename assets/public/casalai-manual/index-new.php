@@ -1077,7 +1077,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             "Ver resumen de compra"
                         ],
                         "instrucciones" => [
-                            "Haga clic en 'Agregar al carrito' para incluir productos",
+                            "Haga clic en 'Agregar al carrito' para registrar productos",
                             "Ajuste las cantidades según necesite",
                             "Revise el resumen antes de proceder al pago"
                         ]
@@ -1248,10 +1248,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir recepción -->
+                                <!-- Pasos detallados para registrar recepción -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nueva Recepción</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nueva Recepción</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -1591,10 +1591,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir marca -->
+                                <!-- Pasos detallados para registrar marca -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nueva Marca</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nueva Marca</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -1726,10 +1726,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir modelo -->
+                                <!-- Pasos detallados para registrar modelo -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nuevo Modelo</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nuevo Modelo</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -1864,15 +1864,16 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li><strong>Detallar</strong>: Ver información completa del producto</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
                                             <li><strong>Eliminar</strong>: Remover producto</li>
+                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
                                             <li><strong>Reporte</strong>: Generar reportes</li>
                                         </ul>
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir producto -->
+                                <!-- Pasos detallados para registrar producto -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nuevo Producto</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nuevo Producto</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -2087,10 +2088,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir categoría -->
+                                <!-- Pasos detallados para registrar categoría -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nueva Categoría</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nueva Categoría</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -2309,7 +2310,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li>Dirección</li>
                                             <li>N° de teléfono (Principal y Secundario)</li>
                                             <li>Observaciones</li>
-                                            <li>Estatus (Habilitado/Inhabilitado)</li>
+                                            <li>Estatus</li>
                                             <li>Suministro de los proveedores</li>
                                         </ul>
                                     </div>
@@ -2321,15 +2322,16 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li><strong>Detallar</strong>: Ver información completa del proveedor</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
                                             <li><strong>Eliminar</strong>: Remover proveedor</li>
+                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
                                             <li><strong>Reporte</strong>: Generar reportes</li>
                                         </ul>
                                     </div>
                                 </div>
 
-                                <!-- Pasos detallados para incluir proveedor -->
+                                <!-- Pasos detallados para registrar proveedor -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nuevo Proveedor</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nuevo Proveedor</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -2546,10 +2548,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir cliente -->
+                                <!-- Pasos detallados para registrar cliente -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nuevo Cliente</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nuevo Cliente</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -2707,10 +2709,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                                 
-                                <!-- Pasos detallados para incluir usuario -->
+                                <!-- Pasos detallados para registrar usuario -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nuevo Usuario</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nuevo Usuario</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -2984,10 +2986,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
 
-                                <!-- Pasos detallados para incluir rol -->
+                                <!-- Pasos detallados para registrar rol -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nueva Rol</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nueva Rol</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -3136,15 +3138,16 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li><strong>Detallar</strong>: Ver información completa</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
                                             <li><strong>Eliminar</strong>: Remover cuenta</li>
+                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
                                             <li><strong>Conciliación</strong>: Balance de cuentas</li>
                                         </ul>
                                     </div>
                                 </div>
 
-                                <!-- Pasos detallados para incluir cuenta bancaria -->
+                                <!-- Pasos detallados para registrar cuenta bancaria -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Incluir Nueva Cuenta Bancaria</h6>
+                                        <h6 class="mb-0">Pasos para Registrar Nueva Cuenta Bancaria</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -3356,18 +3359,131 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li>Precio especial</li>
                                             <li>Descuento aplicado</li>
                                             <li>Fecha de vigencia</li>
-                                            <li>Estado (activo/inactivo)</li>
+                                            <li>Estatus</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
-                                            <li><strong>Crear</strong>: Nuevo combo</li>
+                                            <li><strong>Registrar</strong>: Nuevo combo</li>
                                             <li><strong>Modificar</strong>: Actualizar productos</li>
                                             <li><strong>Eliminar</strong>: Desactivar combo</li>
-                                            <li><strong>Duplicar</strong>: Copiar combo existente</li>
-                                            <li><strong>Promocionar</strong>: Destacar combo</li>
+                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
                                         </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos detallados para registrar combo -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Registrar Nuevo Rol</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese una <strong>descripción</strong> breve.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Agregue los <strong>productos</strong> y la <strong>cantidad</strong> de cada uno.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Guardar Combo"</strong> para confirmar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-person-plus text-success me-2"></i>
+                                                    <strong>Nuevo Combo:</strong><br> Botón "+" verde
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-person me-2"></i>
+                                                    <strong>Cantidad de Productos:</strong> Mínimo 2 productos
+                                                </div>
+                                                <div class="alert alert-light border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para modificar combo -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Modificar Combo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el combo en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para eliminar combo -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Eliminar Combo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el combo que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus del Combo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del combo.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Confirmar"</strong> para realizar el cambio.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border mt-2">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 
