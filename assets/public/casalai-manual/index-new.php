@@ -2074,17 +2074,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <ul>
                                             <li>Nombre de la categoría</li>
                                             <li>Características</li>
-                                            <li>Descripción</li>
-                                            <li>Estado</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
-                                        <h6>Requisitos importantes:</h6>
+                                        <h6>Operaciones disponibles:</h6>
                                         <ul>
-                                            <li>Debe haber al menos una característica</li>
-                                            <li>Nombre único</li>
-                                            <li>Descripción clara</li>
-                                            <li>Estado definido</li>
+                                            <li><strong>Registrar</strong>: Nueva categoría</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Modificar</strong>: Actualizar datos</li>
+                                            <li><strong>Eliminar</strong>: Remover categoría</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -2096,29 +2094,36 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre de la categoría</strong> (único y descriptivo)</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Agregue una <strong>descripción clara</strong> de la categoría</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Defina las <strong>características específicas</strong> para esta categoría</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Configure el <strong>estado</strong> (activo/inactivo)</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Guardar Categoría"</strong> para confirmar</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Agregue las <strong>características específicas</strong> para la categoría.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-folder-plus text-success me-2"></i>
-                                                    <strong>Nueva Categoría</strong>
-                                                    <br><small>Botón "+" verde</small>
+                                                    <i class="bi bi-person-plus text-success me-2"></i>
+                                                    <strong>Nueva Categoría:</strong><br> Botón "+" verde
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Nombre:</strong> Debe ser único
+                                                    <i class="bi bi-person me-2"></i>
+                                                    <strong>Nombre de Categoría:</strong> (único en el sistema)
                                                 </div>
-                                                <div class="alert alert-warning border mt-2">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
                                                     <i class="bi bi-list-check me-2"></i>
-                                                    <strong>Características:</strong> Mínimo 1 requerida
+                                                    <strong>Características:</strong><br> Mínimo 1 requerida
                                                 </div>
                                             </div>
                                         </div>
@@ -2749,7 +2754,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-person me-2"></i>
-                                                    <strong>Nombre de usuario:</strong> (único en el sistema)
+                                                    <strong>Nombre de Usuario:</strong> (único en el sistema)
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-envelope me-2"></i>
