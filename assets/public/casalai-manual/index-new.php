@@ -543,6 +543,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </ol>
                         </div>
                         <div class="col-md-6">
+                            <h6 class="text-success">Ventana de Conversión de Dolar</h6>
                             <?= renderImagen("dashboard", "conversion-dolar-abierto.png") ?>
                         </div>
                     </div>
@@ -564,6 +565,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             <p>Para ver todas las notificaciones, haga clic en "Ver más" en el panel de notificaciones.</p>
                         </div>
                         <div class="col-md-6">
+                            <h6 class="text-success">Central de Notificaciones</h6>
                             <?= renderImagen("dashboard", "notificaciones-abiertas.png") ?>
                         </div>
                     </div>
@@ -607,22 +609,26 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             <div class="col-md-6">
                                 <h4>Acceso al Perfil</h4>
                                 <p>Haga clic en su nombre de usuario en la esquina superior derecha para acceder a su perfil.</p>
+                                <h6 class="text-success">Menú de Perfíl</h6>
                                 <?= renderImagen("dashboard", "mi-cuenta.png") ?>
                             </div>
                             <div class="col-md-6">
                                 <h4>Editar Información Personal</h4>
                                 <p>En la sección de perfil podrá actualizar su información personal.</p>
+                                <h6 class="text-success">Actualización de Datos Personales</h6>
                                 <?= renderImagen("perfil", "perfil-informacion-personal.png") ?>
+                            </div>
+                            <div class="col-md-6">
+                                <h4>Editar Correo</h4>
+                                <p>En la sección de perfil podrá actualizar y cambiar su correo Electronico.</p>
+                                <h6 class="text-success">Actualización de Correo Electrónico</h6>
+                                <?= renderImagen("perfil", "perfil-cuenta.png") ?>
                             </div>
                             <div class="col-md-6">
                                 <h4>Editar Contraseña</h4>
                                 <p>En la sección de perfil podrá actualizar y cambiar su contraseña.</p>
+                                <h6 class="text-success">Actualización de Contraseña</h6>
                                 <?= renderImagen("perfil", "perfil-password.png") ?>
-                            </div>
-                            <div class="col-md-6">
-                                <h4>Editar Correo   </h4>
-                                <p>En la sección de perfil podrá actualizar y cambiar su correo Electronico.</p>
-                                <?= renderImagen("perfil", "perfil-cuenta.png") ?>
                             </div>
                         </div>
                         
@@ -759,15 +765,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <ol>
-                                                    <li class="mb-2">Navegue por el catálogo y encuentre el producto deseado</li>
-                                                    <li class="mb-2">Haga clic en el botón <strong>"Agregar"</strong> en la parte izquierda del producto</li>
-                                                    <li class="mb-2">El producto se añadirá automáticamente a su carrito</li>
-                                                    <li>Verá un mensaje de confirmación y el contador del carrito se actualizará</li>
+                                                    <li class="mb-2">Navegue por el catálogo y encuentre el producto deseado.</li>
+                                                    <li class="mb-2">Haga clic en el botón <strong>"Agregar"</strong> en la parte izquierda del producto.</li>
+                                                    <li class="mb-2">El producto se añadirá automáticamente a su carrito.</li>
+                                                    <li>Verá un mensaje de confirmación y el contador del carrito se actualizará.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-6">
+                                                <h6 class="text-success">Botón para agregar producto al carrito</h6>
                                                 <?= renderImagen("catalogo", "agregar.png") ?>
-                                                <p class="text-muted small mt-2">Botón para agregar producto al carrito</p>
                                             </div>
                                         </div>
                                     </div>
@@ -784,11 +790,14 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 <p>Descubra nuestras ofertas especiales y paquetes con descuento.</p>
                                 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div>
+                                        <h6 class="text-success">Vista de combos promocionales</h6>
                                         <?= renderImagen("catalogo", "vista-2.png") ?>
-                                        <p class="text-muted small mt-2">Vista de combos promocionales</p>
                                     </div>
-                                    <div class="col-md-6">
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8 mx-auto">
                                         <h6>Ventajas de los combos:</h6>
                                         <ul>
                                             <li>Precios especiales</li>
@@ -810,11 +819,14 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 <p>Administre los productos que desea comprar antes de finalizar su pedido.</p>
                                 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div>
+                                        <h6 class="text-success">Vista del carrito de compras</h6>
                                         <?= renderImagen("carrito", "carrito.png") ?>
-                                        <p class="text-muted small mt-2">Vista del carrito de compras</p>
                                     </div>
-                                    <div class="col-md-6">
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8 mx-auto">
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Ajustar cantidad</strong>: Aumentar o disminuir unidades</li>
@@ -837,10 +849,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <div class="row">
                                                     <div class="col-md-8">
                                                         <ol>
-                                                            <li>Ubique el producto que desea modificar</li>
-                                                            <li>Use los botones <strong>+</strong> y <strong>-</strong> para aumentar o disminuir la cantidad</li>
-                                                            <li>El total se actualizará automáticamente</li>
-                                                            <li>Puede ingresar directamente la cantidad deseada</li>
+                                                            <li><strong>Paso 1:</strong> Ubique el producto que desea modificar.</li>
+                                                            <li><strong>Paso 2:</strong> Use los botones <strong>+</strong> y <strong>-</strong> para aumentar o disminuir la cantidad.</li>
+                                                            <li><strong>Paso 3:</strong> El total se actualizará automáticamente.</li>
+                                                            <li><strong>Paso 4:</strong> Puede ingresar directamente la cantidad deseada.</li>
                                                         </ol>
                                                     </div>
                                                     <div class="col-md-4">
@@ -862,10 +874,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <div class="row">
                                                     <div class="col-md-8">
                                                         <ol>
-                                                            <li>Encuentre el producto que desea eliminar</li>
-                                                            <li>Haga clic en el ícono de <strong>basura</strong> 🗑️ junto al producto</li>
-                                                            <li>Confirme la eliminación en el mensaje emergente</li>
-                                                            <li>El producto será removido y el total actualizado</li>
+                                                            <li><strong>Paso 1:</strong> Encuentre el producto que desea eliminar.</li>
+                                                            <li><strong>Paso 2:</strong> Haga clic en el ícono de <strong>basura</strong> 🗑️ junto al producto.</li>
+                                                            <li><strong>Paso 3:</strong> Confirme la eliminación en el mensaje emergente.</li>
+                                                            <li><strong>Paso 4:</strong> El producto será removido y el total actualizado.</li>
                                                         </ol>
                                                     </div>
                                                     <div class="col-md-4">
@@ -886,10 +898,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 <div class="row">
                                                     <div class="col-md-8">
                                                         <ol>
-                                                            <li>Haga clic en el botón <strong>"Vaciar Carrito"</strong></li>
-                                                            <li>Confirme que desea eliminar todos los productos</li>
-                                                            <li>El carrito quedará completamente vacío</li>
-                                                            <li>Podrá comenzar a agregar nuevos productos</li>
+                                                            <li><strong>Paso 1:</strong> Haga clic en el botón <strong>"Vaciar Carrito"</strong>.</li>
+                                                            <li><strong>Paso 2:</strong> Confirme que desea eliminar todos los productos.</li>
+                                                            <li><strong>Paso 3:</strong> El carrito quedará completamente vacío.</li>
+                                                            <li><strong>Paso 4:</strong> Podrá comenzar a agregar nuevos productos.</li>
                                                         </ol>
                                                     </div>
                                                     <div class="col-md-4">
@@ -923,13 +935,13 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique el stock disponible (no puede exceder el stock actual)</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> El subtotal se calculará automáticamente</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Complete los datos del cliente si es necesario</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique el stock disponible (no puede exceder el stock actual).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> El subtotal se calculará automáticamente.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Complete los datos del cliente si es necesario.</li>
+                                                    <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-4">
@@ -953,18 +965,18 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Pasos para gestión de productos en factura -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-warning text-dark">
+                                    <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Gestión de Productos</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong></li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Los productos con stock 0 están ocultos automáticamente</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Los productos con stock 0 están ocultos automáticamente.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-4">
@@ -988,18 +1000,18 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 
                                 <!-- Validaciones y restricciones -->
                                 <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
+                                    <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Validaciones y Restricciones</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ul>
-                                                    <li class="mb-2">• No puede procesar una factura sin productos</li>
-                                                    <li class="mb-2">• Las cantidades no pueden superar el stock disponible</li>
-                                                    <li class="mb-2">• Los precios se calculan automáticamente según el producto</li>
-                                                    <li class="mb-2">• El total se actualiza en tiempo real</li>
-                                                    <li class="mb-2">• Todos los campos obligatorios deben estar completos</li>
+                                                    <li class="mb-2">No puede procesar una factura sin productos.</li>
+                                                    <li class="mb-2">Las cantidades no pueden superar el stock disponible.</li>
+                                                    <li class="mb-2">Los precios se calculan automáticamente según el producto.</li>
+                                                    <li class="mb-2">El total se actualiza en tiempo real.</li>
+                                                    <li class="mb-2">Todos los campos obligatorios deben estar completos.</li>
                                                 </ul>
                                             </div>
                                             <div class="col-md-4">
@@ -1045,10 +1057,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
                                 
-                                <div class="row">
+                                <div class="row mt-2">
                                     <div class="col-md-6">
+                                        <h6 class="text-success">Proceso de facturación detallado</h6>
                                         <?= renderImagen("carrito", "prefacturar.png") ?>
-                                        <p class="text-muted small mt-2">Proceso de facturación detallado</p>
                                     </div>
                                     <div class="col-md-6">
                                         <h6>Resumen del proceso:</h6>
