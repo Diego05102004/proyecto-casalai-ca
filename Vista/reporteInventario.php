@@ -58,6 +58,7 @@
                 <button id="generarReporteRecepcionBtn" class="btn btn-primary w-100">Generar Reporte</button>
             </div>
         </div>
+        <div class="row g-3 align-items-center mt-2" id="parametrosIndividualesRecep"></div>
     </div>
 
     <!-- Mensaje de error -->
@@ -113,7 +114,7 @@
 
     <!-- Reporte 3: Recepciones mensuales -->
     <div class="report-section" id="reporteMensualRecepcion">
-        <h2 class="titulo-form"> Recepciones Mensuales</h2>
+        <h2 class="titulo-form">Recepciones Mensuales</h2>
         <div class="chart-container">
             <div class="chart-canvas">
                 <canvas id="graficoMensualRecepcion" width="400" height="400"></canvas>
@@ -138,7 +139,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script>
     // ============================
     // SECCIÓN DE RECEPCIÓN
@@ -155,14 +155,7 @@
         const finDate = fin ? new Date(fin + 'T23:59:59') : null;
 
         return datos.filter(d => {
-            const fechaDato =
-                d.fecha ||
-                d.fecha_recepcion ||
-                d.fechaRecepcion ||
-                d.created_at ||
-                d.mes ||
-                d.fecha_registro ||
-                null;
+            const fechaDato = d.fecha || d.fecha_recepcion || d.created_at || null;
 
             if (!fechaDato) return true;
 
@@ -183,24 +176,44 @@
         });
     }
 
+    // Agrupar por etiqueta sumando value
+    function agruparPorLabel(rows) {
+        const map = new Map();
+        (rows || []).forEach(r => {
+            const key = String(r.label ?? '').trim() || 'Sin nombre';
+            const val = Number(r.value ?? 0) || 0;
+            map.set(key, (map.get(key) || 0) + val);
+        });
+        return Array.from(map.entries()).map(([label, value]) => ({ label, value }));
+    }
+
 function renderReporteRecepcion(datos, labelKey, valueKey, canvasId, tablaId, titulo, tipoGrafica) {
+    // Destruir gráfico previo si no hay datos, para no dejar gráfico viejo
     if (!datos || datos.length === 0) {
-        document.getElementById(tablaId).innerHTML = `
-            <div class="alert alert-warning text-center">
-                📭 No hay datos disponibles para el período seleccionado
-            </div>`;
+        if (canvasId === 'graficoProveedores' && graficoProveedores) {
+            graficoProveedores.destroy(); graficoProveedores = null;
+        } else if (canvasId === 'graficoProductos' && graficoProductos) {
+            graficoProductos.destroy(); graficoProductos = null;
+        } else if (canvasId === 'graficoMensualRecepcion' && graficoMensualRecepcion) {
+            graficoMensualRecepcion.destroy(); graficoMensualRecepcion = null;
+        }
+        const tablaEl = document.getElementById(tablaId);
+        if (tablaEl) {
+            tablaEl.innerHTML = `
+                <div class="alert alert-warning text-center">
+                    📭 No hay datos disponibles para el período seleccionado
+                </div>`;
+        }
+        // limpiar canvas
+        const canvas = document.getElementById(canvasId);
+        if (canvas) { const ctx = canvas.getContext('2d'); ctx && ctx.clearRect(0,0,canvas.width,canvas.height); }
         return;
     }
 
     // **CORRECCIÓN: Mapear los campos correctamente**
-    const labels = datos.map(d => {
-        return d[labelKey] || d.label || d.nombre_proveedor || d.nombre_producto || d.mes || 'Sin nombre';
-    });
+    const labels = datos.map(d => (d[labelKey] ?? d.label ?? 'Sin nombre'));
     
-    const data = datos.map(d => {
-        const valor = d[valueKey] || d.value || d.total || d.cantidad || 0;
-        return parseInt(valor) || 0;
-    });
+    const data = datos.map(d => Number(d[valueKey] ?? d.value ?? 0) || 0);
 
     const total = data.reduce((a, b) => a + b, 0);
     const colores = generarColores(labels.length);
@@ -288,10 +301,25 @@ function renderReporteRecepcion(datos, labelKey, valueKey, canvasId, tablaId, ti
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const value = context.parsed;
-                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                            return `${value} (${percentage}%)`;
+                            // Robust numeric extraction for tooltips
+                            const raw = context.raw;
+                            let value = 0;
+                            if (typeof context.parsed === 'number') {
+                                value = context.parsed;
+                            } else if (context.parsed && typeof context.parsed === 'object') {
+                                value = Number((context.parsed.x ?? context.parsed.y ?? raw ?? 0));
+                            } else {
+                                value = Number(raw ?? 0);
+                            }
+                            const nums = (context.dataset.data || []).map(d => {
+                                if (typeof d === 'number') return d;
+                                if (d && typeof d === 'object') return Number(d.x ?? d.y ?? 0);
+                                const n = Number(d ?? 0); return isNaN(n) ? 0 : n;
+                            });
+                            const total = nums.reduce((a,b)=> a + (isNaN(b)?0:b), 0);
+                            const pct = total > 0 ? ` (${((value/total)*100).toFixed(1)}%)` : '';
+                            const valFmt = isNaN(value) ? 0 : value;
+                            return `${valFmt.toLocaleString(undefined,{maximumFractionDigits:2})}${pct}`;
                         }
                     }
                 }
@@ -311,11 +339,10 @@ function renderReporteRecepcion(datos, labelKey, valueKey, canvasId, tablaId, ti
 
 // **FUNCIÓN AUXILIAR PARA HEADERS DE TABLA**
 function getHeaderLabelRecepcion(labelKey) {
+
     const headers = {
-        'nombre_proveedor': 'Proveedor',
-        'nombre_producto': 'Producto', 
-        'mes': 'Mes',
-        'label': 'Descripción'
+        'label': 'Descripción',
+        'mes': 'Mes'
     };
     return headers[labelKey] || 'Item';
 }
@@ -328,44 +355,176 @@ function getHeaderLabelRecepcion(labelKey) {
         } else if (seleccion === 'proveedores') {
             document.getElementById('reporteProveedores').style.display = 'block';
             document.getElementById('reporteProductos').style.display = 'none';
+            if (graficoProductos) { graficoProductos.destroy(); graficoProductos = null; }
             document.getElementById('reporteMensualRecepcion').style.display = 'none';
+            if (graficoMensualRecepcion) { graficoMensualRecepcion.destroy(); graficoMensualRecepcion = null; }
         } else if (seleccion === 'productos') {
             document.getElementById('reporteProveedores').style.display = 'none';
+            if (graficoProveedores) { graficoProveedores.destroy(); graficoProveedores = null; }
             document.getElementById('reporteProductos').style.display = 'block';
             document.getElementById('reporteMensualRecepcion').style.display = 'none';
+            if (graficoMensualRecepcion) { graficoMensualRecepcion.destroy(); graficoMensualRecepcion = null; }
         } else if (seleccion === 'mensual') {
             document.getElementById('reporteProveedores').style.display = 'none';
+            if (graficoProveedores) { graficoProveedores.destroy(); graficoProveedores = null; }
             document.getElementById('reporteProductos').style.display = 'none';
+            if (graficoProductos) { graficoProductos.destroy(); graficoProductos = null; }
             document.getElementById('reporteMensualRecepcion').style.display = 'block';
         }
+        buildParametrosUIRecep();
+    }
+
+    // Distinct helper
+    function distinctRecep(arr, key){
+        const s = new Map();
+        (arr||[]).forEach(r=>{ if(r && r[key]!==undefined && r[key]!==null){ const raw=String(r[key]).trim(); const norm=raw.toLowerCase(); if(!s.has(norm)) s.set(norm, raw); }});
+        return Array.from(s.values());
+    }
+
+    function buildParametrosUIRecep(){
+        const cont = document.getElementById('parametrosIndividualesRecep');
+        if(!cont) return;
+        const tipo = document.getElementById('selectReporteRecepcion').value;
+        let html = '';
+        if (tipo === 'proveedores'){
+            const provs = Array.from(new Set(distinctRecep(recepcionesProveedor,'label'))).sort();
+            html += `
+            <div class="col-md-3">
+                <label>Proveedor</label>
+                <select id="paramProvRecep" class="form-select">
+                    <option value="">Todos</option>
+                    ${provs.map(p=>`<option value="${p}">${p}</option>`).join('')}
+                </select>
+            </div>`;
+        } else if (tipo === 'productos'){
+            const prods = Array.from(new Set(distinctRecep(productosRecibidos,'label'))).sort();
+            const provs = Array.from(new Set(distinctRecep(productosRecibidos,'proveedor'))).sort();
+            html += `
+            <div class="col-md-4">
+                <label>Producto</label>
+                <select id="paramProdRecep" class="form-select">
+                    <option value="">Todos</option>
+                    ${prods.map(p=>`<option value="${p}">${p}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>Proveedor</label>
+                <select id="paramProvProdRecep" class="form-select">
+                    <option value="">Todos</option>
+                    ${provs.map(p=>`<option value="${p}">${p}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Top</label>
+                <select id="paramTopNRecep" class="form-select">
+                    <option value="0">Todos</option>
+                    <option value="10">Top 10</option>
+                    <option value="20">Top 20</option>
+                    <option value="50">Top 50</option>
+                </select>
+            </div>`;
+        } else if (tipo === 'mensual'){
+            const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            html += `
+            <div class="col-md-3">
+                <label>Mes</label>
+                <select id="paramMesRecep" class="form-select">
+                    <option value="">Todos</option>
+                    ${meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Año</label>
+                <input id="paramAnioRecep" type="number" class="form-control" placeholder="Ej: 2025" />
+            </div>`;
+        }
+        cont.innerHTML = html;
+    }
+
+    function getParametrosSeleccionadosRecep(){
+        return {
+            proveedor: document.getElementById('paramProvRecep')?.value || '',
+            producto: document.getElementById('paramProdRecep')?.value || '',
+            proveedorProducto: document.getElementById('paramProvProdRecep')?.value || '',
+            topN: parseInt(document.getElementById('paramTopNRecep')?.value || '0',10) || 0,
+            mes: document.getElementById('paramMesRecep')?.value || '',
+            anio: document.getElementById('paramAnioRecep')?.value || ''
+        };
+    }
+
+    function aplicarMesAnioRecep(datos, params){
+        if(!datos) return [];
+        const m = params.mes ? parseInt(params.mes,10) : null;
+        let y = params.anio ? parseInt(params.anio,10) : null;
+        const currentYear = new Date().getFullYear();
+        if(!(y>0) || y>currentYear) y = null;
+        if(!m && !y) return datos;
+        const mesesES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        return (datos||[]).filter(d=>{
+            let date=null;
+            const cruda=d.fecha||d.fecha_recepcion||d.created_at||null;
+            if(cruda){ const tmp=new Date(cruda); if(!isNaN(tmp)) date=tmp; }
+            let mesCampo=d.mes_num||d.mes||null; let anioCampo=d.anio||d.año||d.year||null;
+            if(typeof mesCampo==='string'){ const idx=mesesES.indexOf(mesCampo.toLowerCase()); if(idx>=0) mesCampo=idx+1; }
+            const mes = date ? (date.getMonth()+1) : (mesCampo? parseInt(mesCampo,10): null);
+            const anio = date ? date.getFullYear() : (anioCampo? parseInt(anioCampo,10): null);
+            if(m && mes!==m) return false; if(y && anio!==y) return false; return true;
+        });
     }
 
     function generarReportesRecepcion() {
         const tipoGrafica = document.getElementById('tipoGraficaRecepcion').value;
         const inicio = document.getElementById('fechaInicioRecepcion').value;
         const fin = document.getElementById('fechaFinRecepcion').value;
+        const seleccion = document.getElementById('selectReporteRecepcion').value;
 
-        const recepcionesProveedorFiltrado = filtrarPorFechas(
-            recepcionesProveedor.filter(r => !r.estatus || r.estatus.toLowerCase() !== 'anulada'),
-            inicio,
-            fin
-        );
-
-        const productosRecibidosFiltrado = filtrarPorFechas(
-            productosRecibidos.filter(r => !r.estatus || r.estatus.toLowerCase() !== 'anulada'),
-            inicio,
-            fin
-        );
-
-        const recepcionMensualFiltrado = filtrarPorFechas(
-            recepcionMensual.filter(r => !r.estatus || r.estatus.toLowerCase() !== 'anulada'),
-            inicio,
-            fin
-        );
+        // Filtrar por fecha solo donde aplica (datasets con campo fecha)
+        const recepcionesProveedorFiltrado = filtrarPorFechas(recepcionesProveedor, inicio, fin);
+        const productosRecibidosFiltrado  = filtrarPorFechas(productosRecibidos, inicio, fin);
+        const recepcionMensualFiltrado    = recepcionMensual.slice();
         try {
-            renderReporteRecepcion(recepcionesProveedorFiltrado, "nombre_proveedor", "total", "graficoProveedores", "tablaProveedores", "Recepciones por Proveedor", tipoGrafica);
-            renderReporteRecepcion(productosRecibidosFiltrado, "nombre_producto", "total", "graficoProductos", "tablaProductos", "Productos más Recibidos", tipoGrafica);
-            renderReporteRecepcion(recepcionMensualFiltrado, "mes", "total", "graficoMensualRecepcion", "tablaMensualRecepcion", "Recepciones Mensuales", tipoGrafica);
+            // Aplicar parámetros dinámicos solo cuando no es 'todos'
+            const params = getParametrosSeleccionadosRecep();
+            let provFinal = recepcionesProveedorFiltrado;
+            let prodFinal = productosRecibidosFiltrado;
+            let mensFinal = recepcionMensualFiltrado;
+
+            if (seleccion === 'proveedores' && params.proveedor){
+                const norm = params.proveedor.trim().toLowerCase();
+                provFinal = provFinal.filter(r=> String(r.label||'').trim().toLowerCase()===norm);
+            }
+            if (seleccion === 'productos'){
+                if (params.producto){
+                    const normP = params.producto.trim().toLowerCase();
+                    prodFinal = prodFinal.filter(r=> String(r.label||'').trim().toLowerCase()===normP);
+                }
+                if (params.proveedorProducto){
+                    const normProv = params.proveedorProducto.trim().toLowerCase();
+                    prodFinal = prodFinal.filter(r=> String(r.proveedor||'').trim().toLowerCase()===normProv);
+                }
+                // Después de agrupar se aplicará TopN
+            }
+            if (seleccion === 'mensual'){
+                mensFinal = aplicarMesAnioRecep(mensFinal, params);
+            }
+
+            // Agregar por label para proveedores y productos
+            let provAgg = agruparPorLabel(provFinal).sort((a,b)=> b.value - a.value);
+            let prodAgg = agruparPorLabel(prodFinal).sort((a,b)=> b.value - a.value);
+            if (seleccion === 'productos' && params.topN>0) {
+                prodAgg = prodAgg.slice(0, params.topN);
+            }
+
+            if (document.getElementById('reporteProveedores').style.display === 'block'){
+                renderReporteRecepcion(provAgg, "label", "value", "graficoProveedores", "tablaProveedores", "Recepciones por Proveedor", tipoGrafica);
+            }
+            if (document.getElementById('reporteProductos').style.display === 'block'){
+                renderReporteRecepcion(prodAgg, "label", "value", "graficoProductos", "tablaProductos", "Productos más Recibidos", tipoGrafica);
+            }
+            if (document.getElementById('reporteMensualRecepcion').style.display === 'block'){
+                // mensFinal ya viene agregado del backend; usar label/value
+                renderReporteRecepcion(mensFinal.map(r=>({label: r.label, value: Number(r.value||0)})), "label", "value", "graficoMensualRecepcion", "tablaMensualRecepcion", "Recepciones Mensuales", tipoGrafica);
+            }
             document.getElementById('errorMessageRecepcion').style.display = 'none';
         } catch (error) {
             console.error("Error al generar reportes de recepción:", error);
@@ -471,17 +630,20 @@ function getHeaderLabelRecepcion(labelKey) {
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const hoy = new Date();
-        const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        document.getElementById('fechaInicioRecepcion').valueAsDate = primerDiaMes;
-        document.getElementById('fechaFinRecepcion').valueAsDate = hoy;
-        generarReportesRecepcion();
+        // No establecer fechas por defecto para evitar filtrar; mostrar todos los datos al cargar
+        toggleReportesRecepcion();
+        buildParametrosUIRecep();
         document.getElementById('generarReporteRecepcionBtn').addEventListener('click', generarReportesRecepcion);
         document.getElementById('selectReporteRecepcion').addEventListener('change', toggleReportesRecepcion);
-        toggleReportesRecepcion();
+        // Render inicial con todos los datos (sin filtros)
+        generarReportesRecepcion();
     });
 </script>
 
+<script>
+const proveedoresDisponibles = <?= json_encode($proveedores) ?>;
+</script>
+<script>
 <script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="assets/public/js/jquery-3.7.1.min.js"></script>
 <script src="assets/public/js/jquery.dataTables.min.js"></script>

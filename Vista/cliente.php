@@ -81,49 +81,6 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
         <div class="ghost"></div>
     </div>
 
-    <div class="instrucciones-modulo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #1f66df;">
-        <h5 style="color: #1f66df; margin-bottom: 10px;"> Instrucciones de Uso - Módulo de Clientes</h5>
-        <div class="row">
-            <div class="col-md-6">
-                <h6 style="color: #333;"> Incluir Nuevo Cliente:</h6>
-                <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                    <li>Haga clic en el botón <strong>"+"</strong> (color azul) en la esquina superior derecha</li>
-                    <li>Complete todos los campos obligatorios marcados con <strong>*</strong></li>
-                    <li>Ingrese nombre completo (solo letras, mínimo 2 caracteres)</li>
-                    <li>Escriba la cédula en formato: 1.234.567 o 12.345.678</li>
-                    <li>Agregue teléfono en formato: 0400-000-0000</li>
-                    <li>Proporcione una dirección completa (mínimo 4 caracteres)</li>
-                    <li>Indique un correo electrónico válido (gmail, outlook, yahoo, icloud)</li>
-                    <li>Haga clic en <strong>"Registrar"</strong> para guardar</li>
-                </ol>
-            </div>
-            <div class="col-md-6">
-                <h6 style="color: #333;"> Modificar Cliente:</h6>
-                <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                    <li>Localice al cliente en la tabla</li>
-                    <li>Haga clic en el ícono del <strong>lápiz</strong> en la columna "Acciones"</li>
-                    <li>Edite los campos necesarios</li>
-                    <li>Haga clic en <strong>"Modificar"</strong> para confirmar cambios</li>
-                </ol>
-                <h6 style="color: #333; margin-top: 15px;"> Eliminar Cliente:</h6>
-                <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                    <li>Encuentre al cliente que desea eliminar</li>
-                    <li>Haga clic en el ícono de la <strong>X</strong> en "Acciones"</li>
-                    <li>Confirme la eliminación en el mensaje de advertencia</li>
-                </ol>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col-md-12">
-                <h6 style="color: #333;"> Generar Reporte:</h6>
-                <ol style="font-size: 13px; color: #555; margin-left: 20px;">
-                    <li>Consulte la sección <strong>"Top 10 Clientes por Productos Comprados"</strong> abajo</li>
-                    <li>Visualice el gráfico de barras y la tabla detallada</li>
-                    <li>Haga clic en <strong>"Descargar Reporte de Compras"</strong> para obtener PDF</li>
-                </ol>
-            </div>
-        </div>
-    </div>
 
     <table class="tablaConsultas" id="tablaConsultas">
         <thead>
