@@ -52,3 +52,36 @@
 
 <!-- JSZip (requerido para botón Excel) -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+
+<!-- Script de inicialización automática de WebSocket -->
+<script>
+// Asegurar que el WebSocket se inicialice automáticamente después del login
+document.addEventListener('DOMContentLoaded', function() {
+    const usuarioId = '<?php echo isset($_SESSION['id_usuario']) ? $_SESSION['id_usuario'] : ''; ?>';
+    
+    // Si hay un usuario logueado y no existe el WebSocket, inicializarlo
+    if (usuarioId && usuarioId !== '0' && typeof window.notificacionesWS === 'undefined') {
+        console.log('Inicializando WebSocket automáticamente para usuario:', usuarioId);
+        
+        // Esperar a que la clase NotificacionesWebSocket esté disponible
+        const initWebSocket = () => {
+            if (typeof NotificacionesWebSocket !== 'undefined') {
+                window.notificacionesWS = new NotificacionesWebSocket(usuarioId);
+                console.log('WebSocket inicializado automáticamente');
+            } else {
+                // Si la clase aún no está cargada, reintentar en 100ms
+                setTimeout(initWebSocket, 100);
+            }
+        };
+        
+        initWebSocket();
+    } else if (usuarioId && usuarioId !== '0' && window.notificacionesWS) {
+        // Si ya existe, asegurar que esté conectado
+        console.log('WebSocket ya existe, verificando conexión...');
+        if (window.notificacionesWS.socket && window.notificacionesWS.socket.readyState !== WebSocket.OPEN) {
+            console.log('WebSocket no conectado, reconectando...');
+            window.notificacionesWS.reconectar();
+        }
+    }
+});
+</script>
