@@ -3258,6 +3258,55 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                         </div>
 
+                        <!-- Pagos -->
+                        <div class="card mb-4" id="gestion-pagos-bancarias">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-bank me-2"></i>Gestión de Pagos
+                                </h5>
+                                <p>Administre los pagos realizados por los clientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Estatus de los pagos</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Estatus</strong>: Actualizar estatus <br> (Procesado/No Encontrado/Incompleto)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus del Pago</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Cambiar Estatus"</strong> del pago.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione el <strong>estatus</strong> a asignar (Procesado/No Encontrado/Incompleto).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Haga clic en <strong>"Guardar Cambios"</strong> para realizar el cambio.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border mt-2">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Botón "Cambiar Estatus" azul
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Bancos -->
                         <div class="card mb-4" id="gestion-cuentas-bancarias">
                             <div class="card-body">
@@ -3625,13 +3674,13 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del combo.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Confirmar"</strong> para realizar el cambio.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Confirmar"</strong> para realizar el cambio.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
                                                 <div class="alert alert-light border mt-2">
                                                     <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
+                                                    <strong>Cambiar Estatus:</strong><br> Click en el estatus (habilitado/inhabilitado)
                                                 </div>
                                             </div>
                                         </div>
