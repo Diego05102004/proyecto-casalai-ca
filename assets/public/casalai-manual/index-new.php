@@ -3693,6 +3693,136 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                 </div>
                             </div>
                         </div>
+
+                        <!-- ventas presenciales -->
+                        <div class="card mt-4" id="gestion-ventas-almacenista">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-tag me-2"></i>Gestión de Ventas Presenciales
+                                </h5>
+                                <p>Consulte sus ventas presenciales y realice los pagos o cancelaciones correspondientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Ventas presenciales realizadas</li>
+                                            <li>Fecha de la venta</li>
+                                            <li>Cliente</li>
+                                            <li>Costo de la compra</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Registrar</strong>: Nueva venta presencial</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Información detallada de la venta presencial</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos detallados para realizar pago de pedido -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pasos para Realizar los Pagos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">1. Pago a través de Pago Móvil o Transferencia</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ol>
+                                                            <li class="mb-2"><strong>Paso 1:</strong> Seleccione el <strong>pedido a pagar</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>"Pagar"</strong> (color verde).</li>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>método de pago</strong> (Pago Móvil o Transferencia).</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar Pago"</strong> para confirmar.</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar Pago" verde
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Pago a través de Zelle</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ol>
+                                                            <li class="mb-2"><strong>Paso 1:</strong> Seleccione el <strong>pedido a pagar</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>"Pagar"</strong> (color verde).</li>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>método de pago</strong> (Zelle).</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 8:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 9:</strong> Haga clic en <strong>"Registrar Pago"</strong> para confirmar.</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar Pago" verde
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <div class="note col-md-11 mx-auto">
+                                            <i class="bi bi-info-circle-fill me-2"></i>
+                                            En caso de ser necerio, puede asociar más pago al mismo pedido. Para ello dar clic en el botón "Agregar Método de Pago" y repita el procedimiento.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para detallar recepcion -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Recepción</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la recepción.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
                 <?php /* endif; */ ?>
