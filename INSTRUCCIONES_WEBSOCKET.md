@@ -1,64 +1,101 @@
 # Configuración de Conexión Automática WebSocket
 
-## Pasos para la conexión automática al iniciar sesión:
+## Sistema Automático (Sin Configuración Manual)
 
-### 1. Configurar el servidor WebSocket para inicio automático
+El servidor WebSocket ahora se inicia **automáticamente** cuando un usuario inicia sesión. **No se requiere configuración manual ni Programador de Tareas**.
 
-Ejecuta como **Administrador** el siguiente archivo:
-```
-install_autostart.bat
-```
+## ¿Cómo funciona el sistema automático?
 
-Esto creará una tarea programada en Windows que:
-- Inicia automáticamente el servidor WebSocket al iniciar sesión
-- Se ejecuta en segundo plano sin mostrar ventana
-- Se reinicia automáticamente si hay caídas
+### 1. Inicio Automático al Login
+- Cuando un usuario inicia sesión, el sistema verifica si el servidor WebSocket está corriendo
+- Si no está corriendo, lo inicia automáticamente en segundo plano
+- Espera y verifica que la conexión se establezca correctamente
 
-### 2. Verificar la instalación
+### 2. Inicialización del Cliente
+- El cliente WebSocket se inicializa automáticamente en cada página
+- Detecta si hay un usuario logueado y establece la conexión
+- Verifica que la conexión esté activa y repara si es necesario
 
-Ve al **Programador de Tareas** de Windows y busca "Casalai WebSocket Server".
+### 3. Monitoreo Continuo
+- El sistema verifica periódicamente (cada 30 segundos) que el servidor esté disponible
+- Si detecta que el servidor no está corriendo, intenta reconectar automáticamente
 
-### 3. Probar la conexión automática
+## Características del Sistema
 
-1. Reinicia tu sesión de Windows
-2. Inicia sesión en el sistema Casalai
-3. Abre la consola del navegador (F12)
-4. Deberías ver los siguientes mensajes:
-   - "Servidor WebSocket iniciado automáticamente"
-   - "Conexión WebSocket establecida"
+### ✅ **Totalmente Automático**
+- Sin necesidad de configuración manual
+- Sin requerir Programador de Tareas
+- Sin intervención del usuario
+
+### ✅ **Auto-recuperación**
+- Si el servidor se detiene, se reinicia automáticamente
+- Si la conexión se pierde, se repara automáticamente
+- Soporte para múltiples intentos de reconexión
+
+### ✅ **Multiplataforma**
+- Funciona en Windows, Linux y Mac
+- Detecta automáticamente el sistema operativo
+- Usa los comandos apropiados para cada plataforma
+
+### ✅ **Control de Procesos**
+- Evita múltiples instancias del servidor
+- Verifica si los procesos están activos
+- Limpia archivos lock automáticamente
+
+## Proceso Completo
+
+1. **Usuario inicia sesión** → Sistema verifica servidor WebSocket
+2. **Si no está corriendo** → Lo inicia automáticamente en segundo plano
+3. **Espera y verifica** → Confirma que el servidor inició correctamente
+4. **Inicializa cliente** → Conecta automáticamente al WebSocket
+5. **Monitoreo continuo** → Verifica periódicamente el estado
+
+## Verificación
+
+Para verificar que el sistema funciona:
+
+1. **Inicia sesión** en el sistema Casalai
+2. **Abre la consola** del navegador (F12)
+3. **Busca estos mensajes**:
+   - "Servidor WebSocket ya está corriendo" o "Iniciando servidor WebSocket..."
    - "WebSocket inicializado automáticamente"
+   - "Conexión WebSocket establecida correctamente"
 
-## ¿Qué se ha configurado?
+## Solución de Problemas
 
-### En el servidor:
-- **Verificación automática**: Al iniciar sesión, se verifica si el servidor WebSocket está corriendo
-- **Inicio automático**: Si no está corriendo, se inicia automáticamente
-- **Reconexión automática**: El cliente se reconecta automáticamente si la conexión se pierde
+### Si el WebSocket no inicia automáticamente:
 
-### En el cliente:
-- **Inicialización automática**: El WebSocket se inicializa automáticamente después del login
-- **Verificación de conexión**: Se verifica que la conexión esté activa
-- **Reconexión forzada**: Si la conexión está caída, se repara automáticamente
+1. **Verifica permisos de PHP**
+   - Asegúrate que PHP pueda ejecutar comandos del sistema
+   - En XAMPP, verifica que el módulo `proc_open` esté habilitado
 
-## Solución de problemas
+2. **Verifica el puerto 8080**
+   - Asegúrate que ningún otro programa use el puerto 8080
+   - Puedes verificar con: `netstat -an | findstr 8080`
 
-Si no funciona automáticamente:
+3. **Reinicia sesión**
+   - Cierra y vuelve a iniciar tu sesión en el sistema
+   - Esto forzará una nueva verificación
 
-1. **Verifica permisos**: Asegúrate de ejecutar `install_autostart.bat` como administrador
-2. **Revisa PHP**: Confirma que PHP está en el PATH del sistema
-3. **Verifica puerto**: Asegúrate que el puerto 8080 esté disponible
-4. **Reinicia sesión**: Cierra y vuelve a iniciar tu sesión de Windows
+### Si ves errores en la consola:
 
-## Para desinstalar
+- **"No se pudo iniciar el servidor WebSocket"**: Revisa los permisos de PHP
+- **"WebSocket no pudo conectar"**: Verifica que el puerto 8080 esté disponible
+- **"Error verificando estado WebSocket"**: Es normal si el servidor está ocupado
 
-Ejecuta como administrador:
-```
-uninstall_autostart.bat
-```
+## Archivos del Sistema
 
-## Notas importantes
+- `verificar_websocket.php`: Verificación e inicio automático del servidor
+- `verificar_websocket_status.php`: Endpoint para verificación periódica
+- `websocket_server.php`: Servidor WebSocket principal
+- `Vista/header.php`: Inicialización automática del cliente
 
-- El servidor WebSocket se iniciará **automáticamente cada vez** que inicies sesión en Windows
-- No necesitarás intervención manual después de la instalación
-- El sistema de reconexión automática seguirá funcionando si hay interrupciones
-- La conexión se establecerá inmediatamente después de iniciar sesión en Casalai
+## Notas Importantes
+
+- **No necesitas instalar nada adicional**
+- **No necesitas configurar tareas programadas**
+- **El sistema es completamente autogestionado**
+- **Funciona en cualquier instalación estándar de PHP**
+- **Se reinicia automáticamente si hay caídas**
+
+El sistema está diseñado para ser "plug-and-play" - simplemente funciona sin configuración manual.

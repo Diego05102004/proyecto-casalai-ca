@@ -68,6 +68,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof NotificacionesWebSocket !== 'undefined') {
                 window.notificacionesWS = new NotificacionesWebSocket(usuarioId);
                 console.log('WebSocket inicializado automáticamente');
+                
+                // Verificar que la conexión se establezca correctamente
+                setTimeout(() => {
+                    if (window.notificacionesWS.socket && window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                        console.log('Conexión WebSocket establecida correctamente');
+                    } else {
+                        console.warn('WebSocket no pudo conectar, intentando reconexión...');
+                        window.notificacionesWS.reconectar();
+                    }
+                }, 2000);
             } else {
                 // Si la clase aún no está cargada, reintentar en 100ms
                 setTimeout(initWebSocket, 100);
@@ -83,5 +93,25 @@ document.addEventListener('DOMContentLoaded', function() {
             window.notificacionesWS.reconectar();
         }
     }
+    
+    // Verificación periódica del servidor WebSocket (cada 30 segundos)
+    setInterval(() => {
+        if (usuarioId && usuarioId !== '0') {
+            fetch('?pagina=verificar_websocket_status', {
+                method: 'GET',
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.websocket_running && window.notificacionesWS) {
+                    console.log('Servidor WebSocket no detectado, intentando reconexión...');
+                    window.notificacionesWS.reconectar();
+                }
+            })
+            .catch(error => {
+                console.log('Error verificando estado WebSocket:', error);
+            });
+        }
+    }, 30000);
 });
 </script>
