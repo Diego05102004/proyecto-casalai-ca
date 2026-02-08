@@ -847,7 +847,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="col-md-12">
                                                 <h6 class="text-primary">1. Ajustar Cantidad de Productos</h6>
                                                 <div class="row">
-                                                    <div class="col-md-8">
+                                                    <div class="col-md-7">
                                                         <ol>
                                                             <li><strong>Paso 1:</strong> Ubique el producto que desea modificar.</li>
                                                             <li><strong>Paso 2:</strong> Use los botones <strong>+</strong> y <strong>-</strong> para aumentar o disminuir la cantidad.</li>
@@ -855,7 +855,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                             <li><strong>Paso 4:</strong> Puede ingresar directamente la cantidad deseada.</li>
                                                         </ol>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-5">
                                                         <div class="alert alert-light border">
                                                             <i class="bi bi-plus-circle text-success me-2"></i>
                                                             <i class="bi bi-dash-circle text-danger me-2"></i>
@@ -872,7 +872,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="col-md-12">
                                                 <h6 class="text-primary">2. Eliminar Productos del Carrito</h6>
                                                 <div class="row">
-                                                    <div class="col-md-8">
+                                                    <div class="col-md-7">
                                                         <ol>
                                                             <li><strong>Paso 1:</strong> Encuentre el producto que desea eliminar.</li>
                                                             <li><strong>Paso 2:</strong> Haga clic en el ícono de <strong>basura</strong> 🗑️ junto al producto.</li>
@@ -880,7 +880,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                             <li><strong>Paso 4:</strong> El producto será removido y el total actualizado.</li>
                                                         </ol>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-5">
                                                         <div class="alert alert-light border">
                                                             <i class="bi bi-trash text-danger me-2"></i>
                                                             Eliminar producto
@@ -896,7 +896,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <div class="col-md-12">
                                                 <h6 class="text-primary">3. Vaciar Todo el Carrito</h6>
                                                 <div class="row">
-                                                    <div class="col-md-8">
+                                                    <div class="col-md-7">
                                                         <ol>
                                                             <li><strong>Paso 1:</strong> Haga clic en el botón <strong>"Vaciar Carrito"</strong>.</li>
                                                             <li><strong>Paso 2:</strong> Confirme que desea eliminar todos los productos.</li>
@@ -904,8 +904,8 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                             <li><strong>Paso 4:</strong> Podrá comenzar a agregar nuevos productos.</li>
                                                         </ol>
                                                     </div>
-                                                    <div class="col-md-4">
-                                                        <div class="alert alert-warning border">
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
                                                             <i class="bi bi-trash3 text-warning me-2"></i>
                                                             Vaciar carrito
                                                         </div>
@@ -933,7 +933,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos.</li>
@@ -944,7 +944,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-cart-plus text-success me-2"></i>
                                                     <strong>Agregar Productos</strong>
@@ -970,7 +970,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo.</li>
@@ -979,7 +979,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-dash-circle text-danger me-2"></i>
                                                     <strong>Eliminar</strong>
@@ -1005,7 +1005,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ul>
                                                     <li class="mb-2">No puede procesar una factura sin productos.</li>
                                                     <li class="mb-2">Las cantidades no pueden superar el stock disponible.</li>
@@ -1014,7 +1014,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                     <li class="mb-2">Todos los campos obligatorios deben estar completos.</li>
                                                 </ul>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-shield-check text-info me-2"></i>
                                                     <strong>Validación</strong>
@@ -1036,13 +1036,13 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Use el botón <strong>"Cancelar"</strong> si necesita anular la factura</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Confirme la cancelación en el mensaje de advertencia</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-x-circle text-danger me-2"></i>
                                                     <strong>Cancelar</strong>
@@ -1071,6 +1071,141 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li>Procese pre-factura</li>
                                             <li>Descargue factura final</li>
                                         </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- pedidos -->
+                        <div class="card mt-4" id="gestion-pedidos-almacenista">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-tag me-2"></i>Gestión de Pedidos
+                                </h5>
+                                <p>Consulte sus pedidos y realice los pagos o cancelaciones correspondientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Pedidos realizados</li>
+                                            <li>Estado de pagos</li>
+                                            <li>Información de pedidos</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Pagar</strong>: Realizar pago</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Cancelar</strong>: Retractar solicitud</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos detallados para realizar pago de pedido -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pasos para Realizar los Pagos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">1. Pago a través de Pago Móvil o Transferencia</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ol>
+                                                            <li class="mb-2"><strong>Paso 1:</strong> Seleccione el <strong>pedido a pagar</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>"Pagar"</strong> (color verde).</li>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>método de pago</strong> (Pago Móvil o Transferencia).</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar Pago"</strong> para confirmar.</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar Pago" verde
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Pago a través de Zelle</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ol>
+                                                            <li class="mb-2"><strong>Paso 1:</strong> Seleccione el <strong>pedido a pagar</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>"Pagar"</strong> (color verde).</li>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>método de pago</strong> (Zelle).</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 8:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 9:</strong> Haga clic en <strong>"Registrar Pago"</strong> para confirmar.</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar Pago" verde
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <div class="note col-md-11 mx-auto">
+                                            <i class="bi bi-info-circle-fill me-2"></i>
+                                            En caso de ser necerio, puede asociar más pago al mismo pedido. Para ello dar clic en el botón "Agregar Método de Pago" y repita el procedimiento.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cancelar pedido -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Cancelar Pedido</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Seleccione el pedido a cancelar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>Cancelar</strong> (color rojo).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la cancelación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Cancelar:</strong><br> Botón "Cancelar" rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
