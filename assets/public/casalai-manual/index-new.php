@@ -3722,14 +3722,18 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     </div>
                                 </div>
 
-                                <!-- Pasos detallados para realizar pago de pedido -->
+                                <!-- Pasos detallados para registrar venta -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0">Pasos para Realizar los Pagos</h6>
+                                        <h6 class="mb-0">Pasos para Registrar la Venta Presencial</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-12">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>. De no estar registrado en el sistema, dar clic en el botón "Nuevo" (color verde) y procesa a registrarlo.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
+                                                </ol>
                                                 <h6 class="text-primary">1. Pago a través de Pago Móvil o Transferencia</h6>
                                                 <div class="row">
                                                     <div class="col-md-7 mt-2">
