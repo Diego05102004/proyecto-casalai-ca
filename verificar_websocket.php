@@ -25,9 +25,18 @@ function iniciarWebSocketServer() {
         // Iniciar el servidor en segundo plano (Windows)
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             // Para Windows, usar PowerShell para iniciar en segundo plano
-            $command = "powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File \"$scriptPath\"";
-            $WshShell = new COM('WScript.Shell');
-            $WshShell->Run($command, 0, false);
+            $command = "powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -Command \"php '$scriptPath'\"";
+            
+            // Usar pclose(popen()) para iniciar en segundo plano
+            pclose(popen("start /B " . $command, "r"));
+            
+            // Alternativa: usar WScript.Shell si está disponible
+            /*
+            if (class_exists('COM')) {
+                $WshShell = new COM('WScript.Shell');
+                $WshShell->Run($command, 0, false);
+            }
+            */
         } else {
             // Para Linux/Mac
             exec("php \"$scriptPath\" > /dev/null 2>&1 &");

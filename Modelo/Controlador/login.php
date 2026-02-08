@@ -50,7 +50,7 @@ if ($h == 'acceder') {
             $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
             
             // Verificar y asegurar que el servidor WebSocket esté corriendo
-            require_once __DIR__ . '/../verificar_websocket.php';
+            require_once __DIR__ . '/../../verificar_websocket.php';
             
             // Agregar script para reconexión automática de WebSocket
             echo "<script>
