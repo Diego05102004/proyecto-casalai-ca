@@ -413,18 +413,50 @@
             if (texto === null || texto === undefined) return 0;
             let s = String(texto).trim();
             if (s === '') return 0;
+            
+            // Eliminar caracteres no numéricos excepto punto, coma y signo menos
             s = s.replace(/[^0-9.,\-]/g, '');
+            
+            // Si no hay separadores decimales, convertir directamente
+            if (!s.includes('.') && !s.includes(',')) {
+                const n = parseFloat(s);
+                return isNaN(n) ? 0 : n;
+            }
+            
+            // Detectar el separador decimal correcto
             const lastDot = s.lastIndexOf('.');
             const lastComma = s.lastIndexOf(',');
-            const decIdx = Math.max(lastDot, lastComma);
-            if (decIdx >= 0) {
-                const integerPart = s.slice(0, decIdx).replace(/[^0-9\-]/g, '');
-                const fracPart = s.slice(decIdx + 1).replace(/[^0-9]/g, '');
-                const composed = integerPart + '.' + fracPart;
-                const n = parseFloat(composed);
-                return isNaN(n) ? 0 : n;
+            
+            // Si hay ambos separadores, asumir formato europeo (1.234,56)
+            if (lastDot >= 0 && lastComma >= 0) {
+                if (lastComma > lastDot) {
+                    // Formato europeo: 1.234,56 -> 1234.56
+                    const integerPart = s.slice(0, lastComma).replace(/[.,]/g, '');
+                    const decimalPart = s.slice(lastComma + 1).replace(/[^0-9]/g, '');
+                    const composed = integerPart + '.' + decimalPart;
+                    const n = parseFloat(composed);
+                    return isNaN(n) ? 0 : n;
+                } else {
+                    // Formato americano: 1,234.56 -> 1234.56
+                    const integerPart = s.slice(0, lastDot).replace(/,/g, '');
+                    const decimalPart = s.slice(lastDot + 1).replace(/[^0-9]/g, '');
+                    const composed = integerPart + '.' + decimalPart;
+                    const n = parseFloat(composed);
+                    return isNaN(n) ? 0 : n;
+                }
             } else {
-                const n = parseFloat(s.replace(/[^0-9\-]/g, ''));
+                // Solo un separador decimal
+                const decIdx = Math.max(lastDot, lastComma);
+                const integerPart = s.slice(0, decIdx).replace(/[^0-9\-]/g, '');
+                let decimalPart = s.slice(decIdx + 1).replace(/[^0-9]/g, '');
+                
+                // Limitar decimales a máximo 2 para evitar problemas
+                if (decimalPart.length > 2) {
+                    decimalPart = decimalPart.substring(0, 2);
+                }
+                
+                const composed = integerPart + '.' + decimalPart;
+                const n = parseFloat(composed);
                 return isNaN(n) ? 0 : n;
             }
         }
@@ -677,11 +709,41 @@
             if (tipoPago === 'Pago Movil' || tipoPago === 'Transferencia') {
                 // valor inicial
                 $(`#monto-${id}`).val('0.00');
-                $(`#monto-${id}`).on('input', function() {
+                $(`#monto-${id}`).on('input', function(e) {
+                    const input = this;
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    const originalValue = input.value;
+                    
                     // Forzar formato automáticamente en cada pulsación
-                    let v = this.value.replace(/[^0-9.,]/g, '');
+                    let v = input.value.replace(/[^0-9.,]/g, '');
                     const montoNum = parsearNumeroFormateado(v);
-                    this.value = formatearNumero(montoNum);
+                    const formattedValue = formatearNumero(montoNum);
+                    
+                    // Solo actualizar si el valor cambió
+                    if (originalValue !== formattedValue) {
+                        input.value = formattedValue;
+                        
+                        // Mantener posición del cursor de forma inteligente
+                        let newCursorPos = start;
+                        
+                        // Si el formato agregó comas, ajustar posición
+                        const originalCommas = (originalValue.match(/,/g) || []).length;
+                        const newCommas = (formattedValue.match(/,/g) || []).length;
+                        newCursorPos += (newCommas - originalCommas);
+                        
+                        // Limitar posición del cursor para no pasar de los decimales
+                        const decimalPos = formattedValue.lastIndexOf('.');
+                        if (decimalPos !== -1 && newCursorPos > decimalPos) {
+                            newCursorPos = decimalPos;
+                        }
+                        
+                        // Restaurar posición del cursor
+                        setTimeout(() => {
+                            input.setSelectionRange(newCursorPos, newCursorPos);
+                        }, 0);
+                    }
+                    
                     validarMonto(id, montoNum, 'BS');
                     actualizarResumenPagos();
                 });
@@ -689,11 +751,41 @@
             
             // Validación de monto en dólares (Zelle)
             if (tipoPago === 'Zelle') {
-                $(`#monto-dolar-${id}`).on('input', function() {
+                $(`#monto-dolar-${id}`).on('input', function(e) {
+                    const input = this;
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    const originalValue = input.value;
+                    
                     // Forzar formato automáticamente
-                    let v = $(this).val().replace(/[^0-9.,]/g, '');
+                    let v = input.value.replace(/[^0-9.,]/g, '');
                     const montoDolar = parsearNumeroFormateado(v);
-                    $(this).val(formatearNumero(montoDolar));
+                    const formattedValue = formatearNumero(montoDolar);
+                    
+                    // Solo actualizar si el valor cambió
+                    if (originalValue !== formattedValue) {
+                        input.value = formattedValue;
+                        
+                        // Mantener posición del cursor de forma inteligente
+                        let newCursorPos = start;
+                        
+                        // Si el formato agregó comas, ajustar posición
+                        const originalCommas = (originalValue.match(/,/g) || []).length;
+                        const newCommas = (formattedValue.match(/,/g) || []).length;
+                        newCursorPos += (newCommas - originalCommas);
+                        
+                        // Limitar posición del cursor para no pasar de los decimales
+                        const decimalPos = formattedValue.lastIndexOf('.');
+                        if (decimalPos !== -1 && newCursorPos > decimalPos) {
+                            newCursorPos = decimalPos;
+                        }
+                        
+                        // Restaurar posición del cursor
+                        setTimeout(() => {
+                            input.setSelectionRange(newCursorPos, newCursorPos);
+                        }, 0);
+                    }
+                    
                     validarMonto(id, montoDolar, 'USD');
                     // Conversión a bolívares
                     if (!isNaN(montoDolar) && montoDolar > 0) {
