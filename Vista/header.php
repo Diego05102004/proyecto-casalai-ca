@@ -101,7 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'GET',
                 headers: {'X-Requested-With': 'XMLHttpRequest'}
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (!data.websocket_running && window.notificacionesWS) {
                     console.log('Servidor WebSocket no detectado, intentando reconexión...');
@@ -109,7 +114,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.log('Error verificando estado WebSocket:', error);
+                console.log('Error verificando estado WebSocket:', error.message);
+                // Si hay un error 404, el endpoint no está disponible
+                if (error.message.includes('404')) {
+                    console.warn('Endpoint de verificación no disponible, deshabilitando verificación periódica');
+                    // Detener la verificación periódica
+                    clearInterval(this);
+                }
             });
         }
     }, 30000);

@@ -103,6 +103,11 @@
                     method: 'GET',
                     headers: {'X-Requested-With': 'XMLHttpRequest'}
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.websocket_running) {
