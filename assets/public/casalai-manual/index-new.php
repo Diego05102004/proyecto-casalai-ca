@@ -918,164 +918,6 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             </div>
                         </div>
                         
-                        <!-- Prefactura -->
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-file-earmark-text me-2"></i>Proceso de Facturación
-                                </h5>
-                                <p>Genere facturas para sus ventas con un proceso detallado paso a paso.</p>
-                                
-                                <!-- Pasos detallados para facturación -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Procesar Factura</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique el stock disponible (no puede exceder el stock actual).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> El subtotal se calculará automáticamente.</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Complete los datos del cliente si es necesario.</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-cart-plus text-success me-2"></i>
-                                                    <strong>Agregar Productos</strong>
-                                                    <br><small>Click en producto</small>
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-calculator me-2"></i>
-                                                    <strong>Total:</strong> Calculado automáticamente
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-box-seam me-2"></i>
-                                                    <strong>Stock:</strong> Validado automáticamente
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para gestión de productos en factura -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Gestión de Productos</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Los productos con stock 0 están ocultos automáticamente.</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-dash-circle text-danger me-2"></i>
-                                                    <strong>Eliminar</strong>
-                                                    <br><small>Botón X rojo</small>
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-plus-slash-minus me-2"></i>
-                                                    <strong>Cantidades:</strong> Botones +/-
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Stock 0:</strong> Ocultos automáticamente
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Validaciones y restricciones -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Validaciones y Restricciones</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ul>
-                                                    <li class="mb-2">No puede procesar una factura sin productos.</li>
-                                                    <li class="mb-2">Las cantidades no pueden superar el stock disponible.</li>
-                                                    <li class="mb-2">Los precios se calculan automáticamente según el producto.</li>
-                                                    <li class="mb-2">El total se actualiza en tiempo real.</li>
-                                                    <li class="mb-2">Todos los campos obligatorios deben estar completos.</li>
-                                                </ul>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-shield-check text-info me-2"></i>
-                                                    <strong>Validación</strong>
-                                                    <br><small>Automática</small>
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    <strong>Importante:</strong> Revise antes de procesar
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para cancelar factura -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Cancelar Factura</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Use el botón <strong>"Cancelar"</strong> si necesita anular la factura</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Confirme la cancelación en el mensaje de advertencia</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-x-circle text-danger me-2"></i>
-                                                    <strong>Cancelar</strong>
-                                                    <br><small>Con confirmación</small>
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    <strong>Atención:</strong> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row mt-2">
-                                    <div class="col-md-6">
-                                        <h6 class="text-success">Proceso de facturación detallado</h6>
-                                        <?= renderImagen("carrito", "prefacturar.png") ?>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Resumen del proceso:</h6>
-                                        <ol>
-                                            <li>Seleccione productos del catálogo</li>
-                                            <li>Ajuste cantidades y verifique stock</li>
-                                            <li>Confirme datos del cliente</li>
-                                            <li>Procese pre-factura</li>
-                                            <li>Descargue factura final</li>
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- pedidos -->
                         <div class="card mt-4" id="gestion-pedidos-almacenista">
                             <div class="card-body">
@@ -3704,7 +3546,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                             <li>Fecha</li>
                                             <li>RIF</li>
                                             <li>Monto</li>
-                                            <li>Decripción (Productos involucrados)</li>
+                                            <li>Decripción (Productos Involucrados)</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
@@ -3724,12 +3566,10 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         <div class="row">
                                             <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Ingresos y Egresos, Solo Ingresos o Solo Egresos).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4053,6 +3893,29 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bitacora -->
+                        <div class="card mb-4" id="gestion-bitacora">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-bank me-2"></i>Gestión de Bitácora
+                                </h5>
+                                <p>Consultar los movimientos realizados por los usuarios.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-8 mx-auto">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Fecha completa</li>
+                                            <li>Usuario</li>
+                                            <li>Acción realizada</li>
+                                            <li>Módulo</li>
+                                            <li>Decripción</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
