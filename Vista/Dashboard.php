@@ -198,7 +198,7 @@ $modulos = [
     'reporteInventario' => ['Reporte de Inventario', 'assets/img/chart-bar.svg', '?pagina=reporteInventario'],
     'reporteProductos' => ['Reporte de Productos', 'assets/img/chart-bar.svg', '?pagina=reporteProductos'],
     'reporteProveedores' => ['Reporte de Proveedores', 'assets/img/chart-bar.svg', '?pagina=reporteProveedores'],
-    'reporteVentas' => ['Reporte de Ventas', 'assets/img/chart-bar.svg', '?pagina=reporteVentas'],
+    'reporteVentas' => ['Reporte de Despachos', 'assets/img/chart-bar.svg', '?pagina=reporteVentas'],
     'reporteFinanzas' => ['Reporte de Finanzas', 'assets/img/chart-bar.svg', '?pagina=reporteFinanzas'],
     'reporteCliente' => ['Reporte de Clientes', 'assets/img/chart-bar.svg', '?pagina=reporteCliente'],
 ];

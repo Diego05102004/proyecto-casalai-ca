@@ -366,7 +366,7 @@ if (!empty($_SESSION['foto_perfil'])) {
                         <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Despacho
                     </div>
                     <div class="sub-option" onclick="window.location.href='?pagina=reporteVentas'">
-                        <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Ventas
+                        <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Reporte de Despachos
                     </div>
                 <?php endif; ?>
             </div>
