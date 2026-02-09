@@ -59,15 +59,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     const usuarioId = '<?php echo isset($_SESSION['id_usuario']) ? $_SESSION['id_usuario'] : ''; ?>';
     
-    // Si hay un usuario logueado y no existe el WebSocket, inicializarlo
-    if (usuarioId && usuarioId !== '0' && typeof window.notificacionesWS === 'undefined') {
-        console.log('Inicializando WebSocket automáticamente para usuario:', usuarioId);
+    // Si hay un usuario logueado, inicializar el WebSocket
+    if (usuarioId && usuarioId !== '0') {
+        console.log('Usuario detectado, inicializando WebSocket para:', usuarioId);
         
         // Esperar a que la clase NotificacionesWebSocket esté disponible
         const initWebSocket = () => {
             if (typeof NotificacionesWebSocket !== 'undefined') {
-                window.notificacionesWS = new NotificacionesWebSocket(usuarioId);
-                console.log('WebSocket inicializado automáticamente');
+                // Si ya existe, reconectar
+                if (typeof window.notificacionesWS !== 'undefined') {
+                    console.log('WebSocket ya existe, reconectando...');
+                    window.notificacionesWS.reconectar();
+                } else {
+                    // Crear nueva instancia
+                    console.log('Creando nueva instancia de WebSocket...');
+                    window.notificacionesWS = new NotificacionesWebSocket(usuarioId);
+                    console.log('WebSocket inicializado automáticamente');
+                }
                 
                 // Verificar que la conexión se establezca correctamente
                 setTimeout(() => {
@@ -75,9 +83,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('Conexión WebSocket establecida correctamente');
                     } else {
                         console.warn('WebSocket no pudo conectar, intentando reconexión...');
-                        window.notificacionesWS.reconectar();
+                        if (window.notificacionesWS.reconectar) {
+                            window.notificacionesWS.reconectar();
+                        }
                     }
-                }, 2000);
+                }, 3000);
             } else {
                 // Si la clase aún no está cargada, reintentar en 100ms
                 setTimeout(initWebSocket, 100);
@@ -85,13 +95,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         initWebSocket();
-    } else if (usuarioId && usuarioId !== '0' && window.notificacionesWS) {
-        // Si ya existe, asegurar que esté conectado
-        console.log('WebSocket ya existe, verificando conexión...');
-        if (window.notificacionesWS.socket && window.notificacionesWS.socket.readyState !== WebSocket.OPEN) {
-            console.log('WebSocket no conectado, reconectando...');
-            window.notificacionesWS.reconectar();
-        }
     }
     
     // Verificación periódica del servidor WebSocket (cada 30 segundos)
@@ -108,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                if (!data.websocket_running && window.notificacionesWS) {
+                if (!data.websocket_running && window.notificacionesWS && window.notificacionesWS.reconectar) {
                     console.log('Servidor WebSocket no detectado, intentando reconexión...');
                     window.notificacionesWS.reconectar();
                 }

@@ -4,6 +4,21 @@
  * Se ejecuta automáticamente después del login exitoso
  */
 
+// Determinar si se está ejecutando como include o como script independiente
+$esInclude = !defined('WEBSOCKET_VERIFICACION_STANDALONE');
+
+if (!$esInclude) {
+    define('WEBSOCKET_VERIFICACION_STANDALONE', true);
+}
+
+// Función para registrar logs solo si no es include
+function logWebSocket($mensaje) {
+    global $esInclude;
+    if (!$esInclude) {
+        echo "<script>console.log('$mensaje');</script>";
+    }
+}
+
 // Verificar si el servidor WebSocket está corriendo
 function verificarWebSocketServer() {
     // Intentar conectar al servidor WebSocket
@@ -11,9 +26,11 @@ function verificarWebSocketServer() {
     
     if ($socket) {
         fclose($socket);
+        logWebSocket('Verificación: Servidor WebSocket responde en puerto 8080');
         return true; // El servidor está corriendo
     }
     
+    logWebSocket('Verificación: Servidor WebSocket no responde en puerto 8080 (Error: $errno - $errstr)');
     return false; // El servidor no está corriendo
 }
 
@@ -28,6 +45,7 @@ function iniciarWebSocketServer() {
         if (function_exists('posix_kill')) {
             // Linux/Mac
             if (posix_kill($pid, 0)) {
+                logWebSocket('Servidor WebSocket ya está corriendo (PID: $pid)');
                 return true; // El proceso todavía está corriendo
             }
         } else {
@@ -36,6 +54,7 @@ function iniciarWebSocketServer() {
             exec("tasklist /FI \"PID eq $pid\" 2>NUL", $output);
             foreach ($output as $line) {
                 if (strpos($line, (string)$pid) !== false) {
+                    logWebSocket('Servidor WebSocket ya está corriendo (PID: $pid)');
                     return true; // El proceso todavía está corriendo
                 }
             }
@@ -48,40 +67,60 @@ function iniciarWebSocketServer() {
     $websocketPath = __DIR__ . DIRECTORY_SEPARATOR . 'websocket_server.php';
     
     if (!file_exists($websocketPath)) {
-        error_log("No se encuentra el archivo: $websocketPath");
+        logWebSocket('No se encuentra el archivo: $websocketPath');
         return false;
     }
     
     // Detectar sistema operativo
     $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
     
+    logWebSocket('Iniciando servidor WebSocket...');
+    
     if ($isWindows) {
-        // Windows - usar método más robusto
-        $command = "php \"$websocketPath\"";
-        
-        // Método 1: Usar start /B con redirección
-        $batchFile = sys_get_temp_dir() . '/start_websocket.bat';
-        $batchContent = "@echo off\nphp \"$websocketPath\" > nul 2>&1\n";
-        file_put_contents($batchFile, $batchContent);
-        
-        // Ejecutar en segundo plano
-        pclose(popen("start /B \"\" \"$batchFile\"", "r"));
-        
-        // Esperar un momento y limpiar
-        sleep(1);
-        if (file_exists($batchFile)) {
-            unlink($batchFile);
+        // Windows - método corregido usando PHP_BINARY
+        try {
+            logWebSocket('Iniciando servidor WebSocket en Windows...');
+            
+            // Usar la misma ruta de PHP que ejecuta el script
+            $phpPath = PHP_BINARY;
+            $websocketPath = str_replace('/', '\\', $websocketPath);
+            $command = "\"$phpPath\" \"$websocketPath\"";
+            
+            logWebSocket('Ejecutando: $command');
+            
+            // Redirigir salida y ejecutar en segundo plano
+            $fullCommand = "start /B \"\" $command > nul 2>&1";
+            exec($fullCommand . ' 2>NUL', $output, $returnCode);
+            
+            if ($returnCode === 0) {
+                logWebSocket('Comando de inicio ejecutado correctamente');
+                
+                // Esperar más tiempo para que el servidor inicie completamente
+                sleep(5);
+                
+                // Crear archivo lock
+                file_put_contents($lockFile, 'running');
+                
+            } else {
+                logWebSocket('Error ejecutando comando. Código: $returnCode');
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            logWebSocket('Error iniciando servidor: ' . $e->getMessage());
+            return false;
         }
         
     } else {
         // Linux / Unix
         $command = "nohup php \"$websocketPath\" > /dev/null 2>&1 &";
         exec($command);
+        
+        // Crear archivo lock
+        file_put_contents($lockFile, getmypid());
     }
     
-    // Crear archivo lock para evitar múltiples instancias
-    file_put_contents($lockFile, getmypid());
-    
+    logWebSocket('Servidor WebSocket iniciado, verificando conexión...');
     return true;
 }
 
@@ -92,32 +131,37 @@ function verificarEIniciarWebSocket() {
     
     // Primero verificar si ya está corriendo
     if (verificarWebSocketServer()) {
-        echo "<script>console.log('Servidor WebSocket ya está corriendo');</script>";
+        logWebSocket('El servidor WebSocket ya está corriendo');
         return true;
     }
     
-    // Intentar iniciar el servidor
-    echo "<script>console.log('Iniciando servidor WebSocket...');</script>";
+    logWebSocket('El servidor WebSocket no está corriendo, intentando iniciarlo...');
     
+    // Intentar iniciar el servidor
     if (!iniciarWebSocketServer()) {
-        echo "<script>console.warn('No se pudo iniciar el servidor WebSocket');</script>";
+        logWebSocket('No se pudo iniciar el servidor WebSocket');
         return false;
     }
     
-    // Esperar y verificar que el servidor haya iniciado correctamente
+    // Esperar y verificar que inicie correctamente
     while ($intentos < $maxIntentos) {
-        sleep(1);
+        sleep(2);
+        $intentos++;
+        
         if (verificarWebSocketServer()) {
-            echo "<script>console.log('Servidor WebSocket iniciado correctamente');</script>";
+            logWebSocket('Servidor WebSocket iniciado correctamente');
             return true;
         }
-        $intentos++;
+        
+        logWebSocket('Intento ' . $intentos . ' de ' . $maxIntentos . ': servidor aún no responde');
     }
     
-    echo "<script>console.warn('El servidor WebSocket no pudo iniciarse después de $maxIntentos intentos');</script>";
+    logWebSocket('No se pudo iniciar el servidor WebSocket después de ' . $maxIntentos . ' intentos');
     return false;
 }
 
-// Ejecutar verificación e inicio si es necesario
-verificarEIniciarWebSocket();
+// Ejecutar solo si es un script independiente
+if (!$esInclude) {
+    verificarEIniciarWebSocket();
+}
 ?>

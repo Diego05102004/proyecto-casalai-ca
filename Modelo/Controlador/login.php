@@ -49,19 +49,16 @@ if ($h == 'acceder') {
             $_SESSION['cedula'] = $m['cedula'] ?? '';
             $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
             
-            // Verificar y asegurar que el servidor WebSocket esté corriendo
+            // Iniciar servidor WebSocket automáticamente después del login exitoso
+            ob_start(); // Capturar salida para evitar interferir con headers
             require_once __DIR__ . '/../../verificar_websocket.php';
             
-            // Agregar script para reconexión automática de WebSocket
-            echo "<script>
-                // Forzar reconexión de WebSocket después del login
-                if (typeof window.notificacionesWS !== 'undefined') {
-                    window.notificacionesWS.reconectar();
-                } else {
-                    // Si no existe, recargar la página para inicializarlo
-                    console.log('WebSocket no encontrado, recargando para inicializar...');
-                }
-            </script>";
+            // Ejecutar la verificación y inicio del servidor
+            verificarEIniciarWebSocket();
+            ob_end_clean(); // Limpiar salida capturada
+            
+            // Guardar mensaje para mostrar después del redirect
+            $_SESSION['websocket_init_message'] = 'Servidor WebSocket iniciado automáticamente';
             
             header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
             exit;

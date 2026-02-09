@@ -206,41 +206,72 @@ public function onOpen(ConnectionInterface $conn) {
     protected function obtenerCarritoCount(ConnectionInterface $from, int $usuarioId): void
     {
         try {
-            $bd = new BD('S');
+            echo "=== INICIO obtenerCarritoCount ===\n";
+            echo "Usuario ID: $usuarioId\n";
+            
+            $bd = new BD('P'); // Usar 'S' para consultas de lectura
             $pdo = $bd->getConexion();
             
-            // Obtener el ID del carrito activo del usuario
-            $stmt = $pdo->prepare("SELECT id_carrito FROM tbl_carritos WHERE id_usuario = :usuario_id AND estado = 'activo'");
+            echo "Conexión a BD establecida\n";
+            
+            // Obtener el ID del carrito más reciente del usuario
+            $sqlCarrito = "SELECT id_carrito FROM tbl_carrito WHERE id_cliente = :usuario_id ORDER BY fecha_creacion DESC LIMIT 1";
+            echo "SQL Carrito: $sqlCarrito\n";
+            
+            $stmt = $pdo->prepare($sqlCarrito);
             $stmt->bindParam(':usuario_id', $usuarioId, \PDO::PARAM_INT);
             $stmt->execute();
             $carrito = $stmt->fetch(\PDO::FETCH_ASSOC);
             
+            echo "Resultado carrito: " . ($carrito ? json_encode($carrito) : 'NULL') . "\n";
+            
             $count = 0;
             if ($carrito) {
-                // Contar los productos en el carrito
-                $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM tbl_carrito_detalle WHERE id_carrito = :carrito_id");
-                $stmt->bindParam(':carrito_id', $carrito['id_carrito'], \PDO::PARAM_INT);
+                $carritoId = $carrito['id_carrito'];
+                echo "Carrito ID encontrado: $carritoId\n";
+                
+                // Contar los productos en el carrito con estatus 'pendiente'
+                $sqlDetalle = "SELECT COUNT(*) as total FROM tbl_carritodetalle WHERE id_carrito = :carrito_id AND estatus = 'pendiente'";
+                echo "SQL Detalle: $sqlDetalle\n";
+                
+                $stmt = $pdo->prepare($sqlDetalle);
+                $stmt->bindParam(':carrito_id', $carritoId, \PDO::PARAM_INT);
                 $stmt->execute();
                 $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+                
+                echo "Resultado detalle: " . json_encode($result) . "\n";
                 $count = (int)$result['total'];
+                
+                echo "Carrito encontrado: {$carrito['id_carrito']}, Productos: $count\n";
+            } else {
+                echo "No se encontró carrito para el usuario: $usuarioId\n";
             }
             
+            echo "Enviando respuesta: count=$count\n";
             $from->send(json_encode([
                 'tipo' => 'actualizar_carrito_count',
                 'count' => $count
             ]));
             
+            echo "=== FIN obtenerCarritoCount ===\n";
+            
         } catch (\Exception $e) {
-            echo "Error al obtener conteo de carrito: " . $e->getMessage() . "\n";
+            echo "=== ERROR obtenerCarritoCount ===\n";
+            echo "Error: " . $e->getMessage() . "\n";
+            echo "Código: " . $e->getCode() . "\n";
+            echo "Archivo: " . $e->getFile() . ":" . $e->getLine() . "\n";
+            echo "Traza: " . $e->getTraceAsString() . "\n";
+            
             // Enviar 0 en caso de error
             $from->send(json_encode([
                 'tipo' => 'actualizar_carrito_count',
                 'count' => 0,
-                'error' => 'No se pudo obtener el conteo del carrito'
+                'error' => 'nteo del carrito: ' . $e->getMessage()
             ]));
         } finally {
             if (isset($bd)) {
                 $bd->cerrar();
+                echo "Conexión a BD cerrada\n";
             }
         }
     }
