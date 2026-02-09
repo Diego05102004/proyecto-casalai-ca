@@ -3710,15 +3710,15 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     <div class="col-md-6">
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
-                                            <li><strong>Agregar</strong>: Nueva cuenta</li>
+                                            <li><strong>Reporte</strong>: Generar gráfica</li>
                                         </ul>
                                     </div>
                                 </div>
 
-                                <!-- Pasos para generar reportes de cuentas bancarias -->
+                                <!-- Pasos para generar reportes de finanzas -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
-                                        <h6 class="mb-0">Pasos para Generar Reportes de Cuentas Bancarias</h6>
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Ingresos y Egresos</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
