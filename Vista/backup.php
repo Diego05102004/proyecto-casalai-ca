@@ -38,7 +38,6 @@
             <img src="assets/img/save.svg" alt=""> Generar Backup Seguridad
         </button>
     </div>
-    <h3 class="tabla-titulo-2" style="margin-bottom: 20px;">Backups Disponibles</h3>
 
     <table class="tablaConsultas" id="tablaConsultas" style="width:100%">
         <thead>
@@ -76,19 +75,19 @@
                     </td>
                     <td>
                         <ul>
-                            <button class="btn-descargar"
-                                data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                title="Descargar">
-                                <img src="assets/img/download.svg" alt="Descargar">
-                            </button>
                             <button class="btn-restaurar"
                                 data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
                                 data-bs-toggle="tooltip"
                                 data-bs-placement="top"
                                 title="Restaurar">
                                 <img src="assets/img/rotate-ccw.svg" alt="Restaurar">
+                            </button>
+                            <button class="btn-descargar"
+                                data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                title="Descargar">
+                                <img src="assets/img/download.svg" alt="Descargar">
                             </button>
                             <button class="btn-eliminar"
                                 data-archivo="<?= htmlspecialchars($backup['nombre'] ?? ''); ?>"
