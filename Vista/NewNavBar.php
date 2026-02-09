@@ -721,24 +721,48 @@ if (!empty($_SESSION['foto_perfil'])) {
         
         // Inicializar WebSocket para notificaciones, tasa de cambio y carrito
         if (window.notificacionesWS) {
-            // Configurar intervalos para actualizaciones periódicas
-            setInterval(() => {
-                window.notificacionesWS.enviar({ tipo: 'ping_nuevas' });
-            }, 6000);
+            // Esperar a que el DOM esté completamente cargado antes de configurar intervalos
+            const configurarIntervalos = () => {
+                // Configurar intervalos para actualizaciones periódicas
+                setInterval(() => {
+                    if (window.notificacionesWS && window.notificacionesWS.socket && 
+                        window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                        window.notificacionesWS.enviar({ tipo: 'ping_nuevas' });
+                    }
+                }, 6000);
+                
+                // Actualizar contador del carrito cada 5 segundos
+                setInterval(() => {
+                    if (window.notificacionesWS && window.notificacionesWS.socket && 
+                        window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                        window.notificacionesWS.solicitarCarritoCount();
+                    }
+                }, 5000);
+                
+                // Actualizar tasa de cambio cada 5 minutos
+                setInterval(() => {
+                    if (window.notificacionesWS && window.notificacionesWS.socket && 
+                        window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                        window.notificacionesWS.solicitarTasaCambio();
+                    }
+                }, 300000);
+                
+                // Solicitar datos iniciales después de un pequeño retraso
+                setTimeout(() => {
+                    if (window.notificacionesWS && window.notificacionesWS.socket && 
+                        window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                        window.notificacionesWS.solicitarTasaCambio();
+                        window.notificacionesWS.solicitarCarritoCount();
+                    }
+                }, 2000);
+            };
             
-            // Actualizar contador del carrito cada 5 segundos
-            setInterval(() => {
-                window.notificacionesWS.solicitarCarritoCount();
-            }, 5000);
-            
-            // Actualizar tasa de cambio cada 5 minutos
-            setInterval(() => {
-                window.notificacionesWS.solicitarTasaCambio();
-            }, 300000);
-            
-            // Solicitar datos iniciales
-            window.notificacionesWS.solicitarTasaCambio();
-            window.notificacionesWS.solicitarCarritoCount();
+            // Si el DOM ya está cargado, configurar inmediatamente
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', configurarIntervalos);
+            } else {
+                configurarIntervalos();
+            }
         }
     });
 
@@ -846,6 +870,25 @@ if (!empty($_SESSION['foto_perfil'])) {
                     this.mostrarErrorConexion();
                 }
             }, delay);
+        }
+
+        reconectar() {
+            console.log('Reconexión manual solicitada');
+            this.reconectarIntentos = 0;
+            this.reconectarDelay = 1000;
+            
+            // Limpiar cualquier timeout existente
+            if (this.reconectarTimeout) {
+                clearTimeout(this.reconectarTimeout);
+            }
+            
+            // Cerrar conexión actual si existe
+            if (this.socket) {
+                this.socket.close();
+            }
+            
+            // Conectar inmediatamente
+            this.conectar();
         }
 
         iniciarHeartbeat() {
