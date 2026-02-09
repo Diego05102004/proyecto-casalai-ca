@@ -375,7 +375,6 @@ function mostrarModulo($modulo, $permisosConsulta, $nombre_rol) {
   <?php include 'footer.php'; ?>
   <script>
     const sesion = <?php echo json_encode($_SESSION); ?>;
-    console.log('Sesión actual:', sesion);
   </script>
 </body>
 </html>
