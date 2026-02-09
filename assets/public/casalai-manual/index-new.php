@@ -3730,28 +3730,28 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>. De no estar registrado en el sistema, dar clic en el botón "Nuevo" (color verde) y procesa a registrarlo.</li>
+                                                <ul>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
-                                                </ol>
-                                                <h6 class="text-primary">1. Pago a través de Pago Móvil o Transferencia</h6>
+                                                </ul>
+
+                                                <hr>
+
+                                                <h6 class="text-primary">1. Registro de venta por Pago Móvil o Transferencia</h6>
                                                 <div class="row">
                                                     <div class="col-md-7 mt-2">
-                                                        <ol>
-                                                            <li class="mb-2"><strong>Paso 1:</strong> Seleccione el <strong>pedido a pagar</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>"Pagar"</strong> (color verde).</li>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>método de pago</strong> (Pago Móvil o Transferencia).</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>banco emisor</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
-                                                            <li class="mb-2"><strong>Paso 6:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 7:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar Pago"</strong> para confirmar.</li>
-                                                        </ol>
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
                                                     </div>
                                                     <div class="col-md-5">
                                                         <div class="alert alert-light border">
                                                             <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar Pago" verde
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
                                                         </div>
                                                         <div class="alert alert-light border mt-2">
                                                             <i class="bi bi-image me-2"></i>
@@ -3763,28 +3763,47 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                         
                                         <hr>
-                                        
+
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <h6 class="text-primary">2. Pago a través de Zelle</h6>
+                                                <h6 class="text-primary">2. Registro de venta en efectivo</h6>
                                                 <div class="row">
                                                     <div class="col-md-7 mt-2">
-                                                        <ol>
-                                                            <li class="mb-2"><strong>Paso 1:</strong> Seleccione el <strong>pedido a pagar</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>"Pagar"</strong> (color verde).</li>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>método de pago</strong> (Zelle).</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>banco emisor</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
-                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
-                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 8:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 9:</strong> Haga clic en <strong>"Registrar Pago"</strong> para confirmar.</li>
-                                                        </ol>
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
                                                     </div>
                                                     <div class="col-md-5">
                                                         <div class="alert alert-light border">
                                                             <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar Pago" verde
+                                                            <strong>Regristrar Venta:</strong><br> Botón "Registrar" azul
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Registro de venta por Zelle</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
                                                         </div>
                                                         <div class="alert alert-light border mt-2">
                                                             <i class="bi bi-image me-2"></i>
@@ -3799,27 +3818,61 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
 
                                         <div class="note col-md-11 mx-auto">
                                             <i class="bi bi-info-circle-fill me-2"></i>
-                                            En caso de ser necerio, puede asociar más pago al mismo pedido. Para ello dar clic en el botón "Agregar Método de Pago" y repita el procedimiento.
+                                            En caso de que el cliente no este registrado en el sistema, dar clic en el botón "Nuevo" (color verde) y procesa a registrarlo. Al terminar, vuelva a "Ventas Presenciales" y repita el procedimiento.
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Pasos para detallar recepcion -->
+                                <!-- Pasos para detallar ventas -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Recepción</h6>
+                                        <h6 class="mb-0">Pasos para Detallar Venta Presencial</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la recepción.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la venta.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-eye text-warning me-2"></i>
                                                     <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para generar reportes de cuentas bancarias -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Cuentas Bancarias</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-pie-chart me-2"></i>
+                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
                                         </div>
