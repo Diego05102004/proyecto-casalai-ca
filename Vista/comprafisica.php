@@ -551,15 +551,6 @@ $(document).on('click', '.btn-eliminar-producto', function () {
     $(this).closest('.grupo-producto').remove();
 });
 </script>
-
-
-    <button 
-        class="btn-grafica"
-        title="Visualizar Reportes"
-        onclick="window.location.href='?pagina=reporteVentas'">
-        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    
-    </button>
 </body>
 
 

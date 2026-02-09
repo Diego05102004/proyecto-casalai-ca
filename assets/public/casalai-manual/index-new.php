@@ -3844,40 +3844,6 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Pasos para generar reportes de cuentas bancarias -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-secondary text-white">
-                                        <h6 class="mb-0">Pasos para Generar Reportes de Cuentas Bancarias</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-pie-chart me-2"></i>
-                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
-                                                </div>
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
-                                                    <strong>Reportes:</strong> Múltiples tipos
-                                                </div>
-                                                <div class="alert alert-warning border">
-                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                                    <strong>Reporte PDF:</strong> Descarga automática
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
