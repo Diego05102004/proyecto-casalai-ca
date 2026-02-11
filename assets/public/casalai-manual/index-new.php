@@ -1,10 +1,11 @@
 <?php 
 require_once "utils.php";
+require_once __DIR__ . "/../../../vendor/autoload.php";
 session_start();
 
-// Importar clases de permisos
-use Usuario\ProyectoCasalaiCa\Config\BD;
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+// Habilitar reporte de errores para depuración
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Determinar tipo de usuario basado en la sesión
 $esCliente = isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] == 'Cliente';
@@ -14,7 +15,7 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
 $id_rol = $_SESSION['id_rol'] ?? 0;
 $nombre_rol = $_SESSION['nombre_rol'] ?? '';
 
-$permisosObj = new Permisos();
+$permisosObj = new \Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos();
 
 // Definir módulos del manual con sus secciones correspondientes
 $modulosManual = [
@@ -140,17 +141,101 @@ $modulosManual = [
     ]
 ];
 
-// Obtener permisos del usuario
+// Obtener permisos del usuario (por módulo y por acción)
+$permisosPorModulo = [];
 $permisosConsulta = [];
-if ($nombre_rol === 'SuperUsuario') {
+
+// Normalizador de acciones: el manual usa "ingresar" como visibilidad del módulo.
+// En BD/Permisos.php no existe "ingresar"; lo mapeamos a "consultar".
+$normalizarAccion = static function (string $accion): string {
+    $accion = mb_strtolower(trim($accion));
+    if ($accion === 'ingresar') {
+        return 'consultar';
+    }
+    if ($accion === 'generar re' || $accion === 'generar reporte' || $accion === 'generar reportes') {
+        return 'generar reporte';
+    }
+    return $accion;
+};
+
+if ($nombre_rol === 'SuperUsuario' || (int)$id_rol === 6) {
     foreach ($modulosManual as $moduloBD => $info) {
+        $permisosPorModulo[$moduloBD] = [
+            'consultar' => true,
+            'incluir' => true,
+            'modificar' => true,
+            'eliminar' => true,
+            'generar reporte' => true,
+        ];
         $permisosConsulta[$moduloBD] = true;
     }
 } else {
-    foreach ($modulosManual as $moduloBD => $info) {
-        $permisosConsulta[$moduloBD] = $permisosObj->getPermisosUsuarioModulo($id_rol, $moduloBD)['ingresar'] ?? false;
+    try {
+        foreach ($modulosManual as $moduloBD => $info) {
+            $permisoData = $permisosObj->getPermisosUsuarioModulo($id_rol, $moduloBD);
+            $permisosPorModulo[$moduloBD] = [
+                'consultar' => (bool)($permisoData['consultar'] ?? false),
+                'incluir' => (bool)($permisoData['incluir'] ?? false),
+                'modificar' => (bool)($permisoData['modificar'] ?? false),
+                'eliminar' => (bool)($permisoData['eliminar'] ?? false),
+                'generar reporte' => (bool)($permisoData['generar reporte'] ?? false),
+            ];
+            // "ingresar" (visibilidad) = permiso consultar
+            $permisosConsulta[$moduloBD] = $permisosPorModulo[$moduloBD]['consultar'];
+        }
+    } catch (Exception $e) {
+        foreach ($modulosManual as $moduloBD => $info) {
+            $permisosPorModulo[$moduloBD] = [
+                'consultar' => false,
+                'incluir' => false,
+                'modificar' => false,
+                'eliminar' => false,
+                'generar reporte' => false,
+            ];
+            $permisosConsulta[$moduloBD] = false;
+        }
     }
 }
+
+$puedeIngresar = static function (string $modulo) use ($permisosConsulta): bool {
+    return !empty($permisosConsulta[$modulo]);
+};
+
+$puedeAccion = static function (string $modulo, string $accion) use ($permisosPorModulo, $normalizarAccion): bool {
+    $accion = $normalizarAccion($accion);
+    return !empty($permisosPorModulo[$modulo][$accion]);
+};
+
+$modulos = [
+    'Usuario',
+      'Recepcion',
+       'Despacho',
+       'Marcas',
+       'Modelos',
+       'Productos',
+       'Categorias',
+    'Compra Física',
+    'Proveedores',
+    'Clientes',
+    'Catalogo',
+    'pasarela',
+    'Pedidos',
+    'Ordenes de despacho',
+    'Cuentas bancarias',
+    'Finanzas',
+    'permisos',
+    'Roles',
+    'bitacora',
+    'Backup' 
+];
+    $acciones =  [
+        'ingresar',
+        'incluir',
+        'modificar',
+        'eliminar',
+        'consultar',
+        'generar re'
+    ];
 ?>
 
 <!DOCTYPE html>
@@ -496,132 +581,58 @@ if ($nombre_rol === 'SuperUsuario') {
         <div class="toc-progress" id="tocProgress"></div>
         <h5 class="toc-title">Tabla de Contenidos</h5>
         <ul class="toc-list">
+           <?php if($_SESSION): ?> 
+            <?php if(!$esCliente): ?>
             <li class="toc-item"><a href="#introduccion" class="toc-link"><i class="bi bi-house-door"></i> Introducción</a></li>
+            <?php endif; ?>
+           <?php endif; ?>
             
             <?php if (isset($_SESSION['id_usuario'])): ?>
+                <?php if(!$esCliente): ?>
                 <li class="toc-item"><a href="#dashboard" class="toc-link"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <?php endif; ?>
                 <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
                 
-                <!-- Sección especial para Clientes (siempre visible para clientes) -->
-                <?php if ($esCliente): ?>
+                <!-- Secciones disponibles para todos los usuarios -->
                 <li class="toc-item">
                     <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Sección para Clientes</a>
                     <ul class="toc-sublist ms-3 mt-2">
                         <li><a href="#carrito" class="toc-link">Carrito de Compras</a></li>
                         <li><a href="#mis-pedidos" class="toc-link">Mis Pedidos</a></li>
-                        <li><a href="#catalogo-productos" class="toc-link">Catálogo de Productos</a></li>
                     </ul>
                 </li>
-                <?php endif; ?>
                 
-                <!-- Secciones dinámicas según permisos (para no clientes) -->
-                <?php if (!$esCliente): ?>
-                    <!-- Agrupar módulos por categorías lógicas -->
-                    <?php 
-                    // Módulos de Inventario
-                    $modulosInventario = ['Recepcion', 'Despacho', 'Marcas', 'Modelos', 'Productos', 'Categorias'];
-                    $tieneInventario = false;
-                    foreach ($modulosInventario as $modulo) {
-                        if (!empty($permisosConsulta[$modulo])) {
-                            $tieneInventario = true;
-                            break;
-                        }
-                    }
-                    ?>
-                    
-                    <?php if ($tieneInventario): ?>
+                <?php if ($esAdministrador): ?>
+                    <!-- Secciones para Administradores -->
                     <li class="toc-item">
-                        <a href="#seccion-inventario" class="toc-link"><i class="bi bi-box-seam"></i> Gestión de Inventario</a>
+                        <a href="#seccion-almacenista" class="toc-link"><i class="bi bi-box-seam"></i> Sección para Almacenistas</a>
                         <ul class="toc-sublist ms-3 mt-2">
-                            <?php foreach ($modulosInventario as $modulo): ?>
-                                <?php if (!empty($permisosConsulta[$modulo])): ?>
-                                    <li><a href="#<?= $modulosManual[$modulo]['seccion_id'] ?>" class="toc-link"><?= $modulosManual[$modulo]['titulo'] ?></a></li>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
+                            <li><a href="#recepcion-productos" class="toc-link">Recepción de Productos</a></li>
+                            <li><a href="#despacho-productos" class="toc-link">Despacho de Productos</a></li>
+                            <li><a href="#gestion-marcas-almacenista" class="toc-link">Gestión de Marcas</a></li>
+                            <li><a href="#gestion-modelos-almacenista" class="toc-link">Gestión de Modelos</a></li>
+                            <li><a href="#gestion-productos-almacenista" class="toc-link">Gestión de Productos</a></li>
+                            <li><a href="#gestion-categorias-almacenista" class="toc-link">Gestión de Categorías</a></li>
                         </ul>
                     </li>
-                    <?php endif; ?>
                     
-                    <!-- Módulos de Ventas y Clientes -->
-                    <?php 
-                    $modulosVentas = ['Catalogo', 'Compra Física', 'pasarela', 'Pedidos', 'Ordenes de despacho', 'Clientes'];
-                    $tieneVentas = false;
-                    foreach ($modulosVentas as $modulo) {
-                        if (!empty($permisosConsulta[$modulo])) {
-                            $tieneVentas = true;
-                            break;
-                        }
-                    }
-                    ?>
-                    
-                    <?php if ($tieneVentas): ?>
                     <li class="toc-item">
-                        <a href="#seccion-ventas" class="toc-link"><i class="bi bi-cart"></i> Gestión de Ventas</a>
+                        <a href="#seccion-administrador" class="toc-link"><i class="bi bi-shield-check"></i> Sección para Administradores</a>
                         <ul class="toc-sublist ms-3 mt-2">
-                            <?php foreach ($modulosVentas as $modulo): ?>
-                                <?php if (!empty($permisosConsulta[$modulo])): ?>
-                                    <li><a href="#<?= $modulosManual[$modulo]['seccion_id'] ?>" class="toc-link"><?= $modulosManual[$modulo]['titulo'] ?></a></li>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
+                            <li><a href="#gestion-proveedores-admin" class="toc-link">Gestión de Proveedores</a></li>
+                            <li><a href="#gestion-clientes-admin" class="toc-link">Gestión de Clientes</a></li>
+                            <li><a href="#gestion-usuarios-sistema" class="toc-link">Gestión de Usuarios</a></li>
+                            <li><a href="#gestion-roles-permisos" class="toc-link">Gestión de Roles y Permisos</a></li>
+                            <li><a href="#gestion-cuentas-bancarias" class="toc-link">Gestión de Cuentas Bancarias</a></li>
+                            <li><a href="#catalogo-combos-promocionales" class="toc-link">Combos Promocionales</a></li>
                         </ul>
                     </li>
-                    <?php endif; ?>
-                    
-                    <!-- Módulos de Finanzas -->
-                    <?php 
-                    $modulosFinanzas = ['Proveedores', 'Cuentas bancarias', 'Finanzas'];
-                    $tieneFinanzas = false;
-                    foreach ($modulosFinanzas as $modulo) {
-                        if (!empty($permisosConsulta[$modulo])) {
-                            $tieneFinanzas = true;
-                            break;
-                        }
-                    }
-                    ?>
-                    
-                    <?php if ($tieneFinanzas): ?>
-                    <li class="toc-item">
-                        <a href="#seccion-finanzas" class="toc-link"><i class="bi bi-currency-dollar"></i> Gestión Financiera</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <?php foreach ($modulosFinanzas as $modulo): ?>
-                                <?php if (!empty($permisosConsulta[$modulo])): ?>
-                                    <li><a href="#<?= $modulosManual[$modulo]['seccion_id'] ?>" class="toc-link"><?= $modulosManual[$modulo]['titulo'] ?></a></li>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </ul>
-                    </li>
-                    <?php endif; ?>
-                    
-                    <!-- Módulos de Administración y Seguridad -->
-                    <?php 
-                    $modulosAdmin = ['Usuario', 'permisos', 'Roles', 'bitacora', 'Backup'];
-                    $tieneAdmin = false;
-                    foreach ($modulosAdmin as $modulo) {
-                        if (!empty($permisosConsulta[$modulo])) {
-                            $tieneAdmin = true;
-                            break;
-                        }
-                    }
-                    ?>
-                    
-                    <?php if ($tieneAdmin): ?>
-                    <li class="toc-item">
-                        <a href="#seccion-administracion" class="toc-link"><i class="bi bi-shield-check"></i> Administración y Seguridad</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <?php foreach ($modulosAdmin as $modulo): ?>
-                                <?php if (!empty($permisosConsulta[$modulo])): ?>
-                                    <li><a href="#<?= $modulosManual[$modulo]['seccion_id'] ?>" class="toc-link"><?= $modulosManual[$modulo]['titulo'] ?></a></li>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </ul>
-                    </li>
-                    <?php endif; ?>
                 <?php endif; ?>
             <?php else: ?>
                 <li class="toc-item"><a href="#iniciar-sesion" class="toc-link"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</a></li>
             <?php endif; ?>
             
-            <li class="toc-item"><a href="#preguntas-frecuentes" class="toc-link"><i class="bi bi-question-circle"></i> Preguntas Frecuentes</a></li>
+       <!--     <li class="toc-item"><a href="#preguntas-frecuentes" class="toc-link"><i class="bi bi-question-circle"></i> Preguntas Frecuentes</a></li> -->
         </ul>
     </div>
 </div>
@@ -629,6 +640,8 @@ if ($nombre_rol === 'SuperUsuario') {
             <!-- Main Content -->
             <div class="col-lg-9">
                 <!-- Introduction Section -->
+                 <?php if($_SESSION): ?>
+                    <?php if(!$esCliente): ?>
                 <section id="introduccion" class="section-card">
                     <h2 class="section-title">Introducción</h2>
                     <div class="row">
@@ -712,8 +725,12 @@ if ($nombre_rol === 'SuperUsuario') {
                         </div>
                     </div>
                 </section>
-
+                <?php endif; ?>
+                <?php endif; ?>
+    <?php if($_SESSION): ?>
 <!-- Dashboard Section -->
+ <?php if(!$esCliente): ?>
+
 <section id="dashboard" class="section-card">
     <h2 class="section-title">
         <i class="bi bi-speedometer2 me-2"></i>Dashboard
@@ -807,6 +824,8 @@ if ($nombre_rol === 'SuperUsuario') {
         El Dashboard se adapta automáticamente según su rol de usuario, mostrando solo la información relevante para sus funciones.
     </div>
 </section>
+
+<?php endif; ?>
                 <!-- Mi Cuenta Section -->
                 <?php if (isset($_SESSION['id_usuario'])): ?>
                     <section id="mi-cuenta" class="section-card">
@@ -866,7 +885,7 @@ if ($nombre_rol === 'SuperUsuario') {
                 <?php endif; ?>
 
                 <!-- Sección Clientes -->
-                <?php /* if ($esCliente): */ ?>
+                <?php  if ($esCliente):  ?>
                 <section id="seccion-cliente" class="section-card">
                     <h2 class="section-title">
                         <i class="bi bi-person me-2"></i>Sección para Clientes
@@ -1438,7 +1457,7 @@ if ($nombre_rol === 'SuperUsuario') {
                         </div>
                     </div>
                 </section>
-                <?php /* endif; */ ?>
+                <?php  endif;  ?>
 
                 <!-- Carrito de Compras -->
                 <section id="carrito" class="section-card">
@@ -1500,26 +1519,177 @@ if ($nombre_rol === 'SuperUsuario') {
                     </div>
                 </section>
 
-                <!-- Secciones Dinámicas según Permisos (para no clientes) -->
-                <?php if (!$esCliente): ?>
-                    
-                    <!-- Sección de Inventario -->
-                    <?php 
-                    $modulosInventario = ['Recepcion', 'Despacho', 'Marcas', 'Modelos', 'Productos', 'Categorias'];
-                    $tieneInventario = false;
-                    foreach ($modulosInventario as $modulo) {
-                        if (!empty($permisosConsulta[$modulo])) {
-                            $tieneInventario = true;
-                            break;
-                        }
-                    }
-                    ?>
-                    
-                    <?php if ($tieneInventario): ?>
-                    <section id="seccion-inventario" class="section-card">
+                <!-- Sección Almacenista -->
+                <?php
+                $tieneInventario = (
+                    $puedeIngresar('Recepcion') ||
+                    $puedeIngresar('Despacho') ||
+                    $puedeIngresar('Marcas') ||
+                    $puedeIngresar('Modelos') ||
+                    $puedeIngresar('Productos') ||
+                    $puedeIngresar('Categorias')
+                );
+                ?>
+                <?php if ($tieneInventario): ?>
+                <section id="seccion-almacenista" class="section-card">
                     <h2 class="section-title">
-                            <i class="bi bi-box-seam me-2"></i>Gestión de Inventario
+                        <i class="bi bi-box-seam me-2"></i>Sección para Almacenistas
                     </h2>
+                    
+                    <div class="row">
+                        <div>
+                            <p>Como almacenista, tendrá acceso completo a la gestión de inventario y control de productos del sistema.</p>
+                        </div>
+
+                        <div class="col-md-8 mx-auto">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Flujo de Trabajo</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">1</div>
+                                            <div>
+                                                <h6 class="mb-1">Configurar Categorías</h6>
+                                                <p class="small text-muted mb-0">Establezca la estructura base</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">2</div>
+                                            <div>
+                                                <h6 class="mb-1">Agregar Marcas</h6>
+                                                <p class="small text-muted mb-0">Registre los proveedores</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">3</div>
+                                            <div>
+                                                <h6 class="mb-1">Crear Modelos</h6>
+                                                <p class="small text-muted mb-0">Defina las variantes</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">4</div>
+                                            <div>
+                                                <h6 class="mb-1">Registrar Productos</h6>
+                                                <p class="small text-muted mb-0">Complete el inventario</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <div class="d-flex">
+                                            <div class="step-number">5</div>
+                                            <div>
+                                                <h6 class="mb-1">Gestionar Movimientos</h6>
+                                                <p class="small text-muted mb-0">Controlar entradas y salidas</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">Alertas de Inventario</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                            Stock mínimo alcanzado
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                            Producto sin stock
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="bi bi-arrow-up-circle-fill text-info me-2"></i>
+                                            Stock máximo excedido
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="bi bi-clock-fill text-primary me-2"></i>
+                                            Productos por recibir
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recepción -->
+                        <?php if ($puedeIngresar('Recepcion')): ?>
+                        <div class="card mt-4 mb-4" id="recepcion-productos">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-truck me-2"></i>Recepción de Productos
+                                </h5>
+                                <p>Registre la entrada de nuevos productos al inventario desde proveedores.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Fecha de recepción</li>
+                                            <li>Correlación</li>
+                                            <li>Proveedor</li>
+                                            <li>Productos</li>
+                                            <li>Cantidad recibida</li>
+                                            <li>Costo inversión</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Registrar</strong>: Nueva recepción</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Anular</strong>: Remover recepción</li>
+                                            <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos detallados para registrar recepción -->
+                                <?php if ($puedeAccion('Recepcion', 'incluir')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Registrar Nueva Recepción</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nueva Recepción"</strong> en la parte superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>N° de la factura</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>proveedor</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>tamaño de la compra</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-plus-circle text-success me-2"></i>
+                                                    <strong>Nueva Recepción:</strong><br> Botón "+" verde
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>N° de Factura:</strong><br> (único en el sistema)
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-calculator me-2"></i>
+                                                    <strong>Costo:</strong> Valor unitario requerido
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar:</strong><br> Resetea el formulario
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="note col-md-11 mx-auto">
@@ -1528,8 +1698,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para detallar recepcion -->
+                                <?php if ($puedeAccion('Recepcion', 'consultar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Recepción</h6>
@@ -1550,8 +1722,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar recepción -->
+                                <?php if ($puedeAccion('Recepcion', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Recepción</h6>
@@ -1579,8 +1753,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para anular recepción -->
+                                <?php if ($puedeAccion('Recepcion', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Anular Recepción</h6>
@@ -1607,8 +1783,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para generar reportes de recepciones -->
+                                <?php if ($puedeAccion('Recepcion', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Recepciones</h6>
@@ -1641,10 +1819,13 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <!-- Despacho -->
+                        <?php if ($puedeIngresar('Despacho')): ?>
                         <div class="card mb-4" id="despacho-productos">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -1677,6 +1858,7 @@ if ($nombre_rol === 'SuperUsuario') {
                                 </div>
                                 
                                 <!-- Pasos para detallar despacho -->
+                                <?php if ($puedeAccion('Despacho', 'consultar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Despacho</h6>
@@ -1697,6 +1879,7 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para cambiar estatus -->
                                 <div class="card mt-3">
@@ -1735,6 +1918,7 @@ if ($nombre_rol === 'SuperUsuario') {
                                 </div>
                                 
                                 <!-- Pasos para anular despacho -->
+                                <?php if ($puedeAccion('Despacho', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Anular Despacho</h6>
@@ -1761,8 +1945,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para generar reportes de despachos -->
+                                <?php if ($puedeAccion('Despacho', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Despachos</h6>
@@ -1802,6 +1988,7 @@ if ($nombre_rol === 'SuperUsuario') {
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
 
                         <!-- Orden de Despacho -->
                         <div class="card mb-4" id="despacho-productos">
@@ -1949,8 +2136,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <!-- Marcas -->
+                        <?php if ($puedeIngresar('Marcas')): ?>
                         <div class="card mt-4" id="gestion-marcas-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -1977,6 +2166,7 @@ if ($nombre_rol === 'SuperUsuario') {
                                 </div>
                                 
                                 <!-- Pasos detallados para registrar marca -->
+                                <?php if ($puedeAccion('Marcas', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nueva Marca</h6>
@@ -2019,8 +2209,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar marca -->
+                                <?php if ($puedeAccion('Marcas', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Marca</h6>
@@ -2048,8 +2240,10 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para eliminar marca -->
+                                <?php if ($puedeAccion('Marcas', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Marca</h6>
@@ -2076,6 +2270,7 @@ if ($nombre_rol === 'SuperUsuario') {
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <div class="note mt-3">
                                     <i class="bi bi-info-circle-fill me-2"></i>
@@ -2083,6 +2278,7 @@ if ($nombre_rol === 'SuperUsuario') {
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <!-- Modelos -->
                         <div class="card mt-4" id="gestion-modelos-almacenista">
@@ -2581,242 +2777,22 @@ if ($nombre_rol === 'SuperUsuario') {
                         </div>
                     </div>
                 </section>
-                    <?php endif; ?>
-                <?php endif; ?>
-
-                <!-- Sección de Ventas -->
-                <?php 
-                $modulosVentas = ['Catalogo', 'Compra Física', 'pasarela', 'Pedidos', 'Ordenes de despacho', 'Clientes'];
-                $tieneVentas = false;
-                foreach ($modulosVentas as $modulo) {
-                    if (!empty($permisosConsulta[$modulo])) {
-                        $tieneVentas = true;
-                        break;
-                    }
-                }
-                ?>
-                
-                <?php if ($tieneVentas): ?>
-                <section id="seccion-ventas" class="section-card">
-                    <h2 class="section-title">
-                        <i class="bi bi-cart me-2"></i>Gestión de Ventas
-                    </h2>
-                    
-                    <div class="row">
-                        <div>
-                            <p>En esta sección podrá gestionar todas las operaciones de ventas, desde el catálogo de productos hasta el procesamiento de pedidos y pagos.</p>
-                        </div>
-                    </div>
-
-                    <!-- Módulos específicos de ventas -->
-                    <?php foreach ($modulosVentas as $modulo): ?>
-                        <?php if (!empty($permisosConsulta[$modulo])): ?>
-                            <div class="card mt-4 mb-4" id="<?= $modulosManual[$modulo]['seccion_id'] ?>">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="<?= $modulosManual[$modulo]['icono'] ?> me-2"></i><?= $modulosManual[$modulo]['titulo'] ?>
-                                    </h5>
-                                    <p><?= $modulosManual[$modulo]['descripcion'] ?></p>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6>Información gestionable:</h6>
-                                            <ul>
-                                                <?php
-                                                switch($modulo) {
-                                                    case 'Catalogo':
-                                                        echo '<li>Productos disponibles</li><li>Precios</li><li>Stock</li><li>Imágenes</li><li>Descripciones</li>';
-                                                        break;
-                                                    case 'Compra Física':
-                                                        echo '<li>Ventas presenciales</li><li>Clientes</li><li>Productos vendidos</li><li>Montos</li><li>Métodos de pago</li>';
-                                                        break;
-                                                    case 'pasarela':
-                                                        echo '<li>Transacciones</li><li>Estados de pago</li><li>Referencias</li><li>Comprobantes</li>';
-                                                        break;
-                                                    case 'Pedidos':
-                                                        echo '<li>Órdenes de compra</li><li>Estado de pedidos</li><li>Detalles de envío</li><li>Facturas</li>';
-                                                        break;
-                                                    case 'Ordenes de despacho':
-                                                        echo '<li>Órdenes de despacho</li><li>Estados</li><li>Códigos de seguimiento</li><li>Destinatarios</li>';
-                                                        break;
-                                                    case 'Clientes':
-                                                        echo '<li>Información personal</li><li>Historial de compras</li><li>Datos de contacto</li><li>Estado</li>';
-                                                        break;
-                                                }
-                                                ?>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Operaciones disponibles:</h6>
-                                            <ul>
-                                                <li><strong>Registrar</strong>: Nuevo registro</li>
-                                                <li><strong>Consultar</strong>: Ver lista completa</li>
-                                                <li><strong>Detallar</strong>: Ver información completa</li>
-                                                <li><strong>Actualizar</strong>: Modificar datos</li>
-                                                <li><strong>Eliminar</strong>: Remover registro</li>
-                                                <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </section>
-                <?php endif; ?>
-
-                <!-- Sección de Finanzas -->
-                <?php 
-                $modulosFinanzas = ['Proveedores', 'Cuentas bancarias', 'Finanzas'];
-                $tieneFinanzas = false;
-                foreach ($modulosFinanzas as $modulo) {
-                    if (!empty($permisosConsulta[$modulo])) {
-                        $tieneFinanzas = true;
-                        break;
-                    }
-                }
-                ?>
-                
-                <?php if ($tieneFinanzas): ?>
-                <section id="seccion-finanzas" class="section-card">
-                    <h2 class="section-title">
-                        <i class="bi bi-currency-dollar me-2"></i>Gestión Financiera
-                    </h2>
-                    
-                    <div class="row">
-                        <div>
-                            <p>En esta sección podrá gestionar todos los aspectos financieros del sistema, incluyendo proveedores, cuentas bancarias y movimientos de ingresos y egresos.</p>
-                        </div>
-                    </div>
-
-                    <!-- Módulos específicos de finanzas -->
-                    <?php foreach ($modulosFinanzas as $modulo): ?>
-                        <?php if (!empty($permisosConsulta[$modulo])): ?>
-                            <div class="card mt-4 mb-4" id="<?= $modulosManual[$modulo]['seccion_id'] ?>">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="<?= $modulosManual[$modulo]['icono'] ?> me-2"></i><?= $modulosManual[$modulo]['titulo'] ?>
-                                    </h5>
-                                    <p><?= $modulosManual[$modulo]['descripcion'] ?></p>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6>Información gestionable:</h6>
-                                            <ul>
-                                                <?php
-                                                switch($modulo) {
-                                                    case 'Proveedores':
-                                                        echo '<li>Nombre del proveedor</li><li>RIF</li><li>Teléfono</li><li>Dirección</li><li>Productos suministrados</li>';
-                                                        break;
-                                                    case 'Cuentas bancarias':
-                                                        echo '<li>Número de cuenta</li><li>Banco</li><li>Tipo de cuenta</li><li>Titular</li><li>Estado</li>';
-                                                        break;
-                                                    case 'Finanzas':
-                                                        echo '<li>Ingresos</li><li>Egresos</li><li>Categorías</li><li>Fechas</li><li>Montos</li><li>Descripciones</li>';
-                                                        break;
-                                                }
-                                                ?>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Operaciones disponibles:</h6>
-                                            <ul>
-                                                <li><strong>Registrar</strong>: Nuevo registro</li>
-                                                <li><strong>Consultar</strong>: Ver lista completa</li>
-                                                <li><strong>Detallar</strong>: Ver información completa</li>
-                                                <li><strong>Actualizar</strong>: Modificar datos</li>
-                                                <li><strong>Eliminar</strong>: Remover registro</li>
-                                                <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </section>
-                <?php endif; ?>
-
-                <!-- Sección de Administración y Seguridad -->
-                <?php 
-                $modulosAdmin = ['Usuario', 'permisos', 'Roles', 'bitacora', 'Backup'];
-                $tieneAdmin = false;
-                foreach ($modulosAdmin as $modulo) {
-                    if (!empty($permisosConsulta[$modulo])) {
-                        $tieneAdmin = true;
-                        break;
-                    }
-                }
-                ?>
-                
-                <?php if ($tieneAdmin): ?>
-                <section id="seccion-administracion" class="section-card">
-                    <h2 class="section-title">
-                        <i class="bi bi-shield-check me-2"></i>Administración y Seguridad
-                    </h2>
-                    
-                    <div class="row">
-                        <div>
-                            <p>En esta sección podrá gestionar la seguridad y administración del sistema, incluyendo usuarios, permisos, roles y mantenimiento del sistema.</p>
-                        </div>
-                    </div>
-
-                    <!-- Módulos específicos de administración -->
-                    <?php foreach ($modulosAdmin as $modulo): ?>
-                        <?php if (!empty($permisosConsulta[$modulo])): ?>
-                            <div class="card mt-4 mb-4" id="<?= $modulosManual[$modulo]['seccion_id'] ?>">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="<?= $modulosManual[$modulo]['icono'] ?> me-2"></i><?= $modulosManual[$modulo]['titulo'] ?>
-                                    </h5>
-                                    <p><?= $modulosManual[$modulo]['descripcion'] ?></p>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6>Información gestionable:</h6>
-                                            <ul>
-                                                <?php
-                                                switch($modulo) {
-                                                    case 'Usuario':
-                                                        echo '<li>Nombre de usuario</li><li>Contraseña</li><li>Rol</li><li>Estado</li><li>Permisos</li>';
-                                                        break;
-                                                    case 'permisos':
-                                                        echo '<li>Módulos</li><li>Acciones (CRUD)</li><li>Roles asignados</li><li>Descripciones</li>';
-                                                        break;
-                                                    case 'Roles':
-                                                        echo '<li>Nombre del rol</li><li>Permisos asociados</li><li>Descripción</li><li>Estado</li>';
-                                                        break;
-                                                    case 'bitacora':
-                                                        echo '<li>Registro de actividades</li><li>Usuarios</li><li>Fechas</li><li>Acciones realizadas</li>';
-                                                        break;
-                                                    case 'Backup':
-                                                        echo '<li>Fecha de backup</li><li>Tamaño</li><li>Tipo</li><li>Estado</li>';
-                                                        break;
-                                                }
-                                                ?>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6>Operaciones disponibles:</h6>
-                                            <ul>
-                                                <li><strong>Registrar</strong>: Nuevo registro</li>
-                                                <li><strong>Consultar</strong>: Ver lista completa</li>
-                                                <li><strong>Detallar</strong>: Ver información completa</li>
-                                                <li><strong>Actualizar</strong>: Modificar datos</li>
-                                                <li><strong>Eliminar</strong>: Remover registro</li>
-                                                <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </section>
                 <?php endif; ?>
 
                 <!-- Sección Administrador -->
-                <?php /* if ($esAdministrador): */ ?>
+                <?php
+                $tieneAdmin = (
+                    $puedeIngresar('Usuario') ||
+                    $puedeIngresar('permisos') ||
+                    $puedeIngresar('Roles') ||
+                    $puedeIngresar('bitacora') ||
+                    $puedeIngresar('Backup') ||
+                    $puedeIngresar('Proveedores') ||
+                    $puedeIngresar('Cuentas bancarias') ||
+                    $puedeIngresar('Finanzas')
+                );
+                ?>
+                <?php if ($tieneAdmin): ?>
                 <section id="seccion-administrador" class="section-card">
                     <h2 class="section-title">
                         <i class="bi bi-shield-check me-2"></i>Sección para Administradores
@@ -4378,7 +4354,7 @@ if ($nombre_rol === 'SuperUsuario') {
                         </div>
                     </div>
                 </section>
-                <?php /* endif; */ ?>
+                <?php endif; ?>
 
                 <?php /* if ($esCliente || $esAdministrador): */ ?>
                     <!-- Sección para Clientes -->
@@ -4428,6 +4404,7 @@ if ($nombre_rol === 'SuperUsuario') {
                         <?php /* include 'plantillas/seccion-administrador.php'; */ ?>
                     <?php /* endif; */ ?>
                 <?php /* else: */ ?>
+                <?php endif; ?>
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
                         <h2 class="section-title">Iniciar Sesión</h2>
@@ -4461,7 +4438,7 @@ if ($nombre_rol === 'SuperUsuario') {
                     </section>
                 <?php /* endif; */ ?>
 
-                <!-- Preguntas Frecuentes -->
+                <!-- Preguntas Frecuentes 
                 <section id="preguntas-frecuentes" class="section-card">
                     <h2 class="section-title">Preguntas Frecuentes</h2>
                     
@@ -4528,7 +4505,7 @@ if ($nombre_rol === 'SuperUsuario') {
                         </div>
                     </div>
                 </section>
-               
+               -->
                 <!-- Footer -->
                 <footer class="text-center text-muted py-4 mt-5 border-top">
                     <p class="mb-1">© <?= date('Y') ?> Casa Lai, C.A. Todos los derechos reservados.</p>

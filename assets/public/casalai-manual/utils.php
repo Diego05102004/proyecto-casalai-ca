@@ -3,7 +3,7 @@
 function plantilla($nombre, $datos = [])
 {
     extract($datos);
-    include "plantillas/{$nombre}.php";
+    include __DIR__ . "/plantillas/{$nombre}.php";
 }
 
 function renderImagen($id, $nombre)
