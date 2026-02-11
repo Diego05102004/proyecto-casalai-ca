@@ -1517,9 +1517,9 @@ if ($nombre_rol === 'SuperUsuario') {
                     
                     <?php if ($tieneInventario): ?>
                     <section id="seccion-inventario" class="section-card">
-                        <h2 class="section-title">
+                    <h2 class="section-title">
                             <i class="bi bi-box-seam me-2"></i>Gestión de Inventario
-                        </h2>
+                    </h2>
                                             </div>
                                         </div>
                                         <div class="note col-md-11 mx-auto">

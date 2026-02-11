@@ -170,19 +170,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 </td>
                 <td>
                     <ul>
-                        <button class="btn-descargar"
-                            data-archivo="${nombre}"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Descargar">
-                            <img src="assets/img/download.svg" alt="Descargar">
-                        </button>
                         <button class="btn-restaurar"
                             data-archivo="${nombre}"
                             data-bs-toggle="tooltip"
                             data-bs-placement="top"
                             title="Restaurar">
                             <img src="assets/img/rotate-ccw.svg" alt="Restaurar">
+                        </button>
+                        <button class="btn-descargar"
+                            data-archivo="${nombre}"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Descargar">
+                            <img src="assets/img/download.svg" alt="Descargar">
                         </button>
                         <button class="btn-eliminar"
                             data-archivo="${nombre}"
