@@ -1299,7 +1299,7 @@ $modulos = [
                         </div>
                     </div>
                 </section>
-                <?php  endif;  ?>
+                <?php /* endif; */ ?>
 
                 <!-- Carrito de Compras -->
                 <section id="carrito" class="section-card">
@@ -1362,17 +1362,7 @@ $modulos = [
                 </section>
 
                 <!-- Sección Almacenista -->
-                <?php
-                $tieneInventario = (
-                    $puedeIngresar('Recepcion') ||
-                    $puedeIngresar('Despacho') ||
-                    $puedeIngresar('Marcas') ||
-                    $puedeIngresar('Modelos') ||
-                    $puedeIngresar('Productos') ||
-                    $puedeIngresar('Categorias')
-                );
-                ?>
-                <?php if ($tieneInventario): ?>
+                <?php /* if ($esAdministrador): */ ?>
                 <section id="seccion-almacenista" class="section-card">
                     <h2 class="section-title">
                         <i class="bi bi-box-seam me-2"></i>Sección para Almacenistas
@@ -1661,324 +1651,8 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
-                                <?php endif; ?>
                             </div>
                         </div>
-                        <?php endif; ?>
-                        
-                        <!-- Despacho -->
-                        <?php if ($puedeIngresar('Despacho')): ?>
-                        <div class="card mb-4" id="despacho-productos">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
-                                </h5>
-                                <p>Gestione la salida de productos del inventario hacia los clientes.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Fecha de despacho</li>
-                                            <li>Cliente</li>
-                                            <li>Tipo de compra</li>
-                                            <li>Productos</li>
-                                            <li>Cantidad despachada</li>
-                                            <li>Precio unitario</li>
-                                            <li>Total del despacho</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Proceso de despacho:</h6>
-                                        <ul>
-                                            <li><strong>Consultar</strong>: Ver lista completa</li>
-                                            <li><strong>Detallar</strong>: Ver información completa</li>
-                                            <li><strong>Anular</strong>: Remover despacho</li>
-                                            <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para detallar despacho -->
-                                <?php if ($puedeAccion('Despacho', 'consultar')): ?>
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del despacho.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-eye text-warning me-2"></i>
-                                                    <strong>Detallar:</strong> Ícono ojo
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
-
-                                <!-- Pasos para cambiar estatus -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) del despacho y cambiará automáticamente.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="alert alert-info border">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong><br> Sin confirmación
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="alert alert-danger border">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para anular despacho -->
-                                <?php if ($puedeAccion('Despacho', 'eliminar')): ?>
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Anular Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el despacho que desea anular.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Anular:</strong> Ícono X rojo
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
-
-                                <!-- Pasos para generar reportes de despachos -->
-                                <?php if ($puedeAccion('Despacho', 'generar reporte')): ?>
-                                <div class="card mt-3">
-                                    <div class="card-header bg-secondary text-white">
-                                        <h6 class="mb-0">Pasos para Generar Reportes de Despachos</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: (Todos los reportes, Por Estatus, Mensuales, Por Cliente o Por Tipo de Compra).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-pie-chart me-2"></i>
-                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
-                                                </div>
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
-                                                    <strong>Reportes:</strong> Múltiples tipos
-                                                </div>
-                                                <div class="alert alert-warning border">
-                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                                    <strong>Reporte PDF:</strong> Descarga automática
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="note mt-3">
-                                    <i class="bi bi-info-circle-fill me-2"></i>
-                                    Los despachos reducen automáticamente el stock de productos del inventario.
-                                </div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- Orden de Despacho -->
-                        <div class="card mb-4" id="despacho-productos">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
-                                </h5>
-                                <p>Gestione la verificación y entrega de las ordenes de despacho hacia los clientes.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Fecha</li>
-                                            <li>N° de orden de despacho</li>
-                                            <li>Código de orden de compra</li></li>
-                                            <li>Cliente</li>
-                                            <li>Estatus</li>
-                                            <li>Productos</li>
-                                            <li>Cantidad</li>
-                                            <li>Costo total</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Proceso de despacho:</h6>
-                                        <ul>
-                                            <li><strong>Consultar</strong>: Ver lista completa</li>
-                                            <li><strong>Detallar</strong>: Ver información completa</li>
-                                            <li><strong>Descargar</strong>: Entregar orden de despacho</li>
-                                            <li><strong>Anular</strong>: Remover orden de despacho</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para detallar orden de despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la orden de despacho.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-eye text-warning me-2"></i>
-                                                    <strong>Detallar:</strong> Ícono ojo
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para cambiar estatus -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus de la Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) de la orden de despacho y cambiará automáticamente.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="alert alert-info border">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong><br> Sin confirmación
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="alert alert-danger border">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para descargar orden de despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0">Pasos para Descargar Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono de <strong>descarga</strong> <i class="bi bi-download text-info me-2"></i>en la columna "Acciones" para obtener la orden de despacho en formato PDF.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-download text-info me-2"></i>
-                                                    <strong>Descargar:</strong> Ícono descarga
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-archive me-2"></i>
-                                                    <strong>Archivo:</strong> Formato PDF
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para anular orden de despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Anular Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la orden de despacho que desea anular.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Anular:</strong> Ícono X rojo
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endif; ?>
                         
                         <!-- Despacho -->
                         <div class="card mb-4" id="despacho-productos">
@@ -2287,7 +1961,6 @@ $modulos = [
                         </div>
                         
                         <!-- Marcas -->
-                        <?php if ($puedeIngresar('Marcas')): ?>
                         <div class="card mt-4" id="gestion-marcas-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2925,22 +2598,10 @@ $modulos = [
                         </div>
                     </div>
                 </section>
-                <?php endif; ?>
+                <?php /* endif; */ ?>
 
                 <!-- Sección Administrador -->
-                <?php
-                $tieneAdmin = (
-                    $puedeIngresar('Usuario') ||
-                    $puedeIngresar('permisos') ||
-                    $puedeIngresar('Roles') ||
-                    $puedeIngresar('bitacora') ||
-                    $puedeIngresar('Backup') ||
-                    $puedeIngresar('Proveedores') ||
-                    $puedeIngresar('Cuentas bancarias') ||
-                    $puedeIngresar('Finanzas')
-                );
-                ?>
-                <?php if ($tieneAdmin): ?>
+                <?php /* if ($esAdministrador): */ ?>
                 <section id="seccion-administrador" class="section-card">
                     <h2 class="section-title">
                         <i class="bi bi-shield-check me-2"></i>Sección para Administradores
@@ -4345,11 +4006,6 @@ $modulos = [
                                     <i class="bi bi-info-circle-fill me-2"></i>
                                     Los combos ayudan a aumentar las ventas y mejorar la satisfacción del cliente.
                                 </div>
-                                
-                                <div class="note mt-3">
-                                    <i class="bi bi-info-circle-fill me-2"></i>
-                                    Los combos ayudan a aumentar las ventas y mejorar la satisfacción del cliente.
-                                </div>
                             </div>
                         </div>
 
@@ -4727,6 +4383,10 @@ $modulos = [
                                                     <i class="bi bi-eye text-warning me-2"></i>
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -4735,7 +4395,7 @@ $modulos = [
                         </div>
                     </div>
                 </section>
-                <?php endif; ?>
+                <?php /* endif; */ ?>
 
                 <?php /* if ($esCliente || $esAdministrador): */ ?>
                     <!-- Sección para Clientes -->
@@ -4785,7 +4445,6 @@ $modulos = [
                         <?php /* include 'plantillas/seccion-administrador.php'; */ ?>
                     <?php /* endif; */ ?>
                 <?php /* else: */ ?>
-                <?php endif; ?>
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
                         <h2 class="section-title">Iniciar Sesión</h2>
@@ -4886,7 +4545,7 @@ $modulos = [
                         </div>
                     </div>
                 </section>
-               -->
+               
                 <!-- Footer -->
                 <footer class="text-center text-muted py-4 mt-5 border-top">
                     <p class="mb-1">© <?= date('Y') ?> Casa Lai, C.A. Todos los derechos reservados.</p>
