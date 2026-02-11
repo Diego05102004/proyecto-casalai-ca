@@ -632,7 +632,7 @@ $modulos = [
                 <li class="toc-item"><a href="#iniciar-sesion" class="toc-link"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</a></li>
             <?php endif; ?>
             
-       <!--     <li class="toc-item"><a href="#preguntas-frecuentes" class="toc-link"><i class="bi bi-question-circle"></i> Preguntas Frecuentes</a></li> -->
+            <li class="toc-item"><a href="#preguntas-frecuentes" class="toc-link"><i class="bi bi-question-circle"></i> Preguntas Frecuentes</a></li>
         </ul>
     </div>
 </div>
@@ -1163,164 +1163,6 @@ $modulos = [
                             </div>
                         </div>
                         
-                        <!-- Prefactura -->
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-file-earmark-text me-2"></i>Proceso de Facturación
-                                </h5>
-                                <p>Genere facturas para sus ventas con un proceso detallado paso a paso.</p>
-                                
-                                <!-- Pasos detallados para facturación -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Procesar Factura</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en <strong>"LISTADO DE PRODUCTOS"</strong> para ver productos disponibles.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione los productos deseados haciendo clic en ellos.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ajuste las cantidades usando los botones <strong>+/-</strong> o escribiendo directamente.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Verifique el stock disponible (no puede exceder el stock actual).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> El subtotal se calculará automáticamente.</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Complete los datos del cliente si es necesario.</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Procesar Pre-Factura"</strong> cuando esté listo.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-cart-plus text-success me-2"></i>
-                                                    <strong>Agregar Productos</strong>
-                                                    <br><small>Click en producto</small>
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-calculator me-2"></i>
-                                                    <strong>Total:</strong> Calculado automáticamente
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-box-seam me-2"></i>
-                                                    <strong>Stock:</strong> Validado automáticamente
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para gestión de productos en factura -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Gestión de Productos</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Para <strong>agregar productos</strong>: haga clic en la tabla del modal.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Para <strong>eliminar productos</strong>: presione el botón <strong>"X"</strong> rojo.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Para <strong>modificar cantidades</strong>: use los botones <strong>+/-</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Los productos con stock 0 están ocultos automáticamente.</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> El sistema validará que no exceda el stock disponible.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-dash-circle text-danger me-2"></i>
-                                                    <strong>Eliminar</strong>
-                                                    <br><small>Botón X rojo</small>
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-plus-slash-minus me-2"></i>
-                                                    <strong>Cantidades:</strong> Botones +/-
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Stock 0:</strong> Ocultos automáticamente
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Validaciones y restricciones -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Validaciones y Restricciones</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ul>
-                                                    <li class="mb-2">No puede procesar una factura sin productos.</li>
-                                                    <li class="mb-2">Las cantidades no pueden superar el stock disponible.</li>
-                                                    <li class="mb-2">Los precios se calculan automáticamente según el producto.</li>
-                                                    <li class="mb-2">El total se actualiza en tiempo real.</li>
-                                                    <li class="mb-2">Todos los campos obligatorios deben estar completos.</li>
-                                                </ul>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-shield-check text-info me-2"></i>
-                                                    <strong>Validación</strong>
-                                                    <br><small>Automática</small>
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    <strong>Importante:</strong> Revise antes de procesar
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para cancelar factura -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Cancelar Factura</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Use el botón <strong>"Cancelar"</strong> si necesita anular la factura</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Confirme la cancelación en el mensaje de advertencia</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-x-circle text-danger me-2"></i>
-                                                    <strong>Cancelar</strong>
-                                                    <br><small>Con confirmación</small>
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    <strong>Atención:</strong> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row mt-2">
-                                    <div class="col-md-6">
-                                        <h6 class="text-success">Proceso de facturación detallado</h6>
-                                        <?= renderImagen("carrito", "prefacturar.png") ?>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Resumen del proceso:</h6>
-                                        <ol>
-                                            <li>Seleccione productos del catálogo</li>
-                                            <li>Ajuste cantidades y verifique stock</li>
-                                            <li>Confirme datos del cliente</li>
-                                            <li>Procese pre-factura</li>
-                                            <li>Descargue factura final</li>
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- pedidos -->
                         <div class="card mt-4" id="gestion-pedidos-almacenista">
                             <div class="card-body">
@@ -2137,6 +1979,312 @@ $modulos = [
                             </div>
                         </div>
                         <?php endif; ?>
+                        
+                        <!-- Despacho -->
+                        <div class="card mb-4" id="despacho-productos">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
+                                </h5>
+                                <p>Gestione la salida de productos del inventario hacia los clientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Fecha de despacho</li>
+                                            <li>Cliente</li>
+                                            <li>Tipo de compra</li>
+                                            <li>Productos</li>
+                                            <li>Cantidad despachada</li>
+                                            <li>Precio unitario</li>
+                                            <li>Total del despacho</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Proceso de despacho:</h6>
+                                        <ul>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Anular</strong>: Remover despacho</li>
+                                            <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para detallar despacho -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del despacho.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) del despacho y cambiará automáticamente.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-danger border">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para anular despacho -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Anular Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el despacho que desea anular.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Anular:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para generar reportes de despachos -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Despachos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: (Todos los reportes, Por Estatus, Mensuales, Por Cliente o Por Tipo de Compra).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-pie-chart me-2"></i>
+                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="note mt-3">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    Los despachos reducen automáticamente el stock de productos del inventario.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Orden de Despacho -->
+                        <div class="card mb-4" id="despacho-productos">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
+                                </h5>
+                                <p>Gestione la verificación y entrega de las ordenes de despacho hacia los clientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Fecha</li>
+                                            <li>N° de orden de despacho</li>
+                                            <li>Código de orden de compra</li></li>
+                                            <li>Cliente</li>
+                                            <li>Estatus</li>
+                                            <li>Productos</li>
+                                            <li>Cantidad</li>
+                                            <li>Costo total</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Proceso de despacho:</h6>
+                                        <ul>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Descargar</strong>: Entregar orden de despacho</li>
+                                            <li><strong>Anular</strong>: Remover orden de despacho</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para detallar orden de despacho -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la orden de despacho.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de la Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) de la orden de despacho y cambiará automáticamente.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-danger border">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para descargar orden de despacho -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pasos para Descargar Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono de <strong>descarga</strong> <i class="bi bi-download text-info me-2"></i>en la columna "Acciones" para obtener la orden de despacho en formato PDF.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-download text-info me-2"></i>
+                                                    <strong>Descargar:</strong> Ícono descarga
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-archive me-2"></i>
+                                                    <strong>Archivo:</strong> Formato PDF
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para anular orden de despacho -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Anular Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la orden de despacho que desea anular.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Anular:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <!-- Marcas -->
                         <?php if ($puedeIngresar('Marcas')): ?>
@@ -4197,6 +4345,11 @@ $modulos = [
                                     <i class="bi bi-info-circle-fill me-2"></i>
                                     Los combos ayudan a aumentar las ventas y mejorar la satisfacción del cliente.
                                 </div>
+                                
+                                <div class="note mt-3">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    Los combos ayudan a aumentar las ventas y mejorar la satisfacción del cliente.
+                                </div>
                             </div>
                         </div>
 
@@ -4229,6 +4382,234 @@ $modulos = [
                                 </div>
 
                                 <!-- Pasos detallados para registrar venta -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pasos para Registrar la Venta Presencial</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <ul>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
+                                                </ul>
+
+                                                <hr>
+
+                                                <h6 class="text-primary">1. Registro de venta por Pago Móvil o Transferencia</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Registro de venta en efectivo</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Regristrar Venta:</strong><br> Botón "Registrar" azul
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Registro de venta por Zelle</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <div class="note col-md-11 mx-auto">
+                                            <i class="bi bi-info-circle-fill me-2"></i>
+                                            En caso de que el cliente no este registrado en el sistema, dar clic en el botón "Nuevo" (color verde) y procesa a registrarlo. Al terminar, vuelva a "Ventas Presenciales" y repita el procedimiento.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para detallar ventas -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Venta Presencial</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la venta.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bitacora -->
+                        <div class="card mt-4" id="gestion-bitacora">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-bank me-2"></i>Gestión de Bitácora
+                                </h5>
+                                <p>Consultar los movimientos realizados por los usuarios.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-8 mx-auto">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Fecha completa</li>
+                                            <li>Usuario</li>
+                                            <li>Acción realizada</li>
+                                            <li>Módulo</li>
+                                            <li>Decripción</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- backup -->
+                        <div class="card mt-4" id="gestion-backup">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-tag me-2"></i>Gestión de Bases de Datos
+                                </h5>
+                                <p>Administre las bases de datos para respaldar y restaurar la información.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Nombre de archivo</li>
+                                            <li>Base de datos (Principal/Seguridad)</li>
+                                            <li>Tamaño de archivo</li>
+                                            <li>Fecha</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Generar</strong>: Nuevo respaldo</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Restaurar</strong>: Recuperar base de datos</li>
+                                            <li><strong>Eliminar</strong>: Remover respaldo</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos detallados para generar respaldo -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Generar Respaldo de Base de Datos (Principal/Seguridad)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Generar Backup"</strong> (Principal/Seguridad) para nuevo respaldo.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Confirme la generación del respaldo en el mensaje interrogante.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-patch-plus text-success me-2"></i>
+                                                    <strong>Nueva Marca:</strong><br> Botón "Generar Backup" (Principal/Seguridad)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos detallados para restaurar base de datos -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Restaurar Base de Datos (Principal/Seguridad)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el respaldo en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el botón <strong>"Restaurar"</strong> (color amarillo) para restaurar la base de datos.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la restauración en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-patch-plus text-success me-2"></i>
+                                                    <strong>Restaurar:</strong><br> Botón "Restaurar" amarillo
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="note col-md-11 mx-auto">
+                                            <i class="bi bi-info-circle-fill me-2"></i>
+                                            Esta operación debe ser realizada con responsabilidad. Una restauración de una base de datos incorrecta sin realizar previamente un respaldo de las bases de datos actuales puede causar una grave perdida de información en el sistema. 
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para descargar respaldo -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-primary text-white">
                                         <h6 class="mb-0">Pasos para Registrar la Venta Presencial</h6>
