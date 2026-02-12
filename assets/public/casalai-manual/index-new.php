@@ -592,7 +592,6 @@ $modulos = [
                             <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
                             
                             <!-- Secciones disponibles para todos los usuarios -->
-                            <?php if($esCliente): ?>
                             <li class="toc-item">
                                 <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Clientes</a>
                                 <ul class="toc-sublist ms-3 mt-2">
@@ -603,7 +602,6 @@ $modulos = [
                                     <li><a href="#mis-pagos" class="toc-link"><i class="bi bi-credit-card"></i>Mis Pagos</a></li>
                                 </ul>
                             </li>
-                            <?php endif; ?>
 
 
                                 <!-- Secciones para El resto de Usuarios -->
@@ -696,7 +694,7 @@ $modulos = [
                 <!-- Introduction Section -->
                  <?php if($_SESSION): ?>
                     <section id="introduccion" class="section-card">
-                        <h2 class="section-title">Introducción</h2>
+                        <h2 class="section-title"><i class="bi bi-house-door"></i> Introducción</h2>
                         <div class="row">
                             <div class="col-md-8">
                                 <p>Bienvenido al <strong>Sistema de Gestión de Inventario y Ventas</strong> de <strong>Casa Lai, C.A.</strong> Esta plataforma ha sido diseñada para optimizar y agilizar los procesos de gestión de inventario, ventas y administración de su negocio.</p>
@@ -878,7 +876,7 @@ $modulos = [
                 <!-- Mi Cuenta Section -->
                 <?php if (isset($_SESSION['id_usuario'])): ?>
                     <section id="mi-cuenta" class="section-card">
-                        <h2 class="section-title">Mi Cuenta</h2>
+                        <h2 class="section-title"><i class="bi bi-person"></i> Mi Cuenta</h2>
                         <p>Administre la información de su perfil y preferencias de usuario.</p>
                         
                         <?php
