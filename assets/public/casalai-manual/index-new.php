@@ -573,313 +573,308 @@ $modulos = [
     <div class="container">
         <div class="row">
             <!-- Sidebar Navigation -->
-<!-- Sidebar Navigation -->
-<div class="col-lg-3 mb-4">
-    <div class="toc">
-        <div class="toc-progress" id="tocProgress"></div>
-        <h5 class="toc-title">Tabla de Contenidos</h5>
-        <ul class="toc-list">
-           <?php if($_SESSION): ?> 
-            <?php if(!$esCliente): ?>
-            <li class="toc-item"><a href="#introduccion" class="toc-link"><i class="bi bi-house-door"></i> Introducción</a></li>
-            <?php endif; ?>
-           <?php endif; ?>
-            
-            <?php if (isset($_SESSION['id_usuario'])): ?>
-                <?php if(!$esCliente): ?>
-                <li class="toc-item"><a href="#dashboard" class="toc-link"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                <?php endif; ?>
-                <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
-                
-                <!-- Secciones disponibles para todos los usuarios -->
-                <?php if($esCliente): ?>
-                <li class="toc-item">
-                    <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Clientes</a>
-                    <ul class="toc-sublist ms-3 mt-2">
-                        <li><a href="#catalogo-cliente" class="toc-link"><i class="bi bi-grid-3x3-gap"></i>Catálogo de Productos</a></li>
-                        <li><a href="#combos-cliente" class="toc-link"><i class="bi bi-tags"></i>Combos Promocionales</a></li>
-                        <li><a href="#carrito" class="toc-link"><i class="bi bi-cart3"></i>Carrito de Compras</a></li>
-                        <li><a href="#mis-pedidos" class="toc-link"><i class="bi bi-box"></i>Mis Pedidos</a></li>
-                        <li><a href="#mis-pagos" class="toc-link"><i class="bi bi-credit-card"></i>Mis Pagos</a></li>
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 mb-4">
+                <div class="toc">
+                    <div class="toc-progress" id="tocProgress"></div>
+                    <h5 class="toc-title">Tabla de Contenidos</h5>
+                    <ul class="toc-list">
+                    <?php if($_SESSION): ?> 
+                        <?php if(!$esCliente): ?>
+                        <li class="toc-item"><a href="#introduccion" class="toc-link"><i class="bi bi-house-door"></i> Introducción</a></li>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                        
+                        <?php if (isset($_SESSION['id_usuario'])): ?>
+                            <?php if(!$esCliente): ?>
+                            <li class="toc-item"><a href="#dashboard" class="toc-link"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                            <?php endif; ?>
+                            <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
+                            
+                            <!-- Secciones disponibles para todos los usuarios -->
+                            <?php if($esCliente): ?>
+                            <li class="toc-item">
+                                <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Clientes</a>
+                                <ul class="toc-sublist ms-3 mt-2">
+                                    <li><a href="#catalogo-cliente" class="toc-link"><i class="bi bi-grid-3x3-gap"></i>Catálogo de Productos</a></li>
+                                    <li><a href="#combos-cliente" class="toc-link"><i class="bi bi-tags"></i>Combos Promocionales</a></li>
+                                    <li><a href="#carrito" class="toc-link"><i class="bi bi-cart3"></i>Carrito de Compras</a></li>
+                                    <li><a href="#mis-pedidos" class="toc-link"><i class="bi bi-box"></i>Mis Pedidos</a></li>
+                                    <li><a href="#mis-pagos" class="toc-link"><i class="bi bi-credit-card"></i>Mis Pagos</a></li>
+                                </ul>
+                            </li>
+                            <?php endif; ?>
+
+
+                                <!-- Secciones para El resto de Usuarios -->
+                                <li class="toc-item">
+                                    <a href="#seccion-sistema" class="toc-link"><i class="bi bi-buildings"></i> Gestiones del Sistema</a>
+                                    <ul class="toc-sublist ms-3 mt-2">
+                                        <?php if($puedeAccion('Recepcion', 'ingresar')):  ?>
+                                        <li><a href="#recepcion-productos" class="toc-link"><i class="bi bi-truck"></i>Recepción de Productos</a></li>
+                                        <?php endif; ?>
+
+                                        <?php if($puedeAccion('Marcas', 'ingresar')):  ?>
+                                        <li><a href="#gestion-marcas-almacenista" class="toc-link"><i class="bi bi-tag "></i>Gestión de Marcas</a></li>
+                                        <?php endif; ?>
+
+                                        <?php if($puedeAccion('Modelo', 'ingresar')):  ?>
+                                        <li><a href="#gestion-modelos-almacenista" class="toc-link"><i class="bi bi-tag"></i>Gestión de Modelos</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Producto', 'ingresar')):  ?>
+                                        <li><a href="#gestion-productos-almacenista" class="toc-link"><i class="bi bi-box"></i>Gestión de Productos</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Categoria', 'ingresar')):  ?>
+                                        <li><a href="#gestion-categorias-almacenista" class="toc-link"><i class="bi bi-folder"></i>Gestión de Categorías</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Proveedor', 'ingresar')):  ?>
+                                        <li><a href="#gestion-proveedores-admin" class="toc-link"><i class="bi bi-building"></i>Gestión de Proveedores</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Cliente', 'ingresar')):  ?>
+                                        <li><a href="#gestion-clientes-admin" class="toc-link"><i class="bi bi-people"></i>Gestión de Clientes</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Catalogo', 'ingresar')):  ?>
+                                        <li><a href="#gestion-catalogo-combos" class="toc-link"><i class="bi bi-tags-fill"></i>Catálogo de Combos Promocionales</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('pasarela', 'ingresar')):  ?>
+                                        <li><a href="#gestion-pagos" class="toc-link"><i class="bi bi-credit-card"></i>Gestión de Pagos</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Compra Física', 'ingresar')):  ?>
+                                        <li><a href="#gestion-ventas-presenciales" class="toc-link"><i class="bi bi-shop"></i>Gestión de Ventas Presenciales</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('OrdenDespacho', 'ingresar')):  ?>
+                                        <li><a href="#gestion-orden-despacho" class="toc-link"><i class="bi bi-box-arrow-right"></i>Orden de Despacho</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Despacho', 'ingresar')):  ?>
+                                        <li><a href="#despacho-productos" class="toc-link"><i class="bi bi-box-arrow-right"></i>Despacho de Productos</a></li>
+                                        <?php endif; ?>
+
+                                        <?php if($puedeAccion('Cuentas bancarias', 'ingresar')): ?>
+                                        <li><a href="#gestion-cuentas-bancarias" class="toc-link"><i class="bi bi-bank"></i>Gestión de Cuentas Bancarias</a></li>
+                                        <?php endif; ?>
+
+                                        <?php if($puedeAccion('Finanzas', 'ingresar')): ?>
+                                        <li><a href="#gestion-finanzas" class="toc-link"><i class="bi bi-arrow-down-up"></i>Gestión de Ingresos y Egresos</a></li>
+                                        <?php endif; ?>
+
+                                        <?php if($puedeAccion('Usuario', 'ingresar')): ?>
+                                        <li><a href="#gestion-usuarios" class="toc-link"><i class="bi bi-person-badge"></i>Gestión de Usuarios</a></li>
+                                        <?php endif; ?>
+
+                                        <?php if ($puedeAccion('permisos', 'ingresar') && $puedeAccion('Roles', 'ingresar')): ?>
+                                        <li><a href="#gestion-roles-permisos" class="toc-link"><i class="bi bi-person-check"></i>Gestión de Roles y Permisos</a></li>
+                                        <?php endif; ?>
+
+                                        <?php if($puedeAccion('bitacora', 'ingresar')): ?>
+                                        <li><a href="#gestion-bitacora" class="toc-link"><i class="bi bi-clock-history"></i>Gestión de Bitácora</a></li>
+                                        <?php endif; ?>
+                                        
+                                        <?php if($puedeAccion('Backup', 'ingresar')): ?>
+                                        <li><a href="#gestion-backup" class="toc-link"><i class="bi bi-database"></i>Gestión de Bases de Datos</a></li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </li>
+
+                        <?php endif; ?>
+                        <li class="toc-item"><a href="#iniciar-sesion" class="toc-link"><i class="bi bi-person-circle"></i> Iniciar Sesión</a></li>
+                        <li class="toc-item"><a href="#preguntas-frecuentes" class="toc-link"><i class="bi bi-question-circle"></i> Preguntas Frecuentes</a></li>
                     </ul>
-                </li>
-                <?php endif; ?>
-
-
-                    <!-- Secciones para El resto de Usuarios -->
-                    <li class="toc-item">
-                        <a href="#seccion-almacenista" class="toc-link"><i class="bi bi-box-seam"></i> Sección para Almacenistas</a>
-                        <ul class="toc-sublist ms-3 mt-2">
-                            <?php if($puedeAccion('Recepcion', 'ingresar')):  ?>
-                            <li><a href="#recepcion-productos" class="toc-link"><i class="bi bi-truck"></i>Recepción de Productos</a></li>
-                            <?php endif; ?>
-
-                            <?php if($puedeAccion('Marcas', 'ingresar')):  ?>
-                            <li><a href="#gestion-marcas-almacenista" class="toc-link"><i class="bi bi-tag "></i>Gestión de Marcas</a></li>
-                            <?php endif; ?>
-
-                            <?php if($puedeAccion('Modelo', 'ingresar')):  ?>
-                            <li><a href="#gestion-modelos-almacenista" class="toc-link"><i class="bi bi-tag"></i>Gestión de Modelos</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Producto', 'ingresar')):  ?>
-                            <li><a href="#gestion-productos-almacenista" class="toc-link"><i class="bi bi-box"></i>Gestión de Productos</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Categoria', 'ingresar')):  ?>
-                            <li><a href="#gestion-categorias-almacenista" class="toc-link"><i class="bi bi-folder"></i>Gestión de Categorías</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Proveedor', 'ingresar')):  ?>
-                            <li><a href="#gestion-proveedores-admin" class="toc-link"><i class="bi bi-building"></i>Gestión de Proveedores</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Cliente', 'ingresar')):  ?>
-                            <li><a href="#gestion-clientes-admin" class="toc-link"><i class="bi bi-people"></i>Gestión de Clientes</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Catalogo', 'ingresar')):  ?>
-                            <li><a href="#gestion-catalogo-combos" class="toc-link"><i class="bi bi-tags-fill"></i>Catálogo de Combos Promocionales</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('pasarela', 'ingresar')):  ?>
-                            <li><a href="#gestion-pagos" class="toc-link"><i class="bi bi-credit-card"></i>Gestión de Pagos</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Compra Física', 'ingresar')):  ?>
-                            <li><a href="#gestion-ventas-presenciales" class="toc-link"><i class="bi bi-shop"></i>Gestión de Ventas Presenciales</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('OrdenDespacho', 'ingresar')):  ?>
-                            <li><a href="#gestion-orden-despacho" class="toc-link"><i class="bi bi-box-arrow-right"></i>Orden de Despacho</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Despacho', 'ingresar')):  ?>
-                            <li><a href="#despacho-productos" class="toc-link"><i class="bi bi-box-arrow-right"></i>Despacho de Productos</a></li>
-                            <?php endif; ?>
-
-                            <?php if($puedeAccion('Cuentas bancarias', 'ingresar')): ?>
-                            <li><a href="#gestion-cuentas-bancarias" class="toc-link"><i class="bi bi-bank"></i>Gestión de Cuentas Bancarias</a></li>
-                            <?php endif; ?>
-
-                            <?php if($puedeAccion('Finanzas', 'ingresar')): ?>
-                            <li><a href="#gestion-finanzas" class="toc-link"><i class="bi bi-arrow-down-up"></i>Gestión de Ingresos y Egresos</a></li>
-                            <?php endif; ?>
-
-                            <?php if($puedeAccion('Usuario', 'ingresar')): ?>
-                            <li><a href="#gestion-usuarios" class="toc-link"><i class="bi bi-person-badge"></i>Gestión de Usuarios</a></li>
-                            <?php endif; ?>
-
-                            <?php if ($puedeAccion('permisos', 'ingresar') && $puedeAccion('Roles', 'ingresar')): ?>
-                            <li><a href="#gestion-roles-permisos" class="toc-link"><i class="bi bi-person-check"></i>Gestión de Roles y Permisos</a></li>
-                            <?php endif; ?>
-
-                            <?php if($puedeAccion('bitacora', 'ingresar')): ?>
-                            <li><a href="#gestion-bitacora" class="toc-link"><i class="bi bi-clock-history"></i>Gestión de Bitácora</a></li>
-                            <?php endif; ?>
-                            
-                            <?php if($puedeAccion('Backup', 'ingresar')): ?>
-                            <li><a href="#gestion-backup" class="toc-link"><i class="bi bi-database"></i>Gestión de Bases de Datos</a></li>
-                            <?php endif; ?>
-                        </ul>
-                    </li>
-
-            <?php endif; ?>
-            <li class="toc-item"><a href="#iniciar-sesion" class="toc-link"><i class="bi bi-person-circle"></i> Iniciar Sesión</a></li>
-            <li class="toc-item"><a href="#preguntas-frecuentes" class="toc-link"><i class="bi bi-question-circle"></i> Preguntas Frecuentes</a></li>
-        </ul>
-    </div>
-</div>
+                </div>
+            </div>
 
             <!-- Main Content -->
             <div class="col-lg-9">
                 <!-- Introduction Section -->
                  <?php if($_SESSION): ?>
-                    <?php if(!$esCliente): ?>
-                <section id="introduccion" class="section-card">
-                    <h2 class="section-title">Introducción</h2>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <p>Bienvenido al <strong>Sistema de Gestión de Inventario y Ventas</strong> de <strong>Casa Lai, C.A.</strong> Esta plataforma ha sido diseñada para optimizar y agilizar los procesos de gestión de inventario, ventas y administración de su negocio.</p>
-                            
-                            <div class="note">
-                                <i class="bi bi-info-circle-fill me-2"></i>
-                                <strong>Nota:</strong> Este manual le guiará a través de todas las funcionalidades del sistema según su rol de usuario.
+                    <section id="introduccion" class="section-card">
+                        <h2 class="section-title">Introducción</h2>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p>Bienvenido al <strong>Sistema de Gestión de Inventario y Ventas</strong> de <strong>Casa Lai, C.A.</strong> Esta plataforma ha sido diseñada para optimizar y agilizar los procesos de gestión de inventario, ventas y administración de su negocio.</p>
+                                
+                                <div class="note">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <strong>Nota:</strong> Este manual le guiará a través de todas las funcionalidades del sistema según su rol de usuario.
+                                </div>
+                                
+                                <h4 class="mt-4 mb-3">Características Principales</h4>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="feature-card card h-100 card-hover">
+                                            <div class="card-body text-center">
+                                                <div class="icon-wrapper mx-auto">
+                                                    <i class="bi bi-box-seam"></i>
+                                                </div>
+                                                <h5 class="card-title">Gestión de Inventario</h5>
+                                                <p class="card-text">Control completo sobre el inventario de productos, categorías y existencias.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="feature-card card h-100 card-hover">
+                                            <div class="card-body text-center">
+                                                <div class="icon-wrapper mx-auto">
+                                                    <i class="bi bi-cart"></i>
+                                                </div>
+                                                <h5 class="card-title">Ventas y Facturación</h5>
+                                                <p class="card-text">Proceso de venta simplificado con generación de facturas electrónicas.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="feature-card card h-100 card-hover">
+                                            <div class="card-body text-center">
+                                                <div class="icon-wrapper mx-auto">
+                                                    <i class="bi bi-people"></i>
+                                                </div>
+                                                <h5 class="card-title">Gestión de Clientes</h5>
+                                                <p class="card-text">Mantenga un registro detallado de sus clientes y su historial de compras.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="feature-card card h-100 card-hover">
+                                            <div class="card-body text-center">
+                                                <div class="icon-wrapper mx-auto">
+                                                    <i class="bi bi-graph-up"></i>
+                                                </div>
+                                                <h5 class="card-title">Reportes y Análisis</h5>
+                                                <p class="card-text">Genere informes detallados para el análisis del rendimiento del negocio.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <h4 class="mt-4 mb-3">Características Principales</h4>
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="feature-card card h-100 card-hover">
-                                        <div class="card-body text-center">
-                                            <div class="icon-wrapper mx-auto">
-                                                <i class="bi bi-box-seam"></i>
-                                            </div>
-                                            <h5 class="card-title">Gestión de Inventario</h5>
-                                            <p class="card-text">Control completo sobre el inventario de productos, categorías y existencias.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="feature-card card h-100 card-hover">
-                                        <div class="card-body text-center">
-                                            <div class="icon-wrapper mx-auto">
-                                                <i class="bi bi-cart"></i>
-                                            </div>
-                                            <h5 class="card-title">Ventas y Facturación</h5>
-                                            <p class="card-text">Proceso de venta simplificado con generación de facturas electrónicas.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="feature-card card h-100 card-hover">
-                                        <div class="card-body text-center">
-                                            <div class="icon-wrapper mx-auto">
-                                                <i class="bi bi-people"></i>
-                                            </div>
-                                            <h5 class="card-title">Gestión de Clientes</h5>
-                                            <p class="card-text">Mantenga un registro detallado de sus clientes y su historial de compras.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="feature-card card h-100 card-hover">
-                                        <div class="card-body text-center">
-                                            <div class="icon-wrapper mx-auto">
-                                                <i class="bi bi-graph-up"></i>
-                                            </div>
-                                            <h5 class="card-title">Reportes y Análisis</h5>
-                                            <p class="card-text">Genere informes detallados para el análisis del rendimiento del negocio.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Acceso Rápido</h5>
-                                    <div class="d-grid gap-2">
-                                        <a href="#dashboard" class="btn btn-outline-primary text-start"><i class="bi bi-speedometer2 me-2"></i> Ir al Dashboard</a>
-                                        <?php if ($esCliente): ?>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Acceso Rápido</h5>
+                                        <div class="d-grid gap-2">
+                                            <a href="#dashboard" class="btn btn-outline-primary text-start"><i class="bi bi-speedometer2 me-2"></i> Ir al Dashboard</a>
                                             <a href="#seccion-cliente" class="btn btn-outline-primary text-start"><i class="bi bi-cart me-2"></i> Ver Sección Cliente</a>
-                                        <?php endif; ?>
-                                        <a href="#preguntas-frecuentes" class="btn btn-outline-secondary text-start mt-3"><i class="bi bi-question-circle me-2"></i> Preguntas Frecuentes</a>
+                                            <a href="#preguntas-frecuentes" class="btn btn-outline-secondary text-start mt-3"><i class="bi bi-question-circle me-2"></i> Preguntas Frecuentes</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mt-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Soporte Técnico</h5>
+                                        <p class="card-text small">¿Necesita ayuda? Nuestro equipo de soporte está disponible para asistirle.</p>
+                                        <a href="#soporte" class="btn btn-outline-success w-100"><i class="bi bi-headset me-2"></i> Contactar Soporte</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                <?php endif; ?>
+    
+                <?php if($_SESSION): ?>
+                    <!-- Dashboard Section -->
+                    <section id="dashboard" class="section-card">
+                        <h2 class="section-title">
+                            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                        </h2>
+                        
+                        <div class="row">
+                            <div class="">
+                                <p>El Dashboard es el centro de control principal del sistema. Aquí encontrará un resumen de la información más relevante según su rol de usuario.</p>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Vista General</h5>
+                                        <p>Al iniciar sesión, será dirigido al Dashboard que muestra:</p>
+                                        <div class="row g-4">
+                                            <div class="col-md-6">
+                                                <?= renderImagen("dashboard", "vista2.png") ?>
+                                                <p class="text-muted small mt-2">Vista principal del Dashboard</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <?= renderImagen("dashboard", "barra-lateral.png") ?>
+                                                <p class="text-muted small mt-2">Barra lateral de navegación</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Barra Superior</h5>
+                                        <p>En la parte superior derecha encontrará:</p>
+                                        <div class="text-center mb-3">
+                                            <?= renderImagen("dashboard", "perfil2.png") ?>
+                                        </div>
+                                        <ul>
+                                            <li><strong>Icono de Conversión de Dólar</strong>: Muestra la tasa de cambio actual del BCV.</li>
+                                            <li><strong>Icono de Notificaciones</strong>: Muestra las notificaciones recientes del sistema.</li>
+                                            <li><strong>Icono de Ayuda</strong>: Acceso directo a este manual de usuario.</li>
+                                            <li><strong>Perfil de Usuario</strong>: Muestra su nombre y rol actual.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Conversión de Dólar</h5>
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <p>Para consultar la tasa de cambio:</p>
+                                                <ol>
+                                                    <li>Haga clic en el icono de conversión de dólar <i class="bi bi-currency-exchange"></i></li>
+                                                    <li>Se mostrará un panel con las tasas actualizadas</li>
+                                                    <li>Las tasas se actualizan automáticamente según el BCV</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="text-success">Ventana de Conversión de Dolar</h6>
+                                                <?= renderImagen("dashboard", "conversion-dolar-abierto.png") ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Notificaciones</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p>El sistema le notificará sobre:</p>
+                                                <ul>
+                                                    <li>Nuevos mensajes</li>
+                                                    <li>Actualizaciones del sistema</li>
+                                                    <li>Actividad reciente</li>
+                                                    <li>Recordatorios importantes</li>
+                                                </ul>
+                                                <p>Para ver todas las notificaciones, haga clic en "Ver más" en el panel de notificaciones.</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="text-success">Central de Notificaciones</h6>
+                                                <?= renderImagen("dashboard", "notificaciones-abiertas.png") ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="card mt-4">
-                                <div class="card-body">
-                                    <h5 class="card-title">Soporte Técnico</h5>
-                                    <p class="card-text small">¿Necesita ayuda? Nuestro equipo de soporte está disponible para asistirle.</p>
-                                    <a href="#soporte" class="btn btn-outline-success w-100"><i class="bi bi-headset me-2"></i> Contactar Soporte</a>
-                                </div>
-                            </div>
+
                         </div>
-                    </div>
-                </section>
+                        
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            El Dashboard se adapta automáticamente según su rol de usuario, mostrando solo la información relevante para sus funciones.
+                        </div>
+                    </section>
                 <?php endif; ?>
-                <?php endif; ?>
-    <?php if($_SESSION): ?>
-<!-- Dashboard Section -->
- <?php if(!$esCliente): ?>
 
-<section id="dashboard" class="section-card">
-    <h2 class="section-title">
-        <i class="bi bi-speedometer2 me-2"></i>Dashboard
-    </h2>
-    
-    <div class="row">
-        <div class="">
-            <p>El Dashboard es el centro de control principal del sistema. Aquí encontrará un resumen de la información más relevante según su rol de usuario.</p>
-            
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Vista General</h5>
-                    <p>Al iniciar sesión, será dirigido al Dashboard que muestra:</p>
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <?= renderImagen("dashboard", "vista2.png") ?>
-                            <p class="text-muted small mt-2">Vista principal del Dashboard</p>
-                        </div>
-                        <div class="col-md-6">
-                            <?= renderImagen("dashboard", "barra-lateral.png") ?>
-                            <p class="text-muted small mt-2">Barra lateral de navegación</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Barra Superior</h5>
-                    <p>En la parte superior derecha encontrará:</p>
-                    <div class="text-center mb-3">
-                        <?= renderImagen("dashboard", "perfil2.png") ?>
-                    </div>
-                    <ul>
-                        <li><strong>Icono de Conversión de Dólar</strong>: Muestra la tasa de cambio actual del BCV.</li>
-                        <li><strong>Icono de Notificaciones</strong>: Muestra las notificaciones recientes del sistema.</li>
-                        <li><strong>Icono de Ayuda</strong>: Acceso directo a este manual de usuario.</li>
-                        <li><strong>Perfil de Usuario</strong>: Muestra su nombre y rol actual.</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Conversión de Dólar</h5>
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <p>Para consultar la tasa de cambio:</p>
-                            <ol>
-                                <li>Haga clic en el icono de conversión de dólar <i class="bi bi-currency-exchange"></i></li>
-                                <li>Se mostrará un panel con las tasas actualizadas</li>
-                                <li>Las tasas se actualizan automáticamente según el BCV</li>
-                            </ol>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-success">Ventana de Conversión de Dolar</h6>
-                            <?= renderImagen("dashboard", "conversion-dolar-abierto.png") ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Notificaciones</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p>El sistema le notificará sobre:</p>
-                            <ul>
-                                <li>Nuevos mensajes</li>
-                                <li>Actualizaciones del sistema</li>
-                                <li>Actividad reciente</li>
-                                <li>Recordatorios importantes</li>
-                            </ul>
-                            <p>Para ver todas las notificaciones, haga clic en "Ver más" en el panel de notificaciones.</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-success">Central de Notificaciones</h6>
-                            <?= renderImagen("dashboard", "notificaciones-abiertas.png") ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-
-    </div>
-    
-    <div class="alert alert-info mt-4">
-        <i class="bi bi-info-circle-fill me-2"></i>
-        El Dashboard se adapta automáticamente según su rol de usuario, mostrando solo la información relevante para sus funciones.
-    </div>
-</section>
-
-<?php endif; ?>
                 <!-- Mi Cuenta Section -->
                 <?php if (isset($_SESSION['id_usuario'])): ?>
                     <section id="mi-cuenta" class="section-card">
@@ -939,7 +934,6 @@ $modulos = [
                 <?php endif; ?>
 
                 <!-- Sección Clientes -->
-                <?php if ($esCliente): ?>
                 <section id="seccion-cliente" class="section-card">
                     <h2 class="section-title">
                         <i class="bi bi-person me-2"></i>Clientes
@@ -1395,7 +1389,6 @@ $modulos = [
                         </div>
                     </div>
                 </section>
-                <?php endif; ?>
 
                 <!-- Sección Sistema -->
                 <?php /* if ($esAdministrador): */ ?>
@@ -4489,7 +4482,7 @@ $modulos = [
 
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
-                        <h2 class="section-title">Iniciar Sesión</h2>
+                        <h2 class="section-title"><i class="bi bi-person-circle me-2"></i>Iniciar Sesión</h2>
                         <p>Para acceder al sistema, siga estos pasos:</p>
                         
                         <div class="row">
@@ -4757,6 +4750,5 @@ $modulos = [
             }
         }
     </script>
-<?php endif; ?>
 </body>
 </html>
