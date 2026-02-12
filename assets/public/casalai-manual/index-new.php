@@ -592,12 +592,15 @@ $modulos = [
                 <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
                 
                 <!-- Secciones disponibles para todos los usuarios -->
-                 <?php if($esCliente): ?>
+                <?php if($esCliente): ?>
                 <li class="toc-item">
-                    <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Sección para Clientes</a>
+                    <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Clientes</a>
                     <ul class="toc-sublist ms-3 mt-2">
-                        <li><a href="#carrito" class="toc-link">Carrito de Compras</a></li>
-                        <li><a href="#mis-pedidos" class="toc-link">Mis Pedidos</a></li>
+                        <li><a href="#catalogo-cliente" class="toc-link"><i class="bi bi-grid-3x3-gap"></i>Catálogo de Productos</a></li>
+                        <li><a href="#combos-cliente" class="toc-link"><i class="bi bi-tags"></i>Combos Promocionales</a></li>
+                        <li><a href="#carrito" class="toc-link"><i class="bi bi-cart3"></i>Carrito de Compras</a></li>
+                        <li><a href="#mis-pedidos" class="toc-link"><i class="bi bi-box"></i>Mis Pedidos</a></li>
+                        <li><a href="#mis-pagos" class="toc-link"><i class="bi bi-credit-card"></i>Mis Pagos</a></li>
                     </ul>
                 </li>
                 <?php endif; ?>
@@ -611,7 +614,7 @@ $modulos = [
                             <li><a href="#recepcion-productos" class="toc-link"><i class="bi bi-truck"></i>Recepción de Productos</a></li>
                             <?php endif; ?>
 
-                            <?php if($puedeAccion('Marcas','ingresar')):  ?>
+                            <?php if($puedeAccion('Marcas', 'ingresar')):  ?>
                             <li><a href="#gestion-marcas-almacenista" class="toc-link"><i class="bi bi-tag "></i>Gestión de Marcas</a></li>
                             <?php endif; ?>
 
@@ -659,32 +662,30 @@ $modulos = [
                             <li><a href="#gestion-cuentas-bancarias" class="toc-link"><i class="bi bi-bank"></i>Gestión de Cuentas Bancarias</a></li>
                             <?php endif; ?>
 
-                                <?php if($puedeAccion('Finanzas', 'ingresar')): ?>
+                            <?php if($puedeAccion('Finanzas', 'ingresar')): ?>
                             <li><a href="#gestion-finanzas" class="toc-link"><i class="bi bi-arrow-down-up"></i>Gestión de Ingresos y Egresos</a></li>
                             <?php endif; ?>
 
-                                    <?php if($puedeAccion('Usuario', 'ingresar')): ?>
+                            <?php if($puedeAccion('Usuario', 'ingresar')): ?>
                             <li><a href="#gestion-usuarios" class="toc-link"><i class="bi bi-person-badge"></i>Gestión de Usuarios</a></li>
                             <?php endif; ?>
 
-                            <?php if($puedeAccion('permisos', 'ingresar')): ?>
-                                <?php if($puedeAccion('Roles', 'ingresar')): ?>
+                            <?php if ($puedeAccion('permisos', 'ingresar') && $puedeAccion('Roles', 'ingresar')): ?>
                             <li><a href="#gestion-roles-permisos" class="toc-link"><i class="bi bi-person-check"></i>Gestión de Roles y Permisos</a></li>
-                            <?php endif; ?>
                             <?php endif; ?>
 
                             <?php if($puedeAccion('bitacora', 'ingresar')): ?>
                             <li><a href="#gestion-bitacora" class="toc-link"><i class="bi bi-clock-history"></i>Gestión de Bitácora</a></li>
                             <?php endif; ?>
-                                <?php if($puedeAccion('Backup', 'ingresar')): ?>
+                            
+                            <?php if($puedeAccion('Backup', 'ingresar')): ?>
                             <li><a href="#gestion-backup" class="toc-link"><i class="bi bi-database"></i>Gestión de Bases de Datos</a></li>
                             <?php endif; ?>
-
                         </ul>
                     </li>
 
             <?php endif; ?>
-            
+            <li class="toc-item"><a href="#iniciar-sesion" class="toc-link"><i class="bi bi-person-circle"></i> Iniciar Sesión</a></li>
             <li class="toc-item"><a href="#preguntas-frecuentes" class="toc-link"><i class="bi bi-question-circle"></i> Preguntas Frecuentes</a></li>
         </ul>
     </div>
@@ -938,10 +939,10 @@ $modulos = [
                 <?php endif; ?>
 
                 <!-- Sección Clientes -->
-                <?php  if ($esCliente):  ?>
+                <?php if ($esCliente): ?>
                 <section id="seccion-cliente" class="section-card">
                     <h2 class="section-title">
-                        <i class="bi bi-person me-2"></i>Sección para Clientes
+                        <i class="bi bi-person me-2"></i>Clientes
                     </h2>
                     
                     <div class="row">
@@ -982,12 +983,21 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="step">
+                                    <div class="step mb-3">
                                         <div class="d-flex">
                                             <div class="step-number">4</div>
                                             <div>
-                                                <h6 class="mb-1">Prefacturar</h6>
-                                                <p class="small text-muted mb-0">Genere su resumen de compra</p>
+                                                <h6 class="mb-1">Pagar Pedidos</h6>
+                                                <p class="small text-muted mb-0">Consulte y gestione los pagos de sus pedidos</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <div class="d-flex">
+                                            <div class="step-number">5</div>
+                                            <div>
+                                                <h6 class="mb-1">Consultar Pagos</h6>
+                                                <p class="small text-muted mb-0">Revise el estatus de sus pagos realizados</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1022,7 +1032,7 @@ $modulos = [
                         </div>
 
                         <!-- Catálogo de Productos -->
-                        <div class="card mt-4 mb-4">
+                        <div class="card mt-4 mb-4" id="catalogo-cliente">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     <i class="bi bi-grid-3x3-gap me-2"></i>Catálogo de Productos
@@ -1080,7 +1090,7 @@ $modulos = [
                         </div>
                         
                         <!-- Combos Promocionales -->
-                        <div class="card mb-4">
+                        <div class="card mb-4" id="combos-cliente">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     <i class="bi bi-tags me-2"></i>Combos Promocionales
@@ -1109,10 +1119,10 @@ $modulos = [
                         </div>
                         
                         <!-- Carrito de Compras -->
-                        <div class="card mb-4">
+                        <div class="card mb-4" id="carrito">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-cart3 me-2"></i>Gestión del Carrito
+                                    <i class="bi bi-cart3 me-2"></i>Carrito de Compras
                                 </h5>
                                 <p>Administre los productos que desea comprar antes de finalizar su pedido.</p>
                                 
@@ -1217,10 +1227,10 @@ $modulos = [
                         </div>
                         
                         <!-- pedidos -->
-                        <div class="card mt-4" id="gestion-pedidos-almacenista">
+                        <div class="card mt-2" id="mis-pedidos">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-tag me-2"></i>Gestión de Pedidos
+                                    <i class="bi bi-box me-2"></i>Mis Pedidos
                                 </h5>
                                 <p>Consulte sus pedidos y realice los pagos o cancelaciones correspondientes.</p>
                                 
@@ -1350,86 +1360,59 @@ $modulos = [
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Mis Pagos -->
+                        <div class="card mt-4" id="mis-pagos">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-credit-card me-2"></i>Mis Pagos
+                                </h5>
+                                <p>Consulte sus pagos realizados para observar si fueron validados o en que estatus se encuentran.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información presentada:</h6>
+                                        <ul>
+                                            <li>Factura</li>
+                                            <li>Cuenta</li>
+                                            <li>Tipo de pago</li>
+                                            <li>Referencia</li>
+                                            <li>Fecha</li>
+                                            <li>Estatus</li>
+                                            <li>Comprobante</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Estatus posibles:</h6>
+                                        <ul>
+                                            <li><strong>Pago Procesado</strong>: Pago validado. Ya puede ir a la tienda a retirar su pedido</li>
+                                            <li><strong>Pago No Encontrado</strong>: Pago invalido. Pago no realizado o número de referencia incorrecto.</li>
+                                            <li><strong>Pago Incompleto</strong>: Pago validado, pero no cubre el monto total de la compra</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
-                <?php  endif;  ?>
+                <?php endif; ?>
 
-                <!-- Carrito de Compras -->
-                <section id="carrito" class="section-card">
-                    <h2 class="section-title">Carrito de Compras</h2>
-                    <?php
-                    $datos_carrito = [
-                        "id" => "carrito",
-                        "nombre_singular" => "Producto en Carrito",
-                        "nombre_plural" => "Productos en Carrito",
-                        "gestionable" => [
-                            "Ajustar cantidades",
-                            "Eliminar productos",
-                            "Ver resumen de compra"
-                        ],
-                        "instrucciones" => [
-                            "Haga clic en 'Agregar al carrito' para registrar productos",
-                            "Ajuste las cantidades según necesite",
-                            "Revise el resumen antes de proceder al pago"
-                        ]
-                    ];
-                    plantilla("inicio", $datos_carrito);
-                    ?>
-                    
-                    <div class="note mt-4">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        <strong>Nota:</strong> Los productos en el carrito se mantendrán hasta que los elimine manualmente.
-                    </div>
-                </section>
-
-
-                <!-- Mis Pedidos -->
-                <section id="mis-pedidos" class="section-card">
-                    <h2 class="section-title">Pedidos Realizados</h2>
-                    <?php
-                    $datos_pedidos = [
-                        "id" => "pedidos",
-                        "nombre_singular" => "Pedido",
-                        "nombre_plural" => "Pedidos Realizados",
-                        "gestionable" => [
-                            "Ver historial de pedidos",
-                            "Ver estado de pedido",
-                            "Descargar facturas",
-                            "Anular pedidos",
-                            "Llevar a Cabo el pago por los productos pedidos"
-                        ],
-                        "instrucciones" => [
-                            "Consulte el estado de sus pedidos recientes",
-                            "Consulte el estatus del pedido en tiempo real",
-                            "Descargue sus facturas en formato PDF",
-                            "Anule el pedido si es necesario"
-                        ]
-                    ];
-                    plantilla("inicio", $datos_pedidos);
-                    ?>
-                    
-                    <div class="tip mt-4">
-                        <i class="bi bi-lightbulb-fill me-2"></i>
-                        <strong>Consejo:</strong> Puede hacer seguimiento de sus pedidos en esta sección.
-                    </div>
-                </section>
-
-                <!-- Sección Almacenista -->
+                <!-- Sección Sistema -->
                 <?php /* if ($esAdministrador): */ ?>
-                <section id="seccion-almacenista" class="section-card">
+                <section id="seccion-sistema" class="section-card">
                     <h2 class="section-title">
-                        <i class="bi bi-box-seam me-2"></i>Sección para Almacenistas
+                        <i class="bi bi-buildings me-2"></i>Gestiones del Sistema
                     </h2>
                     
                     <div class="row">
                         <div>
-                            <p>Como almacenista, tendrá acceso completo a la gestión de inventario y control de productos del sistema.</p>
+                            <p>En el sistema podra gestionar desde la entrada y salida de los productos, las ventas y finanzas, hasta la accesibilidad de los usuarios y configuración del sistema.</p>
                         </div>
 
                         <div class="col-md-8 mx-auto">
                             <div class="card">
                                 <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0">Flujo de Trabajo</h5>
+                                    <h5 class="mb-0">Flujo de Incorporación de Mercancia</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="step mb-3">
@@ -1454,7 +1437,7 @@ $modulos = [
                                         <div class="d-flex">
                                             <div class="step-number">3</div>
                                             <div>
-                                                <h6 class="mb-1">Crear Modelos</h6>
+                                                <h6 class="mb-1">Agregar Modelos</h6>
                                                 <p class="small text-muted mb-0">Defina las variantes</p>
                                             </div>
                                         </div>
@@ -1481,7 +1464,7 @@ $modulos = [
                             </div>
                             
                             <div class="card mt-4">
-                                <div class="card-header bg-warning text-dark">
+                                <div class="card-header bg-warning text-light">
                                     <h5 class="mb-0">Alertas de Inventario</h5>
                                 </div>
                                 <div class="card-body">
@@ -1505,10 +1488,147 @@ $modulos = [
                                     </ul>
                                 </div>
                             </div>
+
+                            <div class="card mt-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Flujo de Atención al Cliente</h5>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="text-primary">1. Venta Online</h6>
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">1</div>
+                                            <div>
+                                                <h6 class="mb-1">Validar Pago</h6>
+                                                <p class="small text-muted mb-0">Verifique el pago del cliente</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">2</div>
+                                            <div>
+                                                <h6 class="mb-1">Entregar Orden de Despacho</h6>
+                                                <p class="small text-muted mb-0">Recibe orden de compra, verifique y entregue la orden de despacho</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">3</div>
+                                            <div>
+                                                <h6 class="mb-1">Despachar al Cliente</h6>
+                                                <p class="small text-muted mb-0">Entregue el pedido al cliente e indique el despacho</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <h6 class="text-primary">2. Venta Presencial</h6>
+                                    <div class="step mb-3">
+                                        <div class="d-flex">
+                                            <div class="step-number">1</div>
+                                            <div>
+                                                <h6 class="mb-1">Registrar Compra</h6>
+                                                <p class="small text-muted mb-0">Ingrese la compra del cliente en el sistema</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <div class="d-flex">
+                                            <div class="step-number">2</div>
+                                            <div>
+                                                <h6 class="mb-1">Despachar al Cliente</h6>
+                                                <p class="small text-muted mb-0">Entregue el pedido al cliente e indique el despacho</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-4">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0">Panel de Control</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <div class="display-6 text-danger mb-1">
+                                            <i class="bi bi-shield-check"></i>
+                                        </div>
+                                        <h6>Acceso Administrativo</h6>
+                                    </div>
+                                    
+                                    <div class="list-group list-group-flush">
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-people me-2"></i>Usuarios</span>
+                                            <span class="badge bg-primary rounded-pill">Admin</span>
+                                        </div>
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-person-badge me-2"></i>Roles</span>
+                                            <span class="badge bg-primary rounded-pill">Admin</span>
+                                        </div>
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-bank me-2"></i>Finanzas</span>
+                                            <span class="badge bg-primary rounded-pill">Admin</span>
+                                        </div>
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-gear me-2"></i>Configuración</span>
+                                            <span class="badge bg-primary rounded-pill">Admin</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-4">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">Estadísticas del Sistema</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6 mb-3">
+                                            <div class="display-6 text-info mb-1">100%</div>
+                                            <p class="small text-muted mb-0">Uso del Sistema</p>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="display-6 text-info mb-1">24/7</div>
+                                            <p class="small text-muted mb-0">Disponibilidad</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="display-6 text-info mb-1">0</div>
+                                            <p class="small text-muted mb-0">Errores Críticos</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="display-6 text-info mb-1">99.9</div>
+                                            <p class="small text-muted mb-0">Rendimiento</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-4">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">Accesos Rápidos</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download me-2"></i>Generar Backup
+                                        </button>
+                                        <button class="btn btn-outline-warning btn-sm">
+                                            <i class="bi bi-arrow-repeat me-2"></i>Sincronizar Datos
+                                        </button>
+                                        <button class="btn btn-outline-info btn-sm">
+                                            <i class="bi bi-graph-up me-2"></i>Ver Reportes
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-shield-exclamation me-2"></i>Auditoría
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Recepción -->
-                         <?php if($puedeAccion('Recepcion','ingresar')): ?>
+                        <?php if($puedeAccion('Recepcion', 'ingresar')): ?>
                         <div class="card mt-4 mb-4" id="recepcion-productos">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -1539,8 +1659,9 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                
                                 <!-- Pasos detallados para registrar recepción -->
-                                <?php if ($puedeAccion('Recepcion', 'incluir')): ?>
+                                <?php if($puedeAccion('Recepcion','incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nueva Recepción</h6>
@@ -1581,10 +1702,11 @@ $modulos = [
                                             Puede agregar y remover productos de la recepción si es necesario antes de confirmar.
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para detallar recepcion -->
-                                <?php if ($puedeAccion('Recepcion', 'consultar')): ?>
+                                <?php if($puedeAccion('Recepcion','consultar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Recepción</h6>
@@ -1604,10 +1726,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar recepción -->
-                                <?php if ($puedeAccion('Recepcion', 'modificar')): ?>
+                                <?php if($puedeAccion('Recepcion','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Recepción</h6>
@@ -1634,10 +1757,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para anular recepción -->
-                                <?php if ($puedeAccion('Recepcion', 'eliminar')): ?>
+                                <?php if($puedeAccion('Recepcion','eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Anular Recepción</h6>
@@ -1663,10 +1787,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
-                                
+                                </div>
+                                <?php endif; ?>
+
                                 <!-- Pasos para generar reportes de recepciones -->
-                                <?php if ($puedeAccion('Recepcion', 'generar reporte')): ?>
+                                <?php if($puedeAccion('Recepcion','generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Recepciones</h6>
@@ -1698,321 +1823,14 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <?php endif; ?>
 
-                        
-                        <!-- Despacho -->
-                        <div class="card mb-4" id="despacho-productos">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
-                                </h5>
-                                <p>Gestione la salida de productos del inventario hacia los clientes.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Fecha de despacho</li>
-                                            <li>Cliente</li>
-                                            <li>Tipo de compra</li>
-                                            <li>Productos</li>
-                                            <li>Cantidad despachada</li>
-                                            <li>Precio unitario</li>
-                                            <li>Total del despacho</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Proceso de despacho:</h6>
-                                        <ul>
-                                            <li><strong>Consultar</strong>: Ver lista completa</li>
-                                            <li><strong>Detallar</strong>: Ver información completa</li>
-                                            <li><strong>Anular</strong>: Remover despacho</li>
-                                            <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para detallar despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del despacho.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-eye text-warning me-2"></i>
-                                                    <strong>Detallar:</strong> Ícono ojo
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para cambiar estatus -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) del despacho y cambiará automáticamente.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="alert alert-info border">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong><br> Sin confirmación
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="alert alert-danger border">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para anular despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Anular Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el despacho que desea anular.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Anular:</strong> Ícono X rojo
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para generar reportes de despachos -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-secondary text-white">
-                                        <h6 class="mb-0">Pasos para Generar Reportes de Despachos</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: (Todos los reportes, Por Estatus, Mensuales, Por Cliente o Por Tipo de Compra).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-pie-chart me-2"></i>
-                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
-                                                </div>
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
-                                                    <strong>Reportes:</strong> Múltiples tipos
-                                                </div>
-                                                <div class="alert alert-warning border">
-                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                                    <strong>Reporte PDF:</strong> Descarga automática
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="note mt-3">
-                                    <i class="bi bi-info-circle-fill me-2"></i>
-                                    Los despachos reducen automáticamente el stock de productos del inventario.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Orden de Despacho -->
-                        <div class="card mb-4" id="despacho-productos">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
-                                </h5>
-                                <p>Gestione la verificación y entrega de las ordenes de despacho hacia los clientes.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Fecha</li>
-                                            <li>N° de orden de despacho</li>
-                                            <li>Código de orden de compra</li></li>
-                                            <li>Cliente</li>
-                                            <li>Estatus</li>
-                                            <li>Productos</li>
-                                            <li>Cantidad</li>
-                                            <li>Costo total</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Proceso de despacho:</h6>
-                                        <ul>
-                                            <li><strong>Consultar</strong>: Ver lista completa</li>
-                                            <li><strong>Detallar</strong>: Ver información completa</li>
-                                            <li><strong>Descargar</strong>: Entregar orden de despacho</li>
-                                            <li><strong>Anular</strong>: Remover orden de despacho</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para detallar orden de despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la orden de despacho.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-eye text-warning me-2"></i>
-                                                    <strong>Detallar:</strong> Ícono ojo
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para cambiar estatus -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus de la Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) de la orden de despacho y cambiará automáticamente.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="alert alert-info border">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong><br> Sin confirmación
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="alert alert-danger border">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para descargar orden de despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0">Pasos para Descargar Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono de <strong>descarga</strong> <i class="bi bi-download text-info me-2"></i>en la columna "Acciones" para obtener la orden de despacho en formato PDF.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-download text-info me-2"></i>
-                                                    <strong>Descargar:</strong> Ícono descarga
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-archive me-2"></i>
-                                                    <strong>Archivo:</strong> Formato PDF
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para anular orden de despacho -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Anular Orden de Despacho</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la orden de despacho que desea anular.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Anular:</strong> Ícono X rojo
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Marcas -->
-                        <?php if($puedeAccion('Marcas','ingresar')): ?>
-                         
+                        <?php if($puedeAccion('Marcas', 'ingresar')): ?>
                         <div class="card mt-2" id="gestion-marcas-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2059,7 +1877,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 3:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-patch-plus text-success me-2"></i>
                                                     <strong>Nueva Marca:</strong><br> Botón "+" verde
@@ -2081,8 +1899,9 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
-                                 
+                                </div>
+                                <?php endif; ?>
+                                
                                 <!-- Pasos para modificar marca -->
                                 <?php if($puedeAccion('Marcas','modificar')): ?>
                                 <div class="card mt-3">
@@ -2111,8 +1930,9 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
-
+                                </div>
+                                <?php endif; ?>
+                                
                                 <!-- Pasos para eliminar marca -->
                                 <?php if($puedeAccion('Marcas','eliminar')): ?>
                                 <div class="card mt-3">
@@ -2123,7 +1943,7 @@ $modulos = [
                                         <div class="row">
                                             <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre al marca que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la marca que desea eliminar.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
                                                 </ol>
@@ -2140,8 +1960,8 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
-                                
+                                </div>
+                                <?php endif; ?>
                                 <div class="note mt-3">
                                     <i class="bi bi-info-circle-fill me-2"></i>
                                     Las marcas ayudan a identificar y clasificar productos por fabricante.
@@ -2149,13 +1969,13 @@ $modulos = [
                             </div>
                         </div>
                         <?php endif; ?>
-                        
+
                         <!-- Modelos -->
-                        <?php if($puedeAccion('Modelos','ingresar')): ?>
+                        <?php if($puedeAccion('Modelo', 'ingresar')): ?>
                         <div class="card mt-4" id="gestion-modelos-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-cpu me-2"></i>Gestión de Modelos
+                                    <i class="bi bi-tag me-2"></i>Gestión de Modelos
                                 </h5>
                                 <p>Administre los modelos de productos para especificar versiones y variantes.</p>
                                 
@@ -2179,7 +1999,7 @@ $modulos = [
                                 </div>
                                 
                                 <!-- Pasos detallados para registrar modelo -->
-                                <?php if($puedeAccion('Modelos','incluir')): ?>
+                                <?php if($puedeAccion('Modelo','incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Modelo</h6>
@@ -2222,10 +2042,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar modelo -->
-                                <?php if($puedeAccion('Modelos','modificar')): ?>
+                                <?php if($puedeAccion('Modelo','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Modelo</h6>
@@ -2252,10 +2073,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para eliminar modelo -->
-                                <?php if($puedeAccion('Modelos','eliminar')): ?>
+                                <?php if($puedeAccion('Modelo','eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Modelo</h6>
@@ -2281,7 +2103,8 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                                 <div class="note mt-3">
                                     <i class="bi bi-info-circle-fill me-2"></i>
                                     Los modelos especifican versiones y variantes dentro de cada marca.
@@ -2291,7 +2114,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Productos -->
-                        <?php if($puedeAccion('Productos','ingresar')): ?>
+                        <?php if($puedeAccion('Producto','ingresar')): ?>
                         <div class="card mb-4 mt-4" id="gestion-productos-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2328,7 +2151,7 @@ $modulos = [
                                 </div>
                                 
                                 <!-- Pasos detallados para registrar producto -->
-                                <?php if($puedeAccion('Productos','incluir')): ?>
+                                <?php if($puedeAccion('Producto','incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Producto</h6>
@@ -2362,6 +2185,21 @@ $modulos = [
                                                 </div>
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar:</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <!-- Pasos para detallar producto -->
+                                <?php if($puedeAccion('Producto','consultar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Producto</h6>
+                                    </div>
+                                    <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-7">
                                                 <ol>
@@ -2376,10 +2214,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar producto -->
-                                <?php if($puedeAccion('Productos','modificar')): ?>
+                                <?php if($puedeAccion('Producto','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Producto</h6>
@@ -2406,10 +2245,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para eliminar producto -->
-                                <?php if($puedeAccion('Productos','eliminar')): ?>
+                                <?php if($puedeAccion('Producto','eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Producto</h6>
@@ -2439,19 +2279,20 @@ $modulos = [
                                         <i class="bi bi-exclamation-triangle me-2"></i>
                                         Al eliminar un producto, se eliminarán todos sus datos incluyendo la imagen asociada.
                                     </div>
-                                </div><?php endif; ?>
-
+                                </div>
+                                <?php endif; ?>
+                                
                                 <!-- Pasos para cambiar estatus -->
-                                <?php if($puedeAccion('Productos','modificar')): ?>
+                                <?php if($puedeAccion('Producto','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Proveedor</h6>
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Producto</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-8">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del proveedor y cambiará automáticamente.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del producto y cambiará automáticamente.</li>
                                                 </ol>
                                             </div>
                                         </div>
@@ -2470,10 +2311,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para generar reportes -->
-                                 <?php if($puedeAccion('Productos','generar reporte')): ?>
+                                <?php if($puedeAccion('Producto','generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Productos</h6>
@@ -2509,10 +2351,11 @@ $modulos = [
                                 </div>
                                 <?php endif; ?>
                             </div>
-                        </div> <?php endif; ?>
-                        
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Categorías -->
-                        <?php if($puedeAccion('Categorias','ingresar')): ?>
+                        <?php if($puedeAccion('Categoria', 'ingresar')): ?>
                         <div class="card" id="gestion-categorias-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2540,7 +2383,7 @@ $modulos = [
                                 </div>
                                 
                                 <!-- Pasos detallados para registrar categoría -->
-                                <?php if($puedeAccion('Categorias','incluir')): ?>
+                                <?php if($puedeAccion('Categoria', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nueva Categoría</h6>
@@ -2581,10 +2424,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
-                                 
+                                </div>
+                                <?php endif; ?>
+                                
                                 <!-- Pasos para modificar categoría -->
-                                <?php if($puedeAccion('Categorias','modificar')): ?>
+                                <?php if($puedeAccion('Categoria', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Categoría</h6>
@@ -2611,10 +2455,11 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
-
+                                </div>
+                                <?php endif; ?>
+                                
                                 <!-- Pasos para eliminar categoría -->
-                                <?php if($puedeAccion('Categorias','eliminar')): ?>
+                                <?php if($puedeAccion('Categoria', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Categoría</h6>
@@ -2640,7 +2485,8 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div><?php endif; ?>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <div class="note mt-3">
                                     <i class="bi bi-info-circle-fill me-2"></i>
@@ -2651,6 +2497,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Proveedores -->
+                        <?php if($puedeAccion('Proveedor', 'ingresar')): ?>
                         <div class="card mt-4 mb-4" id="gestion-proveedores-admin">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2687,6 +2534,7 @@ $modulos = [
                                 </div>
 
                                 <!-- Pasos detallados para registrar proveedor -->
+                                <?php if($puedeAccion('Proveedor', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Proveedor</h6>
@@ -2727,8 +2575,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para detallar proveedor -->
+                                <?php if($puedeAccion('Proveedor', 'consultar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Proveedor</h6>
@@ -2749,8 +2599,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar proveedor -->
+                                <?php if($puedeAccion('Proveedor', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Proveedor</h6>
@@ -2778,8 +2630,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para eliminar proveedor -->
+                                <?php if($puedeAccion('Proveedor', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Proveedor</h6>
@@ -2806,8 +2660,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
-
+                                <?php endif; ?>
+                                
                                 <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('Proveedor', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Cambiar Estatus de Proveedor</h6>
@@ -2836,8 +2692,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para generar reportes -->
+                                <?php if($puedeAccion('Proveedor', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Proveedores</h6>
@@ -2871,10 +2729,13 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
-                        
+                        <?php endif; ?>
+
                         <!-- Clientes -->
+                        <?php if($puedeAccion('Cliente', 'ingresar')):  ?>
                         <div class="card mb-4" id="gestion-clientes-admin">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2907,6 +2768,7 @@ $modulos = [
                                 </div>
                                 
                                 <!-- Pasos detallados para registrar cliente -->
+                                <?php if($puedeAccion('Cliente', 'incluir')):  ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Cliente</h6>
@@ -2950,8 +2812,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar cliente -->
+                                <?php if($puedeAccion('Cliente', 'modificar')):  ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Cliente</h6>
@@ -2979,8 +2843,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para eliminar cliente -->
+                                <?php if($puedeAccion('Cliente', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Cliente</h6>
@@ -3007,8 +2873,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para generar reporte -->
+                                <?php if($puedeAccion('Cliente', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reporte de Clientes</h6>
@@ -3035,14 +2903,1032 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
-                        
-                        <!-- Usuarios -->
-                        <div class="card mb-4" id="gestion-usuarios-sistema">
+                        <?php endif; ?>
+
+                        <!-- Catálogo de Combos -->
+                        <?php if($puedeAccion('Catalogo', 'ingresar')):  ?>
+                        <div class="card" id="gestion-catalogo-combos">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-person-badge me-2"></i>Gestión de Usuarios del Sistema
+                                    <i class="bi bi-tags-fill me-2"></i>Catálogo de Combos Promocionales
+                                </h5>
+                                <p>Configure y gestione los combos promocionales para ofrecer mejores precios a los clientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Nombre del combo</li>
+                                            <li>Descripción</li>
+                                            <li>Productos incluidos</li>
+                                            <li>Precio especial</li>
+                                            <li>Descuento aplicado</li>
+                                            <li>Fecha de vigencia</li>
+                                            <li>Estatus</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Registrar</strong>: Nuevo combo</li>
+                                            <li><strong>Modificar</strong>: Actualizar productos</li>
+                                            <li><strong>Eliminar</strong>: Desactivar combo</li>
+                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos detallados para registrar combo -->
+                                <?php if($puedeAccion('Catalogo', 'incluir')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Registrar Nuevo Combo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese una <strong>descripción</strong> breve.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Agregue los <strong>productos</strong> y la <strong>cantidad</strong> de cada uno.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Guardar Combo"</strong> para confirmar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-person-plus text-success me-2"></i>
+                                                    <strong>Nuevo Combo:</strong><br> Botón "+" verde
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-person me-2"></i>
+                                                    <strong>Cantidad de Productos:</strong> Mínimo 2 productos
+                                                </div>
+                                                <div class="alert alert-light border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <!-- Pasos para modificar combo -->
+                                <?php if($puedeAccion('Catalogo', 'modificar')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Modificar Combo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el combo en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para eliminar combo -->
+                                <?php if($puedeAccion('Catalogo', 'eliminar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Eliminar Combo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el combo que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('Catalogo', 'modificar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus del Combo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del combo.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Confirmar"</strong> para realizar el cambio.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border mt-2">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Click en el estatus (habilitado/inhabilitado)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <div class="note mt-3">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    Los combos ayudan a aumentar las ventas y mejorar la satisfacción del cliente.
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Pagos -->
+                        <?php if($puedeAccion('pasarela', 'ingresar')):  ?>
+                        <div class="card mb-4 mt-4" id="gestion-pagos">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-credit-card me-2"></i>Gestión de Pagos
+                                </h5>
+                                <p>Administre los pagos realizados por los clientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Estatus de los pagos</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Estatus</strong>: Actualizar estatus <br> (Procesado/No Encontrado/Incompleto)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('pasarela', 'modificar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus del Pago</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Cambiar Estatus"</strong> del pago.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione el <strong>estatus</strong> a asignar (Procesado/No Encontrado/Incompleto).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Haga clic en <strong>"Guardar Cambios"</strong> para realizar el cambio.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border mt-2">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Botón "Cambiar Estatus" azul
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- ventas presenciales -->
+                        <?php if($puedeAccion('Compra Física', 'ingresar')):  ?>
+                        <div class="card mt-2" id="gestion-ventas-presenciales">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-shop me-2"></i>Gestión de Ventas Presenciales
+                                </h5>
+                                <p>Consulte sus ventas presenciales y realice los pagos o cancelaciones correspondientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Ventas presenciales realizadas</li>
+                                            <li>Fecha de la venta</li>
+                                            <li>Cliente</li>
+                                            <li>Costo de la compra</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Registrar</strong>: Nueva venta presencial</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Información detallada de la venta presencial</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos detallados para registrar venta -->
+                                <?php if($puedeAccion('Compra Física', 'incluir')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pasos para Registrar la Venta Presencial</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <ul>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
+                                                </ul>
+
+                                                <hr>
+
+                                                <h6 class="text-primary">1. Registro de venta por Pago Móvil o Transferencia</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Registro de venta en efectivo</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Regristrar Venta:</strong><br> Botón "Registrar" azul
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <h6 class="text-primary">2. Registro de venta por Zelle</h6>
+                                                <div class="row">
+                                                    <div class="col-md-7 mt-2">
+                                                        <ul>
+                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
+                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>monto pagado</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
+                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
+                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="alert alert-light border">
+                                                            <i class="bi bi-plus-circle text-success me-2"></i>
+                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
+                                                        </div>
+                                                        <div class="alert alert-light border mt-2">
+                                                            <i class="bi bi-image me-2"></i>
+                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <div class="note col-md-11 mx-auto">
+                                            <i class="bi bi-info-circle-fill me-2"></i>
+                                            En caso de que el cliente no este registrado en el sistema, dar clic en el botón "Nuevo" (color verde) y procesa a registrarlo. Al terminar, vuelva a "Ventas Presenciales" y repita el procedimiento.
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para detallar ventas -->
+                                <?php if($puedeAccion('Compra Física', 'consultar')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Venta Presencial</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la venta.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Orden de Despacho -->
+                        <?php if($puedeAccion('OrdenDespacho', 'ingresar')):  ?>
+                        <div class="card mb-4 mt-4" id="gestion-orden-despacho">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Orden de Despacho
+                                </h5>
+                                <p>Gestione la verificación y entrega de las ordenes de despacho hacia los clientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Fecha</li>
+                                            <li>N° de orden de despacho</li>
+                                            <li>Código de orden de compra</li></li>
+                                            <li>Cliente</li>
+                                            <li>Estatus</li>
+                                            <li>Productos</li>
+                                            <li>Cantidad</li>
+                                            <li>Costo total</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Proceso de despacho:</h6>
+                                        <ul>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Descargar</strong>: Entregar orden de despacho</li>
+                                            <li><strong>Anular</strong>: Remover orden de despacho</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para detallar orden de despacho -->
+                                <?php if($puedeAccion('OrdenDespacho', 'consultar')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la orden de despacho.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('OrdenDespacho', 'modificar')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de la Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) de la orden de despacho y cambiará automáticamente.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-danger border">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para descargar orden de despacho -->
+                                <?php if($puedeAccion('OrdenDespacho', 'generar reporte')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pasos para Descargar Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono de <strong>descarga</strong> <i class="bi bi-download text-info me-2"></i>en la columna "Acciones" para obtener la orden de despacho en formato PDF.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-download text-info me-2"></i>
+                                                    <strong>Descargar:</strong> Ícono descarga
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-archive me-2"></i>
+                                                    <strong>Archivo:</strong> Formato PDF
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <!-- Pasos para anular orden de despacho -->
+                                <?php if($puedeAccion('OrdenDespacho', 'eliminar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Anular Orden de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la orden de despacho que desea anular.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Anular:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Despacho -->
+                        <?php if($puedeAccion('Despacho', 'ingresar')):  ?>
+                        <div class="card mb-4" id="despacho-productos">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Despacho de Productos
+                                </h5>
+                                <p>Gestione la salida de productos del inventario hacia los clientes.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Fecha de despacho</li>
+                                            <li>Cliente</li>
+                                            <li>Tipo de compra</li>
+                                            <li>Productos</li>
+                                            <li>Cantidad despachada</li>
+                                            <li>Precio unitario</li>
+                                            <li>Total del despacho</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Proceso de despacho:</h6>
+                                        <ul>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Anular</strong>: Remover despacho</li>
+                                            <li><strong>Reportes</strong>: Gráficas parametrizadas</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pasos para detallar despacho -->
+                                <?php if($puedeAccion('Despacho', 'consultar')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del despacho.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('Despacho', 'modificar')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>check</strong> (color verde) del despacho y cambiará automáticamente.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus:</strong><br> Botón "check" verde
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong><br> Sin confirmación
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-danger border">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <!-- Pasos para anular despacho -->
+                                <?php if($puedeAccion('Despacho', 'eliminar')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Anular Despacho</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el despacho que desea anular.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la anulación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Anular:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para generar reportes de despachos -->
+                                <?php if($puedeAccion('Despacho', 'generar reporte')):  ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Despachos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: (Todos los reportes, Por Estatus, Mensuales, Por Cliente o Por Tipo de Compra).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-pie-chart me-2"></i>
+                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <div class="note mt-3">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    Los despachos reducen automáticamente el stock de productos del inventario.
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Bancos -->
+                        <?php if($puedeAccion('Cuentas bancarias', 'ingresar')): ?>
+                        <div class="card mb-4" id="gestion-cuentas-bancarias">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-bank me-2"></i>Gestión de Cuentas Bancarias
+                                </h5>
+                                <p>Administre las cuentas bancarias para transacciones financieras.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Nombre del banco</li>
+                                            <li>Número de cuenta</li>
+                                            <li>RIF</li>
+                                            <li>Número de teléfono</li>
+                                            <li>Correo electrónico</li>
+                                            <li>Tipo de moneda</li>
+                                            <li>Metodos de pago</li>
+                                            <li>Estatus</li>
+                                            <li>Saldo actual</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Agregar</strong>: Nueva cuenta</li>
+                                            <li><strong>Consultar</strong>: Ver lista completa</li>
+                                            <li><strong>Detallar</strong>: Ver información completa</li>
+                                            <li><strong>Modificar</strong>: Actualizar datos</li>
+                                            <li><strong>Eliminar</strong>: Remover cuenta</li>
+                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
+                                            <li><strong>Conciliación</strong>: Balance de cuentas</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos detallados para registrar cuenta bancaria -->
+                                <?php if($puedeAccion('Cuentas bancarias','incluir')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pasos para Registrar Nueva Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>nombre del banco</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de cuenta</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>RIF</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de teléfono</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 7:</strong> Ingrese un <strong>correo electrónico</strong>.</li>
+                                                    <li class="mb-2"><strong>Paso 8:</strong> Seleccione un tipo de <strong>moneda</strong> (Bolívares o Dolares).</li>
+                                                    <li class="mb-2"><strong>Paso 9:</strong> Seleccione el o los <strong>métodos de pago</strong> (Pago Móvil, Transferencia y/o Zelle).</li>
+                                                    <li class="mb-2"><strong>Paso 10:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-person-plus text-success me-2"></i>
+                                                    <strong>Nuevo Usuario:</strong><br> Botón "+" verde
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-bank me-2"></i>
+                                                    <strong>N° de Cuenta:</strong><br> 0100-0000-00-0000000000
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>RIF:</strong> (VEJPG)-12345678-9
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-phone me-2"></i>
+                                                    <strong>Teléfono:</strong> 0400-000-0000
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-envelope me-2"></i>
+                                                    <strong>Correo:</strong> (gmail, outlook, yahoo, icloud)
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para detallar cuenta bancaria -->
+                                <?php if($puedeAccion('Cuentas bancarias','consultar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la cuenta bancaria.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-eye text-warning me-2"></i>
+                                                    <strong>Detallar:</strong> Ícono ojo
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <!-- Pasos para modificar cuenta bancaria -->
+                                <?php if($puedeAccion('Cuentas bancarias','modificar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Modificar Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la cuenta bancaria en la tabla.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-pencil text-info me-2"></i>
+                                                    <strong>Modificar:</strong> Ícono lápiz
+                                                </div>
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para eliminar cuenta bancaria -->
+                                <?php if($puedeAccion('Cuentas bancarias','eliminar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Eliminar Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la cuenta bancaria que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('Cuentas bancarias','modificar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Cuenta Bancaria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) de la cuenta bancaria y cambiará automáticamente.</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-toggle-on text-info me-2"></i>
+                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="alert alert-info border">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong>Instantáneo:</strong> Sin confirmación
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para generar reportes de cuentas bancarias -->
+                                <?php if($puedeAccion('Cuentas bancarias','generar reporte')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Cuentas Bancarias</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-pie-chart me-2"></i>
+                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Finanzas -->
+                        <?php if($puedeAccion('Finanzas', 'ingresar')): ?>
+                        <div class="card mb-4" id="gestion-finanzas">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-arrow-down-up me-2"></i>Gestión de Ingresos y Egresos
+                                </h5>
+                                <p>Administre los Ingresos y Egresos de la empresa.</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Información gestionable:</h6>
+                                        <ul>
+                                            <li>Ingresos y Egresos</li>
+                                            <li>Fecha</li>
+                                            <li>RIF</li>
+                                            <li>Monto</li>
+                                            <li>Decripción (Productos Involucrados)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Operaciones disponibles:</h6>
+                                        <ul>
+                                            <li><strong>Reporte</strong>: Generar gráfica</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Pasos para generar reportes de finanzas -->
+                                <?php if($puedeAccion('Finanzas', 'generar reporte')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">Pasos para Generar Reportes de Ingresos y Egresos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Ingrese las fechas: (Inicio y Fin).</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Ingresos y Egresos, Solo Ingresos o Solo Egresos).</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-info border mt-2">
+                                                    <i class="bi bi-pie-chart me-2"></i>
+                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
+                                                </div>
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
+                                                    <strong>Reportes:</strong> Múltiples tipos
+                                                </div>
+                                                <div class="alert alert-warning border">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                    <strong>Reporte PDF:</strong> Descarga automática
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Usuarios -->
+                        <?php if($puedeAccion('Usuario', 'ingresar')): ?>
+                        <div class="card mb-4" id="gestion-usuarios">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-person-badge me-2"></i>Gestión de Usuarios
                                 </h5>
                                 <p>Administre los usuarios que tienen acceso al sistema.</p>
                                 
@@ -3068,6 +3954,7 @@ $modulos = [
                                 </div>
                                 
                                 <!-- Pasos detallados para registrar usuario -->
+                                <?php if($puedeAccion('Usuario', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Usuario</h6>
@@ -3134,8 +4021,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar usuario -->
+                                <?php if($puedeAccion('Usuario', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Usuario</h6>
@@ -3163,8 +4052,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para eliminar usuario -->
+                                <?php if($puedeAccion('Usuario', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Usuario</h6>
@@ -3191,8 +4082,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('Usuario', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Cambiar Estatus de Usuario</h6>
@@ -3221,8 +4114,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para generar reportes de usuarios -->
+                                <?php if($puedeAccion('Usuario', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Usuarios</h6>
@@ -3250,73 +4145,17 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Pasos para resetear contraseña -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Resetear Contraseña</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="text-info">SweetAlert de Confirmación</h6>
-                                                <div class="text-center mb-3">
-                                                    <?= renderImagen("usuarios", "sweetalert-resetear.png") ?>
-                                                    <p class="text-muted small mt-2">Mensaje de confirmación para resetear contraseña</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6>Proceso paso a paso:</h6>
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el usuario que necesita reseteo de contraseña</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de <strong>llave</strong> 🔑 junto al usuario</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme que desea resetear la contraseña en el SweetAlert</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> El sistema generará una <strong>contraseña temporal</strong></li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> La nueva contraseña se enviará automáticamente al correo del usuario</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> El usuario deberá cambiarla en el próximo inicio de sesión</li>
-                                                </ol>
-                                                
-                                                <div class="alert alert-info mt-3">
-                                                    <i class="bi bi-envelope-check me-2"></i>
-                                                    <strong>Notificación:</strong> Correo enviado automáticamente
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row mt-3">
-                                            <div class="col-md-6">
-                                                <h6 class="text-info">SweetAlert de Éxito</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("usuarios", "sweetalert-reseteado.png") ?>
-                                                    <p class="text-muted small mt-2">Mensaje de éxito al resetear contraseña</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-key text-info me-2"></i>
-                                                    <strong>Resetear Contraseña</strong>
-                                                    <br><small>Ícono de llave</small>
-                                                </div>
-                                                <div class="alert alert-warning border mt-2">
-                                                    <i class="bi bi-envelope me-2"></i>
-                                                    <strong>Importante:</strong> El usuario debe tener correo válido
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-shield-lock me-2"></i>
-                                                    <strong>Seguridad:</strong> Contraseña temporal de un solo uso
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <!-- Roles -->
+                        <?php if ($puedeAccion('permisos', 'ingresar') && $puedeAccion('Roles', 'ingresar')): ?>
                         <div class="card mb-4" id="gestion-roles-permisos">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-person-badge-fill me-2"></i>Gestión de Roles y Permisos
+                                    <i class="bi bi-person-check me-2"></i>Gestión de Roles y Permisos
                                 </h5>
                                 <p>Defina los roles y permisos para controlar el acceso al sistema.</p>
                                 
@@ -3345,6 +4184,7 @@ $modulos = [
                                 </div>
 
                                 <!-- Pasos detallados para registrar rol -->
+                                <?php if ($puedeAccion('Roles', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nueva Rol</h6>
@@ -3381,8 +4221,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos para modificar rol -->
+                                <?php if ($puedeAccion('Roles', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Rol</h6>
@@ -3410,8 +4252,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos detallados para gestionar los permisos del rol -->
+                                <?php if ($puedeAccion('permisos', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Gestionar los Permisos del Rol</h6>
@@ -3434,8 +4278,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para eliminar rol -->
+                                <?php if ($puedeAccion('Roles', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Rol</h6>
@@ -3462,667 +4308,17 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
-
-                        <!-- Pagos -->
-                        <div class="card mb-4" id="gestion-pagos-bancarias">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-bank me-2"></i>Gestión de Pagos
-                                </h5>
-                                <p>Administre los pagos realizados por los clientes.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Estatus de los pagos</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Operaciones disponibles:</h6>
-                                        <ul>
-                                            <li><strong>Estatus</strong>: Actualizar estatus <br> (Procesado/No Encontrado/Incompleto)</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para cambiar estatus -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus del Pago</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Cambiar Estatus"</strong> del pago.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Seleccione el <strong>estatus</strong> a asignar (Procesado/No Encontrado/Incompleto).</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Haga clic en <strong>"Guardar Cambios"</strong> para realizar el cambio.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border mt-2">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Botón "Cambiar Estatus" azul
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bancos -->
-                        <div class="card mb-4" id="gestion-cuentas-bancarias">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-bank me-2"></i>Gestión de Cuentas Bancarias
-                                </h5>
-                                <p>Administre las cuentas bancarias para transacciones financieras.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Nombre del banco</li>
-                                            <li>Número de cuenta</li>
-                                            <li>RIF</li>
-                                            <li>Número de teléfono</li>
-                                            <li>Correo electrónico</li>
-                                            <li>Tipo de moneda</li>
-                                            <li>Metodos de pago</li>
-                                            <li>Estatus</li>
-                                            <li>Saldo actual</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Operaciones disponibles:</h6>
-                                        <ul>
-                                            <li><strong>Agregar</strong>: Nueva cuenta</li>
-                                            <li><strong>Consultar</strong>: Ver lista completa</li>
-                                            <li><strong>Detallar</strong>: Ver información completa</li>
-                                            <li><strong>Modificar</strong>: Actualizar datos</li>
-                                            <li><strong>Eliminar</strong>: Remover cuenta</li>
-                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
-                                            <li><strong>Conciliación</strong>: Balance de cuentas</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos detallados para registrar cuenta bancaria -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Registrar Nueva Cuenta Bancaria</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>nombre del banco</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de cuenta</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>RIF</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de teléfono</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 7:</strong> Ingrese un <strong>correo electrónico</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 8:</strong> Seleccione un tipo de <strong>moneda</strong> (Bolívares o Dolares).</li>
-                                                    <li class="mb-2"><strong>Paso 9:</strong> Seleccione el o los <strong>métodos de pago</strong> (Pago Móvil, Transferencia y/o Zelle).</li>
-                                                    <li class="mb-2"><strong>Paso 10:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-person-plus text-success me-2"></i>
-                                                    <strong>Nuevo Usuario:</strong><br> Botón "+" verde
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-bank me-2"></i>
-                                                    <strong>N° de Cuenta:</strong><br> 0100-0000-00-0000000000
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>RIF:</strong> (VEJPG)-12345678-9
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-phone me-2"></i>
-                                                    <strong>Teléfono:</strong> 0400-000-0000
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-envelope me-2"></i>
-                                                    <strong>Correo:</strong> (gmail, outlook, yahoo, icloud)
-                                                </div>
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para detallar cuenta bancaria -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Cuenta Bancaria</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la cuenta bancaria.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-eye text-warning me-2"></i>
-                                                    <strong>Detallar:</strong> Ícono ojo
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para modificar cuenta bancaria -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Modificar Cuenta Bancaria</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la cuenta bancaria en la tabla.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-info me-2"></i>
-                                                    <strong>Modificar:</strong> Ícono lápiz
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para eliminar cuenta bancaria -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Eliminar Cuenta Bancaria</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre la cuenta bancaria que desea eliminar.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Eliminar:</strong> Ícono X rojo
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para cambiar estatus -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus de Cuenta Bancaria</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-8">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) de la cuenta bancaria y cambiará automáticamente.</li>
-                                                </ol>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus</strong><br> Click en el estatus (habilitado/inhabilitado)
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="alert alert-info border">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Instantáneo:</strong> Sin confirmación
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para generar reportes de cuentas bancarias -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-secondary text-white">
-                                        <h6 class="mb-0">Pasos para Generar Reportes de Cuentas Bancarias</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-pie-chart me-2"></i>
-                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
-                                                </div>
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
-                                                    <strong>Reportes:</strong> Múltiples tipos
-                                                </div>
-                                                <div class="alert alert-warning border">
-                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                                    <strong>Reporte PDF:</strong> Descarga automática
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Finanzas -->
-                        <div class="card mb-4" id="gestion-finanzas-bancarias">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-bank me-2"></i>Gestión de Ingresos y Egresos
-                                </h5>
-                                <p>Administre los Ingresos y Egresos de la empresa.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Ingresos y Egresos</li>
-                                            <li>Fecha</li>
-                                            <li>RIF</li>
-                                            <li>Monto</li>
-                                            <li>Decripción (Productos involucrados)</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Operaciones disponibles:</h6>
-                                        <ul>
-                                            <li><strong>Reporte</strong>: Generar gráfica</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para generar reportes de finanzas -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-secondary text-white">
-                                        <h6 class="mb-0">Pasos para Generar Reportes de Ingresos y Egresos</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Use el filtro de estatus para <strong>mostrar</strong>: Todos/Habilitados/Inhabilitados.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-pie-chart me-2"></i>
-                                                    <strong>Gráficas:</strong><br> 5 tipos disponibles
-                                                </div>
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-file-earmark-bar-graph text-secondary me-2"></i>
-                                                    <strong>Reportes:</strong> Múltiples tipos
-                                                </div>
-                                                <div class="alert alert-warning border">
-                                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                                    <strong>Reporte PDF:</strong> Descarga automática
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Catálogo de Combos -->
-                        <div class="card" id="catalogo-combos-promocionales">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-tags-fill me-2"></i>Catálogo de Combos Promocionales
-                                </h5>
-                                <p>Configure y gestione los combos promocionales para ofrecer mejores precios a los clientes.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Nombre del combo</li>
-                                            <li>Descripción</li>
-                                            <li>Productos incluidos</li>
-                                            <li>Precio especial</li>
-                                            <li>Descuento aplicado</li>
-                                            <li>Fecha de vigencia</li>
-                                            <li>Estatus</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Operaciones disponibles:</h6>
-                                        <ul>
-                                            <li><strong>Registrar</strong>: Nuevo combo</li>
-                                            <li><strong>Modificar</strong>: Actualizar productos</li>
-                                            <li><strong>Eliminar</strong>: Desactivar combo</li>
-                                            <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos detallados para registrar combo -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-success text-white">
-                                        <h6 class="mb-0">Pasos para Registrar Nuevo Rol</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Ingrese una <strong>descripción</strong> breve.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Agregue los <strong>productos</strong> y la <strong>cantidad</strong> de cada uno.</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Guardar Combo"</strong> para confirmar.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-person-plus text-success me-2"></i>
-                                                    <strong>Nuevo Combo:</strong><br> Botón "+" verde
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-person me-2"></i>
-                                                    <strong>Cantidad de Productos:</strong> Mínimo 2 productos
-                                                </div>
-                                                <div class="alert alert-light border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Botón Limpiar</strong><br> Resetea el formulario
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Pasos para modificar combo -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Modificar Combo</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice el combo en la tabla.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-info me-2"></i>
-                                                    <strong>Modificar:</strong> Ícono lápiz
-                                                </div>
-                                                <div class="alert alert-info border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para eliminar combo -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Eliminar Combo</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el combo que desea eliminar.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-trash text-danger me-2"></i>
-                                                    <strong>Eliminar:</strong> Ícono X rojo
-                                                </div>
-                                                <div class="alert alert-danger border mt-2">
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para cambiar estatus -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Cambiar Estatus del Combo</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del combo.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Confirmar"</strong> para realizar el cambio.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border mt-2">
-                                                    <i class="bi bi-toggle-on text-info me-2"></i>
-                                                    <strong>Cambiar Estatus:</strong><br> Click en el estatus (habilitado/inhabilitado)
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="note mt-3">
-                                    <i class="bi bi-info-circle-fill me-2"></i>
-                                    Los combos ayudan a aumentar las ventas y mejorar la satisfacción del cliente.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ventas presenciales -->
-                        <div class="card mt-4" id="gestion-ventas-almacenista">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-tag me-2"></i>Gestión de Ventas Presenciales
-                                </h5>
-                                <p>Consulte sus ventas presenciales y realice los pagos o cancelaciones correspondientes.</p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Información gestionable:</h6>
-                                        <ul>
-                                            <li>Ventas presenciales realizadas</li>
-                                            <li>Fecha de la venta</li>
-                                            <li>Cliente</li>
-                                            <li>Costo de la compra</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Operaciones disponibles:</h6>
-                                        <ul>
-                                            <li><strong>Registrar</strong>: Nueva venta presencial</li>
-                                            <li><strong>Consultar</strong>: Ver lista completa</li>
-                                            <li><strong>Detallar</strong>: Información detallada de la venta presencial</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos detallados para registrar venta -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0">Pasos para Registrar la Venta Presencial</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <ul>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
-                                                </ul>
-
-                                                <hr>
-
-                                                <h6 class="text-primary">1. Registro de venta por Pago Móvil o Transferencia</h6>
-                                                <div class="row">
-                                                    <div class="col-md-7 mt-2">
-                                                        <ul>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
-                                                            <li class="mb-2"><strong>Paso 5:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="alert alert-light border">
-                                                            <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
-                                                        </div>
-                                                        <div class="alert alert-light border mt-2">
-                                                            <i class="bi bi-image me-2"></i>
-                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <hr>
-
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <h6 class="text-primary">2. Registro de venta en efectivo</h6>
-                                                <div class="row">
-                                                    <div class="col-md-7 mt-2">
-                                                        <ul>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="alert alert-light border">
-                                                            <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Regristrar Venta:</strong><br> Botón "Registrar" azul
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <hr>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <h6 class="text-primary">2. Registro de venta por Zelle</h6>
-                                                <div class="row">
-                                                    <div class="col-md-7 mt-2">
-                                                        <ul>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
-                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
-                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="alert alert-light border">
-                                                            <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
-                                                        </div>
-                                                        <div class="alert alert-light border mt-2">
-                                                            <i class="bi bi-image me-2"></i>
-                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <hr>
-
-                                        <div class="note col-md-11 mx-auto">
-                                            <i class="bi bi-info-circle-fill me-2"></i>
-                                            En caso de que el cliente no este registrado en el sistema, dar clic en el botón "Nuevo" (color verde) y procesa a registrarlo. Al terminar, vuelva a "Ventas Presenciales" y repita el procedimiento.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para detallar ventas -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Venta Presencial</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la venta.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-eye text-warning me-2"></i>
-                                                    <strong>Detallar:</strong> Ícono ojo
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <?php endif; ?>
 
                         <!-- Bitacora -->
-                        <div class="card mt-4" id="gestion-bitacora">
+                        <?php if($puedeAccion('bitacora', 'ingresar')): ?>
+                        <div class="card mt-2" id="gestion-bitacora">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-bank me-2"></i>Gestión de Bitácora
+                                    <i class="bi bi-clock-history me-2"></i>Gestión de Bitácora
                                 </h5>
                                 <p>Consultar los movimientos realizados por los usuarios.</p>
                                 
@@ -4140,12 +4336,14 @@ $modulos = [
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
 
                         <!-- backup -->
+                        <?php if($puedeAccion('Backup', 'ingresar')): ?>
                         <div class="card mt-4" id="gestion-backup">
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-tag me-2"></i>Gestión de Bases de Datos
+                                    <i class="bi bi-database me-2"></i>Gestión de Bases de Datos
                                 </h5>
                                 <p>Administre las bases de datos para respaldar y restaurar la información.</p>
                                 
@@ -4171,6 +4369,7 @@ $modulos = [
                                 </div>
                                 
                                 <!-- Pasos detallados para generar respaldo -->
+                                <?php if($puedeAccion('Backup', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Generar Respaldo de Base de Datos (Principal/Seguridad)</h6>
@@ -4192,8 +4391,10 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                                 
                                 <!-- Pasos detallados para restaurar base de datos -->
+                                <?php if($puedeAccion('Backup', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Restaurar Base de Datos (Principal/Seguridad)</h6>
@@ -4220,124 +4421,55 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
                                 <!-- Pasos para descargar respaldo -->
+                                <?php if($puedeAccion('Backup', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0">Pasos para Registrar la Venta Presencial</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <ul>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
-                                                </ul>
-
-                                                <hr>
-
-                                                <h6 class="text-primary">1. Registro de venta por Pago Móvil o Transferencia</h6>
-                                                <div class="row">
-                                                    <div class="col-md-7 mt-2">
-                                                        <ul>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
-                                                            <li class="mb-2"><strong>Paso 5:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 7:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="alert alert-light border">
-                                                            <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
-                                                        </div>
-                                                        <div class="alert alert-light border mt-2">
-                                                            <i class="bi bi-image me-2"></i>
-                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <hr>
-
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <h6 class="text-primary">2. Registro de venta en efectivo</h6>
-                                                <div class="row">
-                                                    <div class="col-md-7 mt-2">
-                                                        <ul>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="alert alert-light border">
-                                                            <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Regristrar Venta:</strong><br> Botón "Registrar" azul
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <hr>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <h6 class="text-primary">2. Registro de venta por Zelle</h6>
-                                                <div class="row">
-                                                    <div class="col-md-7 mt-2">
-                                                        <ul>
-                                                            <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>banco emisor</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 4:</strong> Ingrese el nombre del <strong>propietario</strong> de la cuenta Zelle.</li>
-                                                            <li class="mb-2"><strong>Paso 5:</strong> Ingrese el <strong>monto pagado</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 6:</strong> Ingrese el <strong>N° de referecia</strong> del pago realizado.</li>
-                                                            <li class="mb-2"><strong>Paso 7:</strong> Agregue la imagen del <strong>comprobante de pago</strong>.</li>
-                                                            <li class="mb-2"><strong>Paso 8:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <div class="alert alert-light border">
-                                                            <i class="bi bi-plus-circle text-success me-2"></i>
-                                                            <strong>Realizar Pago:</strong><br> Botón "Registrar" azul
-                                                        </div>
-                                                        <div class="alert alert-light border mt-2">
-                                                            <i class="bi bi-image me-2"></i>
-                                                            <strong>Imagen:</strong> JPG/PNG <br> requerida
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <hr>
-
-                                        <div class="note col-md-11 mx-auto">
-                                            <i class="bi bi-info-circle-fill me-2"></i>
-                                            En caso de que el cliente no este registrado en el sistema, dar clic en el botón "Nuevo" (color verde) y procesa a registrarlo. Al terminar, vuelva a "Ventas Presenciales" y repita el procedimiento.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pasos para detallar ventas -->
-                                <div class="card mt-3">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Pasos para Detallar Venta Presencial</h6>
+                                        <h6 class="mb-0">Pasos para Descargar el Respaldo de la Base de Datos</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la venta.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono de <strong>descarga</strong> <i class="bi bi-download text-info me-2"></i>en la columna "Acciones" para obtener el respaldo en formato SQL.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
                                                 <div class="alert alert-light border">
-                                                    <i class="bi bi-eye text-warning me-2"></i>
-                                                    <strong>Detallar:</strong> Ícono ojo
+                                                    <i class="bi bi-download text-info me-2"></i>
+                                                    <strong>Descargar:</strong> Ícono descarga
+                                                </div>
+                                                <div class="alert alert-danger border mt-2">
+                                                    <i class="bi bi-archive me-2"></i>
+                                                    <strong>Archivo:</strong> Formato SQL
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Pasos para eliminar respaldo -->
+                                <?php if($puedeAccion('Backup', 'eliminar')): ?>
+                                <div class="card mt-3">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0">Pasos para Eliminar Respaldo de la Base de Datos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Encuentre el respaldo que desea eliminar.</li>
+                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+                                                    <li class="mb-2"><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+                                                </ol>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="alert alert-light border">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    <strong>Eliminar:</strong> Ícono X rojo
                                                 </div>
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -4347,60 +4479,14 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </section>
                 <?php /* endif; */ ?>
 
-                <?php /* if ($esCliente || $esAdministrador): */ ?>
-                    <!-- Sección para Clientes -->
-                    <?php /* if ($esCliente): */ ?>
-                        <!-- Catálogo de Productos -->
-                        <section id="seccion-cliente" class="section-card">
-                            <h2 class="section-title">Catálogo de Productos</h2>
-                            <?php
-                            $datos_catalogo = [
-                                "id" => "catalogo",
-                                "nombre_singular" => "Producto",
-                                "nombre_plural" => "Productos",
-                                "gestionable" => [
-                                    "Ver lista de productos disponibles",
-                                    "Filtrar productos por categoría",
-                                    "Buscar productos específicos",
-                                    "Ver detalles completos de cada producto"
-                                ],
-                                "instrucciones" => [
-                                    "Navegue por las diferentes categorías de productos",
-                                    "Utilice la barra de búsqueda para encontrar productos específicos",
-                                    "Haga clic en un producto para ver más detalles"
-                                ]
-                            ];
-                            plantilla("inicio", $datos_catalogo);
-                            ?>
-                            
-                            <div class="row mt-4">
-                                <div class="col-md-6">
-                                    <h4>Vista de Productos</h4>
-                                    <p>Explore los productos disponibles en el catálogo.</p>
-                                    <?= renderImagen("catalogo", "vista-productos.png") ?>
-                                </div>
-                                <div class="col-md-6">
-                                    <h4>Detalles del Producto</h4>
-                                    <p>Vea información detallada de cada producto.</p>
-                                    <?= renderImagen("catalogo", "detalle-producto.png") ?>
-                                </div>
-                            </div>
-                        </section>
-
-                    <?php /* endif; */ ?>
-                    
-                    <!-- Sección para Administradores -->
-                    <?php /* if ($esAdministrador): */ ?>
-                        <?php /* include 'plantillas/seccion-almacenista.php'; */ ?>
-                        <?php /* include 'plantillas/seccion-administrador.php'; */ ?>
-                    <?php /* endif; */ ?>
-                <?php /* else: */ ?>
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
                         <h2 class="section-title">Iniciar Sesión</h2>
@@ -4434,9 +4520,9 @@ $modulos = [
                     </section>
                 <?php /* endif; */ ?>
 
-                <!-- Preguntas Frecuentes 
+                <!-- Preguntas Frecuentes -->
                 <section id="preguntas-frecuentes" class="section-card">
-                    <h2 class="section-title">Preguntas Frecuentes</h2>
+                    <h2 class="section-title"><i class="bi bi-question-circle me-2"></i>Preguntas Frecuentes</h2>
                     
                     <div class="accordion" id="faqAccordion">
                         <div class="accordion-item">
