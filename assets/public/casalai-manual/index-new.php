@@ -1539,7 +1539,6 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                <?php if($puedeAccion('Recepcion','registrar')): ?>
                                 <!-- Pasos detallados para registrar recepción -->
                                 <?php if ($puedeAccion('Recepcion', 'incluir')): ?>
                                 <div class="card mt-3">
@@ -1583,7 +1582,7 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div><?php endif; ?>
-<?php if($puedeAccion('Recepcion','consultar')): ?>
+
                                 <!-- Pasos para detallar recepcion -->
                                 <?php if ($puedeAccion('Recepcion', 'consultar')): ?>
                                 <div class="card mt-3">
@@ -1606,7 +1605,7 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div><?php endif; ?>
-                                <?php if($puedeAccion('Recepcion','modificar')): ?>
+                                
                                 <!-- Pasos para modificar recepción -->
                                 <?php if ($puedeAccion('Recepcion', 'modificar')): ?>
                                 <div class="card mt-3">
@@ -1636,7 +1635,7 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div><?php endif; ?>
-<?php if($puedeAccion('Recepcion','eliminar')): ?>
+
                                 <!-- Pasos para anular recepción -->
                                 <?php if ($puedeAccion('Recepcion', 'eliminar')): ?>
                                 <div class="card mt-3">
@@ -1665,7 +1664,7 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div><?php endif; ?>
-                                <?php if($puedeAccion('Recepcion','generar reporte')): ?>
+                                
                                 <!-- Pasos para generar reportes de recepciones -->
                                 <?php if ($puedeAccion('Recepcion', 'generar reporte')): ?>
                                 <div class="card mt-3">
@@ -4672,5 +4671,6 @@ $modulos = [
             }
         }
     </script>
+<?php endif; ?>
 </body>
 </html>
