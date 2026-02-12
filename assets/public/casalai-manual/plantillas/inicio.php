@@ -1,4 +1,4 @@
-<?php require_once "utils.php"; ?>
+<?php require_once __DIR__ . "/../utils.php"; ?>
 
 <h2 class="text-primary" id="seccion-<?= $nombre_plural ?>">
     Gestión de <?= $nombre_plural ?>

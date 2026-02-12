@@ -594,7 +594,6 @@ $modulos = [
                 <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
                 
                 <!-- Secciones disponibles para todos los usuarios -->
-                 <?php if($esCliente): ?>
                 <li class="toc-item">
                     <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Sección para Clientes</a>
                     <ul class="toc-sublist ms-3 mt-2">
@@ -602,7 +601,7 @@ $modulos = [
                         <li><a href="#mis-pedidos" class="toc-link">Mis Pedidos</a></li>
                     </ul>
                 </li>
-                <?php endif; ?>
+                
                 <?php if ($esAdministrador): ?>
                     <!-- Secciones para Administradores -->
                     <li class="toc-item">
