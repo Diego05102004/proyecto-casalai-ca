@@ -879,6 +879,8 @@ $modulos = [
 </section>
 
 <?php endif; ?>
+<?php endif; ?>
+
                 <!-- Mi Cuenta Section -->
                 <?php if (isset($_SESSION['id_usuario'])): ?>
                     <section id="mi-cuenta" class="section-card">
@@ -2504,18 +2506,6 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                        </div> <?php endif; ?>
-                        
-                        <!-- Categorías -->
-                        <?php if($puedeAccion('Categorias','ingresar')): ?>
-                        <div class="card" id="gestion-categorias-almacenista">
-                            <div class="card-body">
-                                <h5 class="card-title">
                                     <i class="bi bi-folder me-2"></i>Gestión de Categorías
                                 </h5>
                                 <p>Administre las categorías para organizar mejor el catálogo de productos.</p>
@@ -2875,6 +2865,7 @@ $modulos = [
                         </div>
                         
                         <!-- Clientes -->
+                        <?php if($puedeAccion('Clientes','ingresar')): ?>
                         <div class="card mb-4" id="gestion-clientes-admin">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2907,6 +2898,7 @@ $modulos = [
                                 </div>
                                 
                                 <!-- Pasos detallados para registrar cliente -->
+                                <?php if($puedeAccion('Clientes','incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Cliente</h6>
@@ -2949,9 +2941,10 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div><?php endif; ?>
                                 
                                 <!-- Pasos para modificar cliente -->
+                                <?php if($puedeAccion('Clientes','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Cliente</h6>
@@ -3002,13 +2995,9 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                                 
                                 <!-- Pasos para generar reporte -->
+                                <?php if($puedeAccion('Clientes','generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reporte de Clientes</h6>
@@ -3034,9 +3023,10 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div><?php endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <!-- Usuarios -->
                         <div class="card mb-4" id="gestion-usuarios-sistema">
@@ -3466,6 +3456,7 @@ $modulos = [
                         </div>
 
                         <!-- Pagos -->
+                        <?php if($puedeAccion('Pagos','ingresar') && $puedeAccion('Pagos','consultar')): ?>
                         <div class="card mb-4" id="gestion-pagos-bancarias">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -3651,12 +3642,12 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Pasos para eliminar cuenta bancaria -->
+                                </div><?php endif; ?>
+                                <!-- Pasos para eliminar cliente -->
+                                <?php if($puedeAccion('Clientes','eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
-                                        <h6 class="mb-0">Pasos para Eliminar Cuenta Bancaria</h6>
+                                        <h6 class="mb-0">Pasos para Eliminar Cliente</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -3813,6 +3804,7 @@ $modulos = [
                         </div>
                         
                         <!-- Catálogo de Combos -->
+                        <?php if($puedeAccion('Catalogo','ingresar')): ?>
                         <div class="card" id="catalogo-combos-promocionales">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -3845,6 +3837,7 @@ $modulos = [
                                 </div>
 
                                 <!-- Pasos detallados para registrar combo -->
+                                <?php if($puedeAccion('Catalogo','incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Rol</h6>
@@ -3876,9 +3869,10 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div><?php endif; ?>
                                 
                                 <!-- Pasos para modificar combo -->
+                                <?php if($puedeAccion('Catalogo','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Combo</h6>
@@ -3905,9 +3899,10 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div><?php endif; ?>
 
                                 <!-- Pasos para eliminar combo -->
+                                <?php if($puedeAccion('Catalogo','eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Combo</h6>
@@ -3933,9 +3928,10 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div><?php endif; ?>
 
                                 <!-- Pasos para cambiar estatus -->
+                                <?php if($puedeAccion('Catalogo','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Cambiar Estatus del Combo</h6>
@@ -3956,7 +3952,7 @@ $modulos = [
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div><?php endif; ?>
                                 
                                 <div class="note mt-3">
                                     <i class="bi bi-info-circle-fill me-2"></i>
@@ -3964,6 +3960,7 @@ $modulos = [
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
 
                         <!-- ventas presenciales -->
                         <div class="card mt-4" id="gestion-ventas-almacenista">
@@ -4351,11 +4348,11 @@ $modulos = [
                         </div>
                     </div>
                 </section>
-                <?php /* endif; */ ?>
+                <?php /*endif; */ ?>
 
                 <?php /* if ($esCliente || $esAdministrador): */ ?>
                     <!-- Sección para Clientes -->
-                    <?php /* if ($esCliente): */ ?>
+                    <?php  if ($esCliente):  ?>
                         <!-- Catálogo de Productos -->
                         <section id="seccion-cliente" class="section-card">
                             <h2 class="section-title">Catálogo de Productos</h2>
@@ -4393,14 +4390,14 @@ $modulos = [
                             </div>
                         </section>
 
-                    <?php /* endif; */ ?>
+                    <?php  endif;  ?>
                     
                     <!-- Sección para Administradores -->
                     <?php /* if ($esAdministrador): */ ?>
                         <?php /* include 'plantillas/seccion-almacenista.php'; */ ?>
                         <?php /* include 'plantillas/seccion-administrador.php'; */ ?>
-                    <?php /* endif; */ ?>
-                <?php /* else: */ ?>
+                    <?php  endif;  ?>
+                <?php  else:  ?>
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
                         <h2 class="section-title">Iniciar Sesión</h2>
@@ -4432,9 +4429,9 @@ $modulos = [
                             <strong>¿Problemas para iniciar sesión?</strong> Contacte al administrador del sistema para restablecer su contraseña.
                         </div>
                     </section>
-                <?php /* endif; */ ?>
+                <?php  endif;  ?>
 
-                <!-- Preguntas Frecuentes 
+             Preguntas Frecuentes 
                 <section id="preguntas-frecuentes" class="section-card">
                     <h2 class="section-title">Preguntas Frecuentes</h2>
                     
