@@ -256,6 +256,10 @@
                                                 data-id-combo="<?= $combo['id_combo'] ?>">
                                             <i class="bi bi-pencil"></i> Editar
                                         </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-eliminar-combo"
+                                                data-id-combo="<?= $combo['id_combo'] ?>">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
                                         <button class="btn btn-sm <?= $combo['activo'] ? 'btn-outline-warning' : 'btn-outline-success' ?> btn-cambiar-estado"
                                                 data-id-combo="<?= $combo['id_combo'] ?>"
                                                 data-nombre-combo="<?= htmlspecialchars($combo['nombre_combo']) ?>"

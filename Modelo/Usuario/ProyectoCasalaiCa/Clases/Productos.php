@@ -1419,7 +1419,7 @@ private function e_eliminarCombo($id_combo) {
     $conexion = new BD('P');
     $this->conex = $conexion->getConexion();
     try {
-        $sql = "UPDATE tbl_combo SET activo = 0 WHERE id_combo = :id_combo";
+        $sql = "UPDATE tbl_combo SET activo = 2 WHERE id_combo = :id_combo";
         $stmt = $this->conex->prepare($sql);
         $stmt->bindParam(':id_combo', $id_combo);
         return $stmt->execute();
