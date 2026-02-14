@@ -586,9 +586,7 @@ $modulos = [
                     <?php endif; ?>
                         
                         <?php if (isset($_SESSION['id_usuario'])): ?>
-                            <?php if(!$esCliente): ?>
-                            <li class="toc-item"><a href="#dashboard" class="toc-link"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                            <?php endif; ?>
+                            <li class="toc-item"><a href="#dashboard" class="toc-link"><i class="bi bi-speedometer2"></i> <?php if(!$esCliente): ?> Dashboard <?php endif; ?> <?php if($esCliente): ?> Menú y Barra Superior <?php endif; ?></a></li>
                             <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
                             
                             <!-- Secciones disponibles para todos los usuarios -->
@@ -696,6 +694,7 @@ $modulos = [
             <div class="col-lg-9">
                 <!-- Introduction Section -->
                  <?php if($_SESSION): ?>
+                    <?php if(!$esCliente): ?>
                     <section id="introduccion" class="section-card">
                         <h2 class="section-title"><i class="bi bi-house-door"></i> Introducción</h2>
                         <div class="row">
@@ -762,7 +761,7 @@ $modulos = [
                                         <div class="d-grid gap-2">
                                             <a href="#dashboard" class="btn btn-outline-primary text-start"><i class="bi bi-speedometer2 me-2"></i> Ir al Dashboard</a>
                                             <a href="#seccion-cliente" class="btn btn-outline-primary text-start"><i class="bi bi-cart me-2"></i> Ver Sección Cliente</a>
-                                            <a href="#preguntas-frecuentes" class="btn btn-outline-secondary text-start mt-3"><i class="bi bi-question-circle me-2"></i> Preguntas Frecuentes</a>
+                                            <a href="#preguntas-frecuentes" class="btn btn-outline-secondary text-start"><i class="bi bi-question-circle me-2"></i> Preguntas Frecuentes</a>
                                         </div>
                                     </div>
                                 </div>
@@ -777,17 +776,19 @@ $modulos = [
                             </div>
                         </div>
                     </section>
+                    <?php endif; ?>
                 <?php endif; ?>
     
                 <?php if($_SESSION): ?>
                     <!-- Dashboard Section -->
                     <section id="dashboard" class="section-card">
                         <h2 class="section-title">
-                            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            <i class="bi bi-speedometer2 me-2"></i><?php if(!$esCliente): ?> Dashboard <?php endif; ?> <?php if($esCliente): ?> Menú y Barra Superior <?php endif; ?>
                         </h2>
                         
                         <div class="row">
                             <div class="">
+                                <?php if(!$esCliente): ?>
                                 <p>El Dashboard es el centro de control principal del sistema. Aquí encontrará un resumen de la información más relevante según su rol de usuario.</p>
                                 
                                 <div class="card mb-4">
@@ -796,16 +797,35 @@ $modulos = [
                                         <p>Al iniciar sesión, será dirigido al Dashboard que muestra:</p>
                                         <div class="row g-4">
                                             <div class="col-md-6">
+                                                <h6 class="text-success">Vista principal del Dashboard</h6>
                                                 <?= renderImagen("dashboard", "vista2.png") ?>
-                                                <p class="text-muted small mt-2">Vista principal del Dashboard</p>
                                             </div>
                                             <div class="col-md-6">
+                                                <h6 class="text-success">Menú lateral de navegación</h6>
                                                 <?= renderImagen("dashboard", "barra-lateral.png") ?>
-                                                <p class="text-muted small mt-2">Barra lateral de navegación</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
+
+                                <?php if($esCliente): ?>
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Menú Lateral</h5>
+                                        <p>Secciones Disponibles del Cliente:</p>
+                                        <div class="col-md-8 mx-auto">
+                                            <h6 class="text-success">Menú lateral de navegación</h6>
+                                            <?= renderImagen("dashboard", "barra-lateral-cliente.png") ?>
+                                        </div>
+                                        <ul>
+                                            <li><strong>Catálogo</strong>: Muestra el catálogo con los productos y combos disponibles.</li>
+                                            <li><strong>Mis Pedidos</strong>: Muestra los pedidos realizados.</li>
+                                            <li><strong>Mis Pagos</strong>: Muestra los pagos y el estatus que presentan.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <div class="card mb-4">
                                     <div class="card-body">
@@ -847,7 +867,7 @@ $modulos = [
                                     <div class="card-body">
                                         <h5 class="card-title">Notificaciones</h5>
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-8 mx-auto">
                                                 <p>El sistema le notificará sobre:</p>
                                                 <ul>
                                                     <li>Nuevos mensajes</li>
@@ -855,11 +875,17 @@ $modulos = [
                                                     <li>Actividad reciente</li>
                                                     <li>Recordatorios importantes</li>
                                                 </ul>
-                                                <p>Para ver todas las notificaciones, haga clic en "Ver más" en el panel de notificaciones.</p>
                                             </div>
+                                            <p>Para ver todas las notificaciones, haga clic en "Ver más" en el panel de notificaciones.</p>
+                                            <br>
+                                            <h6 class="text-success">Central de Notificaciones</h6>
+                                            <?php if(!$esCliente): ?>
                                             <div class="col-md-6">
-                                                <h6 class="text-success">Central de Notificaciones</h6>
                                                 <?= renderImagen("dashboard", "notificaciones-abiertas.png") ?>
+                                            </div>
+                                            <?php endif; ?>
+                                            <div class="col-md-6">
+                                                <?= renderImagen("dashboard", "notificaciones-cliente.png") ?>
                                             </div>
                                         </div>
                                     </div>
