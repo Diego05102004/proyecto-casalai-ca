@@ -335,26 +335,26 @@ if (!empty($_SESSION['foto_perfil'])) {
                         <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Ventas Presenciales
                     </div>
                 <?php endif; ?>
+                <?php if (!empty($permisosConsulta['Pedidos']) && $nombre_rol !== 'Cliente'): ?>
+                        <div class="sub-option" onclick="window.location.href='?pagina=gestionarfactura'">
+                            <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Pedidos
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($permisosConsulta['Pedidos']) && $nombre_rol == 'Cliente'): ?>
+                        <div class="sub-option" onclick="window.location.href='?pagina=gestionarfactura'">
+                            <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Mis Pedidos
+                        </div>
+                <?php endif; ?>
                 <?php if (!empty($permisosConsulta['pasarela'])): ?>
                     <?php if ($nombre_rol === 'Cliente'): ?>
                         <div class="sub-option" onclick="window.location.href='?pagina=pasarela'">
-                            <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Pagos
+                            <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Mis Pagos
                         </div>
                     <?php else: ?>
                         <div class="sub-option" onclick="window.location.href='?pagina=pasarela'">
                             <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Pagos
                         </div>
                     <?php endif; ?>
-                <?php endif; ?>
-                <?php if (!empty($permisosConsulta['Pedidos']) && $nombre_rol !== 'Cliente'): ?>
-                <div class="sub-option" onclick="window.location.href='?pagina=gestionarfactura'">
-                    <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Gestionar Pedidos
-                </div>
-                <?php endif; ?>
-                 <?php if (!empty($permisosConsulta['Pedidos']) && $nombre_rol == 'Cliente'): ?>
-                <div class="sub-option" onclick="window.location.href='?pagina=gestionarfactura'">
-                    <IMG src="assets/img/angle-right.svg" alt=">" class="menu-icon"> Pedidos Realizados
-                </div>
                 <?php endif; ?>
                 <?php if (!empty($permisosConsulta['Ordenes de despacho']) && $nombre_rol !== 'Cliente'): ?>
                     <div class="sub-option" onclick="window.location.href='?pagina=ordendespacho'">

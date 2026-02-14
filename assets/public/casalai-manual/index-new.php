@@ -815,8 +815,14 @@ $modulos = [
                                         <h5 class="card-title">Menú Lateral</h5>
                                         <p>Secciones Disponibles del Cliente:</p>
                                         <div class="col-md-8 mx-auto">
-                                            <h6 class="text-success">Menú lateral de navegación</h6>
-                                            <?= renderImagen("dashboard", "barra-lateral-cliente.png") ?>
+                                            <?php if(!$esCliente): ?>
+                                                <h6 class="text-success">Menú lateral de navegación</h6>
+                                                <?= renderImagen("dashboard", "barra-lateral-cliente.png") ?>
+                                            <?php endif; ?>
+                                            <?php if($esCliente): ?>
+                                                <h6 class="text-success">Menú lateral de navegación</h6>
+                                                <?= renderImagen("dashboard", "menu-cliente.png") ?>
+                                            <?php endif; ?>
                                         </div>
                                         <ul>
                                             <li><strong>Catálogo</strong>: Muestra el catálogo con los productos y combos disponibles.</li>
@@ -831,11 +837,21 @@ $modulos = [
                                     <div class="card-body">
                                         <h5 class="card-title">Barra Superior</h5>
                                         <p>En la parte superior derecha encontrará:</p>
-                                        <div class="text-center mb-3">
-                                            <?= renderImagen("dashboard", "perfil2.png") ?>
-                                        </div>
+                                        <?php if(!$esCliente): ?>
+                                            <div class="text-center mb-3">
+                                                <?= renderImagen("dashboard", "perfil2.png") ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if($esCliente): ?>
+                                            <div class="text-center mb-3">
+                                                <?= renderImagen("dashboard", "barra-superior-cliente.png") ?>
+                                            </div>
+                                        <?php endif; ?>
                                         <ul>
                                             <li><strong>Icono de Conversión de Dólar</strong>: Muestra la tasa de cambio actual del BCV.</li>
+                                            <?php if($esCliente): ?>
+                                                <li><strong>Icono de Carrito</strong>: Muestra el carrito de compras.</li>
+                                            <?php endif; ?>
                                             <li><strong>Icono de Notificaciones</strong>: Muestra las notificaciones recientes del sistema.</li>
                                             <li><strong>Icono de Ayuda</strong>: Acceso directo a este manual de usuario.</li>
                                             <li><strong>Perfil de Usuario</strong>: Muestra su nombre y rol actual.</li>
