@@ -408,6 +408,36 @@ table tfoot tr td span a i{
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
+/* Botón flotante de ayuda */
+.btn-ayuda {
+    position: fixed;
+    top: 150px;
+    right: 33px;
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    background-color: #5995fd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1050;
+}
+
+.btn-ayuda img {
+    width: 25px;
+    height: 25px;
+}
+
+.btn-ayuda:hover {
+    background-color: #4d84e2;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
 /* En pantallas pequeñas, ajustamos tamaño */
 @media (max-width: 768px) {
     .btn-grafica {
@@ -418,6 +448,18 @@ table tfoot tr td span a i{
     }
 
     .btn-grafica img {
+        width: 26px;
+        height: 26px;
+    }
+
+    .btn-ayuda {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        left: 20px;
+    }
+
+    .btn-ayuda img {
         width: 26px;
         height: 26px;
     }
@@ -803,6 +845,20 @@ table tfoot tr td span a i{
     }
 
     .btn-grafica img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .btn-ayuda {
+        top: auto;
+        right: auto;
+        bottom: 16px;
+        left: 16px;
+        width: 45px;
+        height: 45px;
+    }
+
+    .btn-ayuda img {
         width: 22px;
         height: 22px;
     }

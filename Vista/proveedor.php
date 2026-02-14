@@ -1262,8 +1262,14 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteProveedores'">
         <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    
     </button>
+    <button 
+        class="btn-ayuda"
+        title="Visualizar Ayuda"
+        onclick="window.location.href='?pagina=ayuda'">
+        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+    </button>
+
 </body>
 </html>
 <?php
