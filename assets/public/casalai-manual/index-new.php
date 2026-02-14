@@ -1176,8 +1176,8 @@ $modulos = [
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Ajustar cantidad</strong>: Aumentar o disminuir unidades</li>
-                                            <li><strong>Eliminar producto</strong>: Quitar items individuales</li>
-                                            <li><strong>Vaciar carrito</strong>: Eliminar todo el contenido</li>
+                                            <li><strong>Eliminar producto</strong>: Descartar producto</li>
+                                            <li><strong>Vaciar carrito</strong>: Eliminar todo el contenido del carrito</li>
                                             <li><strong>Actualizar totales</strong>: Ver costos en tiempo real</li>
                                         </ul>
                                     </div>
