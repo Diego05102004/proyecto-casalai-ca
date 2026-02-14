@@ -78,6 +78,7 @@ $(document).ready(function () {
         $('#nuevo_combo').on('click', mostrarModalNuevoCombo);
         $(document).on('click', '.btn-editar-combo', editarCombo);
         $(document).on('click', '.btn-cambiar-estado', mostrarModalCambioEstado);
+        $(document).on('click', '.btn-eliminar-combo', eliminarCombo);
         $('#agregar_producto').on('click', agregarProductoACombo);
         $(document).on('click', '.btn-eliminar-producto', eliminarProductoDeCombo);
         $('#guardar_combo').on('click', guardarCombo);
@@ -1359,3 +1360,91 @@ verificarTodo();
     // Inicialización al cargar la página
     inicializarDataTableProductos();
 });
+
+// Función para eliminar combo
+function eliminarCombo() {
+    const $btn = $(this);
+    const idCombo = $btn.data('id-combo');
+    const $comboCard = $btn.closest('.combo-card');
+    const nombreCombo = $comboCard.find('.combo-nombre').text() || 'este combo';
+
+    Swal.fire({
+        title: '¿Eliminar Combo?',
+        html: `¿Estás seguro de que deseas eliminar el combo <strong>${nombreCombo}</strong>?<br><small class="text-muted">Esta acción cambiará el estado del combo a "eliminado" (estado 2).</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar loading en el botón
+            $btn.prop('disabled', true)
+               .html('<span class="spinner-border spinner-border-sm" role="status"></span> Eliminando...');
+
+            $.ajax({
+                url: '?pagina=catalogo',
+                type: 'POST',
+                data: {
+                    accion: 'eliminar_combo',
+                    id_combo: idCombo
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Ocultar la tarjeta del combo con una animación
+                        $comboCard.fadeOut(500, function() {
+                            $(this).remove();
+                            
+                            // Verificar si quedan combos
+                            const $combosGrid = $('.combos-grid');
+                            if ($combosGrid.find('.combo-card').length === 0) {
+                                $combosGrid.html(`
+                                    <div class="empty-state">
+                                        <i class="bi bi-info-circle"></i>
+                                        <h4>No hay combos disponibles</h4>
+                                        <p>En este momento no tenemos combos promocionales disponibles.</p>
+                                    </div>
+                                `);
+                            }
+                        });
+
+                        // Mostrar SweetAlert de éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Eliminado!',
+                            text: 'El combo ha sido eliminado correctamente.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        // Restaurar botón
+                        $btn.prop('disabled', false)
+                           .html('<i class="bi bi-trash"></i> Eliminar');
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'No se pudo eliminar el combo',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    // Restaurar botón
+                    $btn.prop('disabled', false)
+                       .html('<i class="bi bi-trash"></i> Eliminar');
+
+                    console.error('Error al eliminar combo:', xhr);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo conectar con el servidor',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
+    });
+}
