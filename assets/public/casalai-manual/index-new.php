@@ -592,6 +592,7 @@ $modulos = [
                             <li class="toc-item"><a href="#mi-cuenta" class="toc-link"><i class="bi bi-person"></i> Mi Cuenta</a></li>
                             
                             <!-- Secciones disponibles para todos los usuarios -->
+                             <?php if($esCliente || $esAdministrador): ?>
                             <li class="toc-item">
                                 <a href="#seccion-cliente" class="toc-link"><i class="bi bi-person"></i> Clientes</a>
                                 <ul class="toc-sublist ms-3 mt-2">
@@ -602,9 +603,10 @@ $modulos = [
                                     <li><a href="#mis-pagos" class="toc-link"><i class="bi bi-credit-card"></i>Mis Pagos</a></li>
                                 </ul>
                             </li>
-
+                            <?php endif; ?>
 
                                 <!-- Secciones para El resto de Usuarios -->
+                                 <?php if($_SESSION && !$esCliente): ?>
                                 <li class="toc-item">
                                     <a href="#seccion-sistema" class="toc-link"><i class="bi bi-buildings"></i> Gestiones del Sistema</a>
                                     <ul class="toc-sublist ms-3 mt-2">
@@ -681,6 +683,7 @@ $modulos = [
                                         <?php endif; ?>
                                     </ul>
                                 </li>
+                                <?php endif; ?>
 
                         <?php endif; ?>
                         <li class="toc-item"><a href="#iniciar-sesion" class="toc-link"><i class="bi bi-person-circle"></i> Iniciar Sesión</a></li>
@@ -932,6 +935,7 @@ $modulos = [
                 <?php endif; ?>
 
                 <!-- Sección Clientes -->
+                 <?php if($esCliente || $esAdministrador): ?>
                 <section id="seccion-cliente" class="section-card">
                     <h2 class="section-title">
                         <i class="bi bi-person me-2"></i>Clientes
@@ -1387,9 +1391,11 @@ $modulos = [
                         </div>
                     </div>
                 </section>
+                <?php endif; ?>
 
                 <!-- Sección Sistema -->
-                <?php /* if ($esAdministrador): */ ?>
+                <?php if ($_SESSION && !$esCliente): ?>
+
                 <section id="seccion-sistema" class="section-card">
                     <h2 class="section-title">
                         <i class="bi bi-buildings me-2"></i>Gestiones del Sistema
@@ -4476,7 +4482,7 @@ $modulos = [
                         <?php endif; ?>
                     </div>
                 </section>
-                <?php /* endif; */ ?>
+                <?php  endif; ?>
 
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
