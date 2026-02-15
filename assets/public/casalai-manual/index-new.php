@@ -1722,6 +1722,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Recepción</h6>
+                                        <?= renderImagen('recepcion', 'vista.png') ?>
+                                    </div>
+                                </div>
                                 
                                 <!-- Pasos detallados para registrar recepción -->
                                 <?php if($puedeAccion('Recepcion','incluir')): ?>
@@ -1731,6 +1738,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nueva Recepción</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('recepcion', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nueva Recepción"</strong> en la parte superior derecha.</li>
@@ -1776,6 +1789,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Detalles de la Recepción</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('recepcion', 'detalles-recepcion.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la recepción.</li>
@@ -1785,37 +1804,6 @@ $modulos = [
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-eye text-warning me-2"></i>
                                                     <strong>Detallar:</strong> Ícono ojo
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
-                                
-                                <!-- Pasos para modificar recepción -->
-                                <?php if($puedeAccion('Recepcion','modificar')): ?>
-                                <div class="card mt-3">
-                                    <div class="card-header bg-info text-white">
-                                        <h6 class="mb-0">Pasos para Modificar Recepción</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-7">
-                                                <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Localice la recepción en la tabla.</li>
-                                                    <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
-                                                    <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
-                                                </ol>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="alert alert-light border">
-                                                    <i class="bi bi-pencil text-info me-2"></i>
-                                                    <strong>Modificar:</strong> Ícono lápiz
-                                                </div>
-                                                <div class="alert alert-light border mt-2">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
                                         </div>
@@ -1861,6 +1849,24 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Recepciones por Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('recepcion', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Productos más Recibidos</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('recepcion', 'reporte2.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Recepciones Mensuales</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('recepcion', 'reporte3.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>

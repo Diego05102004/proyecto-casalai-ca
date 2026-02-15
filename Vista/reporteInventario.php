@@ -23,8 +23,9 @@
 
     <!-- Selector de Reportes -->
     <div class="report-selector">
-        <label for="selectReporteRecepcion" class="form-label"><strong>Seleccionar Reporte:</strong></label>
-        <select id="selectReporteRecepcion" class="form-select">
+        <label for="selectReporteRecepcion" class="title-select"><strong>Seleccionar Reporte:</strong></label>
+        <br>
+        <select id="selectReporteRecepcion" class="selector-reporte">
             <option value="todos">Todos los Reportes</option>
             <option value="proveedores">Recepciones por Proveedor</option>
             <option value="productos">Productos más Recibidos</option>
@@ -37,16 +38,16 @@
         <h2 class="titulo-form">Parámetros del Reporte</h2>
         <div class="row g-3 align-items-center">
             <div class="col-md-3">
-                <label for="fechaInicioRecepcion" class="form-label">Fecha inicio:</label>
-                <input type="date" id="fechaInicioRecepcion" class="form-control">
+                <label for="fechaInicioRecepcion" class="title-select">Fecha inicio:</label>
+                <input type="date" id="fechaInicioRecepcion" class="selector-reporte">
             </div>
             <div class="col-md-3">
-                <label for="fechaFinRecepcion" class="form-label">Fecha fin:</label>
-                <input type="date" id="fechaFinRecepcion" class="form-control">
+                <label for="fechaFinRecepcion" class="title-select">Fecha fin:</label><br>
+                <input type="date" id="fechaFinRecepcion" class="selector-reporte">
             </div>
             <div class="col-md-3">
-                <label for="tipoGraficaRecepcion" class="form-label">Tipo de gráfica:</label>
-                <select id="tipoGraficaRecepcion" class="form-select">
+                <label for="tipoGraficaRecepcion" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGraficaRecepcion" class="selector-reporte">
                     <option value="bar">Barras</option>
                     <option value="pie">Pastel</option>
                     <option value="line">Líneas</option>

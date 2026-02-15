@@ -429,6 +429,28 @@ table tfoot tr td span a i{
     font-weight: 500;
 }
 
+.btn-listado{
+    border-radius: 10px;
+    border: none;
+    width: 180px;
+    height: 40px;
+    margin: auto;
+    margin-top: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0;
+    background: #5995fd;
+    font-size: 15px;
+    color: #fff;
+    transition: 0.5s;
+}
+
+.btn-listado:hover {
+    background-color: #4d84e2;
+}
+
 /* En pantallas pequeñas, ajustamos tamaño */
 @media (max-width: 768px) {
     .btn-grafica {
