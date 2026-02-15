@@ -118,3 +118,7 @@
 [2025-11-16T08:47:49-04:00] Comando: "C:\xampp\mysql\bin\mysql.exe" --user="root" --password="" --host="localhost" seguridadlai < "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_seguridad_20251116_084740.sql" 2>&1
 [2025-11-16T08:47:49-04:00] Resultado: 0
 [2025-11-16T08:47:49-04:00] Salida: 
+[2026-02-15T13:31:37-04:00] RESTAURAR: tipo=P, db=casalai, archivo=C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20260215_132737.sql
+[2026-02-15T13:31:37-04:00] Comando: "C:\xampp\mysql\bin\mysql.exe" --user="root" --password="" --host="localhost" casalai < "C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\Modelo\Usuario\ProyectoCasalaiCa\Clases/../../../../Modelo/db/respaldo/backup_principal_20260215_132737.sql" 2>&1
+[2026-02-15T13:31:37-04:00] Resultado: 0
+[2026-02-15T13:31:37-04:00] Salida: 

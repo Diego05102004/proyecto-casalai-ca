@@ -4490,6 +4490,12 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "modificar-modal.png") ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4518,6 +4524,12 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Confirmacion de Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "eliminar-modal.png") ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -4581,6 +4593,42 @@ $modulos = [
                                                 <div class="alert alert-warning border">
                                                     <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
                                                     <strong>Reporte PDF:</strong> Descarga automática
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Usuarios por Rol</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "reporte1.png") ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Usuarios por Estatus</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "reporte2.png") ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Usuarios por Dominio de Correo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "reporte3.png") ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Usuarios por Inicial de Nombre</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "reporte4.png") ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Usuarios por Inicial de Apellido</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "reporte5.png") ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Usuarios por Prefijo Telefónico</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("usuario", "reporte6.png") ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -4659,6 +4707,11 @@ $modulos = [
                                                     <strong>Nueva Marca:</strong><br> Botón "+" verde
                                                 </div>
                                             </div>
+                                                 <div>
+                                                <h6 class="text-success">Formulario de Registro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("rol", "incluir-modal.png") ?>
+                                                </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6">
@@ -4704,6 +4757,13 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
+
+                                                                                        <div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("rol", "modificar-modal.png") ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4730,6 +4790,11 @@ $modulos = [
                                                     <strong>Gestionar Permisos:</strong><br> Botón "Gestionar Permisos" verde
                                                 </div>
                                             </div>
+                                                <div>
+                                                <h6 class="text-success">Gestion de Permisos</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("permiso", "modificar.png") ?>
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4758,6 +4823,12 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Confirmacion de Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("rol", "eliminar-modal.png") ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -4857,6 +4928,12 @@ $modulos = [
                                                     <strong>Nueva Marca:</strong><br> Botón "Generar Backup" (Principal/Seguridad)
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Generar Respaldo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("respaldo", "generar-respaldo.png") ?>
+                                                    <?= renderImagen("respaldo", "confirmacion.png") ?>
+                                             </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4883,6 +4960,13 @@ $modulos = [
                                                     <strong>Restaurar:</strong><br> Botón "Restaurar" amarillo
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Restaurar Respaldo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("respaldo", "restaurar-respaldo.png") ?>
+                                                    <?= renderImagen("respaldo", "confirmacion-restaurar.png") ?>
+                                             </div>
+                                        </div>
                                         </div>
                                         <div class="note col-md-11 mx-auto">
                                             <i class="bi bi-info-circle-fill me-2"></i>
@@ -4945,6 +5029,12 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
+                                             <div>
+                                                <h6 class="text-success">Eliminar Respaldo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("respaldo", "eliminar-respaldo.png") ?>
+                                             </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
