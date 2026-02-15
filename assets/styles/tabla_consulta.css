@@ -408,6 +408,27 @@ table tfoot tr td span a i{
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
+.selector-reporte {
+    font-family: arial;
+    font-size: 14px;
+    cursor: pointer;
+    color: rgb(101, 162, 241);
+    margin-top:5px;
+    padding:5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.selector-reporte:focus {
+    border-color: #5995fd;
+    box-shadow: 0 0 0 2px rgba(89, 149, 253, 0.2);
+}
+
+.title-select {
+    font-size: 1rem;
+    color: #1976d2;
+    font-weight: 500;
+}
+
 /* En pantallas pequeñas, ajustamos tamaño */
 @media (max-width: 768px) {
     .btn-grafica {
