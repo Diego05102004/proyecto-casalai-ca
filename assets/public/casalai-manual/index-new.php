@@ -2989,13 +2989,12 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Clientes</h6>
                                         <?= renderImagen('cliente', 'vista.png') ?>
                                     </div>
                                 </div>
-                                
                                 
                                 <!-- Pasos detallados para registrar cliente -->
                                 <?php if($puedeAccion('Clientes', 'incluir')):  ?>
@@ -3005,6 +3004,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Cliente</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
@@ -3038,25 +3043,26 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'incluir-modal.png') ?>
-                                                </div>
-                                        </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para modificar cliente -->
-                                <?php if($puedeAccion('Clientes', 'modificar')):  ?>
+                                <?php if($puedeAccion('Clientes', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Cliente</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Cliente</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice al cliente en la tabla.</li>
@@ -3074,12 +3080,7 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'modificar-modal.png') ?>
-                                                </div>
-                                        </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3109,11 +3110,6 @@ $modulos = [
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'eliminar-modal.png') ?>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -3128,6 +3124,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Reporte de Top 10 Clientes por Productos Comprados</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
@@ -3145,11 +3147,6 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte de Top 10 Clientes por Productos Comprados</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'reporte1.png') ?>
-                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3350,7 +3347,7 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Pagos</h6>
                                         <?= renderImagen('pago', 'vista.png') ?>
