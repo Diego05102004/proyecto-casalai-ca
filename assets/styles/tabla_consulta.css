@@ -376,43 +376,12 @@ table tfoot tr td{
 table tfoot tr td span a i{
     font-size: 25px;
 }
-/* Botón flotante de gráfica */
-.btn-grafica {
-    position: fixed;
-    top: 100px;
-    right: 25px;
-    width: 60px;
-    height: 60px;
-    border: none;
-    border-radius: 50%;
-    background-color: #1f66df;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    z-index: 1050;
-}
-
-.btn-grafica img {
-    width: 32px;
-    height: 32px;
-    filter: invert(1);
-    pointer-events: none;
-}
-
-.btn-grafica:hover {
-    background-color: #1552b3;
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-}
 
 /* Botón flotante de ayuda */
 .btn-ayuda {
     position: fixed;
     top: 150px;
-    right: 33px;
+    right: 83px;
     width: 50px;
     height: 50px;
     border: none;
@@ -424,18 +393,40 @@ table tfoot tr td span a i{
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    z-index: 1050;
+    z-index: 500;
 }
 
 .btn-ayuda img {
     width: 25px;
     height: 25px;
+    pointer-events: none;
 }
 
 .btn-ayuda:hover {
     background-color: #4d84e2;
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.selector-reporte {
+    font-family: arial;
+    font-size: 14px;
+    cursor: pointer;
+    color: rgb(101, 162, 241);
+    margin-top:5px;
+    padding:5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.selector-reporte:focus {
+    border-color: #5995fd;
+    box-shadow: 0 0 0 2px rgba(89, 149, 253, 0.2);
+}
+
+.title-select {
+    font-size: 1rem;
+    color: #1976d2;
+    font-weight: 500;
 }
 
 /* En pantallas pequeñas, ajustamos tamaño */

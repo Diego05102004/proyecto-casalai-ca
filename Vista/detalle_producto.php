@@ -106,7 +106,7 @@ if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) { include
         </div>
 
         <div class="mt-4">
-            <h4>Características</h4>
+            <h2 class="tabla-titulo-2">Características</h2>
             <?php $caracs = $producto['caracteristicas'] ?? []; ?>
             <?php if (!empty($caracs)): ?>
                 <ul class="features-list">
@@ -122,7 +122,7 @@ if (isset($_SESSION['nombre_rol']) && !empty($_SESSION['nombre_rol'])) { include
         <!-- Relacionados -->
         <?php if (!empty($relacionados)): ?>
         <div class="mt-5">
-            <h4>Productos relacionados</h4>
+            <h2 class="tabla-titulo-2">Productos relacionados</h2>
             <div class="row g-3">
                 <?php foreach ($relacionados as $rel): 
                     $relImg = $rel['imagen'] ?? '';
@@ -169,5 +169,13 @@ function solicitarLogin() {
 </script>
 <script src="assets/javascript/detalle_producto.js"></script>
 <?php include 'footer.php'; ?>
+
+<button 
+    class="btn-ayuda"
+    style="top: 100px; right: 100px;"
+    title="Visualizar Ayuda"
+    onclick="window.location.href='?pagina=ayuda'">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
 </body>
 </html>

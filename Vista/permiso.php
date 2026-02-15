@@ -30,27 +30,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     flex: 1;
     padding-bottom: 60px; /* Espacio para el footer si es necesario */
 }
-
-        #selectorRol {
-            font-family: arial;
-            font-size: 14px;
-            cursor: pointer;
-            color: rgb(101, 162, 241);
-            margin-left:10px;
-            padding:5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        #selectorRol:focus {
-            border-color: #5995fd;
-            box-shadow: 0 0 0 2px rgba(89, 149, 253, 0.2);
-        }
-        .title-select {
-            font-size: 1rem;
-            color: #1976d2;
-            font-weight: 500;
-        }
-    </style>
+</style>
 </head>
 
 <body class="fondo" style="height:100vh; background-image:url(assets/img/fondo.jpg); background-size:cover;">
@@ -62,25 +42,32 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 <form method="post" action=""
     style="background:rgba(255,255,255,0.97); padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin:30px 0; width:100%; max-width:1100px;">
 
-    <h3 style="text-align:center; color: #1F66DF; padding: 20px;">Gestión de Permisos por Rol</h3>
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <h2 class="tabla-titulo-2">Gestión de Permisos por Rol</h2>
+        </div>
 
-    <!-- Selector de roles -->
-    <div style="text-align:center; margin-bottom:18px;">
-        <label for="selectorRol" class="title-select">Seleccionar Rol:</label>
-        <select id="selectorRol">
-            <?php
-            $excluidos = ['administrador','superusuario', 'cliente'];
-            $rolesSinSuper = array_filter($roles, function ($rol) use ($excluidos) {
-                return !in_array(strtolower(str_replace(' ', '', $rol['nombre_rol'])), $excluidos);
-            });
-            $rolesSinSuper = array_values($rolesSinSuper);
+        <div class="col-md-2">
+            <!-- Selector de roles -->
+            <div style="text-align:center; margin-bottom:18px;">
+                <label for="selectorRol" class="title-select">Seleccionar Rol:</label>
+                <br>
+                <select id="selectorRol" class="selector-reporte">
+                    <?php
+                    $excluidos = ['administrador','superusuario', 'cliente'];
+                    $rolesSinSuper = array_filter($roles, function ($rol) use ($excluidos) {
+                        return !in_array(strtolower(str_replace(' ', '', $rol['nombre_rol'])), $excluidos);
+                    });
+                    $rolesSinSuper = array_values($rolesSinSuper);
 
-            foreach ($rolesSinSuper as $i => $rol): ?>
-                <option value="<?= $rol['id_rol'] ?>" <?= $i===0 ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($rol['nombre_rol']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
+                    foreach ($rolesSinSuper as $i => $rol): ?>
+                        <option value="<?= $rol['id_rol'] ?>" <?= $i===0 ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($rol['nombre_rol']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Tablas visibles -->
@@ -90,7 +77,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         foreach ($rolesSinSuper as $i => $rol): ?>
             <div class="tabla-permisos-rol <?= $i===0 ? 'active' : '' ?>" id="tabla-rol-<?= $rol['id_rol'] ?>">
                 <h4 style="text-align:center; color:#1f66df;"><?= htmlspecialchars($rol['nombre_rol']) ?></h4>
-                <table border="1" cellpadding="6" style="margin:0 auto; min-width:450px; text-align:center;">
+                <table cellpadding="6" style="margin:0 auto; min-width:450px; text-align:center; border:1px solid #ddd;">
                     <thead>
                         <tr>
                             <th>Módulo</th>

@@ -292,8 +292,9 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
     <!-- Selector de Reportes -->
     <div class="report-selector">
-        <label for="selectReporteRecepcion" class="form-label"><strong>Seleccionar Reporte:</strong></label>
-        <select id="selectReporteRecepcion" class="form-select">
+        <label for="selectReporteRecepcion" class="title-select"><strong>Seleccionar Reporte:</strong></label>
+        <br>
+        <select id="selectReporteRecepcion" class="selector-reporte">
             <option value="todos">Todos los Reportes</option>
             <option value="proveedores">Recepciones por Proveedor</option>
             <option value="productos">Productos más Recibidos</option>
@@ -306,16 +307,16 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <h2 class="titulo-form">Parámetros del Reporte</h2>
         <div class="row g-3 align-items-center">
             <div class="col-md-3">
-                <label for="fechaInicioRecepcion" class="form-label">Fecha inicio:</label>
-                <input type="date" id="fechaInicioRecepcion" class="form-control">
+                <label for="fechaInicioRecepcion" class="title-select">Fecha inicio:</label>
+                <input type="date" id="fechaInicioRecepcion" class="selector-reporte">
             </div>
             <div class="col-md-3">
-                <label for="fechaFinRecepcion" class="form-label">Fecha fin:</label>
-                <input type="date" id="fechaFinRecepcion" class="form-control">
+                <label for="fechaFinRecepcion" class="title-select">Fecha fin:</label><br>
+                <input type="date" id="fechaFinRecepcion" class="selector-reporte">
             </div>
             <div class="col-md-3">
-                <label for="tipoGraficaRecepcion" class="form-label">Tipo de gráfica:</label>
-                <select id="tipoGraficaRecepcion" class="form-select">
+                <label for="tipoGraficaRecepcion" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGraficaRecepcion" class="selector-reporte">
                     <option value="bar">Barras</option>
                     <option value="pie">Pastel</option>
                     <option value="line">Líneas</option>
@@ -348,10 +349,10 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         </div>
         <div class="download-buttons">
             <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteProveedores','Reporte_Recepciones_Proveedores.pdf')">
-                📥 Descargar PDF
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -371,10 +372,10 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         </div>
         <div class="download-buttons">
             <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteProductos','Reporte_Recepciones_Productos.pdf')">
-                📥 Descargar PDF
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -394,10 +395,10 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         </div>
         <div class="download-buttons">
             <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteMensualRecepcion','Reporte_Recepciones_Mensual.pdf')">
-                📥 Descargar PDF
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -1010,7 +1011,12 @@ $(document).on('click', '.modal .close', function() {
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteInventario'">
         <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    
+    </button>
+    <button 
+        class="btn-ayuda"
+        title="Visualizar Ayuda"
+        onclick="window.location.href='?pagina=ayuda'">
+        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
 </body>
 </html>

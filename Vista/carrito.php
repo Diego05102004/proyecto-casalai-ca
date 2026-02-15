@@ -300,7 +300,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     <div class="d-flex justify-content-between mt-3">
         <?php if (!empty($carritos)): ?>
             <button type="button" class="btn btn-danger" id="eliminar-todo-carrito">
-                <i class="bi bi-trash"></i> Eliminar Todo el Carrito
+                <i class="bi bi-trash"></i> Vaciar Carrito
             </button>
             <button type="button" class="btn btn-success" id="registrar-compra">
                 <i class="bi bi-check-circle"></i> Prefacturar

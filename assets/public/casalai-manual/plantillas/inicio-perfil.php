@@ -5,8 +5,8 @@
 </h2>
 
 <section>
-    <p>En el logo de usuario en <strong>la esquina superior derecha</strong>, al hacer clic se desplegara un menu lateral con la opción <strong>Mi Perfil <?= $nombre_singular ?></strong> que lo
-     llevara a la <strong>Sección de Gestion de Perfil</strong>.
+    <p>En el logo de usuario en <strong>la esquina superior derecha</strong>, al hacer clic se desplegara un menu lateral con la opción <strong>Mi <?= $nombre_singular ?></strong> que lo
+     llevará a la <strong>Sección de Gestion de Perfil</strong>.
     </p>
 
     <table class="table table-bordered table-striped">
