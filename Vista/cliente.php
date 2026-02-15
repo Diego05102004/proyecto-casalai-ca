@@ -60,11 +60,8 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="boton-form" type="submit">Registrar</button>
-                    <button class="boton-reset" type="reset">Limpiar</button>
-                    <div class="mt-2" style="font-size: 12px; color: #666; text-align: center;">
-                        <strong>Paso 1:</strong> Complete todos los campos obligatorios (*) → <strong>Paso 2:</strong> Revise la información → <strong>Paso 3:</strong> Presione "Registrar"
-                    </div>
+                    <button class="boton-form btn-primary" type="submit">Registrar</button>
+                    <button class="boton-reset btn-primary" type="reset">Limpiar</button>
                 </div>
             </form>
         </div>
@@ -236,9 +233,6 @@ aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">Modificar</button>
-                    <div class="mt-2" style="font-size: 12px; color: #666; text-align: center;">
-                        <strong>Nota:</strong> Los cambios se reflejarán inmediatamente en la tabla después de guardar
-                    </div>
                 </div>
             </form>
         </div>

@@ -292,7 +292,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
     <!-- Selector de Reportes -->
     <div class="report-selector">
-        <label for="selectReporteRecepcion" class="title-select"><strong>Seleccionar Reporte:</strong></label>
+        <label for="selectReporteRecepcion" class="title-select">Seleccionar Reporte:</label>
         <br>
         <select id="selectReporteRecepcion" class="selector-reporte">
             <option value="todos">Todos los Reportes</option>
@@ -304,7 +304,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
     <!-- Parámetros -->
     <div class="parameters-container">
-        <h2 class="titulo-form">Parámetros del Reporte</h2>
         <div class="row g-3 align-items-center">
             <div class="col-md-3">
                 <label for="fechaInicioRecepcion" class="title-select">Fecha inicio:</label>
@@ -348,10 +347,10 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteProveedores','Reporte_Recepciones_Proveedores.pdf')">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteProveedores','Reporte_Recepciones_Proveedores.pdf')">
                 Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">
+            <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">
                 Descargar Gráfico
             </button>
         </div>
@@ -371,10 +370,10 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteProductos','Reporte_Recepciones_Productos.pdf')">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteProductos','Reporte_Recepciones_Productos.pdf')">
                 Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">
+            <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">
                 Descargar Gráfico
             </button>
         </div>
@@ -394,10 +393,10 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteMensualRecepcion','Reporte_Recepciones_Mensual.pdf')">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteMensualRecepcion','Reporte_Recepciones_Mensual.pdf')">
                 Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">
+            <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">
                 Descargar Gráfico
             </button>
         </div>

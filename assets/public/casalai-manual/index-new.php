@@ -2552,6 +2552,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nueva Categoria</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('categoria', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
@@ -2584,12 +2590,6 @@ $modulos = [
                                                     <strong>Características:</strong><br> Mínimo 1 requerida
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('categoria', 'incluir-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2603,6 +2603,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Categoria</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('categoria', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice la categoría en la tabla.</li>
@@ -2621,12 +2627,6 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('categoria', 'modificar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2655,12 +2655,6 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('categoria', 'eliminar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -2712,7 +2706,7 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Proveedores</h6>
                                         <?= renderImagen('proveedor', 'vista.png') ?>
@@ -2728,6 +2722,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
@@ -2759,12 +2759,6 @@ $modulos = [
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'incluir-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2778,6 +2772,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Detalles del Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'detallar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del proveedor.</li>
@@ -2789,12 +2789,6 @@ $modulos = [
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Modal de Detalles</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'detallar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2808,6 +2802,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice al proveedor en la tabla.</li>
@@ -2826,12 +2826,6 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'modificar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2861,13 +2855,6 @@ $modulos = [
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
-                                </div>
-                                                <div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'eliminar-modal.png') ?>
-                                                </div>
-                                            </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2914,6 +2901,30 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Productos Suministrados por Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Ranking de Proveedores</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte2.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Comparación Mensual de Suministros</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte3.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Dependencia de Proveedores</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte4.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
@@ -2938,27 +2949,6 @@ $modulos = [
                                                     <strong>Descarga:</strong> PDF o Gráfica
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte de Suministro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte1.png') ?>
-                                                </div>
-                                        </div><div>
-                                                <h6 class="text-success">Reporte de Rancking</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte2.png') ?>
-                                                </div>
-                                        </div><div>
-                                                <h6 class="text-success">Reporte de Comparación Mensual</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte3.png') ?>
-                                                </div>
-                                        </div><div>
-                                                <h6 class="text-success">Reporte de Dependencia</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte4.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2999,13 +2989,12 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Clientes</h6>
                                         <?= renderImagen('cliente', 'vista.png') ?>
                                     </div>
                                 </div>
-                                
                                 
                                 <!-- Pasos detallados para registrar cliente -->
                                 <?php if($puedeAccion('Clientes', 'incluir')):  ?>
@@ -3015,6 +3004,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Cliente</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
@@ -3048,25 +3043,26 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'incluir-modal.png') ?>
-                                                </div>
-                                        </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para modificar cliente -->
-                                <?php if($puedeAccion('Clientes', 'modificar')):  ?>
+                                <?php if($puedeAccion('Clientes', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Cliente</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Cliente</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice al cliente en la tabla.</li>
@@ -3084,12 +3080,7 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'modificar-modal.png') ?>
-                                                </div>
-                                        </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3119,11 +3110,6 @@ $modulos = [
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'eliminar-modal.png') ?>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -3138,6 +3124,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Reporte de Top 10 Clientes por Productos Comprados</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
@@ -3155,11 +3147,6 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte de Top 10 Clientes por Productos Comprados</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('cliente', 'reporte1.png') ?>
-                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3360,10 +3347,10 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Pagos</h6>
-                                        <?= renderImagen('pago', 'vista.png') ?>
+                                        <?= renderImagen('pagos', 'vista2.png') ?>
                                     </div>
                                 </div>
                                 
@@ -3425,13 +3412,12 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
-                                        <h6 class="text-success">Vista de Compra Fisica</h6>
+                                        <h6 class="text-success">Vista de Venta Presencial</h6>
                                         <?= renderImagen('comprafisica', 'vista.png') ?>
                                     </div>
                                 </div>
-                                
 
                                 <!-- Pasos detallados para registrar venta -->
                                 <?php if($puedeAccion('Compra Física', 'incluir')):  ?>
@@ -3441,6 +3427,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nueva Venta Presencial</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('comprafisica', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-12">
                                                 <ul>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Busque el <strong>Cliente</strong>.</li>
@@ -3471,12 +3463,7 @@ $modulos = [
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('comprafisica', 'incluir-modal.png') ?>
-                                                </div>
-                                        </div>
+                                            </div>
                                         </div>
                                         
                                         <hr>
@@ -3549,6 +3536,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('comprafisica', 'detallar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la venta.</li>
@@ -3559,12 +3552,7 @@ $modulos = [
                                                     <i class="bi bi-eye text-warning me-2"></i>
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Modal de Detalles</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('comprafisica', 'detallar-modal.png') ?>
-                                                </div>
-                                        </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3606,7 +3594,7 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Orden de Despacho</h6>
                                         <?= renderImagen('ordendespacho', 'vista.png') ?>
@@ -3622,6 +3610,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Detalles de la Orden</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('ordendespacho', 'detallar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa de la orden de despacho.</li>
@@ -3633,12 +3627,6 @@ $modulos = [
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Modal de Detalles</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('ordendespacho', 'detallar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3663,12 +3651,6 @@ $modulos = [
                                                     <strong>Cambiar Estatus:</strong><br> Botón "check" verde
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Modal de Cambio de Estado</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('ordendespacho', 'estado-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6">
@@ -3741,12 +3723,6 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Confirmacion de Anulacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('ordendespacho', 'eliminar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3787,7 +3763,7 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Despacho</h6>
                                         <?= renderImagen('despacho', 'vista.png') ?>
@@ -3815,11 +3791,11 @@ $modulos = [
                                                 </div>
                                             </div>
                                             <div>
-                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <h6 class="text-success">Detalles del Despacho</h6>
                                                 <div class="text-center">
                                                     <?= renderImagen('despacho', 'detallar-modal.png') ?>
                                                 </div>
-                                        </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3844,12 +3820,6 @@ $modulos = [
                                                     <strong>Cambiar Estatus:</strong><br> Botón "check" verde
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Modal de Cambio de Estado</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('despacho', 'estado-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6">
@@ -3894,13 +3864,6 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
-
-                                            <div>
-                                                <h6 class="text-success">Confirmacion de Anulacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('despacho', 'eliminar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3914,6 +3877,30 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Reporte Por Estatus </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte Por Despachos Mensuales </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte2.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte Por Cliente </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte3.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte Por Tipo de Compra </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte4.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
@@ -3937,30 +3924,6 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte Por Estatus </h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('despacho', 'reporte1.png') ?>
-                                                </div>
-                                        </div>
-                                        <div>
-                                                <h6 class="text-success">Reporte Por Despachos Mensuales </h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('despacho', 'reporte2.png') ?>
-                                                </div>
-                                        </div>
-                                        <div>
-                                                <h6 class="text-success">Reporte Por Cliente </h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('despacho', 'reporte3.png') ?>
-                                                </div>
-                                        </div>
-                                        <div>
-                                                <h6 class="text-success">Reporte Por Tipo de Compra </h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('despacho', 'reporte4.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>

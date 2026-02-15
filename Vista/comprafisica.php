@@ -139,7 +139,7 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
                     <div class="envolver-form">
                         <input class="" type="text" id="codigoproducto" name="codigoproducto" style="display:none"/>
                         <input class="" type="text" id="idproducto" name="idproducto" style="display:none"/>
-                        <button type="button" class="boton-form" id="listado" name="listado">Lista de Productos</button>
+                        <button type="button" class="btn-listado btn-primary" id="listado" name="listado">Lista de Productos</button>
                     </div>
                 
                     <div class="row">
@@ -174,7 +174,7 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
                     </div>
                     <div class="grupo-form">
                         <div class="grupo-interno">
-                            <button type="button" id="agregarPago" class="btn btn-secondary" style="margin-top: 25px;">Agregar otro pago</button>
+                            <button type="button" id="agregarPago" class="btn btn-primary" style="margin-top: 25px;"><i class="bi bi-plus-circle"></i> Agregar otro Pago</button>
                         </div>
                         <div class="grupo-interno">
                             <label><strong>TOTAL DE LA COMPRA EN BS:</strong></label>
@@ -198,8 +198,8 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="boton-form" id="registrar" name="registrar">Registrar</button>
-                    <button class="boton-reset" type="reset">Limpiar</button>
+                    <button type="button" class="boton-form btn-primary" id="registrar" name="registrar">Registrar</button>
+                    <button type="reset" class="boton-reset btn-primary">Limpiar</button>
                 </div>
             </form>
             <div class="modal fade" tabindex="-1" role="dialog" id="modalp">
