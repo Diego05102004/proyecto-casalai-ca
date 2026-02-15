@@ -1124,6 +1124,30 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Pasos para detallar producto desde el catálogo -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">Pasos para Detallar Producto desde el Catálogo</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <ol>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic sobre el <strong>producto</strong> para ver toda su información y productos relacionados.</li>
+                                                </ol>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Producto detallado</h6>
+                                                <?= renderImagen("catalogo", "producto-detallado.png") ?>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Producto relacionados</h6>
+                                                <?= renderImagen("catalogo", "productos-relacionados.png") ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
