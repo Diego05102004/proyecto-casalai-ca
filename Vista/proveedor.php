@@ -208,8 +208,8 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="boton-form" type="submit">Registrar</button>
-                    <button class="boton-reset" type="reset">Limpiar</button>
+                    <button class="boton-form btn-primary" type="submit">Registrar</button>
+                    <button class="boton-reset btn-primary" type="reset">Limpiar</button>
                 </div>
             </form>
         </div>
@@ -467,19 +467,18 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
 
     <!-- Parámetros del Reporte -->
     <div class="parameters-container">
-        <h5>Parámetros del Reporte</h5>
         <div class="form-inline">
             <div class="form-group">
-                <label for="fechaInicioProv">Fecha inicio:</label>
-                <input type="date" id="fechaInicioProv" class="form-control">
+                <label for="fechaInicioProv" class="title-select">Fecha inicio:</label>
+                <input type="date" id="fechaInicioProv" class="selector-reporte">
             </div>
             <div class="form-group">
-                <label for="fechaFinProv">Fecha fin:</label>
-                <input type="date" id="fechaFinProv" class="form-control">
+                <label for="fechaFinProv" class="title-select">Fecha fin:</label>
+                <input type="date" id="fechaFinProv" class="selector-reporte">
             </div>
             <div class="form-group">
-                <label for="tipoGrafica">Tipo de gráfica:</label>
-                <select id="tipoGrafica" class="form-select">
+                <label for="tipoGrafica" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGrafica" class="selector-reporte">
                     <option value="bar">Barras</option>
                     <option value="pie">Pastel</option>
                     <option value="line">Líneas</option>
@@ -488,12 +487,12 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
                 </select>
             </div>
             <div class="form-group">
-                <label for="selectReporte">Reporte:</label>
-                <select id="selectReporte" class="form-select">
+                <label for="selectReporte" class="title-select">Tipo de Reporte:</label>
+                <select id="selectReporte" class="selector-reporte">
                     <option value="todos">Todos los Reportes</option>
-                    <option value="reporteSuministro">Suministro por Proveedor</option>
+                    <option value="reporteSuministro">Productos Suministrados por Proveedor</option>
                     <option value="reporteRanking">Ranking de Proveedores</option>
-                    <option value="reporteComparacion">Comparación Mensual</option>
+                    <option value="reporteComparacion">Comparación Mensual de Suministros</option>
                     <option value="reporteDependencia">Dependencia de Proveedores</option>
                 </select>
             </div>
@@ -529,10 +528,10 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteSuministro', 'Reporte_Suministro_Proveedores.pdf')">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteSuministro', 'Reporte_Suministro_Proveedores.pdf')">
                 Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoSuministro', 'Grafico_Suministro_Proveedores.png')">
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoSuministro', 'Grafico_Suministro_Proveedores.png')">
                 Descargar Gráfico
             </button>
         </div>
@@ -552,10 +551,10 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteRanking', 'Reporte_Ranking_Proveedores.pdf')">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteRanking', 'Reporte_Ranking_Proveedores.pdf')">
                 Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoRanking', 'Grafico_Ranking_Proveedores.png')">
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoRanking', 'Grafico_Ranking_Proveedores.png')">
                 Descargar Gráfico
             </button>
         </div>
@@ -575,10 +574,10 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteComparacion', 'Reporte_Comparacion_Proveedores.pdf')">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteComparacion', 'Reporte_Comparacion_Proveedores.pdf')">
                 Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoComparacion', 'Grafico_Comparacion_Proveedores.png')">
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoComparacion', 'Grafico_Comparacion_Proveedores.png')">
                 Descargar Gráfico
             </button>
         </div>
@@ -598,10 +597,10 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteDependencia', 'Reporte_Dependencia_Proveedores.pdf')">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteDependencia', 'Reporte_Dependencia_Proveedores.pdf')">
                 Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoDependencia', 'Grafico_Dependencia_Proveedores.png')">
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoDependencia', 'Grafico_Dependencia_Proveedores.png')">
                 Descargar Gráfico
             </button>
         </div>

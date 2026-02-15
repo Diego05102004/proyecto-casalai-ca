@@ -171,11 +171,18 @@
 
     <!-- Parámetros del Reporte -->
     <div class="parameters-container">
-        <h5>Parámetros del Reporte</h5>
         <div class="form-inline">
             <div class="form-group">
-                <label for="tipoGrafica">Tipo de gráfica:</label>
-                <select id="tipoGrafica" class="form-select">
+                <label for="fechaInicioProv" class="title-select">Fecha inicio:</label>
+                <input type="date" id="fechaInicioProv" class="selector-reporte">
+            </div>
+            <div class="form-group">
+                <label for="fechaFinProv" class="title-select">Fecha fin:</label>
+                <input type="date" id="fechaFinProv" class="selector-reporte">
+            </div>
+            <div class="form-group">
+                <label for="tipoGrafica" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGrafica" class="selector-reporte">
                     <option value="bar">Barras</option>
                     <option value="pie">Pastel</option>
                     <option value="line">Líneas</option>
@@ -184,12 +191,12 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="selectReporte">Reporte:</label>
-                <select id="selectReporte" class="form-select">
+                <label for="selectReporte" class="title-select">Tipo de Reporte:</label>
+                <select id="selectReporte" class="selector-reporte">
                     <option value="todos">Todos los Reportes</option>
-                    <option value="reporteSuministro">Suministro por Proveedor</option>
+                    <option value="reporteSuministro">Productos Suministrados por Proveedor</option>
                     <option value="reporteRanking">Ranking de Proveedores</option>
-                    <option value="reporteComparacion">Comparación Mensual</option>
+                    <option value="reporteComparacion">Comparación Mensual de Suministros</option>
                     <option value="reporteDependencia">Dependencia de Proveedores</option>
                 </select>
             </div>
@@ -224,11 +231,11 @@
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteSuministro', 'Reporte_Suministro_Proveedores.pdf')">
-                📥 Descargar PDF
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteSuministro', 'Reporte_Suministro_Proveedores.pdf')">
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoSuministro', 'Grafico_Suministro_Proveedores.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoSuministro', 'Grafico_Suministro_Proveedores.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -247,11 +254,11 @@
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteRanking', 'Reporte_Ranking_Proveedores.pdf')">
-                📥 Descargar PDF
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteRanking', 'Reporte_Ranking_Proveedores.pdf')">
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoRanking', 'Grafico_Ranking_Proveedores.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoRanking', 'Grafico_Ranking_Proveedores.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -270,11 +277,11 @@
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteComparacion', 'Reporte_Comparacion_Proveedores.pdf')">
-                📥 Descargar PDF
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteComparacion', 'Reporte_Comparacion_Proveedores.pdf')">
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoComparacion', 'Grafico_Comparacion_Proveedores.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoComparacion', 'Grafico_Comparacion_Proveedores.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -293,11 +300,11 @@
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFProveedores('reporteDependencia', 'Reporte_Dependencia_Proveedores.pdf')">
-                📥 Descargar PDF
+            <button class="btn btn-primary btn-download" onclick="descargarPDFProveedores('reporteDependencia', 'Reporte_Dependencia_Proveedores.pdf')">
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenProveedores('graficoDependencia', 'Grafico_Dependencia_Proveedores.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-primary btn-download" onclick="descargarImagenProveedores('graficoDependencia', 'Grafico_Dependencia_Proveedores.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -553,6 +560,9 @@
     function generarReportes() {
         console.log('Generando reportes...');
         const tipoGrafica = document.getElementById('tipoGrafica').value;
+        
+        const inicio = document.getElementById('fechaInicioProv')?.value;
+        const fin = document.getElementById('fechaFinProv')?.value;
         
         toggleLoading(true);
         toggleReportes();

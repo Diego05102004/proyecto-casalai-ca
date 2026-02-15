@@ -2552,6 +2552,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nueva Categoria</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('categoria', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
@@ -2584,12 +2590,6 @@ $modulos = [
                                                     <strong>Características:</strong><br> Mínimo 1 requerida
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('categoria', 'incluir-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2603,6 +2603,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Categoria</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('categoria', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice la categoría en la tabla.</li>
@@ -2621,12 +2627,6 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('categoria', 'modificar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2655,12 +2655,6 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('categoria', 'eliminar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -2712,7 +2706,7 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Proveedores</h6>
                                         <?= renderImagen('proveedor', 'vista.png') ?>
@@ -2728,6 +2722,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
@@ -2759,12 +2759,6 @@ $modulos = [
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'incluir-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2778,6 +2772,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Detalles del Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'detallar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del proveedor.</li>
@@ -2789,12 +2789,6 @@ $modulos = [
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Modal de Detalles</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'detallar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2808,6 +2802,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice al proveedor en la tabla.</li>
@@ -2826,12 +2826,6 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'modificar-modal.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2861,13 +2855,6 @@ $modulos = [
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
-                                </div>
-                                                <div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'eliminar-modal.png') ?>
-                                                </div>
-                                            </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2914,6 +2901,30 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Productos Suministrados por Proveedor</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Ranking de Proveedores</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte2.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Comparación Mensual de Suministros</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte3.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Dependencia de Proveedores</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte4.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
@@ -2938,27 +2949,6 @@ $modulos = [
                                                     <strong>Descarga:</strong> PDF o Gráfica
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte de Suministro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte1.png') ?>
-                                                </div>
-                                        </div><div>
-                                                <h6 class="text-success">Reporte de Rancking</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte2.png') ?>
-                                                </div>
-                                        </div><div>
-                                                <h6 class="text-success">Reporte de Comparación Mensual</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte3.png') ?>
-                                                </div>
-                                        </div><div>
-                                                <h6 class="text-success">Reporte de Dependencia</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('proveedor', 'reporte4.png') ?>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>

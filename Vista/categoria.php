@@ -55,13 +55,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             <div class="envolver-form">
                                 <label>Características*</label>
                                 <div id="caracteristicasContainer"></div>
-                                <button type="button" class="btn btn-sm btn-success mt-2" id="agregarCaracteristica">+
-                                    Agregar característica</button>
+                                <button type="button" class="btn btn-sm btn-primary mt-2" id="agregarCaracteristica">
+                                    <i class="bi bi-plus-circle"></i> Agregar característica</button>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="boton-form" type="submit">Registrar</button>
-                            <button class="boton-reset" type="reset">Limpiar</button>
+                            <button class="boton-form btn-primary" type="submit">Registrar</button>
+                            <button class="boton-reset btn-primary" type="reset">Limpiar</button>
                         </div>
                     </form>
                 </div>
@@ -144,8 +144,8 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     <div class="form-group">
                         <label>Características</label>
                         <div id="modificar_caracteristicasContainer"></div>
-                        <button type="button" class="btn btn-sm btn-success mt-2" id="modificar_agregarCaracteristica">
-                            + Agregar característica
+                        <button type="button" class="btn btn-sm btn-primary mt-2" id="modificar_agregarCaracteristica">
+                            <i class="bi bi-plus-circle"></i> Agregar característica
                         </button>
                     </div>
                 </div>
