@@ -133,7 +133,7 @@ $modulosManual = [
         'seccion_id' => 'gestion-bitacora',
         'descripcion' => 'Visualice el registro de actividades del sistema.'
     ],
-    'Backup' => [
+    'Respaldo' => [
         'titulo' => 'Gestión de Backup',
         'icono' => 'bi-cloud-download',
         'seccion_id' => 'gestion-backup',
@@ -224,7 +224,7 @@ $modulos = [
 17 => 'permisos',
 18 => 'Roles',
 19 => 'bitacora',
-20 => 'Backup' 
+20 => 'Respaldo' 
 ];
     $acciones =  [
         'ingresar',
@@ -616,23 +616,23 @@ $modulos = [
                                         <li><a href="#gestion-marcas-almacenista" class="toc-link"><i class="bi bi-tag "></i>Gestión de Marcas</a></li>
                                         <?php endif; ?>
 
-                                        <?php if($puedeAccion('Modelo', 'ingresar')):  ?>
+                                        <?php if($puedeAccion('Modelos', 'ingresar')):  ?>
                                         <li><a href="#gestion-modelos-almacenista" class="toc-link"><i class="bi bi-tag"></i>Gestión de Modelos</a></li>
                                         <?php endif; ?>
                                         
-                                        <?php if($puedeAccion('Producto', 'ingresar')):  ?>
+                                        <?php if($puedeAccion('Productos', 'ingresar')):  ?>
                                         <li><a href="#gestion-productos-almacenista" class="toc-link"><i class="bi bi-box"></i>Gestión de Productos</a></li>
                                         <?php endif; ?>
                                         
-                                        <?php if($puedeAccion('Categoria', 'ingresar')):  ?>
+                                        <?php if($puedeAccion('Categorias', 'ingresar')):  ?>
                                         <li><a href="#gestion-categorias-almacenista" class="toc-link"><i class="bi bi-folder"></i>Gestión de Categorías</a></li>
                                         <?php endif; ?>
                                         
-                                        <?php if($puedeAccion('Proveedor', 'ingresar')):  ?>
+                                        <?php if($puedeAccion('Proveedores', 'ingresar')):  ?>
                                         <li><a href="#gestion-proveedores-admin" class="toc-link"><i class="bi bi-building"></i>Gestión de Proveedores</a></li>
                                         <?php endif; ?>
                                         
-                                        <?php if($puedeAccion('Cliente', 'ingresar')):  ?>
+                                        <?php if($puedeAccion('Clientes', 'ingresar')):  ?>
                                         <li><a href="#gestion-clientes-admin" class="toc-link"><i class="bi bi-people"></i>Gestión de Clientes</a></li>
                                         <?php endif; ?>
                                         
@@ -648,7 +648,7 @@ $modulos = [
                                         <li><a href="#gestion-ventas-presenciales" class="toc-link"><i class="bi bi-shop"></i>Gestión de Ventas Presenciales</a></li>
                                         <?php endif; ?>
                                         
-                                        <?php if($puedeAccion('OrdenDespacho', 'ingresar')):  ?>
+                                        <?php if($puedeAccion('Ordenes de despacho', 'ingresar')):  ?>
                                         <li><a href="#gestion-orden-despacho" class="toc-link"><i class="bi bi-box-arrow-right"></i>Orden de Despacho</a></li>
                                         <?php endif; ?>
                                         
@@ -676,7 +676,7 @@ $modulos = [
                                         <li><a href="#gestion-bitacora" class="toc-link"><i class="bi bi-clock-history"></i>Gestión de Bitácora</a></li>
                                         <?php endif; ?>
                                         
-                                        <?php if($puedeAccion('Backup', 'ingresar')): ?>
+                                        <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'ingresar')): ?>
                                         <li><a href="#gestion-backup" class="toc-link"><i class="bi bi-database"></i>Gestión de Bases de Datos</a></li>
                                         <?php endif; ?>
                                     </ul>
@@ -1924,6 +1924,12 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Marcas</h6>
+                                        <?= renderImagen('marca', 'vista.png') ?>
+                                    </div>
+                                </div>
                                 
                                 <!-- Pasos detallados para registrar marca -->
                                 <?php if($puedeAccion('Marcas','incluir')): ?>
@@ -1997,6 +2003,12 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
+                                                                                        <div>
+                                                <h6 class="text-success">Formulario de Modificacion de Marca</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('marca', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2027,6 +2039,12 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
+                                                                                        <div>
+                                                <h6 class="text-success">Confirmacion para Eliminar Marca</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('marca', 'eliminar-modal.png') ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2040,7 +2058,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Modelos -->
-                        <?php if($puedeAccion('Modelo', 'ingresar')): ?>
+                        <?php if($puedeAccion('Modelos', 'ingresar')): ?>
                         <div class="card mt-4" id="gestion-modelos-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2066,9 +2084,15 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Modeloa</h6>
+                                        <?= renderImagen('modelo', 'vista.png') ?>
+                                    </div>
+                                </div>
                                 
                                 <!-- Pasos detallados para registrar modelo -->
-                                <?php if($puedeAccion('Modelo','incluir')): ?>
+                                <?php if($puedeAccion('Modelos','incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Modelo</h6>
@@ -2115,7 +2139,7 @@ $modulos = [
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para modificar modelo -->
-                                <?php if($puedeAccion('Modelo','modificar')): ?>
+                                <?php if($puedeAccion('Modelos','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Modelo</h6>
@@ -2140,13 +2164,19 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
+                                                 <div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('modelo', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
 
                                 <!-- Pasos para eliminar modelo -->
-                                <?php if($puedeAccion('Modelo','eliminar')): ?>
+                                <?php if($puedeAccion('Modelos','eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Modelo</h6>
@@ -2170,6 +2200,12 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
+                                                                                                                                                                     <div>
+                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('modelo', 'eliminar-modal.png') ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2183,7 +2219,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Productos -->
-                        <?php if($puedeAccion('Producto','ingresar')): ?>
+                        <?php if($puedeAccion('Productos','ingresar')): ?>
                         <div class="card mb-4 mt-4" id="gestion-productos-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2218,9 +2254,15 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Productos</h6>
+                                        <?= renderImagen('producto', 'vista.png') ?>
+                                    </div>
+                                </div>
                                 
                                 <!-- Pasos detallados para registrar producto -->
-                                <?php if($puedeAccion('Producto','incluir')): ?>
+                                <?php if($puedeAccion('Productos','incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Producto</h6>
@@ -2257,13 +2299,18 @@ $modulos = [
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Formulario de Registro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'incluir-modal.png') ?>
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para detallar producto -->
-                                <?php if($puedeAccion('Producto','consultar')): ?>
+                                <?php if($puedeAccion('Productos','consultar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Producto</h6>
@@ -2281,13 +2328,18 @@ $modulos = [
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'detalle-modal.png') ?>
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para modificar producto -->
-                                <?php if($puedeAccion('Producto','modificar')): ?>
+                                <?php if($puedeAccion('Productos','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Producto</h6>
@@ -2311,14 +2363,18 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'modificar-modal.png') ?>
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para eliminar producto -->
-                                <?php if($puedeAccion('Producto','eliminar')): ?>
+                                <?php if($puedeAccion('Productos','eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Producto</h6>
@@ -2341,6 +2397,11 @@ $modulos = [
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
+                                            </div><div>
+                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'eliminar-modal.png') ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2352,7 +2413,7 @@ $modulos = [
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para cambiar estatus -->
-                                <?php if($puedeAccion('Producto','modificar')): ?>
+                                <?php if($puedeAccion('Productos','modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Cambiar Estatus de Producto</h6>
@@ -2384,7 +2445,7 @@ $modulos = [
                                 <?php endif; ?>
 
                                 <!-- Pasos para generar reportes -->
-                                <?php if($puedeAccion('Producto','generar reporte')): ?>
+                                <?php if($puedeAccion('Productos','generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Productos</h6>
@@ -2415,6 +2476,24 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Top Productos Más Vendidos</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Stock Alto vs Bajo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'reporte2.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Rotación de Productos</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'reporte3.png') ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2424,7 +2503,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Categorías -->
-                        <?php if($puedeAccion('Categoria', 'ingresar')): ?>
+                        <?php if($puedeAccion('Categorias', 'ingresar')): ?>
                         <div class="card" id="gestion-categorias-almacenista">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2450,9 +2529,15 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Categorias</h6>
+                                        <?= renderImagen('categoria', 'vista.png') ?>
+                                    </div>
+                                </div>
                                 
                                 <!-- Pasos detallados para registrar categoría -->
-                                <?php if($puedeAccion('Categoria', 'incluir')): ?>
+                                <?php if($puedeAccion('Categorias', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nueva Categoría</h6>
@@ -2491,13 +2576,19 @@ $modulos = [
                                                     <strong>Características:</strong><br> Mínimo 1 requerida
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Formulario de Registro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('categoria', 'incluir-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para modificar categoría -->
-                                <?php if($puedeAccion('Categoria', 'modificar')): ?>
+                                <?php if($puedeAccion('Categorias', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Categoría</h6>
@@ -2522,13 +2613,19 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('categoria', 'modificar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para eliminar categoría -->
-                                <?php if($puedeAccion('Categoria', 'eliminar')): ?>
+                                <?php if($puedeAccion('Categorias', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Categoría</h6>
@@ -2552,6 +2649,12 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('categoria', 'eliminar-modal.png') ?>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2566,7 +2669,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Proveedores -->
-                        <?php if($puedeAccion('Proveedor', 'ingresar')): ?>
+                        <?php if($puedeAccion('Proveedores', 'ingresar')): ?>
                         <div class="card mt-4 mb-4" id="gestion-proveedores-admin">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2601,9 +2704,16 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Proveedores</h6>
+                                        <?= renderImagen('proveedor', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
 
                                 <!-- Pasos detallados para registrar proveedor -->
-                                <?php if($puedeAccion('Proveedor', 'incluir')): ?>
+                                <?php if($puedeAccion('Proveedores', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Proveedor</h6>
@@ -2641,13 +2751,19 @@ $modulos = [
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Formulario de Registro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'incluir-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
 
                                 <!-- Pasos para detallar proveedor -->
-                                <?php if($puedeAccion('Proveedor', 'consultar')): ?>
+                                <?php if($puedeAccion('Proveedores', 'consultar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Proveedor</h6>
@@ -2665,13 +2781,19 @@ $modulos = [
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'detallar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para modificar proveedor -->
-                                <?php if($puedeAccion('Proveedor', 'modificar')): ?>
+                                <?php if($puedeAccion('Proveedores', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Proveedor</h6>
@@ -2696,13 +2818,19 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'modificar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para eliminar proveedor -->
-                                <?php if($puedeAccion('Proveedor', 'eliminar')): ?>
+                                <?php if($puedeAccion('Proveedores', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Proveedor</h6>
@@ -2725,6 +2853,13 @@ $modulos = [
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
+                                </div>
+                                                <div>
+                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'eliminar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2732,7 +2867,7 @@ $modulos = [
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para cambiar estatus -->
-                                <?php if($puedeAccion('Proveedor', 'modificar')): ?>
+                                <?php if($puedeAccion('Proveedores', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Cambiar Estatus de Proveedor</h6>
@@ -2764,7 +2899,7 @@ $modulos = [
                                 <?php endif; ?>
 
                                 <!-- Pasos para generar reportes -->
-                                <?php if($puedeAccion('Proveedor', 'generar reporte')): ?>
+                                <?php if($puedeAccion('Proveedores', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reportes de Proveedores</h6>
@@ -2795,6 +2930,27 @@ $modulos = [
                                                     <strong>Descarga:</strong> PDF o Gráfica
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Suministro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte1.png') ?>
+                                                </div>
+                                        </div><div>
+                                                <h6 class="text-success">Reporte de Rancking</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte2.png') ?>
+                                                </div>
+                                        </div><div>
+                                                <h6 class="text-success">Reporte de Comparación Mensual</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte3.png') ?>
+                                                </div>
+                                        </div><div>
+                                                <h6 class="text-success">Reporte de Dependencia</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('proveedor', 'reporte4.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2804,7 +2960,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Clientes -->
-                        <?php if($puedeAccion('Cliente', 'ingresar')):  ?>
+                        <?php if($puedeAccion('Clientes', 'ingresar')):  ?>
                         <div class="card mb-4" id="gestion-clientes-admin">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -2835,9 +2991,16 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Clientes</h6>
+                                        <?= renderImagen('cliente', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
                                 
                                 <!-- Pasos detallados para registrar cliente -->
-                                <?php if($puedeAccion('Cliente', 'incluir')):  ?>
+                                <?php if($puedeAccion('Clientes', 'incluir')):  ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Registrar Nuevo Cliente</h6>
@@ -2877,14 +3040,19 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Formulario de Registro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'incluir-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para modificar cliente -->
-                                <?php if($puedeAccion('Cliente', 'modificar')):  ?>
+                                <?php if($puedeAccion('Clientes', 'modificar')):  ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Modificar Cliente</h6>
@@ -2908,14 +3076,19 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'modificar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para eliminar cliente -->
-                                <?php if($puedeAccion('Cliente', 'eliminar')): ?>
+                                <?php if($puedeAccion('Clientes', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Cliente</h6>
@@ -2938,6 +3111,11 @@ $modulos = [
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
+                                            </div><div>
+                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'eliminar-modal.png') ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2945,7 +3123,7 @@ $modulos = [
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para generar reporte -->
-                                <?php if($puedeAccion('Cliente', 'generar reporte')): ?>
+                                <?php if($puedeAccion('Clientes', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-secondary text-white">
                                         <h6 class="mb-0">Pasos para Generar Reporte de Clientes</h6>
@@ -2969,6 +3147,11 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte de Top 10 Clientes por Productos Comprados</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('cliente', 'reporte1.png') ?>
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3009,6 +3192,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Combos</h6>
+                                        <?= renderImagen('combos', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
 
                                 <!-- Pasos detallados para registrar combo -->
                                 <?php if($puedeAccion('Catalogo', 'incluir')):  ?>
@@ -3163,6 +3353,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Pagos</h6>
+                                        <?= renderImagen('pago', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
 
                                 <!-- Pasos para cambiar estatus -->
                                 <?php if($puedeAccion('pasarela', 'modificar')): ?>
@@ -3221,6 +3418,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Compra Fisica</h6>
+                                        <?= renderImagen('comprafisica', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
 
                                 <!-- Pasos detallados para registrar venta -->
                                 <?php if($puedeAccion('Compra Física', 'incluir')):  ?>
@@ -3260,7 +3464,12 @@ $modulos = [
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Formulario de Registro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('comprafisica', 'incluir-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                         
                                         <hr>
@@ -3343,7 +3552,12 @@ $modulos = [
                                                     <i class="bi bi-eye text-warning me-2"></i>
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('comprafisica', 'detallar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3353,7 +3567,7 @@ $modulos = [
                         <?php endif; ?>
 
                         <!-- Orden de Despacho -->
-                        <?php if($puedeAccion('OrdenDespacho', 'ingresar')):  ?>
+                        <?php if($puedeAccion('Ordenes de despacho', 'ingresar')):  ?>
                         <div class="card mb-4 mt-4" id="gestion-orden-despacho">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -3385,9 +3599,16 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Orden de Despacho</h6>
+                                        <?= renderImagen('ordendespacho', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
                                 
                                 <!-- Pasos para detallar orden de despacho -->
-                                <?php if($puedeAccion('OrdenDespacho', 'consultar')):  ?>
+                                <?php if($puedeAccion('Ordenes de despacho', 'consultar')):  ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Detallar Orden de Despacho</h6>
@@ -3405,13 +3626,19 @@ $modulos = [
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('ordendespacho', 'detallar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endif; ?>
 
                                 <!-- Pasos para cambiar estatus -->
-                                <?php if($puedeAccion('OrdenDespacho', 'modificar')):  ?>
+                                <?php if($puedeAccion('Ordenes de despacho', 'modificar')):  ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-info text-white">
                                         <h6 class="mb-0">Pasos para Cambiar Estatus de la Orden de Despacho</h6>
@@ -3429,6 +3656,12 @@ $modulos = [
                                                     <strong>Cambiar Estatus:</strong><br> Botón "check" verde
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Modal de Cambio de Estado</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('ordendespacho', 'estado-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6">
@@ -3449,7 +3682,7 @@ $modulos = [
                                 <?php endif; ?>
 
                                 <!-- Pasos para descargar orden de despacho -->
-                                <?php if($puedeAccion('OrdenDespacho', 'generar reporte')): ?>
+                                <?php if($puedeAccion('Ordenes de despacho', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-primary text-white">
                                         <h6 class="mb-0">Pasos para Descargar Orden de Despacho</h6>
@@ -3477,7 +3710,7 @@ $modulos = [
                                 <?php endif; ?>
                                 
                                 <!-- Pasos para anular orden de despacho -->
-                                <?php if($puedeAccion('OrdenDespacho', 'eliminar')): ?>
+                                <?php if($puedeAccion('Ordenes de despacho', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Anular Orden de Despacho</h6>
@@ -3501,6 +3734,12 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Confirmacion de Anulacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('ordendespacho', 'eliminar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3541,6 +3780,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Despacho</h6>
+                                        <?= renderImagen('despacho', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
                                 
                                 <!-- Pasos para detallar despacho -->
                                 <?php if($puedeAccion('Despacho', 'consultar')):  ?>
@@ -3561,6 +3807,12 @@ $modulos = [
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'detallar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3585,6 +3837,12 @@ $modulos = [
                                                     <strong>Cambiar Estatus:</strong><br> Botón "check" verde
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Modal de Cambio de Estado</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'estado-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6">
@@ -3629,6 +3887,13 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
+
+                                            <div>
+                                                <h6 class="text-success">Confirmacion de Anulacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'eliminar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3665,6 +3930,30 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte Por Estatus </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte1.png') ?>
+                                                </div>
+                                        </div>
+                                        <div>
+                                                <h6 class="text-success">Reporte Por Despachos Mensuales </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte2.png') ?>
+                                                </div>
+                                        </div>
+                                        <div>
+                                                <h6 class="text-success">Reporte Por Cliente </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte3.png') ?>
+                                                </div>
+                                        </div>
+                                        <div>
+                                                <h6 class="text-success">Reporte Por Tipo de Compra </h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('despacho', 'reporte4.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3715,6 +4004,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Cuentas Bancarias</h6>
+                                        <?= renderImagen('banco', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
 
                                 <!-- Pasos detallados para registrar cuenta bancaria -->
                                 <?php if($puedeAccion('Cuentas bancarias','incluir')): ?>
@@ -3763,7 +4059,12 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Botón Limpiar</strong><br> Resetea el formulario
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Formulario de Registro</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'incluir-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3787,7 +4088,12 @@ $modulos = [
                                                     <i class="bi bi-eye text-warning me-2"></i>
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Modal de Detalles</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'detallar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3818,7 +4124,12 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
-                                            </div>
+                                            </div><div>
+                                                <h6 class="text-success">Formulario de Modificacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'modificar-modal.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3847,6 +4158,11 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
+                                                </div>
+                                            </div> <div>
+                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'eliminar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -3918,6 +4234,30 @@ $modulos = [
                                                     <strong>Reporte PDF:</strong> Descarga automática
                                                 </div>
                                             </div>
+                                            <div>
+                                                <h6 class="text-success">Reporte Por Método de Pago</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'reporte1.png') ?>
+                                                </div>
+                                        </div>
+                                        <div>
+                                                <h6 class="text-success">Reporte Por Banco</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'reporte2.png') ?>
+                                                </div>
+                                        </div>
+                                        <div>
+                                                <h6 class="text-success">Reporte Por Cliente</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'reporte3.png') ?>
+                                                </div>
+                                        </div>
+                                        <div>
+                                                <h6 class="text-success">Reporte Por Estatus</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('banco', 'reporte4.png') ?>
+                                                </div>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -3953,6 +4293,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Ingresos y Egresos</h6>
+                                        <?= renderImagen('finanzas', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
 
                                 <!-- Pasos para generar reportes de finanzas -->
                                 <?php if($puedeAccion('Finanzas', 'generar reporte')): ?>
@@ -4021,6 +4368,13 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Usuarios</h6>
+                                        <?= renderImagen('usuario', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
                                 
                                 <!-- Pasos detallados para registrar usuario -->
                                 <?php if($puedeAccion('Usuario', 'incluir')): ?>
@@ -4251,6 +4605,20 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Rol</h6>
+                                        <?= renderImagen('rol', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Permisos</h6>
+                                        <?= renderImagen('permiso', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
+                                
 
                                 <!-- Pasos detallados para registrar rol -->
                                 <?php if ($puedeAccion('Roles', 'incluir')): ?>
@@ -4403,12 +4771,19 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Bitacora</h6>
+                                        <?= renderImagen('bitacora', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
                             </div>
                         </div>
                         <?php endif; ?>
 
                         <!-- backup -->
-                        <?php if($puedeAccion('Backup', 'ingresar')): ?>
+                        <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'ingresar')): ?>
                         <div class="card mt-4" id="gestion-backup">
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -4436,9 +4811,16 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
+                                                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Respaldo</h6>
+                                        <?= renderImagen('respaldo', 'vista.png') ?>
+                                    </div>
+                                </div>
+                                
                                 
                                 <!-- Pasos detallados para generar respaldo -->
-                                <?php if($puedeAccion('Backup', 'incluir')): ?>
+                                <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'incluir')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-success text-white">
                                         <h6 class="mb-0">Pasos para Generar Respaldo de Base de Datos (Principal/Seguridad)</h6>
@@ -4463,7 +4845,7 @@ $modulos = [
                                 <?php endif; ?>
                                 
                                 <!-- Pasos detallados para restaurar base de datos -->
-                                <?php if($puedeAccion('Backup', 'modificar')): ?>
+                                <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'modificar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-warning text-white">
                                         <h6 class="mb-0">Pasos para Restaurar Base de Datos (Principal/Seguridad)</h6>
@@ -4493,7 +4875,7 @@ $modulos = [
                                 <?php endif; ?>
 
                                 <!-- Pasos para descargar respaldo -->
-                                <?php if($puedeAccion('Backup', 'generar reporte')): ?>
+                                <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'generar reporte')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-primary text-white">
                                         <h6 class="mb-0">Pasos para Descargar el Respaldo de la Base de Datos</h6>
@@ -4521,7 +4903,7 @@ $modulos = [
                                 <?php endif; ?>
 
                                 <!-- Pasos para eliminar respaldo -->
-                                <?php if($puedeAccion('Backup', 'eliminar')): ?>
+                                <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'eliminar')): ?>
                                 <div class="card mt-3">
                                     <div class="card-header bg-danger text-white">
                                         <h6 class="mb-0">Pasos para Eliminar Respaldo de la Base de Datos</h6>
