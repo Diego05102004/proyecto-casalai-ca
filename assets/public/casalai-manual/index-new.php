@@ -2998,7 +2998,7 @@ $modulos = [
 
                         <!-- Catálogo de Combos -->
                         <?php if($puedeAccion('Catalogo', 'ingresar')):  ?>
-                        <div class="card" id="gestion-catalogo-combos">
+                        <div class="card mb- mt-4" id="gestion-catalogo-combos">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     <i class="bi bi-tags-fill me-2"></i>Catálogo de Combos Promocionales
