@@ -80,10 +80,10 @@
         </div>
         <div class="download-buttons">
             <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteProveedores','Reporte_Recepciones_Proveedores.pdf')">
-                📥 Descargar PDF
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -103,10 +103,10 @@
         </div>
         <div class="download-buttons">
             <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteProductos','Reporte_Recepciones_Productos.pdf')">
-                📥 Descargar PDF
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -126,10 +126,10 @@
         </div>
         <div class="download-buttons">
             <button class="btn btn-success btn-download" onclick="descargarPDFRecepcion('reporteMensualRecepcion','Reporte_Recepciones_Mensual.pdf')">
-                📥 Descargar PDF
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-warning btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>

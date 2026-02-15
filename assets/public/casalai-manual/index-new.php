@@ -3200,8 +3200,7 @@ $modulos = [
                                             <li>Fecha de vigencia</li>
                                             <li>Estatus</li>
                                         </ul>
-                                    </div>
-                                    <div class="col-md-6">
+                                        <br>
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Registrar</strong>: Nuevo combo</li>
@@ -3210,11 +3209,11 @@ $modulos = [
                                             <li><strong>Estatus</strong>: Actualizar estatus (habilitado/inhabilitado)</li>
                                         </ul>
                                     </div>
-                                </div>
-                                                                <div class="row">
-                                    <div>
-                                        <h6 class="text-success">Vista de Combos</h6>
-                                        <?= renderImagen('combos', 'vista.png') ?>
+                                    <div class="col-md-6">
+                                        <div>
+                                            <h6 class="text-success">Combo Promocional</h6>
+                                            <?= renderImagen('combos', 'vista.png') ?>
+                                        </div>
                                     </div>
                                 </div>
                                 

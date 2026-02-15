@@ -88,7 +88,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     <div class="envolver-form">
                         <input class="" type="text" id="codigoproducto" name="codigoproducto" style="display:none"/>
                         <input class="" type="text" id="idproducto" name="idproducto" style="display:none"/>
-                        <button type="button" class="btn-listado" id="listado" name="listado">Lista de Productos</button>
+                        <button type="button" class="btn-listado btn-primary" id="listado" name="listado">Lista de Productos</button>
                     </div>
                 
                     <div class="row">
@@ -118,8 +118,8 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="boton-form" type="submit">Registrar</button>
-                    <button class="boton-reset" type="reset">Limpiar</button>
+                    <button class="boton-form btn-primary" type="submit">Registrar</button>
+                    <button class="boton-reset btn-primary" type="reset">Limpiar</button>
                 </div>
             </form>
 

@@ -36,8 +36,8 @@ aria-labelledby="registrarMarcaModalLabel" aria-hidden="true">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="boton-form" type="submit">Registrar</button>
-                    <button class="boton-reset" type="reset">Limpiar</button>
+                    <button class="boton-form btn-primary" type="submit">Registrar</button>
+                    <button class="boton-reset btn-primary" type="reset">Limpiar</button>
                 </div>
             </form>
         </div>
