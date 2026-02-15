@@ -332,13 +332,15 @@ function actualizarFilaPago(pago) {
                         ${pago.estatus}
                      </span>`,
                     comprobanteHTML,
-                    `<button class="btn btn-primary modificarEstado" 
-                             data-id="${pago.id_detalles}"
-                             data-factura="${pago.id_factura}"
-                             data-estatus="${pago.estatus}"
-                             data-observaciones="${pago.observaciones}">
-                        Cambiar Estatus
-                    </button>`
+                    pago.estatus === 'Pago Procesado' 
+                        ? '<span class="text-success">Pago procesado. No es posible cambiar estatus.</span>'
+                        : `<button class="btn btn-primary modificarEstado" 
+                                 data-id="${pago.id_detalles}"
+                                 data-factura="${pago.id_factura}"
+                                 data-estatus="${pago.estatus}"
+                                 data-observaciones="${pago.observaciones}">
+                            Cambiar Estatus
+                        </button>`
                 ]).draw(false);
 
                 // Reasignar evento de abrir modal
