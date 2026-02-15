@@ -181,7 +181,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="selectReporte" class="title-select">Reporte:</label>
+                <label for="selectReporte" class="title-select">Tipo de Reporte:</label>
                 <select id="selectReporte" class="selector-reporte" name="selectReporte">
                     <option value="todos">Todos los Reportes</option>
                     <option value="reporteEstado">Despachos por Estado</option>
