@@ -59,16 +59,9 @@ body {
     <script src='assets/public/bootstrap/css/bootstrap.min.css'></script>
     <script src="assets/javascript/validaciones.js"></script>
 
-
     <button 
-        class="btn-grafica"
-        title="Visualizar Reportes"
-        onclick="window.location.href='?pagina=reporteVentas'">
-        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    
-    </button>
-        <button 
         class="btn-ayuda"
+        style="top: 100px;"
         title="Visualizar Ayuda"
         onclick="window.location.href='?pagina=ayuda'">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">

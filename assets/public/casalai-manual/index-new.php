@@ -1315,6 +1315,13 @@ $modulos = [
                                     </div>
                                 </div>
 
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de los Pedidos</h6>
+                                        <?= renderImagen("pedidos", "vista.png") ?>
+                                    </div>
+                                </div>
+
                                 <!-- Pasos detallados para realizar pago de pedido -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-primary text-white">
@@ -1451,6 +1458,12 @@ $modulos = [
                                             <li><strong>Pago No Encontrado</strong>: Pago invalido. Pago no realizado o número de referencia incorrecto.</li>
                                             <li><strong>Pago Incompleto</strong>: Pago validado, pero no cubre el monto total de la compra</li>
                                         </ul>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de los Pagos</h6>
+                                        <?= renderImagen("pagos", "vista.png") ?>
                                     </div>
                                 </div>
                             </div>
