@@ -3350,7 +3350,7 @@ $modulos = [
                                 <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Pagos</h6>
-                                        <?= renderImagen('pago', 'vista.png') ?>
+                                        <?= renderImagen('pagos', 'vista2.png') ?>
                                     </div>
                                 </div>
                                 
