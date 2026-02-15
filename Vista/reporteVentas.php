@@ -163,16 +163,16 @@
         <h5 class="titulo-form">Parámetros del Reporte</h5>
         <form id="formParametros" class="form-inline">
             <div class="form-group">
-                <label for="fechaInicio">Fecha inicio:</label>
-                <input type="date" id="fechaInicio" class="form-control" name="fechaInicio">
+                <label for="fechaInicio" class="title-select">Fecha inicio:</label>
+                <input type="date" id="fechaInicio" class="selector-reporte" name="fechaInicio">
             </div>
             <div class="form-group">
-                <label for="fechaFin">Fecha fin:</label>
-                <input type="date" id="fechaFin" class="form-control" name="fechaFin">
+                <label for="fechaFin" class="title-select">Fecha fin:</label>
+                <input type="date" id="fechaFin" class="selector-reporte" name="fechaFin">
             </div>
             <div class="form-group">
-                <label for="tipoGrafica">Tipo de gráfica:</label>
-                <select id="tipoGrafica" class="form-select" name="tipoGrafica">
+                <label for="tipoGrafica" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGrafica" class="selector-reporte" name="tipoGrafica">
                     <option value="bar">Barras</option>
                     <option value="pie">Pastel</option>
                     <option value="line">Líneas</option>
@@ -181,8 +181,8 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="selectReporte">Reporte:</label>
-                <select id="selectReporte" class="form-select" name="selectReporte">
+                <label for="selectReporte" class="title-select">Reporte:</label>
+                <select id="selectReporte" class="selector-reporte" name="selectReporte">
                     <option value="todos">Todos los Reportes</option>
                     <option value="reporteEstado">Despachos por Estado</option>
                     <option value="reporteMensual">Despachos Mensuales</option>
@@ -220,11 +220,11 @@
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFDespachos('reporteEstado', 'Reporte_Despachos_Estado.pdf')">
-                📥 Descargar PDF
+            <button class="btn btn-primary btn-download" onclick="descargarPDFDespachos('reporteEstado', 'Reporte_Despachos_Estado.pdf')">
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenDespachos('graficoEstado', 'Grafico_Despachos_Estado.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-primary btn-download" onclick="descargarImagenDespachos('graficoEstado', 'Grafico_Despachos_Estado.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
@@ -243,11 +243,11 @@
             </div>
         </div>
         <div class="download-buttons">
-            <button class="btn btn-success btn-download" onclick="descargarPDFDespachos('reporteMensual', 'Reporte_Despachos_Mensual.pdf')">
-                📥 Descargar PDF
+            <button class="btn btn-primary btn-download" onclick="descargarPDFDespachos('reporteMensual', 'Reporte_Despachos_Mensual.pdf')">
+                Descargar PDF
             </button>
-            <button class="btn btn-warning btn-download" onclick="descargarImagenDespachos('graficoMensualDespachos', 'Grafico_Despachos_Mensual.png')">
-                🖼️ Descargar Gráfico
+            <button class="btn btn-primary btn-download" onclick="descargarImagenDespachos('graficoMensualDespachos', 'Grafico_Despachos_Mensual.png')">
+                Descargar Gráfico
             </button>
         </div>
     </div>
