@@ -202,8 +202,10 @@
                                     endif;
                                 endforeach;
 
-                                // Placeholders para imágenes faltantes
-                                while ($imagenesMostradas < 4) {
+                                // Placeholders para imágenes faltantes (solo si hay menos de 4 productos)
+                                $totalProductos = count($detalles);
+                                $maxImagenes = min($totalProductos, 4);
+                                while ($imagenesMostradas < $maxImagenes) {
                                     echo '<div class="combo-imagen ' . ($imagenesMostradas == 0 ? 'principal' : '') . ' IMG-placeholder">';
                                     echo '<i class="bi bi-image"></i>';
                                     echo '</div>';
@@ -490,7 +492,7 @@ protegerSelects(["producto_combo"]);
         }
     </script>
 <?php include 'footer.php'; ?>
-
+<?php if($_SESSION): ?>
     <button 
         class="btn-ayuda"
         style="top: 120px;"
@@ -498,5 +500,6 @@ protegerSelects(["producto_combo"]);
         onclick="window.location.href='?pagina=ayuda'">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
+    <?php endif;?>
 </body>
 </html>

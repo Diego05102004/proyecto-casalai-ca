@@ -703,8 +703,8 @@ function cambiarEstadoCombo() {
                     
                     // Actualizar botón de estado
                     this.btnEstado
-                        .toggleClass('btn-outline-warning', !esActivo)
-                        .toggleClass('btn-outline-success', esActivo)
+                        .removeClass('btn-outline-warning btn-outline-success')
+                        .addClass(esActivo ? 'btn-outline-warning' : 'btn-outline-success')
                         .html(`<i class="bi ${esActivo ? 'bi-eye-slash' : 'bi-eye'}"></i> ${esActivo ? 'Inhabilitar' : 'Habilitar'}`)
                         .data('estado-actual', esActivo ? 1 : 0);
                     
