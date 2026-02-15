@@ -290,7 +290,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
     <!-- Parámetros del Reporte -->
     <div class="parameters-container">
-        <h5 class="titulo-form"> Parámetros del Reporte</h5>
         <form id="formParametros" class="form-inline">
             <div class="form-group">
                 <label for="fechaInicio">Fecha inicio:</label>
