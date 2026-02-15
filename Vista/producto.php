@@ -154,11 +154,8 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 </div>
               </div>
               <div class="modal-footer">
-                <button class="boton-form" type="submit">Registrar</button>
-                <button class="boton-reset" type="reset">Limpiar</button>
-                <div class="mt-2" style="font-size: 12px; color: #666; text-align: center;">
-                    <strong>Paso 1:</strong> Complete campos obligatorios (*) → <strong>Paso 2:</strong> Verifique información → <strong>Paso 3:</strong> Presione "Registrar"
-                </div>
+                <button class="boton-form btn-primary" type="submit">Registrar</button>
+                <button class="boton-reset btn-primary" type="reset">Limpiar</button>
               </div>
             </form>
           <?php endif; ?>
@@ -491,11 +488,8 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
               <div id="caracteristicasCategoriaModificar"></div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-              <button type="submit" class="btn btn-primary">Guardar cambios</button>
-              <div class="mt-2" style="font-size: 12px; color: #666; text-align: center;">
-                  <strong>Nota:</strong> Los cambios se aplicarán inmediatamente tras guardar
-              </div>
+              <button type="button" class="btn btn-primary" data-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Guardar Cambios</button>
             </div>
           </form>
         </div>
@@ -508,15 +502,15 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         
         <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center;">
             <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-                <label for="tipoReporte">Tipo de reporte:</label>
-                <select id="tipoReporte" class="form-select" style="width:220px;">
+                <label for="tipoReporte" class="title-select">Tipo de reporte:</label>
+                <select id="tipoReporte" class="selector-reporte">
                     <option value="mas_vendidos">Top Productos Más Vendidos</option>
                     <option value="stock">Stock Alto vs Bajo</option>
                     <option value="rotacion">Rotación de Productos</option>
                 </select>
 
-                <label for="tipoGrafica">Tipo de gráfica:</label>
-                <select id="tipoGrafica" class="form-select" style="width:200px;">
+                <label for="tipoGrafica" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGrafica" class="selector-reporte">
                     <option value="bar">Barras</option>
                     <option value="pie">Pastel</option>
                     <option value="line">Líneas</option>
@@ -525,12 +519,12 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 </select>
 
                 <!-- Parámetros dinámicos -->
-                <div id="parametrosExtra" style="display:flex; gap:10px; flex-wrap: wrap; align-items:center;">
+                <div id="parametrosExtra" class="title-select" style="display:flex; gap:10px; flex-wrap: wrap; align-items:center;">
                     <!-- Aquí se insertan dinámicamente los inputs según el reporte -->
                 </div>
 
-                <button id="generarReporteBtn" class="btn btn-primary">Generar</button>
-                <button id="descargarPDF" class="btn btn-success">Descargar PDF</button>
+                <button id="generarReporteBtn" class="btn btn-primary">Generar Reporte</button>
+                <button id="descargarPDF" class="btn btn-primary">Descargar PDF</button>
             </div>
         </div>
 
@@ -592,7 +586,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         if (tipoReporte === "mas_vendidos") {
             contenedor.innerHTML = `
                 <label for="topN">Top N:</label>
-                <input type="number" id="topN" value="10" min="1" class="form-control" style="width:100px;">
+                <input type="number" id="topN" value="10" min="1" class="selector-reporte">
             `;
         } else if (tipoReporte === "stock") {
             let options = categorias.map(cat => `<option value="${cat.id_categoria}">${cat.nombre_categoria}</option>`).join('');

@@ -48,15 +48,15 @@ canvas {
     <div class="reporte-container" style="max-width: 1000px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.1);">
         <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center;">
             <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-                <label for="tipoReporte">Tipo de reporte:</label>
-                <select id="tipoReporte" class="form-select" style="width:220px;">
+                <label for="tipoReporte" class="title-select">Tipo de reporte:</label>
+                <select id="tipoReporte" class="selector-reporte">
                     <option value="mas_vendidos">Top Productos Más Vendidos</option>
                     <option value="stock">Stock Alto vs Bajo</option>
                     <option value="rotacion">Rotación de Productos</option>
                 </select>
 
-                <label for="tipoGrafica">Tipo de gráfica:</label>
-                <select id="tipoGrafica" class="form-select" style="width:200px;">
+                <label for="tipoGrafica" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGrafica" class="selector-reporte">
                     <option value="bar">Barras</option>
                     <option value="pie">Pastel</option>
                     <option value="line">Líneas</option>
@@ -65,12 +65,12 @@ canvas {
                 </select>
 
                 <!-- Parámetros dinámicos -->
-                <div id="parametrosExtra" style="display:flex; gap:10px; flex-wrap: wrap; align-items:center;">
+                <div id="parametrosExtra" class="title-select" style="display:flex; gap:10px; flex-wrap: wrap; align-items:center;">
                     <!-- Aquí se insertan dinámicamente los inputs según el reporte -->
                 </div>
 
-                <button id="generarReporteBtn" class="btn btn-primary">Generar</button>
-                <button id="descargarPDF" class="btn btn-success">Descargar PDF</button>
+                <button id="generarReporteBtn" class="btn btn-primary">Generar Reporte</button>
+                <button id="descargarPDF" class="btn btn-primary">Descargar PDF</button>
             </div>
         </div>
 
@@ -79,19 +79,16 @@ canvas {
         
         <!-- Secciones de reportes -->
         <div id="reporteMasVendidos">
-            <h5>Top Productos Más Vendidos</h5>
             <canvas id="chartMasVendidos" height="400"></canvas>
             <div id="reporteMasVendidosDetalle"></div>
         </div>
         
         <div id="reporteStock" style="display:none;">
-            <h5>Stock Alto vs Bajo</h5>
             <canvas id="chartStock" height="400"></canvas>
-  <div id="reporteStockDetalle"></div>
+            <div id="reporteStockDetalle"></div>
         </div>
         
         <div id="reporteRotacion" style="display:none;">
-            <h5>Rotación de Productos (días promedio)</h5>
             <canvas id="chartRotacion" height="400"></canvas>
             <div id="reporteRotacionDetalle"></div> 
         </div>
@@ -133,7 +130,7 @@ canvas {
         if (tipoReporte === "mas_vendidos") {
             contenedor.innerHTML = `
                 <label for="topN">Top N:</label>
-                <input type="number" id="topN" value="10" min="1" class="form-control" style="width:100px;">
+                <input type="number" id="topN" value="10" min="1" class="selector-reporte">
             `;
         } else if (tipoReporte === "stock") {
             let options = categorias.map(cat => `<option value="${cat.id_categoria}">${cat.nombre_categoria}</option>`).join('');

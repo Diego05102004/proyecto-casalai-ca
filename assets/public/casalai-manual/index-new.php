@@ -2004,6 +2004,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Marca</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('marca', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice la marca en la tabla.</li>
@@ -2020,12 +2026,6 @@ $modulos = [
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
-                                                </div>
-                                            </div>
-                                                                                        <div>
-                                                <h6 class="text-success">Formulario de Modificacion de Marca</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('marca', 'modificar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -2056,12 +2056,6 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                                                                        <div>
-                                                <h6 class="text-success">Confirmacion para Eliminar Marca</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('marca', 'eliminar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -2105,7 +2099,7 @@ $modulos = [
                                 </div>
                                 <div class="row">
                                     <div>
-                                        <h6 class="text-success">Vista de Modeloa</h6>
+                                        <h6 class="text-success">Vista de Modelos</h6>
                                         <?= renderImagen('modelo', 'vista.png') ?>
                                     </div>
                                 </div>
@@ -2132,7 +2126,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Registrar"</strong> para confirmar.</li>
                                                 </ol>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-patch-plus text-success me-2"></i>
                                                     <strong>Nuevo Modelo:</strong><br> Botón "+" verde
@@ -2165,6 +2159,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Modelo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('modelo', 'modificar-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice el modelo en la tabla.</li>
@@ -2181,12 +2181,6 @@ $modulos = [
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
-                                                </div>
-                                            </div>
-                                                 <div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('modelo', 'modificar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -2217,12 +2211,6 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                                                                                                                                                     <div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('modelo', 'eliminar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -2288,6 +2276,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Producto</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'incluir-modal.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
@@ -2318,11 +2312,6 @@ $modulos = [
                                                     <strong>Botón Limpiar:</strong><br> Resetea el formulario
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('producto', 'incluir-modal.png') ?>
-                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2337,21 +2326,23 @@ $modulos = [
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-7">
+                                                <div>
+                                                    <h6 class="text-success">Detalles del Producto</h6>
+                                                    <div class="text-center">
+                                                        <?= renderImagen('producto', 'detalle-modal.png') ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5" style="margin-top: 200px;">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i>en la columna "Acciones" para ver la información completa del producto.</li>
                                                 </ol>
-                                            </div>
-                                            <div class="col-md-5">
+                                                <br>
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-eye text-warning me-2"></i>
                                                     <strong>Detallar:</strong> Ícono ojo
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Modal de Detalles</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('producto', 'detalle-modal.png') ?>
-                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2366,14 +2357,21 @@ $modulos = [
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-7">
+                                                <div>
+                                                    <h6 class="text-success">Formulario para Modificar Producto</h6>
+                                                    <div class="text-center">
+                                                        <?= renderImagen('producto', 'modificar-modal.png') ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5" style="margin-top: 100px;">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice al producto en la tabla.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Edite los campos necesarios.</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar cambios.</li>
                                                 </ol>
-                                            </div>
-                                            <div class="col-md-5">
+                                                <br>
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-pencil text-info me-2"></i>
                                                     <strong>Modificar:</strong> Ícono lápiz
@@ -2382,11 +2380,7 @@ $modulos = [
                                                     <i class="bi bi-info-circle me-2"></i>
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
-                                            </div><div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('producto', 'modificar-modal.png') ?>
-                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2415,11 +2409,6 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div><div>
-                                                <h6 class="text-success">Confirmacion para Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('producto', 'eliminar-modal.png') ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -2471,6 +2460,24 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Top Productos Más Vendidos</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'reporte1.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Stock Alto vs Bajo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'reporte2.png') ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="text-success">Rotación de Productos</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('producto', 'reporte3.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
@@ -2493,24 +2500,6 @@ $modulos = [
                                                 <div class="alert alert-warning border">
                                                     <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
                                                     <strong>Reporte PDF:</strong> Descarga automática
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte de Top Productos Más Vendidos</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('producto', 'reporte1.png') ?>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte de Stock Alto vs Bajo</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('producto', 'reporte2.png') ?>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-success">Reporte de Rotación de Productos</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen('producto', 'reporte3.png') ?>
                                                 </div>
                                             </div>
                                         </div>

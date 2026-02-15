@@ -45,8 +45,8 @@ aria-labelledby="registrarModeloModalLabel" aria-hidden="true">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="boton-form" type="submit">Registrar</button>
-                    <button class="boton-reset" type="reset">Limpiar</button>
+                    <button class="boton-form btn-primary" type="submit">Registrar</button>
+                    <button class="boton-reset btn-primary" type="reset">Limpiar</button>
                 </div>
             </form>
         </div>
@@ -157,12 +157,13 @@ aria-labelledby="registrarModeloModalLabel" aria-hidden="true">
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
 
-    <button 
-        class="btn-ayuda"
-        title="Visualizar Ayuda"
-        onclick="window.location.href='?pagina=ayuda'">
-        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
-    </button>
+<button 
+    class="btn-ayuda"
+    style="top: 115px;"
+    title="Visualizar Ayuda"
+    onclick="window.location.href='?pagina=ayuda'">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
 </body>
 </html>
 <?php
