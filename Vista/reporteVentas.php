@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'header.php'; ?>
-    <title>Reportes de Ventas</title>
+    <title>Reportes de Despachos</title>
     <style>
         :root {
             --primary-color: #1f66df;
