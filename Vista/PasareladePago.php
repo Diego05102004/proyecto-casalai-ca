@@ -16,6 +16,7 @@
             padding-bottom: 2rem; /* Espacio extra para separar del footer */
             max-width: 1400px;
             margin: 0 auto;
+            margin-top: 2rem;
         }
 
         /* Forzar disposición horizontal en pantallas medianas/grandes */
@@ -41,14 +42,12 @@
         }
         
         .panel-datos-bancarios {
-            background: #f8f9fa;
             padding: 0.75rem;
             border-radius: 6px;
-            border: 1px solid #dee2e6;
             flex: 1;
             min-width: 280px;
             max-width: 320px;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
         
         .seccion-formularios-pago {
@@ -57,7 +56,7 @@
             border-radius: 8px;
             box-shadow: 0 1px 5px rgba(0,0,0,0.1);
             border: 1px solid #e0e0e0;
-            margin-bottom: 2rem; /* Separación del footer */
+            margin-bottom: 1rem; /* Separación del footer */
         }
         
         /* BLOQUES DE PAGO COMPACTOS */
@@ -116,27 +115,35 @@
             width: 100%;
         }
         
-        .boton-form {
+        .btn-pago {
             display: block;
             width: 100%;
-            padding: 0.75rem 1rem;
+            padding: 10px;
             font-size: 1rem;
             border-radius: 6px;
             text-align: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: #fff;
+            border: none;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
         }
         
-        .boton-form:hover {
-            background-color: #218838;
+        .btn-pago:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: linear-gradient(135deg, var(--primary-hover), var(--primary-color));
         }
         
         /* CONTENEDOR HORIZONTAL COMPACTO */
         .contenedor-pagos-horizontal {
             display: flex;
+            justify-content: center;
             flex-wrap: nowrap;
             overflow-x: auto;
             gap: 0.75rem;
             padding: 0.5rem 0;
-            min-height: 320px;
+            min-height: 150px;
             scrollbar-width: thin;
         }
         
@@ -181,21 +188,6 @@
             border: 1px solid #ddd;
             border-radius: 3px;
             padding: 2px;
-        }
-        
-        /* TÍTULOS COMPACTOS */
-        .titulo-seccion {
-            font-size: 1.1rem;
-            color: #2c3e50;
-            margin-bottom: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .titulo-form {
-            font-size: 1.2rem;
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            font-weight: 600;
         }
         
         /* ESTILOS PARA PANTALLAS PEQUEÑAS */
@@ -317,74 +309,88 @@
     };
 })();
 </script>
-    <!-- CONTENEDOR PRINCIPAL COMPACTO -->
-    <div class="main-content">
+<!-- CONTENEDOR PRINCIPAL COMPACTO -->
+<div class="main-content">
     <div class="contenedor-principal">
-        
-        <!-- SECCIÓN DE DATOS BANCARIOS COMPACTA -->
-        <div class="seccion-datos-bancarios">
-            <h3 class="titulo-seccion">Datos Bancarios para Pagos</h3>
-            <div class="contenedor-paneles-bancarios" id="paneles-datos-bancarios">
+            
+        <div class="row">
+            <div class="col-md-3">
+                <!-- SECCIÓN DE DATOS BANCARIOS COMPACTA -->
+                <div class="seccion-datos-bancarios">
+                    <h3 class="title-select">Datos Bancarios para Pagos</h3>
+                    <div class="contenedor-paneles-bancarios" id="paneles-datos-bancarios">
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <!-- SECCIÓN DE FORMULARIOS DE PAGO COMPACTA -->
-        <div class="seccion-formularios-pago">
-            <form id="formularioPago" method="POST" enctype="multipart/form-data" novalidate>
-                <input type="hidden" name="accion" value="ingresar">
-                <h3 class="titulo-form">REGISTRAR PAGOS ONLINE</h3>
-                
-                <!-- Monto total a pagar -->
-                <div class="envolver-form">
-                    <label for="monto_total">Monto Total a Pagar</label>
-                    <input type="text" class="control-form" id="monto_total" name="monto_total" 
-                           value="<?php echo number_format($monto, 2); ?> Bs" 
-                           readonly style="font-weight: 600; background: #e8f5e8; font-size: 0.9rem;">
-                </div>
-                
-                <input type="hidden" name="id_factura" value="<?php echo $idFactura; ?>">
-                
-                <!-- Contenedor horizontal compacto para múltiples pagos -->
-                <div class="contenedor-pagos-horizontal" id="pagos-container">
-                    <!-- Los bloques de pago se agregarán aquí dinámicamente -->
-                </div>
-                
-                <!-- Botón compacto para agregar más métodos de pago -->
-                <div style="text-align: center; margin-top: 0.75rem;">
-                    <button type="button" id="agregar-pago" class="boton-form" style="background: #6c757d; border-color: #6c757d;">
-                        Agregar Método de Pago
-                    </button>
-                </div>
-                
-                <!-- Resumen de pagos compacto -->
-                <div id="resumen-pagos" style="display: none;">
-                    <h4 style="font-size: 1rem; color: #495057; margin-bottom: 0.75rem;">Resumen de Pagos</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                        <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #dee2e6;">
-                            <div style="font-size: 0.8rem; color: #6c757d;">Total Registrado</div>
-                            <div id="total-registrado" style="font-size: 1rem; font-weight: 600; color: #28a745;">0.00 Bs</div>
-                        </div>
-                        <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #dee2e6;">
-                            <div style="font-size: 0.8rem; color: #6c757d;">Restante por Pagar</div>
-                            <div id="restante-pagar" style="font-size: 1rem; font-weight: 600; color: #dc3545;">
-                                <?php echo number_format($monto, 2); ?> Bs
+            
+            <div class="col-md-7">
+                <!-- SECCIÓN DE FORMULARIOS DE PAGO COMPACTA -->
+                <div class="seccion-formularios-pago">
+                    <form id="formularioPago" method="POST" enctype="multipart/form-data" novalidate>
+                        <input type="hidden" name="accion" value="ingresar">
+                        <h3 class="titulo-form">REGISTRAR PAGOS ONLINE</h3>
+
+                        <div class="col-md-12 mx-auto">
+                            <input type="hidden" name="id_factura" value="<?php echo $idFactura; ?>">
+                            
+                            <!-- Contenedor horizontal compacto para múltiples pagos -->
+                            <div class="contenedor-pagos-horizontal" id="pagos-container">
+                                <!-- Los bloques de pago se agregarán aquí dinámicamente -->
                             </div>
                         </div>
-                    </div>
-                    <p id="mensaje-validacion" class="error-validacion" style="text-align: center; margin: 0.75rem 0 0 0;"></p>
+
+                        <div class="col-md-7 mx-auto">
+                            <!-- Monto total a pagar -->
+                            <div class="envolver-form">
+                                <label for="monto_total">Monto Total a Pagar</label>
+                                <input type="text" class="control-form" id="monto_total" name="monto_total" 
+                                    value="<?php echo number_format($monto, 2); ?> Bs" 
+                                    readonly style="font-weight: 600; background: #e8f5e8; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                        
+                        <!-- Resumen de pagos compacto -->
+                        <div id="resumen-pagos" style="display: none;">
+                            <h4 style="font-size: 1rem; color: #495057; margin-bottom: 0.75rem;">Resumen de Pagos</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #dee2e6;">
+                                    <div style="font-size: 0.8rem; color: #6c757d;">Total Registrado</div>
+                                    <div id="total-registrado" style="font-size: 1rem; font-weight: 600; color: #28a745;">0.00 Bs</div>
+                                </div>
+                                <div style="background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #dee2e6;">
+                                    <div style="font-size: 0.8rem; color: #6c757d;">Restante por Pagar</div>
+                                    <div id="restante-pagar" style="font-size: 1rem; font-weight: 600; color: #dc3545;">
+                                        <?php echo number_format($monto, 2); ?> Bs
+                                    </div>
+                                </div>
+                            </div>
+                            <p id="mensaje-validacion" class="error-validacion" style="text-align: center; margin: 0.75rem 0 0 0;"></p>
+                        </div>
+
+                        <div class="row" style="justify-content: center; align-items: center;">
+                            <div class="col-md-4">
+                                <!-- Botón compacto para agregar más métodos de pago -->
+                                <div style="text-align: center; margin-top: 1rem;">
+                                    <button class="btn-pago" type="button" id="agregar-pago">
+                                        Agregar Método de Pago
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <!-- Botón de registro compacto -->
+                                <div style="text-align: center; margin-top: 1rem;">
+                                    <button class="btn-pago" type="submit" id="btn-registrar" disabled>
+                                        Registrar Pagos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                
-                <!-- Botón de registro compacto -->
-                <div style="text-align: center; margin-top: 1rem;">
-                    <button class="boton-form" type="submit" id="btn-registrar" disabled 
-                            style="background: #28a745; border-color: #28a745; padding: 0.6rem 1.5rem;">
-                        Registrar Pagos
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-    </div>
+</div>
     
     <!-- FOOTER -->
     <?php include 'footer.php'; ?>
@@ -479,7 +485,7 @@
                     
                     <!-- PRIMER PASO: Seleccionar tipo de pago -->
                     <div class="envolver-form paso-activo" id="paso-tipo-${id}">
-                        <label for="tipo-${id}">Método de Pago *</label>
+                        <label for="tipo-${id}" class="title-select">Método de Pago *</label>
                         <select id="tipo-${id}" name="pagos[${id}][tipo]" class="control-form" required>
                             <option value="" disabled selected>Seleccione método</option>
                             <option value="Pago Movil">Pago Móvil</option>
@@ -591,7 +597,7 @@
                 
                 const panelHtml = `
                     <div class="panel-datos-bancarios" id="panel-datos-${id}">
-                        <h4 style="color: #495057; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                        <h4 style="margin-bottom: 0.5rem; font-size: 1rem;">
                             Datos para Pago ${id + 1}
                         </h4>
                         <div>
@@ -1275,6 +1281,13 @@ $(document).ready(function() {
     });
 });
 </script>
+<button 
+    class="btn-ayuda"
+    style="top: 120px;"
+    title="Visualizar Ayuda"
+    onclick="window.location.href='?pagina=ayuda'">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
 </body>
 </html>
 <?php

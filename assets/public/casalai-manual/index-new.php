@@ -1315,12 +1315,25 @@ $modulos = [
                                     </div>
                                 </div>
 
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de los Pedidos</h6>
+                                        <?= renderImagen("pedidos", "vista.png") ?>
+                                    </div>
+                                </div>
+
                                 <!-- Pasos detallados para realizar pago de pedido -->
                                 <div class="card mt-3">
                                     <div class="card-header bg-primary text-white">
                                         <h6 class="mb-0">Pasos para Realizar los Pagos</h6>
                                     </div>
                                     <div class="card-body">
+                                        <div>
+                                            <h6 class="text-success">Registro de Pago</h6>
+                                            <div class="text-center">
+                                                <?= renderImagen('pagos', 'registrar-pago.png') ?>
+                                            </div>
+                                        </div>
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <h6 class="text-primary">1. Pago a través de Pago Móvil o Transferencia</h6>
@@ -1451,6 +1464,12 @@ $modulos = [
                                             <li><strong>Pago No Encontrado</strong>: Pago invalido. Pago no realizado o número de referencia incorrecto.</li>
                                             <li><strong>Pago Incompleto</strong>: Pago validado, pero no cubre el monto total de la compra</li>
                                         </ul>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de los Pagos</h6>
+                                        <?= renderImagen("pagos", "vista.png") ?>
                                     </div>
                                 </div>
                             </div>
@@ -3162,7 +3181,7 @@ $modulos = [
 
                         <!-- Catálogo de Combos -->
                         <?php if($puedeAccion('Catalogo', 'ingresar')):  ?>
-                        <div class="card" id="gestion-catalogo-combos">
+                        <div class="card mb- mt-4" id="gestion-catalogo-combos">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     <i class="bi bi-tags-fill me-2"></i>Catálogo de Combos Promocionales

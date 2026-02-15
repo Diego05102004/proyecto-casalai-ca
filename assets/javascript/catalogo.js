@@ -457,7 +457,7 @@ function agregarComboAlCarrito() {
 function confirmarAgregarAlCarrito(idProducto, cantidad, button) {
     if (!idProducto || !cantidad) return;
 
-    // Deshabilitar botón y mostrar spinner
+    // Inhabilitar botón y mostrar spinner
     const originalHtml = button.html();
     button.prop('disabled', true);
     button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
@@ -607,8 +607,8 @@ function editarCombo() {
         const nombreCombo = $(this).data('nombre-combo');
         const estadoActual = $(this).data('estado-actual');
 
-        const accion = estadoActual ? 'deshabilitar' : 'habilitar';
-        const textoAccion = estadoActual ? 'Deshabilitar' : 'Habilitar';
+        const accion = estadoActual ? 'inhabilitar' : 'habilitar';
+        const textoAccion = estadoActual ? 'Inhabilitar' : 'Habilitar';
 
         $('#estadoComboModalLabel').text(`${textoAccion} Combo: ${nombreCombo}`);
         $('#accionEstado').text(accion);
@@ -627,7 +627,7 @@ function editarCombo() {
         $('#estadoComboModal').modal('show');
     }
 
-    // Cambiar estado de combo (habilitar/deshabilitar)
+    // Cambiar estado de combo (habilitar/inhabilitar)
 function cambiarEstadoCombo() {
     console.group('=== DEPURACIÓN: cambiarEstadoCombo ===');
     
@@ -659,11 +659,11 @@ function cambiarEstadoCombo() {
         
         console.log('Datos del combo:', {
             nombre: nombreCombo,
-            estadoActual: estadoActual ? 'Habilitado' : 'Deshabilitado',
-            nuevoEstado: nuevoEstado ? 'Habilitado' : 'Deshabilitado'
+            estadoActual: estadoActual ? 'Habilitado' : 'Inhabilitado',
+            nuevoEstado: nuevoEstado ? 'Habilitado' : 'Inhabilitado'
         });
 
-        // 4. Deshabilitar botón y mostrar indicador de carga
+        // 4. Inhabilitar botón y mostrar indicador de carga
         $btnConfirmar
             .prop('disabled', true)
             .html('<span class="spinner-border spinner-border-sm" role="status"></span> Procesando...');
@@ -696,7 +696,7 @@ function cambiarEstadoCombo() {
                     const esActivo = response.nuevo_estado;
                     
                     console.log('Actualizando interfaz con nuevo estado:', 
-                               esActivo ? 'Habilitado' : 'Deshabilitado');
+                               esActivo ? 'Habilitado' : 'Inhabilitado');
                     
                     // Actualizar tarjeta del combo
                     $comboCard.toggleClass('disabled-combo', !esActivo);
@@ -705,7 +705,7 @@ function cambiarEstadoCombo() {
                     this.btnEstado
                         .toggleClass('btn-outline-warning', !esActivo)
                         .toggleClass('btn-outline-success', esActivo)
-                        .html(`<i class="bi ${esActivo ? 'bi-eye-slash' : 'bi-eye'}"></i> ${esActivo ? 'Deshabilitar' : 'Habilitar'}`)
+                        .html(`<i class="bi ${esActivo ? 'bi-eye-slash' : 'bi-eye'}"></i> ${esActivo ? 'Inhabilitar' : 'Habilitar'}`)
                         .data('estado-actual', esActivo ? 1 : 0);
                     
                     // Actualizar botón de agregar al carrito
@@ -797,7 +797,7 @@ function mostrarModalCambioEstado() {
     
     // Actualizar el texto del modal
     const $accionEstado = $('#accionEstado');
-    $accionEstado.text(nuevoEstado ? 'habilitar' : 'deshabilitar');
+    $accionEstado.text(nuevoEstado ? 'habilitar' : 'inhabilitar');
     
     // Mostrar el modal
     $modal.modal('show');

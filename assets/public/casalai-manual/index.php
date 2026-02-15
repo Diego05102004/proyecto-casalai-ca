@@ -583,13 +583,13 @@ $esAdministrador = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] ==
                             "Crear combos de productos",
                             "Disponiblidad de combos",
                             "Editar los combos",
-                            "Habilitar o deshabilitar combos",
+                            "Habilitar o Inhabilitar combos",
                         ],
                         "instrucciones" => [
                             "Crear combos de productos",
                             "Disponibilidad de combos",
                             "Editar los combos",
-                            "Habilitar o deshabilitar combos",
+                            "Habilitar o Inhabilitar combos",
                         ],
                     ];
 

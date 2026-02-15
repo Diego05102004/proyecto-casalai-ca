@@ -25,6 +25,13 @@
     } else {
         include 'NavBar.php';
     }
+
+    $esCliente = isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] == 'Cliente';
+
+    $id_rol = $_SESSION['id_rol'] ?? 0;
+    $nombre_rol = $_SESSION['nombre_rol'] ?? '';
+
+    $permisosObj = new \Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos();
     ?>
     <br>
 
@@ -116,14 +123,14 @@
                                 
                                 <div class="producto-precio-container">
                                     <div class="producto-precio"><?= number_format($precioBs, 2) ?> BS</div>
-                                   <button type="button" 
-    class="btn-agregar-carrito <?= $stock <= 0 ? 'disabled' : '' ?>"
-    data-id-producto="<?= htmlspecialchars($producto['id_producto']) ?>"
-    data-stock="<?= $stock ?>"
-    <?= $stock <= 0 ? 'disabled' : '' ?>>
-    <i class="bi bi-cart-plus"></i>
-    <span class="btn-text"><?= $stock <= 0 ? 'Agotado' : 'Agregar' ?></span>
-</button>
+                                    <button type="button" 
+                                        class="btn-agregar-carrito <?= $stock <= 0 ? 'disabled' : '' ?>"
+                                        data-id-producto="<?= htmlspecialchars($producto['id_producto']) ?>"
+                                        data-stock="<?= $stock ?>"
+                                        <?= $stock <= 0 ? 'disabled' : '' ?>>
+                                        <i class="bi bi-cart-plus"></i>
+                                        <span class="btn-text"><?= $stock <= 0 ? 'Agotado' : 'Agregar' ?></span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -172,7 +179,7 @@
                             <div class="combo-header">
                                 <h4 class="combo-nombre"><?= htmlspecialchars($combo['nombre_combo']) ?></h4>
                                 <?php if (!$combo['activo']): ?>
-                                    <span class="badge bg-secondary">Deshabilitado</span>
+                                    <span class="badge bg-secondary">Inhabilitado</span>
                                 <?php endif; ?>
                                 <p class="combo-descripcion"><?= htmlspecialchars($combo['descripcion']) ?></p>
                             </div>
@@ -241,13 +248,15 @@
                                     <div class="ahorro-combo">Ahorras <?= number_format($ahorroBs, 2) ?> BS</div>
                                 </div>
 
-                                <!-- Botón agregar combo -->
-                                <button class="btn-agregar-carrito btn-agregar-combo w-100 <?= !$todosDisponibles || !$combo['activo'] ? 'disabled' : '' ?>"
-                                        data-id-combo="<?= $combo['id_combo'] ?>"
-                                        <?= !$todosDisponibles || !$combo['activo'] ? 'disabled' : '' ?>>
-                                    <i class="bi bi-cart-plus"></i>
-                                    <?= !$combo['activo'] ? 'Combo no disponible' : ($todosDisponibles ? 'Agregar Combo' : 'Productos no disponibles') ?>
-                                </button>
+                                <?php if($esCliente): ?>
+                                    <!-- Botón agregar combo -->
+                                    <button class="btn-agregar-carrito btn-agregar-combo w-100 <?= !$todosDisponibles || !$combo['activo'] ? 'disabled' : '' ?>"
+                                            data-id-combo="<?= $combo['id_combo'] ?>"
+                                            <?= !$todosDisponibles || !$combo['activo'] ? 'disabled' : '' ?>>
+                                        <i class="bi bi-cart-plus"></i>
+                                        <?= !$combo['activo'] ? 'Combo no disponible' : ($todosDisponibles ? 'Agregar Combo' : 'Productos no disponibles') ?>
+                                    </button>
+                                <?php endif; ?>
 
                                 <!-- Acciones de admin -->
                                 <?php if ($esAdmin): ?>
@@ -265,7 +274,7 @@
                                                 data-nombre-combo="<?= htmlspecialchars($combo['nombre_combo']) ?>"
                                                 data-estado-actual="<?= $combo['activo'] ? 1 : 0 ?>">
                                             <i class="bi <?= $combo['activo'] ? 'bi-eye-slash' : 'bi-eye' ?>"></i>
-                                            <?= $combo['activo'] ? 'Deshabilitar' : 'Habilitar' ?>
+                                            <?= $combo['activo'] ? 'Inhabilitar' : 'Habilitar' ?>
                                         </button>
                                     </div>
                                 <?php endif; ?>
