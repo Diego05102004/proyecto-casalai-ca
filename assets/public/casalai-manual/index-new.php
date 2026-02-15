@@ -1328,6 +1328,12 @@ $modulos = [
                                         <h6 class="mb-0">Pasos para Realizar los Pagos</h6>
                                     </div>
                                     <div class="card-body">
+                                        <div>
+                                            <h6 class="text-success">Registro de Pago</h6>
+                                            <div class="text-center">
+                                                <?= renderImagen('pagos', 'registrar-pago.png') ?>
+                                            </div>
+                                        </div>
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <h6 class="text-primary">1. Pago a través de Pago Móvil o Transferencia</h6>

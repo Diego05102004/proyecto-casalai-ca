@@ -31,7 +31,7 @@ body {
 <div class="contenedor-tabla">
     <div class="tabla-header">
         <div class="ghost"></div>
-        <h3>Registro de Pedidos</h3>
+        <h3>Pedidos Realizados</h3>
         <div class="ghost"></div>
     </div>
 
