@@ -3192,7 +3192,6 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
-                                
 
                                 <!-- Pasos detallados para registrar combo -->
                                 <?php if($puedeAccion('Catalogo', 'incluir')):  ?>
@@ -3204,7 +3203,7 @@ $modulos = [
                                         <div class="row">
                                             <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+ Nuevo Combo"</strong> (color azul) para nuevo combo.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese una <strong>descripción</strong> breve.</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Agregue los <strong>productos</strong> y la <strong>cantidad</strong> de cada uno.</li>
@@ -3214,7 +3213,7 @@ $modulos = [
                                             <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-person-plus text-success me-2"></i>
-                                                    <strong>Nuevo Combo:</strong><br> Botón "+" verde
+                                                    <strong>Nuevo Combo:</strong><br> Botón "+ Nuevo Combo" azul
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-person me-2"></i>
