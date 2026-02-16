@@ -369,5 +369,80 @@ public function getProductosDespachadosPorMes($anio = null) {
             $this->conex = null;
         }
     }
+
+    // 🚚 5. Despachos por cliente
+    public function getDespachosPorCliente($fechaInicio = null, $fechaFin = null) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "
+                SELECT 
+                    c.nombre AS cliente, 
+                    COUNT(*) AS total
+                FROM tbl_despachos d
+                INNER JOIN tbl_clientes c ON d.id_clientes = c.id_clientes
+                WHERE d.activo = '1'
+            ";
+
+            $params = [];
+
+            if ($fechaInicio && $fechaFin) {
+                $sql .= " AND d.fecha_despacho BETWEEN :fechaInicio AND :fechaFin";
+                $params[':fechaInicio'] = $fechaInicio;
+                $params[':fechaFin'] = $fechaFin;
+            }
+
+            $sql .= " GROUP BY c.id_clientes, c.nombre ORDER BY total DESC LIMIT 10";
+
+            $stmt = $this->conex->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return ['error' => true, 'mensaje' => $e->getMessage()];
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
+    }
+
+    // 🚚 6. Despachos por tipo de compra
+    public function getDespachosPorTipoCompra($fechaInicio = null, $fechaFin = null) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "
+                SELECT 
+                    tipocompra AS tipo_compra, 
+                    COUNT(*) AS total
+                FROM tbl_despachos
+                WHERE activo = '1'
+            ";
+
+            $params = [];
+
+            if ($fechaInicio && $fechaFin) {
+                $sql .= " AND fecha_despacho BETWEEN :fechaInicio AND :fechaFin";
+                $params[':fechaInicio'] = $fechaInicio;
+                $params[':fechaFin'] = $fechaFin;
+            }
+
+            $sql .= " GROUP BY tipocompra ORDER BY total DESC";
+
+            $stmt = $this->conex->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return ['error' => true, 'mensaje' => $e->getMessage()];
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+            $this->conex = null;
+        }
+    }
 }
 ?>
