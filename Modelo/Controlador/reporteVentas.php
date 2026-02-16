@@ -9,6 +9,8 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Recepcion;
 $reporteDespacho = new Despacho();
 $despachoEstado = $reporteDespacho->getDespachosEstado();
 $despachoMes = $reporteDespacho->getProductosDespachadosPorMes();
+$despachoCliente = $reporteDespacho->getDespachosPorCliente();
+$despachoTipoCompra = $reporteDespacho->getDespachosPorTipoCompra();
 $proveedores = $reporteDespacho->obtenercliente();
 $productos = $reporteDespacho->consultarproductos();
 function getdespacho() {

@@ -251,6 +251,52 @@
             </button>
         </div>
     </div>
+
+    <div class="divider"></div>
+
+    <!-- Reporte 3: Despachos por Cliente -->
+    <div class="report-section" id="reporteCliente">
+        <h3 class="titulo-form">Despachos por Cliente</h3>
+        <div class="chart-container">
+            <div class="chart-canvas">
+                <canvas id="graficoCliente" width="400" height="400"></canvas>
+            </div>
+            <div class="chart-table">
+                <div id="tablaCliente"></div>
+            </div>
+        </div>
+        <div class="download-buttons">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFDespachos('reporteCliente', 'Reporte_Despachos_Cliente.pdf')">
+                Descargar PDF
+            </button>
+            <button class="btn btn-primary btn-download" onclick="descargarImagenDespachos('graficoCliente', 'Grafico_Despachos_Cliente.png')">
+                Descargar Gráfico
+            </button>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Reporte 4: Despachos por Tipo de Compra -->
+    <div class="report-section" id="reporteTipoCompra">
+        <h3 class="titulo-form">Despachos por Tipo de Compra</h3>
+        <div class="chart-container">
+            <div class="chart-canvas">
+                <canvas id="graficoTipoCompra" width="400" height="400"></canvas>
+            </div>
+            <div class="chart-table">
+                <div id="tablaTipoCompra"></div>
+            </div>
+        </div>
+        <div class="download-buttons">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFDespachos('reporteTipoCompra', 'Reporte_Despachos_Tipo_Compra.pdf')">
+                Descargar PDF
+            </button>
+            <button class="btn btn-primary btn-download" onclick="descargarImagenDespachos('graficoTipoCompra', 'Grafico_Despachos_Tipo_Compra.png')">
+                Descargar Gráfico
+            </button>
+        </div>
+    </div>
 </div>
 
 <?php include 'footer.php'; ?>
@@ -264,8 +310,12 @@
     // ============================
     let despachoMes = <?= json_encode($despachoMes ?? []) ?>;
     let despachoEstado = <?= json_encode($despachoEstado ?? []) ?>;
+    let despachoCliente = <?= json_encode($despachoCliente ?? []) ?>;
+    let despachoTipoCompra = <?= json_encode($despachoTipoCompra ?? []) ?>;
     let graficoEstado = null;
     let graficoMensualDespachos = null;
+    let graficoCliente = null;
+    let graficoTipoCompra = null;
 
     function generarColores(n) {
         return Array.from({length: n}, (_, i) => {
@@ -296,12 +346,17 @@ function renderReporteDespachos(datos, labelKey, valueKey, canvasId, tablaId, ti
     const total = data.reduce((a, b) => a + b, 0);
     const colores = generarColores(labels.length);
 
+        let headerText = 'Estado';
+        if (labelKey === 'mes') headerText = 'Mes';
+        else if (labelKey === 'cliente') headerText = 'Cliente';
+        else if (labelKey === 'tipo_compra') headerText = 'Tipo de Compra';
+        
         let tablaHtml = `
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>${labelKey === 'mes' ? 'Mes' : 'Estado'}</th>
+                            <th>${headerText}</th>
                             <th>Cantidad</th>
                             <th>Porcentaje (%)</th>
                         </tr>
@@ -337,6 +392,10 @@ function renderReporteDespachos(datos, labelKey, valueKey, canvasId, tablaId, ti
             graficoEstado.destroy();
         } else if (canvasId === 'graficoMensualDespachos' && graficoMensualDespachos) {
             graficoMensualDespachos.destroy();
+        } else if (canvasId === 'graficoCliente' && graficoCliente) {
+            graficoCliente.destroy();
+        } else if (canvasId === 'graficoTipoCompra' && graficoTipoCompra) {
+            graficoTipoCompra.destroy();
         }
         const newChart = new Chart(ctx, {
             type: tipoGrafica,
@@ -382,12 +441,16 @@ function renderReporteDespachos(datos, labelKey, valueKey, canvasId, tablaId, ti
             graficoEstado = newChart;
         } else if (canvasId === 'graficoMensualDespachos') {
             graficoMensualDespachos = newChart;
+        } else if (canvasId === 'graficoCliente') {
+            graficoCliente = newChart;
+        } else if (canvasId === 'graficoTipoCompra') {
+            graficoTipoCompra = newChart;
         }
     }
 
     function toggleReportesDespachos() {
         const seleccion = document.getElementById('selectReporte').value;
-        const reportes = ['reporteEstado', 'reporteMensual'];
+        const reportes = ['reporteEstado', 'reporteMensual', 'reporteCliente', 'reporteTipoCompra'];
         if (seleccion === 'todos') {
             reportes.forEach(reporte => {
                 document.getElementById(reporte).style.display = 'block';
@@ -415,6 +478,12 @@ function renderReporteDespachos(datos, labelKey, valueKey, canvasId, tablaId, ti
                 }
                 if (seleccion === 'todos' || seleccion === 'reporteMensual') {
                     renderReporteDespachos(despachoMes, 'mes', 'total', 'graficoMensualDespachos', 'tablaMensualDespachos', 'Despachos Mensuales', tipoGrafica);
+                }
+                if (seleccion === 'todos' || seleccion === 'reporteCliente') {
+                    renderReporteDespachos(despachoCliente, 'cliente', 'total', 'graficoCliente', 'tablaCliente', 'Despachos por Cliente', tipoGrafica);
+                }
+                if (seleccion === 'todos' || seleccion === 'reporteTipoCompra') {
+                    renderReporteDespachos(despachoTipoCompra, 'tipo_compra', 'total', 'graficoTipoCompra', 'tablaTipoCompra', 'Despachos por Tipo de Compra', tipoGrafica);
                 }
                 document.getElementById('errorMessage').style.display = 'none';
             } catch (error) {
@@ -450,6 +519,10 @@ function renderReporteDespachos(datos, labelKey, valueKey, canvasId, tablaId, ti
                 canvasId = 'graficoEstado';
             } else if (contenedorId === 'reporteMensual') {
                 canvasId = 'graficoMensualDespachos';
+            } else if (contenedorId === 'reporteCliente') {
+                canvasId = 'graficoCliente';
+            } else if (contenedorId === 'reporteTipoCompra') {
+                canvasId = 'graficoTipoCompra';
             }
             
             const canvas = document.getElementById(canvasId);
