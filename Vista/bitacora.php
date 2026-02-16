@@ -86,12 +86,13 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 <script src="assets/public/js/jquery.dataTables.min.js"></script>
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/javascript/bitacora.js"></script>
-    <button 
-        class="btn-ayuda"
-        title="Visualizar Ayuda"
-        onclick="window.location.href='?pagina=ayuda'">
-        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
-    </button>
+<button 
+    class="btn-ayuda"
+    style="top: 115px; right: 100px;"
+    title="Visualizar Ayuda"
+    onclick="window.location.href='?pagina=ayuda'">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
 </body>
 </html>
 <?php } else {

@@ -140,6 +140,13 @@
     });
 </script>
 <script src="assets/javascript/backup.js"></script>
+<button 
+    class="btn-ayuda"
+    style="top: 125px; right: 100px;"
+    title="Visualizar Ayuda"
+    onclick="window.location.href='?pagina=ayuda'">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
 </body>
 </html>
 <?php

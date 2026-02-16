@@ -4796,7 +4796,6 @@ $modulos = [
                                         <?= renderImagen('bitacora', 'vista.png') ?>
                                     </div>
                                 </div>
-                                
                             </div>
                         </div>
                         <?php endif; ?>
@@ -4830,13 +4829,12 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Respaldo</h6>
                                         <?= renderImagen('respaldo', 'vista.png') ?>
                                     </div>
                                 </div>
-                                
                                 
                                 <!-- Pasos detallados para generar respaldo -->
                                 <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'incluir')): ?>
@@ -4858,12 +4856,6 @@ $modulos = [
                                                     <strong>Nueva Marca:</strong><br> Botón "Generar Backup" (Principal/Seguridad)
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Generar Respaldo</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("respaldo", "generar-respaldo.png") ?>
-                                                    <?= renderImagen("respaldo", "confirmacion.png") ?>
-                                             </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4890,13 +4882,6 @@ $modulos = [
                                                     <strong>Restaurar:</strong><br> Botón "Restaurar" amarillo
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Restaurar Respaldo</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("respaldo", "restaurar-respaldo.png") ?>
-                                                    <?= renderImagen("respaldo", "confirmacion-restaurar.png") ?>
-                                             </div>
-                                        </div>
                                         </div>
                                         <div class="note col-md-11 mx-auto">
                                             <i class="bi bi-info-circle-fill me-2"></i>
@@ -4959,12 +4944,6 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
-                                             <div>
-                                                <h6 class="text-success">Eliminar Respaldo</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("respaldo", "eliminar-respaldo.png") ?>
-                                             </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4979,32 +4958,29 @@ $modulos = [
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
                         <h2 class="section-title"><i class="bi bi-person-circle me-2"></i>Iniciar Sesión</h2>
-                        <p>Para acceder al sistema, siga estos pasos:</p>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Paso 1: Ingrese sus credenciales</h5>
-                                        <p class="card-text">Ingrese su nombre de usuario y contraseña en los campos correspondientes.</p>
-                                        <?= renderImagen("login", "login.png") ?>
+                        <p>Ventana princpal del inicio de sesión donde podrá loguear su usuario, recuperar la contraseña o registrarse en el caso de no tener una cuenta de usuario</p>
+
+                        <div class="card mt-3">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">Pasos para Iniciar Sesión</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Inicio de Sesión</h6>
+                                        <div class="text-center">
+                                            <?= renderImagen("login", "iniciar-sesion.png") ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <ol>
+                                            <li class="mb-2"><strong>Paso 1:</strong> Ingrese su nombre de usuario y contraseña en los campos correspondientes.</li>
+                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"no soy un robot"</strong> para cumplir con la verificación de CAPTCHA.</li>
+                                            <li class="mb-2"><strong>Paso 3:</strong> Haga clic en el botón <strong>"Iniciar Sesión"</strong> para acceder a su cuenta de usuario.</li>
+                                        </ol>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Paso 2: Acceda al sistema</h5>
-                                        <p class="card-text">Haga clic en el botón "Iniciar Sesión" para acceder a su cuenta.</p>
-                                        <?= renderImagen("login", "dashboard.png") ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="note mt-4">
-                            <i class="bi bi-question-circle-fill me-2"></i>
-                            <strong>¿Problemas para iniciar sesión?</strong> Contacte al administrador del sistema para restablecer su contraseña.
                         </div>
                     </section>
                 <?php /* endif; */ ?>
