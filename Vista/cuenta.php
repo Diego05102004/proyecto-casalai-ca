@@ -113,8 +113,8 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="boton-form" type="submit">Registrar</button>
-                            <button class="boton-reset" type="reset">Limpiar</button>
+                            <button class="boton-form btn-primary" type="submit">Registrar</button>
+                            <button class="boton-reset btn-primary" type="reset">Limpiar</button>
                         </div>
                     </form>
                 </div>
@@ -352,27 +352,29 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
             <div class="reporte-parametros">
                 <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-                    <label for="fechaInicioCuentas">Fecha inicio:</label>
-                    <input type="date" id="fechaInicioCuentas" class="form-control" style="width:160px;">
-                    <label for="fechaFinCuentas">Fecha fin:</label>
-                    <input type="date" id="fechaFinCuentas" class="form-control" style="width:160px;">
-                    <label for="agruparPor">Agrupar por:</label>
-                    <select id="agruparPor" class="form-select" style="width:200px;">
+                    <label for="fechaInicioCuentas" class="title-select">Fecha inicio:</label>
+                    <input type="date" id="fechaInicioCuentas" class="selector-reporte">
+                    <label for="fechaFinCuentas" class="title-select">Fecha fin:</label>
+                    <input type="date" id="fechaFinCuentas" class="selector-reporte">
+                    <label for="agruparPor" class="title-select">Agrupar por:</label>
+                    <select id="agruparPor" class="selector-reporte">
                         <option value="metodos">Método de Pago</option>
                         <option value="nombre_banco">Banco</option>
                         <option value="nombre">Cliente</option>
                         <option value="estatus">Estatus</option>
                     </select>
-                    <label for="tipoGraficaCuentas">Tipo de gráfica:</label>
-                    <select id="tipoGraficaCuentas" class="form-select" style="width:200px;">
+                    <label for="tipoGraficaCuentas" class="title-select">Tipo de gráfica:</label>
+                    <select id="tipoGraficaCuentas" class="selector-reporte">
                         <option value="bar">Barras</option>
                         <option value="line">Líneas</option>
                         <option value="pie">Pastel</option>
                         <option value="doughnut">Donas</option>
                         <option value="polarArea">Área Polar</option>
                     </select>
-                    <button id="generarReporteCuentasBtn" class="btn btn-primary">Generar</button>
-                    <button id="descargarPDFCuentas" class="btn btn-success">Descargar PDF</button>
+                    <div>
+                        <button id="generarReporteCuentasBtn" class="btn btn-primary">Generar Reporte</button>
+                        <button id="descargarPDFCuentas" class="btn btn-primary">Descargar PDF</button>
+                    </div>
                 </div>
             </div>
 

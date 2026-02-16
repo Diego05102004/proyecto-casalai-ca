@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'header.php'; ?>
-    <title>Reportes de Ventas</title>
+    <title>Reportes de Despachos</title>
     <style>
         :root {
             --primary-color: #1f66df;
@@ -181,7 +181,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="selectReporte" class="title-select">Reporte:</label>
+                <label for="selectReporte" class="title-select">Tipo de Reporte:</label>
                 <select id="selectReporte" class="selector-reporte" name="selectReporte">
                     <option value="todos">Todos los Reportes</option>
                     <option value="reporteEstado">Despachos por Estado</option>

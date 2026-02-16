@@ -23,8 +23,8 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <div class="parameters-container" style="margin: 16px 0; background:#f8f9fa; border-radius: 10px; padding: 16px;">
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label for="selectReporteUsuarios" class="form-label">Reporte</label>
-                    <select id="selectReporteUsuarios" class="form-select">
+                    <label for="selectReporteUsuarios" class="title-select">Reporte</label>
+                    <select id="selectReporteUsuarios" class="selector-reporte">
                         <option value="roles" selected>Usuarios por Rol</option>
                         <option value="estatus">Usuarios por Estatus</option>
                         <option value="dominio">Usuarios por Dominio de Correo</option>
@@ -49,7 +49,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             </div>
             <div style="text-align:center;">
                 <button id="btnGenerarUsuarios" class="btn btn-primary">Generar Reporte</button>
-                <button id="descargarPDFUsuarios" class="btn btn-success">Descargar PDF</button>
+                <button id="descargarPDFUsuarios" class="btn btn-primary">Descargar PDF</button>
             </div>
         </div>
     </div>
@@ -99,19 +99,19 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         let html = '';
         if (tipo==='roles'){
             const roles = Array.from(new Set((reporteRolesPHP||[]).map(r=>r.nombre_rol))).sort();
-            html += `<div class="col-md-4"><label>Rol</label><select id="paramRol" class="form-select"><option value="">Todos</option>${roles.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></div>`;
+            html += `<div class="col-md-4 title-select"><label>Rol</label><select id="paramRol" class="selector-reporte"><option value="">Todos</option>${roles.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></div>`;
         } else if (tipo==='estatus'){
-            html += `<div class="col-md-3"><label>Estatus</label><select id="paramEstatus" class="form-select"><option value="">Todos</option><option value="habilitado">Habilitado</option><option value="deshabilitado">Deshabilitado</option></select></div>`;
+            html += `<div class="col-md-3 title-select"><label>Estatus</label><select id="paramEstatus" class="selector-reporte"><option value="">Todos</option><option value="habilitado">Habilitado</option><option value="deshabilitado">Inhabilitado</option></select></div>`;
         } else if (tipo==='dominio'){
             const dominios = Array.from(new Set((usuariosTodos||[]).map(u=>dominioCorreo(u.correo)))).sort();
-            html += `<div class="col-md-4"><label>Dominio</label><select id="paramDominio" class="form-select"><option value="">Todos</option>${dominios.map(d=>`<option value="${d}">${d}</option>`).join('')}</select></div>`;
-            html += `<div class="col-md-2"><label>Top</label><select id="paramTopN" class="form-select"><option value="0">Todos</option><option value="5">Top 5</option><option value="10">Top 10</option><option value="20">Top 20</option></select></div>`;
+            html += `<div class="col-md-4 title-select"><label>Dominio</label><select id="paramDominio" class="selector-reporte"><option value="">Todos</option>${dominios.map(d=>`<option value="${d}">${d}</option>`).join('')}</select></div>`;
+            html += `<div class="col-md-2 title-select"><label>Top</label><select id="paramTopN" class="selector-reporte"><option value="0">Todos</option><option value="5">Top 5</option><option value="10">Top 10</option><option value="20">Top 20</option></select></div>`;
         } else if (tipo==='inicial_nombre' || tipo==='inicial_apellido'){
             const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-            html += `<div class=\"col-md-3\"><label>Inicial</label><select id=\"paramInicial\" class=\"form-select\"><option value=\"\">Todas</option>${letras.map(l=>`<option value="${l}">${l}</option>`).join('')}</select></div>`;
+            html += `<div class="col-md-3 title-select"><label>Inicial</label><select id="paramInicial" class="selector-reporte"><option value="">Todas</option>${letras.map(l=>`<option value="${l}">${l}</option>`).join('')}</select></div>`;
         } else if (tipo==='area_telefono'){
             const areas = Array.from(new Set((usuariosTodos||[]).map(u=>String(u.telefono||'').slice(0,4)).filter(v=>v))).sort();
-            html += `<div class=\"col-md-3\"><label>Prefijo</label><select id=\"paramArea\" class=\"form-select\"><option value=\"\">Todos</option>${areas.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>`;
+            html += `<div class="col-md-3 title-select"><label>Prefijo</label><select id="paramArea" class="selector-reporte"><option value="">Todos</option>${areas.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>`;
         }
         cont.innerHTML = html;
     }
