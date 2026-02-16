@@ -40,30 +40,32 @@
 
         <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
-            <div class="reporte-parametros" style="text-align:center; margin-top: 50px;">
+            <div class="reporte-parametros" style="text-align:center;">
                 <h3 class="titulo-form">Reporte de Cuentas</h3>
                 <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-                    <label for="fechaInicioCuentas">Fecha inicio:</label>
-                    <input type="date" id="fechaInicioCuentas" class="form-control" style="width:160px;">
-                    <label for="fechaFinCuentas">Fecha fin:</label>
-                    <input type="date" id="fechaFinCuentas" class="form-control" style="width:160px;">
-                    <label for="agruparPor">Agrupar por:</label>
-                    <select id="agruparPor" class="form-select" style="width:200px;">
+                    <label for="fechaInicioCuentas" class="title-select">Fecha inicio:</label>
+                    <input type="date" id="fechaInicioCuentas" class="selector-reporte">
+                    <label for="fechaFinCuentas" class="title-select">Fecha fin:</label>
+                    <input type="date" id="fechaFinCuentas" class="selector-reporte">
+                    <label for="agruparPor" class="title-select">Agrupar por:</label>
+                    <select id="agruparPor" class="selector-reporte">
                         <option value="metodos">Método de Pago</option>
                         <option value="nombre_banco">Banco</option>
                         <option value="nombre">Cliente</option>
                         <option value="estatus">Estatus</option>
                     </select>
-                    <label for="tipoGraficaCuentas">Tipo de gráfica:</label>
-                    <select id="tipoGraficaCuentas" class="form-select" style="width:200px;">
+                    <label for="tipoGraficaCuentas" class="title-select">Tipo de gráfica:</label>
+                    <select id="tipoGraficaCuentas" class="selector-reporte">
                         <option value="bar">Barras</option>
                         <option value="line">Líneas</option>
                         <option value="pie">Pastel</option>
                         <option value="doughnut">Donas</option>
                         <option value="polarArea">Área Polar</option>
                     </select>
-                    <button id="generarReporteCuentasBtn" class="btn btn-primary">Generar</button>
-                    <button id="descargarPDFCuentas" class="btn btn-success">Descargar PDF</button>
+                    <div>
+                        <button id="generarReporteCuentasBtn" class="btn btn-primary">Generar Reporte</button>
+                        <button id="descargarPDFCuentas" class="btn btn-primary">Descargar PDF</button>
+                    </div>
                 </div>
             </div>
 
@@ -83,14 +85,14 @@
             <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center;">
                 <h3 class="titulo-form">Reporte de Ingresos y Egresos</h3>
                 <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-                    <label for="fechaInicio">Fecha inicio:</label>
-                    <input type="date" id="fechaInicio" class="form-control" style="width:160px;">
+                    <label for="fechaInicio" class="title-select">Fecha inicio:</label>
+                    <input type="date" id="fechaInicio" class="selector-reporte">
 
-                    <label for="fechaFin">Fecha fin:</label>
-                    <input type="date" id="fechaFin" class="form-control" style="width:160px;">
+                    <label for="fechaFin" class="title-select">Fecha fin:</label>
+                    <input type="date" id="fechaFin" class="selector-reporte">
 
-                    <label for="tipoGrafica">Tipo de gráfica:</label>
-                    <select id="tipoGrafica" class="form-select" style="width:200px;">
+                    <label for="tipoGrafica" class="title-select">Tipo de gráfica:</label>
+                    <select id="tipoGrafica" class="selector-reporte">
                         <option value="bar">Barras</option>
                         <option value="line">Líneas</option>
                         <option value="pie">Pastel</option>
@@ -98,14 +100,16 @@
                         <option value="polarArea">Área Polar</option>
                     </select>
 
-                    <label for="tipoConsulta">Tipo de consulta:</label>
-                    <select id="tipoConsulta" class="form-select" style="width:180px;">
+                    <label for="tipoConsulta" class="title-select">Tipo de consulta:</label>
+                    <select id="tipoConsulta" class="selector-reporte">
                         <option value="ambos">Ingresos y Egresos</option>
                         <option value="ingresos">Solo Ingresos</option>
                         <option value="egresos">Solo Egresos</option>
                     </select>
-                    <button id="generarReporteFinanzasBtn" class="btn btn-primary">Generar</button>
-                    <button id="descargarPDFFinanzas" class="btn btn-success">Descargar PDF</button>
+                    <div>
+                        <button id="generarReporteFinanzasBtn" class="btn btn-primary">Generar Reporte</button>
+                        <button id="descargarPDFFinanzas" class="btn btn-primary">Descargar PDF</button>
+                    </div>
                 </div>
             </div>
 

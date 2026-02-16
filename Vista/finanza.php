@@ -19,29 +19,33 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
     <div class="reporte-parametros" style="margin-bottom: 30px; text-align:center;">
         <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
-            <label for="fechaInicio">Fecha inicio:</label>
-            <input type="date" id="fechaInicio" class="form-control" style="width:160px;">
+            <div>
+                <label for="fechaInicio" class="title-select">Fecha inicio:</label>
+                <input type="date" id="fechaInicio" class="selector-reporte" style="width:160px;">
 
-            <label for="fechaFin">Fecha fin:</label>
-            <input type="date" id="fechaFin" class="form-control" style="width:160px;">
+                <label for="fechaFin" class="title-select">Fecha fin:</label>
+                <input type="date" id="fechaFin" class="selector-reporte" style="width:160px;">
 
-            <label for="tipoGrafica">Tipo de gráfica:</label>
-            <select id="tipoGrafica" class="form-select" style="width:200px;">
-                <option value="bar">Barras</option>
-                <option value="line">Líneas</option>
-                <option value="pie">Pastel</option>
-                <option value="doughnut">Donas</option>
-                <option value="polarArea">Área Polar</option>
-            </select>
+                <label for="tipoGrafica" class="title-select">Tipo de gráfica:</label>
+                <select id="tipoGrafica" class="selector-reporte" style="width:200px;">
+                    <option value="bar">Barras</option>
+                    <option value="line">Líneas</option>
+                    <option value="pie">Pastel</option>
+                    <option value="doughnut">Donas</option>
+                    <option value="polarArea">Área Polar</option>
+                </select>
 
-            <label for="tipoConsulta">Tipo de consulta:</label>
-            <select id="tipoConsulta" class="form-select" style="width:180px;">
-                <option value="ambos">Ingresos y Egresos</option>
-                <option value="ingresos">Solo Ingresos</option>
-                <option value="egresos">Solo Egresos</option>
-            </select>
-            <button id="generarReporteBtn" class="btn btn-primary">Generar</button>
-            <button id="descargarPDF" class="btn btn-success">Descargar PDF</button>
+                <label for="tipoConsulta" class="title-select">Tipo de consulta:</label>
+                <select id="tipoConsulta" class="selector-reporte" style="width:180px;">
+                    <option value="ambos">Ingresos y Egresos</option>
+                    <option value="ingresos">Solo Ingresos</option>
+                    <option value="egresos">Solo Egresos</option>
+                </select>
+            </div>
+            <div>
+                <button id="generarReporteBtn" class="btn btn-primary">Generar Reporte</button>
+                <button id="descargarPDF" class="btn btn-primary">Descargar PDF</button>
+            </div>
         </div>
     </div>
     <div class="reporte-container" style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
