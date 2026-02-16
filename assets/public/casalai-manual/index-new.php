@@ -3201,6 +3201,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Combo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('combos', 'crear-combo.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+ Nuevo Combo"</strong> (color azul) para nuevo combo.</li>
@@ -3237,6 +3243,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Combo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('combos', 'modificar-combo.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice el combo en la tabla.</li>
@@ -3298,6 +3310,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Cambio de Estatus</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('combos', 'estatus-combo.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del combo.</li>
@@ -4957,7 +4975,7 @@ $modulos = [
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
                         <h2 class="section-title"><i class="bi bi-person-circle me-2"></i>Iniciar Sesión</h2>
-                        <p>Ventana princpal del inicio de sesión donde podrá loguear su usuario, recuperar la contraseña o registrarse en el caso de no tener una cuenta de usuario</p>
+                        <p>Ventana principal del inicio de sesión donde podrá loguear su usuario, recuperar la contraseña o registrarse en el caso de no tener una cuenta de usuario</p>
 
                         <div class="card mt-3">
                             <div class="card-header bg-success text-white">
