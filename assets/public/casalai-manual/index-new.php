@@ -4614,20 +4614,12 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Rol</h6>
                                         <?= renderImagen('rol', 'vista.png') ?>
                                     </div>
                                 </div>
-                                                                <div class="row">
-                                    <div>
-                                        <h6 class="text-success">Vista de Permisos</h6>
-                                        <?= renderImagen('permiso', 'vista.png') ?>
-                                    </div>
-                                </div>
-                                
-                                
 
                                 <!-- Pasos detallados para registrar rol -->
                                 <?php if ($puedeAccion('Roles', 'incluir')): ?>
@@ -4637,6 +4629,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Rol</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("rol", "incluir-modal.png") ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nuevo rol.</li>
@@ -4650,11 +4648,6 @@ $modulos = [
                                                     <strong>Nueva Marca:</strong><br> Botón "+" verde
                                                 </div>
                                             </div>
-                                                 <div>
-                                                <h6 class="text-success">Formulario de Registro</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("rol", "incluir-modal.png") ?>
-                                                </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6">
@@ -4682,6 +4675,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Rol</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("rol", "modificar-modal.png") ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice el rol en la tabla.</li>
@@ -4700,13 +4699,6 @@ $modulos = [
                                                     <strong>Tip:</strong> Los cambios se reflejan inmediatamente
                                                 </div>
                                             </div>
-
-                                                                                        <div>
-                                                <h6 class="text-success">Formulario de Modificacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("rol", "modificar-modal.png") ?>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4720,6 +4712,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Gestion de Permisos</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen("permiso", "modificar.png") ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>Gestionar Permisos</strong> (color verde) del rol a configurar.</li>
@@ -4733,11 +4731,6 @@ $modulos = [
                                                     <strong>Gestionar Permisos:</strong><br> Botón "Gestionar Permisos" verde
                                                 </div>
                                             </div>
-                                                <div>
-                                                <h6 class="text-success">Gestion de Permisos</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("permiso", "modificar.png") ?>
-                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4766,12 +4759,6 @@ $modulos = [
                                                 <div class="alert alert-danger border mt-2">
                                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-success">Confirmacion de Eliminacion</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("rol", "eliminar-modal.png") ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -4803,7 +4790,7 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Bitacora</h6>
                                         <?= renderImagen('bitacora', 'vista.png') ?>
