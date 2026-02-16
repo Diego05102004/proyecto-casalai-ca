@@ -4972,7 +4972,7 @@ $modulos = [
                                             <?= renderImagen("login", "iniciar-sesion.png") ?>
                                         </div>
                                     </div>
-                                    <div class="col-md-7">
+                                    <div class="col-md-12">
                                         <ol>
                                             <li class="mb-2"><strong>Paso 1:</strong> Ingrese su nombre de usuario y contraseña en los campos correspondientes.</li>
                                             <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"no soy un robot"</strong> para cumplir con la verificación de CAPTCHA.</li>
