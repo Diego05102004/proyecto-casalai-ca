@@ -1892,7 +1892,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de reporte: (Todos los Reportes, Recepciones por Proveedor, Productos mas Vendidos, Recepciones Mensuales).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -2485,7 +2485,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Top Productos Más Vendidos, Stock Alto vs Bajo, Rotación de Productos).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 5:</strong> Elije el top de productos.</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -2932,7 +2932,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de reporte: (Todos los Reportes, Suministro, Rancking, Comparación Mensual o Dependencia).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -3924,7 +3924,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: (Todos los reportes, Por Estatus, Mensuales, Por Cliente o Por Tipo de Compra).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4226,7 +4226,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
                                                     <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4299,7 +4299,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 1:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Ingresos y Egresos, Solo Ingresos o Solo Egresos).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4578,7 +4578,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de reporte: Usuarios por (Rol, Estatus, Dominio de Correo, Inicial de Nombre, Inicial de Apellido o Prefijo Telefónico).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elige el rol de los usuarios.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
