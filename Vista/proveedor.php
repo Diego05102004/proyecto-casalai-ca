@@ -1264,8 +1264,7 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
     </button>
     <button 
         class="btn-ayuda"
-        title="Visualizar Ayuda"
-        onclick="window.location.href='?pagina=ayuda'">
+        title="Visualizar Ayuda">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
 
