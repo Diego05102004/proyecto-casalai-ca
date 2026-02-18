@@ -756,11 +756,10 @@ $(document).ready(function() {
         // Cargar HTML del modal
         $.get('assets/public/ayuda/recepcion.php')
             .done(function(html) {
-                // Eliminar modal existente si hay uno
-                $('#modalAyuda').remove();
-                
-                // Agregar nuevo modal al body
-                $('body').append(html);
+                // Solo agregar modal si no existe
+                if (!$('#modalAyuda').length) {
+                    $('body').append(html);
+                }
                 
                 // Cargar JS del modal si no está cargado
                 if (!$('script[src*="ayuda/js/modal.js"]').length) {
@@ -790,21 +789,16 @@ $(document).ready(function() {
                             console.error('Error al cargar el JavaScript del modal de ayuda');
                         });
                 } else {
-                    // Si el JS ya está cargado, solo inicializar
+                    // Si el JS ya está cargado, solo abrir el modal existente
                     if (typeof inicializarModalAyudaProveedor === 'function') {
                         modalAyudaInstance = inicializarModalAyudaProveedor();
                         
                         // Abrir modal con contexto si se proporciona
                         if (contexto) {
                             setTimeout(() => {
-                                if (contexto === 'registrar') {
-                                    modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
-                                } else if (contexto === 'detallar') {
-                                    modalAyudaInstance.goToSlide(2); // Ir a "Detallar"
-                                } else if (contexto === 'anular') {
-                                    modalAyudaInstance.goToSlide(3); // Ir a "Anular"
-                                } else if (contexto === 'reporte') {
-                                    modalAyudaInstance.goToSlide(4); // Ir a "Generar Reporte"
+                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                                if (slideIndex !== undefined) {
+                                    modalAyudaInstance.goToSlide(slideIndex);
                                 }
                             }, 300);
                         }

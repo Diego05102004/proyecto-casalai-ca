@@ -74,7 +74,7 @@ class ModalAyudaProveedor {
         this.tarjetasOriginales = [...this.tarjetas];
         
         // Calcular totalSlides basado en los dots del HTML
-        this.navDots = document.querySelectorAll('.nav-dot');
+        this.navDots = document.querySelectorAll('.nav-indicators .nav-dot');
         this.totalSlides = this.navDots.length;
         
         // Depuración
