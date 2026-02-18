@@ -298,76 +298,76 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="comboModalLabel">Nuevo Combo</h5>
+                        <h5 class="titulo-form" id="comboModalLabel">Crear Nuevo Combo</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form id="comboForm">
                             <input type="hidden" id="id_combo" name="id_combo" value="">
-                            <div class="mb-3">
-                                <label for="nombre_combo" class="form-label">Nombre del Combo</label>
-                                <input type="text" class="form-control" id="nombre_combo" name="nombre_combo" required>
+                            <div class="envolver-form">
+                                <label for="nombre_combo" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Nombre del Combo</label>
+                                <input type="text" class="control-form" id="nombre_combo" name="nombre_combo" required>
                             </div>
-                            <div class="mb-3">
-                                <label for="descripcion" class="form-label">Descripción</label>
+                            <div class="envolver-form">
+                                <label for="descripcion" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Descripción</label>
                                 <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
                             </div>
                             
                             <div class="card mb-3">
                                 <div class="card-header">
-                                    <h6>Productos del Combo</h6>
+                                    <h6 class="titulo-form">Productos del Combo</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row mb-3">
                                         <div class="col-md-8">
-    <select class="form-select" id="producto_combo">
-        <option value="">Seleccionar producto</option>
-        <?php foreach ($productos as $producto): 
-            $precioBs = isset($data['monitors']['bcv']['price']) ? 
-                       $producto['precio'] * $data['monitors']['bcv']['price'] : 0;
-        ?>
-            <option value="<?= $producto['id_producto'] ?>" 
-                    data-stock="<?= $producto['stock'] ?? 0 ?>"
-                    data-precio="<?= $precioBs ?>">
-                <?= htmlspecialchars($producto['nombre_producto']) ?> 
-                (Stock: <?= $producto['stock'] ?? 0 ?>) - 
-                <?= number_format($precioBs, 2) ?> BS
-            </option>
-        <?php endforeach; ?>
-    </select>
-</div>
+                                            <select class="form-select" id="producto_combo">
+                                                <option value="">Seleccionar producto</option>
+                                                <?php foreach ($productos as $producto): 
+                                                    $precioBs = isset($data['monitors']['bcv']['price']) ? 
+                                                               $producto['precio'] * $data['monitors']['bcv']['price'] : 0;
+                                                ?>
+                                                    <option value="<?= $producto['id_producto'] ?>" 
+                                                            data-stock="<?= $producto['stock'] ?? 0 ?>"
+                                                            data-precio="<?= $precioBs ?>">
+                                                        <?= htmlspecialchars($producto['nombre_producto']) ?> 
+                                                        (Stock: <?= $producto['stock'] ?? 0 ?>) - 
+                                                        <?= number_format($precioBs, 2) ?> BS
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
                                         <div class="col-md-2">
                                             <input type="number" class="form-control" id="cantidad_producto" min="1" value="1">
                                         </div>
                                         <div class="col-md-2">
-                                            <button type="button" class="btn btn-primary w-100" id="agregar_producto">
-                                                <i class="bi bi-plus-circle"></i> Agregar
+                                            <button type="button" class="btn btn-primary" style="width: 200px;" id="agregar_producto">
+                                                <i class="bi bi-plus-circle"></i> Agregar Producto
                                             </button>
                                         </div>
                                     </div>
                                     
                                     <div class="table-responsive">
-    <table id="productos_combo_table" class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Total</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Los productos se insertarán aquí dinámicamente -->
-        </tbody>
-    </table>
-</div>
+                                        <table id="productos_combo_table" class="table table-striped table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Producto</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Total</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Los productos se insertarán aquí dinámicamente -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="guardar_combo">
+                        <button type="button" class="boton-reset btn-primary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="boton-form btn-primary" style="width: 160px;" id="guardar_combo">
                             <i class="bi bi-save"></i> Guardar Combo
                         </button>
                     </div>
@@ -380,7 +380,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Cambiar Estado del Combo</h5>
+                        <h5 class="titulo-form">Cambiar Estatus del Combo</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -389,7 +389,7 @@
                         <input type="hidden" id="nuevo_estado" value="1">
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-primary" id="confirmarCambioEstado">Confirmar</button>
                     </div>
                 </div>

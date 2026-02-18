@@ -1892,7 +1892,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de reporte: (Todos los Reportes, Recepciones por Proveedor, Productos mas Vendidos, Recepciones Mensuales).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -2485,7 +2485,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Top Productos Más Vendidos, Stock Alto vs Bajo, Rotación de Productos).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 5:</strong> Elije el top de productos.</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -2932,7 +2932,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de reporte: (Todos los Reportes, Suministro, Rancking, Comparación Mensual o Dependencia).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -3192,7 +3192,6 @@ $modulos = [
                                         </div>
                                     </div>
                                 </div>
-                                
 
                                 <!-- Pasos detallados para registrar combo -->
                                 <?php if($puedeAccion('Catalogo', 'incluir')):  ?>
@@ -3202,9 +3201,15 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario de Nuevo Combo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('combos', 'crear-combo.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
-                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) para nueva categoría.</li>
+                                                    <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"+ Nuevo Combo"</strong> (color azul) para nuevo combo.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>nombre</strong>.</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese una <strong>descripción</strong> breve.</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Agregue los <strong>productos</strong> y la <strong>cantidad</strong> de cada uno.</li>
@@ -3214,7 +3219,7 @@ $modulos = [
                                             <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-person-plus text-success me-2"></i>
-                                                    <strong>Nuevo Combo:</strong><br> Botón "+" verde
+                                                    <strong>Nuevo Combo:</strong><br> Botón "+ Nuevo Combo" azul
                                                 </div>
                                                 <div class="alert alert-info border mt-2">
                                                     <i class="bi bi-person me-2"></i>
@@ -3238,6 +3243,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Formulario para Modificar Combo</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('combos', 'modificar-combo.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Localice el combo en la tabla.</li>
@@ -3299,6 +3310,12 @@ $modulos = [
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
+                                            <div>
+                                                <h6 class="text-success">Cambio de Estatus</h6>
+                                                <div class="text-center">
+                                                    <?= renderImagen('combos', 'estatus-combo.png') ?>
+                                                </div>
+                                            </div>
                                             <div class="col-md-7">
                                                 <ol>
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el estatus (habilitado/inhabilitado) del combo.</li>
@@ -3907,7 +3924,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 2:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: (Todos los reportes, Por Estatus, Mensuales, Por Cliente o Por Tipo de Compra).</li>
-                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4209,7 +4226,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 3:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 4:</strong> Elije el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus).</li>
                                                     <li class="mb-2"><strong>Paso 5:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
-                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4282,7 +4299,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 1:</strong> Ingrese las fechas: (Inicio y Fin).</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elije el tipo de reporte: (Ingresos y Egresos, Solo Ingresos o Solo Egresos).</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4561,7 +4578,7 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón de la <strong>gráfica</strong> (color azul) en la esquina superior derecha.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Elije el tipo de reporte: Usuarios por (Rol, Estatus, Dominio de Correo, Inicial de Nombre, Inicial de Apellido o Prefijo Telefónico).</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Elige el rol de los usuarios.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar"</strong> para visualizar.</li>
+                                                    <li class="mb-2"><strong>Paso 4:</strong> Haga clic en <strong>"Generar Reporte"</strong> para visualizar.</li>
                                                 </ol>
                                             </div>
                                             <div class="col-md-5">
@@ -4796,7 +4813,6 @@ $modulos = [
                                         <?= renderImagen('bitacora', 'vista.png') ?>
                                     </div>
                                 </div>
-                                
                             </div>
                         </div>
                         <?php endif; ?>
@@ -4830,13 +4846,12 @@ $modulos = [
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Respaldo</h6>
                                         <?= renderImagen('respaldo', 'vista.png') ?>
                                     </div>
                                 </div>
-                                
                                 
                                 <!-- Pasos detallados para generar respaldo -->
                                 <?php if($esAdministrador == 'SuperUsuario' || $puedeAccion('Respaldo', 'incluir')): ?>
@@ -4858,12 +4873,6 @@ $modulos = [
                                                     <strong>Nueva Marca:</strong><br> Botón "Generar Backup" (Principal/Seguridad)
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Generar Respaldo</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("respaldo", "generar-respaldo.png") ?>
-                                                    <?= renderImagen("respaldo", "confirmacion.png") ?>
-                                             </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4890,13 +4899,6 @@ $modulos = [
                                                     <strong>Restaurar:</strong><br> Botón "Restaurar" amarillo
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h6 class="text-success">Restaurar Respaldo</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("respaldo", "restaurar-respaldo.png") ?>
-                                                    <?= renderImagen("respaldo", "confirmacion-restaurar.png") ?>
-                                             </div>
-                                        </div>
                                         </div>
                                         <div class="note col-md-11 mx-auto">
                                             <i class="bi bi-info-circle-fill me-2"></i>
@@ -4959,12 +4961,6 @@ $modulos = [
                                                     <strong>¡Cuidado!</strong><br> Esta acción no se puede deshacer
                                                 </div>
                                             </div>
-                                             <div>
-                                                <h6 class="text-success">Eliminar Respaldo</h6>
-                                                <div class="text-center">
-                                                    <?= renderImagen("respaldo", "eliminar-respaldo.png") ?>
-                                             </div>
-                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4979,32 +4975,29 @@ $modulos = [
                     <!-- Sección de Inicio de Sesión -->
                     <section id="iniciar-sesion" class="section-card">
                         <h2 class="section-title"><i class="bi bi-person-circle me-2"></i>Iniciar Sesión</h2>
-                        <p>Para acceder al sistema, siga estos pasos:</p>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Paso 1: Ingrese sus credenciales</h5>
-                                        <p class="card-text">Ingrese su nombre de usuario y contraseña en los campos correspondientes.</p>
-                                        <?= renderImagen("login", "login.png") ?>
+                        <p>Ventana principal del inicio de sesión donde podrá loguear su usuario, recuperar la contraseña o registrarse en el caso de no tener una cuenta de usuario</p>
+
+                        <div class="card mt-3">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">Pasos para Iniciar Sesión</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div>
+                                        <h6 class="text-success">Vista de Inicio de Sesión</h6>
+                                        <div class="text-center">
+                                            <?= renderImagen("login", "iniciar-sesion.png") ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <ol>
+                                            <li class="mb-2"><strong>Paso 1:</strong> Ingrese su nombre de usuario y contraseña en los campos correspondientes.</li>
+                                            <li class="mb-2"><strong>Paso 2:</strong> Haga clic en <strong>"no soy un robot"</strong> para cumplir con la verificación de CAPTCHA.</li>
+                                            <li class="mb-2"><strong>Paso 3:</strong> Haga clic en el botón <strong>"Iniciar Sesión"</strong> para acceder a su cuenta de usuario.</li>
+                                        </ol>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Paso 2: Acceda al sistema</h5>
-                                        <p class="card-text">Haga clic en el botón "Iniciar Sesión" para acceder a su cuenta.</p>
-                                        <?= renderImagen("login", "dashboard.png") ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="note mt-4">
-                            <i class="bi bi-question-circle-fill me-2"></i>
-                            <strong>¿Problemas para iniciar sesión?</strong> Contacte al administrador del sistema para restablecer su contraseña.
                         </div>
                     </section>
                 <?php /* endif; */ ?>

@@ -1228,3 +1228,102 @@ $(window).on('click', function(e){
         modal.classList.remove('mostrar');
     }
 });
+
+(function() {
+    // Esperar a que jQuery esté disponible
+    function initModalAyuda() {
+        if (typeof $ === 'undefined') {
+            setTimeout(initModalAyuda, 100);
+            return;
+        }
+        
+        console.log('Inicializando modal de ayuda...');
+        
+        // Cargar CSS del modal de ayuda
+        $('<link>')
+            .appendTo('head')
+            .attr({
+                type: 'text/css',
+                rel: 'stylesheet',
+                href: 'assets/public/ayuda/css/modal.css'
+            });
+        
+        // Variable global para el modal
+        let modalAyudaInstance = null;
+        
+        // Función para cargar y mostrar el modal de ayuda
+        function cargarYMostrarModalAyuda() {
+            console.log('Cargando modal de ayuda...');
+            
+            if (modalAyudaInstance) {
+                console.log('Modal ya existe, abriendo...');
+                modalAyudaInstance.openModal();
+                return;
+            }
+            
+            // Cargar el contenido del modal
+            $.get('assets/public/ayuda/proveedor.php', function(html) {
+                console.log('HTML del modal cargado');
+                
+                // Agregar el modal al body
+                $('body').append(html);
+                
+                // Cargar JavaScript del modal y luego inicializar
+                $.getScript('assets/public/ayuda/js/modal.js', function() {
+                    console.log('JavaScript del modal cargado');
+                    
+                    // Inicializar el modal
+                    if (typeof inicializarModalAyudaProveedor === 'function') {
+                        modalAyudaInstance = inicializarModalAyudaProveedor();
+                        
+                        // Mostrar el modal
+                        modalAyudaInstance.openModal();
+                        console.log('Modal abierto correctamente');
+                    } else {
+                        console.error('La función inicializarModalAyudaProveedor no está disponible');
+                    }
+                });
+            }).fail(function() {
+                console.error('Error al cargar el HTML del modal');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el contenido de ayuda'
+                });
+            });
+        }
+        
+        // Modificar el botón de ayuda existente
+        $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
+            e.preventDefault();
+            console.log('Clic en botón de ayuda detectado');
+            cargarYMostrarModalAyuda();
+        });
+        
+        // También agregar soporte para botones con clase similar
+        $(document).on('click.ayuda', '.btn-ayuda-proveedor, [data-ayuda="proveedor"]', function(e) {
+            e.preventDefault();
+            cargarYMostrarModalAyuda();
+        });
+        
+        // Event listeners para debugging
+        $(document).on('modal:opened', function(e) {
+            console.log('Modal de ayuda abierto', e.detail);
+        });
+        
+        $(document).on('modal:closed', function(e) {
+            console.log('Modal de ayuda cerrado', e.detail);
+        });
+        
+        $(document).on('slide:changed', function(e) {
+            console.log('Slide cambiado a:', e.detail.slide);
+        });
+    }
+    
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initModalAyuda);
+    } else {
+        initModalAyuda();
+    }
+})();
