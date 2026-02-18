@@ -572,11 +572,19 @@ class Usuarios extends BD {
         try {
             $queryusuarios = "SELECT usuarios.*, rol.nombre_rol 
                               FROM tbl_usuarios AS usuarios
-                              INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
-                              WHERE usuarios.estatus = :estatus
-                              ORDER BY usuarios.id_usuario DESC";
+                              INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol";
+            
+            if ($estatus !== 'todos') {
+                $queryusuarios .= " WHERE usuarios.estatus = :estatus";
+            }
+            
+            $queryusuarios .= " ORDER BY usuarios.id_usuario DESC";
             $stmtusuarios = $pdo->prepare($queryusuarios);
-            $stmtusuarios->bindParam(':estatus', $estatus);
+            
+            if ($estatus !== 'todos') {
+                $stmtusuarios->bindParam(':estatus', $estatus);
+            }
+            
             $stmtusuarios->execute();
             return $stmtusuarios->fetchAll(PDO::FETCH_ASSOC);
         } finally {

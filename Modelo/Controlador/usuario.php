@@ -295,7 +295,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 function getusuarios() {
     $usuario = new Usuarios();
-    return $usuario->getusuarios();
+    return $usuario->getusuarios('todos');
 }
 
 $usuarioModel = new Usuarios();
@@ -305,7 +305,7 @@ $selecionarRol = $rolModel->consultarRoles();
 
 // --- Datos para reportes (igual que en reporteUsuario.php) ---
 $usuariosHabilitados = $usuarioModel->getusuarios('habilitado');
-$usuariosDeshabilitados = $usuarioModel->getusuarios('deshabilitado');
+$usuariosDeshabilitados = $usuarioModel->getusuarios('inhabilitado');
 $usuariosTodos = array_merge($usuariosHabilitados ?? [], $usuariosDeshabilitados ?? []);
 
 $totalRoles = array_sum(array_column($reporteRoles, 'cantidad'));

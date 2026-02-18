@@ -23,9 +23,19 @@ $rolModel = new Rol();
 $reporteRoles = $usuarioModel->obtenerReporteRoles();
 $selecionarRol = $rolModel->consultarRoles();
 // Nuevos datasets crudos para agregación en el cliente (sin AJAX)
+$usuariosTodos = $usuarioModel->getusuarios('todos');
 $usuariosHabilitados = $usuarioModel->getusuarios('habilitado');
-$usuariosDeshabilitados = $usuarioModel->getusuarios('deshabilitado');
-$usuariosTodos = array_merge($usuariosHabilitados ?? [], $usuariosDeshabilitados ?? []);
+$usuariosDeshabilitados = $usuarioModel->getusuarios('inhabilitado');
+
+// Debug: verificar datos
+error_log("DEBUG: Total usuarios: " . count($usuariosTodos));
+error_log("DEBUG: Usuarios habilitados: " . count($usuariosHabilitados));
+error_log("DEBUG: Usuarios deshabilitados: " . count($usuariosDeshabilitados));
+if (!empty($usuariosTodos)) {
+    foreach ($usuariosTodos as $usuario) {
+        error_log("DEBUG: Usuario ID: {$usuario['id_usuario']}, Estatus: '{$usuario['estatus']}'");
+    }
+}
 
 $totalRoles = array_sum(array_column($reporteRoles, 'cantidad'));
 foreach ($reporteRoles as &$rol) {

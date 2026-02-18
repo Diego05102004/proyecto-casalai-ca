@@ -162,8 +162,12 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
             renderUsuarios(rows, 'Usuarios por Rol');
         } else if (tipo==='estatus'){
             let base = usuariosTodos || [];
+            console.log('DEBUG: usuariosTodos:', usuariosTodos);
+            console.log('DEBUG: base.length:', base.length);
             if (p.estatus){ base = base.filter(u=>String(u.estatus||'').toLowerCase()===p.estatus); }
-            renderUsuarios(agrupar(base,'estatus'), 'Usuarios por Estatus');
+            const agrupados = agrupar(base,'estatus');
+            console.log('DEBUG: agrupados por estatus:', agrupados);
+            renderUsuarios(agrupados, 'Usuarios por Estatus');
         } else if (tipo==='dominio'){
             let base = (usuariosTodos||[]).map(u=>({ dominio: dominioCorreo(u.correo) }));
             let rows = agrupar(base.map(x=>({dominio:x.dominio})), 'dominio');
