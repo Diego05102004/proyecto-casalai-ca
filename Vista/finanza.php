@@ -339,14 +339,14 @@ document.getElementById('descargarPDF').addEventListener('click', function () {
 // Generar reporte inicial
 document.addEventListener('DOMContentLoaded', generarReporte);
 </script>
-       <button 
+    <button 
         class="btn-grafica"
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteFinanzas'">
         <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    
     </button>
-        <button 
+
+    <button 
         class="btn-ayuda"
         title="Visualizar Ayuda"
         onclick="window.location.href='?pagina=ayuda'">

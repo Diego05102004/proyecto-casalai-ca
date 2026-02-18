@@ -86,6 +86,5 @@ $data = json_encode(array_column($datos, "stock"));
     });  
     </script>
 
-
 </body>
 </html>

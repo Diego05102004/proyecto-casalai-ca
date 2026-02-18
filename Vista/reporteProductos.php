@@ -400,6 +400,13 @@ if (carac.tipo === 'int' || carac.tipo === 'float') {
 });
 
     </script>
+
+    <button 
+        class="btn-ayuda"
+        title="Visualizar Ayuda"
+        onclick="window.location.href='?pagina=ayuda'">
+        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+    </button>
   </body>
 
   </html>

@@ -861,8 +861,8 @@ if (carac.tipo === 'int' || carac.tipo === 'float') {
         title="Visualizar Reportes"
         onclick="window.location.href='?pagina=reporteProductos'">
         <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    
     </button>
+    
     <button 
         class="btn-ayuda"
         title="Visualizar Ayuda"
