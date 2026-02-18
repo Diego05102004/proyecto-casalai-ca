@@ -1,7 +1,7 @@
 .modal-detalles {
     display: none;
     position: fixed;
-    z-index: 9999;
+    z-index: 990;
     left: 0;
     top: 0;
     width: 100%;
@@ -63,7 +63,7 @@
     background: none;
     border: none;
     transition: color 0.2s;
-    z-index: 2;
+    z-index: 991;
 }
 
 .modal-detalles .close:hover {

@@ -29,7 +29,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 900;
     height: 70px;
 }
 
@@ -177,7 +177,7 @@ body {
     background-color: white;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     transition: left 0.3s ease;
-    z-index: 1001;
+    z-index: 1011;
     overflow-y: auto;
 }
 
@@ -265,7 +265,7 @@ body {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
-    z-index: 1000;
+    z-index: 1010;
 }
 
 .overlay.active {
@@ -284,7 +284,7 @@ body {
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
+    z-index: 1010;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -398,7 +398,7 @@ body {
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
+    z-index: 1010;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -658,7 +658,7 @@ body {
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
+    z-index: 1010;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);

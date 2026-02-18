@@ -38,6 +38,7 @@ input, select, button{
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 990;
 }
 
 .modal-registrar label {
