@@ -8,6 +8,7 @@ class ModalAyudaProveedor {
         this.ayudaPrincipal = null;
         this.ayudaTarjetas = null;
         this.tarjetas = [];
+        this.tarjetasOriginales = [];
         this.btnPrev = null;
         this.btnNext = null;
         this.navDots = [];
@@ -41,30 +42,70 @@ class ModalAyudaProveedor {
         this.btnNext = document.getElementById('btnNavNext');
         this.btnClose = document.getElementById('cerrarModalAyuda');
         
-        // Obtener todas las tarjetas de forma dinámica
-        this.tarjetas = [
-            null, // Slide 0 es la sección principal
-            document.querySelector('[data-tarjeta="registrar"]'),
-            document.querySelector('[data-tarjeta="detallar"]'),
-            document.querySelector('[data-tarjeta="modificar"]'),
-            document.querySelector('[data-tarjeta="eliminar"]'),
-            document.querySelector('[data-tarjeta="estatus"]'),
-            document.querySelector('[data-tarjeta="anular"]'),
-            document.querySelector('[data-tarjeta="reporte"]')
-        ];
+        // Detectar qué tarjetas existen realmente en el DOM
+        const tarjetasExistentes = [];
+        const mapeoIndices = {};
         
-        // Filtrar tarjetas nulas y calcular totalSlides dinámicamente
-        this.tarjetas = this.tarjetas.filter(tarjeta => tarjeta !== null);
-        this.totalSlides = this.tarjetas.length + 1; // +1 por la sección principal
+        // Buscar todas las tarjetas con data-tarjeta
+        document.querySelectorAll('[data-tarjeta]').forEach(tarjeta => {
+            const nombre = tarjeta.dataset.tarjeta;
+            if (!tarjetasExistentes.includes(nombre)) {
+                tarjetasExistentes.push(nombre);
+            }
+        });
         
-        // Obtener indicadores de navegación
+        console.log('🔍 Tarjetas encontradas en el DOM:', tarjetasExistentes);
+        
+        // Crear array de tarjetas basado en las que realmente existen
+        this.tarjetas = [null]; // Slide 0 es la sección principal
+        
+        // Orden específico para mantener consistencia
+        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'eliminar', 'estatus', 'anular', 'reporte'];
+        
+        ordenTarjetas.forEach(nombre => {
+            if (tarjetasExistentes.includes(nombre)) {
+                const tarjeta = document.querySelector(`[data-tarjeta="${nombre}"]`);
+                this.tarjetas.push(tarjeta);
+                mapeoIndices[nombre] = this.tarjetas.length - 1;
+            }
+        });
+        
+        // Guardar referencia original
+        this.tarjetasOriginales = [...this.tarjetas];
+        
+        // Calcular totalSlides basado en los dots del HTML
         this.navDots = document.querySelectorAll('.nav-dot');
+        this.totalSlides = this.navDots.length;
+        
+        // Depuración
+        console.log('🔍 Depuración Modal:');
+        console.log('- Total dots encontrados:', this.navDots.length);
+        console.log('- TotalSlides:', this.totalSlides);
+        console.log('- Tarjetas encontradas:', this.tarjetasOriginales.map((t, i) => t ? `Slide ${i}: ${t.dataset.tarjeta}` : `Slide ${i}: null`));
+        
+        // Mapeo de índices para navegación contextual
+        this.mapeoContextos = {};
+        Object.keys(mapeoIndices).forEach(contexto => {
+            this.mapeoContextos[contexto] = mapeoIndices[contexto];
+        });
+        
+        console.log('- Mapeo de contextos:', this.mapeoContextos);
         
         // Configurar event listeners
         this.setupEventListeners();
         
         // Inicializar estado
         this.updateSlide();
+    }
+    
+    // Método para obtener el índice correcto del slide basado en el contexto
+    getSlideIndex(contexto) {
+        const contextoTarjeta = document.querySelector(`[data-tarjeta="${contexto}"]`);
+        if (!contextoTarjeta) return 0; // Si no existe, ir al principal
+        
+        // Buscar en el array original (con nulls) el índice
+        const index = this.tarjetasOriginales.indexOf(contextoTarjeta);
+        return index >= 0 ? index : 0;
     }
     
     setupEventListeners() {
@@ -205,8 +246,11 @@ class ModalAyudaProveedor {
     }
     
     updateSlide() {
+        console.log(`updateSlide: currentSlide=${this.currentSlide}, totalSlides=${this.totalSlides}`);
+        
         // Actualizar visibilidad del contenido
         if (this.currentSlide === 0) {
+            console.log('Mostrando sección principal');
             // Mostrar sección principal
             if (this.ayudaPrincipal) {
                 this.ayudaPrincipal.style.display = 'block';
@@ -218,6 +262,7 @@ class ModalAyudaProveedor {
                 this.ayudaTarjetas.style.display = 'none';
             }
         } else {
+            console.log('Mostrando tarjetas');
             // Mostrar tarjetas
             if (this.ayudaPrincipal) {
                 this.ayudaPrincipal.style.display = 'none';
@@ -227,10 +272,10 @@ class ModalAyudaProveedor {
             }
             
             // Ocultar todas las tarjetas
-            this.tarjetas.forEach((tarjeta, index) => {
+            this.tarjetasOriginales.forEach((tarjeta, index) => {
                 if (tarjeta) {
-                    const slideIndex = index + 1; // +1 porque el array empieza con null
-                    if (slideIndex === this.currentSlide) {
+                    if (index === this.currentSlide) {
+                        console.log(`Mostrando tarjeta en slide ${index}: ${tarjeta.dataset.tarjeta}`);
                         tarjeta.style.display = 'block';
                         tarjeta.classList.remove('slide-in-left', 'slide-in-right');
                         void tarjeta.offsetWidth; // Forzar reflow
