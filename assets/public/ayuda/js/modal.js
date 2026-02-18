@@ -2,7 +2,7 @@
 class ModalAyudaProveedor {
     constructor() {
         this.currentSlide = 0;
-        this.totalSlides = 7; // 0: principal, 1-6: tarjetas
+        this.totalSlides = 7; // Máximo de slides, se ajustará dinámicamente
         this.modal = null;
         this.overlay = null;
         this.ayudaPrincipal = null;
@@ -28,7 +28,7 @@ class ModalAyudaProveedor {
     
     setupModal() {
         // Obtener elementos del DOM
-        this.modal = document.getElementById('modalAyudaProveedor');
+        this.modal = document.getElementById('modalAyuda');
         if (!this.modal) {
             console.error('No se encontró el modal de ayuda');
             return;
@@ -41,7 +41,7 @@ class ModalAyudaProveedor {
         this.btnNext = document.getElementById('btnNavNext');
         this.btnClose = document.getElementById('cerrarModalAyuda');
         
-        // Obtener todas las tarjetas
+        // Obtener todas las tarjetas de forma dinámica
         this.tarjetas = [
             null, // Slide 0 es la sección principal
             document.querySelector('[data-tarjeta="registrar"]'),
@@ -49,8 +49,13 @@ class ModalAyudaProveedor {
             document.querySelector('[data-tarjeta="modificar"]'),
             document.querySelector('[data-tarjeta="eliminar"]'),
             document.querySelector('[data-tarjeta="estatus"]'),
+            document.querySelector('[data-tarjeta="anular"]'),
             document.querySelector('[data-tarjeta="reporte"]')
         ];
+        
+        // Filtrar tarjetas nulas y calcular totalSlides dinámicamente
+        this.tarjetas = this.tarjetas.filter(tarjeta => tarjeta !== null);
+        this.totalSlides = this.tarjetas.length + 1; // +1 por la sección principal
         
         // Obtener indicadores de navegación
         this.navDots = document.querySelectorAll('.nav-dot');
@@ -224,7 +229,8 @@ class ModalAyudaProveedor {
             // Ocultar todas las tarjetas
             this.tarjetas.forEach((tarjeta, index) => {
                 if (tarjeta) {
-                    if (index === this.currentSlide) {
+                    const slideIndex = index + 1; // +1 porque el array empieza con null
+                    if (slideIndex === this.currentSlide) {
                         tarjeta.style.display = 'block';
                         tarjeta.classList.remove('slide-in-left', 'slide-in-right');
                         void tarjeta.offsetWidth; // Forzar reflow

@@ -4350,6 +4350,8 @@ $modulos = [
                                             <li><strong>Consultar</strong>: Ver lista completa</li>
                                             <li><strong>Modificar</strong>: Actualizar datos</li>
                                             <li><strong>Eliminar</strong>: Remover usuario</li>
+                                            <li><strong>Estatus</strong>: Actualizar estatus (Habilitado/Inhabilitado)</li>
+                                            <li><strong>Reporte</strong>: Generar reporte</li>
                                         </ul>
                                     </div>
                                 </div>
