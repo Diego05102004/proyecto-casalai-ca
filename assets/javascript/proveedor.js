@@ -1252,12 +1252,23 @@ $(window).on('click', function(e){
         let modalAyudaInstance = null;
         
         // Función para cargar y mostrar el modal de ayuda
-        function cargarYMostrarModalAyuda() {
-            console.log('Cargando modal de ayuda...');
+        function cargarYMostrarModalAyuda(contexto) {
+            console.log('Cargando modal de ayuda...', contexto);
             
             if (modalAyudaInstance) {
                 console.log('Modal ya existe, abriendo...');
                 modalAyudaInstance.openModal();
+                
+                // Si hay contexto, ir a la sección específica
+                if (contexto) {
+                    setTimeout(() => {
+                        if (contexto === 'registrar') {
+                            modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
+                        } else if (contexto === 'modificar') {
+                            modalAyudaInstance.goToSlide(3); // Ir a "Modificar"
+                        }
+                    }, 300);
+                }
                 return;
             }
             
@@ -1279,6 +1290,17 @@ $(window).on('click', function(e){
                         // Mostrar el modal
                         modalAyudaInstance.openModal();
                         console.log('Modal abierto correctamente');
+                        
+                        // Si hay contexto, ir a la sección específica
+                        if (contexto) {
+                            setTimeout(() => {
+                                if (contexto === 'registrar') {
+                                    modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
+                                } else if (contexto === 'modificar') {
+                                    modalAyudaInstance.goToSlide(3); // Ir a "Modificar"
+                                }
+                            }, 300);
+                        }
                     } else {
                         console.error('La función inicializarModalAyudaProveedor no está disponible');
                     }
@@ -1297,13 +1319,21 @@ $(window).on('click', function(e){
         $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
             e.preventDefault();
             console.log('Clic en botón de ayuda detectado');
-            cargarYMostrarModalAyuda();
+            cargarYMostrarModalAyuda(); // Sin contexto específico
+        });
+        
+        // Botón de ayuda dentro del modal de registrar
+        $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
+            e.preventDefault();
+            const contexto = $(this).data('contexto');
+            console.log('Clic en botón de ayuda del modal detectado, contexto:', contexto);
+            cargarYMostrarModalAyuda(contexto);
         });
         
         // También agregar soporte para botones con clase similar
         $(document).on('click.ayuda', '.btn-ayuda-proveedor, [data-ayuda="proveedor"]', function(e) {
             e.preventDefault();
-            cargarYMostrarModalAyuda();
+            cargarYMostrarModalAyuda(); // Sin contexto específico
         });
         
         // Event listeners para debugging
