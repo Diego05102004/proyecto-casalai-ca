@@ -210,7 +210,7 @@
 }
 
 .tarjeta-detallar .tarjeta-icono {
-    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    background: linear-gradient(135deg, #edea36 0%, #cbd81b 100%);
 }
 
 .tarjeta-modificar .tarjeta-icono {
@@ -221,8 +221,12 @@
     background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
 }
 
+.tarjeta-anular .tarjeta-icono {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
 .tarjeta-estatus .tarjeta-icono {
-    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    background: linear-gradient(135deg, #42d6e1 0%, #18bfc5 100%);
 }
 
 .tarjeta-reporte .tarjeta-icono {
