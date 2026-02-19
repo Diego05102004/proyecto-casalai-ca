@@ -539,4 +539,99 @@ $(document).ready(function () {
         confirmButtonText: "Aceptar",
         });
     }
+
+    let modalAyudaModeloInstance = null;
+
+    // Función para cargar y mostrar el modal de ayuda de marcas con contexto específico
+    function cargarYMostrarModalAyudaModelo(contexto = null) {
+        // Cargar CSS si no está cargado
+        if (!$('link[href*="ayuda/css/modal.css"]').length) {
+            $('<link>')
+                .attr({
+                    'rel': 'stylesheet',
+                    'type': 'text/css',
+                    'href': 'assets/public/ayuda/css/modal.css'
+                })
+                .appendTo('head');
+        }
+
+        // Cargar HTML del modal
+        $.get('assets/public/ayuda/modelo.php')
+            .done(function(html) {
+                // Solo agregar modal si no existe
+                if (!$('#modalAyuda').length) {
+                    $('body').append(html);
+                }
+
+                // Cargar JS del modal si no está cargado
+                if (!$('script[src*="ayuda/js/modal.js"]').length) {
+                    $.getScript('assets/public/ayuda/js/modal.js')
+                        .done(function() {
+                            // Inicializar modal
+                            if (typeof inicializarModalAyudaProveedor === 'function') {
+                                modalAyudaModeloInstance = inicializarModalAyudaProveedor();
+
+                                // Abrir modal con contexto si se proporciona
+                                if (contexto) {
+                                    setTimeout(() => {
+                                        const slideIndex = modalAyudaModeloInstance.mapeoContextos[contexto];
+                                        if (slideIndex !== undefined) {
+                                            modalAyudaModeloInstance.goToSlide(slideIndex);
+                                        }
+                                    }, 300);
+                                }
+
+                                // Abrir modal
+                                modalAyudaModeloInstance.openModal();
+                            } else {
+                                console.error('La función inicializarModalAyudaProveedor no está disponible');
+                            }
+                        })
+                        .fail(function() {
+                            console.error('Error al cargar el JavaScript del modal de ayuda');
+                        });
+                } else {
+                    // Si el JS ya está cargado, solo abrir el modal existente
+                    if (typeof inicializarModalAyudaProveedor === 'function') {
+                        modalAyudaModeloInstance = inicializarModalAyudaProveedor();
+
+                        // Abrir modal con contexto si se proporciona
+                        if (contexto) {
+                            setTimeout(() => {
+                                const slideIndex = modalAyudaModeloInstance.mapeoContextos[contexto];
+                                if (slideIndex !== undefined) {
+                                    modalAyudaModeloInstance.goToSlide(slideIndex);
+                                }
+                            }, 300);
+                        }
+
+                        // Abrir modal
+                        modalAyudaModeloInstance.openModal();
+                    }
+                }
+            })
+            .fail(function() {
+                console.error('Error al cargar el HTML del modal de marcas');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el contenido de ayuda'
+                });
+            });
+    }
+
+    // Botón de ayuda principal de modelos
+    $('.btn-ayuda').off('click.ayuda-modelo').on('click.ayuda-modelo', function(e) {
+        e.preventDefault();
+        console.log('Clic en botón de ayuda de modelos detectado');
+        cargarYMostrarModalAyudaModelo(); // Sin contexto específico
+    });
+
+    // Botón de ayuda dentro de modales de modelos
+    $(document).on('click.ayuda-modelo', '.btn-ayuda-modal', function(e) {
+        e.preventDefault();
+        const contexto = $(this).data('contexto');
+        console.log('Clic en botón de ayuda modal de modelos con contexto:', contexto);
+        cargarYMostrarModalAyudaModelo(contexto);
+    });
 });
