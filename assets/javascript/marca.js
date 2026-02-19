@@ -440,4 +440,100 @@ $(document).ready(function() {
         var str = str.replace(regex, ' ');
         return str;
     }
+
+    // Modal de Ayuda - Integración para Marcas
+    let modalAyudaMarcaInstance = null;
+
+    // Función para cargar y mostrar el modal de ayuda de marcas con contexto específico
+    function cargarYMostrarModalAyudaMarca(contexto = null) {
+        // Cargar CSS si no está cargado
+        if (!$('link[href*="ayuda/css/modal.css"]').length) {
+            $('<link>')
+                .attr({
+                    'rel': 'stylesheet',
+                    'type': 'text/css',
+                    'href': 'assets/public/ayuda/css/modal.css'
+                })
+                .appendTo('head');
+        }
+
+        // Cargar HTML del modal
+        $.get('assets/public/ayuda/marca.php')
+            .done(function(html) {
+                // Solo agregar modal si no existe
+                if (!$('#modalAyuda').length) {
+                    $('body').append(html);
+                }
+
+                // Cargar JS del modal si no está cargado
+                if (!$('script[src*="ayuda/js/modal.js"]').length) {
+                    $.getScript('assets/public/ayuda/js/modal.js')
+                        .done(function() {
+                            // Inicializar modal
+                            if (typeof inicializarModalAyudaProveedor === 'function') {
+                                modalAyudaMarcaInstance = inicializarModalAyudaProveedor();
+
+                                // Abrir modal con contexto si se proporciona
+                                if (contexto) {
+                                    setTimeout(() => {
+                                        const slideIndex = modalAyudaMarcaInstance.mapeoContextos[contexto];
+                                        if (slideIndex !== undefined) {
+                                            modalAyudaMarcaInstance.goToSlide(slideIndex);
+                                        }
+                                    }, 300);
+                                }
+
+                                // Abrir modal
+                                modalAyudaMarcaInstance.openModal();
+                            } else {
+                                console.error('La función inicializarModalAyudaProveedor no está disponible');
+                            }
+                        })
+                        .fail(function() {
+                            console.error('Error al cargar el JavaScript del modal de ayuda');
+                        });
+                } else {
+                    // Si el JS ya está cargado, solo abrir el modal existente
+                    if (typeof inicializarModalAyudaProveedor === 'function') {
+                        modalAyudaMarcaInstance = inicializarModalAyudaProveedor();
+
+                        // Abrir modal con contexto si se proporciona
+                        if (contexto) {
+                            setTimeout(() => {
+                                const slideIndex = modalAyudaMarcaInstance.mapeoContextos[contexto];
+                                if (slideIndex !== undefined) {
+                                    modalAyudaMarcaInstance.goToSlide(slideIndex);
+                                }
+                            }, 300);
+                        }
+
+                        // Abrir modal
+                        modalAyudaMarcaInstance.openModal();
+                    }
+                }
+            })
+            .fail(function() {
+                console.error('Error al cargar el HTML del modal de marcas');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el contenido de ayuda'
+                });
+            });
+    }
+
+    // Botón de ayuda principal de marcas
+    $('.btn-ayuda').off('click.ayuda-marca').on('click.ayuda-marca', function(e) {
+        e.preventDefault();
+        console.log('Clic en botón de ayuda de marcas detectado');
+        cargarYMostrarModalAyudaMarca(); // Sin contexto específico
+    });
+
+    // Botón de ayuda dentro de modales de marcas
+    $(document).on('click.ayuda-marca', '.btn-ayuda-modal', function(e) {
+        e.preventDefault();
+        const contexto = $(this).data('contexto');
+        console.log('Clic en botón de ayuda modal de marcas con contexto:', contexto);
+        cargarYMostrarModalAyudaMarca(contexto);
+    });
 });
