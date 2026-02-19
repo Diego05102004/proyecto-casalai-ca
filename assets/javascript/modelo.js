@@ -488,8 +488,8 @@ $(document).ready(function () {
 
     let modalAyudaInstance = null;
 
-    // Función para cargar y mostrar el modal de ayuda con contexto específico
-    function cargarYMostrarModalAyuda(contexto = null) {
+    // Función para cargar y mostrar el modal de ayuda de marcas con contexto específico
+    function cargarYMostrarModalAyudaMarca(contexto = null) {
         // Cargar CSS si no está cargado
         if (!$('link[href*="ayuda/css/modal.css"]').length) {
             $('<link>')
@@ -502,7 +502,7 @@ $(document).ready(function () {
         }
 
         // Cargar HTML del modal
-        $.get('assets/public/ayuda/modelo.php')
+        $.get('assets/public/ayuda/marca.php')
             .done(function(html) {
                 // Solo agregar modal si no existe
                 if (!$('#modalAyuda').length) {
@@ -557,7 +557,7 @@ $(document).ready(function () {
                 }
             })
             .fail(function() {
-                console.error('Error al cargar el HTML del modal');
+                console.error('Error al cargar el HTML del modal de marcas');
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -566,19 +566,19 @@ $(document).ready(function () {
             });
     }
 
-    // Botón de ayuda principal
-    $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(e) {
+    // Botón de ayuda principal de marcas
+    $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
         e.preventDefault();
-        console.log('Clic en botón de ayuda detectado');
-        cargarYMostrarModalAyuda(); // Sin contexto específico
+        console.log('Clic en botón de ayuda de marcas detectado');
+        cargarYMostrarModalAyudaMarca(); // Sin contexto específico
     });
 
-    // Botón de ayuda dentro de modales
-    $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
+    // Botón de ayuda dentro de modales de marcas
+    $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
         e.preventDefault();
         const contexto = $(this).data('contexto');
-        console.log('Clic en botón de ayuda modal con contexto:', contexto);
-        cargarYMostrarModalAyuda(contexto);
+        console.log('Clic en botón de ayuda modal de marcas con contexto:', contexto);
+        cargarYMostrarModalAyudaMarca(contexto);
     });
 });
 

@@ -163,7 +163,7 @@ aria-labelledby="registrarModeloModalLabel" aria-hidden="true">
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
 
-<button 
+<button
     class="btn-ayuda"
     style="top: 115px;"
     title="Visualizar Ayuda">
