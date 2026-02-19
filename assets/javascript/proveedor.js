@@ -1284,8 +1284,8 @@ $(window).on('click', function(e){
                     console.log('JavaScript del modal cargado');
                     
                     // Inicializar el modal
-                    if (typeof inicializarModalAyudaProveedor === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaProveedor();
+                    if (typeof inicializarModalAyudaUsuario === 'function') {
+                        modalAyudaInstance = inicializarModalAyudaUsuario();
                         
                         // Mostrar el modal
                         modalAyudaInstance.openModal();
@@ -1302,7 +1302,7 @@ $(window).on('click', function(e){
                             }, 300);
                         }
                     } else {
-                        console.error('La función inicializarModalAyudaProveedor no está disponible');
+                        console.error('La función inicializarModalAyudaUsuario no está disponible');
                     }
                 });
             }).fail(function() {

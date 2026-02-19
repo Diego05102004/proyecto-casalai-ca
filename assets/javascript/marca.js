@@ -470,8 +470,8 @@ $(document).ready(function() {
                     $.getScript('assets/public/ayuda/js/modal.js')
                         .done(function() {
                             // Inicializar modal
-                            if (typeof inicializarModalAyudaProveedor === 'function') {
-                                modalAyudaMarcaInstance = inicializarModalAyudaProveedor();
+                            if (typeof inicializarModalAyudaUsuario === 'function') {
+                                modalAyudaMarcaInstance = inicializarModalAyudaUsuario();
 
                                 // Abrir modal con contexto si se proporciona
                                 if (contexto) {
@@ -486,7 +486,7 @@ $(document).ready(function() {
                                 // Abrir modal
                                 modalAyudaMarcaInstance.openModal();
                             } else {
-                                console.error('La función inicializarModalAyudaProveedor no está disponible');
+                                console.error('La función inicializarModalAyudaUsuario no está disponible');
                             }
                         })
                         .fail(function() {
@@ -494,8 +494,8 @@ $(document).ready(function() {
                         });
                 } else {
                     // Si el JS ya está cargado, solo abrir el modal existente
-                    if (typeof inicializarModalAyudaProveedor === 'function') {
-                        modalAyudaMarcaInstance = inicializarModalAyudaProveedor();
+                    if (typeof inicializarModalAyudaUsuario === 'function') {
+                        modalAyudaMarcaInstance = inicializarModalAyudaUsuario();
 
                         // Abrir modal con contexto si se proporciona
                         if (contexto) {

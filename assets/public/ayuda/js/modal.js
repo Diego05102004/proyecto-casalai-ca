@@ -1,5 +1,5 @@
 // Modal de Ayuda - Funcionalidad Principal
-class ModalAyudaProveedor {
+class ModalAyudaUsuario {
     constructor() {
         this.currentSlide = 0;
         this.totalSlides = 7; // Máximo de slides, se ajustará dinámicamente
@@ -344,14 +344,14 @@ class ModalAyudaProveedor {
 }
 
 // Inicializar el modal cuando se cargue el script
-let modalAyudaProveedor = null;
+let modalAyudaUsuario = null;
 
 // Función para inicializar el modal (se puede llamar desde otros scripts)
-function inicializarModalAyudaProveedor() {
-    if (!modalAyudaProveedor) {
-        modalAyudaProveedor = new ModalAyudaProveedor();
+function inicializarModalAyudaUsuario() {
+    if (!modalAyudaUsuario) {
+        modalAyudaUsuario = new ModalAyudaUsuario();
     }
-    return modalAyudaProveedor;
+    return modalAyudaUsuario;
 }
 
 // Auto-inicialización
@@ -359,17 +359,17 @@ function inicializarModalAyudaProveedor() {
     // Esperar a que jQuery esté disponible si es necesario
     if (typeof $ !== 'undefined') {
         $(document).ready(function() {
-            inicializarModalAyudaProveedor();
+            inicializarModalAyudaUsuario();
         });
     } else {
         // Inicialización vanilla JS
-        inicializarModalAyudaProveedor();
+        inicializarModalAyudaUsuario();
     }
 })();
 
 // Exportar para uso global
 if (typeof window !== 'undefined') {
-    window.ModalAyudaProveedor = ModalAyudaProveedor;
-    window.inicializarModalAyudaProveedor = inicializarModalAyudaProveedor;
-    window.modalAyudaProveedor = modalAyudaProveedor;
+    window.ModalAyudaUsuario = ModalAyudaUsuario;
+    window.inicializarModalAyudaUsuario = inicializarModalAyudaUsuario;
+    window.modalAyudaUsuario = modalAyudaUsuario;
 }
