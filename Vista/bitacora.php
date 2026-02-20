@@ -89,8 +89,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 <button 
     class="btn-ayuda"
     style="top: 115px; right: 100px;"
-    title="Visualizar Ayuda"
-    onclick="window.location.href='?pagina=ayuda'">
+    title="Visualizar Ayuda">
     <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
 </button>
 </body>
