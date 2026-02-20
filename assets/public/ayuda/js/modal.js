@@ -3,6 +3,7 @@ class ModalAyudaUsuario {
     constructor() {
         this.currentSlide = 0;
         this.totalSlides = 7; // Máximo de slides, se ajustará dinámicamente
+
         this.modal = null;
         this.overlay = null;
         this.ayudaPrincipal = null;
@@ -14,6 +15,7 @@ class ModalAyudaUsuario {
         this.navDots = [];
         this.btnClose = null;
         this.animationDirection = 'right';
+        this._onKeyDown = null;
         
         this.init();
     }
@@ -137,22 +139,25 @@ class ModalAyudaUsuario {
             dot.addEventListener('click', () => this.goToSlide(index));
         });
         
-        // Navegación con teclado
-        document.addEventListener('keydown', (e) => {
-            if (!this.modal || !this.modal.classList.contains('active')) return;
-            
-            switch(e.key) {
-                case 'Escape':
-                    this.closeModal();
-                    break;
-                case 'ArrowLeft':
-                    this.prevSlide();
-                    break;
-                case 'ArrowRight':
-                    this.nextSlide();
-                    break;
-            }
-        });
+        // Navegación con teclado (1 handler por instancia)
+        if (!this._onKeyDown) {
+            this._onKeyDown = (e) => {
+                if (!this.modal || !this.modal.classList.contains('active')) return;
+                
+                switch(e.key) {
+                    case 'Escape':
+                        this.closeModal();
+                        break;
+                    case 'ArrowLeft':
+                        this.prevSlide();
+                        break;
+                    case 'ArrowRight':
+                        this.nextSlide();
+                        break;
+                }
+            };
+            document.addEventListener('keydown', this._onKeyDown);
+        }
         
         // Navegación con gestos táctiles (para móviles)
         this.setupTouchGestures();
@@ -209,10 +214,12 @@ class ModalAyudaUsuario {
     }
     
     closeModal() {
+        // Restaurar scroll siempre
+        document.body.style.overflow = '';
+
         if (!this.modal) return;
         
         this.modal.classList.remove('active');
-        document.body.style.overflow = '';
         
         // Accesibilidad
         this.modal.setAttribute('aria-hidden', 'true');

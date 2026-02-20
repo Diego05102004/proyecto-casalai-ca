@@ -1,4 +1,122 @@
 $(document).ready(function () {
+    let modalAyudaInstance = null;
+
+    // Función para cargar y mostrar el modal de ayuda con contexto específico
+    function cargarYMostrarModalAyuda(contexto = null) {
+        // Si ya existe una instancia, solo abrir y navegar
+        if (modalAyudaInstance) {
+            modalAyudaInstance.openModal();
+
+            if (contexto) {
+                setTimeout(() => {
+                    const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                    if (slideIndex !== undefined) {
+                        modalAyudaInstance.goToSlide(slideIndex);
+                    }
+                }, 300);
+            }
+
+            return;
+        }
+
+        // Cargar CSS si no está cargado
+        if (!$('link[href*="ayuda/css/modal.css"]').length) {
+            $('<link>')
+                .attr({
+                    'rel': 'stylesheet',
+                    'type': 'text/css',
+                    'href': 'assets/public/ayuda/css/modal.css'
+                })
+                .appendTo('head');
+        }
+
+        // Cargar HTML del modal
+        $.get('assets/public/ayuda/despacho.php')
+            .done(function(html) {
+                // Insertar el modal si no existe. Si existe, reutilizarlo para evitar pérdida de listeners.
+                if (!$('#modalAyuda').length) {
+                    $('body').append(html);
+                }
+
+                // Cargar JS del modal si no está cargado
+                if (!$('script[src*="ayuda/js/modal.js"]').length) {
+                    $.getScript('assets/public/ayuda/js/modal.js')
+                        .done(function() {
+                            // Inicializar modal
+                            if (typeof inicializarModalAyudaUsuario === 'function') {
+                                modalAyudaInstance = inicializarModalAyudaUsuario();
+
+                                // Asegurar restauración del scroll (por si algún cierre previo falló)
+                                document.body.style.overflow = '';
+
+                                // Abrir modal con contexto si se proporciona
+                                if (contexto) {
+                                    setTimeout(() => {
+                                        const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                                        if (slideIndex !== undefined) {
+                                            modalAyudaInstance.goToSlide(slideIndex);
+                                        }
+                                    }, 300);
+                                }
+
+                                // Abrir modal
+                                modalAyudaInstance.openModal();
+                            } else {
+                                console.error('La función inicializarModalAyudaUsuario no está disponible');
+                            }
+                        })
+                        .fail(function() {
+                            console.error('Error al cargar el JavaScript del modal de ayuda');
+                        });
+                } else {
+                    // Si el JS ya está cargado, solo abrir el modal existente
+                    if (typeof inicializarModalAyudaUsuario === 'function') {
+                        modalAyudaInstance = inicializarModalAyudaUsuario();
+
+                        // Asegurar restauración del scroll (por si algún cierre previo falló)
+                        document.body.style.overflow = '';
+
+                        // Abrir modal con contexto si se proporciona
+                        if (contexto) {
+                            setTimeout(() => {
+                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                                if (slideIndex !== undefined) {
+                                    modalAyudaInstance.goToSlide(slideIndex);
+                                }
+                            }, 300);
+                        }
+
+                        // Abrir modal
+                        modalAyudaInstance.openModal();
+                    }
+                }
+            })
+            .fail(function() {
+                console.error('Error al cargar el HTML del modal');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el contenido de ayuda'
+                });
+            });
+    }
+
+    window.cargarYMostrarModalAyuda = cargarYMostrarModalAyuda;
+
+    // Botón de ayuda principal
+    $(document).off('click.ayuda-modal', '.btn-ayuda').on('click.ayuda-modal', '.btn-ayuda', function(e) {
+        e.preventDefault();
+        console.log('Clic en botón de ayuda detectado');
+        cargarYMostrarModalAyuda(); // Sin contexto específico
+    });
+
+    // Botón de ayuda dentro de modales
+    $(document).off('click.ayuda-modal', '.btn-ayuda-modal').on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
+        e.preventDefault();
+        const contexto = $(this).data('contexto');
+        console.log('Clic en botón de ayuda modal con contexto:', contexto);
+        cargarYMostrarModalAyuda(contexto);
+    });
 
     $("#btnIncluirDespacho").on("click", function () {
         $("#ingresarDespacho")[0].reset();
@@ -13,11 +131,10 @@ $(document).ready(function () {
     $(document).on("click", "#modalp .close-2", function () {
         $("#modalp").modal("hide");
     });
-    });
 
     carga_productos(); //boton para levantar modal de productos
     $("#listado").on("click", function () {
-    $("#modalp").modal("show");
+        $("#modalp").modal("show");
     });
 
     $("#correlativo").on("keypress", function (e) {
@@ -466,148 +583,7 @@ $(document).ready(function () {
         });
     }
 
-const tablaDespacho = document.getElementById('tablaConsultas');
-const modalDespacho = document.getElementById('modalDetallesDespacho');
-const cerrarDespacho = document.getElementById('cerrarModalDetallesDespacho');
-
-// ...existing code...
-tablaDespacho.addEventListener('click', function (e) {
-    const btn = e.target.closest('.btn-detalle');
-    if (!btn) return;
-
-    // Cargar datos principales
-    document.getElementById('detalle-fecha-despacho').textContent = btn.dataset.fecha;
-    document.getElementById('detalle-cliente-despacho').textContent = btn.dataset.cliente;
-    document.getElementById('detalle-cedula-despacho').textContent = btn.dataset.cedula;
-    document.getElementById('detalle-tipocompra-despacho').textContent = btn.dataset.tipocompra;
-
-    // Obtener todos los productos del despacho
-    let productos = [];
-    try {
-        productos = JSON.parse(btn.dataset.productos);
-        console.log("Productos parseados:", productos, typeof productos);
-    } catch (e) {
-        console.error("Error al parsear productos:", e, btn.dataset.productos);
-        productos = [];
-    }
-
-    let html = '';
-    let total = 0;
-    if (productos.length) {
-        productos.forEach(prod => {
-            html += `<tr>
-                <td><span class="campo-numeros">${prod.codigo}</span></td>
-                <td><span class="campo-nombres">${prod.producto}</span></td>
-                <td><span class="campo-nombres">${prod.modelo}</span></td>
-                <td><span class="campo-nombres">${prod.marca}</span></td>
-                <td><span class="campo-numeros">${prod.serial}</span></td>
-                <td><span class="campo-numeros">${prod.cantidad}</span></td>
-            </tr>`;
-        });
-    } else {
-        html = '<tr><td colspan="8" style="text-align:center;">Sin productos asociados.</td></tr>';
-    }
-    document.getElementById('tbodyDetalleProductosDespacho').innerHTML = html;
-
-    // Mostrar modal
-    modalDespacho.classList.add('mostrar');
-
-    let modalAyudaInstance = null;
-
-    // Función para cargar y mostrar el modal de ayuda con contexto específico
-    function cargarYMostrarModalAyuda(contexto = null) {
-        // Cargar CSS si no está cargado
-        if (!$('link[href*="ayuda/css/modal.css"]').length) {
-            $('<link>')
-                .attr({
-                    'rel': 'stylesheet',
-                    'type': 'text/css',
-                    'href': 'assets/public/ayuda/css/modal.css'
-                })
-                .appendTo('head');
-        }
-
-        // Cargar HTML del modal
-        $.get('assets/public/ayuda/despacho.php')
-            .done(function(html) {
-                // Solo agregar modal si no existe
-                if (!$('#modalAyuda').length) {
-                    $('body').append(html);
-                }
-
-                // Cargar JS del modal si no está cargado
-                if (!$('script[src*="ayuda/js/modal.js"]').length) {
-                    $.getScript('assets/public/ayuda/js/modal.js')
-                        .done(function() {
-                            // Inicializar modal
-                            if (typeof inicializarModalAyudaUsuario === 'function') {
-                                modalAyudaInstance = inicializarModalAyudaUsuario();
-
-                                // Abrir modal con contexto si se proporciona
-                                if (contexto) {
-                                    setTimeout(() => {
-                                        const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                        if (slideIndex !== undefined) {
-                                            modalAyudaInstance.goToSlide(slideIndex);
-                                        }
-                                    }, 300);
-                                }
-
-                                // Abrir modal
-                                modalAyudaInstance.openModal();
-                            } else {
-                                console.error('La función inicializarModalAyudaUsuario no está disponible');
-                            }
-                        })
-                        .fail(function() {
-                            console.error('Error al cargar el JavaScript del modal de ayuda');
-                        });
-                } else {
-                    // Si el JS ya está cargado, solo abrir el modal existente
-                    if (typeof inicializarModalAyudaUsuario === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaUsuario();
-
-                        // Abrir modal con contexto si se proporciona
-                        if (contexto) {
-                            setTimeout(() => {
-                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                if (slideIndex !== undefined) {
-                                    modalAyudaInstance.goToSlide(slideIndex);
-                                }
-                            }, 300);
-                        }
-
-                        // Abrir modal
-                        modalAyudaInstance.openModal();
-                    }
-                }
-            })
-            .fail(function() {
-                console.error('Error al cargar el HTML del modal');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar el contenido de ayuda'
-                });
-            });
-    }
-
-    // Botón de ayuda principal
-    $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(e) {
-        e.preventDefault();
-        console.log('Clic en botón de ayuda detectado');
-        cargarYMostrarModalAyuda(); // Sin contexto específico
-    });
 });
 
-// Cierre al hacer clic en el botón "X"
-cerrarDespacho.addEventListener('click', () => {
-    modalDespacho.classList.remove('mostrar');
-});
 
-// Cierre al hacer clic fuera del contenido del modal
-window.addEventListener('click', (e) => {
-    if (e.target === modalDespacho) {
-        modalDespacho.classList.remove('mostrar');
-    }
-});
+

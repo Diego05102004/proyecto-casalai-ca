@@ -531,10 +531,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Cargar HTML del modal
         $.get('assets/public/ayuda/ordendespacho.php')
             .done(function(html) {
-                // Solo agregar modal si no existe
-                if (!$('#modalAyuda').length) {
-                    $('body').append(html);
+                // Asegurar que el contenido corresponda a este módulo (evitar reutilizar HTML de otros módulos)
+                if ($('#modalAyuda').length) {
+                    $('#modalAyuda').remove();
                 }
+                $('body').append(html);
 
                 // Cargar JS del modal si no está cargado
                 if (!$('script[src*="ayuda/js/modal.js"]').length) {
@@ -598,6 +599,14 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         console.log('Clic en botón de ayuda detectado');
         cargarYMostrarModalAyuda(); // Sin contexto específico
+    });
+
+    // Botón de ayuda dentro de modales
+    $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
+        e.preventDefault();
+        const contexto = $(this).data('contexto');
+        console.log('Clic en botón de ayuda modal con contexto:', contexto);
+        cargarYMostrarModalAyuda(contexto);
     });
 });
 

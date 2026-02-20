@@ -432,6 +432,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
 <script src="assets/javascript/sweetalert2.all.min.js"></script>
+<script src="assets/javascript/despacho.js"></script>
 
 <script>
     // ============================
@@ -1131,10 +1132,9 @@ $(function() {
         <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
     </button>
     
-    <button 
+        <button 
         class="btn-ayuda"
-        title="Visualizar Ayuda"
-        onclick="window.location.href='?pagina=ayuda'">
+        title="Visualizar Ayuda">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
 </body>

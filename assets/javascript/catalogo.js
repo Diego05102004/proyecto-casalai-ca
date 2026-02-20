@@ -1364,6 +1364,22 @@ verificarTodo();
 
     // Función para cargar y mostrar el modal de ayuda con contexto específico
     function cargarYMostrarModalAyuda(contexto = null) {
+        // Si ya existe una instancia, solo abrir y navegar
+        if (modalAyudaInstance) {
+            modalAyudaInstance.openModal();
+
+            if (contexto) {
+                setTimeout(() => {
+                    const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                    if (slideIndex !== undefined) {
+                        modalAyudaInstance.goToSlide(slideIndex);
+                    }
+                }, 300);
+            }
+
+            return;
+        }
+
         // Cargar CSS si no está cargado
         if (!$('link[href*="ayuda/css/modal.css"]').length) {
             $('<link>')
@@ -1391,6 +1407,9 @@ verificarTodo();
                             if (typeof inicializarModalAyudaUsuario === 'function') {
                                 modalAyudaInstance = inicializarModalAyudaUsuario();
 
+                                // Asegurar restauración del scroll (por si algún cierre previo falló)
+                                document.body.style.overflow = '';
+
                                 // Abrir modal con contexto si se proporciona
                                 if (contexto) {
                                     setTimeout(() => {
@@ -1414,6 +1433,9 @@ verificarTodo();
                     // Si el JS ya está cargado, solo abrir el modal existente
                     if (typeof inicializarModalAyudaUsuario === 'function') {
                         modalAyudaInstance = inicializarModalAyudaUsuario();
+
+                        // Asegurar restauración del scroll (por si algún cierre previo falló)
+                        document.body.style.overflow = '';
 
                         // Abrir modal con contexto si se proporciona
                         if (contexto) {
