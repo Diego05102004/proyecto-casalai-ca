@@ -575,11 +575,12 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             onclick="window.location.href='?pagina=reporteFinanzas'">
             <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
         </button>
-            <button 
-        class="btn-ayuda"
-        title="Visualizar Ayuda">
-        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
-    </button>
+        
+        <button 
+            class="btn-ayuda"
+            title="Visualizar Ayuda">
+            <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+        </button>
     </body>
 
     </html>
