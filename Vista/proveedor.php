@@ -148,6 +148,9 @@ aria-labelledby="registrarProveedorModalLabel" aria-hidden="true">
         <div class="modal-content">
             <form id="incluirproveedor" method="POST" novalidate>
                 <div class="modal-header">
+                    <button type="button" class="btn-ayuda-modal" title="Ayuda para Incluir Proveedor" data-contexto="registrar">
+                        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="18" height="18">
+                    </button>
                     <h5 class="titulo-form" id="registrarProveedorModalLabel">Incluir Proveedor</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                         <span aria-hidden="true">&times;</span>
@@ -336,6 +339,9 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
         <div class="modal-content">
             <form id="FormModificarProveedor" method="POST" novalidate>
                 <div class="modal-header">
+                    <button type="button" class="btn-ayuda-modal" title="Ayuda para Modificar Proveedor" data-contexto="modificar">
+                        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="18" height="18">
+                    </button>
                     <h5 class="titulo-form" id="modificarProveedorModalLabel">Modificar Proveedor</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                         <span aria-hidden="true">&times;</span>

@@ -1101,3 +1101,145 @@ if (fila.length) {
     });
   }
 });
+
+// Modal de Ayuda para Usuarios - Se ejecuta después del ready principal
+(function() {
+    // Esperar a que jQuery esté disponible
+    function initModalAyuda() {
+        if (typeof $ === 'undefined') {
+            setTimeout(initModalAyuda, 100);
+            return;
+        }
+        
+        console.log('Inicializando modal de ayuda para usuarios...');
+        
+        // Cargar CSS del modal de ayuda
+        $('<link>')
+            .appendTo('head')
+            .attr({
+                type: 'text/css',
+                rel: 'stylesheet',
+                href: 'assets/public/ayuda/css/modal.css'
+            });
+        
+        // Variable global para el modal
+        let modalAyudaInstance = null;
+        
+        // Función para cargar y mostrar el modal de ayuda
+        function cargarYMostrarModalAyuda(contexto) {
+            console.log('Cargando modal de ayuda para usuarios...', contexto);
+            
+            if (modalAyudaInstance) {
+                console.log('Modal ya existe, abriendo...');
+                modalAyudaInstance.openModal();
+                
+                // Si hay contexto, ir a la sección específica
+                if (contexto) {
+                    setTimeout(() => {
+                        if (contexto === 'registrar') {
+                            modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
+                        } else if (contexto === 'modificar') {
+                            modalAyudaInstance.goToSlide(2); // Ir a "Modificar"
+                        } else if (contexto === 'eliminar') {
+                            modalAyudaInstance.goToSlide(3); // Ir a "Eliminar"
+                        } else if (contexto === 'estatus') {
+                            modalAyudaInstance.goToSlide(4); // Ir a "Cambiar Estatus"
+                        } else if (contexto === 'reporte') {
+                            modalAyudaInstance.goToSlide(5); // Ir a "Generar Reporte"
+                        }
+                    }, 300);
+                }
+                return;
+            }
+            
+            // Cargar el contenido del modal
+            $.get('assets/public/ayuda/usuario.php', function(html) {
+                console.log('HTML del modal de usuarios cargado');
+                
+                // Agregar el modal al body
+                $('body').append(html);
+                
+                // Cargar JavaScript del modal y luego inicializar
+                $.getScript('assets/public/ayuda/js/modal.js', function() {
+                    console.log('JavaScript del modal cargado');
+                    
+                    // Inicializar el modal
+                    if (typeof inicializarModalAyudaUsuario === 'function') {
+                        modalAyudaInstance = inicializarModalAyudaUsuario();
+                        
+                        // Mostrar el modal
+                        modalAyudaInstance.openModal();
+                        console.log('Modal de ayuda para usuarios abierto correctamente');
+                        
+                        // Si hay contexto, ir a la sección específica
+                        if (contexto) {
+                            setTimeout(() => {
+                                if (contexto === 'registrar') {
+                                    modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
+                                } else if (contexto === 'modificar') {
+                                    modalAyudaInstance.goToSlide(2); // Ir a "Modificar"
+                                } else if (contexto === 'eliminar') {
+                                    modalAyudaInstance.goToSlide(3); // Ir a "Eliminar"
+                                } else if (contexto === 'estatus') {
+                                    modalAyudaInstance.goToSlide(4); // Ir a "Cambiar Estatus"
+                                } else if (contexto === 'reporte') {
+                                    modalAyudaInstance.goToSlide(5); // Ir a "Generar Reporte"
+                                }
+                            }, 300);
+                        }
+                    } else {
+                        console.error('La función inicializarModalAyudaUsuario no está disponible');
+                    }
+                });
+            }).fail(function() {
+                console.error('Error al cargar el HTML del modal de usuarios');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el contenido de ayuda'
+                });
+            });
+        }
+        
+        // Modificar el botón de ayuda existente
+        $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
+            e.preventDefault();
+            console.log('Clic en botón de ayuda detectado');
+            cargarYMostrarModalAyuda(); // Sin contexto específico
+        });
+        
+        // Botón de ayuda dentro de modales
+        $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
+            e.preventDefault();
+            const contexto = $(this).data('contexto');
+            console.log('Clic en botón de ayuda del modal detectado, contexto:', contexto);
+            cargarYMostrarModalAyuda(contexto);
+        });
+        
+        // También agregar soporte para botones con clase similar
+        $(document).on('click.ayuda', '.btn-ayuda-usuario, [data-ayuda="usuario"]', function(e) {
+            e.preventDefault();
+            cargarYMostrarModalAyuda(); // Sin contexto específico
+        });
+        
+        // Event listeners para debugging
+        $(document).on('modal:opened', function(e) {
+            console.log('Modal de ayuda abierto', e.detail);
+        });
+        
+        $(document).on('modal:closed', function(e) {
+            console.log('Modal de ayuda cerrado', e.detail);
+        });
+        
+        $(document).on('slide:changed', function(e) {
+            console.log('Slide cambiado a:', e.detail.slide);
+        });
+    }
+    
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initModalAyuda);
+    } else {
+        initModalAyuda();
+    }
+})();

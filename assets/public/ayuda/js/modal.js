@@ -1,13 +1,14 @@
 // Modal de Ayuda - Funcionalidad Principal
-class ModalAyudaProveedor {
+class ModalAyudaUsuario {
     constructor() {
         this.currentSlide = 0;
-        this.totalSlides = 7; // 0: principal, 1-6: tarjetas
+        this.totalSlides = 7; // Máximo de slides, se ajustará dinámicamente
         this.modal = null;
         this.overlay = null;
         this.ayudaPrincipal = null;
         this.ayudaTarjetas = null;
         this.tarjetas = [];
+        this.tarjetasOriginales = [];
         this.btnPrev = null;
         this.btnNext = null;
         this.navDots = [];
@@ -28,7 +29,7 @@ class ModalAyudaProveedor {
     
     setupModal() {
         // Obtener elementos del DOM
-        this.modal = document.getElementById('modalAyudaProveedor');
+        this.modal = document.getElementById('modalAyuda');
         if (!this.modal) {
             console.error('No se encontró el modal de ayuda');
             return;
@@ -41,25 +42,70 @@ class ModalAyudaProveedor {
         this.btnNext = document.getElementById('btnNavNext');
         this.btnClose = document.getElementById('cerrarModalAyuda');
         
-        // Obtener todas las tarjetas
-        this.tarjetas = [
-            null, // Slide 0 es la sección principal
-            document.querySelector('[data-tarjeta="registrar"]'),
-            document.querySelector('[data-tarjeta="detallar"]'),
-            document.querySelector('[data-tarjeta="modificar"]'),
-            document.querySelector('[data-tarjeta="eliminar"]'),
-            document.querySelector('[data-tarjeta="estatus"]'),
-            document.querySelector('[data-tarjeta="reporte"]')
-        ];
+        // Detectar qué tarjetas existen realmente en el DOM
+        const tarjetasExistentes = [];
+        const mapeoIndices = {};
         
-        // Obtener indicadores de navegación
-        this.navDots = document.querySelectorAll('.nav-dot');
+        // Buscar todas las tarjetas con data-tarjeta
+        document.querySelectorAll('[data-tarjeta]').forEach(tarjeta => {
+            const nombre = tarjeta.dataset.tarjeta;
+            if (!tarjetasExistentes.includes(nombre)) {
+                tarjetasExistentes.push(nombre);
+            }
+        });
+        
+        console.log('🔍 Tarjetas encontradas en el DOM:', tarjetasExistentes);
+        
+        // Crear array de tarjetas basado en las que realmente existen
+        this.tarjetas = [null]; // Slide 0 es la sección principal
+        
+        // Orden específico para mantener consistencia
+        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'eliminar', 'estatus', 'anular', 'reporte'];
+        
+        ordenTarjetas.forEach(nombre => {
+            if (tarjetasExistentes.includes(nombre)) {
+                const tarjeta = document.querySelector(`[data-tarjeta="${nombre}"]`);
+                this.tarjetas.push(tarjeta);
+                mapeoIndices[nombre] = this.tarjetas.length - 1;
+            }
+        });
+        
+        // Guardar referencia original
+        this.tarjetasOriginales = [...this.tarjetas];
+        
+        // Calcular totalSlides basado en los dots del HTML
+        this.navDots = document.querySelectorAll('.nav-indicators .nav-dot');
+        this.totalSlides = this.navDots.length;
+        
+        // Depuración
+        console.log('🔍 Depuración Modal:');
+        console.log('- Total dots encontrados:', this.navDots.length);
+        console.log('- TotalSlides:', this.totalSlides);
+        console.log('- Tarjetas encontradas:', this.tarjetasOriginales.map((t, i) => t ? `Slide ${i}: ${t.dataset.tarjeta}` : `Slide ${i}: null`));
+        
+        // Mapeo de índices para navegación contextual
+        this.mapeoContextos = {};
+        Object.keys(mapeoIndices).forEach(contexto => {
+            this.mapeoContextos[contexto] = mapeoIndices[contexto];
+        });
+        
+        console.log('- Mapeo de contextos:', this.mapeoContextos);
         
         // Configurar event listeners
         this.setupEventListeners();
         
         // Inicializar estado
         this.updateSlide();
+    }
+    
+    // Método para obtener el índice correcto del slide basado en el contexto
+    getSlideIndex(contexto) {
+        const contextoTarjeta = document.querySelector(`[data-tarjeta="${contexto}"]`);
+        if (!contextoTarjeta) return 0; // Si no existe, ir al principal
+        
+        // Buscar en el array original (con nulls) el índice
+        const index = this.tarjetasOriginales.indexOf(contextoTarjeta);
+        return index >= 0 ? index : 0;
     }
     
     setupEventListeners() {
@@ -200,8 +246,11 @@ class ModalAyudaProveedor {
     }
     
     updateSlide() {
+        console.log(`updateSlide: currentSlide=${this.currentSlide}, totalSlides=${this.totalSlides}`);
+        
         // Actualizar visibilidad del contenido
         if (this.currentSlide === 0) {
+            console.log('Mostrando sección principal');
             // Mostrar sección principal
             if (this.ayudaPrincipal) {
                 this.ayudaPrincipal.style.display = 'block';
@@ -213,6 +262,7 @@ class ModalAyudaProveedor {
                 this.ayudaTarjetas.style.display = 'none';
             }
         } else {
+            console.log('Mostrando tarjetas');
             // Mostrar tarjetas
             if (this.ayudaPrincipal) {
                 this.ayudaPrincipal.style.display = 'none';
@@ -222,9 +272,10 @@ class ModalAyudaProveedor {
             }
             
             // Ocultar todas las tarjetas
-            this.tarjetas.forEach((tarjeta, index) => {
+            this.tarjetasOriginales.forEach((tarjeta, index) => {
                 if (tarjeta) {
                     if (index === this.currentSlide) {
+                        console.log(`Mostrando tarjeta en slide ${index}: ${tarjeta.dataset.tarjeta}`);
                         tarjeta.style.display = 'block';
                         tarjeta.classList.remove('slide-in-left', 'slide-in-right');
                         void tarjeta.offsetWidth; // Forzar reflow
@@ -293,14 +344,14 @@ class ModalAyudaProveedor {
 }
 
 // Inicializar el modal cuando se cargue el script
-let modalAyudaProveedor = null;
+let modalAyudaUsuario = null;
 
 // Función para inicializar el modal (se puede llamar desde otros scripts)
-function inicializarModalAyudaProveedor() {
-    if (!modalAyudaProveedor) {
-        modalAyudaProveedor = new ModalAyudaProveedor();
+function inicializarModalAyudaUsuario() {
+    if (!modalAyudaUsuario) {
+        modalAyudaUsuario = new ModalAyudaUsuario();
     }
-    return modalAyudaProveedor;
+    return modalAyudaUsuario;
 }
 
 // Auto-inicialización
@@ -308,17 +359,17 @@ function inicializarModalAyudaProveedor() {
     // Esperar a que jQuery esté disponible si es necesario
     if (typeof $ !== 'undefined') {
         $(document).ready(function() {
-            inicializarModalAyudaProveedor();
+            inicializarModalAyudaUsuario();
         });
     } else {
         // Inicialización vanilla JS
-        inicializarModalAyudaProveedor();
+        inicializarModalAyudaUsuario();
     }
 })();
 
 // Exportar para uso global
 if (typeof window !== 'undefined') {
-    window.ModalAyudaProveedor = ModalAyudaProveedor;
-    window.inicializarModalAyudaProveedor = inicializarModalAyudaProveedor;
-    window.modalAyudaProveedor = modalAyudaProveedor;
+    window.ModalAyudaUsuario = ModalAyudaUsuario;
+    window.inicializarModalAyudaUsuario = inicializarModalAyudaUsuario;
+    window.modalAyudaUsuario = modalAyudaUsuario;
 }

@@ -16,42 +16,37 @@
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M5 21V7l8-4v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M19 21V11l-6-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 9v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
                         </svg>
                     </div>
-                    <h3 class="ayuda-titulo">Gestión de Proveedores</h3>
+                    <h3 class="ayuda-titulo">Gestión de Usuarios</h3>
                 </div>
                 
-                <p class="ayuda-descripcion">Administre la información de todos los proveedores de productos y servicios.</p>
+                <p class="ayuda-descripcion">Administre las cuentas de usuario y permisos de acceso al sistema.</p>
                 
                 <div class="ayuda-grid">
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Información gestionable:</h4>
                         <ul class="ayuda-lista">
-                            <li>Nombre del proveedor y su representante</li>
-                            <li>RIF del proveedor y su representante</li>
-                            <li>Correo electrónico</li>
-                            <li>Dirección</li>
-                            <li>N° de teléfono (Principal y Secundario)</li>
-                            <li>Observaciones</li>
-                            <li>Estatus</li>
-                            <li>Suministro de los proveedores</li>
+                            <li>Nombre completo del usuario</li>
+                            <li>Nombre de usuario (username)</li>
+                            <li>Contraseña de acceso</li>
+                            <li>Rol y permisos asignados</li>
+                            <li>Estatus de la cuenta</li>
+                            <li>Fecha de registro</li>
+                            <li>Último acceso</li>
                         </ul>
                     </div>
                     
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Operaciones disponibles:</h4>
                         <ul class="ayuda-lista">
-                            <li><strong>Registrar:</strong> Nuevo proveedor</li>
+                            <li><strong>Registrar:</strong> Nuevo usuario</li>
                             <li><strong>Consultar:</strong> Ver lista completa</li>
-                            <li><strong>Detallar:</strong> Ver información completa del proveedor</li>
                             <li><strong>Modificar:</strong> Actualizar datos</li>
-                            <li><strong>Eliminar:</strong> Remover proveedor</li>
-                            <li><strong>Estatus:</strong> Actualizar estatus (habilitado/inhabilitado)</li>
+                            <li><strong>Eliminar:</strong> Remover usuario</li>
+                            <li><strong>Estatus:</strong> Activar/Desactivar cuenta</li>
                             <li><strong>Reporte:</strong> Generar reportes</li>
                         </ul>
                     </div>
@@ -72,34 +67,13 @@
                         <h4 class="tarjeta-titulo">Registrar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite agregar un nuevo proveedor al sistema. Debe completar todos los campos obligatorios como nombre, RIF, correo, dirección y teléfonos.</p>
+                        <p>Permite crear una nueva cuenta de usuario en el sistema con sus respectivos permisos.</p>
                         <ul>
-                            <li>Haga clic en el botón (+) Incluir</li>
-                            <li>Complete el formulario con los datos del proveedor</li>
-                            <li>Verifique que todos los campos sean correctos</li>
+                            <li>Haga clic en el botón (+) Nuevo Usuario</li>
+                            <li>Complete el formulario con los datos del usuario</li>
+                            <li>Asigne el rol y permisos correspondientes</li>
+                            <li>Establezca una contraseña segura</li>
                             <li>Presione "Guardar" para registrar</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Tarjeta Detallar -->
-                <div class="tarjeta-ayuda tarjeta-detallar" data-tarjeta="detallar" style="display: none;">
-                    <div class="tarjeta-header">
-                        <div class="tarjeta-icono">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <h4 class="tarjeta-titulo">Detallar</h4>
-                    </div>
-                    <div class="tarjeta-contenido">
-                        <p>Permite visualizar toda la información completa de un proveedor específico.</p>
-                        <ul>
-                            <li>Ubique el proveedor en la lista</li>
-                            <li>Haga clic en el ícono del ojo (👁)</li>
-                            <li>Revise todos los datos del proveedor</li>
-                            <li>Puede cerrar la vista cuando termine</li>
                         </ul>
                     </div>
                 </div>
@@ -116,11 +90,12 @@
                         <h4 class="tarjeta-titulo">Modificar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite actualizar los datos de un proveedor existente en el sistema.</p>
+                        <p>Permite actualizar los datos y permisos de un usuario existente en el sistema.</p>
                         <ul>
-                            <li>Encuentre el proveedor a modificar</li>
+                            <li>Encuentre el usuario a modificar</li>
                             <li>Haga clic en el ícono del lápiz (✏️)</li>
                             <li>Edite los campos necesarios</li>
+                            <li>Actualice permisos si es requerido</li>
                             <li>Guarde los cambios realizados</li>
                         </ul>
                     </div>
@@ -138,12 +113,13 @@
                         <h4 class="tarjeta-titulo">Eliminar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite remover permanentemente un proveedor del sistema.</p>
+                        <p>Permite remover permanentemente una cuenta de usuario del sistema.</p>
                         <ul>
-                            <li>Localice el proveedor a eliminar</li>
+                            <li>Localice el usuario a eliminar</li>
                             <li>Haga clic en el ícono de eliminar (🗑️)</li>
                             <li>Confirme la acción en la ventana emergente</li>
-                            <li>El proveedor será eliminado del sistema</li>
+                            <li>El usuario será eliminado del sistema</li>
+                            <li>Esta acción no se puede deshacer</li>
                         </ul>
                     </div>
                 </div>
@@ -160,12 +136,13 @@
                         <h4 class="tarjeta-titulo">Cambiar Estatus</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite habilitar o inhabilitar un proveedor sin eliminarlo del sistema.</p>
+                        <p>Permite activar o desactivar una cuenta de usuario sin eliminarla del sistema.</p>
                         <ul>
-                            <li>Encuentre el proveedor en la lista</li>
+                            <li>Encuentre el usuario en la lista</li>
                             <li>Haga clic sobre su estatus actual</li>
-                            <li>El sistema alternará entre habilitado/inhabilitado</li>
-                            <li>El proveedor mantendrá sus datos pero cambiará su estado</li>
+                            <li>El sistema alternará entre activo/inactivo</li>
+                            <li>El usuario mantendrá sus datos pero cambiará su estado</li>
+                            <li>Un usuario inactivo no puede acceder al sistema</li>
                         </ul>
                     </div>
                 </div>
@@ -185,10 +162,11 @@
                         <h4 class="tarjeta-titulo">Generar Reporte</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite generar reportes de los proveedores registrados en el sistema.</p>
+                        <p>Permite generar reportes de los usuarios registrados y su actividad en el sistema.</p>
                         <ul>
                             <li>Utilice los filtros para seleccionar los datos</li>
-                            <li>Puede filtrar por estatus o fecha</li>
+                            <li>Puede filtrar por rol, estatus o fecha</li>
+                            <li>Seleccione el tipo de reporte requerido</li>
                             <li>Haga clic en "Generar Reporte"</li>
                             <li>El sistema descargará el archivo en formato PDF</li>
                         </ul>
@@ -211,7 +189,6 @@
                 <span class="nav-dot" data-slide="3"></span>
                 <span class="nav-dot" data-slide="4"></span>
                 <span class="nav-dot" data-slide="5"></span>
-                <span class="nav-dot" data-slide="6"></span>
             </div>
             
             <button class="nav-btn nav-btn-next" id="btnNavNext">
