@@ -485,11 +485,65 @@ $(document).ready(function () {
             });
         }
     });
+});
 
-    let modalAyudaInstance = null;
 
-    // Función para cargar y mostrar el modal de ayuda de marcas con contexto específico
-    function cargarYMostrarModalAyuda(contexto = null) {
+    function enviarAjax(datos, callback) {
+        $.ajax({
+            url: '',
+            type: 'POST',
+            data: datos,
+            contentType: false,
+            processData: false,
+            cache: false,
+            success: function (respuesta) {
+                if (typeof respuesta === "string") {
+                    respuesta = JSON.parse(respuesta);
+                }
+                if(callback) callback(respuesta);
+            },
+            error: function () {
+                Swal.fire('Error', 'Error en la solicitud AJAX', 'error');
+            }
+        });
+    }
+
+    function validarKeyPress(regex, e) {
+        let key = String.fromCharCode(!e.charCode ? e.which : e.charCode);
+        if (!regex.test(key)) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    }
+    
+    function validarKeyUp(regex, input, span, mensaje) {
+        if (!regex.test(input.val())) {
+            span.text(mensaje);
+            return 0;
+        } else {
+            span.text('');
+            return 1;
+        }
+    }
+    
+    function space(text) {
+        return text.replace(/\s{2,}/g, ' ');
+    }
+    
+    function mensajes(icono, titulo, mensaje) {
+        Swal.fire({
+        icon: icono,
+        title: titulo,
+        text: mensaje,
+        showConfirmButton: true,
+        confirmButtonText: "Aceptar",
+        });
+    }
+        let modalAyudaInstance = null;
+
+    // Función para cargar y mostrar el modal de ayuda de modelos con contexto específico
+    function cargarYMostrarModalAyudaModelo(contexto = null) {
         // Cargar CSS si no está cargado
         if (!$('link[href*="ayuda/css/modal.css"]').length) {
             $('<link>')
@@ -551,13 +605,18 @@ $(document).ready(function () {
                             }, 300);
                         }
 
-                        // Abrir modal
-                        modalAyudaInstance.openModal();
                     }
                 }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se puede eliminar',
+                    html: mensaje.replace(/\n/g, '<br>'),
+                    width: '600px'
+                });
             })
             .fail(function() {
-                console.error('Error al cargar el HTML del modal de marcas');
+                console.error('Error al cargar el HTML del modal de modelos');
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -566,72 +625,19 @@ $(document).ready(function () {
             });
     }
 
-    // Botón de ayuda principal de marcas
+    // Botón de ayuda principal de modelos
     $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
         e.preventDefault();
-        console.log('Clic en botón de ayuda de marcas detectado');
-        cargarYMostrarModalAyuda(); // Sin contexto específico
+        console.log('Clic en botón de ayuda de modelos detectado');
+        cargarYMostrarModalAyudaModelo(); // Sin contexto específico
     });
 
-    // Botón de ayuda dentro de modales de marcas
+    // Botón de ayuda dentro de modales de modelos
     $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
         e.preventDefault();
         const contexto = $(this).data('contexto');
-        console.log('Clic en botón de ayuda modal de marcas con contexto:', contexto);
-        cargarYMostrarModalAyuda(contexto);
+        console.log('Clic en botón de ayuda modal de modelos con contexto:', contexto);
+        cargarYMostrarModalAyudaModelo(contexto);
     });
-});
 
-    function enviarAjax(datos, callback) {
-        $.ajax({
-            url: '',
-            type: 'POST',
-            data: datos,
-            contentType: false,
-            processData: false,
-            cache: false,
-            success: function (respuesta) {
-                if (typeof respuesta === "string") {
-                    respuesta = JSON.parse(respuesta);
-                }
-                if(callback) callback(respuesta);
-            },
-            error: function () {
-                Swal.fire('Error', 'Error en la solicitud AJAX', 'error');
-            }
-        });
-    }
-
-    function validarKeyPress(regex, e) {
-        let key = String.fromCharCode(!e.charCode ? e.which : e.charCode);
-        if (!regex.test(key)) {
-            e.preventDefault();
-            return false;
-        }
-        return true;
-    }
-    
-    function validarKeyUp(regex, input, span, mensaje) {
-        if (!regex.test(input.val())) {
-            span.text(mensaje);
-            return 0;
-        } else {
-            span.text('');
-            return 1;
-        }
-    }
-    
-    function space(text) {
-        return text.replace(/\s{2,}/g, ' ');
-    }
-    
-    function mensajes(icono, titulo, mensaje) {
-        Swal.fire({
-        icon: icono,
-        title: titulo,
-        text: mensaje,
-        showConfirmButton: true,
-        confirmButtonText: "Aceptar",
-        });
-    }
 });
