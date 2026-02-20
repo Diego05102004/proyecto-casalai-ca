@@ -41,7 +41,7 @@
         <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
             <div class="reporte-parametros" style="text-align:center;">
-                <h3 class="titulo-form">Reporte de Cuentas</h3>
+                <h3 class="titulo-form">Reporte de Cuentas Bancarias</h3>
                 <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                     <label for="fechaInicioCuentas" class="title-select">Fecha inicio:</label>
                     <input type="date" id="fechaInicioCuentas" class="selector-reporte">
