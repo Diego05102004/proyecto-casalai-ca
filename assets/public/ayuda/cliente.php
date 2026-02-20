@@ -16,43 +16,38 @@
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M5 21V7l8-4v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M19 21V11l-6-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 9v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3 class="ayuda-titulo">Gestión de Proveedores</h3>
+                    <h3 class="ayuda-titulo">Gestión de Clientes</h3>
                 </div>
                 
-                <p class="ayuda-descripcion">Administre la información de todos los proveedores de productos y servicios.</p>
+                <p class="ayuda-descripcion">Administre la base de datos de clientes del sistema.</p>
                 
                 <div class="ayuda-grid">
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Información gestionable:</h4>
                         <ul class="ayuda-lista">
-                            <li>Nombre del proveedor y su representante</li>
-                            <li>RIF del proveedor y su representante</li>
+                            <li>Nombre completo</li>
+                            <li>Cédula</li>
+                            <li>N° de teléfono</li>
+                            <li>Dirección (Estado/Ciudad/Calle o Avenida)</li>
                             <li>Correo electrónico</li>
-                            <li>Dirección</li>
-                            <li>N° de teléfono (Principal y Secundario)</li>
-                            <li>Observaciones</li>
-                            <li>Estatus</li>
-                            <li>Suministro de los proveedores</li>
+                            <li>Historial de compras</li>
                         </ul>
                     </div>
                     
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Operaciones disponibles:</h4>
                         <ul class="ayuda-lista">
-                            <li><strong>Registrar:</strong> Nuevo proveedor</li>
+                            <li><strong>Registrar:</strong> Nuevo cliente</li>
                             <li><strong>Consultar:</strong> Ver lista completa</li>
-                            <li><strong>Detallar:</strong> Ver información completa del proveedor</li>
                             <li><strong>Modificar:</strong> Actualizar datos</li>
-                            <li><strong>Eliminar:</strong> Remover proveedor</li>
-                            <li><strong>Estatus:</strong> Actualizar estatus (habilitado/inhabilitado)</li>
-                            <li><strong>Reporte:</strong> Generar reportes</li>
+                            <li><strong>Eliminar:</strong> Remover cliente</li>
+                            <li><strong>Reporte:</strong> Estadísticas de compras</li>
                         </ul>
                     </div>
                 </div>
@@ -72,34 +67,16 @@
                         <h4 class="tarjeta-titulo">Registrar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite agregar un nuevo proveedor al sistema. Debe completar todos los campos obligatorios como nombre, RIF, correo, dirección y teléfonos.</p>
+                        <p>Permite agregar un nuevo cliente al sistema. Debe completar todos los campos obligatorios como nombre, cédula, teléfono, dirección y correo.</p>
                         <ul>
-                            <li>Haga clic en el botón (+) Incluir</li>
-                            <li>Complete el formulario con los datos del proveedor</li>
-                            <li>Verifique que todos los campos sean correctos</li>
-                            <li>Presione "Guardar" para registrar</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Tarjeta Detallar -->
-                <div class="tarjeta-ayuda tarjeta-detallar" data-tarjeta="detallar" style="display: none;">
-                    <div class="tarjeta-header">
-                        <div class="tarjeta-icono">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <h4 class="tarjeta-titulo">Detallar</h4>
-                    </div>
-                    <div class="tarjeta-contenido">
-                        <p>Permite visualizar toda la información completa de un proveedor específico.</p>
-                        <ul>
-                            <li>Ubique el proveedor en la lista</li>
-                            <li>Haga clic en el ícono del ojo (👁)</li>
-                            <li>Revise todos los datos del proveedor</li>
-                            <li>Puede cerrar la vista cuando termine</li>
+                            <li>Haga clic en el botón "+" (verde) en la esquina superior derecha</li>
+                            <li>Complete todos los campos obligatorios marcados con *</li>
+                            <li>Ingrese el nombre completo (solo letras, mínimo 2 caracteres)</li>
+                            <li>Ingrese la cédula (formato: 1.234.567 o 12.345.678)</li>
+                            <li>Ingrese el N° de teléfono (formato: 0400-000-0000)</li>
+                            <li>Ingrese una dirección completa (Estado/Ciudad/Calle)</li>
+                            <li>Ingrese un correo electrónico (gmail, outlook, yahoo, icloud)</li>
+                            <li>Haga clic en "Registrar" para guardar</li>
                         </ul>
                     </div>
                 </div>
@@ -116,12 +93,13 @@
                         <h4 class="tarjeta-titulo">Modificar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite actualizar los datos de un proveedor existente en el sistema.</p>
+                        <p>Permite actualizar los datos de un cliente existente en el sistema.</p>
                         <ul>
-                            <li>Encuentre el proveedor a modificar</li>
-                            <li>Haga clic en el ícono del lápiz (✏️)</li>
-                            <li>Edite los campos necesarios</li>
-                            <li>Guarde los cambios realizados</li>
+                            <li>Localice al cliente que desea modificar en la tabla</li>
+                            <li>Haga clic en el ícono del lápiz (📝) en "Acciones"</li>
+                            <li>Edite los campos necesarios (nombre, teléfono, dirección, etc.)</li>
+                            <li>Haga clic en "Modificar" para confirmar los cambios</li>
+                            <li>Los cambios se reflejarán inmediatamente en el sistema</li>
                         </ul>
                     </div>
                 </div>
@@ -138,34 +116,13 @@
                         <h4 class="tarjeta-titulo">Eliminar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite remover permanentemente un proveedor del sistema.</p>
+                        <p>Permite remover permanentemente un cliente del sistema.</p>
                         <ul>
-                            <li>Localice el proveedor a eliminar</li>
-                            <li>Haga clic en el ícono de eliminar (🗑️)</li>
-                            <li>Confirme la acción en la ventana emergente</li>
-                            <li>El proveedor será eliminado del sistema</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Tarjeta Cambiar Estatus -->
-                <div class="tarjeta-ayuda tarjeta-estatus" data-tarjeta="estatus" style="display: none;">
-                    <div class="tarjeta-header">
-                        <div class="tarjeta-icono">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="3" y="11" width="18" height="10" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <h4 class="tarjeta-titulo">Cambiar Estatus</h4>
-                    </div>
-                    <div class="tarjeta-contenido">
-                        <p>Permite habilitar o inhabilitar un proveedor sin eliminarlo del sistema.</p>
-                        <ul>
-                            <li>Encuentre el proveedor en la lista</li>
-                            <li>Haga clic sobre su estatus actual</li>
-                            <li>El sistema alternará entre habilitado/inhabilitado</li>
-                            <li>El proveedor mantendrá sus datos pero cambiará su estado</li>
+                            <li>Encuentre al cliente que desea eliminar en la lista</li>
+                            <li>Haga clic en el ícono de la X (❌) en "Acciones"</li>
+                            <li>Confirme la eliminación en el mensaje de advertencia</li>
+                            <li>El cliente será eliminado permanentemente del sistema</li>
+                            <li><strong>¡Cuidado!</strong> Esta acción no se puede deshacer</li>
                         </ul>
                     </div>
                 </div>
@@ -185,12 +142,14 @@
                         <h4 class="tarjeta-titulo">Generar Reporte</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite generar reportes de los proveedores registrados en el sistema.</p>
+                        <p>Permite generar reportes estadísticos de los clientes y sus compras.</p>
                         <ul>
-                            <li>Utilice los filtros para seleccionar los datos</li>
-                            <li>Puede filtrar por estatus o fecha</li>
-                            <li>Haga clic en "Generar Reporte"</li>
-                            <li>El sistema descargará el archivo en formato PDF</li>
+                            <li>Haga clic en el botón de gráfica (azul) en la esquina superior derecha</li>
+                            <li>Consulte la sección "Top 10 Clientes por Productos Comprados"</li>
+                            <li>Visualice el gráfico de barras con las estadísticas</li>
+                            <li>Revise la tabla detallada con información completa</li>
+                            <li>El sistema genera automáticamente el reporte en PDF</li>
+                            <li>Puede descargar el archivo para análisis externos</li>
                         </ul>
                     </div>
                 </div>
@@ -210,8 +169,6 @@
                 <span class="nav-dot" data-slide="2"></span>
                 <span class="nav-dot" data-slide="3"></span>
                 <span class="nav-dot" data-slide="4"></span>
-                <span class="nav-dot" data-slide="5"></span>
-                <span class="nav-dot" data-slide="6"></span>
             </div>
             
             <button class="nav-btn nav-btn-next" id="btnNavNext">
