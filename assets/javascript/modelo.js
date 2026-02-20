@@ -489,7 +489,7 @@ $(document).ready(function () {
     let modalAyudaInstance = null;
 
     // Función para cargar y mostrar el modal de ayuda de marcas con contexto específico
-    function cargarYMostrarModalAyudaMarca(contexto = null) {
+    function cargarYMostrarModalAyuda(contexto = null) {
         // Cargar CSS si no está cargado
         if (!$('link[href*="ayuda/css/modal.css"]').length) {
             $('<link>')
@@ -502,7 +502,7 @@ $(document).ready(function () {
         }
 
         // Cargar HTML del modal
-        $.get('assets/public/ayuda/marca.php')
+        $.get('assets/public/ayuda/modelo.php')
             .done(function(html) {
                 // Solo agregar modal si no existe
                 if (!$('#modalAyuda').length) {
@@ -570,7 +570,7 @@ $(document).ready(function () {
     $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
         e.preventDefault();
         console.log('Clic en botón de ayuda de marcas detectado');
-        cargarYMostrarModalAyudaMarca(); // Sin contexto específico
+        cargarYMostrarModalAyuda(); // Sin contexto específico
     });
 
     // Botón de ayuda dentro de modales de marcas
@@ -578,7 +578,7 @@ $(document).ready(function () {
         e.preventDefault();
         const contexto = $(this).data('contexto');
         console.log('Clic en botón de ayuda modal de marcas con contexto:', contexto);
-        cargarYMostrarModalAyudaMarca(contexto);
+        cargarYMostrarModalAyuda(contexto);
     });
 });
 
