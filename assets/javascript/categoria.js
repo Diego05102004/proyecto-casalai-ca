@@ -1101,27 +1101,6 @@ $(document).ready(function () {
         });
     });
 
-    // FUNCIONES UTILITARIAS
-    function mensajes(icono, titulo, mensaje){
-        Swal.fire({
-            icon: icono,
-            title: titulo,
-            text: mensaje,
-            showConfirmButton: true,
-            confirmButtonText: 'Aceptar',
-        });
-    }
-
-    function validarKeyPress(er, e) {
-        key = e.keyCode;
-        tecla = String.fromCharCode(key);
-        a = er.test(tecla);
-
-        if (!a) {
-            e.preventDefault();
-        }
-    }
-
     function validarKeyUp(er, etiqueta, etiquetamensaje, mensaje) {
         a = er.test(etiqueta.val());
 
@@ -1142,73 +1121,57 @@ $(document).ready(function () {
 
     let modalAyudaInstance = null;
 
-    // Función para cargar y mostrar el modal de ayuda con contexto específico
     function cargarYMostrarModalAyuda(contexto = null) {
-        // Cargar CSS si no está cargado
         if (!$('link[href*="ayuda/css/modal.css"]').length) {
             $('<link>')
                 .attr({
-                    'rel': 'stylesheet',
-                    'type': 'text/css',
-                    'href': 'assets/public/ayuda/css/modal.css'
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: 'assets/public/ayuda/css/modal.css'
                 })
                 .appendTo('head');
         }
 
-        // Cargar HTML del modal
-        $.get('assets/public/ayuda/categoria.php')
+        if (modalAyudaInstance) {
+            modalAyudaInstance.openModal();
+            if (contexto) {
+                setTimeout(() => {
+                    const slideIndex = modalAyudaInstance.mapeoContextos && modalAyudaInstance.mapeoContextos[contexto];
+                    if (slideIndex !== undefined) {
+                        modalAyudaInstance.goToSlide(slideIndex);
+                    }
+                }, 300);
+            }
+            return;
+        }
+
+        $.get('assets/public/ayuda/categorias.php')
             .done(function(html) {
-                // Solo agregar modal si no existe
                 if (!$('#modalAyuda').length) {
                     $('body').append(html);
                 }
 
-                // Cargar JS del modal si no está cargado
-                if (!$('script[src*="ayuda/js/modal.js"]').length) {
-                    $.getScript('assets/public/ayuda/js/modal.js')
-                        .done(function() {
-                            // Inicializar modal
-                            if (typeof inicializarModalAyudaUsuario === 'function') {
-                                modalAyudaInstance = inicializarModalAyudaUsuario();
+                $.getScript('assets/public/ayuda/js/modal.js')
+                    .done(function() {
+                        if (typeof inicializarModalAyudaUsuario === 'function') {
+                            modalAyudaInstance = inicializarModalAyudaUsuario();
+                            modalAyudaInstance.openModal();
 
-                                // Abrir modal con contexto si se proporciona
-                                if (contexto) {
-                                    setTimeout(() => {
-                                        const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                        if (slideIndex !== undefined) {
-                                            modalAyudaInstance.goToSlide(slideIndex);
-                                        }
-                                    }, 300);
-                                }
-
-                                // Abrir modal
-                                modalAyudaInstance.openModal();
-                            } else {
-                                console.error('La función inicializarModalAyudaUsuario no está disponible');
+                            if (contexto) {
+                                setTimeout(() => {
+                                    const slideIndex = modalAyudaInstance.mapeoContextos && modalAyudaInstance.mapeoContextos[contexto];
+                                    if (slideIndex !== undefined) {
+                                        modalAyudaInstance.goToSlide(slideIndex);
+                                    }
+                                }, 300);
                             }
-                        })
-                        .fail(function() {
-                            console.error('Error al cargar el JavaScript del modal de ayuda');
-                        });
-                } else {
-                    // Si el JS ya está cargado, solo abrir el modal existente
-                    if (typeof inicializarModalAyudaUsuario === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaUsuario();
-
-                        // Abrir modal con contexto si se proporciona
-                        if (contexto) {
-                            setTimeout(() => {
-                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                if (slideIndex !== undefined) {
-                                    modalAyudaInstance.goToSlide(slideIndex);
-                                }
-                            }, 300);
+                        } else {
+                            console.error('La función inicializarModalAyudaUsuario no está disponible');
                         }
-
-                        // Abrir modal
-                        modalAyudaInstance.openModal();
-                    }
-                }
+                    })
+                    .fail(function() {
+                        console.error('Error al cargar el JavaScript del modal de ayuda');
+                    });
             })
             .fail(function() {
                 console.error('Error al cargar el HTML del modal');
@@ -1220,18 +1183,14 @@ $(document).ready(function () {
             });
     }
 
-    // Botón de ayuda principal
     $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(e) {
         e.preventDefault();
-        console.log('Clic en botón de ayuda detectado');
-        cargarYMostrarModalAyuda(); // Sin contexto específico
+        cargarYMostrarModalAyuda();
     });
 
-    // Botón de ayuda dentro de modales
     $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
         e.preventDefault();
         const contexto = $(this).data('contexto');
-        console.log('Clic en botón de ayuda modal con contexto:', contexto);
         cargarYMostrarModalAyuda(contexto);
     });
 });
