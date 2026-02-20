@@ -517,6 +517,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para cargar y mostrar el modal de ayuda con contexto específico
     function cargarYMostrarModalAyuda(contexto = null) {
+        // Si ya existe una instancia, solo abrir y navegar
+        if (modalAyudaInstance) {
+            // Asegurar restauración del scroll (por si algún cierre previo falló)
+            document.body.style.overflow = '';
+
+            modalAyudaInstance.openModal();
+
+            if (contexto) {
+                setTimeout(() => {
+                    const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                    if (slideIndex !== undefined) {
+                        modalAyudaInstance.goToSlide(slideIndex);
+                    }
+                }, 300);
+            }
+
+            return;
+        }
+
         // Cargar CSS si no está cargado
         if (!$('link[href*="ayuda/css/modal.css"]').length) {
             $('<link>')
@@ -531,11 +550,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Cargar HTML del modal
         $.get('assets/public/ayuda/ordendespacho.php')
             .done(function(html) {
-                // Asegurar que el contenido corresponda a este módulo (evitar reutilizar HTML de otros módulos)
-                if ($('#modalAyuda').length) {
-                    $('#modalAyuda').remove();
+                // Solo agregar modal si no existe (evita romper listeners/estado al reabrir)
+                if (!$('#modalAyuda').length) {
+                    $('body').append(html);
                 }
-                $('body').append(html);
 
                 // Cargar JS del modal si no está cargado
                 if (!$('script[src*="ayuda/js/modal.js"]').length) {
@@ -544,6 +562,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Inicializar modal
                             if (typeof inicializarModalAyudaUsuario === 'function') {
                                 modalAyudaInstance = inicializarModalAyudaUsuario();
+
+                                // Asegurar restauración del scroll (por si algún cierre previo falló)
+                                document.body.style.overflow = '';
 
                                 // Abrir modal con contexto si se proporciona
                                 if (contexto) {
@@ -568,6 +589,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Si el JS ya está cargado, solo abrir el modal existente
                     if (typeof inicializarModalAyudaUsuario === 'function') {
                         modalAyudaInstance = inicializarModalAyudaUsuario();
+
+                        // Asegurar restauración del scroll (por si algún cierre previo falló)
+                        document.body.style.overflow = '';
 
                         // Abrir modal con contexto si se proporciona
                         if (contexto) {
