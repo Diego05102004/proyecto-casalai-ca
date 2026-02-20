@@ -23,34 +23,36 @@
                             <path d="M9 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3 class="ayuda-titulo">Gestión de Proveedores</h3>
+                    <h3 class="ayuda-titulo">Gestión de Productos</h3>
                 </div>
                 
-                <p class="ayuda-descripcion">Administre la información de todos los proveedores de productos y servicios.</p>
+                <p class="ayuda-descripcion">Administre el catálogo completo de productos del inventario.</p>
                 
                 <div class="ayuda-grid">
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Información gestionable:</h4>
                         <ul class="ayuda-lista">
-                            <li>Nombre del proveedor y su representante</li>
-                            <li>RIF del proveedor y su representante</li>
-                            <li>Correo electrónico</li>
-                            <li>Dirección</li>
-                            <li>N° de teléfono (Principal y Secundario)</li>
-                            <li>Observaciones</li>
-                            <li>Estatus</li>
-                            <li>Suministro de los proveedores</li>
+                            <li>Nombre del producto</li>
+                            <li>Modelo y marca</li>
+                            <li>Imagen del producto</li>
+                            <li>Descripción breve</li>
+                            <li>Stock (Actual, Máximo y Mínimo)</li>
+                            <li>Cláusula de garantía</li>
+                            <li>Categoría y características específicas</li>
+                            <li>Código serial</li>
+                            <li>Precio de venta</li>
+                            <li>Estatus (habilitado/inhabilitado)</li>
                         </ul>
                     </div>
                     
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Operaciones disponibles:</h4>
                         <ul class="ayuda-lista">
-                            <li><strong>Registrar:</strong> Nuevo proveedor</li>
+                            <li><strong>Registrar:</strong> Nuevo producto</li>
                             <li><strong>Consultar:</strong> Ver lista completa</li>
-                            <li><strong>Detallar:</strong> Ver información completa del proveedor</li>
+                            <li><strong>Detallar:</strong> Ver información completa del producto</li>
                             <li><strong>Modificar:</strong> Actualizar datos</li>
-                            <li><strong>Eliminar:</strong> Remover proveedor</li>
+                            <li><strong>Eliminar:</strong> Remover producto</li>
                             <li><strong>Estatus:</strong> Actualizar estatus (habilitado/inhabilitado)</li>
                             <li><strong>Reporte:</strong> Generar reportes</li>
                         </ul>
@@ -72,12 +74,15 @@
                         <h4 class="tarjeta-titulo">Registrar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite agregar un nuevo proveedor al sistema. Debe completar todos los campos obligatorios como nombre, RIF, correo, dirección y teléfonos.</p>
+                        <p>Permite agregar un nuevo producto al sistema. Debe completar todos los campos obligatorios como nombre, modelo/marca, imagen, descripción, stock y precio.</p>
                         <ul>
-                            <li>Haga clic en el botón (+) Incluir</li>
-                            <li>Complete el formulario con los datos del proveedor</li>
-                            <li>Verifique que todos los campos sean correctos</li>
-                            <li>Presione "Guardar" para registrar</li>
+                            <li>Haga clic en el botón "+" (verde) en la esquina superior derecha</li>
+                            <li>Complete todos los campos obligatorios marcados con *</li>
+                            <li>Ingrese nombre, seleccione modelo/marca y cargue imagen</li>
+                            <li>Complete descripción, stock (actual, máximo, mínimo)</li>
+                            <li>Redacte cláusula de garantía y seleccione categoría</li>
+                            <li>Ingrese código serial y precio de venta</li>
+                            <li>Haga clic en "Registrar" para guardar</li>
                         </ul>
                     </div>
                 </div>
@@ -94,11 +99,11 @@
                         <h4 class="tarjeta-titulo">Detallar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite visualizar toda la información completa de un proveedor específico.</p>
+                        <p>Permite visualizar toda la información completa de un producto específico del inventario.</p>
                         <ul>
-                            <li>Ubique el proveedor en la lista</li>
-                            <li>Haga clic en el ícono del ojo (👁)</li>
-                            <li>Revise todos los datos del proveedor</li>
+                            <li>Ubique el producto en la lista</li>
+                            <li>Haga clic en el ícono del ojo (👁) en "Acciones"</li>
+                            <li>Revise todos los datos del producto incluyendo imagen y stock</li>
                             <li>Puede cerrar la vista cuando termine</li>
                         </ul>
                     </div>
@@ -116,12 +121,13 @@
                         <h4 class="tarjeta-titulo">Modificar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite actualizar los datos de un proveedor existente en el sistema.</p>
+                        <p>Permite actualizar los datos de un producto existente en el sistema.</p>
                         <ul>
-                            <li>Encuentre el proveedor a modificar</li>
-                            <li>Haga clic en el ícono del lápiz (✏️)</li>
-                            <li>Edite los campos necesarios</li>
-                            <li>Guarde los cambios realizados</li>
+                            <li>Localice el producto que desea modificar en la tabla</li>
+                            <li>Haga clic en el ícono del lápiz (📝) en "Acciones"</li>
+                            <li>Edite los campos necesarios (nombre, precio, stock, etc.)</li>
+                            <li>Haga clic en "Modificar" para confirmar los cambios</li>
+                            <li>Los cambios se reflejarán inmediatamente</li>
                         </ul>
                     </div>
                 </div>
@@ -138,12 +144,13 @@
                         <h4 class="tarjeta-titulo">Eliminar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite remover permanentemente un proveedor del sistema.</p>
+                        <p>Permite remover permanentemente un producto del sistema, incluyendo su imagen asociada.</p>
                         <ul>
-                            <li>Localice el proveedor a eliminar</li>
-                            <li>Haga clic en el ícono de eliminar (🗑️)</li>
-                            <li>Confirme la acción en la ventana emergente</li>
-                            <li>El proveedor será eliminado del sistema</li>
+                            <li>Encuentre el producto que desea eliminar</li>
+                            <li>Haga clic en el ícono de la X (❌) en "Acciones"</li>
+                            <li>Confirme la eliminación en el mensaje de advertencia</li>
+                            <li>El producto y todos sus datos serán eliminados permanentemente</li>
+                            <li><strong>¡Cuidado!</strong> Esta acción no se puede deshacer</li>
                         </ul>
                     </div>
                 </div>
@@ -160,12 +167,13 @@
                         <h4 class="tarjeta-titulo">Cambiar Estatus</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite habilitar o inhabilitar un proveedor sin eliminarlo del sistema.</p>
+                        <p>Permite habilitar o inhabilitar un producto sin eliminarlo del sistema.</p>
                         <ul>
-                            <li>Encuentre el proveedor en la lista</li>
-                            <li>Haga clic sobre su estatus actual</li>
-                            <li>El sistema alternará entre habilitado/inhabilitado</li>
-                            <li>El proveedor mantendrá sus datos pero cambiará su estado</li>
+                            <li>Encuentre el producto en la lista</li>
+                            <li>Haga clic directamente sobre su estatus actual (habilitado/inhabilitado)</li>
+                            <li>El sistema alternará automáticamente el estado</li>
+                            <li>El producto mantendrá sus datos pero cambiará su disponibilidad</li>
+                            <li>El cambio es instantáneo y no requiere confirmación</li>
                         </ul>
                     </div>
                 </div>
@@ -185,12 +193,14 @@
                         <h4 class="tarjeta-titulo">Generar Reporte</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite generar reportes de los proveedores registrados en el sistema.</p>
+                        <p>Permite generar reportes de los productos registrados, incluyendo los más vendidos y estadísticas de inventario.</p>
                         <ul>
-                            <li>Utilice los filtros para seleccionar los datos</li>
-                            <li>Puede filtrar por estatus o fecha</li>
-                            <li>Haga clic en "Generar Reporte"</li>
-                            <li>El sistema descargará el archivo en formato PDF</li>
+                            <li>Haga clic en el botón de gráfica (azul) en la esquina superior derecha</li>
+                            <li>Seleccione el tipo de reporte (Todos, Productos más vendidos, etc.)</li>
+                            <li>Ingrese las fechas de inicio y fin</li>
+                            <li>Elija el tipo de gráfica (Barras, Pastel, Líneas, etc.)</li>
+                            <li>Haga clic en "Generar Reporte" para visualizar</li>
+                            <li>El sistema mostrará el reporte en formato visual</li>
                         </ul>
                     </div>
                 </div>
