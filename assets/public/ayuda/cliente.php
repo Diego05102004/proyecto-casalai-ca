@@ -16,45 +16,38 @@
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M5 21V7l8-4v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M19 21V11l-6-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 9v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <h3 class="ayuda-titulo">Gestión de Productos</h3>
+                    <h3 class="ayuda-titulo">Gestión de Clientes</h3>
                 </div>
                 
-                <p class="ayuda-descripcion">Administre el catálogo completo de productos del inventario.</p>
+                <p class="ayuda-descripcion">Administre la base de datos de clientes del sistema.</p>
                 
                 <div class="ayuda-grid">
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Información gestionable:</h4>
                         <ul class="ayuda-lista">
-                            <li>Nombre del producto</li>
-                            <li>Modelo y marca</li>
-                            <li>Imagen del producto</li>
-                            <li>Descripción breve</li>
-                            <li>Stock (Actual, Máximo y Mínimo)</li>
-                            <li>Cláusula de garantía</li>
-                            <li>Categoría y características específicas</li>
-                            <li>Código serial</li>
-                            <li>Precio de venta</li>
-                            <li>Estatus (habilitado/inhabilitado)</li>
+                            <li>Nombre completo</li>
+                            <li>Cédula</li>
+                            <li>N° de teléfono</li>
+                            <li>Dirección (Estado/Ciudad/Calle o Avenida)</li>
+                            <li>Correo electrónico</li>
+                            <li>Historial de compras</li>
                         </ul>
                     </div>
                     
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Operaciones disponibles:</h4>
                         <ul class="ayuda-lista">
-                            <li><strong>Registrar:</strong> Nuevo producto</li>
+                            <li><strong>Registrar:</strong> Nuevo cliente</li>
                             <li><strong>Consultar:</strong> Ver lista completa</li>
-                            <li><strong>Detallar:</strong> Ver información completa del producto</li>
                             <li><strong>Modificar:</strong> Actualizar datos</li>
-                            <li><strong>Eliminar:</strong> Remover producto</li>
-                            <li><strong>Estatus:</strong> Actualizar estatus (habilitado/inhabilitado)</li>
-                            <li><strong>Reporte:</strong> Generar reportes</li>
+                            <li><strong>Eliminar:</strong> Remover cliente</li>
+                            <li><strong>Reporte:</strong> Estadísticas de compras</li>
                         </ul>
                     </div>
                 </div>
@@ -74,37 +67,16 @@
                         <h4 class="tarjeta-titulo">Registrar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite agregar un nuevo producto al sistema. Debe completar todos los campos obligatorios como nombre, modelo/marca, imagen, descripción, stock y precio.</p>
+                        <p>Permite agregar un nuevo cliente al sistema. Debe completar todos los campos obligatorios como nombre, cédula, teléfono, dirección y correo.</p>
                         <ul>
                             <li>Haga clic en el botón "+" (verde) en la esquina superior derecha</li>
                             <li>Complete todos los campos obligatorios marcados con *</li>
-                            <li>Ingrese nombre, seleccione modelo/marca y cargue imagen</li>
-                            <li>Complete descripción, stock (actual, máximo, mínimo)</li>
-                            <li>Redacte cláusula de garantía y seleccione categoría</li>
-                            <li>Ingrese código serial y precio de venta</li>
+                            <li>Ingrese el nombre completo (solo letras, mínimo 2 caracteres)</li>
+                            <li>Ingrese la cédula (formato: 1.234.567 o 12.345.678)</li>
+                            <li>Ingrese el N° de teléfono (formato: 0400-000-0000)</li>
+                            <li>Ingrese una dirección completa (Estado/Ciudad/Calle)</li>
+                            <li>Ingrese un correo electrónico (gmail, outlook, yahoo, icloud)</li>
                             <li>Haga clic en "Registrar" para guardar</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Tarjeta Detallar -->
-                <div class="tarjeta-ayuda tarjeta-detallar" data-tarjeta="detallar" style="display: none;">
-                    <div class="tarjeta-header">
-                        <div class="tarjeta-icono">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <h4 class="tarjeta-titulo">Detallar</h4>
-                    </div>
-                    <div class="tarjeta-contenido">
-                        <p>Permite visualizar toda la información completa de un producto específico del inventario.</p>
-                        <ul>
-                            <li>Ubique el producto en la lista</li>
-                            <li>Haga clic en el ícono del ojo (👁) en "Acciones"</li>
-                            <li>Revise todos los datos del producto incluyendo imagen y stock</li>
-                            <li>Puede cerrar la vista cuando termine</li>
                         </ul>
                     </div>
                 </div>
@@ -121,13 +93,13 @@
                         <h4 class="tarjeta-titulo">Modificar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite actualizar los datos de un producto existente en el sistema.</p>
+                        <p>Permite actualizar los datos de un cliente existente en el sistema.</p>
                         <ul>
-                            <li>Localice el producto que desea modificar en la tabla</li>
+                            <li>Localice al cliente que desea modificar en la tabla</li>
                             <li>Haga clic en el ícono del lápiz (📝) en "Acciones"</li>
-                            <li>Edite los campos necesarios (nombre, precio, stock, etc.)</li>
+                            <li>Edite los campos necesarios (nombre, teléfono, dirección, etc.)</li>
                             <li>Haga clic en "Modificar" para confirmar los cambios</li>
-                            <li>Los cambios se reflejarán inmediatamente</li>
+                            <li>Los cambios se reflejarán inmediatamente en el sistema</li>
                         </ul>
                     </div>
                 </div>
@@ -144,36 +116,13 @@
                         <h4 class="tarjeta-titulo">Eliminar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite remover permanentemente un producto del sistema, incluyendo su imagen asociada.</p>
+                        <p>Permite remover permanentemente un cliente del sistema.</p>
                         <ul>
-                            <li>Encuentre el producto que desea eliminar</li>
+                            <li>Encuentre al cliente que desea eliminar en la lista</li>
                             <li>Haga clic en el ícono de la X (❌) en "Acciones"</li>
                             <li>Confirme la eliminación en el mensaje de advertencia</li>
-                            <li>El producto y todos sus datos serán eliminados permanentemente</li>
+                            <li>El cliente será eliminado permanentemente del sistema</li>
                             <li><strong>¡Cuidado!</strong> Esta acción no se puede deshacer</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Tarjeta Cambiar Estatus -->
-                <div class="tarjeta-ayuda tarjeta-estatus" data-tarjeta="estatus" style="display: none;">
-                    <div class="tarjeta-header">
-                        <div class="tarjeta-icono">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="3" y="11" width="18" height="10" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <h4 class="tarjeta-titulo">Cambiar Estatus</h4>
-                    </div>
-                    <div class="tarjeta-contenido">
-                        <p>Permite habilitar o inhabilitar un producto sin eliminarlo del sistema.</p>
-                        <ul>
-                            <li>Encuentre el producto en la lista</li>
-                            <li>Haga clic directamente sobre su estatus actual (habilitado/inhabilitado)</li>
-                            <li>El sistema alternará automáticamente el estado</li>
-                            <li>El producto mantendrá sus datos pero cambiará su disponibilidad</li>
-                            <li>El cambio es instantáneo y no requiere confirmación</li>
                         </ul>
                     </div>
                 </div>
@@ -193,14 +142,14 @@
                         <h4 class="tarjeta-titulo">Generar Reporte</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite generar reportes de los productos registrados, incluyendo los más vendidos y estadísticas de inventario.</p>
+                        <p>Permite generar reportes estadísticos de los clientes y sus compras.</p>
                         <ul>
                             <li>Haga clic en el botón de gráfica (azul) en la esquina superior derecha</li>
-                            <li>Seleccione el tipo de reporte (Todos, Productos más vendidos, etc.)</li>
-                            <li>Ingrese las fechas de inicio y fin</li>
-                            <li>Elija el tipo de gráfica (Barras, Pastel, Líneas, etc.)</li>
-                            <li>Haga clic en "Generar Reporte" para visualizar</li>
-                            <li>El sistema mostrará el reporte en formato visual</li>
+                            <li>Consulte la sección "Top 10 Clientes por Productos Comprados"</li>
+                            <li>Visualice el gráfico de barras con las estadísticas</li>
+                            <li>Revise la tabla detallada con información completa</li>
+                            <li>El sistema genera automáticamente el reporte en PDF</li>
+                            <li>Puede descargar el archivo para análisis externos</li>
                         </ul>
                     </div>
                 </div>
@@ -220,8 +169,6 @@
                 <span class="nav-dot" data-slide="2"></span>
                 <span class="nav-dot" data-slide="3"></span>
                 <span class="nav-dot" data-slide="4"></span>
-                <span class="nav-dot" data-slide="5"></span>
-                <span class="nav-dot" data-slide="6"></span>
             </div>
             
             <button class="nav-btn nav-btn-next" id="btnNavNext">

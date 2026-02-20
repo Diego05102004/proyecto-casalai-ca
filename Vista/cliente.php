@@ -22,6 +22,9 @@ aria-labelledby="registrarClienteModalLabel" aria-hidden="true">
         <div class="modal-content">
             <form id="ingresarclientes" method="POST" novalidate>
                 <div class="modal-header">
+                    <button type="button" class="btn-ayuda-modal" title="Ayuda para Registrar Cliente" data-contexto="registrar">
+                        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="18" height="18">
+                    </button>
                     <h5 class="titulo-form" id="registrarClienteModalLabel">Incluir Cliente</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                         <span aria-hidden="true">&times;</span>
@@ -197,6 +200,9 @@ aria-labelledby="modificar_clientes_modal_label" aria-hidden="true">
         <div class="modal-content">
             <form id="modificarclientes" method="POST" novalidate>
                 <div class="modal-header">
+                    <button type="button" class="btn-ayuda-modal" title="Ayuda para Modificar Cliente" data-contexto="modificar">
+                        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="18" height="18">
+                    </button>
                     <h5 class="titulo-form" id="modificar_clientes_modal_label">Modificar Cliente</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -313,8 +319,7 @@ document.getElementById('descargarPDFClientes').addEventListener('click', functi
 
 <button 
     class="btn-ayuda"
-    title="Visualizar Ayuda"
-    onclick="window.location.href='?pagina=ayuda'">
+    title="Visualizar Ayuda">
     <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
 </button>
 </body>
