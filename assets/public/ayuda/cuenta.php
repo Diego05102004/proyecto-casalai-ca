@@ -16,38 +16,43 @@
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                            <line x1="7" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="2"/>
+                            <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="2"/>
+                            <path d="M7 17h10" stroke="currentColor" stroke-width="2"/>
                         </svg>
                     </div>
-                    <h3 class="ayuda-titulo">Gestión de Clientes</h3>
+                    <h3 class="ayuda-titulo">Gestión de Cuentas Bancarias</h3>
                 </div>
                 
-                <p class="ayuda-descripcion">Administre la base de datos de clientes del sistema.</p>
+                <p class="ayuda-descripcion">Administre las cuentas bancarias para transacciones financieras.</p>
                 
                 <div class="ayuda-grid">
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Información gestionable:</h4>
                         <ul class="ayuda-lista">
-                            <li>Nombre completo</li>
-                            <li>Cédula</li>
-                            <li>N° de teléfono</li>
-                            <li>Dirección (Estado/Ciudad/Calle o Avenida)</li>
+                            <li>Nombre del banco</li>
+                            <li>Número de cuenta</li>
+                            <li>RIF</li>
+                            <li>Número de teléfono</li>
                             <li>Correo electrónico</li>
-                            <li>Historial de compras</li>
+                            <li>Tipo de moneda</li>
+                            <li>Métodos de pago</li>
+                            <li>Estatus</li>
+                            <li>Saldo actual</li>
                         </ul>
                     </div>
                     
                     <div class="ayuda-columna">
                         <h4 class="ayuda-subtitulo">Operaciones disponibles:</h4>
                         <ul class="ayuda-lista">
-                            <li><strong>Registrar:</strong> Nuevo cliente</li>
+                            <li><strong>Agregar:</strong> Nueva cuenta</li>
                             <li><strong>Consultar:</strong> Ver lista completa</li>
+                            <li><strong>Detallar:</strong> Ver información completa</li>
                             <li><strong>Modificar:</strong> Actualizar datos</li>
-                            <li><strong>Eliminar:</strong> Remover cliente</li>
-                            <li><strong>Reporte:</strong> Estadísticas de compras</li>
+                            <li><strong>Eliminar:</strong> Remover cuenta</li>
+                            <li><strong>Estatus:</strong> Actualizar estatus (habilitado/inhabilitado)</li>
+                            <li><strong>Conciliación:</strong> Balance de cuentas</li>
                         </ul>
                     </div>
                 </div>
@@ -67,16 +72,45 @@
                         <h4 class="tarjeta-titulo">Registrar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite agregar un nuevo cliente al sistema. Debe completar todos los campos obligatorios como nombre, cédula, teléfono, dirección y correo.</p>
+                        <p>Permite agregar una nueva cuenta bancaria al sistema. Debe completar todos los campos obligatorios como nombre del banco, número de cuenta y RIF.</p>
                         <ul>
                             <li>Haga clic en el botón "+" (verde) en la esquina superior derecha</li>
                             <li>Complete todos los campos obligatorios marcados con *</li>
-                            <li>Ingrese el nombre completo (solo letras, mínimo 2 caracteres)</li>
-                            <li>Ingrese la cédula (formato: 1.234.567 o 12.345.678)</li>
+                            <li>Ingrese el nombre del banco</li>
+                            <li>Ingrese el N° de cuenta (formato: 0100-0000-00-0000000000)</li>
+                            <li>Ingrese el RIF (formato: (VEJPG)-12345678-9)</li>
                             <li>Ingrese el N° de teléfono (formato: 0400-000-0000)</li>
-                            <li>Ingrese una dirección completa (Estado/Ciudad/Calle)</li>
                             <li>Ingrese un correo electrónico (gmail, outlook, yahoo, icloud)</li>
+                            <li>Seleccione un tipo de moneda (Bolívares o Dolares)</li>
+                            <li>Seleccione los métodos de pago (Pago Móvil, Transferencia y/o Zelle)</li>
                             <li>Haga clic en "Registrar" para guardar</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Tarjeta Detallar -->
+                <div class="tarjeta-ayuda tarjeta-detallar" data-tarjeta="detallar" style="display: none;">
+                    <div class="tarjeta-header">
+                        <div class="tarjeta-icono">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <h4 class="tarjeta-titulo">Detallar</h4>
+                    </div>
+                    <div class="tarjeta-contenido">
+                        <p>Permite visualizar toda la información completa de una cuenta bancaria específica.</p>
+                        <ul>
+                            <li>Ubique la cuenta bancaria en la lista</li>
+                            <li>Haga clic en el ícono del ojo (👁) en "Acciones"</li>
+                            <li>Revise todos los datos de la cuenta bancaria</li>
+                            <li>• Nombre del banco y número de cuenta</li>
+                            <li>• RIF y información de contacto</li>
+                            <li>• Métodos de pago configurados</li>
+                            <li>• Tipo de moneda y estatus actual</li>
+                            <li>• Saldo disponible</li>
+                            <li>Puede cerrar la vista cuando termine</li>
                         </ul>
                     </div>
                 </div>
@@ -93,11 +127,11 @@
                         <h4 class="tarjeta-titulo">Modificar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite actualizar los datos de un cliente existente en el sistema.</p>
+                        <p>Permite actualizar los datos de una cuenta bancaria existente en el sistema.</p>
                         <ul>
-                            <li>Localice al cliente que desea modificar en la tabla</li>
+                            <li>Localice la cuenta bancaria que desea modificar en la tabla</li>
                             <li>Haga clic en el ícono del lápiz (📝) en "Acciones"</li>
-                            <li>Edite los campos necesarios (nombre, teléfono, dirección, etc.)</li>
+                            <li>Edite los campos necesarios (nombre, teléfono, métodos de pago, etc.)</li>
                             <li>Haga clic en "Modificar" para confirmar los cambios</li>
                             <li>Los cambios se reflejarán inmediatamente en el sistema</li>
                         </ul>
@@ -116,13 +150,36 @@
                         <h4 class="tarjeta-titulo">Eliminar</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite remover permanentemente un cliente del sistema.</p>
+                        <p>Permite remover permanentemente una cuenta bancaria del sistema.</p>
                         <ul>
-                            <li>Encuentre al cliente que desea eliminar en la lista</li>
+                            <li>Encuentre la cuenta bancaria que desea eliminar</li>
                             <li>Haga clic en el ícono de la X (❌) en "Acciones"</li>
                             <li>Confirme la eliminación en el mensaje de advertencia</li>
-                            <li>El cliente será eliminado permanentemente del sistema</li>
+                            <li>La cuenta bancaria será eliminada permanentemente del sistema</li>
                             <li><strong>¡Cuidado!</strong> Esta acción no se puede deshacer</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Tarjeta Cambiar Estatus -->
+                <div class="tarjeta-ayuda tarjeta-estatus" data-tarjeta="estatus" style="display: none;">
+                    <div class="tarjeta-header">
+                        <div class="tarjeta-icono">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="3" y="11" width="18" height="10" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <h4 class="tarjeta-titulo">Cambiar Estatus</h4>
+                    </div>
+                    <div class="tarjeta-contenido">
+                        <p>Permite habilitar o inhabilitar una cuenta bancaria sin eliminarla del sistema.</p>
+                        <ul>
+                            <li>Encuentre la cuenta bancaria en la lista</li>
+                            <li>Haga clic directamente sobre su estatus actual (habilitado/inhabilitado)</li>
+                            <li>El sistema alternará automáticamente el estado</li>
+                            <li>La cuenta mantendrá sus datos pero cambiará su disponibilidad</li>
+                            <li>El cambio es instantáneo y no requiere confirmación</li>
                         </ul>
                     </div>
                 </div>
@@ -142,14 +199,15 @@
                         <h4 class="tarjeta-titulo">Generar Reporte</h4>
                     </div>
                     <div class="tarjeta-contenido">
-                        <p>Permite generar reportes estadísticos de los clientes y sus compras.</p>
+                        <p>Permite generar reportes estadísticos de las cuentas bancarias con múltiples filtros y agrupaciones.</p>
                         <ul>
                             <li>Haga clic en el botón de gráfica (azul) en la esquina superior derecha</li>
-                            <li>Consulte la sección "Top 10 Clientes por Productos Comprados"</li>
-                            <li>Visualice el gráfico de barras con las estadísticas</li>
-                            <li>Revise la tabla detallada con información completa</li>
-                            <li>El sistema genera automáticamente el reporte en PDF</li>
-                            <li>Puede descargar el archivo para análisis externos</li>
+                            <li>Use el filtro de estatus para mostrar: Todos/Habilitados/Inhabilitados</li>
+                            <li>Ingrese las fechas de inicio y fin</li>
+                            <li>Elija el tipo de reporte: Agrupar por (Método de Pago, Banco, Cliente o Estatus)</li>
+                            <li>Elija el tipo de gráfica: (Barras, Pastel, Líneas, Rosca o Área Polar)</li>
+                            <li>Haga clic en "Generar Reporte" para visualizar</li>
+                            <li>El sistema mostrará el reporte en formato visual y descargará automáticamente el PDF</li>
                         </ul>
                     </div>
                 </div>
@@ -169,6 +227,8 @@
                 <span class="nav-dot" data-slide="2"></span>
                 <span class="nav-dot" data-slide="3"></span>
                 <span class="nav-dot" data-slide="4"></span>
+                <span class="nav-dot" data-slide="5"></span>
+                <span class="nav-dot" data-slide="6"></span>
             </div>
             
             <button class="nav-btn nav-btn-next" id="btnNavNext">

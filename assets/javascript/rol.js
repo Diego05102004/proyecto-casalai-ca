@@ -450,7 +450,7 @@ $(document).ready(function () {
         }
 
         // Cargar HTML del modal
-        $.get('assets/public/ayuda/rol.php')
+        $.get('assets/public/ayuda/rolypermisos.php')
             .done(function(html) {
                 // Solo agregar modal si no existe
                 if (!$('#modalAyuda').length) {

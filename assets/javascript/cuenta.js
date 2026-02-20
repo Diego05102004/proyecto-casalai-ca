@@ -259,61 +259,61 @@ $(document).ready(function () {
     });
 
     function verificarPermisosEnTiempoRealCuentas() {
-    var datos = new FormData();
-    datos.append('accion', 'permisos_tiempo_real');
-    enviarAjax(datos, function(permisos) {
-        console.log(permisos);
-        // Si no tiene permiso de consultar
-        if (!permisos.consultar) {
-            $('#tablaConsultas').hide();
-            $('.space-btn-incluir').hide();
-            if ($('#mensaje-permiso').length === 0) {
-                $('.contenedor-tabla').prepend('<div id="mensaje-permiso" style="color:red; text-align:center; margin:20px 0;">No tiene permiso para consultar los registros.</div>');
-            }
-            return;
-        } else {
-            $('#tablaConsultas').show();
-            $('.space-btn-incluir').show();
-            $('#mensaje-permiso').remove();
-        }
-
-        // Mostrar/ocultar botón de incluir
-        if (permisos.incluir) {
-            $('#btnIncluirCuenta').show();
-        } else {
-            $('#btnIncluirCuenta').hide();
-        }
-
-        // Mostrar/ocultar botones de modificar/eliminar
-        $('.btn-modificar').each(function() {
-            if (permisos.modificar) {
-                $(this).show();
+        var datos = new FormData();
+        datos.append('accion', 'permisos_tiempo_real');
+        enviarAjax(datos, function(permisos) {
+            console.log(permisos);
+            // Si no tiene permiso de consultar
+            if (!permisos.consultar) {
+                $('#tablaConsultas').hide();
+                $('.space-btn-incluir').hide();
+                if ($('#mensaje-permiso').length === 0) {
+                    $('.contenedor-tabla').prepend('<div id="mensaje-permiso" style="color:red; text-align:center; margin:20px 0;">No tiene permiso para consultar los registros.</div>');
+                }
+                return;
             } else {
-                $(this).hide();
+                $('#tablaConsultas').show();
+                $('.space-btn-incluir').show();
+                $('#mensaje-permiso').remove();
+            }
+
+            // Mostrar/ocultar botón de incluir
+            if (permisos.incluir) {
+                $('#btnIncluirCuenta').show();
+            } else {
+                $('#btnIncluirCuenta').hide();
+            }
+
+            // Mostrar/ocultar botones de modificar/eliminar
+            $('.btn-modificar').each(function() {
+                if (permisos.modificar) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            $('.btn-eliminar').each(function() {
+                if (permisos.eliminar) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // Ocultar columna Acciones si ambos permisos son falsos
+            if (!permisos.modificar && !permisos.eliminar) {
+                $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').hide();
+            } else {
+                $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').show();
             }
         });
-        $('.btn-eliminar').each(function() {
-            if (permisos.eliminar) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
-        });
+    }
 
-        // Ocultar columna Acciones si ambos permisos son falsos
-        if (!permisos.modificar && !permisos.eliminar) {
-            $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').hide();
-        } else {
-            $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').show();
-        }
+    // Llama la función al cargar la página y luego cada 10 segundos
+    $(document).ready(function() {
+        verificarPermisosEnTiempoRealCuentas();
+        setInterval(verificarPermisosEnTiempoRealCuentas, 10000); // 10 segundos
     });
-}
-
-// Llama la función al cargar la página y luego cada 10 segundos
-$(document).ready(function() {
-    verificarPermisosEnTiempoRealCuentas();
-    setInterval(verificarPermisosEnTiempoRealCuentas, 10000); // 10 segundos
-});
 
     function validarEnvioCuenta(){
         // Nombre del banco
@@ -1084,101 +1084,6 @@ $(document).ready(function() {
 
     // Inicializar estado de los campos
     actualizarCampos();
-
-    let modalAyudaInstance = null;
-
-    // Función para cargar y mostrar el modal de ayuda con contexto específico
-    function cargarYMostrarModalAyuda(contexto = null) {
-        // Cargar CSS si no está cargado
-        if (!$('link[href*="ayuda/css/modal.css"]').length) {
-            $('<link>')
-                .attr({
-                    'rel': 'stylesheet',
-                    'type': 'text/css',
-                    'href': 'assets/public/ayuda/css/modal.css'
-                })
-                .appendTo('head');
-        }
-
-        // Cargar HTML del modal
-        $.get('assets/public/ayuda/cuenta.php')
-            .done(function(html) {
-                // Solo agregar modal si no existe
-                if (!$('#modalAyuda').length) {
-                    $('body').append(html);
-                }
-
-                // Cargar JS del modal si no está cargado
-                if (!$('script[src*="ayuda/js/modal.js"]').length) {
-                    $.getScript('assets/public/ayuda/js/modal.js')
-                        .done(function() {
-                            // Inicializar modal
-                            if (typeof inicializarModalAyudaUsuario === 'function') {
-                                modalAyudaInstance = inicializarModalAyudaUsuario();
-
-                                // Abrir modal con contexto si se proporciona
-                                if (contexto) {
-                                    setTimeout(() => {
-                                        const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                        if (slideIndex !== undefined) {
-                                            modalAyudaInstance.goToSlide(slideIndex);
-                                        }
-                                    }, 300);
-                                }
-
-                                // Abrir modal
-                                modalAyudaInstance.openModal();
-                            } else {
-                                console.error('La función inicializarModalAyudaUsuario no está disponible');
-                            }
-                        })
-                        .fail(function() {
-                            console.error('Error al cargar el JavaScript del modal de ayuda');
-                        });
-                } else {
-                    // Si el JS ya está cargado, solo abrir el modal existente
-                    if (typeof inicializarModalAyudaUsuario === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaUsuario();
-
-                        // Abrir modal con contexto si se proporciona
-                        if (contexto) {
-                            setTimeout(() => {
-                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                if (slideIndex !== undefined) {
-                                    modalAyudaInstance.goToSlide(slideIndex);
-                                }
-                            }, 300);
-                        }
-
-                        // Abrir modal
-                        modalAyudaInstance.openModal();
-                    }
-                }
-            })
-            .fail(function() {
-                console.error('Error al cargar el HTML del modal');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar el contenido de ayuda'
-                });
-            });
-    }
-
-    // Botón de ayuda principal
-    $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(e) {
-        e.preventDefault();
-        console.log('Clic en botón de ayuda detectado');
-        cargarYMostrarModalAyuda(); // Sin contexto específico
-    });
-
-    // Botón de ayuda dentro de modales
-    $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
-        e.preventDefault();
-        const contexto = $(this).data('contexto');
-        console.log('Clic en botón de ayuda modal con contexto:', contexto);
-        cargarYMostrarModalAyuda(contexto);
-    });
 });
 
 // Modal de detalles
@@ -1205,3 +1110,132 @@ $(window).on('click', function (e) {
         $(modal).removeClass('mostrar');
     }
 });
+
+(function() {
+    // Esperar a que jQuery esté disponible
+    function initModalAyuda() {
+        if (typeof $ === 'undefined') {
+            setTimeout(initModalAyuda, 100);
+            return;
+        }
+        
+        console.log('Inicializando modal de ayuda...');
+        
+        // Cargar CSS del modal de ayuda
+        $('<link>')
+            .appendTo('head')
+            .attr({
+                type: 'text/css',
+                rel: 'stylesheet',
+                href: 'assets/public/ayuda/css/modal.css'
+            });
+        
+        // Variable global para el modal
+        let modalAyudaInstance = null;
+        
+        // Función para cargar y mostrar el modal de ayuda
+        function cargarYMostrarModalAyuda(contexto) {
+            console.log('Cargando modal de ayuda...', contexto);
+            
+            if (modalAyudaInstance) {
+                console.log('Modal ya existe, abriendo...');
+                modalAyudaInstance.openModal();
+                
+                // Si hay contexto, ir a la sección específica
+                if (contexto) {
+                    setTimeout(() => {
+                        if (contexto === 'registrar') {
+                            modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
+                        } else if (contexto === 'modificar') {
+                            modalAyudaInstance.goToSlide(3); // Ir a "Modificar"
+                        }
+                    }, 300);
+                }
+                return;
+            }
+            
+            // Cargar el contenido del modal
+            $.get('assets/public/ayuda/cuenta.php', function(html) {
+                console.log('HTML del modal cargado');
+                
+                // Agregar el modal al body
+                $('body').append(html);
+                
+                // Cargar JavaScript del modal y luego inicializar
+                $.getScript('assets/public/ayuda/js/modal.js', function() {
+                    console.log('JavaScript del modal cargado');
+                    
+                    // Inicializar el modal
+                    if (typeof inicializarModalAyudaUsuario === 'function') {
+                        modalAyudaInstance = inicializarModalAyudaUsuario();
+                        
+                        // Mostrar el modal
+                        modalAyudaInstance.openModal();
+                        console.log('Modal abierto correctamente');
+                        
+                        // Si hay contexto, ir a la sección específica
+                        if (contexto) {
+                            setTimeout(() => {
+                                if (contexto === 'registrar') {
+                                    modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
+                                } else if (contexto === 'modificar') {
+                                    modalAyudaInstance.goToSlide(3); // Ir a "Modificar"
+                                }
+                            }, 300);
+                        }
+                    } else {
+                        console.error('La función inicializarModalAyudaUsuario no está disponible');
+                    }
+                });
+            }).fail(function() {
+                console.error('Error al cargar el HTML del modal');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el contenido de ayuda'
+                });
+            });
+        }
+        
+        // Modificar el botón de ayuda existente
+        $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
+            e.preventDefault();
+            console.log('Clic en botón de ayuda detectado');
+            cargarYMostrarModalAyuda(); // Sin contexto específico
+        });
+        
+        // Botón de ayuda dentro del modal de registrar
+        $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
+            e.preventDefault();
+            const contexto = $(this).data('contexto');
+            console.log('Clic en botón de ayuda del modal detectado, contexto:', contexto);
+            cargarYMostrarModalAyuda(contexto);
+        });
+        
+        // También agregar soporte para botones con clase similar
+        $(document).on('click.ayuda', '.btn-ayuda-cuenta, [data-ayuda="cuenta"]', function(e) {
+            e.preventDefault();
+            cargarYMostrarModalAyuda(); // Sin contexto específico
+        });
+        
+        // Event listeners para debugging
+        $(document).on('modal:opened', function(e) {
+            console.log('Modal de ayuda abierto', e.detail);
+        });
+        
+        $(document).on('modal:closed', function(e) {
+            console.log('Modal de ayuda cerrado', e.detail);
+        });
+        
+        $(document).on('slide:changed', function(e) {
+            console.log('Slide cambiado a:', e.detail.slide);
+        });
+    }
+    
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initModalAyuda);
+    } else {
+        initModalAyuda();
+    }
+})();
