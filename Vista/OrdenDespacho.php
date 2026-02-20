@@ -211,12 +211,6 @@ echo json_encode(array_map(function($factura) {
 }, $facturas));
 ?>;
 </script>
-    <button 
-        class="btn-grafica"
-        title="Visualizar Reportes"
-        onclick="window.location.href='?pagina=reporteVentas'">
-        <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
-    </button>
 
     <!-- Nuestro archivo JS -->
     <script src="assets/javascript/ordendespacho.js"></script>
@@ -408,8 +402,7 @@ echo json_encode(array_map(function($factura) {
     </script>
         <button 
         class="btn-ayuda"
-        title="Visualizar Ayuda"
-        onclick="window.location.href='?pagina=ayuda'">
+        title="Visualizar Ayuda">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
     
