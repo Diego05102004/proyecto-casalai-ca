@@ -46,7 +46,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                 <div class="modal-content">
                     <form id="registrarCuenta" method="POST" novalidate>
                         <div class="modal-header">
-                            <button type="button" class="btn-ayuda-modal" title="Ayuda para Modificar Proveedor" data-contexto="modificar">
+                            <button type="button" class="btn-ayuda-modal" title="Ayuda para Incluir Cuenta" data-contexto="registrar">
                                 <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="18" height="18">
                             </button>
                             <h5 class="titulo-form" id="registrarCuentaModalLabel">Incluir Cuenta</h5>
