@@ -38,7 +38,7 @@ $(document).ready(function(){
         }
 
         // Cargar HTML del modal
-        $.get('assets/public/ayuda/finanza.php')
+        $.get('assets/public/ayuda/finanzas.php')
             .done(function(html) {
                 // Solo agregar modal si no existe
                 if (!$('#modalAyuda').length) {
