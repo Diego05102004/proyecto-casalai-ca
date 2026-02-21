@@ -4844,6 +4844,7 @@ $modulos = [
                                             <li><strong>Generar</strong>: Nuevo respaldo</li>
                                             <li><strong>Consultar</strong>: Ver lista completa</li>
                                             <li><strong>Restaurar</strong>: Recuperar base de datos</li>
+                                            <li><strong>Descargar</strong>: Obtener archivo de respaldo</li>
                                             <li><strong>Eliminar</strong>: Remover respaldo</li>
                                         </ul>
                                     </div>
