@@ -62,7 +62,7 @@ class ModalAyudaUsuario {
         this.tarjetas = [null]; // Slide 0 es la sección principal
         
         // Orden específico para mantener consistencia
-        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'eliminar', 'estatus', 'anular', 'reporte'];
+        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'eliminar', 'estatus', 'anular', 'reporte', 'descargar', 'consultar'];
         
         ordenTarjetas.forEach(nombre => {
             if (tarjetasExistentes.includes(nombre)) {
