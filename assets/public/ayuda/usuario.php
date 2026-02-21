@@ -15,10 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
-                        </svg>
+                        <i class="bi bi-person-badge fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Usuarios</h3>
                 </div>
@@ -75,6 +72,14 @@
                             <li>Establezca una contraseña segura</li>
                             <li>Presione "Guardar" para registrar</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Importante:</strong><br>
+                            - Cédula: 1.234.567 o 12.345.678 <br>
+                            - Teléfono: 0400-000-0000 <br>
+                            - Nombre de Usuario: (único en el sistema) <br>
+                            - Correo: (gmail, outlook, yahoo, icloud) <br>
+                            - Contraseña: (6-15 caracteres, con al menos 1 mayúscula, 1 número y 1 caracter especial) <br>
+                        </div>
                     </div>
                 </div>
                 
@@ -98,6 +103,9 @@
                             <li>Actualice permisos si es requerido</li>
                             <li>Guarde los cambios realizados</li>
                         </ul>
+                        <div class="alert alert-warning">
+                            <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                        </div>
                     </div>
                 </div>
                 
@@ -121,6 +129,9 @@
                             <li>El usuario será eliminado del sistema</li>
                             <li>Esta acción no se puede deshacer</li>
                         </ul>
+                        <div class="alert alert-danger">
+                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                        </div>
                     </div>
                 </div>
                 
@@ -144,6 +155,9 @@
                             <li>El usuario mantendrá sus datos pero cambiará su estado</li>
                             <li>Un usuario inactivo no puede acceder al sistema</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Instantáneo:</strong> Sin confirmación
+                        </div>
                     </div>
                 </div>
                 
