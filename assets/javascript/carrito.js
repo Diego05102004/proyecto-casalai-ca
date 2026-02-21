@@ -85,17 +85,6 @@ $(document).ready(function() {
             }
         });
     });
-});
-
-
-
-    // Muestra los datos en consola
-    console.log("Datos del carrito a enviar:", datos);
-
-    // Opcional: mostrar en una alerta
-    alert(JSON.stringify(datos, null, 2));
-
-    // Aquí podrías enviar los datos a tu backend con fetch/ajax si deseas
 
     let modalAyudaInstance = null;
 
@@ -183,6 +172,17 @@ $(document).ready(function() {
         console.log('Clic en botón de ayuda detectado');
         cargarYMostrarModalAyuda(); // Sin contexto específico
     });
+});
+
+
+
+    // Muestra los datos en consola
+    console.log("Datos del carrito a enviar:", datos);
+
+    // Opcional: mostrar en una alerta
+    alert(JSON.stringify(datos, null, 2));
+
+    // Aquí podrías enviar los datos a tu backend con fetch/ajax si deseas
 });
 
     $('#filtroMarca').on('change', function() {

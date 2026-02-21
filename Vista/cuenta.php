@@ -385,7 +385,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             </div>
 
             <div class="reporte-container" style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-                <h3 class="titulo-form">Reporte de Cuentas</h3>
+                <h3 class="titulo-form">Reporte de Cuentas Bancarias</h3>
                 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center;">
                     <div style="flex:1; min-width:320px; text-align:center;">
                         <div class="grafica-container" style="max-width:600px; margin:0 auto 24px auto;">
@@ -575,11 +575,12 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             onclick="window.location.href='?pagina=reporteFinanzas'">
             <img src="assets/img/grafic.png" alt="Reportes" width="30" height="30">
         </button>
-            <button 
-        class="btn-ayuda"
-        title="Visualizar Ayuda">
-        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
-    </button>
+        
+        <button 
+            class="btn-ayuda"
+            title="Visualizar Ayuda">
+            <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+        </button>
     </body>
 
     </html>

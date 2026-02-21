@@ -496,8 +496,7 @@ protegerSelects(["producto_combo"]);
     <button 
         class="btn-ayuda"
         style="top: 120px;"
-        title="Visualizar Ayuda"
-        >
+        title="Visualizar Ayuda">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
     <?php endif;?>

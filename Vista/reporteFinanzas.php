@@ -41,7 +41,7 @@
         <div style="max-width:1200px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
             <div class="reporte-parametros" style="text-align:center;">
-                <h3 class="titulo-form">Reporte de Cuentas</h3>
+                <h3 class="titulo-form">Reporte de Cuentas Bancarias</h3>
                 <div class="form-inline" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                     <label for="fechaInicioCuentas" class="title-select">Fecha inicio:</label>
                     <input type="date" id="fechaInicioCuentas" class="selector-reporte">
@@ -539,12 +539,113 @@
             });
         </script>
 
-    <button 
-        class="btn-ayuda"
-        title="Visualizar Ayuda"
-        onclick="window.location.href='?pagina=ayuda'">
-        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
-    </button>
+<script>
+    // Esperar a que jQuery esté disponible
+    $(document).ready(function() {
+        console.log('jQuery cargado, inicializando modal de ayuda...');
+        
+        let modalAyudaInstance = null;
+
+        // Función para cargar y mostrar el modal de ayuda con contexto específico
+        function cargarYMostrarModalAyuda(contexto = null) {
+            console.log('cargarYMostrarModalAyuda llamado con contexto:', contexto);
+            
+            // Cargar CSS si no está cargado
+            if (!$('link[href*="ayuda/css/modal.css"]').length) {
+                console.log('Cargando CSS del modal...');
+                $('<link>')
+                    .attr({
+                        'rel': 'stylesheet',
+                        'type': 'text/css',
+                        'href': 'assets/public/ayuda/css/modal.css'
+                    })
+                    .appendTo('head');
+            }
+
+            // Cargar HTML del modal
+            $.get('assets/public/ayuda/reporteFinanzas.php')
+                .done(function(html) {
+                    console.log('HTML del modal cargado');
+                    
+                    // Solo agregar modal si no existe
+                    if (!$('#modalAyuda').length) {
+                        $('body').append(html);
+                        console.log('Modal agregado al DOM');
+                    }
+
+                    // Cargar JS del modal si no está cargado
+                    if (!$('script[src*="ayuda/js/modal.js"]').length) {
+                        console.log('Cargando JavaScript del modal...');
+                        $.getScript('assets/public/ayuda/js/modal.js')
+                            .done(function() {
+                                console.log('JavaScript del modal cargado');
+                                inicializarModalConContexto(contexto);
+                            })
+                            .fail(function() {
+                                console.error('Error al cargar el JavaScript del modal de ayuda');
+                            });
+                    } else {
+                        console.log('JavaScript del modal ya estaba cargado');
+                        inicializarModalConContexto(contexto);
+                    }
+                })
+                .fail(function() {
+                    console.error('Error al cargar el HTML del modal');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo cargar el contenido de ayuda'
+                    });
+                });
+        }
+
+        function inicializarModalConContexto(contexto) {
+            // Inicializar modal
+            if (typeof inicializarModalAyudaUsuario === 'function') {
+                modalAyudaInstance = inicializarModalAyudaUsuario();
+                console.log('Modal inicializado:', modalAyudaInstance);
+                console.log('Mapeo de contextos disponible:', modalAyudaInstance.mapeoContextos);
+
+                // Abrir modal con contexto si se proporciona
+                if (contexto) {
+                    setTimeout(() => {
+                        const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                        console.log('Contexto:', contexto, '-> Slide:', slideIndex);
+                        if (slideIndex !== undefined) {
+                            modalAyudaInstance.goToSlide(slideIndex);
+                        }
+                    }, 300);
+                }
+
+                // Abrir modal
+                modalAyudaInstance.openModal();
+            } else {
+                console.error('La función inicializarModalAyudaUsuario no está disponible');
+            }
+        }
+
+        // Botón de ayuda principal
+        $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(e) {
+            e.preventDefault();
+            console.log('Clic en botón de ayuda detectado');
+            cargarYMostrarModalAyuda(); // Sin contexto específico
+        });
+
+        // Botón de ayuda dentro de modales
+        $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
+            e.preventDefault();
+            const contexto = $(this).data('contexto');
+            console.log('Clic en botón de ayuda modal con contexto:', contexto);
+            cargarYMostrarModalAyuda(contexto);
+        });
+    });
+</script>
+
+<button 
+    class="btn-ayuda"
+    title="Visualizar Ayuda">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
     </body>
 
     </html>

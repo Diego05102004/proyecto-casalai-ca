@@ -262,6 +262,13 @@
     </div>
 
     <script src="assets/javascript/perfil.js"></script>
-        <?php include 'footer.php'; ?>                
+        <?php include 'footer.php'; ?>    
+        
+<button 
+    class="btn-ayuda"
+    style="top: 140px; right: 340px;"
+    title="Visualizar Ayuda">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
 </body>
 </html>
