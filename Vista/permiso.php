@@ -254,7 +254,7 @@ protegerSelects(['selectorRol']);
             }
 
             // Cargar HTML del modal
-            $.get('assets/public/ayuda/rolypermisos.php')
+            $.get('assets/public/ayuda/permisos.php')
                 .done(function(html) {
                     console.log('HTML del modal cargado');
                     
@@ -319,7 +319,7 @@ protegerSelects(['selectorRol']);
         $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(e) {
             e.preventDefault();
             console.log('Clic en botón de ayuda principal detectado');
-            cargarYMostrarModalAyuda('estatus'); // Abrir directamente en "Gestionar Permisos"
+            cargarYMostrarModalAyuda('modificar'); // Abrir directamente en "Gestionar Permisos"
         });
 
         // Botón de ayuda dentro de modales
