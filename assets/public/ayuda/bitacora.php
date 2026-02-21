@@ -15,10 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 8v7M12 12h.01M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M16 21l-4-4 4 4M3 21l4-4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-clock-history me-2 fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Bitácora</h3>
                 </div>
@@ -44,7 +41,6 @@
                             <li>Consulta filtrable por usuario y fecha</li>
                             <li>Historial completo de actividades</li>
                             <li>Traza de auditoría de operaciones</li>
-                            <li>Registro de eventos críticos del sistema</li>
                         </ul>
                     </div>
                 </div>
