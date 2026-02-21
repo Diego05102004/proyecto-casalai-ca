@@ -335,6 +335,12 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
     </script>
 
 <?php include 'footer.php'; ?>
+<button 
+    class="btn-ayuda"
+    style="top: 100px; right: 100px;"
+    title="Visualizar Ayuda">
+    <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
+</button>
 </body>
 </html>
 
