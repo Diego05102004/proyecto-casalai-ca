@@ -15,7 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <i class="bi bi-clock-history me-2 fs-1"></i>
+                        <i class="bi bi-clock-history fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Bitácora</h3>
                 </div>
