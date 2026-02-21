@@ -4665,7 +4665,7 @@ $modulos = [
                                             <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-patch-plus text-success me-2"></i>
-                                                    <strong>Nueva Marca:</strong><br> Botón "+" verde
+                                                    <strong>Nuevo Rol:</strong><br> Botón "+" verde
                                                 </div>
                                             </div>
                                         </div>
@@ -4679,7 +4679,7 @@ $modulos = [
                                             <div class="col-md-6">
                                                 <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Nombre de la Marca:</strong><br> (único en el sistema)
+                                                    <strong>Nombre de la Rol:</strong><br> (único en el sistema)
                                                 </div>
                                             </div>
                                         </div>

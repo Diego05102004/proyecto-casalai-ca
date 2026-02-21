@@ -15,11 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 8v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-person-check fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Roles y Permisos</h3>
                 </div>
@@ -74,6 +70,9 @@
                             <li>El rol quedará registrado sin permisos asignados</li>
                             <li>Posteriormente podrá gestionar los permisos del rol</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Importante:</strong> El nombre del rol debe ser único en el sistema
+                        </div>
                     </div>
                 </div>
                 
@@ -95,8 +94,10 @@
                             <li>Haga clic en el ícono del lápiz 📝 en "Acciones"</li>
                             <li>Edite los campos necesarios</li>
                             <li>Haga clic en "Modificar" para confirmar cambios</li>
-                            <li>Los cambios se reflejan inmediatamente</li>
                         </ul>
+                        <div class="alert alert-warning">
+                            <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                        </div>
                     </div>
                 </div>
                 
@@ -141,8 +142,10 @@
                             <li>Haga clic en el ícono de la X ❌ en "Acciones"</li>
                             <li>Confirme la eliminación en el mensaje de advertencia</li>
                             <li>El rol será eliminado permanentemente del sistema</li>
-                            <li><strong>¡Cuidado!</strong> Esta acción no se puede deshacer</li>
                         </ul>
+                        <div class="alert alert-danger">
+                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                        </div>
                     </div>
                 </div>
             </div>
