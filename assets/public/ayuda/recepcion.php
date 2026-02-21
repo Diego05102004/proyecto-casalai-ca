@@ -15,13 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M5 21V7l8-4v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M19 21V11l-6-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 9v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-truck fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Recepción de Productos</h3>
                 </div>
@@ -76,6 +70,11 @@
                             <li>Seleccione los productos y cantidades recibidas</li>
                             <li>Confirme la operación para guardar</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Importante:</strong><br>
+                            - N° de Factura: (único en el sistema) <br>
+                            - Costo: Valor unitario requerido
+                        </div>
                     </div>
                 </div>
                 
