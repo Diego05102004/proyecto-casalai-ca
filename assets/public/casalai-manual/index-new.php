@@ -4275,10 +4275,11 @@ $modulos = [
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Reporte</strong>: Generar gráfica</li>
+                                            <li><strong>Descargar</strong>: Obtener reporte en formato PDF</li>
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Ingresos y Egresos</h6>
                                         <?= renderImagen('finanzas', 'vista.png') ?>

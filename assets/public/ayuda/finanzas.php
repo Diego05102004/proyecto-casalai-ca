@@ -15,11 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0-3.5 3.5H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 15v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-arrow-down-up me-2 fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Ingresos y Egresos</h3>
                 </div>
@@ -42,6 +38,7 @@
                         <h4 class="ayuda-subtitulo">Operaciones disponibles:</h4>
                         <ul class="ayuda-lista">
                             <li><strong>Reporte:</strong> Generar gráfica</li>
+                            <li><strong>Descargar:</strong> Obtener reporte en formato PDF</li>
                         </ul>
                     </div>
                 </div>
