@@ -1356,4 +1356,4 @@ $(window).on('click', function(e){
     } else {
         initModalAyuda();
     }
-})();
+});

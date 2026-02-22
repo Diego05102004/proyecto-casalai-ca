@@ -298,6 +298,9 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
+                    <button type="button" class="btn-ayuda-modal" title="Ayuda para Combo" data-contexto="registrar" onclick="cargarYMostrarModalAyuda(this.getAttribute('data-contexto'))">
+                        <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="18" height="18">
+                    </button>
                         <h5 class="titulo-form" id="comboModalLabel">Crear Nuevo Combo</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -496,7 +499,8 @@ protegerSelects(["producto_combo"]);
     <button 
         class="btn-ayuda"
         style="top: 120px;"
-        title="Visualizar Ayuda">
+        title="Visualizar Ayuda"
+        onclick="cargarYMostrarModalAyuda()">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
     <?php endif;?>

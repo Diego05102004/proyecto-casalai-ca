@@ -62,7 +62,7 @@ class ModalAyudaUsuario {
         this.tarjetas = [null]; // Slide 0 es la sección principal
         
         // Orden específico para mantener consistencia
-        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'eliminar', 'estatus', 'anular', 'reporte', 'descargar', 'consultar'];
+        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'eliminar', 'estatus', 'anular', 'reporte', 'descargar'];
         
         ordenTarjetas.forEach(nombre => {
             if (tarjetasExistentes.includes(nombre)) {
@@ -194,11 +194,13 @@ class ModalAyudaUsuario {
         }
     }
     
-    openModal() {
+    openModal(contexto = null) {
         if (!this.modal) return;
         
-        // Resetear al primer slide
-        this.currentSlide = 0;
+        // Resetear al primer slide solo si no hay contexto específico
+        if (!contexto) {
+            this.currentSlide = 0;
+        }
         this.updateSlide();
         
         // Mostrar modal
@@ -220,6 +222,10 @@ class ModalAyudaUsuario {
         if (!this.modal) return;
         
         this.modal.classList.remove('active');
+        
+        // Resetear al slide principal para limpiar contexto
+        this.currentSlide = 0;
+        this.updateSlide();
         
         // Accesibilidad
         this.modal.setAttribute('aria-hidden', 'true');

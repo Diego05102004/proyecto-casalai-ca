@@ -535,6 +535,11 @@ function confirmarCantidad() {
         $('#descripcion').val('');
         productosSeleccionados = [];
         actualizarTablaProductosCombo();
+        
+        // Establecer contexto de ayuda para registrar
+        $('.btn-ayuda-modal').attr('data-contexto', 'registrar');
+        $('.btn-ayuda-modal').attr('title', 'Ayuda para Registrar Combo');
+        
         $('#comboModal').modal('show');
     }
 
@@ -565,6 +570,10 @@ function editarCombo() {
                     $('#id_combo').val(idCombo);
                     $('#nombre_combo').val(data.combo.nombre_combo);
                     $('#descripcion').val(data.combo.descripcion);
+
+                    // Establecer contexto de ayuda para modificar
+                    $('.btn-ayuda-modal').attr('data-contexto', 'modificar');
+                    $('.btn-ayuda-modal').attr('title', 'Ayuda para Modificar Combo');
 
                     // Limpiar productos seleccionados
                     productosSeleccionados = [];
@@ -1359,14 +1368,14 @@ verificarTodo();
 
     // Inicialización al cargar la página
     inicializarDataTableProductos();
-
+})
     let modalAyudaInstance = null;
 
     // Función para cargar y mostrar el modal de ayuda con contexto específico
     function cargarYMostrarModalAyuda(contexto = null) {
         // Si ya existe una instancia, solo abrir y navegar
         if (modalAyudaInstance) {
-            modalAyudaInstance.openModal();
+            modalAyudaInstance.openModal(contexto);
 
             if (contexto) {
                 setTimeout(() => {
@@ -1376,7 +1385,6 @@ verificarTodo();
                     }
                 }, 300);
             }
-
             return;
         }
 
@@ -1472,11 +1480,19 @@ verificarTodo();
     // Botón de ayuda dentro de modales
     $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
         e.preventDefault();
-        const contexto = $(this).data('contexto');
-        console.log('Clic en botón de ayuda modal con contexto:', contexto);
-        cargarYMostrarModalAyuda(contexto);
+        
+        // Obtener el contexto actual del botón en tiempo real
+        const contextoActual = this.getAttribute('data-contexto');
+        console.log('Clic en botón de ayuda modal con contexto actual:', contextoActual);
+        
+        // Verificar que el contexto sea válido antes de abrir el modal
+        if (contextoActual && (contextoActual === 'registrar' || contextoActual === 'modificar')) {
+            cargarYMostrarModalAyuda(contextoActual);
+        } else {
+            console.warn('Contexto no válido o no encontrado:', contextoActual);
+            cargarYMostrarModalAyuda(); // Abrir sin contexto específico
+        }
     });
-});
 
 // Función para eliminar combo
 function eliminarCombo() {
