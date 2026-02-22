@@ -519,10 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function cargarYMostrarModalAyuda(contexto = null) {
         // Si ya existe una instancia, solo abrir y navegar
         if (modalAyudaInstance) {
-            // Asegurar restauración del scroll (por si algún cierre previo falló)
-            document.body.style.overflow = '';
-
-            modalAyudaInstance.openModal();
+            modalAyudaInstance.openModal(contexto);
 
             if (contexto) {
                 setTimeout(() => {
@@ -532,7 +529,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 300);
             }
-
             return;
         }
 
@@ -550,18 +546,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Cargar HTML del modal
         $.get('assets/public/ayuda/ordendespacho.php')
             .done(function(html) {
-                // Solo agregar modal si no existe (evita romper listeners/estado al reabrir)
-                if (!$('#modalAyuda').length) {
-                    $('body').append(html);
-                }
+                // Eliminar cualquier modal existente para evitar conflictos
+                $('#modalAyuda').remove();
+                
+                // Agregar el nuevo modal
+                $('body').append(html);
 
                 // Cargar JS del modal si no está cargado
                 if (!$('script[src*="ayuda/js/modal.js"]').length) {
                     $.getScript('assets/public/ayuda/js/modal.js')
                         .done(function() {
                             // Inicializar modal
-                            if (typeof inicializarModalAyudaUsuario === 'function') {
-                                modalAyudaInstance = inicializarModalAyudaUsuario();
+                            if (typeof inicializarModalAyuda === 'function') {
+                                modalAyudaInstance = inicializarModalAyuda();
 
                                 // Asegurar restauración del scroll (por si algún cierre previo falló)
                                 document.body.style.overflow = '';
@@ -579,7 +576,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 // Abrir modal
                                 modalAyudaInstance.openModal();
                             } else {
-                                console.error('La función inicializarModalAyudaUsuario no está disponible');
+                                console.error('La función inicializarModalAyuda no está disponible');
                             }
                         })
                         .fail(function() {
@@ -587,8 +584,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                 } else {
                     // Si el JS ya está cargado, solo abrir el modal existente
-                    if (typeof inicializarModalAyudaUsuario === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaUsuario();
+                    if (typeof inicializarModalAyuda === 'function') {
+                        modalAyudaInstance = inicializarModalAyuda();
 
                         // Asegurar restauración del scroll (por si algún cierre previo falló)
                         document.body.style.overflow = '';
@@ -632,7 +629,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Clic en botón de ayuda modal con contexto:', contexto);
         cargarYMostrarModalAyuda(contexto);
     });
-});
 
 const tablaOrden = document.getElementById('tablaConsultas');
 const modalOrden = document.getElementById('modalDetallesOrden');
@@ -680,4 +676,4 @@ window.addEventListener('click', (e) => {
     if (e.target === modalOrden) {
         modalOrden.classList.remove('mostrar');
     }
-});
+})});

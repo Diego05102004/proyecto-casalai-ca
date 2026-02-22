@@ -73,7 +73,7 @@
                 </div>
 
                 <!-- Tarjeta Cambiar Estatus -->
-                <div class="tarjeta-ayuda tarjeta-estatus" data-tarjeta="estatus" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-estatus" data-tarjeta="estatus">
                     <div class="tarjeta-header">
                         <div class="tarjeta-icono">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +96,7 @@
                 </div>
 
                 <!-- Tarjeta Descargar -->
-                <div class="tarjeta-ayuda tarjeta-reporte" data-tarjeta="reporte" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-reporte" data-tarjeta="reporte">
                     <div class="tarjeta-header">
                         <div class="tarjeta-icono">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -118,7 +118,7 @@
                 </div>
 
                 <!-- Tarjeta Anular -->
-                <div class="tarjeta-ayuda tarjeta-anular" data-tarjeta="eliminar" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-anular" data-tarjeta="eliminar">
                     <div class="tarjeta-header">
                         <div class="tarjeta-icono">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -62,27 +62,32 @@ class ModalAyudaUsuario {
         this.tarjetas = [null]; // Slide 0 es la sección principal
         
         // Orden específico para mantener consistencia
-        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'eliminar', 'estatus', 'anular', 'reporte', 'descargar'];
+        const ordenTarjetas = ['registrar', 'detallar', 'modificar', 'reporte', 'estatus', 'anular', 'eliminar', 'descargar'];
         
         ordenTarjetas.forEach(nombre => {
             if (tarjetasExistentes.includes(nombre)) {
                 const tarjeta = document.querySelector(`[data-tarjeta="${nombre}"]`);
                 this.tarjetas.push(tarjeta);
                 mapeoIndices[nombre] = this.tarjetas.length - 1;
+                console.log(`✅ Tarjeta "${nombre}" encontrada -> slide ${mapeoIndices[nombre]}`);
+            } else {
+                console.log(`❌ Tarjeta "${nombre}" NO encontrada`);
             }
         });
         
         // Guardar referencia original
         this.tarjetasOriginales = [...this.tarjetas];
         
-        // Calcular totalSlides basado en los dots del HTML
+        // Calcular totalSlides basado en las tarjetas encontradas (incluyendo el slide principal)
+        this.totalSlides = this.tarjetas.length;
+        
+        // Obtener dots del HTML pero limitar al número real de slides
         this.navDots = document.querySelectorAll('.nav-indicators .nav-dot');
-        this.totalSlides = this.navDots.length;
         
         // Depuración
         console.log('🔍 Depuración Modal:');
         console.log('- Total dots encontrados:', this.navDots.length);
-        console.log('- TotalSlides:', this.totalSlides);
+        console.log('- TotalSlides calculado:', this.totalSlides);
         console.log('- Tarjetas encontradas:', this.tarjetasOriginales.map((t, i) => t ? `Slide ${i}: ${t.dataset.tarjeta}` : `Slide ${i}: null`));
         
         // Mapeo de índices para navegación contextual
