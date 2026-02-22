@@ -32,29 +32,17 @@
 
                     <div class="ayuda-icon">
 
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-
-                            <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-
-                            <path d="M5 21V7l8-4v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-
-                            <path d="M19 21V11l-6-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-
-                            <path d="M9 9v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-
-                            <path d="M9 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-
-                        </svg>
+                        <i class="bi bi-box fs-1"></i>
 
                     </div>
 
-                    <h3 class="ayuda-titulo">Gestión de Proveedores</h3>
+                    <h3 class="ayuda-titulo">Gestión de Productos</h3>
 
                 </div>
 
                 
 
-                <p class="ayuda-descripcion">Administre la información de todos los proveedores de productos y servicios.</p>
+                <p class="ayuda-descripcion">Administre el catálogo completo de productos del inventario con información detallada y control de stock.</p>
 
                 
 
@@ -66,21 +54,21 @@
 
                         <ul class="ayuda-lista">
 
-                            <li>Nombre del proveedor y su representante</li>
+                            <li>Foto del producto</li>
 
-                            <li>RIF del proveedor y su representante</li>
+                            <li>Nombre y descripción</li>
 
-                            <li>Correo electrónico</li>
+                            <li>Stock Actual/Máximo/Mínimo</li>
 
-                            <li>Dirección</li>
+                            <li>Número de serial</li>
 
-                            <li>N° de teléfono (Principal y Secundario)</li>
+                            <li>Cláusula de garantía</li>
 
-                            <li>Observaciones</li>
+                            <li>Categoría</li>
+
+                            <li>Precio</li>
 
                             <li>Estatus</li>
-
-                            <li>Suministro de los proveedores</li>
 
                         </ul>
 
@@ -94,17 +82,17 @@
 
                         <ul class="ayuda-lista">
 
-                            <li><strong>Registrar:</strong> Nuevo proveedor</li>
+                            <li><strong>Registrar:</strong> Nuevo producto</li>
 
                             <li><strong>Consultar:</strong> Ver lista completa</li>
 
-                            <li><strong>Detallar:</strong> Ver información completa del proveedor</li>
+                            <li><strong>Detallar:</strong> Ver información completa</li>
 
                             <li><strong>Modificar:</strong> Actualizar datos</li>
 
-                            <li><strong>Eliminar:</strong> Remover proveedor</li>
+                            <li><strong>Eliminar:</strong> Remover producto</li>
 
-                            <li><strong>Estatus:</strong> Actualizar estatus (habilitado/inhabilitado)</li>
+                            <li><strong>Estatus:</strong> Cambiar disponibilidad</li>
 
                             <li><strong>Reporte:</strong> Generar reportes</li>
 
@@ -122,7 +110,7 @@
 
             <div class="ayuda-tarjetas" id="ayudaTarjetas" style="display: none;">
 
-                <!-- Tarjeta Registrar -->
+                <!-- Tarjeta Registrar Producto -->
 
                 <div class="tarjeta-ayuda tarjeta-registrar" data-tarjeta="registrar">
 
@@ -132,43 +120,69 @@
 
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-                                <path d="M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-
-                                <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
                             </svg>
 
                         </div>
 
-                        <h4 class="tarjeta-titulo">Registrar</h4>
+                        <h4 class="tarjeta-titulo">Registrar Producto</h4>
 
                     </div>
 
                     <div class="tarjeta-contenido">
 
-                        <p>Permite agregar un nuevo proveedor al sistema. Debe completar todos los campos obligatorios como nombre, RIF, correo, dirección y teléfonos.</p>
+                        <p>Agregue nuevos productos al catálogo del inventario con toda la información necesaria para su gestión.</p>
 
-                        <ul>
+                        <h5 class="tarjeta-subtitulo">Pasos para Registrar Nuevo Producto:</h5>
 
-                            <li>Haga clic en el botón (+) Incluir</li>
+                        <ol>
 
-                            <li>Complete el formulario con los datos del proveedor</li>
+                            <li><strong>Paso 1:</strong> Haga clic en el botón <strong>"+"</strong> (color verde) en la esquina superior derecha.</li>
 
-                            <li>Verifique que todos los campos sean correctos</li>
+                            <li><strong>Paso 2:</strong> Complete todos los campos obligatorios marcados con <strong>*</strong>.</li>
 
-                            <li>Presione "Guardar" para registrar</li>
+                            <li><strong>Paso 3:</strong> Ingrese el <strong>nombre</strong> del producto.</li>
 
-                        </ul>
+                            <li><strong>Paso 4:</strong> Seleccione el <strong>modelo/marca</strong> del producto.</li>
+
+                            <li><strong>Paso 5:</strong> Cargue una <strong>imagen</strong> del producto.</li>
+
+                            <li><strong>Paso 6:</strong> Ingrese una <strong>descripción</strong> breve.</li>
+
+                            <li><strong>Paso 7:</strong> Ingrese el <strong>stock</strong> (Actual, Máximo y Mínimo).</li>
+
+                            <li><strong>Paso 8:</strong> Redacte la <strong>cláusula de garantía</strong>.</li>
+
+                            <li><strong>Paso 9:</strong> Seleccione la <strong>categoría</strong> y complete características específicas.</li>
+
+                            <li><strong>Paso 10:</strong> Ingrese el <strong>código serial</strong>.</li>
+
+                            <li><strong>Paso 11:</strong> Ingrese su <strong>precio</strong> de venta.</li>
+
+                            <li><strong>Paso 12:</strong> Haga clic en <strong>"Registrar"</strong> para guardar.</li>
+
+                        </ol>
+
+                        <div class="alert alert-info">
+
+                            <strong>Importante:</strong><br>
+
+                            - La imagen debe estar en formato JPG/PNG<br>
+
+                            - Todos los campos con * son obligatorios<br>
+
+                            - El botón "Limpiar" resetea el formulario
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                
+                <!-- Tarjeta Detallar Producto -->
 
-                <!-- Tarjeta Detallar -->
-
-                <div class="tarjeta-ayuda tarjeta-detallar" data-tarjeta="detallar" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-detallar" data-tarjeta="detallar">
 
                     <div class="tarjeta-header">
 
@@ -178,29 +192,45 @@
 
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
                             </svg>
 
                         </div>
 
-                        <h4 class="tarjeta-titulo">Detallar</h4>
+                        <h4 class="tarjeta-titulo">Detallar Producto</h4>
 
                     </div>
 
                     <div class="tarjeta-contenido">
 
-                        <p>Permite visualizar toda la información completa de un proveedor específico.</p>
+                        <p>Visualice toda la información completa de un producto específico del catálogo.</p>
+
+                        <h5 class="tarjeta-subtitulo">Pasos para Detallar Producto:</h5>
+
+                        <ol>
+
+                            <li><strong>Paso 1:</strong> Localice el producto que desea consultar en la tabla.</li>
+
+                            <li><strong>Paso 2:</strong> Haga clic en el botón ícono del <strong>ojo</strong> <i class="bi bi-eye text-warning me-2"></i> en la columna "Acciones".</li>
+
+                            <li><strong>Paso 3:</strong> Se mostrará una ventana con toda la información completa del producto.</li>
+
+                        </ol>
+
+                        <h5 class="tarjeta-subtitulo">Información Visible:</h5>
 
                         <ul>
 
-                            <li>Ubique el proveedor en la lista</li>
+                            <li><strong>Datos básicos:</strong> Nombre, descripción, imagen</li>
 
-                            <li>Haga clic en el ícono del ojo (👁)</li>
+                            <li><strong>Información de stock:</strong> Actual, máximo y mínimo</li>
 
-                            <li>Revise todos los datos del proveedor</li>
+                            <li><strong>Detalles técnicos:</strong> Serial, garantía, categoría</li>
 
-                            <li>Puede cerrar la vista cuando termine</li>
+                            <li><strong>Información comercial:</strong> Precio, estatus</li>
+
+                            <li><strong>Características específicas:</strong> Según categoría</li>
 
                         </ul>
 
@@ -208,11 +238,9 @@
 
                 </div>
 
-                
+                <!-- Tarjeta Modificar Producto -->
 
-                <!-- Tarjeta Modificar -->
-
-                <div class="tarjeta-ayuda tarjeta-modificar" data-tarjeta="modificar" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-modificar" data-tarjeta="modificar">
 
                     <div class="tarjeta-header">
 
@@ -228,35 +256,61 @@
 
                         </div>
 
-                        <h4 class="tarjeta-titulo">Modificar</h4>
+                        <h4 class="tarjeta-titulo">Modificar Producto</h4>
 
                     </div>
 
                     <div class="tarjeta-contenido">
 
-                        <p>Permite actualizar los datos de un proveedor existente en el sistema.</p>
+                        <p>Actualice la información de un producto existente, incluyendo imagen y todos los datos asociados.</p>
+
+                        <h5 class="tarjeta-subtitulo">Pasos para Modificar Producto:</h5>
+
+                        <ol>
+
+                            <li><strong>Paso 1:</strong> Localice el producto que desea modificar en la tabla.</li>
+
+                            <li><strong>Paso 2:</strong> Haga clic en el ícono del <strong>lápiz</strong> 📝 en la columna "Acciones".</li>
+
+                            <li><strong>Paso 3:</strong> Edite los campos necesarios del formulario.</li>
+
+                            <li><strong>Paso 4:</strong> Puede actualizar la imagen si lo desea.</li>
+
+                            <li><strong>Paso 5:</strong> Haga clic en <strong>"Modificar"</strong> para confirmar los cambios.</li>
+
+                        </ol>
+
+                        <h5 class="tarjeta-subtitulo">Campos Modificables:</h5>
 
                         <ul>
 
-                            <li>Encuentre el proveedor a modificar</li>
+                            <li><strong>Información básica:</strong> Nombre, descripción</li>
 
-                            <li>Haga clic en el ícono del lápiz (✏️)</li>
+                            <li><strong>Stock:</strong> Actual, máximo y mínimo</li>
 
-                            <li>Edite los campos necesarios</li>
+                            <li><strong>Datos técnicos:</strong> Serial, garantía</li>
 
-                            <li>Guarde los cambios realizados</li>
+                            <li><strong>Categoría:</strong> Cambiar de categoría</li>
+
+                            <li><strong>Precio:</strong> Actualizar precio de venta</li>
+
+                            <li><strong>Imagen:</strong> Reemplazar foto del producto</li>
 
                         </ul>
+
+                        <div class="alert alert-warning">
+
+                            <strong>Tip:</strong> Los cambios se reflejan inmediatamente en el sistema
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                
+                <!-- Tarjeta Eliminar Producto -->
 
-                <!-- Tarjeta Eliminar -->
-
-                <div class="tarjeta-ayuda tarjeta-eliminar" data-tarjeta="eliminar" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-eliminar" data-tarjeta="eliminar">
 
                     <div class="tarjeta-header">
 
@@ -272,35 +326,61 @@
 
                         </div>
 
-                        <h4 class="tarjeta-titulo">Eliminar</h4>
+                        <h4 class="tarjeta-titulo">Eliminar Producto</h4>
 
                     </div>
 
                     <div class="tarjeta-contenido">
 
-                        <p>Permite remover permanentemente un proveedor del sistema.</p>
+                        <p>Elimine permanentemente un producto del catálogo junto con toda su información asociada.</p>
+
+                        <h5 class="tarjeta-subtitulo">Pasos para Eliminar Producto:</h5>
+
+                        <ol>
+
+                            <li><strong>Paso 1:</strong> Encuentre el producto que desea eliminar en la tabla.</li>
+
+                            <li><strong>Paso 2:</strong> Haga clic en el ícono de la <strong>X</strong> ❌ en "Acciones".</li>
+
+                            <li><strong>Paso 3:</strong> Confirme la eliminación en el mensaje de advertencia.</li>
+
+                            <li><strong>Paso 4:</strong> El producto será eliminado permanentemente.</li>
+
+                        </ol>
+
+                        <h5 class="tarjeta-subtitulo">Datos Eliminados:</h5>
 
                         <ul>
 
-                            <li>Localice el proveedor a eliminar</li>
+                            <li><strong>Información básica:</strong> Nombre, descripción</li>
 
-                            <li>Haga clic en el ícono de eliminar (🗑️)</li>
+                            <li><strong>Imagen asociada:</strong> Archivo de imagen del producto</li>
 
-                            <li>Confirme la acción en la ventana emergente</li>
+                            <li><strong>Stock y datos técnicos:</strong> Serial, garantía</li>
 
-                            <li>El proveedor será eliminado del sistema</li>
+                            <li><strong>Historial:</strong> Todos los registros relacionados</li>
+
+                            <li><strong>Características:</strong> Datos específicos de categoría</li>
 
                         </ul>
+
+                        <div class="alert alert-danger">
+
+                            <strong>¡Cuidado!</strong><br>
+
+                            Esta acción no se puede deshacer<br>
+
+                            Al eliminar un producto, se eliminarán todos sus datos incluyendo la imagen asociada
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                
-
                 <!-- Tarjeta Cambiar Estatus -->
 
-                <div class="tarjeta-ayuda tarjeta-estatus" data-tarjeta="estatus" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-estatus" data-tarjeta="estatus">
 
                     <div class="tarjeta-header">
 
@@ -308,9 +388,7 @@
 
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-                                <rect x="3" y="11" width="18" height="10" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+                                <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
                             </svg>
 
@@ -322,29 +400,47 @@
 
                     <div class="tarjeta-contenido">
 
-                        <p>Permite habilitar o inhabilitar un proveedor sin eliminarlo del sistema.</p>
+                        <p>Alterne la disponibilidad de un producto entre habilitado e inhabilitado para controlar su visibilidad.</p>
+
+                        <h5 class="tarjeta-subtitulo">Pasos para Cambiar Estatus:</h5>
+
+                        <ol>
+
+                            <li><strong>Paso 1:</strong> Localice el producto en la tabla.</li>
+
+                            <li><strong>Paso 2:</strong> Haga clic directamente en el estatus (habilitado/inhabilitado) del producto.</li>
+
+                            <li><strong>Paso 3:</strong> El estatus cambiará automáticamente al estado opuesto.</li>
+
+                        </ol>
+
+                        <h5 class="tarjeta-subtitulo">Tipos de Estatus:</h5>
 
                         <ul>
 
-                            <li>Encuentre el proveedor en la lista</li>
+                            <li><strong>Habilitado:</strong> Producto visible y disponible para venta</li>
 
-                            <li>Haga clic sobre su estatus actual</li>
+                            <li><strong>Inhabilitado:</strong> Producto oculto y no disponible</li>
 
-                            <li>El sistema alternará entre habilitado/inhabilitado</li>
+                            <li><strong>Cambio instantáneo:</strong> No requiere confirmación</li>
 
-                            <li>El proveedor mantendrá sus datos pero cambiará su estado</li>
+                            <li><strong>Control de inventario:</strong> Gestiona disponibilidad sin eliminar</li>
 
                         </ul>
+
+                        <div class="alert alert-info">
+
+                            <strong>Instantáneo:</strong> Sin confirmación requerida
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                
-
                 <!-- Tarjeta Generar Reporte -->
 
-                <div class="tarjeta-ayuda tarjeta-reporte" data-tarjeta="reporte" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-reporte" data-tarjeta="reporte">
 
                     <div class="tarjeta-header">
 
@@ -352,15 +448,15 @@
 
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
-                                <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2"/>
+                                <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
-                                <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2"/>
+                                <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
-                                <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2"/>
+                                <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
-                                <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2"/>
+                                <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 
                             </svg>
 
@@ -372,17 +468,35 @@
 
                     <div class="tarjeta-contenido">
 
-                        <p>Permite generar reportes de los proveedores registrados en el sistema.</p>
+                        <p>Genere reportes detallados del catálogo de productos con análisis de inventario y estadísticas.</p>
+
+                        <h5 class="tarjeta-subtitulo">Pasos para Generar Reportes:</h5>
+
+                        <ol>
+
+                            <li><strong>Paso 1:</strong> Haga clic en el botón de reportes en la sección de productos.</li>
+
+                            <li><strong>Paso 2:</strong> Seleccione los filtros deseados (categoría, estatus, rango de fechas).</li>
+
+                            <li><strong>Paso 3:</strong> Elija el formato de salida (PDF, Excel).</li>
+
+                            <li><strong>Paso 4:</strong> Haga clic en <strong>"Generar Reporte"</strong>.</li>
+
+                        </ol>
+
+                        <h5 class="tarjeta-subtitulo">Información del Reporte:</h5>
 
                         <ul>
 
-                            <li>Utilice los filtros para seleccionar los datos</li>
+                            <li><strong>Lista completa:</strong> Todos los productos con filtros aplicados</li>
 
-                            <li>Puede filtrar por estatus o fecha</li>
+                            <li><strong>Stock actual:</strong> Niveles de inventario</li>
 
-                            <li>Haga clic en "Generar Reporte"</li>
+                            <li><strong>Precios:</strong> Información de costos y ventas</li>
 
-                            <li>El sistema descargará el archivo en formato PDF</li>
+                            <li><strong>Estatus:</strong> Disponibilidad de productos</li>
+
+                            <li><strong>Categorías:</strong> Agrupación por tipo</li>
 
                         </ul>
 

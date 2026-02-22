@@ -15,12 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 7h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M3 17h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M5 5h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-box-arrow-right fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Orden de Despacho</h3>
                 </div>
@@ -94,6 +89,9 @@
                             <li>Haga clic en el botón de check (verde) en "Acciones"</li>
                             <li>El estatus cambiará automáticamente</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Instantáneo:</strong> Sin confirmación
+                        </div>
                     </div>
                 </div>
 
@@ -120,7 +118,7 @@
                 </div>
 
                 <!-- Tarjeta Anular -->
-                <div class="tarjeta-ayuda tarjeta-eliminar" data-tarjeta="eliminar" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-anular" data-tarjeta="eliminar" style="display: none;">
                     <div class="tarjeta-header">
                         <div class="tarjeta-icono">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -137,6 +135,9 @@
                             <li>Haga clic en el ícono de la X en "Acciones"</li>
                             <li>Confirme la anulación en el mensaje de advertencia</li>
                         </ul>
+                        <div class="alert alert-danger">
+                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                        </div>
                     </div>
                 </div>
             </div>

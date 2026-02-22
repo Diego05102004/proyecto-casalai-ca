@@ -15,12 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-                            <line x1="7" y1="7" x2="17" y2="7" stroke="currentColor" stroke-width="2"/>
-                            <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="2"/>
-                            <path d="M7 17h10" stroke="currentColor" stroke-width="2"/>
-                        </svg>
+                        <i class="bi bi-bank fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Cuentas Bancarias</h3>
                 </div>
@@ -133,8 +128,10 @@
                             <li>Haga clic en el ícono del lápiz (📝) en "Acciones"</li>
                             <li>Edite los campos necesarios (nombre, teléfono, métodos de pago, etc.)</li>
                             <li>Haga clic en "Modificar" para confirmar los cambios</li>
-                            <li>Los cambios se reflejarán inmediatamente en el sistema</li>
                         </ul>
+                        <div class="alert alert-warning">
+                            <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                        </div>
                     </div>
                 </div>
                 
@@ -156,8 +153,10 @@
                             <li>Haga clic en el ícono de la X (❌) en "Acciones"</li>
                             <li>Confirme la eliminación en el mensaje de advertencia</li>
                             <li>La cuenta bancaria será eliminada permanentemente del sistema</li>
-                            <li><strong>¡Cuidado!</strong> Esta acción no se puede deshacer</li>
                         </ul>
+                        <div class="alert alert-danger">
+                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                        </div>
                     </div>
                 </div>
                 
@@ -181,6 +180,9 @@
                             <li>La cuenta mantendrá sus datos pero cambiará su disponibilidad</li>
                             <li>El cambio es instantáneo y no requiere confirmación</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Instantáneo:</strong> Sin confirmación
+                        </div>
                     </div>
                 </div>
                 

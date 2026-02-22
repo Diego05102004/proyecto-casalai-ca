@@ -4275,10 +4275,11 @@ $modulos = [
                                         <h6>Operaciones disponibles:</h6>
                                         <ul>
                                             <li><strong>Reporte</strong>: Generar gráfica</li>
+                                            <li><strong>Descargar</strong>: Obtener reporte en formato PDF</li>
                                         </ul>
                                     </div>
                                 </div>
-                                                                <div class="row">
+                                <div class="row">
                                     <div>
                                         <h6 class="text-success">Vista de Ingresos y Egresos</h6>
                                         <?= renderImagen('finanzas', 'vista.png') ?>
@@ -4664,7 +4665,7 @@ $modulos = [
                                             <div class="col-md-5">
                                                 <div class="alert alert-light border">
                                                     <i class="bi bi-patch-plus text-success me-2"></i>
-                                                    <strong>Nueva Marca:</strong><br> Botón "+" verde
+                                                    <strong>Nuevo Rol:</strong><br> Botón "+" verde
                                                 </div>
                                             </div>
                                         </div>
@@ -4678,7 +4679,7 @@ $modulos = [
                                             <div class="col-md-6">
                                                 <div class="alert alert-info border">
                                                     <i class="bi bi-info-circle me-2"></i>
-                                                    <strong>Nombre de la Marca:</strong><br> (único en el sistema)
+                                                    <strong>Nombre de la Rol:</strong><br> (único en el sistema)
                                                 </div>
                                             </div>
                                         </div>
@@ -4844,6 +4845,7 @@ $modulos = [
                                             <li><strong>Generar</strong>: Nuevo respaldo</li>
                                             <li><strong>Consultar</strong>: Ver lista completa</li>
                                             <li><strong>Restaurar</strong>: Recuperar base de datos</li>
+                                            <li><strong>Descargar</strong>: Obtener archivo de respaldo</li>
                                             <li><strong>Eliminar</strong>: Remover respaldo</li>
                                         </ul>
                                     </div>

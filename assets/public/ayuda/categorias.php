@@ -15,11 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 6H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M16 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-folder fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Categorías</h3>
                 </div>
@@ -68,6 +64,11 @@
                             <li>Agregue las características específicas para la categoría</li>
                             <li>Haga clic en "Registrar" para confirmar</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Importante:</strong><br>
+                            - El nombre de la categoría debe ser único en el sistema <br>
+                            - Mínimo 1 característica requerida
+                        </div>
                     </div>
                 </div>
                 
@@ -90,6 +91,9 @@
                             <li>Edite los campos necesarios</li>
                             <li>Haga clic en "Modificar" para confirmar cambios</li>
                         </ul>
+                        <div class="alert alert-warning">
+                            <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                        </div>
                     </div>
                 </div>
                 
@@ -111,6 +115,9 @@
                             <li>Haga clic en el ícono de la X en "Acciones"</li>
                             <li>Confirme la eliminación en el mensaje de advertencia</li>
                         </ul>
+                        <div class="alert alert-danger">
+                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                        </div>
                     </div>
                 </div>
             </div>

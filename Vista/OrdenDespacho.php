@@ -402,8 +402,7 @@ echo json_encode(array_map(function($factura) {
     </script>
         <button 
         class="btn-ayuda"
-        title="Visualizar Ayuda"
-        >
+        title="Visualizar Ayuda">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
     

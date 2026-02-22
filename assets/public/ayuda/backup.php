@@ -15,12 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7l-4-4H6a2 2 0 0 0-2 2v14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M14 3v4a2 2 0 0 0 2 2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 13h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-database fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Backup</h3>
                 </div>
@@ -45,6 +40,7 @@
                             <li><strong>Consultar:</strong> Ver lista completa</li>
                             <li><strong>Restaurar:</strong> Recuperar base de datos</li>
                             <li><strong>Eliminar:</strong> Remover respaldo</li>
+                            <li><strong>Descargar:</strong> Obtener archivo de respaldo</li>
                         </ul>
                     </div>
                 </div>
@@ -73,7 +69,7 @@
                 </div>
 
                 <!-- Tarjeta Restaurar -->
-                <div class="tarjeta-ayuda tarjeta-modificar" data-tarjeta="modificar" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-detallar" data-tarjeta="modificar" style="display: none;">
                     <div class="tarjeta-header">
                         <div class="tarjeta-icono">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -90,11 +86,14 @@
                             <li>Haga clic en el botón "Restaurar" (amarillo)</li>
                             <li>Confirme la restauración en el mensaje de advertencia</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Importante:</strong> Esta operación debe ser realizada con responsabilidad. Una restauración de una base de datos incorrecta sin realizar previamente un respaldo de las bases de datos actuales puede causar una grave perdida de información en el sistema.
+                        </div>
                     </div>
                 </div>
 
                 <!-- Tarjeta Descargar -->
-                <div class="tarjeta-ayuda tarjeta-reporte" data-tarjeta="reporte" style="display: none;">
+                <div class="tarjeta-ayuda tarjeta-modificar" data-tarjeta="reporte" style="display: none;">
                     <div class="tarjeta-header">
                         <div class="tarjeta-icono">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -132,6 +131,9 @@
                             <li>Haga clic en el ícono de la X en "Acciones"</li>
                             <li>Confirme la eliminación en el mensaje de advertencia</li>
                         </ul>
+                        <div class="alert alert-danger">
+                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                        </div>
                     </div>
                 </div>
             </div>

@@ -531,7 +531,7 @@ a{
 /* ANIMATION */
 
 .container.registrar-mode:before {
-  transform: translate(80%, -50%);
+  transform: translate(100%, -50%);
   right: 52%;
 }
 

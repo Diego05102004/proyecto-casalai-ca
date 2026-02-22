@@ -15,13 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M5 21V7l8-4v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M19 21V11l-6-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 9v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M9 12v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-building fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Proveedores</h3>
                 </div>
@@ -79,6 +73,11 @@
                             <li>Verifique que todos los campos sean correctos</li>
                             <li>Presione "Guardar" para registrar</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Importante:</strong><br>
+                            - RIF: (VEJPG)-12345678-9 <br>
+                            -  Teléfono: 0400-000-0000
+                        </div>
                     </div>
                 </div>
                 
@@ -123,6 +122,9 @@
                             <li>Edite los campos necesarios</li>
                             <li>Guarde los cambios realizados</li>
                         </ul>
+                        <div class="alert alert-warning">
+                            <strong>Tip:</strong> Los cambios se reflejan inmediatamente
+                        </div>
                     </div>
                 </div>
                 
@@ -145,6 +147,9 @@
                             <li>Confirme la acción en la ventana emergente</li>
                             <li>El proveedor será eliminado del sistema</li>
                         </ul>
+                        <div class="alert alert-danger">
+                            <strong>¡Cuidado!</strong> Esta acción no se puede deshacer
+                        </div>
                     </div>
                 </div>
                 
@@ -167,6 +172,9 @@
                             <li>El sistema alternará entre habilitado/inhabilitado</li>
                             <li>El proveedor mantendrá sus datos pero cambiará su estado</li>
                         </ul>
+                        <div class="alert alert-info">
+                            <strong>Instantáneo:</strong> Sin confirmación
+                        </div>
                     </div>
                 </div>
                 

@@ -15,10 +15,7 @@
             <div class="ayuda-seccion" id="ayudaPrincipal">
                 <div class="ayuda-header">
                     <div class="ayuda-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <i class="bi bi-tag fs-1"></i>
                     </div>
                     <h3 class="ayuda-titulo">Gestión de Marcas</h3>
                 </div>
@@ -30,8 +27,6 @@
                         <h4 class="ayuda-subtitulo">Información gestionable:</h4>
                         <ul class="ayuda-lista">
                             <li>Nombre de la marca</li>
-                            <li>Identificador único</li>
-                            <li>Estado de la marca</li>
                         </ul>
                     </div>
                     
