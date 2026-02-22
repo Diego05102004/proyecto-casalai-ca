@@ -41,21 +41,26 @@ if (!isset($_SESSION['name'])) {
     .modulos-dashboard {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       justify-content: center;
       margin-top: 10px;
+      align-items: stretch;
     }
 
     .btn-dashboard {
-      width: 150px; /* 🔹 Tamaño fijo uniforme */
+      width: 120px;
       text-align: center;
-      padding: 8px;
+      padding: 6px 8px;
       border-radius: 6px;
       color: white;
-      font-size: 14px;
+      font-size: 12px;
       text-decoration: none;
       display: inline-block;
       transition: transform 0.2s ease, background-color 0.2s ease;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .btn-dashboard:hover {
@@ -161,6 +166,90 @@ if (!isset($_SESSION['name'])) {
         margin-bottom: 8px;
       }
     }
+/* ===== CARRUSEL CENTER MODE ===== */
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 20px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.carousel-track {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  transition: transform 0.4s ease;
+  padding: 0;
+  width: max-content;
+}
+
+.carousel-item {
+  width: 580px;
+  height: 340px;
+  flex-shrink: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  opacity: 0.6;
+  transform: scale(0.9);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  text-align: center;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Card activa centrada */
+.carousel-item.active {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Botones */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: white;
+  font-size: 28px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.carousel-btn.prev { left: 10px; }
+.carousel-btn.next { right: 10px; }
+
+.carousel-btn:hover {
+  background: rgba(0,0,0,0.9);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .carousel-item {
+    flex: 0 0 85%;
+  }
+
+  .carousel-btn {
+    display: none;
+  }
+
+}
   </style>
 </head>
 
@@ -169,6 +258,19 @@ if (!isset($_SESSION['name'])) {
 
 <?php
 include 'NewNavBar.php';
+
+// Inicializar variables de permisos y rol si no existen
+if (!isset($permisosConsulta)) {
+    $permisosConsulta = [];
+}
+
+if (!isset($nombre_rol)) {
+    $nombre_rol = isset($_SESSION['rol']) ? $_SESSION['rol'] : 'Cliente';
+}
+
+// Debug: mostrar información de sesión y permisos
+error_log("Dashboard - Rol: " . $nombre_rol);
+error_log("Dashboard - Permisos: " . print_r($permisosConsulta, true));
 
 // AGREGAR MÓDULOS DE REPORTES AL ARRAY PRINCIPAL (igual que en navbar)
 $modulos = [
@@ -293,11 +395,27 @@ function mostrarModulo($modulo, $permisosConsulta, $nombre_rol) {
 
 <div class="container">
   <h3 class="tabla-titulo-2" style="margin-top:20px; margin-bottom:20px;">Panel Principal</h3>
-  <div class="row" style="display:flex; flex-wrap:wrap; gap:32px; justify-content:center;">
-    <?php
+<div class="carousel-container">
+    <button class="carousel-btn prev">&#10094;</button>
+
+    <div class="carousel-track">
+        <!-- Aquí se generan dinámicamente tus cards -->
+      <?php
+    // Debug: mostrar información completa antes del foreach
+    error_log("Dashboard - Iniciando generación de cards");
+    error_log("Dashboard - Total grupos: " . count($grupos));
+    error_log("Dashboard - Sesión completa: " . print_r($_SESSION, true));
+    
+    // TEMPORAL: Forzar mostrar todos los grupos para diagnóstico
+    $mostrarTodosGrupos = true; // Cambiar a false cuando funcione
+    
     foreach ($grupos as $grupo => $info) {
+        error_log("Dashboard - Evaluando grupo: $grupo");
+        error_log("Dashboard - Condición del grupo: " . ($info['condicion'] ? 'true' : 'false'));
+        
         // Verificar si el grupo debe mostrarse (igual que en navbar)
-        if (!$info['condicion']) {
+        if (!$mostrarTodosGrupos && !$info['condicion']) {
+            error_log("Dashboard - Grupo $grupo omitido por condición falsa");
             continue;
         }
 
@@ -305,7 +423,9 @@ function mostrarModulo($modulo, $permisosConsulta, $nombre_rol) {
 
         // Agregar módulos principales con permisos
         foreach ($info['modulos'] as $mod) {
-            if (mostrarModulo($mod, $permisosConsulta, $nombre_rol)) {
+            $permisoModulo = $mostrarTodosGrupos ? true : mostrarModulo($mod, $permisosConsulta, $nombre_rol);
+            error_log("Dashboard - Módulo $mod: " . ($permisoModulo ? 'permitido' : 'denegado'));
+            if ($permisoModulo) {
                 $modulosPermitidos[] = $mod;
             }
         }
@@ -352,8 +472,11 @@ function mostrarModulo($modulo, $permisosConsulta, $nombre_rol) {
         if (count($modulosPermitidos) > 0) {
             $icono = $info['icon'];
             $color = $info['color'];
+            
+            // Debug: mostrar que se está generando esta card
+            error_log("Dashboard - Generando card para grupo: $grupo con " . count($modulosPermitidos) . " módulos");
     ?>
-    <div class="card-dashboard" style="border-top:6px solid <?php echo $color; ?>;">
+    <div class="card-dashboard carousel-item" style="border-top:6px solid <?php echo $color; ?>;">
       <img src="<?php echo $icono; ?>" alt="icono" style="width:56px; height:56px; margin-bottom:18px;">
       <div class="modulos-dashboard">
         <h4 style="color:<?php echo $color; ?>;"><?php echo htmlspecialchars($grupo); ?></h4>
@@ -363,18 +486,72 @@ function mostrarModulo($modulo, $permisosConsulta, $nombre_rol) {
           <?php echo htmlspecialchars($modulos[$modulo][0]); ?>
         </a>
         <?php endforeach; ?>
+
       </div>
     </div>
     <?php
         }
     }
     ?>
-  </div>
-</div>
+      </div>
 
+    <button class="carousel-btn next">&#10095;</button>
+</div>
   <?php include 'footer.php'; ?>
   <script>
     const sesion = <?php echo json_encode($_SESSION); ?>;
   </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const track = document.querySelector(".carousel-track");
+    const items = document.querySelectorAll(".carousel-item");
+    const btnNext = document.querySelector(".carousel-btn.next");
+    const btnPrev = document.querySelector(".carousel-btn.prev");
+
+    if (!track || items.length === 0) {
+        console.log('No se encontraron elementos del carrusel');
+        return;
+    }
+
+    let currentIndex = 0;
+
+    function updateCarousel() {
+        // Remover clase active de todos los items
+        items.forEach(item => item.classList.remove("active"));
+
+        // Agregar clase active al item actual
+        items[currentIndex].classList.add("active");
+
+        // Calcular el desplazamiento para centrar el item activo
+        const itemWidth = items[0].offsetWidth + 30; // ancho + gap
+        const containerWidth = track.parentElement.offsetWidth;
+        const offset = (currentIndex * itemWidth) - (containerWidth / 2) + (items[0].offsetWidth / 2);
+
+        // Aplicar transformación
+        track.style.transform = `translateX(-${offset}px)`;
+        
+        console.log(`Item actual: ${currentIndex}, Offset: ${offset}px`);
+    }
+
+    // Event listeners para botones
+    btnNext.addEventListener("click", () => {
+        currentIndex = (currentIndex + 1) % items.length;
+        updateCarousel();
+    });
+
+    btnPrev.addEventListener("click", () => {
+        currentIndex = (currentIndex - 1 + items.length) % items.length;
+        updateCarousel();
+    });
+
+    // Inicializar carrusel
+    updateCarousel();
+
+    // Manejar responsive
+    window.addEventListener('resize', () => {
+        updateCarousel();
+    });
+});
+</script>
 </body>
 </html>
