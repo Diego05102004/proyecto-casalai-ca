@@ -14,6 +14,16 @@ class OrdenDespacho extends BD {
     private $estado;
     private $activo = 1;
     private $tableordendespacho = 'tbl_orden_despachos';
+    
+    // Constantes para validaciones
+    const MAX_CORRELATIVO = 10;
+    const MIN_CORRELATIVO = 4;
+    const MAX_ID_ORDEN = 999999999;
+    const MIN_ID_ORDEN = 1;
+    const MAX_ID_FACTURA = 999999999;
+    const MIN_ID_FACTURA = 1;
+    const ESTADOS_VALIDOS = ['Por Entregar', 'Entregada', 'Anulada'];
+    const ESTADOS_VALIDOS_CAMBIO = ['habilitado', 'inhabilitado'];
 
     public function __construct() {
         $this->conex = null;
@@ -53,44 +63,6 @@ class OrdenDespacho extends BD {
     }
     public function setEstado($estado) {
         $this->estado = $estado;
-    }
-
-    public function validarDatosOrden(array $datos) {
-        $errores = [];
-
-        $correlativo = isset($datos['correlativo']) ? trim((string)$datos['correlativo']) : '';
-        if ($correlativo === '') {
-            $errores['correlativo'] = 'El correlativo es obligatorio';
-        } elseif (!preg_match('/^[0-9]{4,10}$/', $correlativo)) {
-            $errores['correlativo'] = 'El correlativo debe tener entre 4 y 10 dígitos numéricos';
-        }
-
-        $idFactura = null;
-        if (isset($datos['factura'])) {
-            $idFactura = (int)$datos['factura'];
-        } elseif (isset($datos['id_factura'])) {
-            $idFactura = (int)$datos['id_factura'];
-        }
-
-        if ($idFactura === null || $idFactura <= 0) {
-            $errores['factura'] = 'Debe seleccionar una factura válida';
-        }
-
-        if (!empty($datos['fecha'])) {
-            $fecha = trim((string)$datos['fecha']);
-            $dt = \DateTime::createFromFormat('Y-m-d', $fecha);
-            $errors = \DateTime::getLastErrors();
-            if (!$dt || $errors['warning_count'] > 0 || $errors['error_count'] > 0) {
-                $errores['fecha'] = 'La fecha no tiene un formato válido (AAAA-MM-DD)';
-            } else {
-                $hoy = new \DateTime('today');
-                if ($dt > $hoy) {
-                    $errores['fecha'] = 'No se permiten fechas futuras';
-                }
-            }
-        }
-
-        return $errores;
     }
 
     public function obtenerFacturasDisponibles() {
@@ -492,6 +464,209 @@ public function obtenerDatosParaPDF($id) {
         } finally {
             if (isset($conexion)) { $conexion->cerrar(); }
             $this->conex = null;
+        }
+    }
+
+    // ==================== VALIDACIONES DE BACKEND ====================
+
+    /**
+     * Valida los datos para operaciones de orden de despacho
+     */
+    private function validarOrdenDespacho($datos, $requiereFactura = true) {
+        $errores = [];
+        
+        // Validar correlativo (solo para creación)
+        if ($requiereFactura) {
+            if (!isset($datos['correlativo'])) {
+                $errores['correlativo'] = 'El correlativo es obligatorio';
+            } else {
+                $correlativo = trim((string)$datos['correlativo']);
+                if (empty($correlativo)) {
+                    $errores['correlativo'] = 'El correlativo es obligatorio';
+                } elseif (!preg_match('/^[0-9]{' . self::MIN_CORRELATIVO . ',' . self::MAX_CORRELATIVO . '}$/', $correlativo)) {
+                    $errores['correlativo'] = 'El correlativo debe tener entre ' . self::MIN_CORRELATIVO . ' y ' . self::MAX_CORRELATIVO . ' dígitos numéricos';
+                }
+            }
+        }
+        
+        // Validar ID de la factura (solo para creación)
+        if ($requiereFactura) {
+            $idFactura = null;
+            if (isset($datos['factura'])) {
+                $idFactura = (int)$datos['factura'];
+            } elseif (isset($datos['id_factura'])) {
+                $idFactura = (int)$datos['id_factura'];
+            }
+            
+            if ($idFactura === null || $idFactura < self::MIN_ID_FACTURA || $idFactura > self::MAX_ID_FACTURA) {
+                $errores['factura'] = 'Debe seleccionar una factura válida';
+            }
+        }
+        
+        // Validar ID de la orden (solo para operaciones que lo requieran)
+        if (isset($datos['id_orden_despachos'])) {
+            if (!is_numeric($datos['id_orden_despachos']) || $datos['id_orden_despachos'] < self::MIN_ID_ORDEN || $datos['id_orden_despachos'] > self::MAX_ID_ORDEN) {
+                $errores['id_orden_despachos'] = 'El ID de la orden debe ser un número entre ' . self::MIN_ID_ORDEN . ' y ' . self::MAX_ID_ORDEN;
+            }
+        }
+        
+        // Validar fecha (opcional)
+        if (isset($datos['fecha']) && !empty($datos['fecha'])) {
+            $fecha = trim((string)$datos['fecha']);
+            $dt = \DateTime::createFromFormat('Y-m-d', $fecha);
+            $errors = \DateTime::getLastErrors();
+            if (!$dt || $errors['warning_count'] > 0 || $errors['error_count'] > 0) {
+                $errores['fecha'] = 'La fecha no tiene un formato válido (AAAA-MM-DD)';
+            } else {
+                $hoy = new \DateTime('today');
+                if ($dt > $hoy) {
+                    $errores['fecha'] = 'No se permiten fechas futuras';
+                }
+            }
+        }
+        
+        // Validar estado (opcional)
+        if (isset($datos['estado']) && !empty($datos['estado'])) {
+            if (!in_array($datos['estado'], self::ESTADOS_VALIDOS)) {
+                $errores['estado'] = 'El estado no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+
+    /**
+     * Valida los datos para consultar orden (método público)
+     */
+    public function validarConsultarOrden($datos) {
+        $errores = [];
+        
+        // Validar ID de la orden (opcional para consulta)
+        if (isset($datos['id_orden_despachos'])) {
+            if (!is_numeric($datos['id_orden_despachos']) || $datos['id_orden_despachos'] < self::MIN_ID_ORDEN || $datos['id_orden_despachos'] > self::MAX_ID_ORDEN) {
+                $errores['id_orden_despachos'] = 'El ID de la orden debe ser un número entre ' . self::MIN_ID_ORDEN . ' y ' . self::MAX_ID_ORDEN;
+            }
+        }
+        
+        // Validar ID de la factura (opcional para consulta)
+        if (isset($datos['id_factura'])) {
+            if (!is_numeric($datos['id_factura']) || $datos['id_factura'] < self::MIN_ID_FACTURA || $datos['id_factura'] > self::MAX_ID_FACTURA) {
+                $errores['id_factura'] = 'El ID de la factura debe ser un número entre ' . self::MIN_ID_FACTURA . ' y ' . self::MAX_ID_FACTURA;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para detallar orden (método público)
+     */
+    public function validarDetallarOrden($datos) {
+        return $this->validarConsultarOrden($datos);
+    }
+    
+    /**
+     * Valida los datos para cambiar estatus (método público)
+     */
+    public function validarCambiarEstatus($datos) {
+        $errores = [];
+        
+        // Validar ID de la orden
+        if (!isset($datos['id_orden_despachos'])) {
+            $errores['id_orden_despachos'] = 'El ID de la orden es obligatorio';
+        } elseif (!is_numeric($datos['id_orden_despachos']) || $datos['id_orden_despachos'] < self::MIN_ID_ORDEN || $datos['id_orden_despachos'] > self::MAX_ID_ORDEN) {
+            $errores['id_orden_despachos'] = 'El ID de la orden debe ser un número entre ' . self::MIN_ID_ORDEN . ' y ' . self::MAX_ID_ORDEN;
+        }
+        
+        // Validar nuevo estatus
+        if (!isset($datos['nuevo_estatus'])) {
+            $errores['nuevo_estatus'] = 'El nuevo estatus es obligatorio';
+        } elseif (!in_array($datos['nuevo_estatus'], self::ESTADOS_VALIDOS_CAMBIO)) {
+            $errores['nuevo_estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS_CAMBIO);
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para descargar orden (método público)
+     */
+    public function validarDescargarOrden($datos) {
+        $errores = [];
+        
+        // Validar ID de la orden
+        if (!isset($datos['id_orden_despachos'])) {
+            $errores['id_orden_despachos'] = 'El ID de la orden es obligatorio';
+        } elseif (!is_numeric($datos['id_orden_despachos']) || $datos['id_orden_despachos'] < self::MIN_ID_ORDEN || $datos['id_orden_despachos'] > self::MAX_ID_ORDEN) {
+            $errores['id_orden_despachos'] = 'El ID de la orden debe ser un número entre ' . self::MIN_ID_ORDEN . ' y ' . self::MAX_ID_ORDEN;
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para anular orden (método público)
+     */
+    public function validarAnularOrden($datos) {
+        return $this->validarDescargarOrden($datos);
+    }
+    
+    /**
+     * Valida los datos para crear orden (método público)
+     */
+    public function validarCrearOrden($datos) {
+        return $this->validarOrdenDespacho($datos, true);
+    }
+    
+    /**
+     * Verifica si una orden existe por ID
+     */
+    private function verificarOrdenExistente($idOrden) {
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_orden_despachos WHERE id_orden_despachos = :id_orden_despachos AND activo = 1";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_orden_despachos', $idOrden, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarOrdenExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
+        }
+    }
+    
+    /**
+     * Verifica si una factura existe por ID
+     */
+    private function verificarFacturaExistente($idFactura) {
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_facturas WHERE id_factura = :id_factura";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_factura', $idFactura, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarFacturaExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
         }
     }
 }
