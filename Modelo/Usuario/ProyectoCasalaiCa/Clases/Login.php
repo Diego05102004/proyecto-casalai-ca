@@ -17,6 +17,19 @@ class Login extends BD
     private ?string $password = null;
     private ?PDO $co = null;
     private ?PDO $cop = null;
+    
+    // Constantes para validaciones
+    const MAX_USERNAME = 50;
+    const MIN_USERNAME = 3;
+    const MAX_PASSWORD = 255;
+    const MIN_PASSWORD = 8;
+    const MAX_EMAIL = 100;
+    const MAX_NOMBRE = 50;
+    const MAX_APELLIDO = 50;
+    const MAX_TELEFONO = 20;
+    const MAX_CEDULA = 20;
+    const MIN_CEDULA = 5;
+    const MAX_DIRECCION = 200;
 
     public function __construct()
     {
@@ -234,5 +247,215 @@ public function registrarUsuarioYCliente($datos) {
     }
     return $respuesta;
 }
+    
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para iniciar sesión
+     */
+    private function validarInicioSesion($datos) {
+        $errores = [];
+        
+        // Validar username
+        if (!isset($datos['username'])) {
+            $errores['username'] = 'El nombre de usuario es obligatorio';
+        } else {
+            $username = trim($datos['username']);
+            if (empty($username)) {
+                $errores['username'] = 'El nombre de usuario es obligatorio';
+            } elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
+                $errores['username'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+                $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+            }
+        }
+        
+        // Validar password
+        if (!isset($datos['password'])) {
+            $errores['password'] = 'La contraseña es obligatoria';
+        } else {
+            $password = $datos['password'];
+            if (empty($password)) {
+                $errores['password'] = 'La contraseña es obligatoria';
+            } elseif (mb_strlen($password) < self::MIN_PASSWORD || mb_strlen($password) > self::MAX_PASSWORD) {
+                $errores['password'] = 'La contraseña debe tener entre ' . self::MIN_PASSWORD . ' y ' . self::MAX_PASSWORD . ' caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para registrar un usuario
+     */
+    private function validarRegistroUsuario($datos) {
+        $errores = [];
+        
+        // Validar nombre de usuario
+        if (!isset($datos['nombre_usuario'])) {
+            $errores['nombre_usuario'] = 'El nombre de usuario es obligatorio';
+        } else {
+            $nombreUsuario = trim($datos['nombre_usuario']);
+            if (empty($nombreUsuario)) {
+                $errores['nombre_usuario'] = 'El nombre de usuario es obligatorio';
+            } elseif (mb_strlen($nombreUsuario) < self::MIN_USERNAME || mb_strlen($nombreUsuario) > self::MAX_USERNAME) {
+                $errores['nombre_usuario'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $nombreUsuario)) {
+                $errores['nombre_usuario'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+            }
+        }
+        
+        // Validar contraseña
+        if (!isset($datos['clave'])) {
+            $errores['clave'] = 'La contraseña es obligatoria';
+        } else {
+            $clave = $datos['clave'];
+            if (empty($clave)) {
+                $errores['clave'] = 'La contraseña es obligatoria';
+            } elseif (mb_strlen($clave) < self::MIN_PASSWORD || mb_strlen($clave) > self::MAX_PASSWORD) {
+                $errores['clave'] = 'La contraseña debe tener entre ' . self::MIN_PASSWORD . ' y ' . self::MAX_PASSWORD . ' caracteres';
+            } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', $clave)) {
+                $errores['clave'] = 'La contraseña debe contener al menos una letra mayúscula, una letra minúscula y un número';
+            }
+        }
+        
+        // Validar nombre
+        if (!isset($datos['nombre'])) {
+            $errores['nombre'] = 'El nombre es obligatorio';
+        } else {
+            $nombre = trim($datos['nombre']);
+            if (empty($nombre)) {
+                $errores['nombre'] = 'El nombre es obligatorio';
+            } elseif (mb_strlen($nombre) > self::MAX_NOMBRE) {
+                $errores['nombre'] = 'El nombre no debe exceder los ' . self::MAX_NOMBRE . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', $nombre)) {
+                $errores['nombre'] = 'El nombre solo puede contener letras y espacios';
+            }
+        }
+        
+        // Validar apellido
+        if (!isset($datos['apellido'])) {
+            $errores['apellido'] = 'El apellido es obligatorio';
+        } else {
+            $apellido = trim($datos['apellido']);
+            if (empty($apellido)) {
+                $errores['apellido'] = 'El apellido es obligatorio';
+            } elseif (mb_strlen($apellido) > self::MAX_APELLIDO) {
+                $errores['apellido'] = 'El apellido no debe exceder los ' . self::MAX_APELLIDO . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', $apellido)) {
+                $errores['apellido'] = 'El apellido solo puede contener letras y espacios';
+            }
+        }
+        
+        // Validar correo
+        if (!isset($datos['correo'])) {
+            $errores['correo'] = 'El correo electrónico es obligatorio';
+        } else {
+            $correo = trim($datos['correo']);
+            if (empty($correo)) {
+                $errores['correo'] = 'El correo electrónico es obligatorio';
+            } elseif (mb_strlen($correo) > self::MAX_EMAIL) {
+                $errores['correo'] = 'El correo electrónico no debe exceder los ' . self::MAX_EMAIL . ' caracteres';
+            } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                $errores['correo'] = 'El formato del correo electrónico no es válido';
+            }
+        }
+        
+        // Validar teléfono
+        if (!isset($datos['telefono'])) {
+            $errores['telefono'] = 'El teléfono es obligatorio';
+        } else {
+            $telefono = trim($datos['telefono']);
+            if (empty($telefono)) {
+                $errores['telefono'] = 'El teléfono es obligatorio';
+            } elseif (mb_strlen($telefono) > self::MAX_TELEFONO) {
+                $errores['telefono'] = 'El teléfono no debe exceder los ' . self::MAX_TELEFONO . ' caracteres';
+            } elseif (!preg_match('/^[0-9\-\+\(\)\s]+$/', $telefono)) {
+                $errores['telefono'] = 'El teléfono solo puede contener números, guiones, paréntesis y el signo +';
+            }
+        }
+        
+        // Validar cédula
+        if (!isset($datos['cedula'])) {
+            $errores['cedula'] = 'La cédula es obligatoria';
+        } else {
+            $cedula = trim($datos['cedula']);
+            if (empty($cedula)) {
+                $errores['cedula'] = 'La cédula es obligatoria';
+            } elseif (mb_strlen($cedula) < self::MIN_CEDULA || mb_strlen($cedula) > self::MAX_CEDULA) {
+                $errores['cedula'] = 'La cédula debe tener entre ' . self::MIN_CEDULA . ' y ' . self::MAX_CEDULA . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $cedula)) {
+                $errores['cedula'] = 'La cédula solo puede contener letras, números y guiones';
+            }
+        }
+        
+        // Validar dirección (opcional)
+        if (isset($datos['direccion'])) {
+            $direccion = trim($datos['direccion']);
+            if (!empty($direccion) && mb_strlen($direccion) > self::MAX_DIRECCION) {
+                $errores['direccion'] = 'La dirección no debe exceder los ' . self::MAX_DIRECCION . ' caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para iniciar sesión (método público)
+     */
+    public function validarInicioSesionDatos($datos) {
+        return $this->validarInicioSesion($datos);
+    }
+    
+    /**
+     * Valida los datos para registrar usuario (método público)
+     */
+    public function validarRegistroUsuarioDatos($datos) {
+        return $this->validarRegistroUsuario($datos);
+    }
+    
+    /**
+     * Verifica si un nombre de usuario ya existe
+     */
+    private function verificarUsernameExistente($username) {
+        try {
+            $p = $this->co->prepare("SELECT COUNT(*) FROM tbl_usuarios WHERE username = ?");
+            $p->execute([$username]);
+            return $p->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarUsernameExistente: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica si un correo electrónico ya existe
+     */
+    private function verificarCorreoExistente($correo) {
+        try {
+            $p = $this->co->prepare("SELECT COUNT(*) FROM tbl_usuarios WHERE correo = ?");
+            $p->execute([$correo]);
+            return $p->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarCorreoExistente: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica si una cédula ya existe
+     */
+    private function verificarCedulaExistente($cedula) {
+        try {
+            $p = $this->co->prepare("SELECT COUNT(*) FROM tbl_usuarios WHERE cedula = ?");
+            $p->execute([$cedula]);
+            return $p->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarCedulaExistente: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
 
