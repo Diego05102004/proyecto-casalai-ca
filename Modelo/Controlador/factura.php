@@ -8,18 +8,97 @@ if (!is_file("Modelo/factura.php")) {
 
 require_once("Modelo/factura.php");
 require_once("Modelo/producto.php");
+
 if (is_file("Vista/factura.php")) {
 
     if (!empty($_POST)) {
 
-        $o = new Producto();
+        $factura = new Factura();
         $accion = $_POST['accion'];
-        if ($accion == 'listadoproductos') {
-            $respuesta = $o->listadoproductos();
-            echo json_encode($respuesta);
-        } elseif ($accion == 'registrar') {
-            /*$respuesta = $o->registrar($_POST['cliente'], $_POST['idp'], $_POST['cant'], $_POST['correlativo']);
-            echo json_encode($respuesta);*/
+        
+        switch ($accion) {
+            case 'pagar':
+                // Validar datos de entrada
+                $datosValidacion = [
+                    'id_factura' => $_POST['id_factura'] ?? null,
+                    'estatus_pago' => $_POST['estatus_pago'] ?? null,
+                    'observaciones' => $_POST['observaciones'] ?? null
+                ];
+                
+                $errores = $factura->validarPagarFactura($datosValidacion);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Datos inválidos',
+                        'errors' => $errores
+                    ]);
+                    break;
+                }
+                
+                // Aquí iría la lógica de pago
+                echo json_encode(['status' => 'success', 'message' => 'Validación exitosa']);
+                break;
+                
+            case 'consultar':
+                // Validar datos de entrada
+                $datosValidacion = [
+                    'id_factura' => $_POST['id_factura'] ?? null,
+                    'cedula' => $_POST['cedula'] ?? null,
+                    'limite' => $_POST['limite'] ?? null,
+                    'fecha_inicio' => $_POST['fecha_inicio'] ?? null,
+                    'fecha_fin' => $_POST['fecha_fin'] ?? null,
+                    'estatus' => $_POST['estatus'] ?? null
+                ];
+                
+                $errores = $factura->validarConsultarFacturas($datosValidacion);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Datos inválidos',
+                        'errors' => $errores
+                    ]);
+                    break;
+                }
+                
+                // Aquí iría la lógica de consulta
+                echo json_encode(['status' => 'success', 'message' => 'Validación exitosa']);
+                break;
+                
+            case 'cancelar':
+                // Validar datos de entrada
+                $datosValidacion = [
+                    'id_factura' => $_POST['id_factura'] ?? null,
+                    'motivo_cancelacion' => $_POST['motivo_cancelacion'] ?? null
+                ];
+                
+                $errores = $factura->validarCancelarFactura($datosValidacion);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Datos inválidos',
+                        'errors' => $errores
+                    ]);
+                    break;
+                }
+                
+                // Aquí iría la lógica de cancelación
+                echo json_encode(['status' => 'success', 'message' => 'Validación exitosa']);
+                break;
+                
+            case 'listadoproductos':
+                $o = new Producto();
+                $respuesta = $o->listadoproductos();
+                echo json_encode($respuesta);
+                break;
+                
+            case 'registrar':
+                /*$respuesta = $o->registrar($_POST['cliente'], $_POST['idp'], $_POST['cant'], $_POST['correlativo']);
+                echo json_encode($respuesta);*/
+                break;
+                
+            default:
+                echo json_encode(['status' => 'error', 'message' => 'Acción no válida']);
+                break;
         }
         exit;
     }
@@ -29,3 +108,4 @@ if (is_file("Vista/factura.php")) {
 } else {
     echo "pagina en construccion";
 }
+?>

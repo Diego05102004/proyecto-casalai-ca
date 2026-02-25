@@ -16,6 +16,16 @@ class Factura extends BD
 
     private $cedula;
     private $conex;
+    
+    // Constantes para validaciones
+    const MAX_DESCUENTO = 100;
+    const MIN_DESCUENTO = 0;
+    const MAX_CANTIDAD = 999999;
+    const MIN_CANTIDAD = 1;
+    const MAX_CLIENTE = 50;
+    const MIN_CLIENTE = 3;
+    const ESTADOS_PERMITIDOS = ['Borrador', 'Pagada Presencialmente', 'Pagada', 'Cancelada'];
+    const ESTADOS_PAGO = ['En Proceso', 'Pago Incompleto', 'Pago Procesado', 'Pago No Encontrado'];
 
     // Constructor sin conexión persistente
 public function __construct() {
@@ -45,69 +55,6 @@ public function __construct() {
     public function setCantidad($cantidad) { $this->cantidad = $cantidad; }
     public function getCedula() { return $this->cedula; }
     public function setCedula($cedula) { $this->cedula = $cedula; }
-
-    // Validaciones de datos para registro de factura
-    public function validarDatosRegistro() {
-        $errores = [];
-
-        // Validar fecha
-        if (empty($this->fecha)) {
-            $errores[] = "La fecha de la factura es obligatoria.";
-        } else {
-            $timestamp = strtotime($this->fecha);
-            if ($timestamp === false) {
-                $errores[] = "La fecha de la factura no tiene un formato válido.";
-            }
-        }
-
-        // Validar cliente (se espera la cédula en esta propiedad)
-        if (empty($this->cliente)) {
-            $errores[] = "La cédula del cliente es obligatoria.";
-        } elseif (strlen((string)$this->cliente) < 3 || strlen((string)$this->cliente) > 20) {
-            $errores[] = "La cédula del cliente no tiene una longitud válida.";
-        }
-
-        // Validar descuento
-        if ($this->descuento === null || $this->descuento === '') {
-            $this->descuento = 0;
-        }
-        if (!is_numeric($this->descuento) || $this->descuento < 0 || $this->descuento > 100) {
-            $errores[] = "El descuento debe ser un número entre 0 y 100.";
-        }
-
-        // Validar estatus
-        if (empty($this->estatus)) {
-            $errores[] = "El estatus de la factura es obligatorio.";
-        }
-
-        // Validar productos y cantidades
-        if (!is_array($this->id_producto) || !is_array($this->cantidad)) {
-            $errores[] = "Los productos y cantidades de la factura deben enviarse en formato de lista.";
-            return $errores;
-        }
-
-        if (count($this->id_producto) === 0) {
-            $errores[] = "Debe agregar al menos un producto a la factura.";
-        }
-
-        if (count($this->id_producto) !== count($this->cantidad)) {
-            $errores[] = "La cantidad de productos no coincide con las cantidades indicadas.";
-        }
-
-        foreach ($this->id_producto as $index => $idProducto) {
-            $cantidad = $this->cantidad[$index] ?? null;
-
-            if (!is_numeric($idProducto) || (int)$idProducto <= 0) {
-                $errores[] = "El producto en la posición " . ($index + 1) . " no tiene un ID válido.";
-            }
-
-            if (!is_numeric($cantidad) || (int)$cantidad <= 0) {
-                $errores[] = "La cantidad del producto en la posición " . ($index + 1) . " no es válida.";
-            }
-        }
-
-        return $errores;
-    }
 
     public function registrar() {
         return $this->r_registrar();
@@ -850,6 +797,227 @@ private function facturaConsultar() {
         $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $conexionPrincipal->cerrar();
         return $facturas;
+    }
+    
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para pagar facturas
+     */
+    private function validarPagar($datos) {
+        $errores = [];
+        
+        // Validar ID de la factura
+        if (!isset($datos['id_factura'])) {
+            $errores['id_factura'] = 'El ID de la factura es obligatorio';
+        } elseif (!is_numeric($datos['id_factura']) || $datos['id_factura'] <= 0) {
+            $errores['id_factura'] = 'El ID de la factura debe ser un número positivo';
+        }
+        
+        // Validar estatus del pago
+        if (isset($datos['estatus_pago'])) {
+            $estatusPago = trim($datos['estatus_pago']);
+            if (!empty($estatusPago) && !in_array($estatusPago, self::ESTADOS_PAGO)) {
+                $errores['estatus_pago'] = 'El estatus del pago debe ser uno de: ' . implode(', ', self::ESTADOS_PAGO);
+            }
+        }
+        
+        // Validar observaciones del pago
+        if (isset($datos['observaciones'])) {
+            $observaciones = trim($datos['observaciones']);
+            if (mb_strlen($observaciones) > 500) {
+                $errores['observaciones'] = 'Las observaciones no deben exceder los 500 caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar facturas
+     */
+    private function validarConsultar($datos) {
+        $errores = [];
+        
+        // Validar ID de la factura (opcional)
+        if (isset($datos['id_factura'])) {
+            if (!is_numeric($datos['id_factura']) || $datos['id_factura'] <= 0) {
+                $errores['id_factura'] = 'El ID de la factura debe ser un número positivo';
+            }
+        }
+        
+        // Validar cédula del cliente (opcional)
+        if (isset($datos['cedula'])) {
+            $cedula = trim($datos['cedula']);
+            if (empty($cedula)) {
+                $errores['cedula'] = 'La cédula del cliente es obligatoria';
+            } elseif (mb_strlen($cedula) < self::MIN_CLIENTE || mb_strlen($cedula) > self::MAX_CLIENTE) {
+                $errores['cedula'] = 'La cédula del cliente debe tener entre ' . self::MIN_CLIENTE . ' y ' . self::MAX_CLIENTE . ' caracteres';
+            }
+        }
+        
+        // Validar límite de resultados (opcional)
+        if (isset($datos['limite'])) {
+            $limite = (int)$datos['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
+            }
+        }
+        
+        // Validar fecha de inicio (opcional)
+        if (isset($datos['fecha_inicio'])) {
+            $fechaInicio = trim($datos['fecha_inicio']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio)) {
+                $errores['fecha_inicio'] = 'La fecha de inicio debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaInicio);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_inicio'] = 'La fecha de inicio no es válida';
+                }
+            }
+        }
+        
+        // Validar fecha de fin (opcional)
+        if (isset($datos['fecha_fin'])) {
+            $fechaFin = trim($datos['fecha_fin']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
+                $errores['fecha_fin'] = 'La fecha de fin debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaFin);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_fin'] = 'La fecha de fin no es válida';
+                }
+            }
+        }
+        
+        // Validar que la fecha de fin no sea anterior a la de inicio
+        if (isset($datos['fecha_inicio']) && isset($datos['fecha_fin']) && !isset($errores['fecha_inicio']) && !isset($errores['fecha_fin'])) {
+            $fechaInicio = new \DateTime($datos['fecha_inicio']);
+            $fechaFin = new \DateTime($datos['fecha_fin']);
+            if ($fechaFin < $fechaInicio) {
+                $errores['fecha_fin'] = 'La fecha de fin no puede ser anterior a la fecha de inicio';
+            }
+        }
+        
+        // Validar estatus de la factura (opcional)
+        if (isset($datos['estatus'])) {
+            $estatus = trim($datos['estatus']);
+            if (!empty($estatus) && !in_array($estatus, self::ESTADOS_PERMITIDOS)) {
+                $errores['estatus'] = 'El estatus debe ser uno de: ' . implode(', ', self::ESTADOS_PERMITIDOS);
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para cancelar facturas
+     */
+    private function validarCancelar($datos) {
+        $errores = [];
+        
+        // Validar ID de la factura
+        if (!isset($datos['id_factura'])) {
+            $errores['id_factura'] = 'El ID de la factura es obligatorio';
+        } elseif (!is_numeric($datos['id_factura']) || $datos['id_factura'] <= 0) {
+            $errores['id_factura'] = 'El ID de la factura debe ser un número positivo';
+        }
+        
+        // Validar motivo de cancelación (opcional)
+        if (isset($datos['motivo_cancelacion'])) {
+            $motivo = trim($datos['motivo_cancelacion']);
+            if (mb_strlen($motivo) > 200) {
+                $errores['motivo_cancelacion'] = 'El motivo de cancelación no debe exceder los 200 caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para pagar (método público)
+     */
+    public function validarPagarFactura($datos) {
+        return $this->validarPagar($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar (método público)
+     */
+    public function validarConsultarFacturas($datos) {
+        return $this->validarConsultar($datos);
+    }
+    
+    /**
+     * Valida los datos para cancelar (método público)
+     */
+    public function validarCancelarFactura($datos) {
+        return $this->validarCancelar($datos);
+    }
+    
+    /**
+     * Verifica si una factura existe por ID
+     */
+    private function verificarFacturaExistente($idFactura) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_facturas WHERE id_factura = :id_factura";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_factura', $idFactura, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarFacturaExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si un cliente existe por cédula
+     */
+    private function verificarClienteExistente($cedula) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = :cedula AND activo = 1";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':cedula', $cedula, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarClienteExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si una factura está en un estado que permite cancelación
+     */
+    private function verificarFacturaCancelable($idFactura) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT estatus FROM tbl_facturas WHERE id_factura = :id_factura";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_factura', $idFactura, PDO::PARAM_INT);
+            $stmt->execute();
+            $estatus = $stmt->fetchColumn();
+            
+            // Solo se pueden cancelar facturas en estado Borrador
+            return $estatus === 'Borrador';
+        } catch (PDOException $e) {
+            error_log('Error en verificarFacturaCancelable: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
     }
 }
 
