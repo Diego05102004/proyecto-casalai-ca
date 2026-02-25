@@ -50,20 +50,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             error_log("  Categoria: " . $Categoria);
             error_log("  Precio: " . $Precio);
 
-            $Producto->setNombreP($nombre_producto);
-            $Producto->setDescripcionP($descripcion_producto);
-            $Producto->setIdModelo($modelo);
-            $Producto->setStockActual($Stock_Actual);
-            $Producto->setStockMax($Stock_Maximo);
-            $Producto->setStockMin($Stock_Minimo);
-            $Producto->setClausulaDeGarantia($Clausula_garantia);
-            $Producto->setCodigo($Seriales);
-            $Producto->setCategoria($Categoria);
-            $Producto->setPrecio($Precio);
+            // Preparar datos para validación
+            $datos_validacion = [
+                'nombre_producto' => $nombre_producto,
+                'descripcion_producto' => $descripcion_producto,
+                'id_modelo' => $modelo,
+                'stock_actual' => $Stock_Actual,
+                'stock_maximo' => $Stock_Maximo,
+                'stock_minimo' => $Stock_Minimo,
+                'clausula_garantia' => $Clausula_garantia,
+                'serial' => $Seriales,
+                'categoria' => $Categoria,
+                'precio' => $Precio
+            ];
 
-            // Validar datos del producto
+            // Validar datos del producto usando las nuevas validaciones centralizadas
             error_log("Validando datos del producto...");
-            $errores = $Producto->validarDatos();
+            $errores = $Producto->validarRegistrarProducto($datos_validacion);
             if (!empty($errores)) {
                 error_log("❌ Errores de validación encontrados: " . print_r($errores, true));
                 header('Content-Type: application/json; charset=utf-8');
@@ -127,26 +130,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         // Procesar imagen si fue enviada
                         if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
-                            $directorio = "../assets/img/productos/";
-                            if (!is_dir($directorio)) {
-                                mkdir($directorio, 0755, true);
-                            }
-                            $nombre_original = $_FILES['imagen']['name'];
-                            $extension = strtolower(pathinfo($nombre_original, PATHINFO_EXTENSION));
-                            $nombre_nuevo = "producto_" . $id_producto . "." . $extension;
-                            $ruta_destino = $directorio . $nombre_nuevo;
-
-                            if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_destino)) {
-                                // Intentar guardar nombre en BD si el método existe
-                                if (method_exists($Producto, 'guardarImagenProducto')) {
-                                    // Guardar la ruta relativa completa, no solo el nombre
-                                    $Producto->guardarImagenProducto($id_producto, $ruta_destino);
-                                }
-                                $respuesta['imagen'] = $ruta_destino;
-                                $respuesta['mensaje'] = "Producto registrado e imagen guardada correctamente.";
+                            // Validar imagen usando las nuevas validaciones
+                            $imagenData = [
+                                'name' => $_FILES['imagen']['name'],
+                                'tmp_name' => $_FILES['imagen']['tmp_name'],
+                                'error' => $_FILES['imagen']['error'],
+                                'size' => $_FILES['imagen']['size']
+                            ];
+                            $errores_imagen = $Producto->validarImagen($imagenData);
+                            
+                            if (!empty($errores_imagen)) {
+                                $respuesta['imagen_error'] = $errores_imagen;
                             } else {
-                                $respuesta['imagen'] = null;
-                                $respuesta['mensaje'] = "Producto registrado, pero error al guardar la imagen.";
+                                $directorio = "../assets/img/productos/";
+                                if (!is_dir($directorio)) {
+                                    mkdir($directorio, 0755, true);
+                                }
+                                $nombre_original = $_FILES['imagen']['name'];
+                                $extension = strtolower(pathinfo($nombre_original, PATHINFO_EXTENSION));
+                                $nombre_nuevo = "producto_" . $id_producto . "." . $extension;
+                                $ruta_destino = $directorio . $nombre_nuevo;
+
+                                if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_destino)) {
+                                    // Intentar guardar nombre en BD si el método existe
+                                    if (method_exists($Producto, 'guardarImagenProducto')) {
+                                        // Guardar la ruta relativa completa, no solo el nombre
+                                        $Producto->guardarImagenProducto($id_producto, $ruta_destino);
+                                    }
+                                    $respuesta['imagen'] = $ruta_destino;
+                                    $respuesta['mensaje'] = "Producto registrado e imagen guardada correctamente.";
+                                } else {
+                                    $respuesta['imagen'] = null;
+                                    $respuesta['mensaje'] = "Producto registrado, pero error al guardar la imagen.";
+                                }
                             }
                         } else {
                             $respuesta['mensaje'] = "Producto registrado correctamente.";
@@ -194,19 +210,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             $Producto = new Productos();
-            $Producto->setId($id);
-            $Producto->setNombreP($_POST['nombre_producto'] ?? '');
-            $Producto->setDescripcionP($_POST['descripcion_producto'] ?? '');
-            $Producto->setIdModelo($_POST['modelo'] ?? null);
-            $Producto->setStockActual($_POST['Stock_Actual'] ?? 0);
-            $Producto->setStockMax($_POST['Stock_Maximo'] ?? 0);
-            $Producto->setStockMin($_POST['Stock_Minimo'] ?? 0);
-            $Producto->setClausulaDeGarantia($_POST['Clausula_garantia'] ?? '');
-            $Producto->setCodigo($_POST['Seriales'] ?? '');
-            $Producto->setPrecio($_POST['Precio'] ?? 0);
+            
+            // Preparar datos para validación
+            $datos_validacion = [
+                'id_producto' => $id,
+                'nombre_producto' => $_POST['nombre_producto'] ?? '',
+                'descripcion_producto' => $_POST['descripcion_producto'] ?? '',
+                'id_modelo' => $_POST['modelo'] ?? null,
+                'stock_actual' => $_POST['Stock_Actual'] ?? 0,
+                'stock_maximo' => $_POST['Stock_Maximo'] ?? 0,
+                'stock_minimo' => $_POST['Stock_Minimo'] ?? 0,
+                'clausula_garantia' => $_POST['Clausula_garantia'] ?? '',
+                'serial' => $_POST['Seriales'] ?? '',
+                'precio' => $_POST['Precio'] ?? 0
+            ];
 
-            // Validar datos del producto
-            $errores = $Producto->validarDatos(true); // true = es modificación
+            // Validar datos del producto usando las nuevas validaciones centralizadas
+            $errores = $Producto->validarModificarProducto($datos_validacion);
             if (!empty($errores)) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
@@ -252,6 +272,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($Producto->modificarProducto($id, $_POST)) {
                     // Procesar imagen si existe
                     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
+                        // Validar imagen usando las nuevas validaciones
+                        $imagenData = [
+                            'name' => $_FILES['imagen']['name'],
+                            'tmp_name' => $_FILES['imagen']['tmp_name'],
+                            'error' => $_FILES['imagen']['error'],
+                            'size' => $_FILES['imagen']['size']
+                        ];
+                        $errores_imagen = $Producto->validarImagen($imagenData);
+                        
+                        if (!empty($errores_imagen)) {
+                            header('Content-Type: application/json; charset=utf-8');
+                            echo json_encode([
+                                'status' => 'error',
+                                'message' => 'Error en la imagen',
+                                'imagen_errors' => $errores_imagen
+                            ], JSON_UNESCAPED_UNICODE);
+                            exit;
+                        }
+                        
                         $directorio = "../assets/img/productos/";
                         if (!is_dir($directorio)) {
                             mkdir($directorio, 0755, true);
@@ -367,14 +406,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id = $_POST['id_producto'] ?? null;
             $nuevoEstatus = $_POST['nuevo_estatus'] ?? null;
             header('Content-Type: application/json; charset=utf-8');
-            if ($id === null || $nuevoEstatus === null) {
-                echo json_encode(['status' => 'error', 'message' => 'Parámetros insuficientes'], JSON_UNESCAPED_UNICODE);
+            
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $Producto = new Productos();
+            $datos_validacion = [
+                'id_producto' => $id,
+                'nuevo_estatus' => $nuevoEstatus
+            ];
+            $errores = $Producto->validarCambiarEstatus($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para cambiar estatus',
+                    'errors' => $errores
+                ], JSON_UNESCAPED_UNICODE);
                 exit;
             }
-            if (!in_array($nuevoEstatus, ['habilitado', 'inhabilitado'])) {
-                echo json_encode(['status' => 'error', 'message' => 'Estatus no válido'], JSON_UNESCAPED_UNICODE);
-                exit;
-            }
+            
             $producto = new Productos();
             $producto->setId($id);
             if ($producto->cambiarEstatus($nuevoEstatus)) {
