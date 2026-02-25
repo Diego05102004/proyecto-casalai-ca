@@ -289,6 +289,43 @@ try {
         }
     }
 
+    if ($accion === 'consultar' && !empty($_GET['archivo'])) {
+        // Validar datos de entrada
+        $backup = new BackupClass();
+        $datosValidacion = [
+            'nombre_archivo' => $_GET['archivo']
+        ];
+        
+        $errores = $backup->validarConsultar($datosValidacion);
+        if (!empty($errores)) {
+            send_json(['success' => false, 'error' => 'Datos inválidos', 'detalles' => $errores], 400);
+        }
+        
+        $archivo = basename($_GET['archivo']);
+        $ruta = BACKUP_DIR . $archivo;
+
+        if (file_exists($ruta) && is_file($ruta)) {
+            // Obtener información detallada del archivo
+            $tamano = filesize($ruta);
+            $fileInfo = [
+                'nombre' => $archivo,
+                'tamano' => $tamano,
+                'tamano_formateado' => $backup->formatearTamano($tamano),
+                'fecha_modificacion' => date('Y-m-d H:i:s', filemtime($ruta)),
+                'fecha_creacion' => date('Y-m-d H:i:s', filectime($ruta)),
+                'tipo' => (stripos($archivo, 'seguridad') !== false) ? 'Seguridad' : 'Principal',
+                'extension' => pathinfo($archivo, PATHINFO_EXTENSION),
+                'permisos' => substr(sprintf('%o', fileperms($ruta)), -4),
+                'es_legible' => is_readable($ruta),
+                'ruta_completa' => $ruta
+            ];
+            
+            send_json(['success' => true, 'data' => $fileInfo]);
+        } else {
+            send_json(['success' => false, 'error' => 'Archivo no encontrado'], 404);
+        }
+    }
+
     // Si no hay acción AJAX, renderizar vista normal (GET a la página)
     // NOTA: aquí asumimos que quieres mostrar la vista cuando accedes por navegador
     $pagina = "backup";

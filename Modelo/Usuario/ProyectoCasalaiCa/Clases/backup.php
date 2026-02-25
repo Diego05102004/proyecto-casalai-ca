@@ -497,6 +497,55 @@ private function getSqlFooter() {
     }
     
     /**
+     * Valida los datos para consultar un backup individual
+     */
+    private function validarConsultarBackup($datos) {
+        $errores = [];
+        
+        // Validar nombre del archivo
+        if (!isset($datos['nombre_archivo']) || empty($datos['nombre_archivo'])) {
+            $errores['nombre_archivo'] = 'Debe especificar el nombre del archivo a consultar';
+        } else {
+            $nombreArchivo = trim($datos['nombre_archivo']);
+            
+            // Validar longitud del nombre
+            if (mb_strlen($nombreArchivo) > self::MAX_NOMBRE_ARCHIVO) {
+                $errores['nombre_archivo'] = 'El nombre del archivo no debe exceder los ' . self::MAX_NOMBRE_ARCHIVO . ' caracteres';
+            }
+            
+            // Validar caracteres del nombre
+            if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo solo puede contener letras, números, guiones, guiones bajos y puntos';
+            }
+            
+            // Validar que no tenga caracteres peligrosos
+            if (preg_match('/[<>"\|\&\$\*\?]/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo contiene caracteres no permitidos';
+            }
+            
+            // Validar extensión
+            $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+            if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
+                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql';
+            }
+            
+            // Validar que el archivo exista
+            $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
+            $rutaArchivo = $rutaCarpeta . $nombreArchivo;
+            
+            if (!file_exists($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo de backup no existe';
+            } elseif (!is_file($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'La ruta especificada no es un archivo válido';
+            } elseif (!is_readable($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo no tiene permisos de lectura';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
      * Valida los datos para listar backups
      */
     private function validarListarBackups($datos) {
@@ -556,6 +605,13 @@ private function getSqlFooter() {
      */
     public function validarListar($datos) {
         return $this->validarListarBackups($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar un backup (método público)
+     */
+    public function validarConsultar($datos) {
+        return $this->validarConsultarBackup($datos);
     }
     
     /**
