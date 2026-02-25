@@ -7,7 +7,15 @@ use PDOException;
 
 class Carrito extends BD{
     private $conex;
-
+    
+    // Constantes para validaciones
+    const MAX_CANTIDAD_PRODUCTO = 999;
+    const MAX_DESCRIPCION = 500;
+    const MAX_NOMBRE_PRODUCTO = 200;
+    const MAX_PRECIO = 999999.99;
+    const ESTADOS_PERMITIDOS = ['activo', 'inactivo', 'pendiente'];
+    const ACCIONES_PERMITIDAS = ['agregar', 'actualizar', 'eliminar', 'vaciar', 'comprar', 'consultar'];
+    const TIPOS_PRODUCTO_PERMITIDOS = ['simple', 'combo', 'servicio'];
 
     public function __construct() {
         $this->conex = null;
@@ -348,6 +356,306 @@ class Carrito extends BD{
         } catch (PDOException $e) {
             if ($this->conex && $this->conex->inTransaction()) { $this->conex->rollBack(); }
             return ['error' => $e->getMessage()];
+        } finally {
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
+        }
+    }
+
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para agregar producto al carrito
+     */
+    private function validarAgregarProducto($datos) {
+        $errores = [];
+        
+        // Validar ID del carrito
+        if (!isset($datos['id_carrito']) || !is_numeric($datos['id_carrito']) || $datos['id_carrito'] <= 0) {
+            $errores['id_carrito'] = 'El ID del carrito debe ser un número positivo';
+        }
+        
+        // Validar ID del producto
+        if (!isset($datos['id_producto']) || !is_numeric($datos['id_producto']) || $datos['id_producto'] <= 0) {
+            $errores['id_producto'] = 'El ID del producto debe ser un número positivo';
+        }
+        
+        // Validar cantidad
+        if (!isset($datos['cantidad'])) {
+            $errores['cantidad'] = 'La cantidad es obligatoria';
+        } else {
+            $cantidad = (int)$datos['cantidad'];
+            if ($cantidad <= 0) {
+                $errores['cantidad'] = 'La cantidad debe ser un número positivo';
+            } elseif ($cantidad > self::MAX_CANTIDAD_PRODUCTO) {
+                $errores['cantidad'] = 'La cantidad no debe exceder los ' . self::MAX_CANTIDAD_PRODUCTO . ' productos';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para actualizar cantidad de producto
+     */
+    private function validarActualizarCantidad($datos) {
+        $errores = [];
+        
+        // Validar ID del detalle del carrito
+        if (!isset($datos['id_carrito_detalle']) || !is_numeric($datos['id_carrito_detalle']) || $datos['id_carrito_detalle'] <= 0) {
+            $errores['id_carrito_detalle'] = 'El ID del detalle del carrito debe ser un número positivo';
+        }
+        
+        // Validar cantidad
+        if (!isset($datos['cantidad'])) {
+            $errores['cantidad'] = 'La cantidad es obligatoria';
+        } else {
+            $cantidad = (int)$datos['cantidad'];
+            if ($cantidad <= 0) {
+                $errores['cantidad'] = 'La cantidad debe ser un número positivo';
+            } elseif ($cantidad > self::MAX_CANTIDAD_PRODUCTO) {
+                $errores['cantidad'] = 'La cantidad no debe exceder los ' . self::MAX_CANTIDAD_PRODUCTO . ' productos';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para eliminar producto del carrito
+     */
+    private function validarEliminarProducto($datos) {
+        $errores = [];
+        
+        // Validar ID del detalle del carrito
+        if (!isset($datos['id_carrito_detalle']) || !is_numeric($datos['id_carrito_detalle']) || $datos['id_carrito_detalle'] <= 0) {
+            $errores['id_carrito_detalle'] = 'El ID del detalle del carrito debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para vaciar el carrito
+     */
+    private function validarVaciarCarrito($datos) {
+        $errores = [];
+        
+        // Validar ID del carrito
+        if (!isset($datos['id_carrito']) || !is_numeric($datos['id_carrito']) || $datos['id_carrito'] <= 0) {
+            $errores['id_carrito'] = 'El ID del carrito debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para registrar compra
+     */
+    private function validarRegistrarCompra($datos) {
+        $errores = [];
+        
+        // Validar ID del carrito
+        if (!isset($datos['id_carrito']) || !is_numeric($datos['id_carrito']) || $datos['id_carrito'] <= 0) {
+            $errores['id_carrito'] = 'El ID del carrito debe ser un número positivo';
+        }
+        
+        // Validar ID del cliente
+        if (!isset($datos['id_cliente']) || !is_numeric($datos['id_cliente']) || $datos['id_cliente'] <= 0) {
+            $errores['id_cliente'] = 'El ID del cliente debe ser un número positivo';
+        }
+        
+        // Validar productos
+        if (!isset($datos['productos']) || !is_array($datos['productos']) || empty($datos['productos'])) {
+            $errores['productos'] = 'Debe especificar al menos un producto para la compra';
+        } else {
+            foreach ($datos['productos'] as $index => $producto) {
+                if (!is_array($producto)) {
+                    $errores["productos_$index"] = 'El producto en la posición ' . $index . ' debe ser un array';
+                    continue;
+                }
+                
+                // Validar ID del producto
+                if (!isset($producto['id_producto']) || !is_numeric($producto['id_producto']) || $producto['id_producto'] <= 0) {
+                    $errores["productos_{$index}_id_producto"] = 'El ID del producto en la posición ' . $index . ' debe ser un número positivo';
+                }
+                
+                // Validar cantidad
+                if (!isset($producto['cantidad']) || !is_numeric($producto['cantidad']) || $producto['cantidad'] <= 0) {
+                    $errores["productos_{$index}_cantidad"] = 'La cantidad del producto en la posición ' . $index . ' debe ser un número positivo';
+                } elseif ($producto['cantidad'] > self::MAX_CANTIDAD_PRODUCTO) {
+                    $errores["productos_{$index}_cantidad"] = 'La cantidad del producto en la posición ' . $index . ' no debe exceder los ' . self::MAX_CANTIDAD_PRODUCTO . ' productos';
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar carrito
+     */
+    private function validarConsultarCarrito($datos) {
+        $errores = [];
+        
+        // Validar ID del cliente
+        if (!isset($datos['id_cliente']) || !is_numeric($datos['id_cliente']) || $datos['id_cliente'] <= 0) {
+            $errores['id_cliente'] = 'El ID del cliente debe ser un número positivo';
+        }
+        
+        // Validar ID del carrito (opcional)
+        if (isset($datos['id_carrito'])) {
+            if (!is_numeric($datos['id_carrito']) || $datos['id_carrito'] <= 0) {
+                $errores['id_carrito'] = 'El ID del carrito debe ser un número positivo';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para filtrar por marca
+     */
+    private function validarFiltrarMarca($datos) {
+        $errores = [];
+        
+        // Validar ID de marca (opcional)
+        if (isset($datos['id_marca'])) {
+            if (!is_numeric($datos['id_marca']) || $datos['id_marca'] <= 0) {
+                $errores['id_marca'] = 'El ID de la marca debe ser un número positivo';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para agregar producto al carrito (método público)
+     */
+    public function validarAgregar($datos) {
+        return $this->validarAgregarProducto($datos);
+    }
+    
+    /**
+     * Valida los datos para actualizar cantidad de producto (método público)
+     */
+    public function validarActualizar($datos) {
+        return $this->validarActualizarCantidad($datos);
+    }
+    
+    /**
+     * Valida los datos para eliminar producto del carrito (método público)
+     */
+    public function validarEliminar($datos) {
+        return $this->validarEliminarProducto($datos);
+    }
+    
+    /**
+     * Valida los datos para vaciar el carrito (método público)
+     */
+    public function validarVaciar($datos) {
+        return $this->validarVaciarCarrito($datos);
+    }
+    
+    /**
+     * Valida los datos para registrar compra (método público)
+     */
+    public function validarCompra($datos) {
+        return $this->validarRegistrarCompra($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar carrito (método público)
+     */
+    public function validarConsultar($datos) {
+        return $this->validarConsultarCarrito($datos);
+    }
+    
+    /**
+     * Valida los datos para filtrar por marca (método público)
+     */
+    public function validarFiltrar($datos) {
+        return $this->validarFiltrarMarca($datos);
+    }
+    
+    /**
+     * Verifica si un producto existe y tiene stock
+     */
+    private function verificarProductoExistente($idProducto, $cantidadRequerida = 1) {
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
+        try {
+            $sql = "SELECT id_producto, stock, estado FROM tbl_productos WHERE id_producto = :id_producto";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
+            $stmt->execute();
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$producto) {
+                return ['existe' => false, 'mensaje' => 'El producto no existe'];
+            }
+            
+            if ($producto['stock'] < $cantidadRequerida) {
+                return ['existe' => false, 'mensaje' => 'No hay stock suficiente para el producto'];
+            }
+            
+            if ($producto['estado'] !== 'activo') {
+                return ['existe' => false, 'mensaje' => 'El producto no está disponible'];
+            }
+            
+            return ['existe' => true, 'producto' => $producto];
+        } finally {
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
+        }
+    }
+    
+    /**
+     * Verifica si un carrito pertenece a un cliente
+     */
+    private function verificarCarritoCliente($idCarrito, $idCliente) {
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
+        try {
+            $sql = "SELECT id_carrito FROM tbl_carrito WHERE id_carrito = :id_carrito AND id_cliente = :id_cliente";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_carrito', $idCarrito, PDO::PARAM_INT);
+            $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() !== false;
+        } finally {
+            if ($bd) { $bd->cerrar(); }
+            if ($created) { $this->conex = null; }
+        }
+    }
+    
+    /**
+     * Verifica si un detalle del carrito pertenece a un cliente
+     */
+    private function verificarDetalleCliente($idCarritoDetalle, $idCliente) {
+        $bd = null; $created = false;
+        if (!($this->conex instanceof PDO)) {
+            if (method_exists($this, 'getConexion')) { $this->conex = $this->getConexion(); }
+            if (!($this->conex instanceof PDO)) { $bd = new BD('P'); $this->conex = $bd->getConexion(); $created = true; }
+        }
+        try {
+            $sql = "SELECT cd.id_carrito_detalle 
+                    FROM tbl_carritodetalle cd
+                    INNER JOIN tbl_carrito c ON cd.id_carrito = c.id_carrito
+                    WHERE cd.id_carrito_detalle = :id_carrito_detalle AND c.id_cliente = :id_cliente";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_carrito_detalle', $idCarritoDetalle, PDO::PARAM_INT);
+            $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() !== false;
         } finally {
             if ($bd) { $bd->cerrar(); }
             if ($created) { $this->conex = null; }
