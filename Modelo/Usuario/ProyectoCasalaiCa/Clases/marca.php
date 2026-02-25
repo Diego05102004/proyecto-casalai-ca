@@ -9,6 +9,12 @@ class marca extends BD {
     private $conex;
     private $nombre_marca;
     private $id_marca;
+    
+    // Constantes para validaciones
+    const MAX_NOMBRE_MARCA = 100;
+    const MIN_NOMBRE_MARCA = 2;
+    const MAX_ID_MARCA = 999999999;
+    const MIN_ID_MARCA = 1;
 
     public function __construct() {
         $this->conex = null;
@@ -26,30 +32,6 @@ class marca extends BD {
     }
     public function setIdMarca($id_marca) {
         $this->id_marca = $id_marca;
-    }
-
-    public function validarDatos($esModificacion = false) {
-        $errores = [];
-
-        // Validar nombre de la marca
-        $nombre_marca = trim((string)$this->nombre_marca);
-        if ($nombre_marca === '') {
-            $errores['nombre_marca'] = 'El nombre de la marca es obligatorio';
-        } elseif (mb_strlen($nombre_marca) < 2 || mb_strlen($nombre_marca) > 100) {
-            $errores['nombre_marca'] = 'El nombre de la marca debe tener entre 2 y 100 caracteres';
-        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_marca)) {
-            $errores['nombre_marca'] = 'El nombre de la marca solo puede contener letras, números, espacios y caracteres especiales comunes';
-        }
-
-        // Validar ID de la marca (solo para modificaciones)
-        if ($esModificacion) {
-            $id_marca = (int)$this->id_marca;
-            if ($id_marca <= 0) {
-                $errores['id_marca'] = 'El ID de la marca no es válido';
-            }
-        }
-
-        return $errores;
     }
 
     public function existeNombreMarca($nombre_marca, $excluir_id = null) {
@@ -211,6 +193,105 @@ class marca extends BD {
             $stmtmarcas = $this->conex->prepare($querymarcas);
             $stmtmarcas->execute();
             return $stmtmarcas->fetchAll(PDO::FETCH_ASSOC);
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+    
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para operaciones CRUD de marcas
+     */
+    private function validarMarca($datos, $esModificacion = false) {
+        $errores = [];
+        
+        // Validar nombre de la marca (solo para registro y modificación)
+        if (!isset($datos['accion_eliminar'])) {
+            if (!isset($datos['nombre_marca'])) {
+                $errores['nombre_marca'] = 'El nombre de la marca es obligatorio';
+            } else {
+                $nombre_marca = trim($datos['nombre_marca']);
+                if (empty($nombre_marca)) {
+                    $errores['nombre_marca'] = 'El nombre de la marca es obligatorio';
+                } elseif (mb_strlen($nombre_marca) < self::MIN_NOMBRE_MARCA || mb_strlen($nombre_marca) > self::MAX_NOMBRE_MARCA) {
+                    $errores['nombre_marca'] = 'El nombre de la marca debe tener entre ' . self::MIN_NOMBRE_MARCA . ' y ' . self::MAX_NOMBRE_MARCA . ' caracteres';
+                } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_marca)) {
+                    $errores['nombre_marca'] = 'El nombre de la marca solo puede contener letras, números, espacios y caracteres especiales comunes';
+                }
+            }
+        }
+        
+        // Validar ID de la marca (solo para modificaciones y eliminaciones)
+        if ($esModificacion || isset($datos['accion_eliminar'])) {
+            if (!isset($datos['id_marca'])) {
+                $errores['id_marca'] = 'El ID de la marca es obligatorio';
+            } elseif (!is_numeric($datos['id_marca']) || $datos['id_marca'] < self::MIN_ID_MARCA || $datos['id_marca'] > self::MAX_ID_MARCA) {
+                $errores['id_marca'] = 'El ID de la marca debe ser un número entre ' . self::MIN_ID_MARCA . ' y ' . self::MAX_ID_MARCA;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para registrar marca (método público)
+     */
+    public function validarRegistrarMarca($datos) {
+        return $this->validarMarca($datos, false);
+    }
+    
+    /**
+     * Valida los datos para consultar marca (método público)
+     */
+    public function validarConsultarMarca($datos) {
+        $errores = [];
+        
+        // Validar ID de la marca (opcional para consulta)
+        if (isset($datos['id_marca'])) {
+            if (!is_numeric($datos['id_marca']) || $datos['id_marca'] < self::MIN_ID_MARCA || $datos['id_marca'] > self::MAX_ID_MARCA) {
+                $errores['id_marca'] = 'El ID de la marca debe ser un número entre ' . self::MIN_ID_MARCA . ' y ' . self::MAX_ID_MARCA;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para modificar marca (método público)
+     */
+    public function validarModificarMarca($datos) {
+        return $this->validarMarca($datos, true);
+    }
+    
+    /**
+     * Valida los datos para eliminar marca (método público)
+     */
+    public function validarEliminarMarca($datos) {
+        $datos['accion_eliminar'] = true; // Marcar como acción de eliminación
+        return $this->validarMarca($datos, true);
+    }
+    
+    /**
+     * Verifica si una marca existe por ID
+     */
+    private function verificarMarcaExistente($idMarca) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_marcas WHERE id_marca = :id_marca";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_marca', $idMarca, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarMarcaExistente: ' . $e->getMessage());
+            return false;
         } finally {
             if ($conexion) { $conexion->cerrar(); $this->conex = null; }
         }
