@@ -101,6 +101,18 @@ $accion = $_GET['accion'] ?? $_POST['accion'] ?? null;
 
 try {
     if ($accion === 'listar') {
+        // Validar datos de entrada
+        $backup = new BackupClass();
+        $datosValidacion = [
+            'limite' => $_GET['limite'] ?? null,
+            'tipo_filtro' => $_GET['tipo_filtro'] ?? null
+        ];
+        
+        $errores = $backup->validarListar($datosValidacion);
+        if (!empty($errores)) {
+            send_json(['success' => false, 'error' => 'Datos inválidos', 'detalles' => $errores], 400);
+        }
+        
         // Listar archivos .sql
         $ruta = BACKUP_DIR;
         $archivos = [];
@@ -133,6 +145,17 @@ try {
     }
 
     if ($accion === 'descargar' && !empty($_GET['archivo'])) {
+        // Validar datos de entrada
+        $backup = new BackupClass();
+        $datosValidacion = [
+            'nombre_archivo' => $_GET['archivo']
+        ];
+        
+        $errores = $backup->validarDescargar($datosValidacion);
+        if (!empty($errores)) {
+            send_json(['success' => false, 'error' => 'Datos inválidos', 'detalles' => $errores], 400);
+        }
+        
         // Descarga: no devolvemos JSON, devolvemos el archivo
         $archivo = basename($_GET['archivo']);
         $ruta = BACKUP_DIR . $archivo;
@@ -164,6 +187,17 @@ try {
     }
 
     if ($accion === 'eliminar' && !empty($_GET['archivo'])) {
+        // Validar datos de entrada
+        $backup = new BackupClass();
+        $datosValidacion = [
+            'nombre_archivo' => $_GET['archivo']
+        ];
+        
+        $errores = $backup->validarEliminar($datosValidacion);
+        if (!empty($errores)) {
+            send_json(['success' => false, 'error' => 'Datos inválidos', 'detalles' => $errores], 400);
+        }
+        
         $archivo = basename($_GET['archivo']);
         $ruta = BACKUP_DIR . $archivo;
 
@@ -179,6 +213,17 @@ try {
     }
 
     if ($accion === 'restaurar' && !empty($_GET['archivo'])) {
+        // Validar datos de entrada
+        $backup = new BackupClass();
+        $datosValidacion = [
+            'nombre_archivo' => $_GET['archivo']
+        ];
+        
+        $errores = $backup->validarRestaurar($datosValidacion);
+        if (!empty($errores)) {
+            send_json(['success' => false, 'error' => 'Datos inválidos', 'detalles' => $errores], 400);
+        }
+        
         $archivo = basename($_GET['archivo']);
         $ruta = BACKUP_DIR . $archivo;
 
@@ -202,6 +247,18 @@ try {
     }
 
     if ($accion === 'generar') {
+        // Validar datos de entrada
+        $backup = new BackupClass();
+        $datosValidacion = [
+            'tipo' => $_GET['tipo'] ?? $_POST['tipo'] ?? 'P',
+            'nombre_archivo' => $_GET['nombre_archivo'] ?? $_POST['nombre_archivo'] ?? null
+        ];
+        
+        $errores = $backup->validarGenerar($datosValidacion);
+        if (!empty($errores)) {
+            send_json(['success' => false, 'error' => 'Datos inválidos', 'detalles' => $errores], 400);
+        }
+        
         // permitimos tanto GET como POST (según lo que uses)
         $tipo = (isset($_GET['tipo']) && $_GET['tipo'] === 'S') ? 'S' : (isset($_POST['tipo']) && $_POST['tipo'] === 'S' ? 'S' : 'P');
         $tipoTexto = ($tipo === 'S') ? 'seguridad' : 'principal';
