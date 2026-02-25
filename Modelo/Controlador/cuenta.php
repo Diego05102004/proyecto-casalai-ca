@@ -40,7 +40,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cuentabanco->setTelefonoCuenta($_POST['telefono_cuenta']);
             $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
             $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
-            $errores = $cuentabanco->validarDatos();
+            // Validar datos de entrada
+            $datosValidacion = [
+                'nombre_banco' => $_POST['nombre_banco'] ?? '',
+                'numero_cuenta' => $_POST['numero_cuenta'] ?? '',
+                'rif_cuenta' => $_POST['rif_cuenta'] ?? '',
+                'telefono_cuenta' => $_POST['telefono_cuenta'] ?? '',
+                'correo_cuenta' => $_POST['correo_cuenta'] ?? '',
+                'metodos_pago' => $_POST['metodos_pago'] ?? []
+            ];
+            
+            $errores = $cuentabanco->validarRegistrarCuenta($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -137,7 +147,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cuentabanco->setTelefonoCuenta($_POST['telefono_cuenta']);
             $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
             $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
-            $errores = $cuentabanco->validarDatos();
+            // Validar datos de entrada
+            $datosValidacion = [
+                'nombre_banco' => $_POST['nombre_banco'] ?? '',
+                'numero_cuenta' => $_POST['numero_cuenta'] ?? '',
+                'rif_cuenta' => $_POST['rif_cuenta'] ?? '',
+                'telefono_cuenta' => $_POST['telefono_cuenta'] ?? '',
+                'correo_cuenta' => $_POST['correo_cuenta'] ?? '',
+                'metodos_pago' => $_POST['metodos_pago'] ?? []
+            ];
+            
+            $errores = $cuentabanco->validarRegistrarCuenta($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',

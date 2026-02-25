@@ -15,6 +15,19 @@ class Cuentabanco extends BD {
     private $metodos_pago;
     private $estado;
     private $db;
+    
+    // Constantes para validaciones
+    const MAX_NOMBRE_BANCO = 100;
+    const MIN_NOMBRE_BANCO = 3;
+    const MAX_NUMERO_CUENTA = 30;
+    const MIN_NUMERO_CUENTA = 10;
+    const MAX_TELEFONO_CUENTA = 15;
+    const MIN_TELEFONO_CUENTA = 7;
+    const MAX_CORREO_CUENTA = 150;
+    const MAX_RIF_CUENTA = 12;
+    const MIN_RIF_CUENTA = 9;
+    const ESTADOS_PERMITIDOS = ['habilitado', 'inhabilitado'];
+    const TIPOS_PAGO_PERMITIDOS = ['efectivo', 'transferencia', 'zelle', 'pago_movil', 'tarjeta', 'cheque'];
 
     public function __construct() {
         $this->db = null;
@@ -81,54 +94,483 @@ class Cuentabanco extends BD {
         $this->estado = $estado;
     }
     
-    public function validarDatos() {
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para registrar una cuenta bancaria
+     */
+    private function validarRegistrar($datos) {
         $errores = [];
-
-        $nombre = trim((string)$this->nombre_banco);
-        if ($nombre === '') {
+        
+        // Validar nombre del banco
+        if (!isset($datos['nombre_banco'])) {
             $errores['nombre_banco'] = 'El nombre del banco es obligatorio';
-        } elseif (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100) {
-            $errores['nombre_banco'] = 'El nombre del banco debe tener entre 3 y 100 caracteres';
-        }
-
-        $numeroOriginal = (string)$this->numero_cuenta;
-        $numero = preg_replace('/\D+/', '', $numeroOriginal);
-        if ($numero === '') {
-            $errores['numero_cuenta'] = 'El número de cuenta es obligatorio';
-        } elseif (strlen($numero) < 10 || strlen($numero) > 30) {
-            $errores['numero_cuenta'] = 'El número de cuenta debe tener entre 10 y 30 dígitos';
-        }
-
-        $rif = strtoupper(trim((string)$this->rif_cuenta));
-        if ($rif === '') {
-            $errores['rif_cuenta'] = 'El RIF de la cuenta es obligatorio';
         } else {
-            $rifLimpio = str_replace(['-', ' '], '', $rif);
-            if (!preg_match('/^[VEJGCP][0-9]{8,9}$/', $rifLimpio)) {
-                $errores['rif_cuenta'] = 'El formato del RIF no es válido';
+            $nombre_banco = trim($datos['nombre_banco']);
+            if (empty($nombre_banco)) {
+                $errores['nombre_banco'] = 'El nombre del banco no puede estar vacío';
+            } elseif (mb_strlen($nombre_banco) < self::MIN_NOMBRE_BANCO || mb_strlen($nombre_banco) > self::MAX_NOMBRE_BANCO) {
+                $errores['nombre_banco'] = 'El nombre del banco debe tener entre ' . self::MIN_NOMBRE_BANCO . ' y ' . self::MAX_NOMBRE_BANCO . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_banco)) {
+                $errores['nombre_banco'] = 'El nombre del banco solo puede contener letras, números, espacios y caracteres especiales comunes';
             }
         }
-
-        $telefono = preg_replace('/\D+/', '', (string)$this->telefono_cuenta);
-        if ($telefono === '') {
+        
+        // Validar número de cuenta
+        if (!isset($datos['numero_cuenta'])) {
+            $errores['numero_cuenta'] = 'El número de cuenta es obligatorio';
+        } else {
+            $numero_cuenta = trim($datos['numero_cuenta']);
+            if (empty($numero_cuenta)) {
+                $errores['numero_cuenta'] = 'El número de cuenta no puede estar vacío';
+            } else {
+                // Limpiar solo los dígitos
+                $numero_limpio = preg_replace('/\D+/', '', $numero_cuenta);
+                if (empty($numero_limpio)) {
+                    $errores['numero_cuenta'] = 'El número de cuenta debe contener solo dígitos';
+                } elseif (mb_strlen($numero_limpio) < self::MIN_NUMERO_CUENTA || mb_strlen($numero_limpio) > self::MAX_NUMERO_CUENTA) {
+                    $errores['numero_cuenta'] = 'El número de cuenta debe tener entre ' . self::MIN_NUMERO_CUENTA . ' y ' . self::MAX_NUMERO_CUENTA . ' dígitos';
+                }
+            }
+        }
+        
+        // Validar RIF
+        if (!isset($datos['rif_cuenta'])) {
+            $errores['rif_cuenta'] = 'El RIF de la cuenta es obligatorio';
+        } else {
+            $rif_cuenta = trim($datos['rif_cuenta']);
+            if (empty($rif_cuenta)) {
+                $errores['rif_cuenta'] = 'El RIF de la cuenta no puede estar vacío';
+            } else {
+                $rif_limpio = str_replace(['-', ' '], '', strtoupper($rif_cuenta));
+                if (!preg_match('/^[VEJGCP][0-9]{8,9}$/', $rif_limpio)) {
+                    $errores['rif_cuenta'] = 'El formato del RIF no es válido. Debe ser como: V123456789, J123456789, G123456789, P123456789 o C123456789';
+                } elseif (mb_strlen($rif_limpio) < self::MIN_RIF_CUENTA || mb_strlen($rif_limpio) > self::MAX_RIF_CUENTA) {
+                    $errores['rif_cuenta'] = 'El RIF debe tener ' . self::MIN_RIF_CUENTA . ' caracteres (letra + 8-9 dígitos)';
+                }
+            }
+        }
+        
+        // Validar teléfono
+        if (!isset($datos['telefono_cuenta'])) {
             $errores['telefono_cuenta'] = 'El teléfono de la cuenta es obligatorio';
-        } elseif (strlen($telefono) < 7 || strlen($telefono) > 15) {
-            $errores['telefono_cuenta'] = 'El teléfono de la cuenta debe tener entre 7 y 15 dígitos';
+        } else {
+            $telefono_cuenta = trim($datos['telefono_cuenta']);
+            if (empty($telefono_cuenta)) {
+                $errores['telefono_cuenta'] = 'El teléfono de la cuenta no puede estar vacío';
+            } else {
+                // Limpiar solo los dígitos
+                $telefono_limpio = preg_replace('/\D+/', '', $telefono_cuenta);
+                if (empty($telefono_limpio)) {
+                    $errores['telefono_cuenta'] = 'El teléfono debe contener solo dígitos';
+                } elseif (mb_strlen($telefono_limpio) < self::MIN_TELEFONO_CUENTA || mb_strlen($telefono_limpio) > self::MAX_TELEFONO_CUENTA) {
+                    $errores['telefono_cuenta'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO_CUENTA . ' y ' . self::MAX_TELEFONO_CUENTA . ' dígitos';
+                }
+            }
         }
-
-        $correo = trim((string)$this->correo_cuenta);
-        if ($correo === '') {
+        
+        // Validar correo
+        if (!isset($datos['correo_cuenta'])) {
             $errores['correo_cuenta'] = 'El correo de la cuenta es obligatorio';
-        } elseif (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-            $errores['correo_cuenta'] = 'El correo de la cuenta no es válido';
+        } else {
+            $correo_cuenta = trim($datos['correo_cuenta']);
+            if (empty($correo_cuenta)) {
+                $errores['correo_cuenta'] = 'El correo de la cuenta no puede estar vacío';
+            } elseif (mb_strlen($correo_cuenta) > self::MAX_CORREO_CUENTA) {
+                $errores['correo_cuenta'] = 'El correo no debe exceder los ' . self::MAX_CORREO_CUENTA . ' caracteres';
+            } elseif (!filter_var($correo_cuenta, FILTER_VALIDATE_EMAIL)) {
+                $errores['correo_cuenta'] = 'El formato del correo electrónico no es válido';
+            }
         }
-
-        $metodos = $this->metodos_pago;
-        if ($metodos === null || $metodos === '') {
+        
+        // Validar métodos de pago
+        if (!isset($datos['metodos_pago'])) {
             $errores['metodos_pago'] = 'Debe seleccionar al menos un método de pago';
+        } else {
+            $metodos_pago = $datos['metodos_pago'];
+            if (is_array($metodos_pago)) {
+                $metodos_pago = array_filter($metodos_pago, function($metodo) {
+                    return !empty($metodo);
+                });
+            }
+            if (empty($metodos_pago)) {
+                $errores['metodos_pago'] = 'Debe seleccionar al menos un método de pago válido';
+            } else {
+                foreach ($metodos_pago as $metodo) {
+                    if (!in_array($metodo, self::TIPOS_PAGO_PERMITIDOS)) {
+                        $errores['metodos_pago'] = 'Los métodos de pago permitidos son: ' . implode(', ', self::TIPOS_PAGO_PERMITIDOS);
+                        break;
+                    }
+                }
+            }
         }
-
+        
         return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar una cuenta bancaria
+     */
+    private function validarConsultar($datos) {
+        $errores = [];
+        
+        // Validar ID de la cuenta (opcional)
+        if (isset($datos['id_cuenta'])) {
+            if (!is_numeric($datos['id_cuenta']) || $datos['id_cuenta'] <= 0) {
+                $errores['id_cuenta'] = 'El ID de la cuenta debe ser un número positivo';
+            }
+        }
+        
+        // Validar límite de resultados (opcional)
+        if (isset($datos['limite'])) {
+            $limite = (int)$datos['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para detallar una cuenta bancaria
+     */
+    private function validarDetallar($datos) {
+        $errores = [];
+        
+        // Validar ID de la cuenta
+        if (!isset($datos['id_cuenta'])) {
+            $errores['id_cuenta'] = 'El ID de la cuenta es obligatorio';
+        } elseif (!is_numeric($datos['id_cuenta']) || $datos['id_cuenta'] <= 0) {
+            $errores['id_cuenta'] = 'El ID de la cuenta debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para modificar una cuenta bancaria
+     */
+    private function validarModificar($datos) {
+        $errores = [];
+        
+        // Validar ID de la cuenta
+        if (!isset($datos['id_cuenta'])) {
+            $errores['id_cuenta'] = 'El ID de la cuenta es obligatorio';
+        } elseif (!is_numeric($datos['id_cuenta']) || $datos['id_cuenta'] <= 0) {
+            $errores['id_cuenta'] = 'El ID de la cuenta debe ser un número positivo';
+        }
+        
+        // Validar nombre del banco
+        if (!isset($datos['nombre_banco'])) {
+            $errores['nombre_banco'] = 'El nombre del banco es obligatorio';
+        } else {
+            $nombre_banco = trim($datos['nombre_banco']);
+            if (empty($nombre_banco)) {
+                $errores['nombre_banco'] = 'El nombre del banco no puede estar vacío';
+            } elseif (mb_strlen($nombre_banco) < self::MIN_NOMBRE_BANCO || mb_strlen($nombre_banco) > self::MAX_NOMBRE_BANCO) {
+                $errores['nombre_banco'] = 'El nombre del banco debe tener entre ' . self::MIN_NOMBRE_BANCO . ' y ' . self::MAX_NOMBRE_BANCO . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_banco)) {
+                $errores['nombre_banco'] = 'El nombre del banco solo puede contener letras, números, espacios y caracteres especiales comunes';
+            }
+        }
+        
+        // Validar número de cuenta
+        if (!isset($datos['numero_cuenta'])) {
+            $errores['numero_cuenta'] = 'El número de cuenta es obligatorio';
+        } else {
+            $numero_cuenta = trim($datos['numero_cuenta']);
+            if (empty($numero_cuenta)) {
+                $errores['numero_cuenta'] = 'El número de cuenta no puede estar vacío';
+            } else {
+                // Limpiar solo los dígitos
+                $numero_limpio = preg_replace('/\D+/', '', $numero_cuenta);
+                if (empty($numero_limpio)) {
+                    $errores['numero_cuenta'] = 'El número de cuenta debe contener solo dígitos';
+                } elseif (mb_strlen($numero_limpio) < self::MIN_NUMERO_CUENTA || mb_strlen($numero_limpio) > self::MAX_NUMERO_CUENTA) {
+                    $errores['numero_cuenta'] = 'El número de cuenta debe tener entre ' . self::MIN_NUMERO_CUENTA . ' y ' . self::MAX_NUMERO_CUENTA . ' dígitos';
+                }
+            }
+        }
+        
+        // Validar RIF
+        if (!isset($datos['rif_cuenta'])) {
+            $errores['rif_cuenta'] = 'El RIF de la cuenta es obligatorio';
+        } else {
+            $rif_cuenta = trim($datos['rif_cuenta']);
+            if (empty($rif_cuenta)) {
+                $errores['rif_cuenta'] = 'El RIF de la cuenta no puede estar vacío';
+            } else {
+                $rif_limpio = str_replace(['-', ' '], '', strtoupper($rif_cuenta));
+                if (!preg_match('/^[VEJGCP][0-9]{8,9}$/', $rif_limpio)) {
+                    $errores['rif_cuenta'] = 'El formato del RIF no es válido. Debe ser como: V123456789, J123456789, G123456789, P123456789 o C123456789';
+                } elseif (mb_strlen($rif_limpio) < self::MIN_RIF_CUENTA || mb_strlen($rif_limpio) > self::MAX_RIF_CUENTA) {
+                    $errores['rif_cuenta'] = 'El RIF debe tener ' . self::MIN_RIF_CUENTA . ' caracteres (letra + 8-9 dígitos)';
+                }
+            }
+        }
+        
+        // Validar teléfono
+        if (!isset($datos['telefono_cuenta'])) {
+            $errores['telefono_cuenta'] = 'El teléfono de la cuenta es obligatorio';
+        } else {
+            $telefono_cuenta = trim($datos['telefono_cuenta']);
+            if (empty($telefono_cuenta)) {
+                $errores['telefono_cuenta'] = 'El teléfono de la cuenta no puede estar vacío';
+            } else {
+                // Limpiar solo los dígitos
+                $telefono_limpio = preg_replace('/\D+/', '', $telefono_cuenta);
+                if (empty($telefono_limpio)) {
+                    $errores['telefono_cuenta'] = 'El teléfono debe contener solo dígitos';
+                } elseif (mb_strlen($telefono_limpio) < self::MIN_TELEFONO_CUENTA || mb_strlen($telefono_limpio) > self::MAX_TELEFONO_CUENTA) {
+                    $errores['telefono_cuenta'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO_CUENTA . ' y ' . self::MAX_TELEFONO_CUENTA . ' dígitos';
+                }
+            }
+        }
+        
+        // Validar correo
+        if (!isset($datos['correo_cuenta'])) {
+            $errores['correo_cuenta'] = 'El correo de la cuenta es obligatorio';
+        } else {
+            $correo_cuenta = trim($datos['correo_cuenta']);
+            if (empty($correo_cuenta)) {
+                $errores['correo_cuenta'] = 'El correo de la cuenta no puede estar vacío';
+            } elseif (mb_strlen($correo_cuenta) > self::MAX_CORREO_CUENTA) {
+                $errores['correo_cuenta'] = 'El correo no debe exceder los ' . self::MAX_CORREO_CUENTA . ' caracteres';
+            } elseif (!filter_var($correo_cuenta, FILTER_VALIDATE_EMAIL)) {
+                $errores['correo_cuenta'] = 'El formato del correo electrónico no es válido';
+            }
+        }
+        
+        // Validar métodos de pago (opcional en modificación)
+        if (isset($datos['metodos_pago'])) {
+            $metodos_pago = $datos['metodos_pago'];
+            if (is_array($metodos_pago)) {
+                $metodos_pago = array_filter($metodos_pago, function($metodo) {
+                    return !empty($metodo);
+                });
+            }
+            if (!empty($metodos_pago)) {
+                foreach ($metodos_pago as $metodo) {
+                    if (!in_array($metodo, self::TIPOS_PAGO_PERMITIDOS)) {
+                        $errores['metodos_pago'] = 'Los métodos de pago permitidos son: ' . implode(', ', self::TIPOS_PAGO_PERMITIDOS);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para eliminar una cuenta bancaria
+     */
+    private function validarEliminar($datos) {
+        $errores = [];
+        
+        // Validar ID de la cuenta
+        if (!isset($datos['id_cuenta'])) {
+            $errores['id_cuenta'] = 'El ID de la cuenta es obligatorio';
+        } elseif (!is_numeric($datos['id_cuenta']) || $datos['id_cuenta'] <= 0) {
+            $errores['id_cuenta'] = 'El ID de la cuenta debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para cambiar estado de una cuenta bancaria
+     */
+    private function validarCambiarEstadoCuenta($datos) {
+        $errores = [];
+        
+        // Validar ID de la cuenta
+        if (!isset($datos['id_cuenta'])) {
+            $errores['id_cuenta'] = 'El ID de la cuenta es obligatorio';
+        } elseif (!is_numeric($datos['id_cuenta']) || $datos['id_cuenta'] <= 0) {
+            $errores['id_cuenta'] = 'El ID de la cuenta debe ser un número positivo';
+        }
+        
+        // Validar estado
+        if (!isset($datos['estado'])) {
+            $errores['estado'] = 'El estado es obligatorio';
+        } elseif (!in_array($datos['estado'], self::ESTADOS_PERMITIDOS)) {
+            $errores['estado'] = 'El estado debe ser uno de: ' . implode(', ', self::ESTADOS_PERMITIDOS);
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para generar reporte
+     */
+    private function validarReporte($datos) {
+        $errores = [];
+        
+        // Validar límite de resultados (opcional)
+        if (isset($datos['limite'])) {
+            $limite = (int)$datos['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
+            }
+        }
+        
+        // Validar fecha de inicio (opcional)
+        if (isset($datos['fecha_inicio'])) {
+            $fecha_inicio = trim($datos['fecha_inicio']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_inicio)) {
+                $errores['fecha_inicio'] = 'La fecha de inicio debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fecha_inicio);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_inicio'] = 'La fecha de inicio no es válida';
+                }
+            }
+        }
+        
+        // Validar fecha de fin (opcional)
+        if (isset($datos['fecha_fin'])) {
+            $fecha_fin = trim($datos['fecha_fin']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_fin)) {
+                $errores['fecha_fin'] = 'La fecha de fin debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fecha_fin);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_fin'] = 'La fecha de fin no es válida';
+                }
+            }
+        }
+        
+        // Validar que la fecha de fin no sea anterior a la de inicio
+        if (isset($datos['fecha_inicio']) && isset($datos['fecha_fin']) && !isset($errores['fecha_inicio']) && !isset($errores['fecha_fin'])) {
+            $fecha_inicio = new \DateTime($datos['fecha_inicio']);
+            $fecha_fin = new \DateTime($datos['fecha_fin']);
+            if ($fecha_fin < $fecha_inicio) {
+                $errores['fecha_fin'] = 'La fecha de fin no puede ser anterior a la fecha de inicio';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para registrar (método público)
+     */
+    public function validarRegistrarCuenta($datos) {
+        return $this->validarRegistrar($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar (método público)
+     */
+    public function validarConsultarCuentas($datos) {
+        return $this->validarConsultar($datos);
+    }
+    
+    /**
+     * Valida los datos para detallar (método público)
+     */
+    public function validarDetallarCuenta($datos) {
+        return $this->validarDetallar($datos);
+    }
+    
+    /**
+     * Valida los datos para modificar (método público)
+     */
+    public function validarModificarCuenta($datos) {
+        return $this->validarModificar($datos);
+    }
+    
+    /**
+     * Valida los datos para eliminar (método público)
+     */
+    public function validarEliminarCuenta($datos) {
+        return $this->validarEliminar($datos);
+    }
+    
+    /**
+     * Valida los datos para cambiar estado (método público)
+     */
+    public function validarCambiarEstado($datos) {
+        return $this->validarCambiarEstadoCuenta($datos);
+    }
+    
+    /**
+     * Valida los datos para reporte (método público)
+     */
+    public function validarReporteCuentas($datos) {
+        return $this->validarReporte($datos);
+    }
+    
+    /**
+     * Verifica si una cuenta bancaria existe por ID
+     */
+    private function verificarCuentaExistente($idCuenta) {
+        $conexion = new BD('P');
+        $db = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_cuentas WHERE id_cuenta = :id_cuenta";
+            $stmt = $db->prepare($sql);
+            $stmt->bindValue(':id_cuenta', $idCuenta, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarCuentaExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si un número de cuenta ya existe (excluyendo un ID específico)
+     */
+    private function verificarNumeroCuentaExistente($numeroCuenta, $excluirId = null) {
+        $conexion = new BD('P');
+        $db = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_cuentas WHERE numero_cuenta = :numero_cuenta";
+            $params = [':numero_cuenta' => $numeroCuenta];
+            if ($excluirId !== null) {
+                $sql .= " AND id_cuenta != :id_cuenta";
+                $params[':id_cuenta'] = $excluirId;
+            }
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarNumeroCuentaExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si un RIF ya existe (excluyendo un ID específico)
+     */
+    private function verificarRifExistente($rifCuenta, $excluirId = null) {
+        $conexion = new BD('P');
+        $db = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_cuentas WHERE rif_cuenta = :rif_cuenta";
+            $params = [':rif_cuenta' => $rifCuenta];
+            if ($excluirId !== null) {
+                $sql .= " AND id_cuenta != :id_cuenta";
+                $params[':id_cuenta'] = $excluirId;
+            }
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarRifExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
     }
 
     public function registrarCuentabanco() {
