@@ -22,6 +22,26 @@ class Usuarios extends BD {
     private $usuarios;
     private $cedula;
 
+    // Constantes de validación
+    const MAX_ID_USUARIO = 999999999;
+    const MIN_ID_USUARIO = 1;
+    const MAX_USERNAME = 50;
+    const MIN_USERNAME = 3;
+    const MAX_CLAVE = 255;
+    const MIN_CLAVE = 8;
+    const MAX_NOMBRE = 100;
+    const MIN_NOMBRE = 2;
+    const MAX_APELLIDO = 100;
+    const MIN_APELLIDO = 2;
+    const MAX_CORREO = 150;
+    const MAX_TELEFONO = 15;
+    const MIN_TELEFONO = 7;
+    const MAX_CEDULA = 10;
+    const MIN_CEDULA = 6;
+    const MAX_ID_ROL = 999999999;
+    const MIN_ID_ROL = 1;
+    const ESTADOS_VALIDOS = ['habilitado', 'deshabilitado', 'inhabilitado'];
+
     public function __construct() {
         $this->conex = null;
         $this->con = null;
@@ -65,74 +85,300 @@ class Usuarios extends BD {
     public function setCedula($cedula) { $this->cedula = $cedula; }
 
     
-    public function validarDatos($esModificacion = false) {
+    // Métodos de validación centralizados
+    private function validarUsuario($datos) {
         $errores = [];
-
-        $username = trim((string)$this->username);
-        if ($username === '') {
-            $errores['username'] = 'El nombre de usuario es obligatorio';
-        } elseif (mb_strlen($username) < 3 || mb_strlen($username) > 50) {
-            $errores['username'] = 'El nombre de usuario debe tener entre 3 y 50 caracteres';
-        } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
-            $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+        
+        if (!is_array($datos)) {
+            $errores['usuario'] = 'Los datos del usuario deben ser un arreglo';
+            return $errores;
         }
-
-        $clave = (string)$this->clave;
-        if (!$esModificacion || $clave !== '') {
-            if ($clave === '') {
-                $errores['clave'] = 'La contraseña es obligatoria';
-            } elseif (mb_strlen($clave) < 8) {
-                $errores['clave'] = 'La contraseña debe tener al menos 8 caracteres';
-            } elseif (!preg_match('/[A-Z]/', $clave)) {
-                $errores['clave'] = 'La contraseña debe incluir al menos una letra mayúscula';
-            } elseif (!preg_match('/[a-z]/', $clave)) {
-                $errores['clave'] = 'La contraseña debe incluir al menos una letra minúscula';
-            } elseif (!preg_match('/[0-9]/', $clave)) {
-                $errores['clave'] = 'La contraseña debe incluir al menos un número';
+        
+        // Validar ID del usuario
+        if (isset($datos['id_usuario'])) {
+            $id_usuario = (int)$datos['id_usuario'];
+            if ($id_usuario < self::MIN_ID_USUARIO || $id_usuario > self::MAX_ID_USUARIO) {
+                $errores['id_usuario'] = 'El ID del usuario debe ser un número entre ' . self::MIN_ID_USUARIO . ' y ' . self::MAX_ID_USUARIO;
             }
         }
-
-        $nombre = trim((string)$this->nombre);
-        if ($nombre === '') {
-            $errores['nombre'] = 'El nombre es obligatorio';
-        } elseif (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100) {
-            $errores['nombre'] = 'El nombre debe tener entre 2 y 100 caracteres';
+        
+        // Validar username
+        if (isset($datos['username'])) {
+            $username = trim((string)$datos['username']);
+            if ($username === '') {
+                $errores['username'] = 'El nombre de usuario es obligatorio';
+            } elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
+                $errores['username'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+                $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+            }
         }
-
-        $apellido = trim((string)$this->apellido);
-        if ($apellido === '') {
-            $errores['apellido'] = 'El apellido es obligatorio';
-        } elseif (mb_strlen($apellido) < 2 || mb_strlen($apellido) > 100) {
-            $errores['apellido'] = 'El apellido debe tener entre 2 y 100 caracteres';
+        
+        // Validar clave
+        if (isset($datos['clave'])) {
+            $clave = (string)$datos['clave'];
+            if ($clave !== '') {
+                if (mb_strlen($clave) < self::MIN_CLAVE) {
+                    $errores['clave'] = 'La contraseña debe tener al menos ' . self::MIN_CLAVE . ' caracteres';
+                } elseif (!preg_match('/[A-Z]/', $clave)) {
+                    $errores['clave'] = 'La contraseña debe incluir al menos una letra mayúscula';
+                } elseif (!preg_match('/[a-z]/', $clave)) {
+                    $errores['clave'] = 'La contraseña debe incluir al menos una letra minúscula';
+                } elseif (!preg_match('/[0-9]/', $clave)) {
+                    $errores['clave'] = 'La contraseña debe incluir al menos un número';
+                }
+            }
         }
-
-        $correo = trim((string)$this->correo);
-        if ($correo === '') {
-            $errores['correo'] = 'El correo es obligatorio';
-        } elseif (mb_strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-            $errores['correo'] = 'El correo no es válido';
+        
+        // Validar nombre
+        if (isset($datos['nombre'])) {
+            $nombre = trim((string)$datos['nombre']);
+            if ($nombre === '') {
+                $errores['nombre'] = 'El nombre es obligatorio';
+            } elseif (mb_strlen($nombre) < self::MIN_NOMBRE || mb_strlen($nombre) > self::MAX_NOMBRE) {
+                $errores['nombre'] = 'El nombre debe tener entre ' . self::MIN_NOMBRE . ' y ' . self::MAX_NOMBRE . ' caracteres';
+            }
         }
-
-        $telefono = preg_replace('/\D+/', '', (string)$this->telefono);
-        if ($telefono === '') {
-            $errores['telefono'] = 'El teléfono es obligatorio';
-        } elseif (strlen($telefono) < 7 || strlen($telefono) > 15) {
-            $errores['telefono'] = 'El teléfono debe tener entre 7 y 15 dígitos';
+        
+        // Validar apellido
+        if (isset($datos['apellido'])) {
+            $apellido = trim((string)$datos['apellido']);
+            if ($apellido === '') {
+                $errores['apellido'] = 'El apellido es obligatorio';
+            } elseif (mb_strlen($apellido) < self::MIN_APELLIDO || mb_strlen($apellido) > self::MAX_APELLIDO) {
+                $errores['apellido'] = 'El apellido debe tener entre ' . self::MIN_APELLIDO . ' y ' . self::MAX_APELLIDO . ' caracteres';
+            }
         }
-
-        $cedula = preg_replace('/\D+/', '', (string)$this->cedula);
-        if ($cedula === '') {
-            $errores['cedula'] = 'La cédula es obligatoria';
-        } elseif (strlen($cedula) < 6 || strlen($cedula) > 10) {
-            $errores['cedula'] = 'La cédula debe tener entre 6 y 10 dígitos';
+        
+        // Validar correo
+        if (isset($datos['correo'])) {
+            $correo = trim((string)$datos['correo']);
+            if ($correo === '') {
+                $errores['correo'] = 'El correo es obligatorio';
+            } elseif (mb_strlen($correo) > self::MAX_CORREO || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                $errores['correo'] = 'El correo no es válido';
+            }
         }
-
-        $rango = (int)$this->id_rol;
-        if ($rango <= 0) {
-            $errores['rango'] = 'Debe seleccionar un rol válido';
+        
+        // Validar teléfono
+        if (isset($datos['telefono'])) {
+            $telefono = preg_replace('/\D+/', '', (string)$datos['telefono']);
+            if ($telefono === '') {
+                $errores['telefono'] = 'El teléfono es obligatorio';
+            } elseif (strlen($telefono) < self::MIN_TELEFONO || strlen($telefono) > self::MAX_TELEFONO) {
+                $errores['telefono'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO . ' y ' . self::MAX_TELEFONO . ' dígitos';
+            }
         }
-
+        
+        // Validar cédula
+        if (isset($datos['cedula'])) {
+            $cedula = preg_replace('/\D+/', '', (string)$datos['cedula']);
+            if ($cedula === '') {
+                $errores['cedula'] = 'La cédula es obligatoria';
+            } elseif (strlen($cedula) < self::MIN_CEDULA || strlen($cedula) > self::MAX_CEDULA) {
+                $errores['cedula'] = 'La cédula debe tener entre ' . self::MIN_CEDULA . ' y ' . self::MAX_CEDULA . ' dígitos';
+            }
+        }
+        
+        // Validar ID del rol
+        if (isset($datos['id_rol'])) {
+            $id_rol = (int)$datos['id_rol'];
+            if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
+                $errores['id_rol'] = 'Debe seleccionar un rol válido';
+            }
+        }
+        
+        // Validar estatus
+        if (isset($datos['estatus'])) {
+            $estatus = trim((string)$datos['estatus']);
+            if (!in_array($estatus, self::ESTADOS_VALIDOS)) {
+                $errores['estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
+            }
+        }
+        
         return $errores;
+    }
+    
+    // Métodos públicos de validación
+    public function validarConsultarUsuario($datos) {
+        $errores = [];
+        
+        // Para consultar, podemos validar por ID o sin filtros
+        if (isset($datos['id_usuario'])) {
+            $id_usuario = (int)$datos['id_usuario'];
+            if ($id_usuario < self::MIN_ID_USUARIO || $id_usuario > self::MAX_ID_USUARIO) {
+                $errores['id_usuario'] = 'El ID del usuario debe ser un número entre ' . self::MIN_ID_USUARIO . ' y ' . self::MAX_ID_USUARIO;
+            }
+        }
+        
+        // Validar estatus si viene
+        if (isset($datos['estatus'])) {
+            $estatus = trim((string)$datos['estatus']);
+            if (!in_array($estatus, self::ESTADOS_VALIDOS) && $estatus !== 'todos') {
+                $errores['estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS) . ', todos';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarRegistrarUsuario($datos) {
+        $errores = [];
+        
+        // Para registrar, requerimos campos obligatorios
+        $campos_obligatorios = ['username', 'clave', 'nombre', 'apellido', 'correo', 'telefono', 'cedula', 'id_rol'];
+        foreach ($campos_obligatorios as $campo) {
+            if (!isset($datos[$campo])) {
+                $errores[$campo] = 'El campo ' . $campo . ' es obligatorio';
+            }
+        }
+        
+        // Validar el usuario completo
+        $errores_usuario = $this->validarUsuario($datos);
+        if (!empty($errores_usuario)) {
+            $errores = array_merge($errores, $errores_usuario);
+        }
+        
+        return $errores;
+    }
+    
+    public function validarModificarUsuario($datos) {
+        $errores = [];
+        
+        // Para modificar, el ID es obligatorio
+        if (!isset($datos['id_usuario'])) {
+            $errores['id_usuario'] = 'El ID del usuario es obligatorio';
+        }
+        
+        // Para modificar, requerimos campos obligatorios (excepto clave que es opcional)
+        $campos_obligatorios = ['username', 'nombre', 'apellido', 'correo', 'telefono', 'cedula', 'id_rol'];
+        foreach ($campos_obligatorios as $campo) {
+            if (!isset($datos[$campo])) {
+                $errores[$campo] = 'El campo ' . $campo . ' es obligatorio';
+            }
+        }
+        
+        // Validar el usuario completo
+        $errores_usuario = $this->validarUsuario($datos);
+        if (!empty($errores_usuario)) {
+            $errores = array_merge($errores, $errores_usuario);
+        }
+        
+        return $errores;
+    }
+    
+    public function validarEliminarUsuario($datos) {
+        $errores = [];
+        
+        // Para eliminar, el ID es obligatorio
+        if (!isset($datos['id_usuario'])) {
+            $errores['id_usuario'] = 'El ID del usuario es obligatorio';
+        } else {
+            $id_usuario = (int)$datos['id_usuario'];
+            if ($id_usuario < self::MIN_ID_USUARIO || $id_usuario > self::MAX_ID_USUARIO) {
+                $errores['id_usuario'] = 'El ID del usuario debe ser un número entre ' . self::MIN_ID_USUARIO . ' y ' . self::MAX_ID_USUARIO;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarCambiarEstatus($datos) {
+        $errores = [];
+        
+        // Para cambiar estatus, el ID es obligatorio
+        if (!isset($datos['id_usuario'])) {
+            $errores['id_usuario'] = 'El ID del usuario es obligatorio';
+        } else {
+            $id_usuario = (int)$datos['id_usuario'];
+            if ($id_usuario < self::MIN_ID_USUARIO || $id_usuario > self::MAX_ID_USUARIO) {
+                $errores['id_usuario'] = 'El ID del usuario debe ser un número entre ' . self::MIN_ID_USUARIO . ' y ' . self::MAX_ID_USUARIO;
+            }
+        }
+        
+        // Validar estatus
+        if (!isset($datos['estatus'])) {
+            $errores['estatus'] = 'El estatus es obligatorio';
+        } else {
+            $estatus = trim((string)$datos['estatus']);
+            if (!in_array($estatus, self::ESTADOS_VALIDOS)) {
+                $errores['estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarReporte($datos) {
+        $errores = [];
+        
+        // Para reporte, validar parámetros opcionales
+        if (isset($datos['estatus'])) {
+            $estatus = trim((string)$datos['estatus']);
+            if (!in_array($estatus, self::ESTADOS_VALIDOS) && $estatus !== 'todos') {
+                $errores['estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS) . ', todos';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarDescarga($datos) {
+        $errores = [];
+        
+        // Para descarga, validar tipo de descarga
+        if (isset($datos['tipo_descarga'])) {
+            $tipos_validos = ['pdf', 'excel', 'csv'];
+            if (!in_array($datos['tipo_descarga'], $tipos_validos)) {
+                $errores['tipo_descarga'] = 'El tipo de descarga no es válido. Tipos permitidos: ' . implode(', ', $tipos_validos);
+            }
+        }
+        
+        // Validar parámetros adicionales según el tipo
+        if (isset($datos['parametros']) && is_array($datos['parametros'])) {
+            foreach ($datos['parametros'] as $parametro => $valor) {
+                if (is_string($valor) && mb_strlen($valor) > 100) {
+                    $errores[$parametro] = 'El parámetro ' . $parametro . ' es demasiado largo';
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // Métodos auxiliares
+    private function verificarUsuarioExistente($id_usuario) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('S');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_usuarios WHERE id_usuario = ?");
+            $stmt->execute([$id_usuario]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+    
+    private function verificarRolExistente($id_rol) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('S');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_rol WHERE id_rol = ?");
+            $stmt->execute([$id_rol]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
     }
 
     public function verificarCampoEstatus() {
