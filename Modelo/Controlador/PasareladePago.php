@@ -71,6 +71,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $resultados = [];
             $errores = [];
 
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $pasarela = new PasareladePago();
+            $errores_validacion = $pasarela->validarIngresarPagos($pagos);
+            
+            if (!empty($errores_validacion)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de los pagos',
+                    'errors' => $errores_validacion
+                ]);
+                exit;
+            }
+
             foreach ($pagos as $index => $pagoData) {
                 try {
                     $pasarela = new PasareladePago();
@@ -90,37 +103,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 
                     // Manejo de comprobante
                     $comprobanteNombre = null;
-if (!empty($_FILES['pagos']['name'][$index]['comprobante'])) {
-    $comprobanteTmp = $_FILES['pagos']['tmp_name'][$index]['comprobante'];
-    $comprobanteOriginal = $_FILES['pagos']['name'][$index]['comprobante'];
+                    if (!empty($_FILES['pagos']['name'][$index]['comprobante'])) {
+                        $comprobanteTmp = $_FILES['pagos']['tmp_name'][$index]['comprobante'];
+                        $comprobanteOriginal = $_FILES['pagos']['name'][$index]['comprobante'];
 
-    // Detectar extensión original de forma segura
-    $extension = strtolower(pathinfo($comprobanteOriginal, PATHINFO_EXTENSION));
+                        // Validar comprobante usando las nuevas validaciones
+                        $archivoData = [
+                            'name' => $comprobanteOriginal,
+                            'tmp_name' => $comprobanteTmp,
+                            'error' => $_FILES['pagos']['error'][$index]['comprobante'],
+                            'size' => $_FILES['pagos']['size'][$index]['comprobante']
+                        ];
+                        $errores_comprobante = $pasarela->validarComprobante($archivoData);
+                        
+                        if (!empty($errores_comprobante)) {
+                            $errores[] = "Error en comprobante para referencia {$pagoData['referencia']}: " . implode(', ', $errores_comprobante);
+                            continue;
+                        }
 
-    // Validar que sea una extensión permitida (seguridad)
-    $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
-    if (!in_array($extension, $extensionesPermitidas)) {
-        $errores[] = "Formato de archivo no permitido para la referencia {$pagoData['referencia']}";
-        continue;
-    }
+                        // Detectar extensión original de forma segura
+                        $extension = strtolower(pathinfo($comprobanteOriginal, PATHINFO_EXTENSION));
 
-    // Generar nombre único con la extensión original
-    $comprobanteNombre = 'comprobante_' . time() . '_' . $index . '.' . $extension;
-    $destino = 'comprobantes/' . $comprobanteNombre;
+                        // Validar que sea una extensión permitida (seguridad)
+                        $extensionesPermitidas = PasareladePago::EXTENSIONES_COMPROBANTE;
+                        if (!in_array($extension, $extensionesPermitidas)) {
+                            $errores[] = "Formato de archivo no permitido para la referencia {$pagoData['referencia']}";
+                            continue;
+                        }
 
-    // Crear carpeta si no existe
-    if (!is_dir('comprobantes')) {
-        mkdir('comprobantes', 0755, true);
-    }
+                        // Generar nombre único con la extensión original
+                        $comprobanteNombre = 'comprobante_' . time() . '_' . $index . '.' . $extension;
+                        $destino = 'comprobantes/' . $comprobanteNombre;
 
-    // Mover archivo
-    if (!move_uploaded_file($comprobanteTmp, $destino)) {
-        $errores[] = "Error al subir el comprobante para la referencia {$pagoData['referencia']}";
-        continue;
-    }
+                        // Crear carpeta si no existe
+                        if (!is_dir('comprobantes')) {
+                            mkdir('comprobantes', 0755, true);
+                        }
 
-    $pasarela->setComprobante($comprobanteNombre);
-}
+                        // Mover archivo
+                        if (!move_uploaded_file($comprobanteTmp, $destino)) {
+                            $errores[] = "Error al subir el comprobante para la referencia {$pagoData['referencia']}";
+                            continue;
+                        }
+
+                        $pasarela->setComprobante($comprobanteNombre);
+                    }
 
 
                     // Guardar pago
@@ -186,6 +213,51 @@ if (!empty($_FILES['pagos']['name'][$index]['comprobante'])) {
             exit; // DETENER EJECUCIÓN DESPUÉS DE RESPONDER JSON
             
 
+        case 'cambiar_estatus':
+            if (empty($_POST['id_detalles']) || empty($_POST['estatus'])) {
+                echo json_encode(['status' => 'error', 'message' => 'Datos incompletos para cambiar estatus']);
+                exit;
+            }
+
+            $id_detalles = $_POST['id_detalles'];
+            $nuevo_estatus = $_POST['estatus'];
+
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $pasarela = new PasareladePago();
+            $datos_validacion = [
+                'id_detalles' => $id_detalles,
+                'estatus' => $nuevo_estatus
+            ];
+            $errores = $pasarela->validarCambiarEstatus($datos_validacion);
+
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para cambiar estatus',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
+            $pasarela->setIdDetalles($id_detalles);
+            
+            if ($pasarela->cambiarEstatus($nuevo_estatus)) {
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    $bitacoraModel = new Bitacora();
+                    $bitacoraModel->registrarBitacora(
+                        $_SESSION['id_usuario'],
+                        MODULO_PASARELA_PAGOS,
+                        'MODIFICAR',
+                        'El usuario cambió el estatus del pago ' . $id_detalles . ' a ' . $nuevo_estatus,
+                        'media'
+                    );
+                }
+                echo json_encode(['status' => 'success', 'message' => 'Estatus cambiado correctamente']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Error al cambiar el estatus']);
+            }
+            exit;
+
         default:
             echo json_encode(['status' => 'error', 'message' => 'Acción no válida']);
             exit;
@@ -196,6 +268,17 @@ if (!empty($_FILES['pagos']['name'][$index]['comprobante'])) {
 // Si no es AJAX, carga la vista normalmente
 if (isset($_POST['id_factura'])) {
     $idFactura = $_POST['id_factura'];
+    
+    // Validar datos de entrada usando las nuevas validaciones centralizadas
+    $pasarela = new PasareladePago();
+    $datos_validacion = ['id_factura' => $idFactura];
+    $errores = $pasarela->validarConsultarPagos($datos_validacion);
+    
+    if (!empty($errores)) {
+        // Mostrar error pero continuar con la vista
+        $_SESSION['error_pagos'] = $errores;
+    }
+    
     $facturaModel = new Factura();
     $cuentaModel = new Cuentabanco();
     $listadocuentas = $cuentaModel->consultarCuentabanco();

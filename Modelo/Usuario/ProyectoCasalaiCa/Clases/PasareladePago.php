@@ -20,11 +20,28 @@ class PasareladePago extends Factura {
     private $comprobante;
     private $monto;
     private $cedula;
+    
+    // Constantes de validación
+    const MAX_ID_DETALLES = 999999999;
+    const MIN_ID_DETALLES = 1;
+    const MAX_ID_FACTURA = 999999999;
+    const MIN_ID_FACTURA = 1;
+    const MAX_ID_CUENTA = 999999999;
+    const MIN_ID_CUENTA = 1;
+    const MAX_REFERENCIA = 50;
+    const MIN_REFERENCIA = 1;
+    const MAX_OBSERVACIONES = 500;
+    const MIN_OBSERVACIONES = 0;
+    const MAX_MONTO = 999999999.99;
+    const MIN_MONTO = 0.01;
+    const TIPOS_VALIDOS = ['Transferencia', 'Deposito', 'Efectivo', 'Tarjeta', 'Cheque', 'Otro'];
+    const ESTADOS_VALIDOS = ['Pendiente', 'En Proceso', 'Pago Procesado', 'Anulado'];
+    const ESTADOS_VALIDOS_CAMBIO = ['Pendiente', 'En Proceso', 'Pago Procesado', 'Anulado'];
+    const EXTENSIONES_COMPROBANTE = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
 
-
-public function __construct() {
-    parent::__construct();
-}
+    public function __construct() {
+        parent::__construct();
+    }
     // Setters y Getters
 
     // ID Detalles
@@ -121,23 +138,283 @@ public function setCedula($cedula) {
 }
 
 
-public function validarCodigoReferencia() {
-    return $this->v_validarCodigoReferencia();
-}
-private function v_validarCodigoReferencia() {
-    $conexion = new BD('P');
-    $pdo = $conexion->getConexion();
-    try {
-        $sql = "SELECT COUNT(*) FROM tbl_detalles_pago WHERE referencia = :referencia";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':referencia', $this->referencia);
-        $stmt->execute();
-        $count = $stmt->fetchColumn();
-        return $count == 0;
-    } finally {
-        $conexion->cerrar();
+// Métodos de validación centralizados
+    private function validarPago($datos) {
+        $errores = [];
+        
+        if (!is_array($datos)) {
+            $errores['pago'] = 'Los datos del pago deben ser un arreglo';
+            return $errores;
+        }
+        
+        // Validar ID de detalles
+        if (isset($datos['id_detalles'])) {
+            $id_detalles = (int)$datos['id_detalles'];
+            if ($id_detalles < self::MIN_ID_DETALLES || $id_detalles > self::MAX_ID_DETALLES) {
+                $errores['id_detalles'] = 'El ID del pago debe ser un número entre ' . self::MIN_ID_DETALLES . ' y ' . self::MAX_ID_DETALLES;
+            }
+        }
+        
+        // Validar ID de factura
+        if (isset($datos['id_factura'])) {
+            $id_factura = (int)$datos['id_factura'];
+            if ($id_factura < self::MIN_ID_FACTURA || $id_factura > self::MAX_ID_FACTURA) {
+                $errores['id_factura'] = 'El ID de la factura debe ser un número entre ' . self::MIN_ID_FACTURA . ' y ' . self::MAX_ID_FACTURA;
+            }
+        }
+        
+        // Validar ID de cuenta
+        if (isset($datos['id_cuenta'])) {
+            $id_cuenta = (int)$datos['id_cuenta'];
+            if ($id_cuenta < self::MIN_ID_CUENTA || $id_cuenta > self::MAX_ID_CUENTA) {
+                $errores['id_cuenta'] = 'El ID de la cuenta debe ser un número entre ' . self::MIN_ID_CUENTA . ' y ' . self::MAX_ID_CUENTA;
+            }
+        }
+        
+        // Validar referencia
+        if (isset($datos['referencia'])) {
+            $referencia = trim((string)$datos['referencia']);
+            if (mb_strlen($referencia) < self::MIN_REFERENCIA) {
+                $errores['referencia'] = 'La referencia debe tener al menos ' . self::MIN_REFERENCIA . ' caracteres';
+            } elseif (mb_strlen($referencia) > self::MAX_REFERENCIA) {
+                $errores['referencia'] = 'La referencia no debe exceder los ' . self::MAX_REFERENCIA . ' caracteres';
+            }
+        }
+        
+        // Validar tipo
+        if (isset($datos['tipo'])) {
+            $tipo = trim((string)$datos['tipo']);
+            if (!in_array($tipo, self::TIPOS_VALIDOS)) {
+                $errores['tipo'] = 'El tipo de pago no es válido. Tipos permitidos: ' . implode(', ', self::TIPOS_VALIDOS);
+            }
+        }
+        
+        // Validar observaciones
+        if (isset($datos['observaciones'])) {
+            $observaciones = trim((string)$datos['observaciones']);
+            if (mb_strlen($observaciones) > self::MAX_OBSERVACIONES) {
+                $errores['observaciones'] = 'Las observaciones no deben exceder los ' . self::MAX_OBSERVACIONES . ' caracteres';
+            }
+        }
+        
+        // Validar monto
+        if (isset($datos['monto'])) {
+            $monto = (float)$datos['monto'];
+            if ($monto < self::MIN_MONTO || $monto > self::MAX_MONTO) {
+                $errores['monto'] = 'El monto debe estar entre ' . self::MIN_MONTO . ' y ' . self::MAX_MONTO;
+            }
+        }
+        
+        // Validar estatus
+        if (isset($datos['estatus'])) {
+            $estatus = trim((string)$datos['estatus']);
+            if (!in_array($estatus, self::ESTADOS_VALIDOS)) {
+                $errores['estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
+            }
+        }
+        
+        // Validar fecha
+        if (isset($datos['fecha'])) {
+            $fecha = trim((string)$datos['fecha']);
+            if ($fecha === '') {
+                $errores['fecha'] = 'La fecha es obligatoria';
+            } elseif (!$this->validarFormatoFecha($fecha)) {
+                $errores['fecha'] = 'La fecha no tiene un formato válido (AAAA-MM-DD)';
+            } elseif (!$this->validarFechaNoFutura($fecha)) {
+                $errores['fecha'] = 'No se permiten fechas futuras';
+            }
+        }
+        
+        return $errores;
     }
-}
+    
+    private function validarFormatoFecha($fecha) {
+        $formato = 'Y-m-d';
+        $fechaObj = DateTime::createFromFormat($formato, $fecha);
+        return $fechaObj && $fechaObj->format($formato) === $fecha;
+    }
+    
+    private function validarFechaNoFutura($fecha) {
+        $hoy = new DateTime();
+        $fechaPago = new DateTime($fecha);
+        return $fechaPago <= $hoy;
+    }
+    
+    private function validarComprobante($archivo) {
+        $errores = [];
+        
+        if (!is_array($archivo)) {
+            $errores['comprobante'] = 'Los datos del comprobante deben ser un arreglo';
+            return $errores;
+        }
+        
+        if (!isset($archivo['name']) || !isset($archivo['tmp_name']) || !isset($archivo['error'])) {
+            $errores['comprobante'] = 'Estructura del comprobante inválida';
+            return $errores;
+        }
+        
+        // Validar que no haya errores de subida
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            $errores['comprobante'] = 'Error al subir el comprobante: ' . $this->getUploadErrorMessage($archivo['error']);
+            return $errores;
+        }
+        
+        // Validar tamaño máximo (5MB)
+        $maxSize = 5 * 1024 * 1024; // 5MB
+        if ($archivo['size'] > $maxSize) {
+            $errores['comprobante'] = 'El comprobante no debe exceder los 5MB';
+            return $errores;
+        }
+        
+        // Validar extensión
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        if (!in_array($extension, self::EXTENSIONES_COMPROBANTE)) {
+            $errores['comprobante'] = 'La extensión del archivo no es permitida. Extensiones permitidas: ' . implode(', ', self::EXTENSIONES_COMPROBANTE);
+        }
+        
+        return $errores;
+    }
+    
+    private function getUploadErrorMessage($errorCode) {
+        $messages = [
+            UPLOAD_ERR_INI_SIZE => 'El archivo excede el tamaño máximo permitido',
+            UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamaño máximo permitido',
+            UPLOAD_ERR_PARTIAL => 'El archivo se subió parcialmente',
+            UPLOAD_ERR_NO_FILE => 'No se subió ningún archivo',
+            UPLOAD_ERR_NO_TMP_DIR => 'Falta carpeta temporal',
+            UPLOAD_ERR_CANT_WRITE => 'No se puede escribir el archivo',
+            UPLOAD_ERR_EXTENSION => 'Subida detenida por extensión',
+            UPLOAD_ERR_NO_TMP_FILE => 'No hay archivo temporal',
+            UPLOAD_ERR_CANT_WRITE => 'No se puede mover el archivo'
+        ];
+        
+        return $messages[$errorCode] ?? 'Error desconocido';
+    }
+    
+    // Métodos públicos de validación
+    public function validarConsultarPagos($datos) {
+        $errores = [];
+        
+        // Para consultar pagos, podemos validar por cédula o por factura
+        if (isset($datos['cedula'])) {
+            $cedula = trim((string)$datos['cedula']);
+            if ($cedula === '') {
+                $errores['cedula'] = 'La cédula es obligatoria para consultar pagos';
+            }
+        }
+        
+        if (isset($datos['id_factura'])) {
+            $id_factura = (int)$datos['id_factura'];
+            if ($id_factura < self::MIN_ID_FACTURA || $id_factura > self::MAX_ID_FACTURA) {
+                $errores['id_factura'] = 'El ID de la factura debe ser un número entre ' . self::MIN_ID_FACTURA . ' y ' . self::MAX_ID_FACTURA;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarCambiarEstatus($datos) {
+        $errores = [];
+        
+        // Validar ID del pago (obligatorio)
+        if (!isset($datos['id_detalles'])) {
+            $errores['id_detalles'] = 'El ID del pago es obligatorio';
+        } else {
+            $id_detalles = (int)$datos['id_detalles'];
+            if ($id_detalles < self::MIN_ID_DETALLES || $id_detalles > self::MAX_ID_DETALLES) {
+                $errores['id_detalles'] = 'El ID del pago debe ser un número entre ' . self::MIN_ID_DETALLES . ' y ' . self::MAX_ID_DETALLES;
+            }
+        }
+        
+        // Validar nuevo estatus (obligatorio)
+        if (!isset($datos['estatus'])) {
+            $errores['estatus'] = 'El nuevo estatus es obligatorio';
+        } else {
+            $estatus = trim((string)$datos['estatus']);
+            if (!in_array($estatus, self::ESTADOS_VALIDOS_CAMBIO)) {
+                $errores['estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS_CAMBIO);
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarIngresarPagos($pagos) {
+        $errores = [];
+        
+        if (!is_array($pagos)) {
+            $errores['pagos'] = 'Los datos de pagos deben ser un arreglo';
+            return $errores;
+        }
+        
+        if (empty($pagos)) {
+            $errores['pagos'] = 'Debe proporcionar al menos un pago';
+            return $errores;
+        }
+        
+        foreach ($pagos as $index => $pago) {
+            $errores_pago = $this->validarPago($pago);
+            if (!empty($errores_pago)) {
+                foreach ($errores_pago as $campo => $error) {
+                    $errores["pago_{$index}_{$campo}"] = $error;
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // Métodos auxiliares
+    private function verificarPagoExistente($id_detalles) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_detalles_pago WHERE id_detalles = ?");
+            $stmt->execute([$id_detalles]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+    
+    private function verificarFacturaExistente($id_factura) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_facturas WHERE id_factura = ?");
+            $stmt->execute([$id_factura]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+    
+    private function verificarCuentaExistente($id_cuenta) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_cuentas WHERE id_cuenta = ?");
+            $stmt->execute([$id_cuenta]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
     public function pasarelaTransaccion($transaccion) {
         switch ($transaccion) {
             case 'Ingresar':
