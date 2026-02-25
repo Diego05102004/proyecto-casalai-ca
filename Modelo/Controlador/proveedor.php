@@ -35,7 +35,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
             
         case 'registrar':
+            // Usar validación centralizada
             $proveedor = new Proveedores();
+            
+            // Validar usando el nuevo método centralizado
+            $errores = $proveedor->validarRegistrar($_POST);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en la validación de datos',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            // Si pasa todas las validaciones, proceder a registrar
             $proveedor->setNombre($_POST['nombre_proveedor']);
             $proveedor->setRif1($_POST['rif_proveedor']);
             $proveedor->setRepresentante($_POST['nombre_representante']);
@@ -46,45 +61,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $proveedor->setTelefono2($_POST['telefono_2']);
             $proveedor->setObservacion($_POST['observacion']);
             
-            // Validar datos del proveedor
-            $errores = $proveedor->validarDatos();
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en los datos del proveedor',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
-
-            if ($proveedor->existeNombreProveedor($_POST['nombre_proveedor'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre del proveedor ya existe'
-                ]);
-                exit;
-            }
-
-            if ($proveedor->existeRifProveedor($_POST['rif_proveedor'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El RIF del proveedor ya está registrado'
-                ]);
-                exit;
-            }
-
-            if ($proveedor->existeRifRepresentante($_POST['rif_representante'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El RIF del representante ya está registrado'
-                ]);
-                exit;
-            }
-
             if ($proveedor->registrarProveedor()) {
                 $proveedorRegistrado = $proveedor->obtenerUltimoProveedor();
                 
-                // Registrar en bitácora (estilo Recepción)
+                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
@@ -110,26 +90,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'obtener_proveedor':
-            $id_proveedor = $_POST['id_proveedor'];
-            if ($id_proveedor !== null) {
-                $proveedor = new Proveedores();
-                $proveedorData = $proveedor->obtenerProveedorPorId($id_proveedor);
-                
-                if ($proveedorData !== null) {
-                    echo json_encode($proveedorData);
-                } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Proveedor no encontrado']);
-                }
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'ID del Proveedor no proporcionado']);
+            // Usar validación centralizada
+            $proveedor = new Proveedores();
+            
+            // Validar ID
+            $errores = $proveedor->validarDetallar($_POST['id_proveedor']);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al obtener el proveedor',
+                    'errors' => $errores
+                ]);
+                exit;
             }
+            
+            // Si pasa la validación, obtener el proveedor
+            $proveedorData = $proveedor->obtenerProveedorPorId($_POST['id_proveedor']);
+            
+            echo json_encode([
+                'status' => 'success',
+                'proveedor' => $proveedorData
+            ]);
             exit;
 
         case 'modificar':
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
-            $id_proveedor = $_POST['id_proveedor'];
+            
+            // Usar validación centralizada
             $proveedor = new Proveedores();
+            
+            // Validar usando el nuevo método centralizado
+            $errores = $proveedor->validarModificar($_POST);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en la validación de datos',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            // Si pasa todas las validaciones, proceder a modificar
+            $id_proveedor = $_POST['id_proveedor'];
             $proveedor->setIdProveedor($id_proveedor);
             $proveedor->setNombre($_POST['nombre_proveedor']);
             $proveedor->setRif1($_POST['rif_proveedor']);
@@ -141,56 +146,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $proveedor->setTelefono2($_POST['telefono_2']);
             $proveedor->setObservacion($_POST['observacion']);
             
-            // Validar datos del proveedor
-            $errores = $proveedor->validarDatos(true); // true = es modificación
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en los datos del proveedor',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
-
-            // Verificar que el proveedor exista antes de modificar
-            $proveedorExistente = $proveedor->obtenerProveedorPorId($id_proveedor);
-            if (!$proveedorExistente) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El proveedor que intenta modificar no existe'
-                ]);
-                exit;
-            }
-            
-            if ($proveedor->existeNombreProveedor($_POST['nombre_proveedor'], $id_proveedor)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre del proveedor ya existe'
-                ]);
-                exit;
-            }
-
-            if ($proveedor->existeRifProveedor($_POST['rif_proveedor'], $id_proveedor)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El RIF del proveedor ya está registrado'
-                ]);
-                exit;
-            }
-
-            if ($proveedor->existeRifRepresentante($_POST['rif_representante'], $id_proveedor)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El RIF del representante ya está registrado'
-                ]);
-                exit;
-            }
             $proveedorViejo = $proveedor->obtenerProveedorPorId($id_proveedor);
                 
             if ($proveedor->modificarProveedor($id_proveedor)) {
                 $proveedorActualizado = $proveedor->obtenerProveedorPorId($id_proveedor);
                 
-                // Registrar en bitácora (estilo Recepción)
+                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
@@ -204,6 +165,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 echo json_encode([
                     'status' => 'success',
+                    'message' => 'Proveedor modificado correctamente',
                     'proveedor' => $proveedorActualizado
                 ]);
             } else {
@@ -212,70 +174,76 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id_proveedor = $_POST['id_proveedor'] ?? null;
-            
-            // Validar ID del proveedor
-            if ($id_proveedor === null) {
-                echo json_encode(['status' => 'error', 'message' => 'ID del Proveedor no proporcionado']);
-                exit;
-            }
-            
-            $id_proveedor = (int)$id_proveedor;
-            if ($id_proveedor <= 0) {
-                echo json_encode(['status' => 'error', 'message' => 'El ID del proveedor no es válido']);
-                exit;
-            }
-            
+            // Usar validación centralizada
             $proveedor = new Proveedores();
             
-            // Verificar que el proveedor exista antes de eliminar
-            $proveedorExistente = $proveedor->obtenerProveedorPorId($id_proveedor);
-            if (!$proveedorExistente) {
-                echo json_encode(['status' => 'error', 'message' => 'El proveedor que intenta eliminar no existe']);
+            // Validar usando el nuevo método centralizado
+            $errores = $proveedor->validarEliminar($_POST['id_proveedor']);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al eliminar el proveedor',
+                    'errors' => $errores
+                ]);
                 exit;
             }
+            
+            // Si pasa todas las validaciones, proceder a eliminar
+            $id_proveedor = $_POST['id_proveedor'];
             
             // Obtener datos del proveedor antes de eliminarlo
             $proveedorAEliminar = $proveedor->obtenerProveedorPorId($id_proveedor);
             
             if ($proveedor->eliminarProveedor($id_proveedor)) {
-                // Registrar en bitácora (estilo Recepción)
+                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
                         $_SESSION['id_usuario'],
                         MODULO_PROVEEDORES,
                         'ELIMINAR',
-                        'El usuario elimino el proveedor ' . $proveedorAEliminar['nombre_proveedor'] . '',
+                        'El usuario eliminó el proveedor ' . $proveedorAEliminar['nombre_proveedor'] . '',
                         'alta'
                     );
                 }
                 
-                echo json_encode(['status' => 'success']);
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Proveedor eliminado correctamente'
+                ]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el Proveedor']);
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => 'Error al eliminar el proveedor'
+                ]);
             }
             exit;
         
         case 'cambiar_estado':
-            $id_proveedor = $_POST['id_proveedor'] ?? null;
-            $nuevoEstatus = $_POST['nuevo_estatus'] ?? null;
-
-            if ($id_proveedor === null || !ctype_digit((string)$id_proveedor)) {
-                echo json_encode(['status' => 'error', 'message' => 'ID de proveedor no válido']);
-                exit;
-            }
-
-            if (!in_array($nuevoEstatus, ['habilitado', 'inhabilitado'])) {
-                echo json_encode(['status' => 'error', 'message' => 'Estatus no válido']);
-                exit;
-            }
-
+            // Usar validación centralizada
             $proveedor = new Proveedores();
+            
+            // Validar usando el nuevo método centralizado
+            $errores = $proveedor->validarCambiarEstatus($_POST['id_proveedor'], $_POST['nuevo_estatus']);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al cambiar el estatus del proveedor',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            // Si pasa todas las validaciones, proceder a cambiar estatus
+            $id_proveedor = $_POST['id_proveedor'];
+            $nuevoEstatus = $_POST['nuevo_estatus'];
+            
             $proveedor->setIdProveedor($id_proveedor);
             
             if ($proveedor->cambiarEstatus($nuevoEstatus)) {
-                // Registrar en bitácora (estilo Recepción)
+                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
@@ -287,10 +255,77 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     );
                 }
                 
-                echo json_encode(['status' => 'success']);
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Estatus cambiado correctamente'
+                ]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al cambiar el estatus del Proveedor']);
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => 'Error al cambiar el estatus del proveedor'
+                ]);
             }
+            exit;
+
+        case 'generar_reporte':
+            // Usar validación centralizada para reportes
+            $proveedor = new Proveedores();
+            
+            // Validar parámetros del reporte
+            $parametros = $_POST;
+            $errores = $proveedor->validarGenerarReporte($parametros);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los parámetros del reporte',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            // Si pasa las validaciones, generar el reporte
+            $formato = $parametros['formato'] ?? 'pdf';
+            $fecha_inicio = $parametros['fecha_inicio'] ?? null;
+            $fecha_fin = $parametros['fecha_fin'] ?? null;
+            
+            // Obtener datos para el reporte
+            $filtros = [];
+            if ($fecha_inicio && $fecha_fin) {
+                $filtros['fecha_inicio'] = $fecha_inicio;
+                $filtros['fecha_fin'] = $fecha_fin;
+            }
+            
+            $resultado = $proveedor->obtenerProveedoresConFiltros($filtros);
+            
+            if (isset($resultado['error'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al obtener datos para el reporte',
+                    'errors' => $resultado['error']
+                ]);
+                exit;
+            }
+            
+            // Registrar en bitácora
+            if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                $bitacora = new Bitacora();
+                $bitacora->registrarBitacora(
+                    $_SESSION['id_usuario'],
+                    MODULO_PROVEEDORES,
+                    'GENERAR REPORTE',
+                    'El usuario generó un reporte de proveedores en formato ' . $formato,
+                    'baja'
+                );
+            }
+            
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Reporte generado correctamente',
+                'datos' => $resultado['proveedores'],
+                'formato' => $formato,
+                'total' => $resultado['total']
+            ]);
             exit;
 
         default:
@@ -299,9 +334,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-function getproveedores() {
+function getproveedores($filtros = []) {
     $proveedor = new Proveedores();
-    return $proveedor->getproveedores();
+    
+    // Usar el nuevo método con validación centralizada
+    $resultado = $proveedor->obtenerProveedoresConFiltros($filtros);
+    
+    // Si hay errores de validación, devolver array vacío o manejar el error
+    if (isset($resultado['error'])) {
+        // En un entorno real, aquí podrías loggear el error
+        return [];
+    }
+    
+    return $resultado['proveedores'] ?? [];
 }
 
 $proveedorModel = new Proveedores();

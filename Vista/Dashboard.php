@@ -232,8 +232,8 @@ if (!isset($_SESSION['name'])) {
   z-index: 10;
 }
 
-.carousel-btn.prev { left: 10px; }
-.carousel-btn.next { right: 10px; }
+.carousel-btn.prev { left: 250px; }
+.carousel-btn.next { right: 250px; }
 
 .carousel-btn:hover {
   background: rgba(0,0,0,0.9);
@@ -395,109 +395,109 @@ function mostrarModulo($modulo, $permisosConsulta, $nombre_rol) {
 
 <div class="container">
   <h3 class="tabla-titulo-2" style="margin-top:20px; margin-bottom:20px;">Panel Principal</h3>
-<div class="carousel-container">
-    <button class="carousel-btn prev">&#10094;</button>
+    <div class="carousel-container">
+        <button class="carousel-btn prev">&#10094;</button>
 
-    <div class="carousel-track">
-        <!-- Aquí se generan dinámicamente tus cards -->
-      <?php
-    // Debug: mostrar información completa antes del foreach
-    error_log("Dashboard - Iniciando generación de cards");
-    error_log("Dashboard - Total grupos: " . count($grupos));
-    error_log("Dashboard - Sesión completa: " . print_r($_SESSION, true));
-    
-    // TEMPORAL: Forzar mostrar todos los grupos para diagnóstico
-    $mostrarTodosGrupos = true; // Cambiar a false cuando funcione
-    
-    foreach ($grupos as $grupo => $info) {
-        error_log("Dashboard - Evaluando grupo: $grupo");
-        error_log("Dashboard - Condición del grupo: " . ($info['condicion'] ? 'true' : 'false'));
+        <div class="carousel-track">
+            <!-- Aquí se generan dinámicamente tus cards -->
+          <?php
+        // Debug: mostrar información completa antes del foreach
+        error_log("Dashboard - Iniciando generación de cards");
+        error_log("Dashboard - Total grupos: " . count($grupos));
+        error_log("Dashboard - Sesión completa: " . print_r($_SESSION, true));
         
-        // Verificar si el grupo debe mostrarse (igual que en navbar)
-        if (!$mostrarTodosGrupos && !$info['condicion']) {
-            error_log("Dashboard - Grupo $grupo omitido por condición falsa");
-            continue;
-        }
-
-        $modulosPermitidos = [];
-
-        // Agregar módulos principales con permisos
-        foreach ($info['modulos'] as $mod) {
-            $permisoModulo = $mostrarTodosGrupos ? true : mostrarModulo($mod, $permisosConsulta, $nombre_rol);
-            error_log("Dashboard - Módulo $mod: " . ($permisoModulo ? 'permitido' : 'denegado'));
-            if ($permisoModulo) {
-                $modulosPermitidos[] = $mod;
-            }
-        }
-
-        // Agregar reportes con permisos (usando la misma lógica que en el navbar)
-        foreach ($info['reportes'] as $reporte) {
-            $mostrarReporte = false;
-            switch ($reporte) {
-                case 'reporteUsuario':
-                    $mostrarReporte = !empty($permisosConsulta['Usuario']) && $nombre_rol !== 'Cliente';
-                    break;
-                case 'reporteInventario':
-                    $mostrarReporte = !empty($permisosConsulta['Recepcion']) && $nombre_rol !== 'Cliente';
-                    break;
-                case 'reporteProductos':
-                    $mostrarReporte = ($nombre_rol !== 'Cliente') && (
-                        !empty($permisosConsulta['Marcas']) || 
-                        !empty($permisosConsulta['Modelos']) || 
-                        !empty($permisosConsulta['Productos']) || 
-                        !empty($permisosConsulta['Categorias'])
-                    );
-                    break;
-                case 'reporteProveedores':
-                    $mostrarReporte = !empty($permisosConsulta['Proveedores']) && $nombre_rol !== 'Cliente';
-                    break;
-                case 'reporteVentas':
-                    $mostrarReporte = !empty($permisosConsulta['Despacho']) && $nombre_rol !== 'Cliente';
-                    break;
-                case 'reporteFinanzas':
-                    $mostrarReporte = ((!empty($permisosConsulta['Cuentas bancarias']) || !empty($permisosConsulta['Finanzas'])) && $nombre_rol !== 'Cliente');
-                    break;
-                case 'reporteCliente':
-                    $mostrarReporte = !empty($permisosConsulta['Clientes']) && $nombre_rol !== 'Cliente';
-                    break;
-                default:
-                    $mostrarReporte = !empty($permisosConsulta[$reporte]);
-            }
-            if ($mostrarReporte && !empty($modulos[$reporte])) {
-                $modulosPermitidos[] = $reporte;
-            }
-        }
-
-        // Mostrar el grupo solo si tiene módulos o reportes permitidos
-        if (count($modulosPermitidos) > 0) {
-            $icono = $info['icon'];
-            $color = $info['color'];
+        // TEMPORAL: Forzar mostrar todos los grupos para diagnóstico
+        $mostrarTodosGrupos = true; // Cambiar a false cuando funcione
+        
+        foreach ($grupos as $grupo => $info) {
+            error_log("Dashboard - Evaluando grupo: $grupo");
+            error_log("Dashboard - Condición del grupo: " . ($info['condicion'] ? 'true' : 'false'));
             
-            // Debug: mostrar que se está generando esta card
-            error_log("Dashboard - Generando card para grupo: $grupo con " . count($modulosPermitidos) . " módulos");
-    ?>
-    <div class="card-dashboard carousel-item" style="border-top:6px solid <?php echo $color; ?>;">
-      <img src="<?php echo $icono; ?>" alt="icono" style="width:56px; height:56px; margin-bottom:18px;">
-      <div class="modulos-dashboard">
-        <h4 style="color:<?php echo $color; ?>;"><?php echo htmlspecialchars($grupo); ?></h4>
-        <?php foreach ($modulosPermitidos as $modulo): ?>
-        <a href="<?php echo $modulos[$modulo][2]; ?>" class="btn-dashboard"
-          style="background:<?php echo $color; ?>;">
-          <?php echo htmlspecialchars($modulos[$modulo][0]); ?>
-        </a>
-        <?php endforeach; ?>
+            // Verificar si el grupo debe mostrarse (igual que en navbar)
+            if (!$mostrarTodosGrupos && !$info['condicion']) {
+                error_log("Dashboard - Grupo $grupo omitido por condición falsa");
+                continue;
+            }
 
-      </div>
+            $modulosPermitidos = [];
+
+            // Agregar módulos principales con permisos
+            foreach ($info['modulos'] as $mod) {
+                $permisoModulo = $mostrarTodosGrupos ? true : mostrarModulo($mod, $permisosConsulta, $nombre_rol);
+                error_log("Dashboard - Módulo $mod: " . ($permisoModulo ? 'permitido' : 'denegado'));
+                if ($permisoModulo) {
+                    $modulosPermitidos[] = $mod;
+                }
+            }
+
+            // Agregar reportes con permisos (usando la misma lógica que en el navbar)
+            foreach ($info['reportes'] as $reporte) {
+                $mostrarReporte = false;
+                switch ($reporte) {
+                    case 'reporteUsuario':
+                        $mostrarReporte = !empty($permisosConsulta['Usuario']) && $nombre_rol !== 'Cliente';
+                        break;
+                    case 'reporteInventario':
+                        $mostrarReporte = !empty($permisosConsulta['Recepcion']) && $nombre_rol !== 'Cliente';
+                        break;
+                    case 'reporteProductos':
+                        $mostrarReporte = ($nombre_rol !== 'Cliente') && (
+                            !empty($permisosConsulta['Marcas']) || 
+                            !empty($permisosConsulta['Modelos']) || 
+                            !empty($permisosConsulta['Productos']) || 
+                            !empty($permisosConsulta['Categorias'])
+                        );
+                        break;
+                    case 'reporteProveedores':
+                        $mostrarReporte = !empty($permisosConsulta['Proveedores']) && $nombre_rol !== 'Cliente';
+                        break;
+                    case 'reporteVentas':
+                        $mostrarReporte = !empty($permisosConsulta['Despacho']) && $nombre_rol !== 'Cliente';
+                        break;
+                    case 'reporteFinanzas':
+                        $mostrarReporte = ((!empty($permisosConsulta['Cuentas bancarias']) || !empty($permisosConsulta['Finanzas'])) && $nombre_rol !== 'Cliente');
+                        break;
+                    case 'reporteCliente':
+                        $mostrarReporte = !empty($permisosConsulta['Clientes']) && $nombre_rol !== 'Cliente';
+                        break;
+                    default:
+                        $mostrarReporte = !empty($permisosConsulta[$reporte]);
+                }
+                if ($mostrarReporte && !empty($modulos[$reporte])) {
+                    $modulosPermitidos[] = $reporte;
+                }
+            }
+
+            // Mostrar el grupo solo si tiene módulos o reportes permitidos
+            if (count($modulosPermitidos) > 0) {
+                $icono = $info['icon'];
+                $color = $info['color'];
+                
+                // Debug: mostrar que se está generando esta card
+                error_log("Dashboard - Generando card para grupo: $grupo con " . count($modulosPermitidos) . " módulos");
+          ?>
+          <div class="card-dashboard carousel-item" style="border-top:6px solid <?php echo $color; ?>;">
+            <img src="<?php echo $icono; ?>" alt="icono" style="width:56px; height:56px; margin-bottom:18px;">
+            <div class="modulos-dashboard">
+              <h4 style="color:<?php echo $color; ?>;"><?php echo htmlspecialchars($grupo); ?></h4>
+              <?php foreach ($modulosPermitidos as $modulo): ?>
+              <a href="<?php echo $modulos[$modulo][2]; ?>" class="btn-dashboard"
+                style="background:<?php echo $color; ?>;">
+                <?php echo htmlspecialchars($modulos[$modulo][0]); ?>
+              </a>
+              <?php endforeach; ?>
+
+            </div>
+          </div>
+          <?php
+              }
+          }
+          ?>
+        </div>
+
+        <button class="carousel-btn next">&#10095;</button>
     </div>
-    <?php
-        }
-    }
-    ?>
-      </div>
-
-    <button class="carousel-btn next">&#10095;</button>
 </div>
-  <?php include 'footer.php'; ?>
   <script>
     const sesion = <?php echo json_encode($_SESSION); ?>;
   </script>
@@ -553,5 +553,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+<?php include 'footer.php'; ?>
 </body>
 </html>
