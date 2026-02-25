@@ -42,6 +42,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         break;
 
         case 'obtener_detalles':
+            // Validar datos de entrada
+            $datosValidacion = [
+                'id_despacho' => $_POST['id_despachos'] ?? null
+            ];
+            
+            $errores = $k->validarDetallarDespacho($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                break;
+            }
+            
             $idDespacho = isset($_POST['id_despachos']) ? (int)$_POST['id_despachos'] : 0;
             if ($idDespacho > 0) {
                 $respuesta = $k->obtenerDetallesPorDespacho($idDespacho);
@@ -52,6 +67,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         break;
 
         case 'cambiar_estado_despacho':
+            // Validar datos de entrada
+            $datosValidacion = [
+                'id_despacho' => $_POST['id'] ?? null,
+                'estado_actual' => $_POST['estado_actual'] ?? null
+            ];
+            
+            $errores = $k->validarCambiarEstado($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                break;
+            }
+            
             $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
             $estado_actual = isset($_POST['estado_actual']) ? trim($_POST['estado_actual']) : '';
 
@@ -94,6 +125,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'anular':
+            // Validar datos de entrada
+            $datosValidacion = [
+                'id_despacho' => $_POST['id_despachos'] ?? null
+            ];
+            
+            $errores = $k->validarAnularDespacho($datosValidacion);
+            if (!empty($errores)) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                break;
+            }
+            
             $idDespacho = isset($_POST['id_despachos']) ? (int)$_POST['id_despachos'] : 0;
             if ($idDespacho <= 0) {
                 header('Content-Type: application/json');
