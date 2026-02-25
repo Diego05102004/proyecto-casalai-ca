@@ -14,6 +14,14 @@ class Despacho extends BD{
     private $estado;
     private $correlativo;
     private $tablerecepcion = 'tbl_despachos';
+    
+    // Constantes para validaciones
+    const MAX_DESCRIPCION = 500;
+    const MAX_ESTADO = 50;
+    const MAX_TIPO_COMPRA = 50;
+    const ESTADOS_PERMITIDOS = ['Por Despachar', 'Despachado', 'Anulado'];
+    const TIPOS_COMPRA_PERMITIDOS = ['Presencial', 'Online', 'Mixta'];
+    const ESTADOS_CAMBIO = ['Por Despachar', 'Despachado'];
 
     public function __construct() {
         $this->conex = null;
@@ -59,6 +67,314 @@ class Despacho extends BD{
     }
     public function setdesc($desc) {
         $this->desc = $desc;
+    }
+    
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para consultar despachos
+     */
+    private function validarConsultar($datos) {
+        $errores = [];
+        
+        // Validar ID del despacho (opcional)
+        if (isset($datos['id_despacho'])) {
+            if (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
+                $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
+            }
+        }
+        
+        // Validar ID del cliente (opcional)
+        if (isset($datos['id_cliente'])) {
+            if (!is_numeric($datos['id_cliente']) || $datos['id_cliente'] <= 0) {
+                $errores['id_cliente'] = 'El ID del cliente debe ser un número positivo';
+            }
+        }
+        
+        // Validar límite de resultados (opcional)
+        if (isset($datos['limite'])) {
+            $limite = (int)$datos['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
+            }
+        }
+        
+        // Validar fecha de inicio (opcional)
+        if (isset($datos['fecha_inicio'])) {
+            $fechaInicio = trim($datos['fecha_inicio']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio)) {
+                $errores['fecha_inicio'] = 'La fecha de inicio debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaInicio);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_inicio'] = 'La fecha de inicio no es válida';
+                }
+            }
+        }
+        
+        // Validar fecha de fin (opcional)
+        if (isset($datos['fecha_fin'])) {
+            $fechaFin = trim($datos['fecha_fin']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
+                $errores['fecha_fin'] = 'La fecha de fin debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaFin);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_fin'] = 'La fecha de fin no es válida';
+                }
+            }
+        }
+        
+        // Validar que la fecha de fin no sea anterior a la de inicio
+        if (isset($datos['fecha_inicio']) && isset($datos['fecha_fin']) && !isset($errores['fecha_inicio']) && !isset($errores['fecha_fin'])) {
+            $fechaInicio = new \DateTime($datos['fecha_inicio']);
+            $fechaFin = new \DateTime($datos['fecha_fin']);
+            if ($fechaFin < $fechaInicio) {
+                $errores['fecha_fin'] = 'La fecha de fin no puede ser anterior a la fecha de inicio';
+            }
+        }
+        
+        // Validar tipo de compra (opcional)
+        if (isset($datos['tipocompra'])) {
+            $tipoCompra = trim($datos['tipocompra']);
+            if (!empty($tipoCompra) && !in_array($tipoCompra, self::TIPOS_COMPRA_PERMITIDOS)) {
+                $errores['tipocompra'] = 'El tipo de compra debe ser uno de: ' . implode(', ', self::TIPOS_COMPRA_PERMITIDOS);
+            } elseif (!empty($tipoCompra) && mb_strlen($tipoCompra) > self::MAX_TIPO_COMPRA) {
+                $errores['tipocompra'] = 'El tipo de compra no debe exceder los ' . self::MAX_TIPO_COMPRA . ' caracteres';
+            }
+        }
+        
+        // Validar estado (opcional)
+        if (isset($datos['estado'])) {
+            $estado = trim($datos['estado']);
+            if (!empty($estado) && !in_array($estado, self::ESTADOS_PERMITIDOS)) {
+                $errores['estado'] = 'El estado debe ser uno de: ' . implode(', ', self::ESTADOS_PERMITIDOS);
+            } elseif (!empty($estado) && mb_strlen($estado) > self::MAX_ESTADO) {
+                $errores['estado'] = 'El estado no debe exceder los ' . self::MAX_ESTADO . ' caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para detallar un despacho
+     */
+    private function validarDetallar($datos) {
+        $errores = [];
+        
+        // Validar ID del despacho
+        if (!isset($datos['id_despacho'])) {
+            $errores['id_despacho'] = 'El ID del despacho es obligatorio';
+        } elseif (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
+            $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para anular un despacho
+     */
+    private function validarAnular($datos) {
+        $errores = [];
+        
+        // Validar ID del despacho
+        if (!isset($datos['id_despacho'])) {
+            $errores['id_despacho'] = 'El ID del despacho es obligatorio';
+        } elseif (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
+            $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para cambiar estado de un despacho
+     */
+    private function validarCambiarEstadoDespacho($datos) {
+        $errores = [];
+        
+        // Validar ID del despacho
+        if (!isset($datos['id_despacho'])) {
+            $errores['id_despacho'] = 'El ID del despacho es obligatorio';
+        } elseif (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
+            $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
+        }
+        
+        // Validar estado actual
+        if (!isset($datos['estado_actual'])) {
+            $errores['estado_actual'] = 'El estado actual del despacho es obligatorio';
+        } elseif (!in_array($datos['estado_actual'], self::ESTADOS_CAMBIO)) {
+            $errores['estado_actual'] = 'El estado actual debe ser uno de: ' . implode(', ', self::ESTADOS_CAMBIO);
+        }
+        
+        // Validar nuevo estado (opcional, ya que se calcula automáticamente)
+        if (isset($datos['nuevo_estado'])) {
+            $nuevoEstado = trim($datos['nuevo_estado']);
+            if (!in_array($nuevoEstado, self::ESTADOS_CAMBIO)) {
+                $errores['nuevo_estado'] = 'El nuevo estado debe ser uno de: ' . implode(', ', self::ESTADOS_CAMBIO);
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para generar reporte
+     */
+    private function validarReporte($datos) {
+        $errores = [];
+        
+        // Validar límite de resultados (opcional)
+        if (isset($datos['limite'])) {
+            $limite = (int)$datos['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
+            }
+        }
+        
+        // Validar año (opcional)
+        if (isset($datos['anio'])) {
+            $anio = (int)$datos['anio'];
+            if ($anio < 2000 || $anio > 2100) {
+                $errores['anio'] = 'El año debe estar entre 2000 y 2100';
+            }
+        }
+        
+        // Validar fecha de inicio (opcional)
+        if (isset($datos['fecha_inicio'])) {
+            $fechaInicio = trim($datos['fecha_inicio']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio)) {
+                $errores['fecha_inicio'] = 'La fecha de inicio debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaInicio);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_inicio'] = 'La fecha de inicio no es válida';
+                }
+            }
+        }
+        
+        // Validar fecha de fin (opcional)
+        if (isset($datos['fecha_fin'])) {
+            $fechaFin = trim($datos['fecha_fin']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
+                $errores['fecha_fin'] = 'La fecha de fin debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaFin);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_fin'] = 'La fecha de fin no es válida';
+                }
+            }
+        }
+        
+        // Validar que la fecha de fin no sea anterior a la de inicio
+        if (isset($datos['fecha_inicio']) && isset($datos['fecha_fin']) && !isset($errores['fecha_inicio']) && !isset($errores['fecha_fin'])) {
+            $fechaInicio = new \DateTime($datos['fecha_inicio']);
+            $fechaFin = new \DateTime($datos['fecha_fin']);
+            if ($fechaFin < $fechaInicio) {
+                $errores['fecha_fin'] = 'La fecha de fin no puede ser anterior a la fecha de inicio';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para consultar (método público)
+     */
+    public function validarConsultarDespachos($datos) {
+        return $this->validarConsultar($datos);
+    }
+    
+    /**
+     * Valida los datos para detallar (método público)
+     */
+    public function validarDetallarDespacho($datos) {
+        return $this->validarDetallar($datos);
+    }
+    
+    /**
+     * Valida los datos para anular (método público)
+     */
+    public function validarAnularDespacho($datos) {
+        return $this->validarAnular($datos);
+    }
+    
+    /**
+     * Valida los datos para cambiar estado (método público)
+     */
+    public function validarCambiarEstado($datos) {
+        return $this->validarCambiarEstadoDespacho($datos);
+    }
+    
+    /**
+     * Valida los datos para reporte (método público)
+     */
+    public function validarReporteDespacho($datos) {
+        return $this->validarReporte($datos);
+    }
+    
+    /**
+     * Verifica si un despacho existe por ID
+     */
+    private function verificarDespachoExistente($idDespacho) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarDespachoExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si un cliente existe y está activo
+     */
+    private function verificarClienteExistente($idCliente) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE id_clientes = :id_cliente AND activo = 1";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarClienteExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si un despacho está activo
+     */
+    private function verificarDespachoActivo($idDespacho) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho AND activo = 1";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarDespachoActivo: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
     }
 
     public function obtenercliente() {
