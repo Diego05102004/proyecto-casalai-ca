@@ -20,7 +20,6 @@ class Productos extends BD{
     private $alto;
     private $ancho;
     private $clausula_garantia;
-    private $servicio;
     private $serial;
     private $estado;
     private $lleva_lote;
@@ -133,14 +132,6 @@ class Productos extends BD{
 
     public function setClausulaDeGarantia($clausula_garantia) {
         $this->clausula_garantia = $clausula_garantia;
-    }
-
-    public function getServicio() {
-        return $this->servicio;
-    }
-
-    public function setServicio($servicio) {
-        $this->servicio = $servicio;
     }
 
     public function getCodigo() {
