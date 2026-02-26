@@ -346,6 +346,85 @@ class Usuarios extends BD {
         return $errores;
     }
     
+    public function validarActualizarAvatar($datos) {
+        $errores = [];
+        
+        // Validar que se haya subido un archivo
+        if (!isset($datos['foto_perfil']) || empty($datos['foto_perfil'])) {
+            $errores['foto_perfil'] = 'Debe seleccionar una imagen para el avatar';
+            return $errores;
+        }
+        
+        // Validar que el archivo sea un array (información de $_FILES)
+        if (!is_array($datos['foto_perfil'])) {
+            $errores['foto_perfil'] = 'El formato del archivo no es válido';
+            return $errores;
+        }
+        
+        $archivo = $datos['foto_perfil'];
+        
+        // Validar que no haya error en la subida
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            $errores_mensajes = [
+                UPLOAD_ERR_INI_SIZE => 'El archivo excede el tamaño máximo permitido por PHP',
+                UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamaño máximo permitido por el formulario',
+                UPLOAD_ERR_PARTIAL => 'El archivo se subió parcialmente',
+                UPLOAD_ERR_NO_FILE => 'No se seleccionó ningún archivo',
+                UPLOAD_ERR_NO_TMP_DIR => 'No existe directorio temporal',
+                UPLOAD_ERR_CANT_WRITE => 'Error al escribir el archivo en disco',
+                UPLOAD_ERR_EXTENSION => 'Una extensión de PHP detuvo la subida del archivo'
+            ];
+            
+            $error_msg = $errores_mensajes[$archivo['error']] ?? 'Error desconocido al subir el archivo';
+            $errores['foto_perfil'] = $error_msg;
+            return $errores;
+        }
+        
+        // Validar tipo de archivo
+        $tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($archivo['type'], $tipos_permitidos)) {
+            $errores['foto_perfil'] = 'Solo se permiten archivos JPG, PNG, GIF o WebP';
+        }
+        
+        // Validar tamaño (2MB máximo)
+        $tamano_maximo = 2 * 1024 * 1024; // 2MB en bytes
+        if ($archivo['size'] > $tamano_maximo) {
+            $errores['foto_perfil'] = 'La imagen debe ser menor a 2MB';
+        }
+        
+        // Validar extensión del archivo
+        $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        if (!in_array($extension, $extensiones_permitidas)) {
+            $errores['foto_perfil'] = 'La extensión del archivo no es permitida';
+        }
+        
+        // Validar que sea una imagen real (usando getimagesize) - solo si hay tmp_name
+        if (!empty($archivo['tmp_name']) && file_exists($archivo['tmp_name'])) {
+            $info_imagen = @getimagesize($archivo['tmp_name']);
+            if ($info_imagen === false) {
+                // Si getimagesize falla, verificar con exif_imagetype (más simple)
+                if (function_exists('exif_imagetype')) {
+                    $tipo_imagen = @exif_imagetype($archivo['tmp_name']);
+                    if ($tipo_imagen === false) {
+                        $errores['foto_perfil'] = 'El archivo no es una imagen válida';
+                    }
+                } else {
+                    // Si tampoco funciona, verificar por extensión y tamaño mínimo
+                    $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                    $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+                    if (!in_array($extension, $extensiones_permitidas)) {
+                        $errores['foto_perfil'] = 'La extensión del archivo no es permitida';
+                    } elseif ($archivo['size'] < 100) { // Mínimo 100 bytes
+                        $errores['foto_perfil'] = 'El archivo parece demasiado pequeño para ser una imagen';
+                    }
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
     // Métodos auxiliares
     private function verificarUsuarioExistente($id_usuario) {
         $conexion = null;

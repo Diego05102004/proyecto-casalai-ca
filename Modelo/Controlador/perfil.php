@@ -26,6 +26,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tipo = $_POST['tipo'] ?? 'general';
     
     switch($tipo) {
+        case 'consultar':
+            // Preparar datos para validación del modelo
+            $datosValidacion = [
+                'id_usuario' => $_SESSION['id_usuario']
+            ];
+
+            // Validar usando el método del modelo
+            $errores = $usuarioModel->validarConsultarUsuario($datosValidacion);
+            
+            if (!empty($errores)) {
+                return [
+                    'status' => 'error', 
+                    'message' => 'Errores de validación',
+                    'errors' => $errores
+                ];
+            }
+
+            // Aquí iría la lógica de consulta
+            $usuario_consultado = $usuarioModel->obtenerUsuarioPorId($_SESSION['id_usuario']);
+            
+            return [
+                'status' => 'success', 
+                'message' => 'Usuario consultado exitosamente',
+                'usuario' => $usuario_consultado
+            ];
+            
         case 'personal':
             $respuesta = handlePersonalUpdate($usuarioModel, new Bitacora(), $usuario);
             break;
@@ -56,6 +82,29 @@ function handlePersonalUpdate($usuarioModel, $bitacoraModel, $usuario) {
     
     if (!password_verify($_POST['clave_actual'], $usuario['password'])) {
         return ['status' => 'error', 'message' => 'La contraseña actual es incorrecta'];
+    }
+
+    // Preparar datos para validación del modelo
+    $datosValidacion = [
+        'id_usuario' => $_SESSION['id_usuario'],
+        'username' => $_POST['username'] ?? null,
+        'nombre' => $_POST['nombres'] ?? null,
+        'apellido' => $_POST['apellidos'] ?? null,
+        'correo' => $usuario['correo'], // Usar correo actual para validación
+        'telefono' => $_POST['telefono'] ?? null,
+        'cedula' => $usuario['cedula'], // Usar cédula actual para validación
+        'id_rol' => $usuario['id_rol'] // Usar rol actual para validación
+    ];
+
+    // Validar usando el método del modelo
+    $errores = $usuarioModel->validarModificarUsuario($datosValidacion);
+    
+    if (!empty($errores)) {
+        return [
+            'status' => 'error', 
+            'message' => 'Errores de validación',
+            'errors' => $errores
+        ];
     }
 
     $datosActualizar = [];
@@ -108,21 +157,24 @@ function handleAvatarUpdate($usuarioModel, $bitacoraModel, $usuario) {
         return ['status' => 'error', 'message' => 'La contraseña actual es incorrecta'];
     }
 
+    // Preparar datos para validación del modelo
+    $datosValidacion = [
+        'foto_perfil' => $_FILES['foto_perfil'] ?? null
+    ];
+
+    // Validar usando el nuevo método del modelo
+    $errores = $usuarioModel->validarActualizarAvatar($datosValidacion);
+    
+    if (!empty($errores)) {
+        return [
+            'status' => 'error', 
+            'message' => 'Errores de validación',
+            'errors' => $errores
+        ];
+    }
+
     // Manejo de la imagen de perfil
     if (isset($_FILES['foto_perfil']) && $_FILES['foto_perfil']['error'] === UPLOAD_ERR_OK) {
-        // Validar tipo de archivo
-        $tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif'];
-        $tipoArchivo = $_FILES['foto_perfil']['type'];
-        
-        if (!in_array($tipoArchivo, $tiposPermitidos)) {
-            return ['status' => 'error', 'message' => 'Solo se permiten archivos JPG, PNG o GIF'];
-        }
-        
-        // Validar tamaño (2MB máximo)
-        if ($_FILES['foto_perfil']['size'] > 2 * 1024 * 1024) {
-            return ['status' => 'error', 'message' => 'La imagen debe ser menor a 2MB'];
-        }
-        
         // Asegurar que el directorio de subidas exista
         $uploadDir = __DIR__ . '/../../assets/img/uploads/';
         
@@ -175,7 +227,30 @@ function handleEmailUpdate($usuarioModel, $bitacoraModel, $usuario) {
     $nuevo_correo = trim($_POST['new_email'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    // Validaciones
+    // Preparar datos para validación del modelo
+    $datosValidacion = [
+        'id_usuario' => $_SESSION['id_usuario'],
+        'username' => $usuario['username'], // Usar username actual para validación
+        'nombre' => $usuario['nombres'], // Usar nombre actual para validación
+        'apellido' => $usuario['apellidos'], // Usar apellido actual para validación
+        'correo' => $nuevo_correo,
+        'telefono' => $usuario['telefono'], // Usar teléfono actual para validación
+        'cedula' => $usuario['cedula'], // Usar cédula actual para validación
+        'id_rol' => $usuario['id_rol'] // Usar rol actual para validación
+    ];
+
+    // Validar usando el método del modelo
+    $errores = $usuarioModel->validarModificarUsuario($datosValidacion);
+    
+    if (!empty($errores)) {
+        return [
+            'status' => 'error', 
+            'message' => 'Errores de validación',
+            'errors' => $errores
+        ];
+    }
+
+    // Validaciones adicionales específicas para correo
     if (empty($nuevo_correo) || empty($password)) {
         return ['status' => 'error', 'message' => 'Todos los campos son obligatorios'];
     }
@@ -220,7 +295,31 @@ function handlePasswordUpdate($usuarioModel, $bitacoraModel, $usuario) {
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // Validaciones
+    // Preparar datos para validación del modelo
+    $datosValidacion = [
+        'id_usuario' => $_SESSION['id_usuario'],
+        'username' => $usuario['username'], // Usar username actual para validación
+        'nombre' => $usuario['nombres'], // Usar nombre actual para validación
+        'apellido' => $usuario['apellidos'], // Usar apellido actual para validación
+        'correo' => $usuario['correo'], // Usar correo actual para validación
+        'telefono' => $usuario['telefono'], // Usar teléfono actual para validación
+        'cedula' => $usuario['cedula'], // Usar cédula actual para validación
+        'id_rol' => $usuario['id_rol'], // Usar rol actual para validación
+        'clave' => $new_password // Incluir nueva contraseña para validación
+    ];
+
+    // Validar usando el método del modelo
+    $errores = $usuarioModel->validarModificarUsuario($datosValidacion);
+    
+    if (!empty($errores)) {
+        return [
+            'status' => 'error', 
+            'message' => 'Errores de validación',
+            'errors' => $errores
+        ];
+    }
+
+    // Validaciones adicionales específicas para contraseña
     if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
         return ['status' => 'error', 'message' => 'Todos los campos son obligatorios'];
     }
