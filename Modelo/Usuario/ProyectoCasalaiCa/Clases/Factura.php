@@ -802,38 +802,6 @@ private function facturaConsultar() {
     // ==================== VALIDACIONES DE BACKEND ====================
     
     /**
-     * Valida los datos para pagar facturas
-     */
-    private function validarPagar($datos) {
-        $errores = [];
-        
-        // Validar ID de la factura
-        if (!isset($datos['id_factura'])) {
-            $errores['id_factura'] = 'El ID de la factura es obligatorio';
-        } elseif (!is_numeric($datos['id_factura']) || $datos['id_factura'] <= 0) {
-            $errores['id_factura'] = 'El ID de la factura debe ser un número positivo';
-        }
-        
-        // Validar estatus del pago
-        if (isset($datos['estatus_pago'])) {
-            $estatusPago = trim($datos['estatus_pago']);
-            if (!empty($estatusPago) && !in_array($estatusPago, self::ESTADOS_PAGO)) {
-                $errores['estatus_pago'] = 'El estatus del pago debe ser uno de: ' . implode(', ', self::ESTADOS_PAGO);
-            }
-        }
-        
-        // Validar observaciones del pago
-        if (isset($datos['observaciones'])) {
-            $observaciones = trim($datos['observaciones']);
-            if (mb_strlen($observaciones) > 500) {
-                $errores['observaciones'] = 'Las observaciones no deben exceder los 500 caracteres';
-            }
-        }
-        
-        return $errores;
-    }
-    
-    /**
      * Valida los datos para consultar facturas
      */
     private function validarConsultar($datos) {
@@ -935,13 +903,6 @@ private function facturaConsultar() {
     }
     
     // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
-    
-    /**
-     * Valida los datos para pagar (método público)
-     */
-    public function validarPagarFactura($datos) {
-        return $this->validarPagar($datos);
-    }
     
     /**
      * Valida los datos para consultar (método público)

@@ -17,28 +17,6 @@ if (is_file("Vista/factura.php")) {
         $accion = $_POST['accion'];
         
         switch ($accion) {
-            case 'pagar':
-                // Validar datos de entrada
-                $datosValidacion = [
-                    'id_factura' => $_POST['id_factura'] ?? null,
-                    'estatus_pago' => $_POST['estatus_pago'] ?? null,
-                    'observaciones' => $_POST['observaciones'] ?? null
-                ];
-                
-                $errores = $factura->validarPagarFactura($datosValidacion);
-                if (!empty($errores)) {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Datos inválidos',
-                        'errors' => $errores
-                    ]);
-                    break;
-                }
-                
-                // Aquí iría la lógica de pago
-                echo json_encode(['status' => 'success', 'message' => 'Validación exitosa']);
-                break;
-                
             case 'consultar':
                 // Validar datos de entrada
                 $datosValidacion = [

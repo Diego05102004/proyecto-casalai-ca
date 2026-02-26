@@ -313,6 +313,38 @@ public function setCedula($cedula) {
         return $errores;
     }
     
+    /**
+     * Valida los datos para registrar pago
+     */
+    public function validarRegistrarPago($datos) {
+        $errores = [];
+        
+        // Validar ID de la factura
+        if (!isset($datos['id_factura'])) {
+            $errores['id_factura'] = 'El ID de la factura es obligatorio';
+        } elseif (!is_numeric($datos['id_factura']) || $datos['id_factura'] <= 0) {
+            $errores['id_factura'] = 'El ID de la factura debe ser un número positivo';
+        }
+        
+        // Validar estatus del pago
+        if (isset($datos['estatus_pago'])) {
+            $estatusPago = trim($datos['estatus_pago']);
+            if (!empty($estatusPago) && !in_array($estatusPago, ['En Proceso', 'Pago Incompleto', 'Pago Procesado', 'Pago No Encontrado'])) {
+                $errores['estatus_pago'] = 'El estatus del pago debe ser uno de: En Proceso, Pago Incompleto, Pago Procesado, Pago No Encontrado';
+            }
+        }
+        
+        // Validar observaciones del pago
+        if (isset($datos['observaciones'])) {
+            $observaciones = trim($datos['observaciones']);
+            if (mb_strlen($observaciones) > 500) {
+                $errores['observaciones'] = 'Las observaciones no deben exceder los 500 caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
     public function validarCambiarEstatus($datos) {
         $errores = [];
         

@@ -71,15 +71,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $resultados = [];
             $errores = [];
 
-            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            // Validar datos de entrada usando las validaciones de registrar pago
             $pasarela = new PasareladePago();
-            $errores_validacion = $pasarela->validarIngresarPagos($pagos);
             
-            if (!empty($errores_validacion)) {
+            // Validar cada pago individualmente
+            foreach ($pagos as $index => $pagoData) {
+                $datos_validacion = [
+                    'id_factura' => $id_factura,
+                    'estatus_pago' => $pagoData['estatus_pago'] ?? null,
+                    'observaciones' => $pagoData['observaciones'] ?? null
+                ];
+                
+                $errores_validacion = $pasarela->validarRegistrarPago($datos_validacion);
+                
+                if (!empty($errores_validacion)) {
+                    $errores[] = "Pago " . ($index + 1) . ": " . implode(', ', $errores_validacion);
+                }
+            }
+            
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en los datos de los pagos',
-                    'errors' => $errores_validacion
+                    'errors' => $errores
                 ]);
                 exit;
             }

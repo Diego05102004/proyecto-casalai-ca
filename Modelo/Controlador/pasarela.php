@@ -25,104 +25,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 
     switch ($accion) {
+        case 'consultar_pagos':
+            // Validar datos de entrada para consulta de pagos
+            $datosValidacion = [
+                'cedula' => $_POST['cedula'] ?? null,
+                'id_factura' => $_POST['id_factura'] ?? null
+            ];
+            
+            $errores = $pasarela->validarConsultarPagos($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos para consulta de pagos',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            // Aquí iría la lógica de consulta de pagos
+            echo json_encode(['status' => 'success', 'message' => 'Validación exitosa']);
+            exit;
+            
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
             $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, 'Pasarela de pagos');
             echo json_encode($permisosActualizados);
-            exit;
-            
-        case 'ingresar':
-            // Verificar que se hayan enviado pagos
-            if (!isset($_POST['pagos']) || empty($_POST['pagos'])) {
-                echo json_encode(['status' => 'error', 'message' => 'No se han enviado datos de pagos']);
-                exit;
-            }
-            
-            $id_factura = $_POST['id_factura'];
-            $pagos = $_POST['pagos'];
-            $resultados = [];
-            $errores = [];
-            
-            // Procesar cada pago individualmente
-            foreach ($pagos as $index => $pagoData) {
-                try {
-                    $pasarela = new PasareladePago();
-                    
-                    // Asignar datos del pago
-                    $pasarela->setCuenta($pagoData['cuenta']);
-                    $pasarela->setReferencia($pagoData['referencia']);
-                    $pasarela->setFecha(date('Y-m-d')); // Fecha actual
-                    $pasarela->setTipo($pagoData['tipo']);
-                    $pasarela->setFactura($id_factura);
-                    $pasarela->setMonto($pagoData['monto']);
-                    $pasarela->setObservaciones('');
-                    
-                    // Validar referencia única
-                    if (!$pasarela->validarCodigoReferencia()) {
-                        $errores[] = "La referencia {$pagoData['referencia']} ya existe";
-                        continue;
-                    }
-                    
-                    // Procesar comprobante de imagen si existe
-                    $comprobanteNombre = null;
-                    if (isset($_FILES['pagos']['name'][$index]['comprobante']) && 
-                        $_FILES['pagos']['name'][$index]['comprobante']) {
-                        
-                        $comprobante = $_FILES['pagos']['tmp_name'][$index]['comprobante'];
-                        $comprobanteNombre = 'comprobante_' . time() . '_' . $index . '.jpg';
-                        $destino = 'comprobantes/' . $comprobanteNombre;
-                        
-                        // Crear directorio si no existe
-                        if (!is_dir('comprobantes')) {
-                            mkdir('comprobantes', 0755, true);
-                        }
-                        
-                        // Mover archivo
-                        if (!move_uploaded_file($comprobante, $destino)) {
-                            $errores[] = "Error al subir el comprobante para la referencia {$pagoData['referencia']}";
-                            continue;
-                        }
-                        
-                        $pasarela->setComprobante($comprobanteNombre);
-                    }
-                    
-                    // Intentar ingresar el pago
-                    if ($pasarela->pasarelaTransaccion('Ingresar')) {
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_PASARELA_PAGOS,
-                            'INGRESAR',
-                            'El usuario incluyó la referencia bancaria: ' . $pagoData['referencia'],
-                            'media');
-                         $resultados[] = [
-                            'status' => 'success', 
-                            'referencia' => $pagoData['referencia'],
-                            'comprobante' => $comprobanteNombre
-                        ];
-                    } else {
-                        $errores[] = "Error al ingresar el pago con referencia {$pagoData['referencia']}";
-                    }
-                    
-                } catch (Exception $e) {
-                    $errores[] = "Error procesando pago {$index}: " . $e->getMessage();
-                }
-            }
-            
-            // Preparar respuesta
-            if (empty($errores)) {
-                echo json_encode([
-                    'status' => 'success', 
-                    'message' => 'Todos los pagos se registraron correctamente',
-                    'pagos' => $resultados
-                ]);
-            } else {
-                echo json_encode([
-                    'status' => 'partial', 
-                    'message' => 'Algunos pagos no se pudieron procesar',
-                    'pagos_exitosos' => $resultados,
-                    'errores' => $errores
-                ]);
-            }
             exit;
             
         case 'modificar':
