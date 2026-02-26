@@ -1181,13 +1181,126 @@ $(document).ready(function() {
         return str;
     }
 });
-function muestraMensaje(mensaje) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: mensaje
+
+// Modal de Ayuda - Integración para Proveedores
+$(document).ready(function() {
+    console.log('Inicializando modal de ayuda...');
+    
+    // Cargar CSS del modal de ayuda
+    if (!$('link[href*="ayuda/css/modal.css"]').length) {
+        $('<link>')
+            .attr({
+                'rel': 'stylesheet',
+                'type': 'text/css',
+                'href': 'assets/public/ayuda/css/modal.css'
+            })
+            .appendTo('head');
+    }
+    
+    // Variable global para el modal
+    let modalAyudaInstance = null;
+    
+    // Función para cargar y mostrar el modal de ayuda
+    function cargarYMostrarModalAyuda(contexto = null) {
+        console.log('Cargando modal de ayuda...', contexto);
+        
+        if (modalAyudaInstance) {
+            console.log('Modal ya existe, abriendo...');
+            modalAyudaInstance.openModal();
+            
+            // Si hay contexto, ir a la sección específica
+            if (contexto) {
+                setTimeout(() => {
+                    if (contexto === 'registrar') {
+                        modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
+                    } else if (contexto === 'modificar') {
+                        modalAyudaInstance.goToSlide(3); // Ir a "Modificar"
+                    }
+                }, 300);
+            }
+            return;
+        }
+        
+        // Cargar HTML del modal
+        $.get('assets/public/ayuda/proveedor.php')
+            .done(function(html) {
+                // Solo agregar modal si no existe
+                if (!$('#modalAyuda').length) {
+                    $('body').append(html);
+                }
+                
+                // Cargar JS del modal si no está cargado
+                if (!$('script[src*="ayuda/js/modal.js"]').length) {
+                    $.getScript('assets/public/ayuda/js/modal.js')
+                        .done(function() {
+                            // Inicializar modal
+                            if (typeof inicializarModalAyudaUsuario === 'function') {
+                                modalAyudaInstance = inicializarModalAyudaUsuario();
+                                
+                                // Abrir modal con contexto si se proporciona
+                                if (contexto) {
+                                    setTimeout(() => {
+                                        const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                                        if (slideIndex !== undefined) {
+                                            modalAyudaInstance.goToSlide(slideIndex);
+                                        }
+                                    }, 300);
+                                }
+                               
+                                // Abrir modal
+                                modalAyudaInstance.openModal();
+                            } else {
+                                console.error('La función inicializarModalAyudaUsuario no está disponible');
+                            }
+                        })
+                        .fail(function() {
+                            console.error('Error al cargar el JavaScript del modal de ayuda');
+                        });
+                } else {
+                    // Si el JS ya está cargado, solo abrir el modal existente
+                    if (typeof inicializarModalAyudaUsuario === 'function') {
+                        modalAyudaInstance = inicializarModalAyudaUsuario();
+                        
+                        // Abrir modal con contexto si se proporciona
+                        if (contexto) {
+                            setTimeout(() => {
+                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                                if (slideIndex !== undefined) {
+                                    modalAyudaInstance.goToSlide(slideIndex);
+                                }
+                            }, 300);
+                        }
+                        
+                        // Abrir modal
+                        modalAyudaInstance.openModal();
+                    }
+                }
+            })
+            .fail(function() {
+                console.error('Error al cargar el HTML del modal de proveedor');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el contenido de ayuda'
+                });
+            });
+    }
+    
+    // Botón de ayuda principal (si existe)
+    $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
+        e.preventDefault();
+        console.log('Clic en botón de ayuda detectado');
+        cargarYMostrarModalAyuda(); // Sin contexto específico
     });
-}
+    
+    // Botón de ayuda dentro de modales
+    $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
+        e.preventDefault();
+        const contexto = $(this).data('contexto');
+        console.log('Clic en botón de ayuda modal con contexto:', contexto);
+        cargarYMostrarModalAyuda(contexto);
+    });
+});
 
 $(document).on('click', '.btn-detalle', function() {
     const d = this.dataset;
@@ -1229,131 +1342,10 @@ $(window).on('click', function(e){
     }
 });
 
-(function() {
-    // Esperar a que jQuery esté disponible
-    function initModalAyuda() {
-        if (typeof $ === 'undefined') {
-            setTimeout(initModalAyuda, 100);
-            return;
-        }
-        
-        console.log('Inicializando modal de ayuda...');
-        
-        // Cargar CSS del modal de ayuda
-        $('<link>')
-            .appendTo('head')
-            .attr({
-                type: 'text/css',
-                rel: 'stylesheet',
-                href: 'assets/public/ayuda/css/modal.css'
-            });
-        
-        // Variable global para el modal
-        let modalAyudaInstance = null;
-        
-        // Función para cargar y mostrar el modal de ayuda
-        function cargarYMostrarModalAyuda(contexto) {
-            console.log('Cargando modal de ayuda...', contexto);
-            
-            if (modalAyudaInstance) {
-                console.log('Modal ya existe, abriendo...');
-                modalAyudaInstance.openModal();
-                
-                // Si hay contexto, ir a la sección específica
-                if (contexto) {
-                    setTimeout(() => {
-                        if (contexto === 'registrar') {
-                            modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
-                        } else if (contexto === 'modificar') {
-                            modalAyudaInstance.goToSlide(3); // Ir a "Modificar"
-                        }
-                    }, 300);
-                }
-                return;
-            }
-            
-            // Cargar el contenido del modal
-            $.get('assets/public/ayuda/proveedor.php', function(html) {
-                console.log('HTML del modal cargado');
-                
-                // Agregar el modal al body
-                $('body').append(html);
-                
-                // Cargar JavaScript del modal y luego inicializar
-                $.getScript('assets/public/ayuda/js/modal.js', function() {
-                    console.log('JavaScript del modal cargado');
-                    
-                    // Inicializar el modal
-                    if (typeof inicializarModalAyudaUsuario === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaUsuario();
-                        
-                        // Mostrar el modal
-                        modalAyudaInstance.openModal();
-                        console.log('Modal abierto correctamente');
-                        
-                        // Si hay contexto, ir a la sección específica
-                        if (contexto) {
-                            setTimeout(() => {
-                                if (contexto === 'registrar') {
-                                    modalAyudaInstance.goToSlide(1); // Ir a "Registrar"
-                                } else if (contexto === 'modificar') {
-                                    modalAyudaInstance.goToSlide(3); // Ir a "Modificar"
-                                }
-                            }, 300);
-                        }
-                    } else {
-                        console.error('La función inicializarModalAyudaUsuario no está disponible');
-                    }
-                });
-            }).fail(function() {
-                console.error('Error al cargar el HTML del modal');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar el contenido de ayuda'
-                });
-            });
-        }
-        
-        // Modificar el botón de ayuda existente
-        $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
-            e.preventDefault();
-            console.log('Clic en botón de ayuda detectado');
-            cargarYMostrarModalAyuda(); // Sin contexto específico
-        });
-        
-        // Botón de ayuda dentro del modal de registrar
-        $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
-            e.preventDefault();
-            const contexto = $(this).data('contexto');
-            console.log('Clic en botón de ayuda del modal detectado, contexto:', contexto);
-            cargarYMostrarModalAyuda(contexto);
-        });
-        
-        // También agregar soporte para botones con clase similar
-        $(document).on('click.ayuda', '.btn-ayuda-proveedor, [data-ayuda="proveedor"]', function(e) {
-            e.preventDefault();
-            cargarYMostrarModalAyuda(); // Sin contexto específico
-        });
-        
-        // Event listeners para debugging
-        $(document).on('modal:opened', function(e) {
-            console.log('Modal de ayuda abierto', e.detail);
-        });
-        
-        $(document).on('modal:closed', function(e) {
-            console.log('Modal de ayuda cerrado', e.detail);
-        });
-        
-        $(document).on('slide:changed', function(e) {
-            console.log('Slide cambiado a:', e.detail.slide);
-        });
-    }
-    
-    // Inicializar cuando el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initModalAyuda);
-    } else {
-        initModalAyuda();
-    }
-});
+function muestraMensaje(mensaje) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: mensaje
+    });
+}
