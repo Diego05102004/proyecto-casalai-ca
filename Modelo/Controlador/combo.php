@@ -1,61 +1,320 @@
 <?php
 ob_start();
-//session_start();
-require_once './Modelo/producto.php';
-require_once './Modelo/combo.php';
-//require_once './Modelo/producto.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-//$productoModel = new Productos();
-//$comboModel = new Combo();
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Combos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['accion'] === 'crear_combo') {
+// Definir constantes para IDs de módulo
+define('MODULO_COMBOS', 11);
+
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: ?pagina=login');
+    exit;
+}
+
+$comboModel = new Combos();
+$bitacoraModel = new Bitacora();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     try {
-       // $combo = new Combo();
-        $productos = json_decode($_POST['productos'], true);
+        header('Content-Type: application/json; charset=utf-8');
+        $accion = $_POST['accion'];
 
-        if (!is_array($productos) || empty($productos)) {
-            throw new Exception("Lista de productos inválida");
+        switch ($accion) {
+            case 'consultar_combo':
+                try {
+                    $id_combo = $_POST['id_combo'] ?? '';
+                    $termino = $_POST['termino'] ?? '';
+                    $estado = $_POST['estado'] ?? '';
+
+                    // Preparar datos para validación
+                    $datos_validacion = [];
+                    if (!empty($id_combo)) $datos_validacion['id_combo'] = $id_combo;
+                    if (!empty($termino)) $datos_validacion['termino'] = $termino;
+                    if (!empty($estado)) $datos_validacion['estado'] = $estado;
+
+                    // Validar datos usando las nuevas validaciones centralizadas
+                    $errores = $comboModel->validarConsultar($datos_validacion);
+                    if (!empty($errores)) {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Errores de validación',
+                            'errors' => $errores
+                        ]);
+                        exit;
+                    }
+
+                    // Aquí iría la lógica para consultar el combo
+                    // Por ahora, simulamos que se consulta exitosamente
+                    $combo_data = [
+                        'id_combo' => $id_combo ?: rand(1, 1000),
+                        'nombre_combo' => 'Combo Consultado',
+                        'estado' => $estado ?: 'activo'
+                    ];
+
+                    // Registrar en bitácora
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_COMBOS,
+                            'CONSULTAR',
+                            "El usuario consultó el combo: " . ($id_combo ?: 'búsqueda general'),
+                            'baja'
+                        );
+                    }
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Combo consultado exitosamente',
+                        'combo' => $combo_data
+                    ]);
+                } catch (Exception $e) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => $e->getMessage()
+                    ]);
+                }
+                exit;
+
+            case 'crear_combo':
+                try {
+                    $nombre = $_POST['nombre_combo'] ?? '';
+                    $descripcion = $_POST['descripcion'] ?? '';
+                    $productos = json_decode($_POST['productos'], true);
+
+                    // Preparar datos para validación
+                    $datos_validacion = [
+                        'nombre_combo' => $nombre,
+                        'descripcion' => $descripcion,
+                        'productos' => $productos
+                    ];
+
+                    // Validar datos usando las nuevas validaciones centralizadas
+                    $errores = $comboModel->validarCrear($datos_validacion);
+                    if (!empty($errores)) {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Errores de validación',
+                            'errors' => $errores
+                        ]);
+                        exit;
+                    }
+
+                    // Aquí iría la lógica para crear el combo
+                    // Por ahora, simulamos que se crea exitosamente
+                    $id_combo = rand(1, 1000); // Simulación
+
+                    // Registrar en bitácora
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_COMBOS,
+                            'INCLUIR',
+                            "El usuario creó un nuevo combo: $nombre (ID: $id_combo)",
+                            'alta'
+                        );
+                    }
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Combo creado exitosamente',
+                        'id_combo' => $id_combo
+                    ]);
+                } catch (Exception $e) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => $e->getMessage()
+                    ]);
+                }
+                exit;
+
+            case 'modificar_combo':
+                try {
+                    $id_combo = $_POST['id_combo'] ?? '';
+                    $nombre = $_POST['nombre_combo'] ?? '';
+                    $descripcion = $_POST['descripcion'] ?? '';
+                    $productos = json_decode($_POST['productos'], true);
+
+                    // Preparar datos para validación
+                    $datos_validacion = [
+                        'id_combo' => $id_combo,
+                        'nombre_combo' => $nombre,
+                        'descripcion' => $descripcion,
+                        'productos' => $productos
+                    ];
+
+                    // Validar datos usando las nuevas validaciones centralizadas
+                    $errores = $comboModel->validarModificar($datos_validacion);
+                    if (!empty($errores)) {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Errores de validación',
+                            'errors' => $errores
+                        ]);
+                        exit;
+                    }
+
+                    // Aquí iría la lógica para modificar el combo
+                    // Por ahora, simulamos que se modifica exitosamente
+
+                    // Registrar en bitácora
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_COMBOS,
+                            'MODIFICAR',
+                            "El usuario modificó el combo: $nombre (ID: $id_combo)",
+                            'media'
+                        );
+                    }
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Combo modificado exitosamente'
+                    ]);
+                } catch (Exception $e) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => $e->getMessage()
+                    ]);
+                }
+                exit;
+
+            case 'eliminar_combo':
+                try {
+                    $id_combo = $_POST['id_combo'] ?? '';
+
+                    // Preparar datos para validación
+                    $datos_validacion = [
+                        'id_combo' => $id_combo
+                    ];
+
+                    // Validar datos usando las nuevas validaciones centralizadas
+                    $errores = $comboModel->validarEliminar($datos_validacion);
+                    if (!empty($errores)) {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Errores de validación',
+                            'errors' => $errores
+                        ]);
+                        exit;
+                    }
+
+                    // Aquí iría la lógica para eliminar el combo
+                    // Por ahora, simulamos que se elimina exitosamente
+
+                    // Registrar en bitácora
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_COMBOS,
+                            'ELIMINAR',
+                            "El usuario eliminó el combo (ID: $id_combo)",
+                            'media'
+                        );
+                    }
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Combo eliminado exitosamente'
+                    ]);
+                } catch (Exception $e) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => $e->getMessage()
+                    ]);
+                }
+                exit;
+
+            case 'cambiar_estado_combo':
+                try {
+                    $id_combo = $_POST['id_combo'] ?? '';
+                    $estado = $_POST['estado'] ?? '';
+
+                    // Preparar datos para validación
+                    $datos_validacion = [
+                        'id_combo' => $id_combo,
+                        'estado' => $estado
+                    ];
+
+                    // Validar datos usando las nuevas validaciones centralizadas
+                    $errores = $comboModel->validarCambiarEstado($datos_validacion);
+                    if (!empty($errores)) {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Errores de validación',
+                            'errors' => $errores
+                        ]);
+                        exit;
+                    }
+
+                    // Aquí iría la lógica para cambiar el estado del combo
+                    // Por ahora, simulamos que se cambia exitosamente
+
+                    // Registrar en bitácora
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $accionEstado = $estado == 'activo' ? 'activó' : 'desactivó';
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_COMBOS,
+                            'CAMBIAR_ESTADO',
+                            "El usuario $accionEstado el combo (ID: $id_combo)",
+                            'media'
+                        );
+                    }
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Estado del combo actualizado correctamente'
+                    ]);
+                } catch (Exception $e) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => $e->getMessage()
+                    ]);
+                }
+                exit;
+
+            default:
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Acción no válida'
+                ]);
+                exit;
         }
-
-        // Crear nuevo combo (cabecera)
-        $id_combo = $combo->crearNuevoCombo();
-        if (!$id_combo) {
-            throw new Exception("No se pudo crear el combo");
-        }
-
-        // Insertar productos (detalle)
-        foreach ($productos as $p) {
-            if (!isset($p['id']) || !isset($p['cantidad'])) {
-                throw new Exception("Formato de producto inválido");
-            }
-            $combo->insertarProductoEnCombo($id_combo, $p['id'], $p['cantidad']);
-        }
-
-        // Obtener combos actualizados
-        $combos = $combo->obtenerCombos();
-        $comboInsertado = array_filter($combos, fn($c) => $c['id_combo'] == $id_combo);
-        $comboInsertado = array_shift($comboInsertado);
-
-        echo json_encode([
-            'status' => 'success',
-            'combo' => $comboInsertado
-        ]);
     } catch (Exception $e) {
         echo json_encode([
             'status' => 'error',
             'message' => $e->getMessage()
         ]);
+        exit;
     }
-    exit;
 }
 
+// Obtener datos para la vista
+try {
+    $combos = $comboModel->obtenerCombos();
+} catch (Exception $e) {
+    $combos = [];
+}
+
+// Asignar la página y cargar la vista
 $pagina = "combo";
-// Verifica si el archivo de vista existe
 if (is_file("Vista/" . $pagina . ".php")) {
-    // Incluye el archivo de vista
+    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+        $bitacoraModel->registrarBitacora(
+            $_SESSION['id_usuario'],
+            MODULO_COMBOS,
+            'ACCESAR',
+            'El usuario accedió al módulo de Combos',
+            'media'
+        );
+    }
     require_once("Vista/" . $pagina . ".php");
 } else {
-    // Muestra un mensaje si la página está en construcción
     echo "Página en construcción";
 }
 

@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
-
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Catalogo;
 
 // Definir constantes para IDs de módulo
 define('MODULO_CATALOGO', 10);
@@ -20,6 +20,7 @@ $precioDolar = $dolarService->obtenerPrecioDolar();
 $dolarService->guardarPrecioCache($precioDolar);
 
 $productosModel = new Productos();
+$catalogoModel = new Catalogo();
 $bitacoraModel = new Bitacora();
 // Manejar generación de reportes PDF
 try {
@@ -128,6 +129,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
         if ($accion == 'filtrar_por_marca') {
             $id_marca_raw = $_POST['id_marca'] ?? '';
             $id_marca = is_numeric($id_marca_raw) ? (int)$id_marca_raw : 0;
+            
+            // Validar datos usando las nuevas validaciones centralizadas
+            $datos_validacion = ['id_marca' => $id_marca];
+            $errores = $catalogoModel->validarFiltrar($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para filtrar',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
             if ($id_marca > 0) {
                 $productos = $productosModel->obtenerProductosPorMarca($id_marca);
             } else {
@@ -233,13 +248,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
                 $id_producto = isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0;
                 $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
+                $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
 
-                if ($id_producto <= 0) {
-                    throw new Exception('Producto no especificado o inválido');
-                }
-
-                if ($cantidad <= 0) {
-                    throw new Exception('La cantidad debe ser mayor a cero');
+                // Validar datos usando las nuevas validaciones centralizadas
+                $datos_validacion = [
+                    'id_producto' => $id_producto,
+                    'cantidad' => $cantidad,
+                    'id_combo' => $id_combo
+                ];
+                $errores = $catalogoModel->validarAgregarCarrito($datos_validacion);
+                
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error en los datos para agregar al carrito',
+                        'errors' => $errores
+                    ]);
+                    exit;
                 }
 
                 $producto = $productosModel->obtenerProductoPorId($id_producto);
