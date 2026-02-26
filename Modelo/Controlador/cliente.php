@@ -18,15 +18,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     switch ($accion) {
         case 'registrar':
+            // Validar datos de entrada
             $cliente = new cliente();
-            $cliente->setnombre($_POST['nombre']);
-            $cliente->setcedula($_POST['cedula']);
-            $cliente->settelefono($_POST['telefono']);
-            $cliente->setdireccion($_POST['direccion']);
-            $cliente->setcorreo($_POST['correo']);
+            $datosValidacion = [
+                'nombre' => $_POST['nombre'] ?? '',
+                'cedula' => $_POST['cedula'] ?? '',
+                'telefono' => $_POST['telefono'] ?? '',
+                'direccion' => $_POST['direccion'] ?? '',
+                'correo' => $_POST['correo'] ?? ''
+            ];
             
-            // Validar datos del cliente
-            $errores = $cliente->validarDatos();
+            $errores = $cliente->validarRegistrarCliente($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -35,6 +37,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+            
+            $cliente->setnombre($_POST['nombre']);
+            $cliente->setcedula($_POST['cedula']);
+            $cliente->settelefono($_POST['telefono']);
+            $cliente->setdireccion($_POST['direccion']);
+            $cliente->setcorreo($_POST['correo']);
             
             if ($cliente->existeNumeroCedula($_POST['cedula'])) {
                 echo json_encode([
@@ -76,9 +84,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode($permisosActualizados);
             exit;
         case 'obtener_clientes':
+            // Validar datos de entrada
+            $cliente = new cliente();
+            $datosValidacion = [
+                'id_cliente' => $_POST['id_clientes'] ?? null
+            ];
+            
+            $errores = $cliente->validarConsultarCliente($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             $id = $_POST['id_clientes'];
             if ($id !== null) {
-                $cliente = new cliente();
                 $cliente = $cliente->obtenerclientesPorId($id);
                 if ($cliente !== null) {
                     echo json_encode($cliente);
@@ -93,17 +116,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'modificar':
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
-            $id = $_POST['id_clientes'];
-            $cliente = new cliente();
-            $cliente->setId($id);
-            $cliente->setnombre($_POST['nombre']);
-            $cliente->setcedula($_POST['cedula']);
-            $cliente->settelefono($_POST['telefono']);
-            $cliente->setdireccion($_POST['direccion']);
-            $cliente->setcorreo($_POST['correo']);
             
-            // Validar datos del cliente
-            $errores = $cliente->validarDatos(true); // true = es modificación
+            // Validar datos de entrada
+            $cliente = new cliente();
+            $datosValidacion = [
+                'id_cliente' => $_POST['id_clientes'] ?? null,
+                'nombre' => $_POST['nombre'] ?? '',
+                'cedula' => $_POST['cedula'] ?? '',
+                'telefono' => $_POST['telefono'] ?? '',
+                'direccion' => $_POST['direccion'] ?? '',
+                'correo' => $_POST['correo'] ?? ''
+            ];
+            
+            $errores = $cliente->validarModificarCliente($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -112,6 +137,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+            
+            $id = $_POST['id_clientes'];
+            $cliente->setId($id);
+            $cliente->setnombre($_POST['nombre']);
+            $cliente->setcedula($_POST['cedula']);
+            $cliente->settelefono($_POST['telefono']);
+            $cliente->setdireccion($_POST['direccion']);
+            $cliente->setcorreo($_POST['correo']);
             
             // Verificar que el cliente exista antes de modificar
             $clienteExistente = $cliente->obtenerclientesPorId($id);
@@ -155,30 +188,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id = $_POST['id_clientes'] ?? null;
+            // Validar datos de entrada
+            $cliente = new cliente();
+            $datosValidacion = [
+                'id_cliente' => $_POST['id_clientes'] ?? null
+            ];
             
-            // Validar ID del cliente
-            if ($id === null) {
-                echo json_encode(['status' => 'error', 'message' => 'ID del Cliente no proporcionado']);
+            $errores = $cliente->validarEliminarCliente($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
                 exit;
             }
             
-            $id = (int)$id;
-            if ($id <= 0) {
-                echo json_encode(['status' => 'error', 'message' => 'El ID del cliente no es válido']);
-                exit;
-            }
-            
-            $clientesModel = new cliente();
+            $id = $_POST['id_clientes'];
             
             // Verificar que el cliente exista antes de eliminar
-            $clienteExistente = $clientesModel->obtenerclientesPorId($id);
+            $clienteExistente = $cliente->obtenerclientesPorId($id);
             if (!$clienteExistente) {
                 echo json_encode(['status' => 'error', 'message' => 'El cliente que intenta eliminar no existe']);
                 exit;
             }
             
-            if ($clientesModel->eliminarclientes($id)) {
+            if ($cliente->eliminarclientes($id)) {
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(

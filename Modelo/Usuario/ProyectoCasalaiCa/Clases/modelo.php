@@ -10,6 +10,14 @@ class modelo extends BD{
     private $conex;
     private $nombre_modelo;
     private $id_modelo;
+    
+    // Constantes para validaciones
+    const MAX_NOMBRE_MODELO = 100;
+    const MIN_NOMBRE_MODELO = 2;
+    const MAX_ID_MODELO = 999999999;
+    const MIN_ID_MODELO = 1;
+    const MAX_ID_MARCA = 999999999;
+    const MIN_ID_MARCA = 1;
 
     public function __construct() {
         $this->conex = null;
@@ -36,36 +44,6 @@ class modelo extends BD{
     }
     public function setIdModelo($id_modelo) {
         $this->id_modelo = $id_modelo;
-    }
-
-    public function validarDatos($esModificacion = false) {
-        $errores = [];
-
-        // Validar nombre del modelo
-        $nombre_modelo = trim((string)$this->nombre_modelo);
-        if ($nombre_modelo === '') {
-            $errores['nombre_modelo'] = 'El nombre del modelo es obligatorio';
-        } elseif (mb_strlen($nombre_modelo) < 2 || mb_strlen($nombre_modelo) > 100) {
-            $errores['nombre_modelo'] = 'El nombre del modelo debe tener entre 2 y 100 caracteres';
-        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_modelo)) {
-            $errores['nombre_modelo'] = 'El nombre del modelo solo puede contener letras, números, espacios y caracteres especiales comunes';
-        }
-
-        // Validar ID de la marca
-        $id_marca = (int)$this->id_marca;
-        if ($id_marca <= 0) {
-            $errores['id_marca'] = 'Debe seleccionar una marca válida';
-        }
-
-        // Validar ID del modelo (solo para modificaciones)
-        if ($esModificacion) {
-            $id_modelo = (int)$this->id_modelo;
-            if ($id_modelo <= 0) {
-                $errores['id_modelo'] = 'El ID del modelo no es válido';
-            }
-        }
-
-        return $errores;
     }
 
     public function existeNombreModelo($nombre_modelo, $excluir_id = null) {
@@ -353,6 +331,148 @@ class modelo extends BD{
             $stmtmodelos->execute();
             $modelos = $stmtmodelos->fetchAll(PDO::FETCH_ASSOC);
             return $modelos;
+        } finally {
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
+        }
+    }
+
+    // ==================== VALIDACIONES DE BACKEND ====================
+
+    /**
+     * Valida los datos para operaciones CRUD de modelos
+     */
+    private function validarModelo($datos, $esModificacion = false) {
+        $errores = [];
+
+        // Validar nombre del modelo (solo para registro y modificación)
+        if (!isset($datos['accion_eliminar'])) {
+            if (!isset($datos['nombre_modelo'])) {
+                $errores['nombre_modelo'] = 'El nombre del modelo es obligatorio';
+            } else {
+                $nombre_modelo = trim($datos['nombre_modelo']);
+                if (empty($nombre_modelo)) {
+                    $errores['nombre_modelo'] = 'El nombre del modelo es obligatorio';
+                } elseif (mb_strlen($nombre_modelo) < self::MIN_NOMBRE_MODELO || mb_strlen($nombre_modelo) > self::MAX_NOMBRE_MODELO) {
+                    $errores['nombre_modelo'] = 'El nombre del modelo debe tener entre ' . self::MIN_NOMBRE_MODELO . ' y ' . self::MAX_NOMBRE_MODELO . ' caracteres';
+                } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_modelo)) {
+                    $errores['nombre_modelo'] = 'El nombre del modelo solo puede contener letras, números, espacios y caracteres especiales comunes';
+                }
+            }
+        }
+
+        // Validar ID de la marca (solo para registro y modificación)
+        if (!isset($datos['accion_eliminar'])) {
+            if (!isset($datos['id_marca'])) {
+                $errores['id_marca'] = 'Debe seleccionar una marca válida';
+            } elseif (!is_numeric($datos['id_marca']) || $datos['id_marca'] < self::MIN_ID_MARCA || $datos['id_marca'] > self::MAX_ID_MARCA) {
+                $errores['id_marca'] = 'El ID de la marca debe ser un número entre ' . self::MIN_ID_MARCA . ' y ' . self::MAX_ID_MARCA;
+            }
+        }
+
+        // Validar ID del modelo (solo para modificaciones y eliminaciones)
+        if ($esModificacion || isset($datos['accion_eliminar'])) {
+            if (!isset($datos['id_modelo'])) {
+                $errores['id_modelo'] = 'El ID del modelo es obligatorio';
+            } elseif (!is_numeric($datos['id_modelo']) || $datos['id_modelo'] < self::MIN_ID_MODELO || $datos['id_modelo'] > self::MAX_ID_MODELO) {
+                $errores['id_modelo'] = 'El ID del modelo debe ser un número entre ' . self::MIN_ID_MODELO . ' y ' . self::MAX_ID_MODELO;
+            }
+        }
+
+        return $errores;
+    }
+
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+
+    /**
+     * Valida los datos para registrar modelo (método público)
+     */
+    public function validarRegistrarModelo($datos) {
+        return $this->validarModelo($datos, false);
+    }
+
+    /**
+     * Valida los datos para consultar modelo (método público)
+     */
+    public function validarConsultarModelo($datos) {
+        $errores = [];
+
+        // Validar ID del modelo (opcional para consulta)
+        if (isset($datos['id_modelo'])) {
+            if (!is_numeric($datos['id_modelo']) || $datos['id_modelo'] < self::MIN_ID_MODELO || $datos['id_modelo'] > self::MAX_ID_MODELO) {
+                $errores['id_modelo'] = 'El ID del modelo debe ser un número entre ' . self::MIN_ID_MODELO . ' y ' . self::MAX_ID_MODELO;
+            }
+        }
+
+        // Validar ID de la marca (opcional para consulta)
+        if (isset($datos['id_marca'])) {
+            if (!is_numeric($datos['id_marca']) || $datos['id_marca'] < self::MIN_ID_MARCA || $datos['id_marca'] > self::MAX_ID_MARCA) {
+                $errores['id_marca'] = 'El ID de la marca debe ser un número entre ' . self::MIN_ID_MARCA . ' y ' . self::MAX_ID_MARCA;
+            }
+        }
+
+        return $errores;
+    }
+
+    /**
+     * Valida los datos para modificar modelo (método público)
+     */
+    public function validarModificarModelo($datos) {
+        return $this->validarModelo($datos, true);
+    }
+
+    /**
+     * Valida los datos para eliminar modelo (método público)
+     */
+    public function validarEliminarModelo($datos) {
+        $datos['accion_eliminar'] = true; // Marcar como acción de eliminación
+        return $this->validarModelo($datos, true);
+    }
+
+    /**
+     * Verifica si un modelo existe por ID
+     */
+    private function verificarModeloExistente($idModelo) {
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_modelos WHERE id_modelo = :id_modelo";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_modelo', $idModelo, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarModeloExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
+            if (isset($created) && $created) { $this->conex = null; }
+        }
+    }
+
+    /**
+     * Verifica si una marca existe por ID
+     */
+    private function verificarMarcaExistente($idMarca) {
+        $created = false;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+            $created = true;
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_marcas WHERE id_marca = :id_marca";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_marca', $idMarca, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarMarcaExistente: ' . $e->getMessage());
+            return false;
         } finally {
             if (isset($created) && $created && isset($conexion)) { $conexion->cerrar(); }
             if (isset($created) && $created) { $this->conex = null; }

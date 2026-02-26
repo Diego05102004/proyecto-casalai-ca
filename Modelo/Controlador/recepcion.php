@@ -47,14 +47,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
 
-            // Setea los datos principales de la recepción
-            $k->setidproveedor($_POST['proveedor']);
-            $k->setcorrelativo($_POST['correlativo']);
-            $k->settamanocompra($_POST['tamanocompra']);
-            $k->setestado('habilitado');
+            // Preparar datos para validación
+            $datos_validacion = [
+                'idproveedor' => $_POST['proveedor'],
+                'correlativo' => $_POST['correlativo'],
+                'tamanocompra' => $_POST['tamanocompra'],
+                'estado' => 'habilitado'
+            ];
 
-            // Validar datos principales de la recepción
-            $erroresPrincipales = $k->validarDatos();
+            // Validar datos principales de la recepción usando las nuevas validaciones centralizadas
+            $erroresPrincipales = $k->validarRegistrarRecepcion($datos_validacion);
             if (!empty($erroresPrincipales)) {
                 echo json_encode([
                     'status' => 'error',
@@ -64,12 +66,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            // Validar detalle de productos
-            $erroresProductos = $k->validarDetalleProductos(
-                $_POST['producto'],
-                $_POST['cantidad'],
-                $_POST['costo']
-            );
+            // Validar detalle de productos usando las nuevas validaciones
+            $productos_data = [
+                'idproducto' => $_POST['producto'],
+                'cantidad' => $_POST['cantidad'],
+                'costo' => $_POST['costo']
+            ];
+            $erroresProductos = $k->validarDetalleProductos($productos_data);
             if (!empty($erroresProductos)) {
                 echo json_encode([
                     'status' => 'error',
@@ -78,6 +81,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+
+            // Setea los datos principales de la recepción
+            $k->setidproveedor($_POST['proveedor']);
+            $k->setcorrelativo($_POST['correlativo']);
+            $k->settamanocompra($_POST['tamanocompra']);
+            $k->setestado('habilitado');
 
             // Verifica si el correlativo ya existe
             if ($k->existeCorrelativo($_POST['correlativo'])) {
@@ -161,12 +170,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             $correlativo = $_POST['correlativo'] ?? '';
             
-            // Validar correlativo
-            $correlativo = trim($correlativo);
-            if ($correlativo === '') {
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $datos_validacion = ['correlativo' => $correlativo];
+            $errores = $k->validarAnularRecepcion($datos_validacion);
+            
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'El N° de Factura es obligatorio para anular'
+                    'message' => 'Error en los datos para anular la recepción',
+                    'errors' => $errores
                 ]);
                 exit;
             }
@@ -225,6 +237,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $fechaFin    = $_POST['fechaFin'] ?? null;
             $anio        = $_POST['anio'] ?? null;
             $proveedorId = $_POST['proveedorId'] ?? null;
+
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $datos_validacion = [
+                'fechaInicio' => $fechaInicio,
+                'fechaFin' => $fechaFin,
+                'anio' => $anio,
+                'proveedorId' => $proveedorId
+            ];
+            $errores = $k->validarReporte($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para generar el reporte',
+                    'errors' => $errores
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
 
             try {
                 $resp = [

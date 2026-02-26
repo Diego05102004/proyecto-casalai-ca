@@ -56,17 +56,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
 
         case 'agregar_al_carrito':
-            $id_producto = isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0;
-
-            if ($id_producto <= 0) {
+            // Validar datos de entrada
+            $carrito = new Carrito();
+            $datosValidacion = [
+                'id_producto' => isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0,
+                'cantidad' => isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1
+            ];
+            
+            $errores = $carrito->validarAgregar($datosValidacion);
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'ID de producto no válido'
+                    'message' => 'Datos inválidos',
+                    'detalles' => $errores
                 ]);
                 break;
             }
 
-            $carrito = new Carrito();
+            $id_producto = $datosValidacion['id_producto'];
+            $cantidad = $datosValidacion['cantidad'];
             $productoModel = new Productos();
             $id_cliente = $_SESSION['id_usuario']; // Obtener de la sesión
             
@@ -80,8 +88,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     break;
                 }
 
-                $cantidad = 1; // Cantidad predeterminada
-                
                 if ((int)($producto['stock'] ?? 0) < $cantidad) {
                     echo json_encode([
                         'status' => 'error',
@@ -98,6 +104,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 
                 $id_carrito = $carritoCliente['id_carrito'];
+                
+                // Validar datos completos para agregar
+                $datosCompletos = [
+                    'id_carrito' => $id_carrito,
+                    'id_producto' => $id_producto,
+                    'cantidad' => $cantidad
+                ];
+                
+                $erroresCompletos = $carrito->validarAgregar($datosCompletos);
+                if (!empty($erroresCompletos)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Datos inválidos para agregar al carrito',
+                        'detalles' => $erroresCompletos
+                    ]);
+                    break;
+                }
                 
                 if ($carrito->agregarProductoAlCarrito($id_carrito, $id_producto, $cantidad)) {
                     echo json_encode([
@@ -120,15 +143,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'actualizar_cantidad':
-            $id_carrito_detalle = isset($_POST['id_carrito_detalle']) ? (int)$_POST['id_carrito_detalle'] : 0;
-            $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 0;
-
-            if ($id_carrito_detalle <= 0 || $cantidad <= 0) {
-                echo json_encode(['status' => 'error', 'message' => 'Datos de cantidad o detalle del carrito inválidos']);
+            // Validar datos de entrada
+            $carrito = new Carrito();
+            $datosValidacion = [
+                'id_carrito_detalle' => isset($_POST['id_carrito_detalle']) ? (int)$_POST['id_carrito_detalle'] : 0,
+                'cantidad' => isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 0
+            ];
+            
+            $errores = $carrito->validarActualizar($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'detalles' => $errores
+                ]);
                 break;
             }
 
-            $carrito = new Carrito();
+            $id_carrito_detalle = $datosValidacion['id_carrito_detalle'];
+            $cantidad = $datosValidacion['cantidad'];
             $productoModel = new Productos();
             $id_cliente = $_SESSION['id_usuario'];
 

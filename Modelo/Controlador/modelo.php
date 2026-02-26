@@ -29,11 +29,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
             $modelo = new modelo();
-            $modelo->setnombre_modelo($_POST['nombre_modelo']);
-            $modelo->setid_marca($_POST['id_marca']);
-
-            // Validar datos del modelo
-            $errores = $modelo->validarDatos();
+            
+            // Validar datos de entrada
+            $datosValidacion = [
+                'nombre_modelo' => $_POST['nombre_modelo'] ?? '',
+                'id_marca' => $_POST['id_marca'] ?? ''
+            ];
+            
+            $errores = $modelo->validarRegistrarModelo($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -42,6 +45,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+            
+            $modelo->setnombre_modelo($_POST['nombre_modelo']);
+            $modelo->setid_marca($_POST['id_marca']);
 
             // Validar que la marca exista antes de registrar
             $marcas = $modelo->getmarcas();
@@ -117,23 +123,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $nombre_modelo = $_POST['nombre_modelo'] ?? '';
             $id_marca = $_POST['id_marca'] ?? '';
             
-            // Validar ID del modelo
-            $id_modelo = (int)$id_modelo;
-            if ($id_modelo <= 0) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El ID del modelo no es válido'
-                ]);
-                exit;
-            }
-            
             $modelo = new modelo();
-            $modelo->setIdModelo($id_modelo);
-            $modelo->setnombre_modelo($nombre_modelo);
-            $modelo->setid_marca($id_marca);
-
-            // Validar datos del modelo
-            $errores = $modelo->validarDatos(true); // true = es modificación
+            
+            // Validar datos de entrada
+            $datosValidacion = [
+                'id_modelo' => $id_modelo,
+                'nombre_modelo' => $nombre_modelo,
+                'id_marca' => $id_marca
+            ];
+            
+            $errores = $modelo->validarModificarModelo($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -142,6 +141,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+            
+            $id_modelo = (int)$id_modelo;
+            $modelo->setIdModelo($id_modelo);
+            $modelo->setnombre_modelo($nombre_modelo);
+            $modelo->setid_marca($id_marca);
 
             // Verificar que el modelo exista antes de modificar
             $modeloExistente = $modelo->obtenerModeloPorId($id_modelo);
@@ -210,17 +214,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'eliminar':
             $id_modelo = $_POST['id_modelo'] ?? '';
             
-            // Validar ID del modelo
-            $id_modelo = (int)$id_modelo;
-            if ($id_modelo <= 0) {
+            $modelo = new modelo();
+            
+            // Validar datos de entrada
+            $datosValidacion = [
+                'id_modelo' => $id_modelo
+            ];
+            
+            $errores = $modelo->validarEliminarModelo($datosValidacion);
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'El ID del modelo no es válido'
+                    'message' => 'Error en los datos del modelo',
+                    'errors' => $errores
                 ]);
                 exit;
             }
             
-            $modelo = new modelo();
+            $id_modelo = (int)$id_modelo;
             
             // Verificar que el modelo exista antes de eliminar
             $modeloExistente = $modelo->obtenerModeloPorId($id_modelo);

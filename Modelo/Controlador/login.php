@@ -17,55 +17,66 @@ if (!empty($_POST)) {
     $h = $_POST['accion'] ?? '';
 
 if ($h == 'acceder') {
-    $o->setUsername($_POST['username'] ?? '');
-    $o->setPassword($_POST['password'] ?? '');
-    $captcha = $_POST['g-recaptcha-response'] ?? '';
-    $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
-    $response = file_get_contents($url);
-    $responseKeys = json_decode($response, true);
+    // Validar datos de entrada
+    $datosValidacion = [
+        'username' => $_POST['username'] ?? '',
+        'password' => $_POST['password'] ?? ''
+    ];
     
-    // Mostrar el resultado de la validación en un alert
-    echo "<script>alert('Resultado de reCAPTCHA: " . json_encode($responseKeys) . "');</script>";
-    
-    // Si el reCAPTCHA no es válido, mostrar mensaje y detener la ejecución
-    if(!$responseKeys['success']) {
-        echo "<script>alert('Error en reCAPTCHA: " . ($responseKeys['error-codes'][0] ?? 'Error desconocido') . "');</script>";
-        $m = ['resultado' => 'error', 'mensaje' => 'Error en la verificación del reCAPTCHA'];
+    $errores = $o->validarInicioSesionDatos($datosValidacion);
+    if (!empty($errores)) {
+        $mensaje = '<div class="error">Por favor corrija los siguientes errores:<br>';
+        foreach ($errores as $campo => $error) {
+            $mensaje .= "• $error<br>";
+        }
+        $mensaje .= '</div>';
     } else {
-        $m = $o->existe();
-    }
+        $o->setUsername($_POST['username'] ?? '');
+        $o->setPassword($_POST['password'] ?? '');
+        $captcha = $_POST['g-recaptcha-response'] ?? '';
+        $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
+        $response = file_get_contents($url);
+        $responseKeys = json_decode($response, true);
         
-        if ($m['resultado'] == 'existe') {
-            // Reiniciar la sesión por seguridad
-            session_destroy();
-            session_start();
-
-            $_SESSION['name'] = $m['mensaje'] ?? '';
-            $_SESSION['nombre_rol'] = $m['nombre_rol'] ?? '';
-            $_SESSION['id_usuario'] = $m['id_usuario'] ?? '';
-            $_SESSION['id_rol'] = $m['id_rol'] ?? '';
-            $_SESSION['cedula'] = $m['cedula'] ?? '';
-            $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
-            
-            // Iniciar servidor WebSocket automáticamente después del login exitoso
-            ob_start(); // Capturar salida para evitar interferir con headers
-            require_once __DIR__ . '/../../verificar_websocket.php';
-            
-            // Ejecutar la verificación y inicio del servidor
-            verificarEIniciarWebSocket();
-            ob_end_clean(); // Limpiar salida capturada
-            
-            // Guardar mensaje para mostrar después del redirect
-            $_SESSION['websocket_init_message'] = 'Servidor WebSocket iniciado automáticamente';
-            
-            header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
-            exit;
+        // Si el reCAPTCHA no es válido, mostrar mensaje y detener la ejecución
+        if(!$responseKeys['success']) {
+            $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: ' . ($responseKeys['error-codes'][0] ?? 'Error desconocido') . '</div>';
         } else {
-            $mensaje = $m['mensaje'] ?? 'Error en las credenciales';
+            $m = $o->existe();
+            
+            if ($m['resultado'] == 'existe') {
+                // Reiniciar la sesión por seguridad
+                session_destroy();
+                session_start();
+
+                $_SESSION['name'] = $m['mensaje'] ?? '';
+                $_SESSION['nombre_rol'] = $m['nombre_rol'] ?? '';
+                $_SESSION['id_usuario'] = $m['id_usuario'] ?? '';
+                $_SESSION['id_rol'] = $m['id_rol'] ?? '';
+                $_SESSION['cedula'] = $m['cedula'] ?? '';
+                $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
+                
+                // Iniciar servidor WebSocket automáticamente después del login exitoso
+                ob_start(); // Capturar salida para evitar interferir con headers
+                require_once __DIR__ . '/../../verificar_websocket.php';
+                
+                // Ejecutar la verificación y inicio del servidor
+                verificarEIniciarWebSocket();
+                ob_end_clean(); // Limpiar salida capturada
+                
+                // Guardar mensaje para mostrar después del redirect
+                $_SESSION['websocket_init_message'] = 'Servidor WebSocket iniciado automáticamente';
+                
+                header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
+                exit;
+            } else {
+                $mensaje = '<div class="error">' . ($m['mensaje'] ?? 'Error en las credenciales') . '</div>';
+            }
         }
     }
+}
 
     // Recuperación de contraseña
     if ($h == 'solicitar_recuperacion') {
@@ -92,11 +103,21 @@ if ($h == 'acceder') {
             'direccion' => $_POST['direccion'] ?? ''
         ];
         
-        $resultado = $o->registrarUsuarioYCliente($datos);
-        if ($resultado['status'] == 'success') {
-            $mensaje = '<span class="success">' . $resultado['mensaje'] . '</span>';
+        // Validar datos de entrada
+        $errores = $o->validarRegistroUsuarioDatos($datos);
+        if (!empty($errores)) {
+            $mensaje = '<div class="error">Por favor corrija los siguientes errores:<br>';
+            foreach ($errores as $campo => $error) {
+                $mensaje .= "• $error<br>";
+            }
+            $mensaje .= '</div>';
         } else {
-            $mensaje = '<span class="error">' . $resultado['mensaje'] . '</span>';
+            $resultado = $o->registrarUsuarioYCliente($datos);
+            if ($resultado['status'] == 'success') {
+                $mensaje = '<span class="success">' . $resultado['mensaje'] . '</span>';
+            } else {
+                $mensaje = '<span class="error">' . $resultado['mensaje'] . '</span>';
+            }
         }
     }
 }

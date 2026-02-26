@@ -132,6 +132,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
             if ($id !== null) {
                 $ordenModel = new OrdenDespacho();
+                
+                // Validar datos de entrada
+                $datosValidacion = ['id_orden_despachos' => $id];
+                $errores = $ordenModel->validarConsultarOrden($datosValidacion);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error en los datos de la orden',
+                        'errors' => $errores
+                    ]);
+                    exit;
+                }
+                
                 $orden = $ordenModel->obtenerOrdenPorId($id);
         
                 if ($orden !== null) {
@@ -163,6 +176,19 @@ case 'descargar_pdf':
     }
 
     $ordenModel = new OrdenDespacho();
+    
+    // Validar datos de entrada
+    $datosValidacion = ['id_orden_despachos' => $idOrden];
+    $errores = $ordenModel->validarDescargarOrden($datosValidacion);
+    if (!empty($errores)) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Error en los datos de la orden',
+            'errors' => $errores
+        ]);
+        exit;
+    }
+    
     $ordenData = $ordenModel->obtenerDatosParaPDF($idOrden);
     
     if (empty($ordenData)) {
@@ -236,9 +262,21 @@ break;
             $id = $_POST['id_despachos'];
             $nuevoEstatus = $_POST['nuevo_estatus'];
             
-            // Validación básica
-            if (!in_array($nuevoEstatus, ['habilitado', 'inhabilitado'])) {
-                echo json_encode(['status' => 'error', 'message' => 'Estatus no válido']);
+            $ordenModel = new OrdenDespacho();
+            
+            // Validar datos de entrada
+            $datosValidacion = [
+                'id_orden_despachos' => $id,
+                'nuevo_estatus' => $nuevoEstatus
+            ];
+            
+            $errores = $ordenModel->validarCambiarEstatus($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la orden',
+                    'errors' => $errores
+                ]);
                 exit;
             }
             
@@ -310,6 +348,20 @@ break;
         case 'anularOrden':
             $ordenModel = new OrdenDespacho();
             $idOrden = isset($_POST['id_orden_despachos']) ? (int)$_POST['id_orden_despachos'] : 0;
+            
+            // Validar datos de entrada
+            $datosValidacion = ['id_orden_despachos' => $idOrden];
+            $errores = $ordenModel->validarAnularOrden($datosValidacion);
+            if (!empty($errores)) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos de la orden',
+                    'errors' => $errores
+                ]);
+                break;
+            }
+            
             if ($idOrden <= 0) {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode(['status' => 'error', 'message' => 'ID de orden de despacho no válido']);
@@ -396,7 +448,7 @@ function getordendespacho() {
             echo json_encode($response);
             exit;
         }
-    }
+}
 
 $pagina = "ordendespacho";
 if (is_file("Vista/" . $pagina . ".php")) {
@@ -409,15 +461,17 @@ if (is_file("Vista/" . $pagina . ".php")) {
             'El usuario accedió al módulo de Ordenes de Despacho',
             'media'
         );
-    }
-    $ordendespacho = getordendespacho();
-    
-    // Obtener facturas disponibles
-    $ordenModel = new OrdenDespacho();
-    $facturas = $ordenModel->obtenerFacturasDisponibles();
+    } {
+        $ordendespacho = getordendespacho();
+        
+        // Obtener facturas disponibles
+        $ordenModel = new OrdenDespacho();
+        $facturas = $ordenModel->obtenerFacturasDisponibles();
 
-    require_once("Vista/" . $pagina . ".php");
+        require_once("Vista/" . $pagina . ".php");
+    }
 } else {
     echo "Página en construcción";
 }
-ob_end_flush();?>
+ob_end_flush();
+?>

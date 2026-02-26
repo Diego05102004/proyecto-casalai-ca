@@ -47,7 +47,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $usuario->setRango($_POST['rango']);
             $usuario->setCedula($_POST['cedula']);
             
-            $errores = $usuario->validarDatos();
+            // Preparar datos para validación
+            $datos_validacion = [
+                'username' => $_POST['nombre_usuario'],
+                'clave' => $_POST['clave_usuario'],
+                'nombre' => $_POST['nombre'],
+                'apellido' => $_POST['apellido_usuario'],
+                'correo' => $_POST['correo_usuario'],
+                'telefono' => $_POST['telefono_usuario'],
+                'cedula' => $_POST['cedula'],
+                'id_rol' => $_POST['rango']
+            ];
+            
+            // Validar datos del usuario usando las nuevas validaciones centralizadas
+            $errores = $usuario->validarRegistrarUsuario($datos_validacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -111,7 +124,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'filtrar_estatus':
             $estatus = $_POST['estatus'] ?? 'habilitado';
+            
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $datos_validacion = ['estatus' => $estatus];
             $usuario = new Usuarios();
+            $errores = $usuario->validarReporte($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para filtrar usuarios',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
             $usuarios = $usuario->getusuarios($estatus);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['status' => 'success', 'usuarios' => $usuarios]);
@@ -119,11 +146,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'obtener_usuario':
             $id_usuario = $_POST['id_usuario'] ?? null;
-            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
-                echo json_encode(['status' => 'error', 'message' => 'ID de usuario no válido']);
+            
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $datos_validacion = ['id_usuario' => $id_usuario];
+            $usuario = new Usuarios();
+            $errores = $usuario->validarConsultarUsuario($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para consultar el usuario',
+                    'errors' => $errores
+                ]);
                 exit;
             }
-            $usuario = new Usuarios();
+            
             $usuarioData = $usuario->obtenerUsuarioPorId($id_usuario);
             
             if ($usuarioData !== null) {
@@ -135,14 +172,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'modificar':
             $id_usuario = $_POST['id_usuario'];
-            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
+            
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $datos_validacion = [
+                'id_usuario' => $id_usuario,
+                'username' => $_POST['nombre_usuario'],
+                'nombre' => $_POST['nombre'],
+                'apellido' => $_POST['apellido_usuario'],
+                'correo' => $_POST['correo_usuario'],
+                'telefono' => $_POST['telefono_usuario'],
+                'cedula' => $_POST['cedula'],
+                'id_rol' => $_POST['rango'],
+                'clave' => $_POST['clave_usuario'] ?? ''
+            ];
+            
+            $usuario = new Usuarios();
+            $errores = $usuario->validarModificarUsuario($datos_validacion);
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'ID de usuario no válido'
+                    'message' => 'Errores de validación',
+                    'errors' => $errores
                 ]);
                 exit;
             }
-            $usuario = new Usuarios();
+            
             $usuario->setId($id_usuario);
             $usuario->setUsername($_POST['nombre_usuario']);
             $usuario->setNombre($_POST['nombre']);
@@ -152,16 +206,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $usuario->setRango($_POST['rango']);
             $usuario->setCedula($_POST['cedula']);
             $usuario->setClave($_POST['clave_usuario'] ?? '');
-            
-            $errores = $usuario->validarDatos(true);
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Errores de validación',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
             
             if ($usuario->existeUsuario($_POST['nombre_usuario'], $id_usuario)) {
                 echo json_encode([
@@ -220,14 +264,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             $id_usuario = $_POST['id_usuario'];
-            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
+            
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $datos_validacion = ['id_usuario' => $id_usuario];
+            $usuarioModel = new Usuarios();
+            $errores = $usuarioModel->validarEliminarUsuario($datos_validacion);
+            
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'ID de usuario no válido'
+                    'message' => 'Error en los datos para eliminar el usuario',
+                    'errors' => $errores
                 ]);
                 exit;
             }
-            $usuarioModel = new Usuarios();
             
             // Obtener datos del usuario antes de eliminarlo
             $usuarioAEliminar = $usuarioModel->obtenerUsuarioPorId($id_usuario);
@@ -255,17 +305,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_usuario = $_POST['id_usuario'];
             $nuevoEstatus = $_POST['nuevo_estatus'];
             
-            if ($id_usuario === null || !ctype_digit((string)$id_usuario)) {
-                echo json_encode(['status' => 'error', 'message' => 'ID de usuario no válido']);
-                exit;
-            }
-            
-            if (!in_array($nuevoEstatus, ['habilitado', 'inhabilitado'])) {
-                echo json_encode(['status' => 'error', 'message' => 'Estatus no válido']);
-                exit;
-            }
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            $datos_validacion = [
+                'id_usuario' => $id_usuario,
+                'estatus' => $nuevoEstatus
+            ];
             
             $usuario = new Usuarios();
+            $errores = $usuario->validarCambiarEstatus($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para cambiar estatus',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
             $usuario->setId($id_usuario);
             
             if ($usuario->cambiarEstatus($nuevoEstatus)) {

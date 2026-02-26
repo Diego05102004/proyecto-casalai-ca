@@ -3,11 +3,23 @@ namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
 use PDO;
 use PDOException;
+
 class Categoria extends BD
 {
     private $id_categoria;
     private $nombre_categoria;
     private $conex;
+    
+    // Constantes para validaciones
+    const MAX_NOMBRE_CATEGORIA = 100;
+    const MIN_NOMBRE_CATEGORIA = 2;
+    const MAX_NOMBRE_CARACTERISTICA = 100;
+    const MIN_NOMBRE_CARACTERISTICA = 2;
+    const MAX_VALOR_STRING = 1000;
+    const MAX_VALOR_NUMERICO = 999999;
+    const MAX_VALOR_DECIMAL = 999999.99;
+    const MAX_LONGITUD_CAMPO = 255;
+    const TIPOS_CARACTERISTICA_PERMITIDOS = ['int', 'float', 'string'];
 
     public function __construct()
     {
@@ -34,56 +46,71 @@ class Categoria extends BD
         $this->nombre_categoria = $nombre_categoria;
     }
 
-    public function validarDatos($esModificacion = false) {
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para registrar una categoría
+     */
+    private function validarRegistrar($datos) {
         $errores = [];
-
+        
         // Validar nombre de la categoría
-        $nombre_categoria = trim((string)$this->nombre_categoria);
-        if ($nombre_categoria === '') {
+        if (!isset($datos['nombre_categoria'])) {
             $errores['nombre_categoria'] = 'El nombre de la categoría es obligatorio';
-        } elseif (mb_strlen($nombre_categoria) < 2 || mb_strlen($nombre_categoria) > 100) {
-            $errores['nombre_categoria'] = 'El nombre de la categoría debe tener entre 2 y 100 caracteres';
-        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_categoria)) {
-            $errores['nombre_categoria'] = 'El nombre de la categoría solo puede contener letras, números, espacios y caracteres especiales comunes';
+        } else {
+            $nombre_categoria = trim($datos['nombre_categoria']);
+            if (empty($nombre_categoria)) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría no puede estar vacío';
+            } elseif (mb_strlen($nombre_categoria) < self::MIN_NOMBRE_CATEGORIA || mb_strlen($nombre_categoria) > self::MAX_NOMBRE_CATEGORIA) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría debe tener entre ' . self::MIN_NOMBRE_CATEGORIA . ' y ' . self::MAX_NOMBRE_CATEGORIA . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_categoria)) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría solo puede contener letras, números, espacios y caracteres especiales comunes';
+            }
         }
-
+        
         // Validar características si existen
-        if (isset($this->caracteristicas) && is_array($this->caracteristicas)) {
-            foreach ($this->caracteristicas as $index => $caracteristica) {
-                $nombre_carac = trim((string)($caracteristica['nombre'] ?? ''));
-                if ($nombre_carac === '') {
+        if (isset($datos['caracteristicas']) && is_array($datos['caracteristicas'])) {
+            foreach ($datos['caracteristicas'] as $index => $caracteristica) {
+                if (!is_array($caracteristica)) {
+                    $errores["caracteristica_{$index}"] = 'La característica en la posición ' . $index . ' debe ser un array';
+                    continue;
+                }
+                
+                // Validar nombre de la característica
+                $nombre_carac = trim($caracteristica['nombre'] ?? '');
+                if (empty($nombre_carac)) {
                     $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica es obligatorio';
-                } elseif (mb_strlen($nombre_carac) < 2 || mb_strlen($nombre_carac) > 100) {
-                    $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica debe tener entre 2 y 100 caracteres';
+                } elseif (mb_strlen($nombre_carac) < self::MIN_NOMBRE_CARACTERISTICA || mb_strlen($nombre_carac) > self::MAX_NOMBRE_CARACTERISTICA) {
+                    $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica debe tener entre ' . self::MIN_NOMBRE_CARACTERISTICA . ' y ' . self::MAX_NOMBRE_CARACTERISTICA . ' caracteres';
                 } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_carac)) {
                     $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica solo puede contener letras, números, espacios y caracteres especiales comunes';
                 }
 
                 // Validar tipo
-                $tipo = strtolower(trim((string)($caracteristica['tipo'] ?? '')));
-                if (!in_array($tipo, ['int', 'float', 'string'])) {
-                    $errores["caracteristica_{$index}_tipo"] = 'El tipo de característica debe ser: int, float o string';
+                $tipo = strtolower(trim($caracteristica['tipo'] ?? ''));
+                if (!in_array($tipo, self::TIPOS_CARACTERISTICA_PERMITIDOS)) {
+                    $errores["caracteristica_{$index}_tipo"] = 'El tipo de característica debe ser: ' . implode(', ', self::TIPOS_CARACTERISTICA_PERMITIDOS);
                 }
 
                 // Validar valor según tipo
-                $valor = trim((string)($caracteristica['valor'] ?? ''));
-                if ($valor === '') {
+                $valor = trim($caracteristica['valor'] ?? '');
+                if (empty($valor)) {
                     $errores["caracteristica_{$index}_valor"] = 'El valor de la característica es obligatorio';
                 } else {
                     switch ($tipo) {
                         case 'int':
-                            if (!is_numeric($valor) || (int)$valor < 0 || (int)$valor > 999999) {
-                                $errores["caracteristica_{$index}_valor"] = 'El valor entero debe estar entre 0 y 999999';
+                            if (!is_numeric($valor) || (int)$valor < 0 || (int)$valor > self::MAX_VALOR_NUMERICO) {
+                                $errores["caracteristica_{$index}_valor"] = 'El valor entero debe estar entre 0 y ' . self::MAX_VALOR_NUMERICO;
                             }
                             break;
                         case 'float':
-                            if (!is_numeric($valor) || (float)$valor < 0 || (float)$valor > 999999.99) {
-                                $errores["caracteristica_{$index}_valor"] = 'El valor decimal debe estar entre 0 y 999999.99';
+                            if (!is_numeric($valor) || (float)$valor < 0 || (float)$valor > self::MAX_VALOR_DECIMAL) {
+                                $errores["caracteristica_{$index}_valor"] = 'El valor decimal debe estar entre 0 y ' . self::MAX_VALOR_DECIMAL;
                             }
                             break;
                         case 'string':
-                            if (mb_strlen($valor) > 1000) {
-                                $errores["caracteristica_{$index}_valor"] = 'El valor de texto no debe exceder los 1000 caracteres';
+                            if (mb_strlen($valor) > self::MAX_VALOR_STRING) {
+                                $errores["caracteristica_{$index}_valor"] = 'El valor de texto no debe exceder los ' . self::MAX_VALOR_STRING . ' caracteres';
                             }
                             break;
                     }
@@ -92,22 +119,225 @@ class Categoria extends BD
                 // Validar longitud máxima (string)
                 if ($tipo === 'string' && isset($caracteristica['max'])) {
                     $max = (int)$caracteristica['max'];
-                    if ($max <= 0 || $max > 255) {
-                        $errores["caracteristica_{$index}_max"] = 'La longitud máxima debe estar entre 1 y 255 caracteres';
+                    if ($max <= 0 || $max > self::MAX_LONGITUD_CAMPO) {
+                        $errores["caracteristica_{$index}_max"] = 'La longitud máxima debe estar entre 1 y ' . self::MAX_LONGITUD_CAMPO . ' caracteres';
                     }
                 }
             }
         }
-
-        // Validar ID de la categoría (solo para modificaciones)
-        if ($esModificacion) {
-            $id_categoria = (int)$this->id_categoria;
-            if ($id_categoria <= 0) {
-                $errores['id_categoria'] = 'El ID de la categoría no es válido';
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar una categoría
+     */
+    private function validarConsultar($datos) {
+        $errores = [];
+        
+        // Validar ID de la categoría
+        if (!isset($datos['id_categoria'])) {
+            $errores['id_categoria'] = 'El ID de la categoría es obligatorio';
+        } elseif (!is_numeric($datos['id_categoria']) || $datos['id_categoria'] <= 0) {
+            $errores['id_categoria'] = 'El ID de la categoría debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para modificar una categoría
+     */
+    private function validarModificar($datos) {
+        $errores = [];
+        
+        // Validar ID de la categoría
+        if (!isset($datos['id_categoria'])) {
+            $errores['id_categoria'] = 'El ID de la categoría es obligatorio';
+        } elseif (!is_numeric($datos['id_categoria']) || $datos['id_categoria'] <= 0) {
+            $errores['id_categoria'] = 'El ID de la categoría debe ser un número positivo';
+        }
+        
+        // Validar nombre de la categoría
+        if (!isset($datos['nombre_categoria'])) {
+            $errores['nombre_categoria'] = 'El nombre de la categoría es obligatorio';
+        } else {
+            $nombre_categoria = trim($datos['nombre_categoria']);
+            if (empty($nombre_categoria)) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría no puede estar vacío';
+            } elseif (mb_strlen($nombre_categoria) < self::MIN_NOMBRE_CATEGORIA || mb_strlen($nombre_categoria) > self::MAX_NOMBRE_CATEGORIA) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría debe tener entre ' . self::MIN_NOMBRE_CATEGORIA . ' y ' . self::MAX_NOMBRE_CATEGORIA . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_categoria)) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría solo puede contener letras, números, espacios y caracteres especiales comunes';
             }
         }
+        
+        // Validar características si existen
+        if (isset($datos['caracteristicas']) && is_array($datos['caracteristicas'])) {
+            foreach ($datos['caracteristicas'] as $index => $caracteristica) {
+                if (!is_array($caracteristica)) {
+                    $errores["caracteristica_{$index}"] = 'La característica en la posición ' . $index . ' debe ser un array';
+                    continue;
+                }
+                
+                // Validar nombre de la característica
+                $nombre_carac = trim($caracteristica['nombre'] ?? '');
+                if (!empty($nombre_carac)) {
+                    if (mb_strlen($nombre_carac) < self::MIN_NOMBRE_CARACTERISTICA || mb_strlen($nombre_carac) > self::MAX_NOMBRE_CARACTERISTICA) {
+                        $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica debe tener entre ' . self::MIN_NOMBRE_CARACTERISTICA . ' y ' . self::MAX_NOMBRE_CARACTERISTICA . ' caracteres';
+                    } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_carac)) {
+                        $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica solo puede contener letras, números, espacios y caracteres especiales comunes';
+                    }
 
+                    // Validar tipo
+                    $tipo = strtolower(trim($caracteristica['tipo'] ?? ''));
+                    if ($tipo && !in_array($tipo, self::TIPOS_CARACTERISTICA_PERMITIDOS)) {
+                        $errores["caracteristica_{$index}_tipo"] = 'El tipo de característica debe ser: ' . implode(', ', self::TIPOS_CARACTERISTICA_PERMITIDOS);
+                    }
+
+                    // Validar valor según tipo
+                    $valor = trim($caracteristica['valor'] ?? '');
+                    if (!empty($valor) && $tipo) {
+                        switch ($tipo) {
+                            case 'int':
+                                if (!is_numeric($valor) || (int)$valor < 0 || (int)$valor > self::MAX_VALOR_NUMERICO) {
+                                    $errores["caracteristica_{$index}_valor"] = 'El valor entero debe estar entre 0 y ' . self::MAX_VALOR_NUMERICO;
+                                }
+                                break;
+                            case 'float':
+                                if (!is_numeric($valor) || (float)$valor < 0 || (float)$valor > self::MAX_VALOR_DECIMAL) {
+                                    $errores["caracteristica_{$index}_valor"] = 'El valor decimal debe estar entre 0 y ' . self::MAX_VALOR_DECIMAL;
+                                }
+                                break;
+                            case 'string':
+                                if (mb_strlen($valor) > self::MAX_VALOR_STRING) {
+                                    $errores["caracteristica_{$index}_valor"] = 'El valor de texto no debe exceder los ' . self::MAX_VALOR_STRING . ' caracteres';
+                                }
+                                break;
+                        }
+                    }
+
+                    // Validar longitud máxima (string)
+                    if ($tipo === 'string' && isset($caracteristica['max'])) {
+                        $max = (int)$caracteristica['max'];
+                        if ($max <= 0 || $max > self::MAX_LONGITUD_CAMPO) {
+                            $errores["caracteristica_{$index}_max"] = 'La longitud máxima debe estar entre 1 y ' . self::MAX_LONGITUD_CAMPO . ' caracteres';
+                        }
+                    }
+                }
+            }
+        }
+        
         return $errores;
+    }
+    
+    /**
+     * Valida los datos para eliminar una categoría
+     */
+    private function validarEliminar($datos) {
+        $errores = [];
+        
+        // Validar ID de la categoría
+        if (!isset($datos['id_categoria'])) {
+            $errores['id_categoria'] = 'El ID de la categoría es obligatorio';
+        } elseif (!is_numeric($datos['id_categoria']) || $datos['id_categoria'] <= 0) {
+            $errores['id_categoria'] = 'El ID de la categoría debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para registrar (método público)
+     */
+    public function validarRegistrarCategoria($datos) {
+        return $this->validarRegistrar($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar (método público)
+     */
+    public function validarConsultarCategoria($datos) {
+        return $this->validarConsultar($datos);
+    }
+    
+    /**
+     * Valida los datos para modificar (método público)
+     */
+    public function validarModificarCategoria($datos) {
+        return $this->validarModificar($datos);
+    }
+    
+    /**
+     * Valida los datos para eliminar (método público)
+     */
+    public function validarEliminarCategoria($datos) {
+        return $this->validarEliminar($datos);
+    }
+    
+    /**
+     * Verifica si una categoría existe por ID
+     */
+    private function verificarCategoriaExistente($idCategoria) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_categoria WHERE id_categoria = :id_categoria";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_categoria', $idCategoria, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarCategoriaExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) {
+                $conexion->cerrar();
+                $this->conex = null;
+            }
+        }
+    }
+    
+    /**
+     * Verifica si una categoría tiene productos asociados
+     */
+    private function verificarProductosAsociados($idCategoria) {
+        $conexion = new BD('P');
+        $this->conex = $conexion->getConexion();
+        
+        try {
+            // Obtener información de la categoría
+            $categoriaInfo = $this->o_categoriaPorId($idCategoria, $conexion);
+            if (!$categoriaInfo) {
+                return false;
+            }
+            
+            $this->nombre_categoria = $categoriaInfo['nombre_categoria'];
+            $tabla = $this->generarNombreTabla();
+            
+            // Verificar si la tabla existe
+            $tableExists = $this->conex->query("SHOW TABLES LIKE '$tabla'")->rowCount() > 0;
+            
+            if ($tableExists) {
+                // Verificar si hay productos en la tabla de la categoría
+                $stmt = $this->conex->query("SELECT COUNT(*) as total FROM `$tabla`");
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                return (int)$result['total'] > 0;
+            }
+            
+            return false;
+        } catch (PDOException $e) {
+            error_log('Error en verificarProductosAsociados: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) {
+                $conexion->cerrar();
+                $this->conex = null;
+            }
+        }
     }
     
     public function existeNombreCategoria($nombre, $excluirId = null)

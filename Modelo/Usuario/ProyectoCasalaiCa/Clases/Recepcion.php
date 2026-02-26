@@ -14,6 +14,30 @@ class Recepcion extends BD{
     private $conex;
     private $tablerecepcion = 'tbl_recepcion_productos';
 
+    // Constantes de validación
+    const MAX_ID_PROVEEDOR = 999999999;
+    const MIN_ID_PROVEEDOR = 1;
+    const MAX_CORRELATIVO = 50;
+    const MIN_CORRELATIVO = 3;
+    const MAX_TAMANOCOMPRA = 100;
+    const MIN_TAMANOCOMPRA = 2;
+    const MAX_DESCRIPCION = 500;
+    const MIN_DESCRIPCION = 0;
+    const MAX_COSTO = 999999.99;
+    const MIN_COSTO = 0.01;
+    const MAX_ID_RECEPCION = 999999999;
+    const MIN_ID_RECEPCION = 1;
+    const MAX_ID_PRODUCTO = 999999999;
+    const MIN_ID_PRODUCTO = 1;
+    const MAX_CANTIDAD = 99999;
+    const MIN_CANTIDAD = 1;
+    const ESTADOS_VALIDOS = ['habilitado', 'anulado', 'deshabilitado'];
+    const ESTADOS_VALIDOS_CAMBIO = ['habilitado', 'anulado'];
+    const MAX_ANIO = 2099;
+    const MIN_ANIO = 2000;
+    const MAX_MES = 12;
+    const MIN_MES = 1;
+
     public function __construct() {
         $this->conex = null;
     }
@@ -67,87 +91,345 @@ class Recepcion extends BD{
         $this->estado = $estado;
     }
 
-    public function validarDatos() {
+    // Métodos de validación centralizados
+    private function validarRecepcion($datos) {
         $errores = [];
-
-        // Validar proveedor
-        $idproveedor = (int)$this->idproveedor;
-        if ($idproveedor <= 0) {
-            $errores['proveedor'] = 'Debe seleccionar un proveedor válido';
+        
+        if (!is_array($datos)) {
+            $errores['recepcion'] = 'Los datos de la recepción deben ser un arreglo';
+            return $errores;
         }
-
+        
+        // Validar ID del proveedor
+        if (isset($datos['idproveedor'])) {
+            $idproveedor = (int)$datos['idproveedor'];
+            if ($idproveedor < self::MIN_ID_PROVEEDOR || $idproveedor > self::MAX_ID_PROVEEDOR) {
+                $errores['idproveedor'] = 'El ID del proveedor debe ser un número entre ' . self::MIN_ID_PROVEEDOR . ' y ' . self::MAX_ID_PROVEEDOR;
+            }
+        }
+        
         // Validar correlativo
-        $correlativo = trim((string)$this->correlativo);
-        if ($correlativo === '') {
-            $errores['correlativo'] = 'El N° de Factura es obligatorio';
-        } elseif (mb_strlen($correlativo) < 3 || mb_strlen($correlativo) > 50) {
-            $errores['correlativo'] = 'El N° de Factura debe tener entre 3 y 50 caracteres';
-        } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $correlativo)) {
-            $errores['correlativo'] = 'El N° de Factura solo puede contener letras, números y guiones';
+        if (isset($datos['correlativo'])) {
+            $correlativo = trim((string)$datos['correlativo']);
+            if ($correlativo === '') {
+                $errores['correlativo'] = 'El N° de Factura es obligatorio';
+            } elseif (mb_strlen($correlativo) < self::MIN_CORRELATIVO || mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
+                $errores['correlativo'] = 'El N° de Factura debe tener entre ' . self::MIN_CORRELATIVO . ' y ' . self::MAX_CORRELATIVO . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $correlativo)) {
+                $errores['correlativo'] = 'El N° de Factura solo puede contener letras, números y guiones';
+            }
         }
-
+        
         // Validar tamaño de compra
-        $tamanocompra = trim((string)$this->tamanocompra);
-        if ($tamanocompra === '') {
-            $errores['tamanocompra'] = 'El tamaño de compra es obligatorio';
-        } elseif (mb_strlen($tamanocompra) < 2 || mb_strlen($tamanocompra) > 100) {
-            $errores['tamanocompra'] = 'El tamaño de compra debe tener entre 2 y 100 caracteres';
+        if (isset($datos['tamanocompra'])) {
+            $tamanocompra = trim((string)$datos['tamanocompra']);
+            if ($tamanocompra === '') {
+                $errores['tamanocompra'] = 'El tamaño de compra es obligatorio';
+            } elseif (mb_strlen($tamanocompra) < self::MIN_TAMANOCOMPRA || mb_strlen($tamanocompra) > self::MAX_TAMANOCOMPRA) {
+                $errores['tamanocompra'] = 'El tamaño de compra debe tener entre ' . self::MIN_TAMANOCOMPRA . ' y ' . self::MAX_TAMANOCOMPRA . ' caracteres';
+            }
         }
-
+        
+        // Validar descripción
+        if (isset($datos['desc'])) {
+            $desc = trim((string)$datos['desc']);
+            if ($desc !== '' && mb_strlen($desc) > self::MAX_DESCRIPCION) {
+                $errores['desc'] = 'La descripción no debe exceder los ' . self::MAX_DESCRIPCION . ' caracteres';
+            }
+        }
+        
+        // Validar fecha
+        if (isset($datos['fecha'])) {
+            $fecha = trim((string)$datos['fecha']);
+            if ($fecha !== '' && !$this->validarFormatoFecha($fecha)) {
+                $errores['fecha'] = 'La fecha debe tener el formato AAAA-MM-DD';
+            }
+        }
+        
+        // Validar costo
+        if (isset($datos['costo'])) {
+            $costo = (float)$datos['costo'];
+            if ($costo < self::MIN_COSTO || $costo > self::MAX_COSTO) {
+                $errores['costo'] = 'El costo debe estar entre ' . self::MIN_COSTO . ' y ' . self::MAX_COSTO;
+            }
+        }
+        
         // Validar estado
-        $estado = trim((string)$this->estado);
-        if ($estado === '') {
-            $errores['estado'] = 'El estado es obligatorio';
-        } elseif (!in_array($estado, ['habilitado', 'anulado', 'deshabilitado'])) {
-            $errores['estado'] = 'El estado no es válido';
+        if (isset($datos['estado'])) {
+            $estado = trim((string)$datos['estado']);
+            if (!in_array($estado, self::ESTADOS_VALIDOS)) {
+                $errores['estado'] = 'El estado no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
+            }
         }
-
+        
         return $errores;
     }
-
-    public function validarDetalleProductos($idproducto, $cantidad, $costo) {
+    
+    private function validarFormatoFecha($fecha) {
+        // Validar formato AAAA-MM-DD
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            return false;
+        }
+        
+        $partes = explode('-', $fecha);
+        $anio = (int)$partes[0];
+        $mes = (int)$partes[1];
+        $dia = (int)$partes[2];
+        
+        // Validar rango de año
+        if ($anio < self::MIN_ANIO || $anio > self::MAX_ANIO) {
+            return false;
+        }
+        
+        // Validar rango de mes
+        if ($mes < self::MIN_MES || $mes > self::MAX_MES) {
+            return false;
+        }
+        
+        // Validar día según mes (validación básica)
+        $diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if (($anio % 4 == 0 && $anio % 100 != 0) || ($anio % 400 == 0)) {
+            $diasPorMes[1] = 29; // Año bisiesto
+        }
+        
+        if ($dia < 1 || $dia > $diasPorMes[$mes - 1]) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private function validarDetalleProductos($productos) {
         $errores = [];
-
+        
+        if (!is_array($productos)) {
+            $errores['productos'] = 'Los datos de productos deben ser un arreglo';
+            return $errores;
+        }
+        
         // Validar que los arrays no estén vacíos
-        if (empty($idproducto) || !is_array($idproducto)) {
+        if (empty($productos['idproducto']) || !is_array($productos['idproducto'])) {
             $errores['productos'] = 'Debe agregar al menos un producto';
             return $errores;
         }
-
+        
         // Validar que todos los arrays tengan la misma cantidad de elementos
-        if (count($idproducto) !== count($cantidad) || count($idproducto) !== count($costo)) {
+        if (count($productos['idproducto']) !== count($productos['cantidad']) || 
+            count($productos['idproducto']) !== count($productos['costo'])) {
             $errores['productos'] = 'La información de productos está incompleta';
             return $errores;
         }
-
+        
         // Validar cada producto
-        for ($i = 0; $i < count($idproducto); $i++) {
+        for ($i = 0; $i < count($productos['idproducto']); $i++) {
             $index = $i + 1; // Para mostrar en mensajes de error
-
+            
             // Validar ID de producto
-            $idProd = (int)$idproducto[$i];
-            if ($idProd <= 0) {
+            $idProd = (int)$productos['idproducto'][$i];
+            if ($idProd < self::MIN_ID_PRODUCTO || $idProd > self::MAX_ID_PRODUCTO) {
                 $errores["producto_{$i}"] = "El producto {$index} no es válido";
             }
-
+            
             // Validar cantidad
-            $cant = (int)$cantidad[$i];
-            if ($cant <= 0) {
-                $errores["cantidad_{$i}"] = "La cantidad del producto {$index} debe ser mayor a 0";
-            } elseif ($cant > 99999) {
-                $errores["cantidad_{$i}"] = "La cantidad del producto {$index} es muy grande";
+            $cant = (int)$productos['cantidad'][$i];
+            if ($cant < self::MIN_CANTIDAD || $cant > self::MAX_CANTIDAD) {
+                $errores["cantidad_{$i}"] = "La cantidad del producto {$index} debe estar entre " . self::MIN_CANTIDAD . " y " . self::MAX_CANTIDAD;
             }
-
+            
             // Validar costo
-            $cost = (float)$costo[$i];
-            if ($cost <= 0) {
-                $errores["costo_{$i}"] = "El costo del producto {$index} debe ser mayor a 0";
-            } elseif ($cost > 999999.99) {
-                $errores["costo_{$i}"] = "El costo del producto {$index} es muy grande";
+            $cost = (float)$productos['costo'][$i];
+            if ($cost < self::MIN_COSTO || $cost > self::MAX_COSTO) {
+                $errores["costo_{$i}"] = "El costo del producto {$index} debe estar entre " . self::MIN_COSTO . " y " . self::MAX_COSTO;
             }
         }
-
+        
         return $errores;
+    }
+    
+    // Métodos públicos de validación
+    public function validarConsultarRecepcion($datos) {
+        $errores = [];
+        
+        // Para consultar, podemos validar por ID o correlativo
+        if (isset($datos['id_recepcion'])) {
+            $id_recepcion = (int)$datos['id_recepcion'];
+            if ($id_recepcion < self::MIN_ID_RECEPCION || $id_recepcion > self::MAX_ID_RECEPCION) {
+                $errores['id_recepcion'] = 'El ID de la recepción debe ser un número entre ' . self::MIN_ID_RECEPCION . ' y ' . self::MAX_ID_RECEPCION;
+            }
+        }
+        
+        if (isset($datos['correlativo'])) {
+            $correlativo = trim((string)$datos['correlativo']);
+            if ($correlativo !== '' && mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
+                $errores['correlativo'] = 'El correlativo no debe exceder los ' . self::MAX_CORRELATIVO . ' caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarDetallarRecepcion($datos) {
+        $errores = [];
+        
+        // Para detallar, el ID es obligatorio
+        if (!isset($datos['id_recepcion'])) {
+            $errores['id_recepcion'] = 'El ID de la recepción es obligatorio';
+        } else {
+            $id_recepcion = (int)$datos['id_recepcion'];
+            if ($id_recepcion < self::MIN_ID_RECEPCION || $id_recepcion > self::MAX_ID_RECEPCION) {
+                $errores['id_recepcion'] = 'El ID de la recepción debe ser un número entre ' . self::MIN_ID_RECEPCION . ' y ' . self::MAX_ID_RECEPCION;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarRegistrarRecepcion($datos) {
+        $errores = [];
+        
+        // Para registrar, requerimos campos obligatorios
+        if (!isset($datos['idproveedor'])) {
+            $errores['idproveedor'] = 'El proveedor es obligatorio';
+        }
+        
+        if (!isset($datos['correlativo'])) {
+            $errores['correlativo'] = 'El N° de Factura es obligatorio';
+        }
+        
+        if (!isset($datos['tamanocompra'])) {
+            $errores['tamanocompra'] = 'El tamaño de compra es obligatorio';
+        }
+        
+        // Validar la recepción completa
+        $errores_recepcion = $this->validarRecepcion($datos);
+        if (!empty($errores_recepcion)) {
+            $errores = array_merge($errores, $errores_recepcion);
+        }
+        
+        // Validar productos si vienen
+        if (isset($datos['productos'])) {
+            $errores_productos = $this->validarDetalleProductos($datos['productos']);
+            if (!empty($errores_productos)) {
+                $errores = array_merge($errores, $errores_productos);
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarAnularRecepcion($datos) {
+        $errores = [];
+        
+        // Para anular, el correlativo es obligatorio
+        if (!isset($datos['correlativo'])) {
+            $errores['correlativo'] = 'El N° de Factura es obligatorio';
+        } else {
+            $correlativo = trim((string)$datos['correlativo']);
+            if ($correlativo === '') {
+                $errores['correlativo'] = 'El N° de Factura es obligatorio';
+            } elseif (mb_strlen($correlativo) < self::MIN_CORRELATIVO || mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
+                $errores['correlativo'] = 'El N° de Factura debe tener entre ' . self::MIN_CORRELATIVO . ' y ' . self::MAX_CORRELATIVO . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $correlativo)) {
+                $errores['correlativo'] = 'El N° de Factura solo puede contener letras, números y guiones';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarReporte($datos) {
+        $errores = [];
+        
+        // Validar fechas si vienen
+        if (isset($datos['fechaInicio'])) {
+            $fechaInicio = trim((string)$datos['fechaInicio']);
+            if ($fechaInicio !== '' && !$this->validarFormatoFecha($fechaInicio)) {
+                $errores['fechaInicio'] = 'La fecha de inicio debe tener el formato AAAA-MM-DD';
+            }
+        }
+        
+        if (isset($datos['fechaFin'])) {
+            $fechaFin = trim((string)$datos['fechaFin']);
+            if ($fechaFin !== '' && !$this->validarFormatoFecha($fechaFin)) {
+                $errores['fechaFin'] = 'La fecha de fin debe tener el formato AAAA-MM-DD';
+            }
+        }
+        
+        // Validar año si viene
+        if (isset($datos['anio'])) {
+            $anio = (int)$datos['anio'];
+            if ($anio < self::MIN_ANIO || $anio > self::MAX_ANIO) {
+                $errores['anio'] = 'El año debe estar entre ' . self::MIN_ANIO . ' y ' . self::MAX_ANIO;
+            }
+        }
+        
+        // Validar ID de proveedor si viene
+        if (isset($datos['proveedorId'])) {
+            $proveedorId = (int)$datos['proveedorId'];
+            if ($proveedorId < self::MIN_ID_PROVEEDOR || $proveedorId > self::MAX_ID_PROVEEDOR) {
+                $errores['proveedorId'] = 'El ID del proveedor debe ser un número entre ' . self::MIN_ID_PROVEEDOR . ' y ' . self::MAX_ID_PROVEEDOR;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarDescarga($datos) {
+        $errores = [];
+        
+        // Para descarga, validar tipo de descarga
+        if (isset($datos['tipo_descarga'])) {
+            $tipos_validos = ['pdf', 'excel', 'csv'];
+            if (!in_array($datos['tipo_descarga'], $tipos_validos)) {
+                $errores['tipo_descarga'] = 'El tipo de descarga no es válido. Tipos permitidos: ' . implode(', ', $tipos_validos);
+            }
+        }
+        
+        // Validar parámetros adicionales según el tipo
+        if (isset($datos['parametros']) && is_array($datos['parametros'])) {
+            foreach ($datos['parametros'] as $parametro => $valor) {
+                if (is_string($valor) && mb_strlen($valor) > 100) {
+                    $errores[$parametro] = 'El parámetro ' . $parametro . ' es demasiado largo';
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // Métodos auxiliares
+    private function verificarRecepcionExistente($id_recepcion) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_recepcion_productos WHERE id_recepcion = ?");
+            $stmt->execute([$id_recepcion]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+    
+    private function verificarProveedorExistente($id_proveedor) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_proveedores WHERE id_proveedor = ?");
+            $stmt->execute([$id_proveedor]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
     }
 
     public function registrarRecepcion($idproducto, $cantidad, $costo) {

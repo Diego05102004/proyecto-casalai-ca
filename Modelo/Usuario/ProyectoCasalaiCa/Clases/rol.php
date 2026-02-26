@@ -9,6 +9,12 @@ class Rol extends BD {
     private $nombre_rol;
     private $conex;
 
+    // Constantes de validación
+    const MAX_ID_ROL = 999999999;
+    const MIN_ID_ROL = 1;
+    const MAX_NOMBRE_ROL = 100;
+    const MIN_NOMBRE_ROL = 2;
+
     public function __construct() {
         $this->conex = null;
     }
@@ -27,28 +33,124 @@ class Rol extends BD {
         $this->nombre_rol = $nombre_rol; 
     }
 
-    public function validarDatos($esModificacion = false) {
+    // Métodos de validación centralizados
+    private function validarRol($datos) {
         $errores = [];
-
-        // Validar nombre del rol
-        $nombre_rol = trim((string)$this->nombre_rol);
-        if ($nombre_rol === '') {
-            $errores['nombre_rol'] = 'El nombre del rol es obligatorio';
-        } elseif (mb_strlen($nombre_rol) < 2 || mb_strlen($nombre_rol) > 100) {
-            $errores['nombre_rol'] = 'El nombre del rol debe tener entre 2 y 100 caracteres';
-        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_rol)) {
-            $errores['nombre_rol'] = 'El nombre del rol solo puede contener letras, números, espacios y caracteres especiales comunes';
+        
+        if (!is_array($datos)) {
+            $errores['rol'] = 'Los datos del rol deben ser un arreglo';
+            return $errores;
         }
-
-        // Validar ID del rol (solo para modificaciones)
-        if ($esModificacion) {
-            $id_rol = (int)$this->id_rol;
-            if ($id_rol <= 0) {
-                $errores['id_rol'] = 'El ID del rol no es válido';
+        
+        // Validar ID del rol
+        if (isset($datos['id_rol'])) {
+            $id_rol = (int)$datos['id_rol'];
+            if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
+                $errores['id_rol'] = 'El ID del rol debe ser un número entre ' . self::MIN_ID_ROL . ' y ' . self::MAX_ID_ROL;
             }
         }
-
+        
+        // Validar nombre del rol
+        if (isset($datos['nombre_rol'])) {
+            $nombre_rol = trim((string)$datos['nombre_rol']);
+            if ($nombre_rol === '') {
+                $errores['nombre_rol'] = 'El nombre del rol es obligatorio';
+            } elseif (mb_strlen($nombre_rol) < self::MIN_NOMBRE_ROL || mb_strlen($nombre_rol) > self::MAX_NOMBRE_ROL) {
+                $errores['nombre_rol'] = 'El nombre del rol debe tener entre ' . self::MIN_NOMBRE_ROL . ' y ' . self::MAX_NOMBRE_ROL . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_rol)) {
+                $errores['nombre_rol'] = 'El nombre del rol solo puede contener letras, números, espacios y caracteres especiales comunes';
+            }
+        }
+        
         return $errores;
+    }
+    
+    // Métodos públicos de validación
+    public function validarConsultarRol($datos) {
+        $errores = [];
+        
+        // Para consultar, podemos validar por ID o sin filtros
+        if (isset($datos['id_rol'])) {
+            $id_rol = (int)$datos['id_rol'];
+            if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
+                $errores['id_rol'] = 'El ID del rol debe ser un número entre ' . self::MIN_ID_ROL . ' y ' . self::MAX_ID_ROL;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarRegistrarRol($datos) {
+        $errores = [];
+        
+        // Para registrar, requerimos campos obligatorios
+        if (!isset($datos['nombre_rol'])) {
+            $errores['nombre_rol'] = 'El nombre del rol es obligatorio';
+        }
+        
+        // Validar el rol completo
+        $errores_rol = $this->validarRol($datos);
+        if (!empty($errores_rol)) {
+            $errores = array_merge($errores, $errores_rol);
+        }
+        
+        return $errores;
+    }
+    
+    public function validarModificarRol($datos) {
+        $errores = [];
+        
+        // Para modificar, el ID es obligatorio
+        if (!isset($datos['id_rol'])) {
+            $errores['id_rol'] = 'El ID del rol es obligatorio';
+        }
+        
+        // Para modificar, el nombre también es obligatorio
+        if (!isset($datos['nombre_rol'])) {
+            $errores['nombre_rol'] = 'El nombre del rol es obligatorio';
+        }
+        
+        // Validar el rol completo
+        $errores_rol = $this->validarRol($datos);
+        if (!empty($errores_rol)) {
+            $errores = array_merge($errores, $errores_rol);
+        }
+        
+        return $errores;
+    }
+    
+    public function validarEliminarRol($datos) {
+        $errores = [];
+        
+        // Para eliminar, el ID es obligatorio
+        if (!isset($datos['id_rol'])) {
+            $errores['id_rol'] = 'El ID del rol es obligatorio';
+        } else {
+            $id_rol = (int)$datos['id_rol'];
+            if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
+                $errores['id_rol'] = 'El ID del rol debe ser un número entre ' . self::MIN_ID_ROL . ' y ' . self::MAX_ID_ROL;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // Métodos auxiliares
+    private function verificarRolExistente($id_rol) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('S');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_rol WHERE id_rol = ?");
+            $stmt->execute([$id_rol]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
     } 
 
     public function registrarRol() {

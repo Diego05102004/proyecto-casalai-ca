@@ -6,6 +6,13 @@ use PDO;
 use PDOException;
 use RuntimeException;
 class Bitacora extends BD {
+    // Constantes para validaciones
+    const MAX_DESCRIPCION = 1000;
+    const MAX_LIMITE_REGISTROS = 1000;
+    const PRIORIDADES_PERMITIDAS = ['alta', 'media', 'baja'];
+    const ACCIONES_PERMITIDAS = ['ACCESAR', 'CREAR', 'MODIFICAR', 'ELIMINAR', 'RESTAURAR', 'DESCARGAR', 'GENERAR', 'CONSULTAR', 'CAMBIAR_ESTADO', 'EXPORTAR', 'IMPORTAR'];
+    const MODULOS_PERMITIDOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; // IDs de módulos válidos
+    
     public function __construct() {
         parent::__construct();
     }
@@ -177,7 +184,231 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
         }
     }
 
-    // Puedes agregar más métodos según necesidades del sistema...
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para registrar en la bitácora
+     */
+    private function validarRegistrarBitacora($datos) {
+        $errores = [];
+        
+        // Validar ID de usuario
+        if (!isset($datos['id_usuario']) || !is_numeric($datos['id_usuario']) || $datos['id_usuario'] <= 0) {
+            $errores['id_usuario'] = 'El ID de usuario debe ser un número positivo';
+        }
+        
+        // Validar módulo
+        if (!isset($datos['modulo']) || !is_numeric($datos['modulo']) || !in_array((int)$datos['modulo'], self::MODULOS_PERMITIDOS)) {
+            $errores['modulo'] = 'El módulo especificado no es válido';
+        }
+        
+        // Validar acción
+        if (!isset($datos['accion']) || empty($datos['accion'])) {
+            $errores['accion'] = 'La acción es obligatoria';
+        } else {
+            $accion = strtoupper(trim($datos['accion']));
+            if (!in_array($accion, self::ACCIONES_PERMITIDAS)) {
+                $errores['accion'] = 'La acción especificada no es válida';
+            }
+        }
+        
+        // Validar descripción
+        if (!isset($datos['descripcion']) || empty($datos['descripcion'])) {
+            $errores['descripcion'] = 'La descripción es obligatoria';
+        } else {
+            $descripcion = trim($datos['descripcion']);
+            if (mb_strlen($descripcion) > self::MAX_DESCRIPCION) {
+                $errores['descripcion'] = 'La descripción no debe exceder los ' . self::MAX_DESCRIPCION . ' caracteres';
+            }
+            
+            // Validar caracteres peligrosos
+            if (preg_match('/[<>"\|\&\$\*\?]/', $descripcion)) {
+                $errores['descripcion'] = 'La descripción contiene caracteres no permitidos';
+            }
+        }
+        
+        // Validar prioridad
+        if (!isset($datos['prioridad']) || empty($datos['prioridad'])) {
+            $errores['prioridad'] = 'La prioridad es obligatoria';
+        } else {
+            $prioridad = strtolower(trim($datos['prioridad']));
+            if (!in_array($prioridad, self::PRIORIDADES_PERMITIDAS)) {
+                $errores['prioridad'] = 'La prioridad debe ser: alta, media o baja';
+            }
+        }
+        
+        // Validar datos anteriores y nuevos (opcional)
+        if (isset($datos['datos_anteriores']) && $datos['datos_anteriores'] !== null) {
+            if (!is_array($datos['datos_anteriores'])) {
+                $errores['datos_anteriores'] = 'Los datos anteriores deben ser un array';
+            }
+        }
+        
+        if (isset($datos['datos_nuevos']) && $datos['datos_nuevos'] !== null) {
+            if (!is_array($datos['datos_nuevos'])) {
+                $errores['datos_nuevos'] = 'Los datos nuevos deben ser un array';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar registros de la bitácora
+     */
+    private function validarConsultarBitacora($datos) {
+        $errores = [];
+        
+        // Validar límite de registros
+        if (isset($datos['limite'])) {
+            if (!is_numeric($datos['limite']) || $datos['limite'] <= 0) {
+                $errores['limite'] = 'El límite debe ser un número positivo';
+            } elseif ($datos['limite'] > self::MAX_LIMITE_REGISTROS) {
+                $errores['limite'] = 'El límite no debe exceder los ' . self::MAX_LIMITE_REGISTROS . ' registros';
+            }
+        }
+        
+        // Validar filtros de fecha
+        if (isset($datos['fecha_inicio'])) {
+            $fechaInicio = $datos['fecha_inicio'];
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio)) {
+                $errores['fecha_inicio'] = 'La fecha de inicio debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaInicio);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_inicio'] = 'La fecha de inicio no es válida';
+                }
+            }
+        }
+        
+        if (isset($datos['fecha_fin'])) {
+            $fechaFin = $datos['fecha_fin'];
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
+                $errores['fecha_fin'] = 'La fecha de fin debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaFin);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_fin'] = 'La fecha de fin no es válida';
+                }
+            }
+        }
+        
+        // Validar que la fecha de fin no sea anterior a la de inicio
+        if (isset($datos['fecha_inicio']) && isset($datos['fecha_fin']) && !isset($errores['fecha_inicio']) && !isset($errores['fecha_fin'])) {
+            $fechaInicio = new \DateTime($datos['fecha_inicio']);
+            $fechaFin = new \DateTime($datos['fecha_fin']);
+            if ($fechaFin < $fechaInicio) {
+                $errores['fecha_fin'] = 'La fecha de fin no puede ser anterior a la fecha de inicio';
+            }
+        }
+        
+        // Validar filtros de usuario
+        if (isset($datos['id_usuario'])) {
+            if (!is_numeric($datos['id_usuario']) || $datos['id_usuario'] <= 0) {
+                $errores['id_usuario'] = 'El ID de usuario debe ser un número positivo';
+            }
+        }
+        
+        // Validar filtros de módulo
+        if (isset($datos['id_modulo'])) {
+            if (!is_numeric($datos['id_modulo']) || !in_array((int)$datos['id_modulo'], self::MODULOS_PERMITIDOS)) {
+                $errores['id_modulo'] = 'El módulo especificado no es válido';
+            }
+        }
+        
+        // Validar filtros de acción
+        if (isset($datos['accion'])) {
+            $accion = strtoupper(trim($datos['accion']));
+            if (!in_array($accion, self::ACCIONES_PERMITIDAS)) {
+                $errores['accion'] = 'La acción especificada no es válida';
+            }
+        }
+        
+        // Validar filtros de prioridad
+        if (isset($datos['prioridad'])) {
+            $prioridad = strtolower(trim($datos['prioridad']));
+            if (!in_array($prioridad, self::PRIORIDADES_PERMITIDAS)) {
+                $errores['prioridad'] = 'La prioridad debe ser: alta, media o baja';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para registrar en la bitácora (método público)
+     */
+    public function validarRegistrar($datos) {
+        return $this->validarRegistrarBitacora($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar registros de la bitácora (método público)
+     */
+    public function validarConsultar($datos) {
+        return $this->validarConsultarBitacora($datos);
+    }
+    
+    /**
+     * Limpia y sanitiza una descripción
+     */
+    private function sanitizarDescripcion($descripcion) {
+        // Eliminar caracteres peligrosos
+        $descripcion = preg_replace('/[<>"\|\&\$\*\?]/', '', $descripcion);
+        
+        // Eliminar espacios múltiples
+        $descripcion = preg_replace('/\s+/', ' ', $descripcion);
+        
+        // Limitar longitud
+        if (mb_strlen($descripcion) > self::MAX_DESCRIPCION) {
+            $descripcion = mb_substr($descripcion, 0, self::MAX_DESCRIPCION);
+        }
+        
+        return trim($descripcion);
+    }
+    
+    /**
+     * Verifica si un usuario existe
+     */
+    private function verificarUsuarioExistente($idUsuario) {
+        $conexion = new BD('S');
+        $co = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE id_usuario = :id_usuario";
+            $stmt = $co->prepare($sql);
+            $stmt->bindValue(':id_usuario', $idUsuario, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } finally {
+            if (isset($conexion)) { 
+                $conexion->cerrar(); 
+            }
+            $co = null;
+        }
+    }
+    
+    /**
+     * Verifica si un módulo existe
+     */
+    private function verificarModuloExistente($idModulo) {
+        $conexion = new BD('S');
+        $co = $conexion->getConexion();
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_modulos WHERE id_modulo = :id_modulo";
+            $stmt = $co->prepare($sql);
+            $stmt->bindValue(':id_modulo', $idModulo, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } finally {
+            if (isset($conexion)) { 
+                $conexion->cerrar(); 
+            }
+            $co = null;
+        }
+    }
 }
+
 ?>
 

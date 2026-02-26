@@ -18,24 +18,67 @@ if (!isset($_SESSION['id_usuario'])) {
     exit;
 }
 
-// Registrar acceso al módulo (formato Recepción) si no está en modo pruebas
+// Validar y registrar acceso al módulo
 if (!defined('SKIP_SIDE_EFFECTS')) {
     $bitacoraModel = new Bitacora();
-    $bitacoraModel->registrarBitacora(
-        $_SESSION['id_usuario'],
-        MODULO_BITACORA,
-        'ACCESAR',
-        'El usuario accedió al módulo de bitácora',
-        'baja'
-    );
+    
+    // Validar datos de registro
+    $datosRegistro = [
+        'id_usuario' => $_SESSION['id_usuario'],
+        'modulo' => MODULO_BITACORA,
+        'accion' => 'ACCESAR',
+        'descripcion' => 'El usuario accedió al módulo de bitácora',
+        'prioridad' => 'baja'
+    ];
+    
+    $errores = $bitacoraModel->validarRegistrar($datosRegistro);
+    if (empty($errores)) {
+        $bitacoraModel->registrarBitacora(
+            $datosRegistro['id_usuario'],
+            $datosRegistro['modulo'],
+            $datosRegistro['accion'],
+            $datosRegistro['descripcion'],
+            $datosRegistro['prioridad']
+        );
+    }
 }
 
-// Consultar registros
+// Validar y consultar registros
 $bitacoraModel = new Bitacora();
-try {
-    $registros = $bitacoraModel->obtenerRegistrosDetallados(500);
-} catch (Exception $e) {
-    $registros = [];
+$registros = [];
+$erroresConsulta = [];
+
+// Obtener parámetros de consulta
+$datosConsulta = [
+    'limite' => $_GET['limite'] ?? 500,
+    'fecha_inicio' => $_GET['fecha_inicio'] ?? null,
+    'fecha_fin' => $_GET['fecha_fin'] ?? null,
+    'id_usuario' => $_GET['id_usuario'] ?? null,
+    'id_modulo' => $_GET['id_modulo'] ?? null,
+    'accion' => $_GET['accion'] ?? null,
+    'prioridad' => $_GET['prioridad'] ?? null
+];
+
+// Validar parámetros de consulta
+$erroresConsulta = $bitacoraModel->validarConsultar($datosConsulta);
+
+if (empty($erroresConsulta)) {
+    try {
+        // Usar el límite validado o el valor por defecto
+        $limite = isset($datosConsulta['limite']) ? (int)$datosConsulta['limite'] : 500;
+        $registros = $bitacoraModel->obtenerRegistrosDetallados($limite);
+    } catch (Exception $e) {
+        $registros = [];
+        $erroresConsulta['sistema'] = 'Error al consultar los registros: ' . $e->getMessage();
+    }
+} else {
+    // Si hay errores de validación, usar valores por defecto
+    try {
+        $registros = $bitacoraModel->obtenerRegistrosDetallados(500);
+    } catch (Exception $e) {
+        $registros = [];
+        $erroresConsulta['sistema'] = 'Error al consultar los registros: ' . $e->getMessage();
+    }
 }
 
 // Render de vista

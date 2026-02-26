@@ -8,6 +8,12 @@ use RuntimeException;
 class Backup {
     private $tipo;
     private $config;
+    
+    // Constantes para validaciones
+    const MAX_NOMBRE_ARCHIVO = 255;
+    const EXTENSIONES_PERMITIDAS = ['sql'];
+    const TIPOS_BACKUP_PERMITIDOS = ['P', 'S']; // Principal, Seguridad
+    const TAMANO_MAXIMO_BACKUP = 104857600; // 100MB en bytes
 
     public function __construct($tipo = 'P') {
         $this->tipo = $tipo;
@@ -332,6 +338,323 @@ private function getSqlFooter() {
             return 'Principal';
         }
         return 'Desconocido';
-    }}
+    }
+    
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para generar un backup
+     */
+    private function validarGenerarBackup($datos) {
+        $errores = [];
+        
+        // Validar tipo de backup
+        if (isset($datos['tipo'])) {
+            $tipo = strtoupper(trim($datos['tipo']));
+            if (!in_array($tipo, self::TIPOS_BACKUP_PERMITIDOS)) {
+                $errores['tipo'] = 'El tipo de backup debe ser P (Principal) o S (Seguridad)';
+            }
+        }
+        
+        // Validar nombre del archivo (si se proporciona)
+        if (isset($datos['nombre_archivo']) && $datos['nombre_archivo'] !== '') {
+            $nombreArchivo = trim($datos['nombre_archivo']);
+            
+            // Validar longitud del nombre
+            if (mb_strlen($nombreArchivo) > self::MAX_NOMBRE_ARCHIVO) {
+                $errores['nombre_archivo'] = 'El nombre del archivo no debe exceder los ' . self::MAX_NOMBRE_ARCHIVO . ' caracteres';
+            }
+            
+            // Validar caracteres del nombre
+            if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo solo puede contener letras, números, guiones, guiones bajos y puntos';
+            }
+            
+            // Validar que no tenga caracteres peligrosos
+            if (preg_match('/[<>"\|\&\$\*\?]/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo contiene caracteres no permitidos';
+            }
+            
+            // Validar extensión
+            $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+            if (!empty($extension) && !in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
+                $errores['nombre_archivo'] = 'La extensión del archivo debe ser .sql';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para restaurar un backup
+     */
+    private function validarRestaurarBackup($datos) {
+        $errores = [];
+        
+        // Validar nombre del archivo
+        if (!isset($datos['nombre_archivo']) || empty($datos['nombre_archivo'])) {
+            $errores['nombre_archivo'] = 'Debe especificar el nombre del archivo a restaurar';
+        } else {
+            $nombreArchivo = trim($datos['nombre_archivo']);
+            
+            // Validar longitud del nombre
+            if (mb_strlen($nombreArchivo) > self::MAX_NOMBRE_ARCHIVO) {
+                $errores['nombre_archivo'] = 'El nombre del archivo no debe exceder los ' . self::MAX_NOMBRE_ARCHIVO . ' caracteres';
+            }
+            
+            // Validar caracteres del nombre
+            if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo solo puede contener letras, números, guiones, guiones bajos y puntos';
+            }
+            
+            // Validar que no tenga caracteres peligrosos
+            if (preg_match('/[<>"\|\&\$\*\?]/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo contiene caracteres no permitidos';
+            }
+            
+            // Validar extensión
+            $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+            if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
+                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql';
+            }
+            
+            // Validar que el archivo exista
+            $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
+            $rutaArchivo = $rutaCarpeta . $nombreArchivo;
+            
+            if (!file_exists($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo de backup no existe';
+            } elseif (!is_file($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'La ruta especificada no es un archivo válido';
+            } elseif (!is_readable($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo no tiene permisos de lectura';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para descargar un backup
+     */
+    private function validarDescargarBackup($datos) {
+        return $this->validarRestaurarBackup($datos); // Usa la misma validación que restaurar
+    }
+    
+    /**
+     * Valida los datos para eliminar un backup
+     */
+    private function validarEliminarBackup($datos) {
+        $errores = [];
+        
+        // Validar nombre del archivo
+        if (!isset($datos['nombre_archivo']) || empty($datos['nombre_archivo'])) {
+            $errores['nombre_archivo'] = 'Debe especificar el nombre del archivo a eliminar';
+        } else {
+            $nombreArchivo = trim($datos['nombre_archivo']);
+            
+            // Validar longitud del nombre
+            if (mb_strlen($nombreArchivo) > self::MAX_NOMBRE_ARCHIVO) {
+                $errores['nombre_archivo'] = 'El nombre del archivo no debe exceder los ' . self::MAX_NOMBRE_ARCHIVO . ' caracteres';
+            }
+            
+            // Validar caracteres del nombre
+            if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo solo puede contener letras, números, guiones, guiones bajos y puntos';
+            }
+            
+            // Validar que no tenga caracteres peligrosos
+            if (preg_match('/[<>"\|\&\$\*\?]/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo contiene caracteres no permitidos';
+            }
+            
+            // Validar extensión
+            $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+            if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
+                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql';
+            }
+            
+            // Validar que el archivo exista
+            $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
+            $rutaArchivo = $rutaCarpeta . $nombreArchivo;
+            
+            if (!file_exists($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo de backup no existe';
+            } elseif (!is_file($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'La ruta especificada no es un archivo válido';
+            } elseif (!is_writable($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo no tiene permisos de eliminación';
+            }
+            
+            // Validar que no sea un archivo protegido
+            $archivosProtegidos = ['backup_restore.log', 'backup_debug.log'];
+            if (in_array($nombreArchivo, $archivosProtegidos)) {
+                $errores['nombre_archivo'] = 'No se puede eliminar un archivo de sistema';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar un backup individual
+     */
+    private function validarConsultarBackup($datos) {
+        $errores = [];
+        
+        // Validar nombre del archivo
+        if (!isset($datos['nombre_archivo']) || empty($datos['nombre_archivo'])) {
+            $errores['nombre_archivo'] = 'Debe especificar el nombre del archivo a consultar';
+        } else {
+            $nombreArchivo = trim($datos['nombre_archivo']);
+            
+            // Validar longitud del nombre
+            if (mb_strlen($nombreArchivo) > self::MAX_NOMBRE_ARCHIVO) {
+                $errores['nombre_archivo'] = 'El nombre del archivo no debe exceder los ' . self::MAX_NOMBRE_ARCHIVO . ' caracteres';
+            }
+            
+            // Validar caracteres del nombre
+            if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo solo puede contener letras, números, guiones, guiones bajos y puntos';
+            }
+            
+            // Validar que no tenga caracteres peligrosos
+            if (preg_match('/[<>"\|\&\$\*\?]/', $nombreArchivo)) {
+                $errores['nombre_archivo'] = 'El nombre del archivo contiene caracteres no permitidos';
+            }
+            
+            // Validar extensión
+            $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+            if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
+                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql';
+            }
+            
+            // Validar que el archivo exista
+            $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
+            $rutaArchivo = $rutaCarpeta . $nombreArchivo;
+            
+            if (!file_exists($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo de backup no existe';
+            } elseif (!is_file($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'La ruta especificada no es un archivo válido';
+            } elseif (!is_readable($rutaArchivo)) {
+                $errores['nombre_archivo'] = 'El archivo no tiene permisos de lectura';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para listar backups
+     */
+    private function validarListarBackups($datos) {
+        $errores = [];
+        
+        // Validar límite de resultados (si se proporciona)
+        if (isset($datos['limite'])) {
+            $limite = (int)$datos['limite'];
+            if ($limite < 1 || $limite > 100) {
+                $errores['limite'] = 'El límite debe estar entre 1 y 100 resultados';
+            }
+        }
+        
+        // Validar tipo de filtro (si se proporciona)
+        if (isset($datos['tipo_filtro'])) {
+            $tiposValidos = ['todos', 'principal', 'seguridad'];
+            if (!in_array(strtolower($datos['tipo_filtro']), $tiposValidos)) {
+                $errores['tipo_filtro'] = 'El tipo de filtro debe ser: todos, principal o seguridad';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para generar un backup (método público)
+     */
+    public function validarGenerar($datos) {
+        return $this->validarGenerarBackup($datos);
+    }
+    
+    /**
+     * Valida los datos para restaurar un backup (método público)
+     */
+    public function validarRestaurar($datos) {
+        return $this->validarRestaurarBackup($datos);
+    }
+    
+    /**
+     * Valida los datos para descargar un backup (método público)
+     */
+    public function validarDescargar($datos) {
+        return $this->validarDescargarBackup($datos);
+    }
+    
+    /**
+     * Valida los datos para eliminar un backup (método público)
+     */
+    public function validarEliminar($datos) {
+        return $this->validarEliminarBackup($datos);
+    }
+    
+    /**
+     * Valida los datos para listar backups (método público)
+     */
+    public function validarListar($datos) {
+        return $this->validarListarBackups($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar un backup (método público)
+     */
+    public function validarConsultar($datos) {
+        return $this->validarConsultarBackup($datos);
+    }
+    
+    /**
+     * Verifica si el directorio de backup existe y tiene permisos
+     */
+    private function verificarDirectorioBackup() {
+        $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
+        
+        // Crear directorio si no existe
+        if (!is_dir($rutaCarpeta)) {
+            if (!mkdir($rutaCarpeta, 0775, true)) {
+                return false;
+            }
+        }
+        
+        // Verificar permisos de escritura
+        if (!is_writable($rutaCarpeta)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Limpia y sanitiza un nombre de archivo
+     */
+    private function sanitizarNombreArchivo($nombreArchivo) {
+        // Eliminar caracteres peligrosos
+        $nombreArchivo = preg_replace('/[<>"\|\&\$\*\?]/', '', $nombreArchivo);
+        
+        // Eliminar espacios y reemplazar con guiones bajos
+        $nombreArchivo = preg_replace('/\s+/', '_', $nombreArchivo);
+        
+        // Eliminar caracteres no permitidos excepto letras, números, guiones, guiones bajos y puntos
+        $nombreArchivo = preg_replace('/[^a-zA-Z0-9_\-\.]/', '', $nombreArchivo);
+        
+        // Limitar longitud
+        if (mb_strlen($nombreArchivo) > self::MAX_NOMBRE_ARCHIVO) {
+            $nombreArchivo = mb_substr($nombreArchivo, 0, self::MAX_NOMBRE_ARCHIVO);
+        }
+        
+        return $nombreArchivo;
+    }
+}
 
 ?>

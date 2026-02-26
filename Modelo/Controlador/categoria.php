@@ -23,12 +23,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     switch ($accion) {
         case 'registrar':
+            // Validar datos de entrada
             $categoria = new Categoria();
-            $categoria->setNombreCategoria($_POST['nombre_categoria']);
-            $caracteristicas = isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : [];
-
-            // Validar datos de la categoría
-            $errores = $categoria->validarDatos();
+            $datosValidacion = [
+                'nombre_categoria' => $_POST['nombre_categoria'] ?? '',
+                'caracteristicas' => isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : []
+            ];
+            
+            $errores = $categoria->validarRegistrarCategoria($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -37,6 +39,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+
+            $categoria->setNombreCategoria($_POST['nombre_categoria']);
+            $caracteristicas = isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : [];
 
             if ($categoria->existeNombreCategoria($_POST['nombre_categoria'])) {
                 echo json_encode([
@@ -86,9 +91,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'obtener_categoria':
+            // Validar datos de entrada
+            $categoria = new Categoria();
+            $datosValidacion = [
+                'id_categoria' => $_POST['id_categoria'] ?? null
+            ];
+            
+            $errores = $categoria->validarConsultarCategoria($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             $id_categoria = $_POST['id_categoria'];
             if ($id_categoria !== null) {
-                $categoria = new Categoria();
                 $categoria_obt = $categoria->obtenerCategoriaPorId($id_categoria);
                 if ($categoria_obt !== null) {
                     echo json_encode($categoria_obt);
@@ -101,118 +121,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
-            // Iniciar buffer de salida para capturar posibles errores
-            ob_start();
+            // Validar datos de entrada
+            $categoria = new Categoria();
+            $datosValidacion = [
+                'id_categoria' => $_POST['id_categoria'] ?? null,
+                'nombre_categoria' => $_POST['nombre_categoria'] ?? '',
+                'caracteristicas' => []
+            ];
             
-            // Registrar datos recibidos
-            error_log('=== INICIO DE SOLICITUD DE MODIFICACIÓN ===');
-            error_log('Datos POST recibidos: ' . print_r($_POST, true));
-            
-            if (!isset($_POST['id_categoria'], $_POST['nombre_categoria'])) {
-                $error = 'Faltan parámetros requeridos';
-                error_log('Error: ' . $error);
-                
-                // Capturar cualquier salida de depuración
-                $debugOutput = ob_get_clean();
-                if (!empty($debugOutput)) {
-                    error_log('Salida de depuración: ' . $debugOutput);
+            // Decodificar características si están presentes
+            if (isset($_POST['caracteristicas'])) {
+                if (is_string($_POST['caracteristicas'])) {
+                    $datosValidacion['caracteristicas'] = json_decode($_POST['caracteristicas'], true);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        error_log('Error al decodificar características JSON: ' . json_last_error_msg());
+                        $datosValidacion['caracteristicas'] = [];
+                    }
+                } else {
+                    $datosValidacion['caracteristicas'] = $_POST['caracteristicas'];
                 }
-                
+            }
+            
+            $errores = $categoria->validarModificarCategoria($datosValidacion);
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => $error,
-                    'debug' => [
-                        'post_data' => $_POST,
-                        'debug_output' => $debugOutput
-                    ]
+                    'message' => 'Error en los datos de la categoría',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            if (!isset($_POST['id_categoria'], $_POST['nombre_categoria'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Faltan parámetros requeridos'
                 ]);
                 exit;
             }
             
             $id_categoria  = $_POST['id_categoria'];
             $nuevo_nombre = trim($_POST['nombre_categoria']);
-            $caracteristicas = [];
+            $caracteristicas = $datosValidacion['caracteristicas'];
             
-            // Decodificar características si están presentes
-            if (isset($_POST['caracteristicas'])) {
-                if (is_string($_POST['caracteristicas'])) {
-                    $caracteristicas = json_decode($_POST['caracteristicas'], true);
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        error_log('Error al decodificar características JSON: ' . json_last_error_msg());
-                    }
-                } else {
-                    $caracteristicas = $_POST['caracteristicas'];
-                }
-            }
-            
-            error_log('Datos procesados - ID: ' . $id_categoria . ', Nombre: ' . $nuevo_nombre);
-            error_log('Características recibidas: ' . print_r($caracteristicas, true));
-            
-            if (empty($nuevo_nombre)) {
-                $error = 'El nombre de la categoría no puede estar vacío';
-                error_log('Error: ' . $error);
-                
-                // Capturar cualquier salida de depuración
-                $debugOutput = ob_get_clean();
-                
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => $error,
-                    'debug' => [
-                        'id_categoria' => $id_categoria,
-                        'nombre_categoria' => $nuevo_nombre,
-                        'caracteristicas' => $caracteristicas,
-                        'debug_output' => $debugOutput
-                    ]
-                ]);
-                exit;
-            }
-            
-            $categoria = new Categoria();
             $categoria->setIdCategoria($id_categoria);
             $categoria->setNombreCategoria($nuevo_nombre);
             
-            error_log('Iniciando modificación de categoría: ' . $nuevo_nombre);
-            
-            // Validar datos de la categoría
-            $errores = $categoria->validarDatos(true); // true = es modificación
-            if (!empty($errores)) {
-                error_log('Errores de validación: ' . print_r($errores, true));
-                
-                // Capturar cualquier salida de depuración
-                $debugOutput = ob_get_clean();
-                
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en los datos de la categoría',
-                    'errors' => $errores,
-                    'debug' => [
-                        'id_categoria' => $id_categoria,
-                        'nombre_categoria' => $nuevo_nombre,
-                        'caracteristicas' => $caracteristicas,
-                        'debug_output' => $debugOutput
-                    ]
-                ]);
-                exit;
-            }
-            
             // Verificar si el nombre ya existe (excluyendo la categoría actual)
             if ($categoria->existeNombreCategoria($nuevo_nombre, $id_categoria)) {
-                $error = 'El nombre de la categoria ya existe';
-                error_log('Error: ' . $error);
-                
-                // Capturar cualquier salida de depuración
-                $debugOutput = ob_get_clean();
-                
                 echo json_encode([
                     'status' => 'error',
-                    'message' => $error,
-                    'debug' => [
-                        'id_categoria' => $id_categoria,
-                        'nombre_categoria' => $nuevo_nombre,
-                        'caracteristicas' => $caracteristicas,
-                        'debug_output' => $debugOutput
-                    ]
+                    'message' => 'El nombre de la categoria ya existe'
                 ]);
                 exit;
             }
@@ -221,14 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $resultado = $categoria->modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas);
             
             if ($resultado === true) {
-                error_log('Categoría modificada exitosamente, obteniendo datos actualizados...');
                 $categoriaActualizada = $categoria->obtenerCategoriaPorId($id_categoria);
-                
-                if (!$categoriaActualizada) {
-                    error_log('Error: No se pudo obtener la categoría actualizada');
-                } else {
-                    error_log('Datos de categoría actualizada: ' . print_r($categoriaActualizada, true));
-                }
 
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     try {
@@ -240,75 +192,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             'El usuario modificó la categoría ID: ' . $id_categoria,
                             'media'
                         );
-                        error_log('Bitácora registrada correctamente');
                     } catch (Exception $e) {
                         error_log('Error al registrar en bitácora: ' . $e->getMessage());
                     }
                 }
                 
-                // Capturar cualquier salida de depuración
-                $debugOutput = ob_get_clean();
-                
-                $respuesta = [
+                echo json_encode([
                     'status' => 'success',
-                    'categoria' => $categoriaActualizada,
-                    'debug' => [
-                        'caracteristicas_enviadas' => $caracteristicas,
-                        'debug_output' => $debugOutput
-                    ]
-                ];
-                
-                error_log('Respuesta de éxito: ' . print_r($respuesta, true));
-                echo json_encode($respuesta);
+                    'categoria' => $categoriaActualizada
+                ]);
             } else {
                 $error = 'Error al modificar la categoría';
                 if (is_string($resultado)) {
-                    $error = $resultado; // Si modificarCategoria devuelve un mensaje de error
+                    $error = $resultado;
                 }
                 
-                error_log('Error al modificar categoría: ' . $error);
-                
-                // Capturar cualquier salida de depuración
-                $debugOutput = ob_get_clean();
-                
-                $respuestaError = [
+                echo json_encode([
                     'status' => 'error',
-                    'message' => $error,
-                    'debug' => [
-                        'id_categoria' => $id_categoria,
-                        'nombre_categoria' => $nuevo_nombre,
-                        'caracteristicas_enviadas' => $caracteristicas,
-                        'debug_output' => $debugOutput
-                    ]
-                ];
-                
-                error_log('Respuesta de error: ' . print_r($respuestaError, true));
-                echo json_encode($respuestaError);
+                    'message' => $error
+                ]);
             }
             exit;
 
         case 'eliminar':
-            $id_categoria = $_POST['id_categoria'] ?? null;
-            
-            // Validar ID de la categoría
-            if ($id_categoria === null) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'ID de la categoría no proporcionado'
-                ]);
-                exit;
-            }
-            
-            $id_categoria = (int)$id_categoria;
-            if ($id_categoria <= 0) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El ID de la categoría no es válido'
-                ]);
-                exit;
-            }
-            
+            // Validar datos de entrada
             $categoria = new Categoria();
+            $datosValidacion = [
+                'id_categoria' => $_POST['id_categoria'] ?? null
+            ];
+            
+            $errores = $categoria->validarEliminarCategoria($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
+            $id_categoria = $_POST['id_categoria'];
             
             // Verificar que la categoría exista antes de eliminar
             $categoriaExistente = $categoria->obtenerCategoriaPorId($id_categoria);

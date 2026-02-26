@@ -97,11 +97,6 @@ if (is_file("Vista/" . $pagina . ".php")) {
                 $montoTotal = $_POST['monto_total'] ?? 0;
                 $cambio = $_POST['cambio_efectivo'] ?? 0;
 
-                if (!$idCliente || empty($productos)) {
-                    echo json_encode(['status' => 'error', 'mensaje' => 'Faltan datos obligatorios']);
-                    exit;
-                }
-
                 // Preparar productos
                 $detalleProductos = [];
                 foreach ($productos as $i => $prod) {
@@ -160,12 +155,13 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     'pagos' => $detallePagos
                 ];
 
-                $errores = $k->validarDatosVenta($datosVenta);
+                // Validar datos de entrada
+                $errores = $k->validarRegistrarVenta($datosVenta);
                 if (!empty($errores)) {
                     echo json_encode([
                         'status' => 'error',
-                        'mensaje' => 'Error en los datos de la venta',
-                        'errores' => $errores
+                        'message' => 'Error en los datos de la venta',
+                        'errors' => $errores
                     ]);
                     exit;
                 }
@@ -236,6 +232,21 @@ if (is_file("Vista/" . $pagina . ".php")) {
                 exit;
 
             case 'obtener_detalles':
+                // Validar datos de entrada
+                $datosValidacion = [
+                    'id_despacho' => $_POST['id_despachos'] ?? null
+                ];
+                
+                $errores = $k->validarDetallarVenta($datosValidacion);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Datos inválidos',
+                        'errors' => $errores
+                    ]);
+                    exit;
+                }
+                
                 $idDespacho = $_POST['id_despachos'] ?? null;
                 if ($idDespacho) {
                     $respuesta = $k->obtenerDetallesPorDespacho($idDespacho);

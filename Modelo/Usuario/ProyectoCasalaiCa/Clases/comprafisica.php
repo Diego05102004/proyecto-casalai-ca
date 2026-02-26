@@ -11,6 +11,16 @@ class Comprafisica extends BD{
     private $fecha;
     private $conex;
     private $tablerecepcion = 'tbl_despachos';
+    
+    // Constantes para validaciones
+    const MAX_DESCRIPCION = 500;
+    const MAX_REFERENCIA = 100;
+    const MAX_CANTIDAD_PRODUCTO = 999999;
+    const MAX_MONTO_PAGO = 99999999.99;
+    const MIN_CANTIDAD_PRODUCTO = 0.01;
+    const TIPOS_PAGO_PERMITIDOS = ['Efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'Tarjeta', 'Cheque'];
+    const TIPOS_PAGO_CON_REFERENCIA = ['Transferencia', 'Zelle', 'Pago Movil'];
+    const ESTADOS_PERMITIDOS = ['activo', 'inactivo', 'pendiente'];
 
     public function __construct() {
         $this->conex = null;
@@ -37,91 +47,288 @@ class Comprafisica extends BD{
         $this->desc = $desc;
     }
 
-    public function validarDatosVenta(array $datos) {
+    // ==================== VALIDACIONES DE BACKEND ====================
+    
+    /**
+     * Valida los datos para registrar una venta física
+     */
+    private function validarRegistrar($datos) {
         $errores = [];
-
-        $idCliente = isset($datos['cliente']) ? (int)$datos['cliente'] : 0;
-        if ($idCliente <= 0) {
-            $errores['cliente'] = 'Debe seleccionar un cliente válido';
+        
+        // Validar ID del cliente
+        if (!isset($datos['cliente'])) {
+            $errores['cliente'] = 'El ID del cliente es obligatorio';
+        } elseif (!is_numeric($datos['cliente']) || $datos['cliente'] <= 0) {
+            $errores['cliente'] = 'El ID del cliente debe ser un número positivo';
         }
-
-        $productos = isset($datos['productos']) && is_array($datos['productos']) ? $datos['productos'] : [];
-        if (empty($productos)) {
+        
+        // Validar productos
+        if (!isset($datos['productos']) || !is_array($datos['productos']) || empty($datos['productos'])) {
             $errores['productos'] = 'Debe agregar al menos un producto';
         } else {
-            foreach ($productos as $producto) {
+            foreach ($datos['productos'] as $index => $producto) {
                 if (!is_array($producto)) {
-                    $errores['productos'] = 'El formato de los productos no es válido';
-                    break;
+                    $errores["productos_$index"] = 'El producto en la posición ' . $index . ' debe ser un array';
+                    continue;
                 }
-
-                $idProducto = isset($producto['id_producto']) ? (int)$producto['id_producto'] : 0;
-                if ($idProducto <= 0) {
-                    $errores['productos'] = 'Todos los productos deben tener un ID válido';
-                    break;
+                
+                // Validar ID del producto
+                if (!isset($producto['id_producto']) || !is_numeric($producto['id_producto']) || $producto['id_producto'] <= 0) {
+                    $errores["productos_{$index}_id_producto"] = 'El ID del producto en la posición ' . $index . ' debe ser un número positivo';
                 }
-
+                
+                // Validar cantidad
                 if (!isset($producto['cantidad'])) {
-                    $errores['productos'] = 'Cada producto debe tener una cantidad';
-                    break;
-                }
-
-                $cantidad = (float)$producto['cantidad'];
-                if ($cantidad <= 0) {
-                    $errores['productos'] = 'La cantidad de cada producto debe ser mayor a 0';
-                    break;
-                } elseif ($cantidad > 999999) {
-                    $errores['productos'] = 'La cantidad de productos es muy grande';
-                    break;
+                    $errores["productos_{$index}_cantidad"] = 'La cantidad del producto en la posición ' . $index . ' es obligatoria';
+                } else {
+                    $cantidad = (float)$producto['cantidad'];
+                    if ($cantidad <= self::MIN_CANTIDAD_PRODUCTO) {
+                        $errores["productos_{$index}_cantidad"] = 'La cantidad debe ser mayor a ' . self::MIN_CANTIDAD_PRODUCTO;
+                    } elseif ($cantidad > self::MAX_CANTIDAD_PRODUCTO) {
+                        $errores["productos_{$index}_cantidad"] = 'La cantidad no debe exceder ' . self::MAX_CANTIDAD_PRODUCTO;
+                    }
                 }
             }
         }
-
-        $pagos = isset($datos['pagos']) && is_array($datos['pagos']) ? $datos['pagos'] : [];
-        if (empty($pagos)) {
+        
+        // Validar pagos
+        if (!isset($datos['pagos']) || !is_array($datos['pagos']) || empty($datos['pagos'])) {
             $errores['pagos'] = 'Debe registrar al menos un método de pago';
         } else {
-            foreach ($pagos as $pago) {
+            foreach ($datos['pagos'] as $index => $pago) {
                 if (!is_array($pago)) {
-                    $errores['pagos'] = 'El formato de los pagos no es válido';
-                    break;
+                    $errores["pagos_$index"] = 'El pago en la posición ' . $index . ' debe ser un array';
+                    continue;
                 }
-
-                $tipo = isset($pago['tipo']) ? trim($pago['tipo']) : '';
-                if ($tipo === '') {
-                    $errores['pagos'] = 'Cada pago debe tener un tipo válido';
-                    break;
-                }
-
-                if (!isset($pago['monto'])) {
-                    $errores['pagos'] = 'Cada pago debe tener un monto';
-                    break;
-                }
-
-                $monto = (float)$pago['monto'];
-                if ($monto <= 0) {
-                    $errores['pagos'] = 'El monto de cada pago debe ser mayor a 0';
-                    break;
-                } elseif ($monto > 99999999.99) {
-                    $errores['pagos'] = 'El monto de cada pago es muy grande';
-                    break;
-                }
-
-                if (in_array($tipo, ['Transferencia', 'Zelle', 'Pago Movil'])) {
-                    $referencia = isset($pago['referencia']) ? trim($pago['referencia']) : '';
-                    if ($referencia === '') {
-                        $errores['pagos'] = 'La referencia es obligatoria para este tipo de pago';
-                        break;
+                
+                // Validar tipo de pago
+                if (!isset($pago['tipo']) || !is_string($pago['tipo'])) {
+                    $errores["pagos_{$index}_tipo"] = 'El tipo de pago en la posición ' . $index . ' es obligatorio';
+                } else {
+                    $tipo = trim($pago['tipo']);
+                    if (empty($tipo)) {
+                        $errores["pagos_{$index}_tipo"] = 'El tipo de pago en la posición ' . $index . ' no puede estar vacío';
+                    } elseif (!in_array($tipo, self::TIPOS_PAGO_PERMITIDOS)) {
+                        $errores["pagos_{$index}_tipo"] = 'El tipo de pago debe ser uno de: ' . implode(', ', self::TIPOS_PAGO_PERMITIDOS);
                     }
-                    if (mb_strlen($referencia) > 100) {
-                        $errores['pagos'] = 'La referencia no debe exceder los 100 caracteres';
-                        break;
+                }
+                
+                // Validar monto
+                if (!isset($pago['monto'])) {
+                    $errores["pagos_{$index}_monto"] = 'El monto del pago en la posición ' . $index . ' es obligatorio';
+                } else {
+                    $monto = (float)$pago['monto'];
+                    if ($monto <= 0) {
+                        $errores["pagos_{$index}_monto"] = 'El monto debe ser mayor a 0';
+                    } elseif ($monto > self::MAX_MONTO_PAGO) {
+                        $errores["pagos_{$index}_monto"] = 'El monto no debe exceder ' . self::MAX_MONTO_PAGO;
+                    }
+                }
+                
+                // Validar referencia para tipos que lo requieren
+                if (isset($pago['tipo']) && in_array($pago['tipo'], self::TIPOS_PAGO_CON_REFERENCIA)) {
+                    if (!isset($pago['referencia'])) {
+                        $errores["pagos_{$index}_referencia"] = 'La referencia es obligatoria para el tipo ' . $pago['tipo'];
+                    } else {
+                        $referencia = trim($pago['referencia']);
+                        if (empty($referencia)) {
+                            $errores["pagos_{$index}_referencia"] = 'La referencia no puede estar vacía';
+                        } elseif (mb_strlen($referencia) > self::MAX_REFERENCIA) {
+                            $errores["pagos_{$index}_referencia"] = 'La referencia no debe exceder los ' . self::MAX_REFERENCIA . ' caracteres';
+                        }
                     }
                 }
             }
         }
-
+        
+        // Validar monto total (opcional)
+        if (isset($datos['monto_total'])) {
+            $montoTotal = (float)$datos['monto_total'];
+            if ($montoTotal <= 0) {
+                $errores['monto_total'] = 'El monto total debe ser mayor a 0';
+            } elseif ($montoTotal > self::MAX_MONTO_PAGO * 10) {
+                $errores['monto_total'] = 'El monto total es muy grande';
+            }
+        }
+        
+        // Validar cambio (opcional)
+        if (isset($datos['cambio'])) {
+            $cambio = (float)$datos['cambio'];
+            if ($cambio < 0) {
+                $errores['cambio'] = 'El cambio no puede ser negativo';
+            } elseif ($cambio > self::MAX_MONTO_PAGO) {
+                $errores['cambio'] = 'El cambio es muy grande';
+            }
+        }
+        
         return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar ventas
+     */
+    private function validarConsultar($datos) {
+        $errores = [];
+        
+        // Validar ID de despacho (opcional)
+        if (isset($datos['id_despacho'])) {
+            if (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
+                $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
+            }
+        }
+        
+        // Validar límite de resultados (opcional)
+        if (isset($datos['limite'])) {
+            $limite = (int)$datos['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
+            }
+        }
+        
+        // Validar fecha de inicio (opcional)
+        if (isset($datos['fecha_inicio'])) {
+            $fechaInicio = trim($datos['fecha_inicio']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio)) {
+                $errores['fecha_inicio'] = 'La fecha de inicio debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaInicio);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_inicio'] = 'La fecha de inicio no es válida';
+                }
+            }
+        }
+        
+        // Validar fecha de fin (opcional)
+        if (isset($datos['fecha_fin'])) {
+            $fechaFin = trim($datos['fecha_fin']);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
+                $errores['fecha_fin'] = 'La fecha de fin debe tener formato YYYY-MM-DD';
+            } else {
+                $partes = explode('-', $fechaFin);
+                if (!checkdate($partes[1], $partes[2], $partes[0])) {
+                    $errores['fecha_fin'] = 'La fecha de fin no es válida';
+                }
+            }
+        }
+        
+        // Validar que la fecha de fin no sea anterior a la de inicio
+        if (isset($datos['fecha_inicio']) && isset($datos['fecha_fin']) && !isset($errores['fecha_inicio']) && !isset($errores['fecha_fin'])) {
+            $fechaInicio = new \DateTime($datos['fecha_inicio']);
+            $fechaFin = new \DateTime($datos['fecha_fin']);
+            if ($fechaFin < $fechaInicio) {
+                $errores['fecha_fin'] = 'La fecha de fin no puede ser anterior a la fecha de inicio';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para detallar una venta
+     */
+    private function validarDetallar($datos) {
+        $errores = [];
+        
+        // Validar ID del despacho
+        if (!isset($datos['id_despacho'])) {
+            $errores['id_despacho'] = 'El ID del despacho es obligatorio';
+        } elseif (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
+            $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para registrar (método público)
+     */
+    public function validarRegistrarVenta($datos) {
+        return $this->validarRegistrar($datos);
+    }
+    
+    /**
+     * Valida los datos para consultar (método público)
+     */
+    public function validarConsultarVentas($datos) {
+        return $this->validarConsultar($datos);
+    }
+    
+    /**
+     * Valida los datos para detallar (método público)
+     */
+    public function validarDetallarVenta($datos) {
+        return $this->validarDetallar($datos);
+    }
+    
+    /**
+     * Verifica si un cliente existe y está activo
+     */
+    private function verificarClienteExistente($idCliente) {
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE id_clientes = :id_cliente AND activo = 1";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarClienteExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si un producto existe y está activo
+     */
+    private function verificarProductoExistente($idProducto) {
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_productos WHERE id_producto = :id_producto AND estado = 1";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarProductoExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
+    }
+    
+    /**
+     * Verifica si un despacho existe
+     */
+    private function verificarDespachoExistente($idDespacho) {
+        $conexion = null;
+        if ($this->conex === null) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho";
+            $stmt = $this->conex->prepare($sql);
+            $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en verificarDespachoExistente: ' . $e->getMessage());
+            return false;
+        } finally {
+            if (isset($conexion)) { $conexion->cerrar(); }
+        }
     }
 
     public function registrarCompraFisica($datos) {

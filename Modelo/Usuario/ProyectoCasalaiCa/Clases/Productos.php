@@ -38,6 +38,27 @@ class Productos extends BD{
     private $tomas;
  private $imagen;
 
+    // Constantes de validación
+    const MAX_ID_PRODUCTO = 999999999;
+    const MIN_ID_PRODUCTO = 1;
+    const MAX_ID_MODELO = 999999999;
+    const MIN_ID_MODELO = 1;
+    const MAX_NOMBRE_PRODUCTO = 200;
+    const MIN_NOMBRE_PRODUCTO = 2;
+    const MAX_DESCRIPCION = 1000;
+    const MAX_CLAUSULA_GARANTIA = 1000;
+    const MAX_SERIAL = 100;
+    const MAX_CATEGORIA = 100;
+    const MAX_STOCK = 999999;
+    const MIN_STOCK = 0;
+    const MAX_PRECIO = 999999.99;
+    const MIN_PRECIO = 0.01;
+    const MAX_DIMENSION = 999999.99;
+    const MIN_DIMENSION = 0;
+    const ESTADOS_VALIDOS = ['habilitado', 'inhabilitado'];
+    const ESTADOS_VALIDOS_CAMBIO = ['habilitado', 'inhabilitado'];
+    const EXTENSIONES_IMAGEN = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const MAX_TAMANO_IMAGEN = 5 * 1024 * 1024; // 5MB
 
     private $id;
 
@@ -199,57 +220,83 @@ public function getCapacidad() { return $this->capacidad; }
 public function setDescripcionOtros($descripcion) { $this->descripcion_otros = $descripcion; }
     public function getDescripcionOtros() { return $this->descripcion_otros; }
 
-    public function validarDatos($esModificacion = false) {
+    // Métodos de validación centralizados
+    private function validarProducto($datos) {
         $errores = [];
-
+        
+        if (!is_array($datos)) {
+            $errores['producto'] = 'Los datos del producto deben ser un arreglo';
+            return $errores;
+        }
+        
+        // Validar ID del producto
+        if (isset($datos['id_producto'])) {
+            $id_producto = (int)$datos['id_producto'];
+            if ($id_producto < self::MIN_ID_PRODUCTO || $id_producto > self::MAX_ID_PRODUCTO) {
+                $errores['id_producto'] = 'El ID del producto debe ser un número entre ' . self::MIN_ID_PRODUCTO . ' y ' . self::MAX_ID_PRODUCTO;
+            }
+        }
+        
+        // Validar ID del modelo
+        if (isset($datos['id_modelo'])) {
+            $id_modelo = (int)$datos['id_modelo'];
+            if ($id_modelo < self::MIN_ID_MODELO || $id_modelo > self::MAX_ID_MODELO) {
+                $errores['id_modelo'] = 'El ID del modelo debe ser un número entre ' . self::MIN_ID_MODELO . ' y ' . self::MAX_ID_MODELO;
+            }
+        }
+        
         // Validar nombre del producto
-        $nombre_producto = trim((string)$this->nombre_producto);
-        if ($nombre_producto === '') {
-            $errores['nombre_producto'] = 'El nombre del producto es obligatorio';
-        } elseif (mb_strlen($nombre_producto) < 2 || mb_strlen($nombre_producto) > 200) {
-            $errores['nombre_producto'] = 'El nombre del producto debe tener entre 2 y 200 caracteres';
-        } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_producto)) {
-            $errores['nombre_producto'] = 'El nombre del producto solo puede contener letras, números, espacios y caracteres especiales comunes';
+        if (isset($datos['nombre_producto'])) {
+            $nombre_producto = trim((string)$datos['nombre_producto']);
+            if ($nombre_producto === '') {
+                $errores['nombre_producto'] = 'El nombre del producto es obligatorio';
+            } elseif (mb_strlen($nombre_producto) < self::MIN_NOMBRE_PRODUCTO) {
+                $errores['nombre_producto'] = 'El nombre del producto debe tener al menos ' . self::MIN_NOMBRE_PRODUCTO . ' caracteres';
+            } elseif (mb_strlen($nombre_producto) > self::MAX_NOMBRE_PRODUCTO) {
+                $errores['nombre_producto'] = 'El nombre del producto no debe exceder los ' . self::MAX_NOMBRE_PRODUCTO . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_producto)) {
+                $errores['nombre_producto'] = 'El nombre del producto solo puede contener letras, números, espacios y caracteres especiales comunes';
+            }
         }
-
+        
         // Validar descripción
-        $descripcion = trim((string)$this->descripcion_p);
-        if ($descripcion !== '' && mb_strlen($descripcion) > 1000) {
-            $errores['descripcion_producto'] = 'La descripción no debe exceder los 1000 caracteres';
+        if (isset($datos['descripcion_producto'])) {
+            $descripcion = trim((string)$datos['descripcion_producto']);
+            if ($descripcion !== '' && mb_strlen($descripcion) > self::MAX_DESCRIPCION) {
+                $errores['descripcion_producto'] = 'La descripción no debe exceder los ' . self::MAX_DESCRIPCION . ' caracteres';
+            }
         }
-
-        // Validar modelo
-        $id_modelo = (int)$this->id_modelo;
-        if ($id_modelo <= 0) {
-            $errores['modelo'] = 'Debe seleccionar un modelo válido';
-        }
-
+        
         // Validar stock actual
-        $stock_actual = (int)$this->stock_actual;
-        if ($stock_actual < 0) {
-            $errores['stock_actual'] = 'El stock actual no puede ser negativo';
-        } elseif ($stock_actual > 999999) {
-            $errores['stock_actual'] = 'El stock actual es muy grande';
+        if (isset($datos['stock_actual'])) {
+            $stock_actual = (int)$datos['stock_actual'];
+            if ($stock_actual < self::MIN_STOCK || $stock_actual > self::MAX_STOCK) {
+                $errores['stock_actual'] = 'El stock actual debe estar entre ' . self::MIN_STOCK . ' y ' . self::MAX_STOCK;
+            }
         }
-
+        
         // Validar stock máximo
-        $stock_max = (int)$this->stock_max;
-        if ($stock_max <= 0) {
-            $errores['stock_maximo'] = 'El stock máximo debe ser mayor a 0';
-        } elseif ($stock_max > 999999) {
-            $errores['stock_maximo'] = 'El stock máximo es muy grande';
+        if (isset($datos['stock_maximo'])) {
+            $stock_max = (int)$datos['stock_maximo'];
+            if ($stock_max < self::MIN_STOCK || $stock_max > self::MAX_STOCK) {
+                $errores['stock_maximo'] = 'El stock máximo debe estar entre ' . self::MIN_STOCK . ' y ' . self::MAX_STOCK;
+            }
         }
-
+        
         // Validar stock mínimo
-        $stock_min = (int)$this->stock_min;
-        if ($stock_min < 0) {
-            $errores['stock_minimo'] = 'El stock mínimo no puede ser negativo';
-        } elseif ($stock_min > 999999) {
-            $errores['stock_minimo'] = 'El stock mínimo es muy grande';
+        if (isset($datos['stock_minimo'])) {
+            $stock_min = (int)$datos['stock_minimo'];
+            if ($stock_min < self::MIN_STOCK || $stock_min > self::MAX_STOCK) {
+                $errores['stock_minimo'] = 'El stock mínimo debe estar entre ' . self::MIN_STOCK . ' y ' . self::MAX_STOCK;
+            }
         }
-
+        
         // Validar relación entre stocks
-        if (empty($errores['stock_actual']) && empty($errores['stock_maximo']) && empty($errores['stock_minimo'])) {
+        if (isset($datos['stock_actual']) && isset($datos['stock_maximo']) && isset($datos['stock_minimo'])) {
+            $stock_actual = (int)$datos['stock_actual'];
+            $stock_max = (int)$datos['stock_maximo'];
+            $stock_min = (int)$datos['stock_minimo'];
+            
             if ($stock_min > $stock_max) {
                 $errores['stock_minimo'] = 'El stock mínimo no puede ser mayor al stock máximo';
             }
@@ -260,71 +307,311 @@ public function setDescripcionOtros($descripcion) { $this->descripcion_otros = $
                 $errores['stock_actual'] = 'El stock actual no puede ser menor al stock mínimo';
             }
         }
-
+        
         // Validar cláusula de garantía
-        $clausula = trim((string)$this->clausula_garantia);
-        if ($clausula !== '' && mb_strlen($clausula) > 1000) {
-            $errores['clausula_garantia'] = 'La cláusula de garantía no debe exceder los 1000 caracteres';
-        }
-
-        // Validar código/serial
-        $codigo = trim((string)$this->serial);
-        if ($codigo !== '' && mb_strlen($codigo) > 100) {
-            $errores['codigo'] = 'El código/serial no debe exceder los 100 caracteres';
-        }
-
-        // Validar categoría
-        $categoria = trim((string)$this->categoria);
-        if ($categoria !== '' && mb_strlen($categoria) > 100) {
-            $errores['categoria'] = 'La categoría no debe exceder los 100 caracteres';
-        }
-
-        // Validar precio
-        $precio = (float)$this->precio;
-        if ($precio <= 0) {
-            $errores['precio'] = 'El precio debe ser mayor a 0';
-        } elseif ($precio > 999999.99) {
-            $errores['precio'] = 'El precio es muy grande';
-        }
-
-        // Validar dimensiones (peso, largo, alto, ancho)
-        $peso = (float)$this->peso;
-        if ($peso < 0) {
-            $errores['peso'] = 'El peso no puede ser negativo';
-        } elseif ($peso > 999999.99) {
-            $errores['peso'] = 'El peso es muy grande';
-        }
-
-        $largo = (float)$this->largo;
-        if ($largo < 0) {
-            $errores['largo'] = 'El largo no puede ser negativo';
-        } elseif ($largo > 999999.99) {
-            $errores['largo'] = 'El largo es muy grande';
-        }
-
-        $alto = (float)$this->alto;
-        if ($alto < 0) {
-            $errores['alto'] = 'El alto no puede ser negativo';
-        } elseif ($alto > 999999.99) {
-            $errores['alto'] = 'El alto es muy grande';
-        }
-
-        $ancho = (float)$this->ancho;
-        if ($ancho < 0) {
-            $errores['ancho'] = 'El ancho no puede ser negativo';
-        } elseif ($ancho > 999999.99) {
-            $errores['ancho'] = 'El ancho es muy grande';
-        }
-
-        // Validar ID del producto (solo para modificaciones)
-        if ($esModificacion) {
-            $id = (int)$this->id;
-            if ($id <= 0) {
-                $errores['id_producto'] = 'El ID del producto no es válido';
+        if (isset($datos['clausula_garantia'])) {
+            $clausula = trim((string)$datos['clausula_garantia']);
+            if ($clausula !== '' && mb_strlen($clausula) > self::MAX_CLAUSULA_GARANTIA) {
+                $errores['clausula_garantia'] = 'La cláusula de garantía no debe exceder los ' . self::MAX_CLAUSULA_GARANTIA . ' caracteres';
             }
         }
-
+        
+        // Validar serial
+        if (isset($datos['serial'])) {
+            $serial = trim((string)$datos['serial']);
+            if ($serial !== '' && mb_strlen($serial) > self::MAX_SERIAL) {
+                $errores['serial'] = 'El serial no debe exceder los ' . self::MAX_SERIAL . ' caracteres';
+            }
+        }
+        
+        // Validar categoría
+        if (isset($datos['categoria'])) {
+            $categoria = trim((string)$datos['categoria']);
+            if ($categoria !== '' && mb_strlen($categoria) > self::MAX_CATEGORIA) {
+                $errores['categoria'] = 'La categoría no debe exceder los ' . self::MAX_CATEGORIA . ' caracteres';
+            }
+        }
+        
+        // Validar precio
+        if (isset($datos['precio'])) {
+            $precio = (float)$datos['precio'];
+            if ($precio < self::MIN_PRECIO || $precio > self::MAX_PRECIO) {
+                $errores['precio'] = 'El precio debe estar entre ' . self::MIN_PRECIO . ' y ' . self::MAX_PRECIO;
+            }
+        }
+        
+        // Validar dimensiones (peso, largo, alto, ancho)
+        $dimensiones = ['peso', 'largo', 'alto', 'ancho'];
+        foreach ($dimensiones as $dimension) {
+            if (isset($datos[$dimension])) {
+                $valor = (float)$datos[$dimension];
+                if ($valor < self::MIN_DIMENSION || $valor > self::MAX_DIMENSION) {
+                    $errores[$dimension] = 'El ' . $dimension . ' debe estar entre ' . self::MIN_DIMENSION . ' y ' . self::MAX_DIMENSION;
+                }
+            }
+        }
+        
+        // Validar estatus
+        if (isset($datos['estado'])) {
+            $estado = trim((string)$datos['estado']);
+            if (!in_array($estado, self::ESTADOS_VALIDOS)) {
+                $errores['estado'] = 'El estado no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
+            }
+        }
+        
         return $errores;
+    }
+    
+    private function validarImagen($archivo) {
+        $errores = [];
+        
+        if (!is_array($archivo)) {
+            $errores['imagen'] = 'Los datos de la imagen deben ser un arreglo';
+            return $errores;
+        }
+        
+        if (!isset($archivo['name']) || !isset($archivo['tmp_name']) || !isset($archivo['error'])) {
+            $errores['imagen'] = 'Estructura de la imagen inválida';
+            return $errores;
+        }
+        
+        // Validar que no haya errores de subida
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            $errores['imagen'] = 'Error al subir la imagen: ' . $this->getUploadErrorMessage($archivo['error']);
+            return $errores;
+        }
+        
+        // Validar tamaño máximo
+        if ($archivo['size'] > self::MAX_TAMANO_IMAGEN) {
+            $errores['imagen'] = 'La imagen no debe exceder los 5MB';
+            return $errores;
+        }
+        
+        // Validar extensión
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        if (!in_array($extension, self::EXTENSIONES_IMAGEN)) {
+            $errores['imagen'] = 'La extensión de la imagen no es permitida. Extensiones permitidas: ' . implode(', ', self::EXTENSIONES_IMAGEN);
+        }
+        
+        return $errores;
+    }
+    
+    private function getUploadErrorMessage($errorCode) {
+        $messages = [
+            UPLOAD_ERR_INI_SIZE => 'El archivo excede el tamaño máximo permitido',
+            UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamaño máximo permitido',
+            UPLOAD_ERR_PARTIAL => 'El archivo se subió parcialmente',
+            UPLOAD_ERR_NO_FILE => 'No se subió ningún archivo',
+            UPLOAD_ERR_NO_TMP_DIR => 'Falta carpeta temporal',
+            UPLOAD_ERR_CANT_WRITE => 'No se puede escribir el archivo',
+            UPLOAD_ERR_EXTENSION => 'Subida detenida por extensión',
+            UPLOAD_ERR_NO_TMP_FILE => 'No hay archivo temporal',
+            UPLOAD_ERR_CANT_WRITE => 'No se puede mover el archivo'
+        ];
+        
+        return $messages[$errorCode] ?? 'Error desconocido';
+    }
+    
+    // Métodos públicos de validación
+    public function validarConsultarProducto($datos) {
+        $errores = [];
+        
+        // Para consultar, podemos validar por ID o por nombre
+        if (isset($datos['id_producto'])) {
+            $id_producto = (int)$datos['id_producto'];
+            if ($id_producto < self::MIN_ID_PRODUCTO || $id_producto > self::MAX_ID_PRODUCTO) {
+                $errores['id_producto'] = 'El ID del producto debe ser un número entre ' . self::MIN_ID_PRODUCTO . ' y ' . self::MAX_ID_PRODUCTO;
+            }
+        }
+        
+        if (isset($datos['nombre_producto'])) {
+            $nombre_producto = trim((string)$datos['nombre_producto']);
+            if ($nombre_producto !== '' && mb_strlen($nombre_producto) > self::MAX_NOMBRE_PRODUCTO) {
+                $errores['nombre_producto'] = 'El nombre del producto no debe exceder los ' . self::MAX_NOMBRE_PRODUCTO . ' caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarDetallarProducto($datos) {
+        $errores = [];
+        
+        // Para detallar, el ID es obligatorio
+        if (!isset($datos['id_producto'])) {
+            $errores['id_producto'] = 'El ID del producto es obligatorio';
+        } else {
+            $id_producto = (int)$datos['id_producto'];
+            if ($id_producto < self::MIN_ID_PRODUCTO || $id_producto > self::MAX_ID_PRODUCTO) {
+                $errores['id_producto'] = 'El ID del producto debe ser un número entre ' . self::MIN_ID_PRODUCTO . ' y ' . self::MAX_ID_PRODUCTO;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarRegistrarProducto($datos) {
+        $errores = [];
+        
+        // Para registrar, requerimos campos obligatorios
+        if (!isset($datos['nombre_producto'])) {
+            $errores['nombre_producto'] = 'El nombre del producto es obligatorio';
+        }
+        
+        if (!isset($datos['id_modelo'])) {
+            $errores['id_modelo'] = 'El modelo es obligatorio';
+        }
+        
+        if (!isset($datos['precio'])) {
+            $errores['precio'] = 'El precio es obligatorio';
+        }
+        
+        // Validar el producto completo
+        $errores_producto = $this->validarProducto($datos);
+        if (!empty($errores_producto)) {
+            $errores = array_merge($errores, $errores_producto);
+        }
+        
+        return $errores;
+    }
+    
+    public function validarModificarProducto($datos) {
+        $errores = [];
+        
+        // Para modificar, el ID es obligatorio
+        if (!isset($datos['id_producto'])) {
+            $errores['id_producto'] = 'El ID del producto es obligatorio';
+        }
+        
+        // Validar el producto completo
+        $errores_producto = $this->validarProducto($datos);
+        if (!empty($errores_producto)) {
+            $errores = array_merge($errores, $errores_producto);
+        }
+        
+        return $errores;
+    }
+    
+    public function validarEliminarProducto($datos) {
+        $errores = [];
+        
+        // Para eliminar, el ID es obligatorio
+        if (!isset($datos['id_producto'])) {
+            $errores['id_producto'] = 'El ID del producto es obligatorio';
+        } else {
+            $id_producto = (int)$datos['id_producto'];
+            if ($id_producto < self::MIN_ID_PRODUCTO || $id_producto > self::MAX_ID_PRODUCTO) {
+                $errores['id_producto'] = 'El ID del producto debe ser un número entre ' . self::MIN_ID_PRODUCTO . ' y ' . self::MAX_ID_PRODUCTO;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarCambiarEstatus($datos) {
+        $errores = [];
+        
+        // Validar ID del producto (obligatorio)
+        if (!isset($datos['id_producto'])) {
+            $errores['id_producto'] = 'El ID del producto es obligatorio';
+        } else {
+            $id_producto = (int)$datos['id_producto'];
+            if ($id_producto < self::MIN_ID_PRODUCTO || $id_producto > self::MAX_ID_PRODUCTO) {
+                $errores['id_producto'] = 'El ID del producto debe ser un número entre ' . self::MIN_ID_PRODUCTO . ' y ' . self::MAX_ID_PRODUCTO;
+            }
+        }
+        
+        // Validar nuevo estatus (obligatorio)
+        if (!isset($datos['nuevo_estatus'])) {
+            $errores['nuevo_estatus'] = 'El nuevo estatus es obligatorio';
+        } else {
+            $nuevo_estatus = trim((string)$datos['nuevo_estatus']);
+            if (!in_array($nuevo_estatus, self::ESTADOS_VALIDOS_CAMBIO)) {
+                $errores['nuevo_estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS_CAMBIO);
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarReporte($datos) {
+        $errores = [];
+        
+        // Para reporte, validar tipo de reporte
+        if (isset($datos['tipo_reporte'])) {
+            $tipos_validos = ['por_categoria', 'por_categoria_especifica', 'precios', 'stock'];
+            if (!in_array($datos['tipo_reporte'], $tipos_validos)) {
+                $errores['tipo_reporte'] = 'El tipo de reporte no es válido. Tipos permitidos: ' . implode(', ', $tipos_validos);
+            }
+        }
+        
+        // Validar categoría si se especifica
+        if (isset($datos['categoria'])) {
+            $categoria = trim((string)$datos['categoria']);
+            if ($categoria !== '' && mb_strlen($categoria) > self::MAX_CATEGORIA) {
+                $errores['categoria'] = 'La categoría no debe exceder los ' . self::MAX_CATEGORIA . ' caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarDescarga($datos) {
+        $errores = [];
+        
+        // Para descarga, validar tipo de descarga
+        if (isset($datos['tipo_descarga'])) {
+            $tipos_validos = ['pdf', 'excel', 'csv'];
+            if (!in_array($datos['tipo_descarga'], $tipos_validos)) {
+                $errores['tipo_descarga'] = 'El tipo de descarga no es válido. Tipos permitidos: ' . implode(', ', $tipos_validos);
+            }
+        }
+        
+        // Validar parámetros adicionales según el tipo
+        if (isset($datos['parametros']) && is_array($datos['parametros'])) {
+            foreach ($datos['parametros'] as $parametro => $valor) {
+                if (is_string($valor) && mb_strlen($valor) > 100) {
+                    $errores[$parametro] = 'El parámetro ' . $parametro . ' es demasiado largo';
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // Métodos auxiliares
+    private function verificarProductoExistente($id_producto) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_productos WHERE id_producto = ?");
+            $stmt->execute([$id_producto]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
+    }
+    
+    private function verificarModeloExistente($id_modelo) {
+        $conexion = null;
+        if (!($this->conex instanceof PDO)) {
+            $conexion = new BD('P');
+            $this->conex = $conexion->getConexion();
+        }
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_modelos WHERE id_modelo = ?");
+            $stmt->execute([$id_modelo]);
+            return $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            return false;
+        } finally {
+            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
+        }
     }
 
 public function setVoltajeEntrada($voltaje_entrada) { $this->voltaje_entrada = $voltaje_entrada; }
