@@ -362,22 +362,20 @@ class Proveedores extends BD {
     /**
      * Validar integridad referencial para eliminación
      */
-    private function validarIntegridadReferencial($id_proveedor, $conexion) {
+    private function validarIntegridadReferencial($id_proveedor, $pdo) {
         $errores = [];
         
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            // Verificar si el proveedor tiene recepciones asociadas
-            $sql = "SELECT COUNT(*) as total FROM tbl_recepcion_productos WHERE id_proveedor = ?";
-            $stmt = $conexion->prepare($sql);
-            $stmt->execute([$id_proveedor]);
-            $recepciones = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-            
-            if ($recepciones > 0) {
-                $errores['integridad'] = "No se puede eliminar el proveedor porque tiene {$recepciones} recepción(es) asociada(s)";
-            }
-            
-            return $errores;
-        });
+        // Verificar si el proveedor tiene recepciones asociadas
+        $sql = "SELECT COUNT(*) as total FROM tbl_recepcion_productos WHERE id_proveedor = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_proveedor]);
+        $recepciones = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        if ($recepciones > 0) {
+            $errores['integridad'] = "No se puede eliminar el proveedor porque tiene {$recepciones} recepción(es) asociada(s)";
+        }
+        
+        return $errores;
     }
     
     /**
@@ -612,12 +610,11 @@ class Proveedores extends BD {
         
         // Validar integridad referencial
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
+            $errores = [];
             $errores_integridad = $this->validarIntegridadReferencial($id_proveedor, $pdo);
             $errores = array_merge($errores, $errores_integridad);
             return $errores;
         });
-        
-        return $errores;
     }
     
     /**
