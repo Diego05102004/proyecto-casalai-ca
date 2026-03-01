@@ -78,6 +78,7 @@ class Proveedores extends BD {
             }
         }
     }
+    
     private function validarEsquema($datos, $operacion = 'registrar') {
         $errores = [];
         
@@ -364,7 +365,7 @@ class Proveedores extends BD {
     private function validarIntegridadReferencial($id_proveedor, $conexion) {
         $errores = [];
         
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             // Verificar si el proveedor tiene recepciones asociadas
             $sql = "SELECT COUNT(*) as total FROM tbl_recepcion_productos WHERE id_proveedor = ?";
             $stmt = $conexion->prepare($sql);
@@ -375,11 +376,8 @@ class Proveedores extends BD {
                 $errores['integridad'] = "No se puede eliminar el proveedor porque tiene {$recepciones} recepción(es) asociada(s)";
             }
             
-        } catch (PDOException $e) {
-            $errores['integridad'] = 'Error al verificar integridad referencial';
-        }
-        
-        return $errores;
+            return $errores;
+        });
     }
     
     /**
@@ -613,9 +611,10 @@ class Proveedores extends BD {
         }
         
         // Validar integridad referencial
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $errores_integridad = $this->validarIntegridadReferencial($id_proveedor, $this->pdo);
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
+            $errores_integridad = $this->validarIntegridadReferencial($id_proveedor, $pdo);
             $errores = array_merge($errores, $errores_integridad);
+            return $errores;
         });
         
         return $errores;
@@ -678,7 +677,7 @@ class Proveedores extends BD {
             return ['error' => $errores];
         }
         
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
             $pagina = (int)($filtros['pagina'] ?? 1);
             $limite = (int)($filtros['limite'] ?? 50);
             $orden = $filtros['orden'] ?? 'nombre_proveedor';
@@ -703,7 +702,7 @@ class Proveedores extends BD {
             // Agregar paginación
             $sql .= " LIMIT :limite OFFSET :offset";
             
-            $stmt = $this->pdo->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             
             // Bind parameters
             foreach ($params as $key => $value) {
@@ -721,7 +720,7 @@ class Proveedores extends BD {
                 $sql_total .= " AND (nombre_proveedor LIKE :busqueda OR rif_proveedor LIKE :busqueda OR nombre_representante LIKE :busqueda)";
             }
             
-            $stmt_total = $this->pdo->prepare($sql_total);
+            $stmt_total = $pdo->prepare($sql_total);
             foreach ($params as $key => $value) {
                 $stmt_total->bindValue($key, $value);
             }
@@ -743,14 +742,14 @@ class Proveedores extends BD {
         return $this->existeNomProveedor($nombre, $excluir_id); 
     }
     private function existeNomProveedor($nombre, $excluir_id) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nombre, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE nombre_proveedor = ?";
             $params = [$nombre];
             if ($excluir_id !== null) {
                 $sql .= " AND id_proveedor != ?";
                 $params[] = $excluir_id;
             }
-            $stmt = $this->pdo->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
         });
@@ -767,7 +766,7 @@ class Proveedores extends BD {
                 $sql .= " AND id_proveedor != ?";
                 $params[] = $excluir_id;
             }
-            $stmt = $this->pdo->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
         });
@@ -784,7 +783,7 @@ class Proveedores extends BD {
                 $sql .= " AND id_proveedor != ?";
                 $params[] = $excluir_id;
             }
-            $stmt = $this->pdo->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
         });
