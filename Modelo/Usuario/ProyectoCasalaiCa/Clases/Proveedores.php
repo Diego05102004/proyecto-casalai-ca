@@ -759,7 +759,7 @@ class Proveedores extends BD {
         return $this->existeRifProv($rif, $excluir_id);
     }
     private function existeRifProv($rif, $excluir_id) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($rif, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE rif_proveedor = ?";
             $params = [$rif];
             if ($excluir_id !== null) {
@@ -776,7 +776,7 @@ class Proveedores extends BD {
         return $this->existeRifRep($rif, $excluir_id);
     }
     private function existeRifRep($rif, $excluir_id) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($rif, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE rif_representante = ?";
             $params = [$rif];
             if ($excluir_id !== null) {
