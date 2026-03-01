@@ -16,6 +16,9 @@ if (!isset($_SESSION['id_usuario'])) {
 
 $permisos = new Permisos();
 
+// Obtener permisos actuales (por rol y módulo)
+$permisosActuales = $permisos->getPermisosPorRolModulo();
+$permisosUsuario = $permisos->getPermisosPorRolModulo();
 // Obtener roles
 $roles = $permisos->getRoles();
 
@@ -25,9 +28,7 @@ $modulos_permiso = $permisos->getModulos();
 // Acciones posibles
 $acciones = ['ingresar','consultar', 'incluir', 'modificar', 'eliminar', 'generar reporte'];
 
-// Obtener permisos actuales (por rol y módulo)
-$permisosActuales = $permisos->getPermisosPorRolModulo();
-$permisosUsuario = $permisos->getPermisosPorRolModulo();
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
     // Validar datos antes de guardar
@@ -42,17 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
         header("Location: ?pagina=permiso&error=1");
         exit;
     }
-    
-    if (!defined('SKIP_SIDE_EFFECTS')) {
-        $bitacoraModel = new Bitacora();
-        $bitacoraModel->registrarBitacora(
-            $_SESSION['id_usuario'],
-            MODULO_PERMISOS,
-            'MODIFICAR',
-            'El usuario modificó los permisos de los roles del sistema',
-            'media'
-        );
-    }
+
     $permisos->guardarPermisos($_POST['permisos'] ?? [], $roles, $modulos_permiso, $acciones);
     $bd_seguridad = new BD('S');
     $pdo_seguridad = $bd_seguridad->getConexion();
@@ -67,6 +58,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
         MODULO_PERMISOS,
         'modificar'
     );
+    
+    if (!defined('SKIP_SIDE_EFFECTS')) {
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
+            $_SESSION['id_usuario'],
+            MODULO_PERMISOS,
+            'MODIFICAR',
+            'El usuario modificó los permisos de los roles del sistema',
+            'media'
+        );
+    }
+
     header("Location: ?pagina=permiso&ok=1");
     exit;
 }
