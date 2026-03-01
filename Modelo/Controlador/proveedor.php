@@ -14,7 +14,7 @@ $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('proveedores'));
 
-$reporteProveedor = new Proveedores();
+$reporteProveedor = new Proveedores('P');
 $reporteRankingProveedores = $reporteProveedor->getRankingProveedores();
 $reporteComparacion = $reporteProveedor->getComparacionPreciosProducto();
 $reporteDependencia = $reporteProveedor->getDependenciaProveedores();
@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
         case 'registrar':
             // Usar validación centralizada
-            $proveedor = new Proveedores();
+            $proveedor = new Proveedores('P');
             
             // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarRegistrar($_POST);
@@ -91,7 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'obtener_proveedor':
             // Usar validación centralizada
-            $proveedor = new Proveedores();
+            $proveedor = new Proveedores('P');
             
             // Validar ID
             $errores = $proveedor->validarDetallar($_POST['id_proveedor']);
@@ -119,7 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             
             // Usar validación centralizada
-            $proveedor = new Proveedores();
+            $proveedor = new Proveedores('P');
             
             // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarModificar($_POST);
@@ -175,7 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             // Usar validación centralizada
-            $proveedor = new Proveedores();
+            $proveedor = new Proveedores('P');
             
             // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarEliminar($_POST['id_proveedor']);
@@ -222,7 +222,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         case 'cambiar_estado':
             // Usar validación centralizada
-            $proveedor = new Proveedores();
+            $proveedor = new Proveedores('P');
             
             // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarCambiarEstatus($_POST['id_proveedor'], $_POST['nuevo_estatus']);
@@ -269,7 +269,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'generar_reporte':
             // Usar validación centralizada para reportes
-            $proveedor = new Proveedores();
+            $proveedor = new Proveedores('P');
             
             // Validar parámetros del reporte
             $parametros = $_POST;
@@ -335,7 +335,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function getproveedores($filtros = []) {
-    $proveedor = new Proveedores();
+    $proveedor = new Proveedores('P');
     
     // Usar el nuevo método con validación centralizada
     $resultado = $proveedor->obtenerProveedoresConFiltros($filtros);
@@ -349,7 +349,7 @@ function getproveedores($filtros = []) {
     return $resultado['proveedores'] ?? [];
 }
 
-$proveedorModel = new Proveedores();
+$proveedorModel = new Proveedores('P');
 $reporteSuministroProveedores = $proveedorModel->obtenerReporteSuministroProveedores();
 $totalSuministrado = array_sum(array_column($reporteSuministroProveedores, 'cantidad'));
 
