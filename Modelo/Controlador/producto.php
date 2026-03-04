@@ -482,8 +482,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Funciones auxiliares y carga de vista
 
 function obtenerModelos() {
-    $ModelosModel = new Productos();
-    return $ModelosModel->obtenerModelos();
+    $producto = new Productos();
+    return $producto->obtenerModelos();
 }
 
 function obtenerProductos() {

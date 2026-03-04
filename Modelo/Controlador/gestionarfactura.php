@@ -123,9 +123,12 @@ if (is_file("Vista/gestionarfactura.php")) {
                 $factura->setId($id_factura);
                 if ($factura->facturaTransaccion('Cancelar')) {
                     echo json_encode(['status' => 'success', 'message' => 'Factura cancelada correctamente.']);
+                    $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], '13', 'CANCELAR', 'El usuario canceló la factura con ID: ' . $id_factura, 'media');
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Error al cancelar la factura.']);
                 }
+
                 break;
 
             default:
