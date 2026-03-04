@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en la validación de datos',
-                    'errors' => $errores
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
@@ -128,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en la validación de datos',
-                    'errors' => $errores
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
