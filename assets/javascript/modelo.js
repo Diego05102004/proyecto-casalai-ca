@@ -150,6 +150,11 @@ $(document).ready(function () {
     $("#id_marca").on("change", function(){
         if ($(this).val()) {
             $(this).removeClass("is-invalid").addClass("is-valid");
+            // Verificar si el nombre del modelo ya existe con la nueva marca seleccionada
+            const nombreModelo = $("#nombre_modelo").val().trim();
+            if (nombreModelo !== '') {
+                verificarModeloExistente(nombreModelo, $(this).val(), 'registro');
+            }
         } else {
             $(this).removeClass("is-valid").addClass("is-invalid");
         }
@@ -159,6 +164,12 @@ $(document).ready(function () {
     $("#modificar_marca_modelo").on("change", function(){
         if ($(this).val()) {
             $(this).removeClass("is-invalid").addClass("is-valid");
+            // Verificar si el nombre del modelo ya existe con la nueva marca seleccionada
+            const nombreModelo = $("#modificar_nombre_modelo").val().trim();
+            const idModelo = $("#modificar_id_modelo").val();
+            if (nombreModelo !== '') {
+                verificarModeloExistente(nombreModelo, $(this).val(), 'modificar', idModelo);
+            }
         } else {
             $(this).removeClass("is-valid").addClass("is-invalid");
         }
@@ -172,12 +183,20 @@ $(document).ready(function () {
     });
     
     $("#nombre_modelo").on("keyup", function(){
-        validarKeyUp(
+        // Primero validar formato
+        let formatoValido = validarKeyUp(
             /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{2,25}$/,
             $(this),
             $("#snombre_modelo"),
             "*El formato permite letras, números y (-/)*"
         );
+        
+        // Si el formato es válido, verificar si ya existe para la marca seleccionada
+        if (formatoValido === 1 && $(this).val().trim() !== '' && $("#id_marca").val()) {
+            verificarModeloExistente($(this).val().trim(), $("#id_marca").val(), 'registro');
+        } else if ($(this).val().trim() === '' || !$("#id_marca").val()) {
+            $("#snombre_modelo").text('');
+        }
     });
 
     function verificarPermisosEnTiempoRealModelos() {
@@ -515,6 +534,29 @@ $(document).ready(function () {
     });
 });
 
+    function verificarModeloExistente(nombre_modelo, id_marca, tipo, id_modelo_excluir = null) {
+        var datos = new FormData();
+        datos.append('accion', 'verificar_modelo_existente');
+        datos.append('nombre_modelo', nombre_modelo);
+        datos.append('id_marca', id_marca);
+        if (id_modelo_excluir) {
+            datos.append('id_modelo_excluir', id_modelo_excluir);
+        }
+        
+        enviarAjax(datos, function(respuesta) {
+            const spanError = tipo === 'registro' ? '#snombre_modelo' : '#smnombre_modelo';
+            
+            if (respuesta.existe) {
+                $(spanError).text('*Ya existe un modelo con este nombre para la marca seleccionada*');
+            } else {
+                // Solo limpiar si no hay otros errores de formato
+                const currentText = $(spanError).text();
+                if (currentText.includes('Ya existe un modelo con este nombre')) {
+                    $(spanError).text('');
+                }
+            }
+        });
+    }
 
     function enviarAjax(datos, callback) {
         $.ajax({

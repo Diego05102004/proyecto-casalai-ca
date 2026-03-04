@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
             }
             exit;
-
+            
         case 'eliminar':
             $modelo = new modelo('P');
             $errores = $modelo->validarEliminar($_POST['id_modelo']);

@@ -80,10 +80,10 @@ class modelo extends BD{
         }
     }
 
-    private function existeNombreModelo($nombre_modelo, $excluir_id = null) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($nombre_modelo, $excluir_id) {
-            $sql = "SELECT COUNT(*) FROM tbl_modelos WHERE nombre_modelo = ?";
-            $params = [$nombre_modelo];
+    public function existeNombreModelo($nombre_modelo, $id_marca, $excluir_id = null) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nombre_modelo, $id_marca, $excluir_id) {
+            $sql = "SELECT COUNT(*) FROM tbl_modelos WHERE nombre_modelo = ? AND id_marca = ?";
+            $params = [$nombre_modelo, $id_marca];
             if ($excluir_id !== null) {
                 $sql .= " AND id_modelo != ?";
                 $params[] = $excluir_id;
@@ -292,8 +292,8 @@ class modelo extends BD{
             $errores['id_marca'] = 'La marca seleccionada no existe';
         }
         
-        if ($this->existeNombreModelo($datos['nombre_modelo'])) {
-            $errores['nombre_modelo'] = 'El nombre del modelo ya existe';
+        if ($this->existeNombreModelo($datos['nombre_modelo'], $datos['id_marca'])) {
+            $errores['nombre_modelo'] = 'Ya existe un modelo con este nombre para la marca seleccionada';
         }
         
         return $errores;
@@ -357,8 +357,8 @@ class modelo extends BD{
         }
         
         if (isset($datos['nombre_modelo']) && 
-            $this->existeNombreModelo($datos['nombre_modelo'], $datos['id_modelo'])) {
-            $errores['nombre_modelo'] = 'El nombre del modelo ya existe';
+            $this->existeNombreModelo($datos['nombre_modelo'], $datos['id_marca'], $datos['id_modelo'])) {
+            $errores['nombre_modelo'] = 'Ya existe un modelo con este nombre para la marca seleccionada';
         }
         
         return $errores;
