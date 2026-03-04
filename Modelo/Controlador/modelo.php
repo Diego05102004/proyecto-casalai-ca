@@ -28,20 +28,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
-            $modelo = new modelo();
+            $modelo = new modelo('P');
             
-            // Validar datos de entrada
-            $datosValidacion = [
-                'nombre_modelo' => $_POST['nombre_modelo'] ?? '',
-                'id_marca' => $_POST['id_marca'] ?? ''
-            ];
+            $errores = $modelo->validarRegistrar($_POST);
             
-            $errores = $modelo->validarRegistrarModelo($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos del modelo',
-                    'errors' => $errores
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
@@ -49,36 +44,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $modelo->setnombre_modelo($_POST['nombre_modelo']);
             $modelo->setid_marca($_POST['id_marca']);
 
-            // Validar que la marca exista antes de registrar
-            $marcas = $modelo->getmarcas();
-            $marcaExiste = false;
-            foreach ($marcas as $marca) {
-                if ($marca['id_marca'] == $_POST['id_marca']) {
-                    $marcaExiste = true;
-                    break;
-                }
-            }
-            if (!$marcaExiste) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'La marca seleccionada no existe'
-                ]);
-                exit;
-            }
-
-            if ($modelo->existeNombreModelo($_POST['nombre_modelo'])) {
-                
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El modelo ya existe'
-                ]);
-                exit;
-            }
-
             if ($modelo->registrarModelo()) {
                 $modeloRegistrado = $modelo->obtenerUltimoModelo();
                 
-                // Registrar éxito en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacoraModel = new Bitacora(); 
                     $bitacoraModel->registrarBitacora(
@@ -106,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtener_modelo':
             $id_modelo = $_POST['id_modelo'];
             if ($id_modelo !== null) {
-                $modelo = new modelo();
+                $modelo = new modelo('P');
                 $modelo = $modelo->obtenerModeloPorId($id_modelo);
                 if ($modelo !== null) {
                     echo json_encode($modelo);
@@ -119,74 +87,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
-            $id_modelo = $_POST['id_modelo'] ?? '';
-            $nombre_modelo = $_POST['nombre_modelo'] ?? '';
-            $id_marca = $_POST['id_marca'] ?? '';
+            $modelo = new modelo('P');
+            $errores = $modelo->validarModificar($_POST);
             
-            $modelo = new modelo();
-            
-            // Validar datos de entrada
-            $datosValidacion = [
-                'id_modelo' => $id_modelo,
-                'nombre_modelo' => $nombre_modelo,
-                'id_marca' => $id_marca
-            ];
-            
-            $errores = $modelo->validarModificarModelo($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos del modelo',
-                    'errors' => $errores
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
             
-            $id_modelo = (int)$id_modelo;
+            $id_modelo = (int)$_POST['id_modelo'];
             $modelo->setIdModelo($id_modelo);
-            $modelo->setnombre_modelo($nombre_modelo);
-            $modelo->setid_marca($id_marca);
-
-            // Verificar que el modelo exista antes de modificar
-            $modeloExistente = $modelo->obtenerModeloPorId($id_modelo);
-            if (!$modeloExistente) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El modelo que intenta modificar no existe'
-                ]);
-                exit;
-            }
-
-            // Validar que la marca exista antes de modificar
-            $marcas = $modelo->getmarcas();
-            $marcaExiste = false;
-            foreach ($marcas as $marca) {
-                if ($marca['id_marca'] == $id_marca) {
-                    $marcaExiste = true;
-                    break;
-                }
-            }
-            if (!$marcaExiste) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'La marca seleccionada no existe'
-                ]);
-                exit;
-            }
-            
-            if ($modelo->existeNombreModelo($_POST['nombre_modelo'], $id_modelo)) {
-                
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El modelo ya existe'
-                ]);
-                exit;
-            }
+            $modelo->setnombre_modelo($_POST['nombre_modelo']);
+            $modelo->setid_marca($_POST['id_marca']);
 
             if ($modelo->modificarModelo($id_modelo)) {
                 $modeloActualizado = $modelo->obtenerModeloConMarcaPorId($id_modelo);
                 
-                // Registrar modificación exitosa
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
@@ -212,41 +132,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $id_modelo = $_POST['id_modelo'] ?? '';
+            $modelo = new modelo('P');
+            $errores = $modelo->validarEliminar($_POST['id_modelo']);
             
-            $modelo = new modelo();
-            
-            // Validar datos de entrada
-            $datosValidacion = [
-                'id_modelo' => $id_modelo
-            ];
-            
-            $errores = $modelo->validarEliminarModelo($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos del modelo',
-                    'errors' => $errores
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
             
-            $id_modelo = (int)$id_modelo;
-            
-            // Verificar que el modelo exista antes de eliminar
-            $modeloExistente = $modelo->obtenerModeloPorId($id_modelo);
-            if (!$modeloExistente) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El modelo que intenta eliminar no existe'
-                ]);
-                exit;
-            }
-            
+            $id_modelo = (int)$_POST['id_modelo'];
             $resultado = $modelo->eliminarModelo($id_modelo);
 
             if (is_array($resultado) && $resultado['status'] === 'error') {
-                // Registrar en bitácora el intento fallido
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
@@ -265,7 +166,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'total_productos' => $resultado['total_productos'] ?? 0
                 ]);
             } else if ($resultado['status'] === 'success') {
-                // Registrar eliminación exitosa
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
@@ -277,9 +177,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     );
                 }
                 
-                echo json_encode(['status' => 'success']);
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Modelo eliminado correctamente'
+                ]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el modelo']);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al eliminar el modelo'
+                ]);
             }
             exit;
 
@@ -291,12 +197,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function getModelos() {
-    $modelo = new modelo();
+    $modelo = new modelo('P');
     return $modelo->getModelos();
 }
 
 function getmarcas() {
-    $marcas = new modelo();
+    $marcas = new modelo('P');
     return $marcas->getmarcas();
 }
 

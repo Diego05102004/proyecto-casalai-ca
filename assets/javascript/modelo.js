@@ -57,6 +57,42 @@ function protegerSelects(selectIds, interval = 1000) {
 
 $(document).ready(function () {
 
+    // Función para manejar errores específicos del backend
+    function manejarErroresBackend(respuesta, esModificacion = false) {
+        if (respuesta.field_errors && typeof respuesta.field_errors === 'object') {
+            // Limpiar todos los spans de error primero
+            if (esModificacion) {
+                $("#smnombre_modelo").text('');
+                $("#smid_marca").text('');
+            } else {
+                $("#snombre_modelo").text('');
+                $("#sid_marca").text('');
+            }
+
+            // Mapeo de campos del backend a spans del frontend
+            const mapeoCampos = esModificacion ? {
+                'nombre_modelo': '#smnombre_modelo',
+                'id_marca': '#smid_marca',
+                'id_modelo': '#smid_modelo'
+            } : {
+                'nombre_modelo': '#snombre_modelo',
+                'id_marca': '#sid_marca',
+                'id_modelo': '#sid_modelo'
+            };
+
+            // Mostrar errores específicos en sus spans correspondientes
+            Object.keys(respuesta.field_errors).forEach(campo => {
+                const selector = mapeoCampos[campo];
+                if (selector) {
+                    $(selector).text(respuesta.field_errors[campo]);
+                }
+            });
+
+            return true; // Indica que se manejaron errores específicos
+        }
+        return false; // No hay errores específicos que manejar
+    }
+
     // Inicializar DataTable de modelos y crear dinámicamente el botón Incluir en el filtro
     var $tabla = $('#tablaConsultas');
     if ($tabla.length) {
@@ -294,11 +330,7 @@ $(document).ready(function () {
                     resetModelo();
                     $('#registrarModeloModal').modal('hide');
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: respuesta.message || respuesta.msg || 'No se pudo registrar el modelo'
-                    });
+                    manejarErroresBackend(respuesta, false);
                 }
             });
         }
@@ -407,11 +439,7 @@ $(document).ready(function () {
                     botonModificar.data("nombre", modelo.nombre_modelo);
                 }
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: respuesta.message || 'No se pudo modificar el modelo'
-                });
+                manejarErroresBackend(respuesta, false);
             }
         });
     });

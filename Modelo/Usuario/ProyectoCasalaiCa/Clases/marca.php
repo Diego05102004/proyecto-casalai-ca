@@ -6,7 +6,6 @@ use PDOException;
 
 class marca extends BD {
     private $tablemarcas = 'tbl_marcas';
-    private $conex;
     private $nombre_marca;
     private $id_marca;
     
@@ -70,7 +69,7 @@ class marca extends BD {
     }
 
     private function existeNombreMarca($nombre_marca, $excluir_id = null) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nombre_marca, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_marcas WHERE nombre_marca = ?";
             $params = [$nombre_marca];
             if ($excluir_id !== null) {
@@ -125,9 +124,9 @@ class marca extends BD {
         return $this->obtmarcasPorId($id_marca);
     }
     private function obtmarcasPorId($id_marca) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
             $query = "SELECT nombre_marca FROM tbl_marcas WHERE id_marca = ?";
-            $stmt = $this->conex->prepare($query);
+            $stmt = $pdo->prepare($query);
             $stmt->execute([$id_marca]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         });
@@ -137,9 +136,9 @@ class marca extends BD {
         return $this->m_marcas($id_marca);
     }
     private function m_marcas($id_marca) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
             $sql = "UPDATE tbl_marcas SET nombre_marca = :nombre_marca WHERE id_marca = :id_marca";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_marca', $id_marca);
             $stmt->bindParam(':nombre_marca', $this->nombre_marca);
             return $stmt->execute();
@@ -150,9 +149,9 @@ class marca extends BD {
         return $this->e_marcas($id_marca);
     }
     private function e_marcas($id_marca) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
             $sql = "DELETE FROM tbl_marcas WHERE id_marca = :id_marca";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_marca', $id_marca);
             return $stmt->execute();
         });
@@ -164,109 +163,244 @@ class marca extends BD {
     private function g_marcas() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $querymarcas = 'SELECT id_marca, nombre_marca FROM ' . $this->tablemarcas. ' ORDER BY id_marca DESC';
-            $stmtmarcas = $this->conex->prepare($querymarcas);
+            $stmtmarcas = $pdo->prepare($querymarcas);
             $stmtmarcas->execute();
             return $stmtmarcas->fetchAll(PDO::FETCH_ASSOC);
         });
     }
     
     // ==================== VALIDACIONES DE BACKEND ====================
+
+    public function validarRegistrar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'registrar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        if ($this->existeNombreMarca($datos['nombre_marca'])) {
+            $errores['nombre_marca'] = 'El nombre de la marca ya existe';
+        }
+        
+        return $errores;
+    }
     
-    /**
-     * Valida los datos para operaciones CRUD de marcas
-     */
-    private function validarMarca($datos, $esModificacion = false) {
+    public function validarConsultar($filtros = []) {
+        $filtros_default = [
+            'pagina' => 1,
+            'limite' => 50,
+            'orden' => 'nombre_marca',
+            'direccion' => 'ASC'
+        ];
+        
+        $filtros = array_merge($filtros_default, $filtros);
+        
+        return $this->validarFiltros($filtros);
+    }
+    
+    public function validarDetallar($id_marca) {
+        $errores = $this->validarId($id_marca);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $marca = $this->obtenerMarcaPorId($id_marca);
+        if (!$marca) {
+            $errores['existencia'] = 'La marca solicitada no existe';
+        }
+        
+        return $errores;
+    }
+    
+    public function validarModificar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'modificar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $marca_existente = $this->obtenerMarcaPorId($datos['id_marca']);
+        if (!$marca_existente) {
+            $errores['existencia'] = 'La marca que intenta modificar no existe';
+            return $errores;
+        }
+        
+        if (isset($datos['nombre_marca']) && 
+            $this->existeNombreMarca($datos['nombre_marca'], $datos['id_marca'])) {
+            $errores['nombre_marca'] = 'El nombre de la marca ya existe';
+        }
+        
+        return $errores;
+    }
+    
+    public function validarEliminar($id_marca) {
+        $errores = $this->validarId($id_marca);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $marca = $this->obtenerMarcaPorId($id_marca);
+        if (!$marca) {
+            $errores['existencia'] = 'La marca que intenta eliminar no existe';
+            return $errores;
+        }
+        
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
+            $errores = [];
+            $errores_integridad = $this->validarIntegridadReferencial($id_marca, $pdo);
+            $errores = array_merge($errores, $errores_integridad);
+            return $errores;
+        });
+    }
+    
+    private function sanitizarDatos($datos) {
+        if (!is_array($datos)) {
+            return $datos;
+        }
+        
+        $datos_sanitizados = [];
+        
+        foreach ($datos as $clave => $valor) {
+            if (is_string($valor)) {
+                $valor = trim($valor);
+                
+                $valor = htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+                
+                $valor = addslashes($valor);
+                
+                $datos_sanitizados[$clave] = $valor;
+            } else {
+                $datos_sanitizados[$clave] = $valor;
+            }
+        }
+        
+        return $datos_sanitizados;
+    }
+    
+    private function validarEsquema($datos, $operacion = 'registrar') {
         $errores = [];
         
-        // Validar nombre de la marca (solo para registro y modificación)
-        if (!isset($datos['accion_eliminar'])) {
-            if (!isset($datos['nombre_marca'])) {
-                $errores['nombre_marca'] = 'El nombre de la marca es obligatorio';
-            } else {
-                $nombre_marca = trim($datos['nombre_marca']);
-                if (empty($nombre_marca)) {
-                    $errores['nombre_marca'] = 'El nombre de la marca es obligatorio';
-                } elseif (mb_strlen($nombre_marca) < self::MIN_NOMBRE_MARCA || mb_strlen($nombre_marca) > self::MAX_NOMBRE_MARCA) {
-                    $errores['nombre_marca'] = 'El nombre de la marca debe tener entre ' . self::MIN_NOMBRE_MARCA . ' y ' . self::MAX_NOMBRE_MARCA . ' caracteres';
-                } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_marca)) {
-                    $errores['nombre_marca'] = 'El nombre de la marca solo puede contener letras, números, espacios y caracteres especiales comunes';
+        if (!is_array($datos)) {
+            $errores['datos'] = 'Los datos proporcionados no son válidos';
+            return $errores;
+        }
+        
+        if ($operacion === 'registrar') {
+            $campos_obligatorios = ['nombre_marca'];
+            foreach ($campos_obligatorios as $campo) {
+                if (!isset($datos[$campo])) {
+                    $errores[$campo] = 'El campo ' . $campo . ' es obligatorio';
                 }
             }
         }
         
-        // Validar ID de la marca (solo para modificaciones y eliminaciones)
-        if ($esModificacion || isset($datos['accion_eliminar'])) {
-            if (!isset($datos['id_marca'])) {
-                $errores['id_marca'] = 'El ID de la marca es obligatorio';
-            } elseif (!is_numeric($datos['id_marca']) || $datos['id_marca'] < self::MIN_ID_MARCA || $datos['id_marca'] > self::MAX_ID_MARCA) {
-                $errores['id_marca'] = 'El ID de la marca debe ser un número entre ' . self::MIN_ID_MARCA . ' y ' . self::MAX_ID_MARCA;
+        if ($operacion === 'modificar') {
+            $campos_obligatorios = ['id_marca', 'nombre_marca'];
+            foreach ($campos_obligatorios as $campo) {
+                if (!isset($datos[$campo])) {
+                    $errores[$campo] = 'El campo ' . $campo . ' es obligatorio';
+                }
             }
         }
         
         return $errores;
     }
     
-    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
-    
-    /**
-     * Valida los datos para registrar marca (método público)
-     */
-    public function validarRegistrarMarca($datos) {
-        return $this->validarMarca($datos, false);
-    }
-    
-    /**
-     * Valida los datos para consultar marca (método público)
-     */
-    public function validarConsultarMarca($datos) {
+    private function validarFormato($datos) {
         $errores = [];
         
-        // Validar ID de la marca (opcional para consulta)
-        if (isset($datos['id_marca'])) {
-            if (!is_numeric($datos['id_marca']) || $datos['id_marca'] < self::MIN_ID_MARCA || $datos['id_marca'] > self::MAX_ID_MARCA) {
-                $errores['id_marca'] = 'El ID de la marca debe ser un número entre ' . self::MIN_ID_MARCA . ' y ' . self::MAX_ID_MARCA;
+        if (isset($datos['nombre_marca'])) {
+            $nombre_marca = trim($datos['nombre_marca']);
+            if (empty($nombre_marca)) {
+                $errores['nombre_marca'] = 'El nombre de la marca es obligatorio';
+            } elseif (mb_strlen($nombre_marca) < self::MIN_NOMBRE_MARCA || mb_strlen($nombre_marca) > self::MAX_NOMBRE_MARCA) {
+                $errores['nombre_marca'] = 'El nombre de la marca debe tener entre ' . self::MIN_NOMBRE_MARCA . ' y ' . self::MAX_NOMBRE_MARCA . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_marca)) {
+                $errores['nombre_marca'] = 'El nombre de la marca solo puede contener letras, números, espacios y caracteres especiales comunes';
             }
         }
         
         return $errores;
     }
     
-    /**
-     * Valida los datos para modificar marca (método público)
-     */
-    public function validarModificarMarca($datos) {
-        return $this->validarMarca($datos, true);
+    private function validarFiltros($filtros) {
+        $errores = [];
+        
+        if (isset($filtros['pagina'])) {
+            if (!is_numeric($filtros['pagina']) || $filtros['pagina'] < 1) {
+                $errores['pagina'] = 'La página debe ser un número mayor a 0';
+            }
+        }
+        
+        if (isset($filtros['limite'])) {
+            if (!is_numeric($filtros['limite']) || $filtros['limite'] < 1 || $filtros['limite'] > 100) {
+                $errores['limite'] = 'El límite debe ser un número entre 1 y 100';
+            }
+        }
+        
+        if (isset($filtros['orden'])) {
+            $ordenes_validos = ['id_marca', 'nombre_marca'];
+            if (!in_array($filtros['orden'], $ordenes_validos)) {
+                $errores['orden'] = 'El campo de orden no es válido';
+            }
+        }
+        
+        if (isset($filtros['direccion'])) {
+            $direcciones_validas = ['ASC', 'DESC'];
+            if (!in_array(strtoupper($filtros['direccion']), $direcciones_validas)) {
+                $errores['direccion'] = 'La dirección de orden no es válida';
+            }
+        }
+        
+        return $errores;
     }
     
-    /**
-     * Valida los datos para eliminar marca (método público)
-     */
-    public function validarEliminarMarca($datos) {
-        $datos['accion_eliminar'] = true; // Marcar como acción de eliminación
-        return $this->validarMarca($datos, true);
+    private function validarId($id_marca) {
+        $errores = [];
+        
+        if ($id_marca === null || $id_marca === '') {
+            $errores['id_marca'] = 'El ID de la marca es obligatorio';
+        } elseif (!is_numeric($id_marca) || $id_marca < self::MIN_ID_MARCA || $id_marca > self::MAX_ID_MARCA) {
+            $errores['id_marca'] = 'El ID de la marca debe ser un número entre ' . self::MIN_ID_MARCA . ' y ' . self::MAX_ID_MARCA;
+        }
+        
+        return $errores;
     }
     
-    /**
-     * Verifica si una marca existe por ID
-     */
-    private function verificarMarcaExistente($idMarca) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
+    public function obtenerMarcaPorId($id_marca) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
+            $query = "SELECT * FROM tbl_marcas WHERE id_marca = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([$id_marca]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        });
+    }
+    
+    private function validarIntegridadReferencial($id_marca, $pdo) {
+        $errores = [];
+        
+        $sql = "SELECT COUNT(*) as total FROM tbl_modelos WHERE id_marca = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_marca]);
+        $modelos = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        if ($modelos > 0) {
+            $errores['integridad'] = "No se puede eliminar la marca porque tiene {$modelos} modelo(s) asociado(s)";
         }
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_marcas WHERE id_marca = :id_marca";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindValue(':id_marca', $idMarca, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarMarcaExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
+        
+        return $errores;
     }
 }
 ?>
