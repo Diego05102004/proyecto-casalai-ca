@@ -6,6 +6,39 @@ if (typeof window !== "undefined" && window.sessionStorage) {
 if (typeof nombre_rol !== "undefined" && nombre_rol === 'SuperUsuario') {
     esSuperUsuario = true;
 }
+
+    // Función para manejar errores específicos del backend
+    function manejarErroresBackend(respuesta, esModificacion = false) {
+        if (respuesta.field_errors && typeof respuesta.field_errors === 'object') {
+            // Limpiar todos los spans de error primero
+            if (esModificacion) {
+                $("#smnombre_marca").text('');
+            } else {
+                $("#snombre_marca").text('');
+            }
+
+            // Mapeo de campos del backend a spans del frontend
+            const mapeoCampos = esModificacion ? {
+                'nombre_marca': '#smnombre_marca',
+                'id_marca': '#smid_marca'
+            } : {
+                'nombre_marca': '#snombre_marca',
+                'id_marca': '#sid_marca'
+            };
+
+            // Mostrar errores específicos en sus spans correspondientes
+            Object.keys(respuesta.field_errors).forEach(campo => {
+                const selector = mapeoCampos[campo];
+                if (selector) {
+                    $(selector).text(respuesta.field_errors[campo]);
+                }
+            });
+
+            return true; // Indica que se manejaron errores específicos
+        }
+        return false; // No hay errores específicos que manejar
+    }
+
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", "Atención", $("#mensajes").html());
     }
@@ -206,7 +239,7 @@ $(document).ready(function() {
                     agregarFilaMarca(respuesta.marca);
                     resetMarca();
                 } else {
-                    Swal.fire({icon: 'error',title: 'Error',text: respuesta.message || 'No se pudo registrar la marca'});
+                    manejarErroresBackend(respuesta, false);
                 }
             });
         }
@@ -325,11 +358,7 @@ $(document).ready(function() {
                             tabla.ajax.reload();
                         }
                     } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'No se pudo modificar la marca'
-                        });
+                        manejarErroresBackend(response, true);
                     }
                 } catch (error) {
                     console.error('Error al procesar la respuesta:', error);

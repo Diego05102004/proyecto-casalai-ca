@@ -57,6 +57,42 @@ function protegerSelects(selectIds, interval = 1000) {
 
 $(document).ready(function () {
 
+    // Función para manejar errores específicos del backend
+    function manejarErroresBackend(respuesta, esModificacion = false) {
+        if (respuesta.field_errors && typeof respuesta.field_errors === 'object') {
+            // Limpiar todos los spans de error primero
+            if (esModificacion) {
+                $("#smnombre_modelo").text('');
+                $("#smid_marca").text('');
+            } else {
+                $("#snombre_modelo").text('');
+                $("#sid_marca").text('');
+            }
+
+            // Mapeo de campos del backend a spans del frontend
+            const mapeoCampos = esModificacion ? {
+                'nombre_modelo': '#smnombre_modelo',
+                'id_marca': '#smid_marca',
+                'id_modelo': '#smid_modelo'
+            } : {
+                'nombre_modelo': '#snombre_modelo',
+                'id_marca': '#sid_marca',
+                'id_modelo': '#sid_modelo'
+            };
+
+            // Mostrar errores específicos en sus spans correspondientes
+            Object.keys(respuesta.field_errors).forEach(campo => {
+                const selector = mapeoCampos[campo];
+                if (selector) {
+                    $(selector).text(respuesta.field_errors[campo]);
+                }
+            });
+
+            return true; // Indica que se manejaron errores específicos
+        }
+        return false; // No hay errores específicos que manejar
+    }
+
     // Inicializar DataTable de modelos y crear dinámicamente el botón Incluir en el filtro
     var $tabla = $('#tablaConsultas');
     if ($tabla.length) {
@@ -114,6 +150,11 @@ $(document).ready(function () {
     $("#id_marca").on("change", function(){
         if ($(this).val()) {
             $(this).removeClass("is-invalid").addClass("is-valid");
+            // Verificar si el nombre del modelo ya existe con la nueva marca seleccionada
+            const nombreModelo = $("#nombre_modelo").val().trim();
+            if (nombreModelo !== '') {
+                verificarModeloExistente(nombreModelo, $(this).val(), 'registro');
+            }
         } else {
             $(this).removeClass("is-valid").addClass("is-invalid");
         }
@@ -123,6 +164,12 @@ $(document).ready(function () {
     $("#modificar_marca_modelo").on("change", function(){
         if ($(this).val()) {
             $(this).removeClass("is-invalid").addClass("is-valid");
+            // Verificar si el nombre del modelo ya existe con la nueva marca seleccionada
+            const nombreModelo = $("#modificar_nombre_modelo").val().trim();
+            const idModelo = $("#modificar_id_modelo").val();
+            if (nombreModelo !== '') {
+                verificarModeloExistente(nombreModelo, $(this).val(), 'modificar', idModelo);
+            }
         } else {
             $(this).removeClass("is-valid").addClass("is-invalid");
         }
@@ -136,12 +183,20 @@ $(document).ready(function () {
     });
     
     $("#nombre_modelo").on("keyup", function(){
-        validarKeyUp(
+        // Primero validar formato
+        let formatoValido = validarKeyUp(
             /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9-\/\s\b]{2,25}$/,
             $(this),
             $("#snombre_modelo"),
             "*El formato permite letras, números y (-/)*"
         );
+        
+        // Si el formato es válido, verificar si ya existe para la marca seleccionada
+        if (formatoValido === 1 && $(this).val().trim() !== '' && $("#id_marca").val()) {
+            verificarModeloExistente($(this).val().trim(), $("#id_marca").val(), 'registro');
+        } else if ($(this).val().trim() === '' || !$("#id_marca").val()) {
+            $("#snombre_modelo").text('');
+        }
     });
 
     function verificarPermisosEnTiempoRealModelos() {
@@ -294,11 +349,7 @@ $(document).ready(function () {
                     resetModelo();
                     $('#registrarModeloModal').modal('hide');
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: respuesta.message || respuesta.msg || 'No se pudo registrar el modelo'
-                    });
+                    manejarErroresBackend(respuesta, false);
                 }
             });
         }
@@ -407,11 +458,7 @@ $(document).ready(function () {
                     botonModificar.data("nombre", modelo.nombre_modelo);
                 }
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: respuesta.message || 'No se pudo modificar el modelo'
-                });
+                manejarErroresBackend(respuesta, false);
             }
         });
     });
@@ -487,6 +534,29 @@ $(document).ready(function () {
     });
 });
 
+    function verificarModeloExistente(nombre_modelo, id_marca, tipo, id_modelo_excluir = null) {
+        var datos = new FormData();
+        datos.append('accion', 'verificar_modelo_existente');
+        datos.append('nombre_modelo', nombre_modelo);
+        datos.append('id_marca', id_marca);
+        if (id_modelo_excluir) {
+            datos.append('id_modelo_excluir', id_modelo_excluir);
+        }
+        
+        enviarAjax(datos, function(respuesta) {
+            const spanError = tipo === 'registro' ? '#snombre_modelo' : '#smnombre_modelo';
+            
+            if (respuesta.existe) {
+                $(spanError).text('*Ya existe un modelo con este nombre para la marca seleccionada*');
+            } else {
+                // Solo limpiar si no hay otros errores de formato
+                const currentText = $(spanError).text();
+                if (currentText.includes('Ya existe un modelo con este nombre')) {
+                    $(spanError).text('');
+                }
+            }
+        });
+    }
 
     function enviarAjax(datos, callback) {
         $.ajax({

@@ -23,32 +23,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
-            $marca = new marca();
+            $marca = new marca('P');
             
-            // Validar datos de entrada
-            $datosValidacion = [
-                'nombre_marca' => $_POST['nombre_marca'] ?? ''
-            ];
+            $errores = $marca->validarRegistrar($_POST);
             
-            $errores = $marca->validarRegistrarMarca($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos de la marca',
-                    'errors' => $errores
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
             
             $marca->setnombre_marca($_POST['nombre_marca']);
-
-            // En entorno de pruebas, omitir validación de duplicado para estabilizar tests
-            if ((getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? '')) !== 'testing') {
-                if ($marca->existeNombreMarca($_POST['nombre_marca'])) {
-                    echo json_encode(['status' => 'error','message' => 'El nombre de la marca ya existe']);
-                    exit;
-                }
-            }
 
             if ($marca->registrarMarca()) {
                 $marcaRegistrada = $marca->obtenerUltimaMarca();
@@ -64,15 +52,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     );
                 }
 
-                echo json_encode(['status' => 'success','message' => 'Marca registrada correctamente','marca' => $marcaRegistrada
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Marca registrada correctamente',
+                    'marca' => $marcaRegistrada
                 ]);
             } else {
-                echo json_encode(['status' => 'error','message' => 'Error al registrar la marca']);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al registrar la marca'
+                ]);
             }
             exit;
         case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
-            // Ejecuta SIEMPRE la consulta en tiempo real
             $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('marcas'));
             echo json_encode($permisosActualizados);
             exit;
@@ -80,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtener_marcas':
             $id_marca = $_POST['id_marca'];
             if ($id_marca !== null) {
-                $marca = new marca();
+                $marca = new marca('P');
                 $marca = $marca->obtenermarcasPorId($id_marca);
                 if ($marca !== null) {
                     echo json_encode($marca);
@@ -96,50 +89,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'modificar':
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
-            $id_marca = $_POST['id_marca'] ?? '';
-            $nombre_marca = $_POST['nombre_marca'] ?? '';
-
-            $marca = new marca();
             
-            // Validar datos de entrada
-            $datosValidacion = [
-                'id_marca' => $id_marca,
-                'nombre_marca' => $nombre_marca
-            ];
+            $marca = new marca('P');
+            $errores = $marca->validarModificar($_POST);
             
-            $errores = $marca->validarModificarMarca($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos de la marca',
-                    'errors' => $errores
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
-
-            $id_marca = (int)$id_marca;
+            
+            $id_marca = (int)$_POST['id_marca'];
             $marca->setIdMarca($id_marca);
-            $marca->setnombre_marca($nombre_marca);
-
-            // Verificar que la marca exista antes de modificar
-            $marcaExistente = $marca->obtenermarcasPorId($id_marca);
-            if (!$marcaExistente) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'La marca que intenta modificar no existe'
-                ]);
-                exit;
-            }
-
-            if ((getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? '')) !== 'testing') {
-                if ($marca->existeNombreMarca($_POST['nombre_marca'], $id_marca)) {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'El nombre de la marca ya existe'
-                    ]);
-                    exit;
-                }
-            }
+            $marca->setnombre_marca($_POST['nombre_marca']);
 
             $marcaVieja = $marca->obtenermarcasPorId($id_marca);
             if ($marca->modificarmarcas($id_marca)) {
@@ -160,51 +125,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'marca' => $marcaActualizada
                 ]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al modificar la marca']);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al modificar la marca'
+                ]);
             }
             exit;
 
         case 'eliminar':
-            $id_marca = $_POST['id_marca'] ?? '';
+            $marca = new marca('P');
+            $errores = $marca->validarEliminar($_POST['id_marca']);
             
-            $marca = new marca();
-            
-            // Validar datos de entrada
-            $datosValidacion = [
-                'id_marca' => $id_marca
-            ];
-            
-            $errores = $marca->validarEliminarMarca($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos de la marca',
-                    'errors' => $errores
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
             
-            $id_marca = (int)$id_marca;
+            $id_marca = (int)$_POST['id_marca'];
+            $eliminada = $marca->obtenermarcasPorId($id_marca);
             
-            // Verificar que la marca exista antes de eliminar
-            $marcaExistente = $marca->obtenermarcasPorId($id_marca);
-            if (!$marcaExistente) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'La marca que intenta eliminar no existe'
-                ]);
-                exit;
-            }
-
-            // Verificar si la marca tiene modelos asociados
-            if ($marca->tieneModelosAsociados($id_marca)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'No se puede eliminar la marca porque tiene modelos asociados'
-                ]);
-                exit;
-            }
-            $eliminada = $marca->obtenermarcasPorId($id_marca); // Cargar datos actuales antes de eliminar
             if ($marca->eliminarmarcas($id_marca)) {
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacoraModel = new Bitacora();
@@ -237,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 if (!function_exists('getmarcas')) {
     function getmarcas()
     {
-        $marca = new marca();
+        $marca = new marca('P');
         return $marca->getmarcas();
     }
 }
@@ -257,7 +200,6 @@ if (is_file("Vista/" . $pagina . ".php")) {
     }
 
     $marcas = getmarcas();
-    // Pasa $permisosUsuario a la vista
     require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";

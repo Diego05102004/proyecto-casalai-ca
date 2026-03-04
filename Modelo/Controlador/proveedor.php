@@ -19,7 +19,7 @@ $reporteRankingProveedores = $reporteProveedor->getRankingProveedores();
 $reporteComparacion = $reporteProveedor->getComparacionPreciosProducto();
 $reporteDependencia = $reporteProveedor->getDependenciaProveedores();
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id_usuario_accion = $_SESSION['id_usuario'] ?? null; // Usuario que realiza la acción
+    $id_usuario_accion = $_SESSION['id_usuario'] ?? null;
     
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
@@ -35,22 +35,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
             
         case 'registrar':
-            // Usar validación centralizada
             $proveedor = new Proveedores('P');
             
-            // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarRegistrar($_POST);
             
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en la validación de datos',
-                    'errors' => $errores
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
             
-            // Si pasa todas las validaciones, proceder a registrar
             $proveedor->setNombre($_POST['nombre_proveedor']);
             $proveedor->setRif1($_POST['rif_proveedor']);
             $proveedor->setRepresentante($_POST['nombre_representante']);
@@ -64,7 +61,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($proveedor->registrarProveedor()) {
                 $proveedorRegistrado = $proveedor->obtenerUltimoProveedor();
                 
-                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
@@ -90,10 +86,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'obtener_proveedor':
-            // Usar validación centralizada
             $proveedor = new Proveedores('P');
             
-            // Validar ID
             $errores = $proveedor->validarDetallar($_POST['id_proveedor']);
             
             if (!empty($errores)) {
@@ -105,7 +99,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Si pasa la validación, obtener el proveedor
             $proveedorData = $proveedor->obtenerProveedorPorId($_POST['id_proveedor']);
             
             echo json_encode([
@@ -118,22 +111,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
             
-            // Usar validación centralizada
             $proveedor = new Proveedores('P');
             
-            // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarModificar($_POST);
             
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en la validación de datos',
-                    'errors' => $errores
+                    'field_errors' => $errores
                 ]);
                 exit;
             }
             
-            // Si pasa todas las validaciones, proceder a modificar
             $id_proveedor = $_POST['id_proveedor'];
             $proveedor->setIdProveedor($id_proveedor);
             $proveedor->setNombre($_POST['nombre_proveedor']);
@@ -151,7 +141,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($proveedor->modificarProveedor($id_proveedor)) {
                 $proveedorActualizado = $proveedor->obtenerProveedorPorId($id_proveedor);
                 
-                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
@@ -174,10 +163,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            // Usar validación centralizada
             $proveedor = new Proveedores('P');
             
-            // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarEliminar($_POST['id_proveedor']);
             
             if (!empty($errores)) {
@@ -189,14 +176,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Si pasa todas las validaciones, proceder a eliminar
             $id_proveedor = $_POST['id_proveedor'];
             
-            // Obtener datos del proveedor antes de eliminarlo
             $proveedorAEliminar = $proveedor->obtenerProveedorPorId($id_proveedor);
             
             if ($proveedor->eliminarProveedor($id_proveedor)) {
-                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
@@ -221,10 +205,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'cambiar_estado':
-            // Usar validación centralizada
             $proveedor = new Proveedores('P');
             
-            // Validar usando el nuevo método centralizado
             $errores = $proveedor->validarCambiarEstatus($_POST['id_proveedor'], $_POST['nuevo_estatus']);
             
             if (!empty($errores)) {
@@ -236,14 +218,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Si pasa todas las validaciones, proceder a cambiar estatus
             $id_proveedor = $_POST['id_proveedor'];
             $nuevoEstatus = $_POST['nuevo_estatus'];
             
             $proveedor->setIdProveedor($id_proveedor);
             
             if ($proveedor->cambiarEstatus($nuevoEstatus)) {
-                // Registrar en bitácora
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                     $bitacora = new Bitacora();
                     $bitacora->registrarBitacora(
@@ -268,10 +248,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'generar_reporte':
-            // Usar validación centralizada para reportes
             $proveedor = new Proveedores('P');
             
-            // Validar parámetros del reporte
             $parametros = $_POST;
             $errores = $proveedor->validarGenerarReporte($parametros);
             
@@ -284,12 +262,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Si pasa las validaciones, generar el reporte
             $formato = $parametros['formato'] ?? 'pdf';
             $fecha_inicio = $parametros['fecha_inicio'] ?? null;
             $fecha_fin = $parametros['fecha_fin'] ?? null;
             
-            // Obtener datos para el reporte
             $filtros = [];
             if ($fecha_inicio && $fecha_fin) {
                 $filtros['fecha_inicio'] = $fecha_inicio;
@@ -307,7 +283,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Registrar en bitácora
             if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                 $bitacora = new Bitacora();
                 $bitacora->registrarBitacora(
@@ -337,12 +312,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 function getproveedores($filtros = []) {
     $proveedor = new Proveedores('P');
     
-    // Usar el nuevo método con validación centralizada
     $resultado = $proveedor->obtenerProveedoresConFiltros($filtros);
     
-    // Si hay errores de validación, devolver array vacío o manejar el error
     if (isset($resultado['error'])) {
-        // En un entorno real, aquí podrías loggear el error
         return [];
     }
     

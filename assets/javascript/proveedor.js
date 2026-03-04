@@ -1,5 +1,89 @@
 $(document).ready(function () {
 
+    // Función para manejar errores específicos del backend
+    function manejarErroresBackend(respuesta, esModificacion = false) {
+        if (respuesta.field_errors && typeof respuesta.field_errors === 'object') {
+            // Limpiar todos los spans de error primero
+            if (esModificacion) {
+                $("#smnombre_proveedor, #smrif_proveedor, #smnombre_representante, #smrif_representante, #scorreo_proveedor, #smdireccion_proveedor, #smtelefono_1, #smtelefono_2, #smobservacion").text('');
+            } else {
+                $("#snombre_proveedor, #srif_proveedor, #snombre_representante, #srif_representante, #scorreo_proveedor, #sdireccion_proveedor, #stelefono_1, #stelefono_2, #sobservacion").text('');
+            }
+
+            // Mapeo de campos del backend a spans del frontend
+            const mapeoCampos = esModificacion ? {
+                'nombre_proveedor': '#smnombre_proveedor',
+                'rif_proveedor': '#smrif_proveedor', 
+                'nombre_representante': '#smnombre_representante',
+                'rif_representante': '#smrif_representante',
+                'correo_proveedor': '#scorreo_proveedor',
+                'direccion_proveedor': '#smdireccion_proveedor',
+                'telefono_1': '#smtelefono_1',
+                'telefono_2': '#smtelefono_2',
+                'observacion': '#smobservacion'
+            } : {
+                'nombre_proveedor': '#snombre_proveedor',
+                'rif_proveedor': '#srif_proveedor',
+                'nombre_representante': '#snombre_representante', 
+                'rif_representante': '#srif_representante',
+                'correo_proveedor': '#scorreo_proveedor',
+                'direccion_proveedor': '#sdireccion_proveedor',
+                'telefono_1': '#stelefono_1',
+                'telefono_2': '#stelefono_2',
+                'observacion': '#sobservacion'
+            };
+
+            // Mensajes personalizados para errores comunes
+            const mensajesPersonalizados = {
+                'El nombre del proveedor ya existe': '*Este nombre de proveedor ya está registrado*',
+                'El RIF del proveedor ya está registrado': '*Este RIF ya está registrado*',
+                'El RIF del representante ya está registrado': '*Este RIF de representante ya está registrado*',
+                'El nombre del proveedor debe tener entre 2 y 200 caracteres': '*El nombre debe tener entre 2 y 200 caracteres*',
+                'El RIF debe tener entre 5 y 20 caracteres': '*El RIF debe tener entre 5 y 20 caracteres*',
+                'El nombre del representante debe tener entre 2 y 200 caracteres': '*El nombre debe tener entre 2 y 200 caracteres*',
+                'El RIF del representante debe tener entre 5 y 20 caracteres': '*El RIF debe tener entre 5 y 20 caracteres*',
+                'El correo no debe exceder los 255 caracteres': '*El correo es demasiado largo*',
+                'El correo debe tener formato usuario@dominio.extensión': '*Formato de correo inválido*',
+                'El teléfono debe tener entre 7 y 20 caracteres': '*El teléfono debe tener entre 7 y 20 caracteres*',
+                'La dirección no debe exceder los 500 caracteres': '*La dirección es demasiado larga*',
+                'La observación no debe exceder los 1000 caracteres': '*La observación es demasiado larga*'
+            };
+
+            // Iterar sobre los errores y mostrarlos en los spans correspondientes
+            Object.keys(respuesta.field_errors).forEach(function(campo) {
+                const spanSelector = mapeoCampos[campo];
+                const mensajeError = respuesta.field_errors[campo];
+                
+                if (spanSelector) {
+                    // Buscar mensaje personalizado
+                    let mensajeMostrar = mensajeError;
+                    Object.keys(mensajesPersonalizados).forEach(function(errorOriginal) {
+                        if (mensajeError.includes(errorOriginal)) {
+                            mensajeMostrar = mensajesPersonalizados[errorOriginal];
+                        }
+                    });
+                    
+                    $(spanSelector).text(mensajeMostrar);
+                }
+            });
+
+            // Mostrar mensaje general solo si hay errores
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'Por favor, corrija los campos marcados',
+                showConfirmButton: true
+            });
+        } else {
+            // Si no hay errores específicos, mostrar el mensaje genérico
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: respuesta.message || 'Error en la validación de datos'
+            });
+        }
+    }
+
     var $tabla = $('#tablaConsultas');
     if ($tabla.length) {
         var tablaProveedores;
@@ -561,11 +645,7 @@ $(document).ready(function() {
                     agregarFilaProveedor(respuesta.proveedor);
                     resetProveedor();
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: respuesta.message || respuesta.msg || 'No se pudo registrar el proveedor'
-                    });
+                    manejarErroresBackend(respuesta, false);
                 }
             });
         }
@@ -940,11 +1020,7 @@ $(document).ready(function() {
                         botonModificar.data('observacion', proveedor.observacion);
                     }
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.message || 'No se pudo modificar el proveedor'
-                    });
+                    manejarErroresBackend(response, true);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
