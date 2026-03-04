@@ -183,18 +183,18 @@ class modelo extends BD{
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_modelo', $id_modelo);
             $result = $stmt->execute();
+            
+            if ($result) {
+                return ['status' => 'success'];
+            } else {
+                return [
+                    'status' => 'error', 
+                    'mensaje' => 'Error al eliminar el modelo',
+                    'productos' => [],
+                    'total_productos' => 0
+                ];
+            }
         });
-        
-        if ($result) {
-            return ['status' => 'success'];
-        } else {
-            return [
-                'status' => 'error', 
-                'mensaje' => 'Error al eliminar el modelo',
-                'productos' => [],
-                'total_productos' => 0
-            ];
-        }
     }
 
     public function tieneProductosAsociados($id_modelo) {
