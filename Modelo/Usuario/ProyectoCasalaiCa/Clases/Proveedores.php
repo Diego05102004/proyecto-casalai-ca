@@ -616,10 +616,7 @@ class Proveedores extends BD {
         }); 
     }
 
-    public function existeNombreProveedor($nombre, $excluir_id = null) {
-        return $this->existeNomProveedor($nombre, $excluir_id); 
-    }
-    private function existeNomProveedor($nombre, $excluir_id) {
+    private function existeNombreProveedor($nombre, $excluir_id = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($nombre, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE nombre_proveedor = ?";
             $params = [$nombre];
@@ -633,10 +630,7 @@ class Proveedores extends BD {
         });
     }
 
-    public function existeRifProveedor($rif, $excluir_id = null) {
-        return $this->existeRifProv($rif, $excluir_id);
-    }
-    private function existeRifProv($rif, $excluir_id) {
+    private function existeRifProveedor($rif, $excluir_id = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($rif, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE rif_proveedor = ?";
             $params = [$rif];
@@ -650,10 +644,7 @@ class Proveedores extends BD {
         });
     }
 
-    public function existeRifRepresentante($rif, $excluir_id = null) {
-        return $this->existeRifRep($rif, $excluir_id);
-    }
-    private function existeRifRep($rif, $excluir_id) {
+    private function existeRifRepresentante($rif, $excluir_id = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($rif, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_proveedores WHERE rif_representante = ?";
             $params = [$rif];
