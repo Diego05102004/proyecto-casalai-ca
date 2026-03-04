@@ -81,7 +81,7 @@ class modelo extends BD{
     }
 
     private function existeNombreModelo($nombre_modelo, $excluir_id = null) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nombre_modelo, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_modelos WHERE nombre_modelo = ?";
             $params = [$nombre_modelo];
             if ($excluir_id !== null) {
@@ -128,7 +128,7 @@ class modelo extends BD{
         return $this->obtModeloPorId($id_modelo);
     }
     private function obtModeloPorId($id_modelo) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
             $sql = "SELECT * FROM tbl_modelos WHERE id_modelo = ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id_modelo]);
@@ -153,7 +153,7 @@ class modelo extends BD{
         return $this->m_modelo($id_modelo);
     }
     private function m_modelo($id_modelo) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
             $sql = "UPDATE tbl_modelos SET nombre_modelo = :nombre_modelo, id_marca = :id_marca WHERE id_modelo = :id_modelo";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_modelo', $id_modelo);
@@ -167,7 +167,6 @@ class modelo extends BD{
         return $this->e_modelo($id_modelo);
     }
     private function e_modelo($id_modelo) {
-        // Primero verificar si hay productos asociados a este modelo
         $productosAsociados = $this->tieneProductosAsociados($id_modelo);
         
         if ($productosAsociados['tiene_productos']) {
@@ -179,7 +178,7 @@ class modelo extends BD{
             ];
         }
 
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
             $sql = "DELETE FROM tbl_modelos WHERE id_modelo = :id_modelo";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_modelo', $id_modelo);
@@ -202,8 +201,7 @@ class modelo extends BD{
         return $this->tieneProductosAso($id_modelo);
     }
     private function tieneProductosAso($id_modelo) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            // Verificar si hay productos asociados al modelo
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
             $sql = "SELECT COUNT(*) as total FROM tbl_productos WHERE id_modelo = :id_modelo";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_modelo', $id_modelo, PDO::PARAM_INT);
@@ -238,7 +236,7 @@ class modelo extends BD{
         return $this->obtModeloConMarcaPorId($id_modelo);
     }
     private function obtModeloConMarcaPorId($id_modelo) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
             $sql = "SELECT m.id_modelo, m.nombre_modelo, m.id_marca, ma.nombre_marca
                 FROM tbl_modelos m
                 JOIN tbl_marcas ma ON m.id_marca = ma.id_marca
@@ -255,12 +253,12 @@ class modelo extends BD{
     private function g_modelos() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $querymodelos = 'SELECT mo.id_modelo,
-                                mo.id_marca,
-                                mo.nombre_modelo,
-                                ma.nombre_marca 
-                                FROM tbl_modelos AS mo
-                                INNER JOIN tbl_marcas AS ma ON mo.id_marca = ma.id_marca
-                                ORDER BY mo.id_modelo DESC';
+            mo.id_marca,
+            mo.nombre_modelo,
+            ma.nombre_marca 
+            FROM tbl_modelos AS mo
+            INNER JOIN tbl_marcas AS ma ON mo.id_marca = ma.id_marca
+            ORDER BY mo.id_modelo DESC';
             $stmtmodelos = $pdo->prepare($querymodelos);
             $stmtmodelos->execute();
             $modelos = $stmtmodelos->fetchAll(PDO::FETCH_ASSOC);
