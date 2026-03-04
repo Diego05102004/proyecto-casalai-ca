@@ -3,6 +3,7 @@ ob_start();
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\modelo;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\marca;
 
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
@@ -202,7 +203,7 @@ function getModelos() {
 }
 
 function getmarcas() {
-    $marcas = new modelo('P');
+    $marcas = new marca('P');
     return $marcas->getmarcas();
 }
 
