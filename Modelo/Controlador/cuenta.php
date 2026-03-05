@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
-            $cuentabanco = new Cuentabanco();
+            $cuentabanco = new Cuentabanco('P');
             $cuentabanco->setNombreBanco($_POST['nombre_banco']);
             $cuentabanco->setNumeroCuenta($_POST['numero_cuenta']);
             $cuentabanco->setRifCuenta($_POST['rif_cuenta']);
@@ -64,15 +64,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo json_encode([
                         'status' => 'error',
                         'message' => 'El número de cuenta ya existe'
-                    ]);
-                    exit;
-                }
-            }
-            if ($_POST['rif_cuenta'] != ''){
-                if ($cuentabanco->existeRifCuenta($_POST['rif_cuenta'])) {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'El RIF de la cuenta ya existe'
                     ]);
                     exit;
                 }
@@ -111,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            $cuentabanco = new Cuentabanco();
+            $cuentabanco = new Cuentabanco('P');
             $cuenta_obt = $cuentabanco->obtenerCuentaPorId($id_cuenta);
 
             if ($cuenta_obt !== null) {
@@ -122,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'consultar_cuentas':
-            $cuentabanco = new Cuentabanco();
+            $cuentabanco = new Cuentabanco('P');
             $cuentas_obt = $cuentabanco->consultarCuentabanco();
 
             echo json_encode($cuentas_obt);
@@ -139,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            $cuentabanco = new Cuentabanco();
+            $cuentabanco = new Cuentabanco('P');
             $cuentabanco->setIdCuenta($id_cuenta);
             $cuentabanco->setNombreBanco($_POST['nombre_banco']);
             $cuentabanco->setNumeroCuenta($_POST['numero_cuenta']);
@@ -170,13 +161,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'El número de cuenta ya existe'
-                ]);
-                exit;
-            }
-            if ($cuentabanco->existeRifCuenta($_POST['rif_cuenta'], $id_cuenta)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El RIF de la cuenta ya existe'
                 ]);
                 exit;
             }
@@ -212,7 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            $cuentabanco = new Cuentabanco();
+            $cuentabanco = new Cuentabanco('P');
 
             $resultado = $cuentabanco->eliminarCuentabanco($id_cuenta);
 
@@ -269,7 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $cuentabanco = new Cuentabanco();
+            $cuentabanco = new Cuentabanco('P');
             $cuentabanco->setIdCuenta($id_cuenta);
             
             if ($cuentabanco->cambiarEstado($nuevoEstado)) {
@@ -297,12 +281,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function consultarCuentabanco() {
-    $cuentabanco = new Cuentabanco();
+    $cuentabanco = new Cuentabanco('P');
     return $cuentabanco->consultarCuentabanco();
 }
 
 function cuentasReportes() {
-    $cuentabanco = new Cuentabanco();
+    $cuentabanco = new Cuentabanco('P');
     return $cuentabanco->cuentasReportes();
 }
 
