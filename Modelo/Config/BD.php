@@ -5,7 +5,7 @@ use PDO;
 use PDOException;
 
 class BD {
-    private $pdo = null;
+    protected $pdo = null;
     private $config = [];
 
     // $tipo: 'P' para principal, 'S' para seguridad

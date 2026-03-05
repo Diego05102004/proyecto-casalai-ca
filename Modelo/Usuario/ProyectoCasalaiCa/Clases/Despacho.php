@@ -5,7 +5,6 @@ use PDO;
 use PDOException;
 
 class Despacho extends BD{
-    private $conex;
     private $id;
     private $idcliente;
     private $tipocompra;
@@ -22,10 +21,6 @@ class Despacho extends BD{
     const ESTADOS_PERMITIDOS = ['Por Despachar', 'Despachado', 'Anulado'];
     const TIPOS_COMPRA_PERMITIDOS = ['Presencial', 'Online', 'Mixta'];
     const ESTADOS_CAMBIO = ['Por Despachar', 'Despachado'];
-
-    public function __construct() {
-        $this->conex = null;
-    }
 
     public function getid() {
         return $this->id;
@@ -68,12 +63,47 @@ class Despacho extends BD{
     public function setdesc($desc) {
         $this->desc = $desc;
     }
-    
-    // ==================== VALIDACIONES DE BACKEND ====================
+
+    public function __construct($tipo = 'P') {
+    }
     
     /**
-     * Valida los datos para consultar despachos
+     * @return PDO
      */
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        try {
+            parent::__construct('P'); 
+            $pdo = parent::getConexion(); 
+
+            if (!$pdo instanceof \PDO) {
+                throw new \RuntimeException("La conexión PDO no es válida o es nula.");
+            }
+
+            $pdo->beginTransaction();
+            $resultado = $operation($pdo);
+            $pdo->commit();
+            
+            return $resultado;
+        } catch (\Exception $e) {
+            $pdo = parent::getConexion();
+            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            $this->cerrar();
+        }
+    }
+    
     private function validarConsultar($datos) {
         $errores = [];
         
@@ -316,157 +346,82 @@ class Despacho extends BD{
     public function validarReporteDespacho($datos) {
         return $this->validarReporte($datos);
     }
-    
-    /**
-     * Verifica si un despacho existe por ID
-     */
-    private function verificarDespachoExistente($idDespacho) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarDespachoExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
-    }
-    
-    /**
-     * Verifica si un cliente existe y está activo
-     */
-    private function verificarClienteExistente($idCliente) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE id_clientes = :id_cliente AND activo = 1";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarClienteExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
-    }
-    
-    /**
-     * Verifica si un despacho está activo
-     */
-    private function verificarDespachoActivo($idDespacho) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho AND activo = 1";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarDespachoActivo: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
-    }
 
     public function obtenercliente() {
         return $this->obt_cliente();
     }
     private function obt_cliente() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
-            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $p = $this->conex->prepare("SELECT * FROM tbl_clientes");
-            $p->execute();
-            return $p->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            return ['error' => true, 'mensaje' => $e->getMessage()];
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try{
+                $p = $pdo->prepare("SELECT * FROM tbl_clientes");
+                $p->execute();
+                return $p->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                return ['error' => true, 'mensaje' => $e->getMessage()];
+            }
+        });
     }
 
-    // Ejemplo con listadoproductos
     public function listadoproductos() {
         return $this->list_productos(); 
     }
     private function list_productos() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        $r = array();
-        try {
-            $resultado = $this->conex->query("
-                SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
-                FROM tbl_productos AS p 
-                INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
-                INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
-            ");
-            
-            $respuesta = '';
-            $totalFilas = 0;
-            foreach($resultado as $fila){
-                $respuesta .= "<tr style='cursor:pointer' onclick='colocaproducto(this);'>";
-                $respuesta .= "<td style='display:none'>{$fila['id_producto']}</td>";
-                $respuesta .= "<td>{$fila['id_producto']}</td>";
-                $respuesta .= "<td>{$fila['nombre_producto']}</td>";
-                $respuesta .= "<td>{$fila['nombre_modelo']}</td>";
-                $respuesta .= "<td>{$fila['nombre_marca']}</td>";
-                $respuesta .= "<td>{$fila['serial']}</td>";
-                $respuesta .= "</tr>";
-                $totalFilas++;
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $resultado = $pdo->query("
+                    SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
+                    FROM tbl_productos AS p 
+                    INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
+                    INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
+                ");
+                
+                $respuesta = '';
+                $totalFilas = 0;
+                foreach($resultado as $fila){
+                    $respuesta .= "<tr style='cursor:pointer' onclick='colocaproducto(this);'>";
+                    $respuesta .= "<td style='display:none'>{$fila['id_producto']}</td>";
+                    $respuesta .= "<td>{$fila['id_producto']}</td>";
+                    $respuesta .= "<td>{$fila['nombre_producto']}</td>";
+                    $respuesta .= "<td>{$fila['nombre_modelo']}</td>";
+                    $respuesta .= "<td>{$fila['nombre_marca']}</td>";
+                    $respuesta .= "<td>{$fila['serial']}</td>";
+                    $respuesta .= "</tr>";
+                    $totalFilas++;
+                }
+
+                $modalSize = 'modal-md';
+                if ($totalFilas > 8) $modalSize = 'modal-lg';
+                if ($totalFilas > 20) $modalSize = 'modal-xl';
+
+                $r = [
+                    'resultado' => 'listado',
+                    'mensaje' => $respuesta,
+                    'modalSize' => $modalSize
+                ];
+            } catch (Exception $e) {
+                $r = [
+                    'resultado' => 'error',
+                    'mensaje' => $e->getMessage(),
+                    'modalSize' => 'modal-md'
+                ];
             }
-
-            $modalSize = 'modal-md';
-            if ($totalFilas > 8) $modalSize = 'modal-lg';
-            if ($totalFilas > 20) $modalSize = 'modal-xl';
-
-            $r = [
-                'resultado' => 'listado',
-                'mensaje' => $respuesta,
-                'modalSize' => $modalSize
-            ];
-        } catch (Exception $e) {
-            $r = [
-                'resultado' => 'error',
-                'mensaje' => $e->getMessage(),
-                'modalSize' => 'modal-md'
-            ];
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
-        return $r;
+            return $r;
+        });
     }
 
-    // Ejemplo con consultarproductos
     public function consultarproductos() {
         return $this->consul_productos(); 
     }
     private function consul_productos() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
                     FROM tbl_productos AS p 
                     INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
                     INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
 
     public function getdespacho() {
@@ -474,9 +429,7 @@ class Despacho extends BD{
     }
 
     private function g_despacho() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $query = "
                 SELECT 
                     r.id_despachos,
@@ -495,7 +448,7 @@ class Despacho extends BD{
                 GROUP BY r.id_despachos, r.fecha_despacho, r.tipocompra, r.estado, c.nombre
                 ORDER BY r.fecha_despacho DESC
             ";
-            $stmt = $this->conex->prepare($query);
+            $stmt = $pdo->prepare($query);
             $stmt->execute();
             $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -518,25 +471,20 @@ class Despacho extends BD{
                     INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
                     WHERE d.id_despacho = ?
                 ";
-                $stmtProd = $this->conex->prepare($sqlProd);
+                $stmtProd = $pdo->prepare($sqlProd);
                 $stmtProd->execute([$despacho['id_despachos']]);
                 $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
             }
 
             return $despachos;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
 
     public function obt_productos_despacho($id_despacho) {
         return $this->obt_productos_des($id_despacho); 
     }
     private function obt_productos_des($id_despacho) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_despacho){
             $sql = "
                 SELECT 
                     p.id_producto AS codigo,
@@ -551,190 +499,21 @@ class Despacho extends BD{
                 INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
                 WHERE d.id_despacho = :id_despacho
             ";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_despacho', $id_despacho, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
 
-////////////////////////////////////////////////////////////
-
-// 🚚 4. Despachos por estado (con rango de fechas)
-public function getDespachosEstado($fechaInicio = null, $fechaFin = null) {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
-    try {
-        $sql = "
-            SELECT 
-                estado AS label, 
-                COUNT(*) AS value
-            FROM tbl_orden_despachos
-            WHERE 1 = 1
-        ";
-
-        $params = [];
-
-        if ($fechaInicio && $fechaFin) {
-            $sql .= " AND fecha_despacho BETWEEN :fechaInicio AND :fechaFin";
-            $params[':fechaInicio'] = $fechaInicio;
-            $params[':fechaFin'] = $fechaFin;
-        }
-
-        $sql .= " GROUP BY estado ORDER BY value DESC";
-
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
-    }
-}
-
-////////////////////////////////////////////////////////////
-
-// 📦 5. Volumen de productos despachados por mes (por año)
-public function getProductosDespachadosPorMes($anio = null) {
-    $conexion = new BD('P');
-    $this->conex = $conexion->getConexion();
-    try {
-        $sql = "
-            SELECT 
-                MONTH(od.fecha_despacho) AS mes_num, 
-                SUM(dd.cantidad) AS value
-            FROM tbl_despacho_detalle dd
-            INNER JOIN tbl_orden_despachos od ON dd.id_detalle = od.id_orden_despachos
-            WHERE 1 = 1
-        ";
-
-        $params = [];
-
-        if ($anio) {
-            $sql .= " AND YEAR(od.fecha_despacho) = :anio";
-            $params[':anio'] = $anio;
-        }
-
-        $sql .= "
-            GROUP BY MONTH(od.fecha_despacho)
-            ORDER BY mes_num
-        ";
-
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute($params);
-        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Traducción de meses
-        $meses = [
-            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
-        ];
-
-        foreach ($resultados as &$fila) {
-            $fila['label'] = $meses[$fila['mes_num']] ?? 'Desconocido';
-            unset($fila['mes_num']);
-        }
-
-        return $resultados;
-    } finally {
-        if (isset($conexion)) { $conexion->cerrar(); }
-        $this->conex = null;
-    }
-}
-
-    public function anularDespacho($idDespacho) {
-        return $this->an_despacho($idDespacho); 
-    }
-
-    private function an_despacho($idDespacho) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
-            $sql = "UPDATE tbl_despachos SET activo = 0 WHERE id_despachos = :id";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindParam(':id', $idDespacho, PDO::PARAM_INT);
-            $result = $stmt->execute();
-
-            return $result 
-                ? ['status' => 'success'] 
-                : ['status' => 'error', 'message' => 'No se pudo anular el despacho'];
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
-    }
-
-    public function cambiarEstadoDespacho($id, $nuevoEstado) {
-        return $this->cam_estadoDespacho($id, $nuevoEstado); 
-    }
-    private function cam_estadoDespacho($id, $nuevoEstado) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
-            $sql = "UPDATE tbl_despachos SET estado = :estado WHERE id_despachos = :id";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindParam(':estado', $nuevoEstado);
-            $stmt->bindParam(':id', $id);
-            return $stmt->execute();
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
-    }
-
-    // 🚚 5. Despachos por cliente
-    public function getDespachosPorCliente($fechaInicio = null, $fechaFin = null) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
+    public function getDespachosEstado($fechaInicio = null, $fechaFin = null) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
             $sql = "
                 SELECT 
-                    c.nombre AS cliente, 
-                    COUNT(*) AS total
-                FROM tbl_despachos d
-                INNER JOIN tbl_clientes c ON d.id_clientes = c.id_clientes
-                WHERE d.activo = '1'
-            ";
-
-            $params = [];
-
-            if ($fechaInicio && $fechaFin) {
-                $sql .= " AND d.fecha_despacho BETWEEN :fechaInicio AND :fechaFin";
-                $params[':fechaInicio'] = $fechaInicio;
-                $params[':fechaFin'] = $fechaFin;
-            }
-
-            $sql .= " GROUP BY c.id_clientes, c.nombre ORDER BY total DESC LIMIT 10";
-
-            $stmt = $this->conex->prepare($sql);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            return ['error' => true, 'mensaje' => $e->getMessage()];
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
-    }
-
-    // 🚚 6. Despachos por tipo de compra
-    public function getDespachosPorTipoCompra($fechaInicio = null, $fechaFin = null) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
-            $sql = "
-                SELECT 
-                    tipocompra AS tipo_compra, 
-                    COUNT(*) AS total
-                FROM tbl_despachos
-                WHERE activo = '1'
+                    estado AS label, 
+                    COUNT(*) AS value
+                FROM tbl_orden_despachos
+                WHERE 1 = 1
             ";
 
             $params = [];
@@ -745,20 +524,152 @@ public function getProductosDespachadosPorMes($anio = null) {
                 $params[':fechaFin'] = $fechaFin;
             }
 
-            $sql .= " GROUP BY tipocompra ORDER BY total DESC";
+            $sql .= " GROUP BY estado ORDER BY value DESC";
 
-            $stmt = $this->conex->prepare($sql);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            $stmt->execute();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            return ['error' => true, 'mensaje' => $e->getMessage()];
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
+    }
+
+    public function getProductosDespachadosPorMes($anio = null) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($anio){
+            $sql = "
+                SELECT 
+                    MONTH(od.fecha_despacho) AS mes_num, 
+                    SUM(dd.cantidad) AS value
+                FROM tbl_despacho_detalle dd
+                INNER JOIN tbl_orden_despachos od ON dd.id_detalle = od.id_orden_despachos
+                WHERE 1 = 1
+            ";
+
+            $params = [];
+
+            if ($anio) {
+                $sql .= " AND YEAR(od.fecha_despacho) = :anio";
+                $params[':anio'] = $anio;
+            }
+
+            $sql .= "
+                GROUP BY MONTH(od.fecha_despacho)
+                ORDER BY mes_num
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Traducción de meses
+            $meses = [
+                1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+                5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+                9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+            ];
+
+            foreach ($resultados as &$fila) {
+                $fila['label'] = $meses[$fila['mes_num']] ?? 'Desconocido';
+                unset($fila['mes_num']);
+            }
+
+            return $resultados;
+        });
+    }
+
+    public function anularDespacho($idDespacho) {
+        return $this->an_despacho($idDespacho); 
+    }
+
+    private function an_despacho($idDespacho) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idDespacho){
+            $sql = "UPDATE tbl_despachos SET activo = 0 WHERE id_despachos = :id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id', $idDespacho, PDO::PARAM_INT);
+            $result = $stmt->execute();
+
+            return $result 
+                ? ['status' => 'success'] 
+                : ['status' => 'error', 'message' => 'No se pudo anular el despacho'];
+        });
+    }
+
+    public function cambiarEstadoDespacho($id, $nuevoEstado) {
+        return $this->cam_estadoDespacho($id, $nuevoEstado); 
+    }
+    private function cam_estadoDespacho($id, $nuevoEstado) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $nuevoEstado){
+            $sql = "UPDATE tbl_despachos SET estado = :estado WHERE id_despachos = :id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':estado', $nuevoEstado);
+            $stmt->bindParam(':id', $id);
+            return $stmt->execute();
+        });
+    }
+
+    public function getDespachosPorCliente($fechaInicio = null, $fechaFin = null) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
+            try {
+                $sql = "
+                    SELECT 
+                        c.nombre AS cliente, 
+                        COUNT(*) AS total
+                    FROM tbl_despachos d
+                    INNER JOIN tbl_clientes c ON d.id_clientes = c.id_clientes
+                    WHERE d.activo = '1'
+                ";
+
+                $params = [];
+
+                if ($fechaInicio && $fechaFin) {
+                    $sql .= " AND d.fecha_despacho BETWEEN :fechaInicio AND :fechaFin";
+                    $params[':fechaInicio'] = $fechaInicio;
+                    $params[':fechaFin'] = $fechaFin;
+                }
+
+                $sql .= " GROUP BY c.id_clientes, c.nombre ORDER BY total DESC LIMIT 10";
+
+                $stmt = $pdo->prepare($sql);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value);
+                }
+                $stmt->execute();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                return ['error' => true, 'mensaje' => $e->getMessage()];
+            }
+        });
+    }
+
+    public function getDespachosPorTipoCompra($fechaInicio = null, $fechaFin = null) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
+            try {
+                $sql = "
+                    SELECT 
+                        tipocompra AS tipo_compra, 
+                        COUNT(*) AS total
+                    FROM tbl_despachos
+                    WHERE activo = '1'
+                ";
+
+                $params = [];
+
+                if ($fechaInicio && $fechaFin) {
+                    $sql .= " AND fecha_despacho BETWEEN :fechaInicio AND :fechaFin";
+                    $params[':fechaInicio'] = $fechaInicio;
+                    $params[':fechaFin'] = $fechaFin;
+                }
+
+                $sql .= " GROUP BY tipocompra ORDER BY total DESC";
+
+                $stmt = $pdo->prepare($sql);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value);
+                }
+                $stmt->execute();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                return ['error' => true, 'mensaje' => $e->getMessage()];
+            }
+        });
     }
 }
 ?>

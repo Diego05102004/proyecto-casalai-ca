@@ -1,5 +1,4 @@
 <?php  
-// Requires organizados al inicio
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Despacho;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
@@ -7,17 +6,15 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 use Usuario\ProyectoCasalaiCa\Config\BD;
 define('MODULO_DESPACHO', 3);
 
-$id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
+$id_rol = $_SESSION['id_rol'];
 
-// Permisos compatibles con la vista
 $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('despacho'));
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Instanciar solo cuando se va a usar
-    $k = new Despacho();
+    $k = new Despacho('P');
 
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
