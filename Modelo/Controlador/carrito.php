@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'agregar_al_carrito':
             // Validar datos de entrada
-            $carrito = new Carrito();
+            $carrito = new Carrito('P');
             $datosValidacion = [
                 'id_producto' => isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0,
                 'cantidad' => isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1
@@ -144,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'actualizar_cantidad':
             // Validar datos de entrada
-            $carrito = new Carrito();
+            $carrito = new Carrito('P');
             $datosValidacion = [
                 'id_carrito_detalle' => isset($_POST['id_carrito_detalle']) ? (int)$_POST['id_carrito_detalle'] : 0,
                 'cantidad' => isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 0
@@ -204,7 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'ID de detalle del carrito no proporcionado o inválido']);
                 break;
             }
-            $carrito = new Carrito();
+            $carrito = new Carrito('P');
             $id_cliente = $_SESSION['id_usuario'];
             try {
                 if (method_exists($carrito, 'obtenerDetallePorId')) {
@@ -231,7 +231,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'eliminar_todo_carrito':
             $id_cliente = $_SESSION['id_usuario']; // Obtener de la sesión
 
-            $carrito = new Carrito();
+            $carrito = new Carrito('P');
             $carritoCliente = $carrito->obtenerCarritoPorCliente($id_cliente);
 
             if ($carritoCliente) {
@@ -310,7 +310,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo json_encode(['status' => 'error', 'message' => $resultado['error']]);
                 } elseif ($resultado === true) {
                     // Todo fue exitoso
-                    $carrito = new Carrito();   
+                    $carrito = new Carrito('P');   
                     $carritoCliente = $carrito->obtenerCarritoPorCliente($_SESSION['id_usuario']);
                     $id_carrito = $carritoCliente['id_carrito'];
                     $carrito->eliminarTodoElCarrito($id_carrito);
@@ -367,7 +367,7 @@ function obtenerProductos() {
 }
 
 function obtenerProductosDelCarrito() {
-    $carrito = new Carrito();
+    $carrito = new Carrito('P');
     $id_cliente = $_SESSION['id_usuario']; // Obtener de la sesión
     $carritoCliente = $carrito->obtenerCarritoPorCliente($id_cliente);
 
