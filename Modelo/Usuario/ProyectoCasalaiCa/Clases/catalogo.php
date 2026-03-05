@@ -324,15 +324,9 @@ class Catalogo extends BD {
      * Verifica si un producto existe y está activo
      */
     private function verificarProductoExistente($idProducto) {
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT id_producto, nombre_producto, stock, estado FROM productos WHERE id_producto = :id_producto";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
             $stmt->execute();
             $producto = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -350,25 +344,16 @@ class Catalogo extends BD {
             }
             
             return ['existe' => true, 'producto' => $producto];
-        } finally {
-            if (isset($bd) && $created) { $bd->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
     
     /**
      * Verifica si un combo existe y está activo
      */
     private function verificarComboExistente($idCombo) {
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT id_combo, nombre_combo, activo FROM combos WHERE id_combo = :id_combo";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_combo', $idCombo, PDO::PARAM_INT);
             $stmt->execute();
             $combo = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -382,10 +367,7 @@ class Catalogo extends BD {
             }
             
             return ['existe' => true, 'combo' => $combo];
-        } finally {
-            if (isset($bd) && $created) { $bd->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 }
 ?>
