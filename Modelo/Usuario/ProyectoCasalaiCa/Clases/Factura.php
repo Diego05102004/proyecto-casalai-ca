@@ -713,12 +713,11 @@ class Factura extends BD
                 $stmt->execute();
                 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                // Verificación: Si no hay factura, retornamos 0 para evitar el error de offset
                 if (!$resultado) {
                     return 0;
                 }
 
-                $tasa = 1; // Tasa por defecto por si falla la consulta del dólar
+                $tasa = 1;
                 try {
                     $stmtDolar = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
                     $stmtDolar->execute();
@@ -731,10 +730,7 @@ class Factura extends BD
                     error_log('Error al obtener cache del dólar: ' . $e->getMessage());
                 }
 
-                // Calculamos el total
                 $total = $resultado['total_con_impuesto'] * $tasa;
-
-                // IMPORTANTE: Eliminamos $pdo->cerrar(); la función padre lo hace por nosotros
                 return $total;
 
             } catch (PDOException $e) {
