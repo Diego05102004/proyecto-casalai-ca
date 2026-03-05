@@ -57,40 +57,61 @@ function protegerSelects(selectIds, interval = 1000) {
 
 $(document).ready(function () {
 
-    // Función para manejar errores específicos del backend
     function manejarErroresBackend(respuesta, esModificacion = false) {
         if (respuesta.field_errors && typeof respuesta.field_errors === 'object') {
-            // Limpiar todos los spans de error primero
             if (esModificacion) {
-                $("#smnombre_modelo").text('');
-                $("#smid_marca").text('');
+                $("#smid_marca, #smnombre_modelo").text('');
             } else {
-                $("#snombre_modelo").text('');
-                $("#sid_marca").text('');
+                $("#sid_marca, #snombre_modelo").text('');
             }
 
             // Mapeo de campos del backend a spans del frontend
             const mapeoCampos = esModificacion ? {
-                'nombre_modelo': '#smnombre_modelo',
                 'id_marca': '#smid_marca',
-                'id_modelo': '#smid_modelo'
+                'id_modelo': '#smid_modelo',
+                'nombre_modelo': '#smnombre_modelo'
             } : {
-                'nombre_modelo': '#snombre_modelo',
                 'id_marca': '#sid_marca',
-                'id_modelo': '#sid_modelo'
+                'id_modelo': '#sid_modelo',
+                'nombre_modelo': '#snombre_modelo'
             };
 
-            // Mostrar errores específicos en sus spans correspondientes
-            Object.keys(respuesta.field_errors).forEach(campo => {
-                const selector = mapeoCampos[campo];
-                if (selector) {
-                    $(selector).text(respuesta.field_errors[campo]);
+            const mensajesPersonalizados = {
+                'La marca no fue seleccionada': '*Debe seleccionar una marca*',
+                'El nombre del modelo ya existe': '*Este nombre de modelo ya está registrado con esta marca*'
+            };
+
+            // Iterar sobre los errores y mostrarlos en los spans correspondientes
+            Object.keys(respuesta.field_errors).forEach(function(campo) {
+                const spanSelector = mapeoCampos[campo];
+                const mensajeError = respuesta.field_errors[campo];
+                
+                if (spanSelector) {
+                    // Buscar mensaje personalizado
+                    let mensajeMostrar = mensajeError;
+                    Object.keys(mensajesPersonalizados).forEach(function(errorOriginal) {
+                        if (mensajeError.includes(errorOriginal)) {
+                            mensajeMostrar = mensajesPersonalizados[errorOriginal];
+                        }
+                    });
+                    
+                    $(spanSelector).text(mensajeMostrar);
                 }
             });
 
-            return true; // Indica que se manejaron errores específicos
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'Por favor, corrija los campos marcados',
+                showConfirmButton: true
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: respuesta.message || 'Error en la validación de datos'
+            });
         }
-        return false; // No hay errores específicos que manejar
     }
 
     // Inicializar DataTable de modelos y crear dinámicamente el botón Incluir en el filtro

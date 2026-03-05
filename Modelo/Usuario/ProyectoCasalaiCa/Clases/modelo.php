@@ -293,7 +293,7 @@ class modelo extends BD{
         }
         
         if ($this->existeNombreModelo($datos['nombre_modelo'], $datos['id_marca'])) {
-            $errores['nombre_modelo'] = 'Ya existe un modelo con este nombre para la marca seleccionada';
+            $errores['nombre_modelo'] = '*Ya existe un modelo con este nombre para la marca seleccionada*';
         }
         
         return $errores;
@@ -358,7 +358,7 @@ class modelo extends BD{
         
         if (isset($datos['nombre_modelo']) && 
             $this->existeNombreModelo($datos['nombre_modelo'], $datos['id_marca'], $datos['id_modelo'])) {
-            $errores['nombre_modelo'] = 'Ya existe un modelo con este nombre para la marca seleccionada';
+            $errores['nombre_modelo'] = '*Ya existe un modelo con este nombre para la marca seleccionada*';
         }
         
         return $errores;
