@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             error_log("POST data: " . print_r($_POST, true));
             error_log("FILES data: " . print_r($_FILES, true));
             
-            $Producto = new Productos();
+            $Producto = new Productos('P');
 
             $nombre_producto = $_POST['nombre_producto'] ?? '';
             $descripcion_producto = $_POST['descripcion_producto'] ?? '';
@@ -188,7 +188,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id = $_POST['id_producto'] ?? null;
             header('Content-Type: application/json; charset=utf-8');
             if ($id !== null) {
-                $Producto = new Productos();
+                $Producto = new Productos('P');
                 $producto = $Producto->obtenerProductoPorId($id);
                 if ($producto !== null) {
                     echo json_encode($producto, JSON_UNESCAPED_UNICODE);
@@ -209,7 +209,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            $Producto = new Productos();
+            $Producto = new Productos('P');
             
             // Preparar datos para validación
             $datos_validacion = [
@@ -369,7 +369,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $producto = new Productos();
+            $producto = new Productos('P');
             
             // Verificar que el producto exista antes de eliminar
             $productoExistente = $producto->obtenerProductoPorId($id_producto);
@@ -408,7 +408,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             
             // Validar datos de entrada usando las nuevas validaciones centralizadas
-            $Producto = new Productos();
+            $Producto = new Productos('P');
             $datos_validacion = [
                 'id_producto' => $id,
                 'nuevo_estatus' => $nuevoEstatus
@@ -424,7 +424,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $producto = new Productos();
+            $producto = new Productos('P');
             $producto->setId($id);
             if ($producto->cambiarEstatus($nuevoEstatus)) {
                 if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -448,7 +448,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'reporte_parametrizado') {
                 $tipoReporte = $_POST['tipoReporte'] ?? '';
                 $categoria = $_POST['categoriaSeleccionada'] ?? '';
-                $productoModel = new Productos();
+                $productoModel = new Productos('P');
                 if ($tipoReporte === 'por_categoria') {
                     $datos = $productoModel->obtenerReporteCategorias();
                     $labels = array_column($datos, 'nombre_categoria');
@@ -482,16 +482,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Funciones auxiliares y carga de vista
 
 function obtenerModelos() {
-    $producto = new Productos();
+    $producto = new Productos('P');
     return $producto->obtenerModelos();
 }
 
 function obtenerProductos() {
-    $producto = new Productos();
+    $producto = new Productos('P');
     return $producto->obtenerProductos();
 }
 
-$productoModel = new Productos();
+$productoModel = new Productos('P');
 $masVendidos   = $productoModel->getProductosMasVendidos();
 $stockProductos = $productoModel->getStockProductos();
 $rotacion      = $productoModel->getRotacionProductos();
