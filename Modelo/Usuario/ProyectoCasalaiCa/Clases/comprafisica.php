@@ -9,7 +9,6 @@ class Comprafisica extends BD{
     private $correlativo;
     private $desc;
     private $fecha;
-    private $conex;
     private $tablerecepcion = 'tbl_despachos';
     
     // Constantes para validaciones
@@ -21,10 +20,6 @@ class Comprafisica extends BD{
     const TIPOS_PAGO_PERMITIDOS = ['Efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'Tarjeta', 'Cheque'];
     const TIPOS_PAGO_CON_REFERENCIA = ['Transferencia', 'Zelle', 'Pago Movil'];
     const ESTADOS_PERMITIDOS = ['activo', 'inactivo', 'pendiente'];
-
-    public function __construct() {
-        $this->conex = null;
-    }
 
     public function getidcliente() {
         return $this->idcliente;
@@ -45,6 +40,46 @@ class Comprafisica extends BD{
     }
     public function setdesc($desc) {
         $this->desc = $desc;
+    }
+
+    public function __construct($tipo = 'P') {
+        parent::__construct($tipo);
+    }
+    
+    /**
+     * @return PDO
+     */
+
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        $conexion = new BD('P');
+        
+        try {
+            $conexion->getConexion()->beginTransaction();
+            
+            $resultado = $operation($conexion->getConexion());
+            
+            $conexion->getConexion()->commit();
+            
+            return $resultado;
+        } catch (Exception $e) {
+            if (isset($conexion) && $conexion->getConexion()->inTransaction()) {
+                $conexion->getConexion()->rollback();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            if (isset($conexion)) {
+                $conexion->cerrar();
+            }
+        }
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================
@@ -266,267 +301,225 @@ class Comprafisica extends BD{
      * Verifica si un cliente existe y está activo
      */
     private function verificarClienteExistente($idCliente) {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE id_clientes = :id_cliente AND activo = 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarClienteExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        });
     }
     
     /**
      * Verifica si un producto existe y está activo
      */
     private function verificarProductoExistente($idProducto) {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT COUNT(*) FROM tbl_productos WHERE id_producto = :id_producto AND estado = 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarProductoExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        });
     }
     
     /**
      * Verifica si un despacho existe
      */
     private function verificarDespachoExistente($idDespacho) {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarDespachoExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        });
     }
 
     public function registrarCompraFisica($datos) {
         return $this->r_compraFisica($datos);
     }
 
-private function r_compraFisica($datos) {
-    $d = [];
-    $conexion = null;
+    private function r_compraFisica($datos) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($datos){
+            try{
+                $pdo->beginTransaction();
 
-    if ($this->conex === null) {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-    }
-    $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                // 1️⃣ Crear despacho
+                $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, activo) 
+                                VALUES (:id_cliente, :fecha, :tipocompra, 1)";
+                $stmt = $pdo->prepare($sqlDespacho);
+                $stmt->execute([
+                    ':id_cliente' => $datos['cliente'],
+                    ':fecha' => date('Y-m-d'),
+                    ':tipocompra' => 'Presencial',
+                ]);
+                $idDespacho = $pdo->lastInsertId();
 
-    try {
-        $this->conex->beginTransaction();
+                $descripcion = "Venta: ";
+                $monto_total = 0;
+                $productosVenta = [];
 
-        // 1️⃣ Crear despacho
-        $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, activo) 
-                        VALUES (:id_cliente, :fecha, :tipocompra, 1)";
-        $stmt = $this->conex->prepare($sqlDespacho);
-        $stmt->execute([
-            ':id_cliente' => $datos['cliente'],
-            ':fecha' => date('Y-m-d'),
-            ':tipocompra' => 'Presencial',
-        ]);
-        $idDespacho = $this->conex->lastInsertId();
+                // 2️⃣ Insertar productos en despacho + preparar para factura
+                foreach ($datos['productos'] as $p) {
+                    $cantidad = $this->parsearCantidadFormateada($p['cantidad']);
 
-        $descripcion = "Venta: ";
-        $monto_total = 0;
-        $productosVenta = [];
+                    // Insertar detalle de despacho
+                    $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
+                                VALUES (:id_despacho, :id_producto, :cantidad)";
+                    $stmtDet = $pdo->prepare($sqlDetalle);
+                    $stmtDet->execute([
+                        ':id_despacho' => $idDespacho,
+                        ':id_producto' => $p['id_producto'],
+                        ':cantidad' => $cantidad
+                    ]);
 
-        // 2️⃣ Insertar productos en despacho + preparar para factura
-        foreach ($datos['productos'] as $p) {
-            $cantidad = $this->parsearCantidadFormateada($p['cantidad']);
+                    // Consultar producto
+                    $stmtProd = $pdo->prepare("
+                        SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca,
+                            p.serial, p.precio
+                        FROM tbl_productos p
+                        INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
+                        INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
+                        WHERE p.id_producto = ?
+                    ");
+                    $stmtProd->execute([$p['id_producto']]);
+                    $prod = $stmtProd->fetch(PDO::FETCH_ASSOC);
 
-            // Insertar detalle de despacho
-            $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
-                           VALUES (:id_despacho, :id_producto, :cantidad)";
-            $stmtDet = $this->conex->prepare($sqlDetalle);
-            $stmtDet->execute([
-                ':id_despacho' => $idDespacho,
-                ':id_producto' => $p['id_producto'],
-                ':cantidad' => $cantidad
-            ]);
+                    if ($prod) {
+                        $subtotal = floatval($prod['precio']) * $cantidad;
+                        $monto_total += $subtotal;
 
-            // Consultar producto
-            $stmtProd = $this->conex->prepare("
-                SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca,
-                       p.serial, p.precio
-                FROM tbl_productos p
-                INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
-                INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
-                WHERE p.id_producto = ?
-            ");
-            $stmtProd->execute([$p['id_producto']]);
-            $prod = $stmtProd->fetch(PDO::FETCH_ASSOC);
+                        // DESCRIPCIÓN → nombre (xCantidad)
+                        $descripcion .= "{$prod['nombre_producto']} ({$cantidad}), ";
 
-            if ($prod) {
-                $subtotal = floatval($prod['precio']) * $cantidad;
-                $monto_total += $subtotal;
+                        $productosVenta[] = [
+                            'id_producto' => $prod['id_producto'],
+                            'codigo' => $prod['id_producto'],
+                            'nombre' => $prod['nombre_producto'],
+                            'modelo' => $prod['nombre_modelo'],
+                            'marca' => $prod['nombre_marca'],
+                            'serial' => $prod['serial'],
+                            'precio' => $prod['precio'],
+                            'cantidad' => $cantidad,
+                            'subtotal' => $subtotal
+                        ];
+                    }
+                }
 
-                // DESCRIPCIÓN → nombre (xCantidad)
-                $descripcion .= "{$prod['nombre_producto']} ({$cantidad}), ";
+                $descripcion = rtrim($descripcion, ', ');
 
-                $productosVenta[] = [
-                    'id_producto' => $prod['id_producto'],
-                    'codigo' => $prod['id_producto'],
-                    'nombre' => $prod['nombre_producto'],
-                    'modelo' => $prod['nombre_modelo'],
-                    'marca' => $prod['nombre_marca'],
-                    'serial' => $prod['serial'],
-                    'precio' => $prod['precio'],
-                    'cantidad' => $cantidad,
-                    'subtotal' => $subtotal
-                ];
-            }
-        }
+                // 3️⃣ Crear factura
+                $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento) 
+                            VALUES (:cliente, :fecha, 0)";
+                $stmtFactura = $pdo->prepare($sqlFactura);
+                $stmtFactura->execute([
+                    ':cliente' => $datos['cliente'],
+                    ':fecha' => date('Y-m-d')
+                ]);
+                $idFactura = $pdo->lastInsertId();
 
-        $descripcion = rtrim($descripcion, ', ');
+                // 4️⃣ Factura detalle
+                foreach ($productosVenta as $prod) {
+                    $sqlFacturaDet = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad)
+                                    VALUES (:factura_id, :id_producto, :cantidad)";
+                    $stmtFacturaDet = $pdo->prepare($sqlFacturaDet);
+                    $stmtFacturaDet->execute([
+                        ':factura_id' => $idFactura,
+                        ':id_producto' => $prod['id_producto'],
+                        ':cantidad' => $prod['cantidad']
+                    ]);
+                }
 
-        // 3️⃣ Crear factura
-        $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento) 
-                       VALUES (:cliente, :fecha, 0)";
-        $stmtFactura = $this->conex->prepare($sqlFactura);
-        $stmtFactura->execute([
-            ':cliente' => $datos['cliente'],
-            ':fecha' => date('Y-m-d')
-        ]);
-        $idFactura = $this->conex->lastInsertId();
+                // 5️⃣ Cliente
+                $stmtCliente = $pdo->prepare("
+                    SELECT id_clientes, nombre, cedula, telefono, correo 
+                    FROM tbl_clientes 
+                    WHERE id_clientes = ?
+                ");
+                $stmtCliente->execute([$datos['cliente']]);
+                $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
 
-        // 4️⃣ Factura detalle
-        foreach ($productosVenta as $prod) {
-            $sqlFacturaDet = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad)
-                              VALUES (:factura_id, :id_producto, :cantidad)";
-            $stmtFacturaDet = $this->conex->prepare($sqlFacturaDet);
-            $stmtFacturaDet->execute([
-                ':factura_id' => $idFactura,
-                ':id_producto' => $prod['id_producto'],
-                ':cantidad' => $prod['cantidad']
-            ]);
-        }
+                // 6️⃣ Registrar pagos
+                $pagosVenta = [];
+                if (!empty($datos['pagos'])) {
+                    foreach ($datos['pagos'] as $pago) {
+                        $sqlPago = "INSERT INTO tbl_detalles_pago 
+                                    (id_factura, tipo, id_cuenta, referencia, monto, comprobante, fecha) 
+                                    VALUES (:id_factura, :tipo, :id_cuenta, :referencia, :monto, :comprobante, NOW())";
+                        $stmtPago = $pdo->prepare($sqlPago);
+                        $stmtPago->execute([
+                            ':id_factura' => $idFactura,
+                            ':tipo' => $pago['tipo'],
+                            ':id_cuenta' => $pago['cuenta'] ?? null,
+                            ':referencia' => $pago['referencia'] ?? null,
+                            ':monto' => $pago['monto'],
+                            ':comprobante' => $pago['comprobante'] ?? null
+                        ]);
 
-        // 5️⃣ Cliente
-        $stmtCliente = $this->conex->prepare("
-            SELECT id_clientes, nombre, cedula, telefono, correo 
-            FROM tbl_clientes 
-            WHERE id_clientes = ?
-        ");
-        $stmtCliente->execute([$datos['cliente']]);
-        $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+                        $pagosVenta[] = [
+                            'tipo' => $pago['tipo'] ?? '',
+                            'monto' => $pago['monto'] ?? 0,
+                            'referencia' => $pago['referencia'] ?? '',
+                            'id_cuenta' => $pago['id_cuenta'] ?? '',
+                            'comprobante' => $pago['comprobante'] ?? '',
+                            'estatus' => 'Procesado'
+                        ];
+                    }
+                }
 
-        // 6️⃣ Registrar pagos
-        $pagosVenta = [];
-        if (!empty($datos['pagos'])) {
-            foreach ($datos['pagos'] as $pago) {
-                $sqlPago = "INSERT INTO tbl_detalles_pago 
-                            (id_factura, tipo, id_cuenta, referencia, monto, comprobante, fecha) 
-                            VALUES (:id_factura, :tipo, :id_cuenta, :referencia, :monto, :comprobante, NOW())";
-                $stmtPago = $this->conex->prepare($sqlPago);
-                $stmtPago->execute([
-                    ':id_factura' => $idFactura,
-                    ':tipo' => $pago['tipo'],
-                    ':id_cuenta' => $pago['cuenta'] ?? null,
-                    ':referencia' => $pago['referencia'] ?? null,
-                    ':monto' => $pago['monto'],
-                    ':comprobante' => $pago['comprobante'] ?? null
+                // 7️⃣ Ingresos → CORREGIDO COMPLETAMENTE
+                $sqlFinanzas = "INSERT INTO tbl_ingresos_egresos (
+                    id_despacho,
+                    tipo,
+                    monto,
+                    descripcion,
+                    fecha,
+                    estado
+                ) VALUES (
+                    :id_despacho,
+                    :tipo,
+                    :monto,
+                    :descripcion,
+                    NOW(),
+                    1
+                )";
+
+                $stmtFinanzas = $pdo->prepare($sqlFinanzas);
+                $stmtFinanzas->execute([
+                    ':id_despacho' => $idDespacho,
+                    ':tipo' => 'ingreso',
+                    ':monto' => $monto_total,
+                    ':descripcion' => 'Venta presencial #' . $idFactura . ' - ' . $descripcion
                 ]);
 
-                $pagosVenta[] = [
-                    'tipo' => $pago['tipo'] ?? '',
-                    'monto' => $pago['monto'] ?? 0,
-                    'referencia' => $pago['referencia'] ?? '',
-                    'id_cuenta' => $pago['id_cuenta'] ?? '',
-                    'comprobante' => $pago['comprobante'] ?? '',
-                    'estatus' => 'Procesado'
+                // 8️⃣ Respuesta para AJAX
+                $resultado = [
+                    'id_factura' => $idFactura,
+                    'fecha_factura' => date('Y-m-d'),
+                    'nombre_cliente' => $cliente['nombre'] ?? '',
+                    'cedula' => $cliente['cedula'] ?? '',
+                    'telefono' => $cliente['telefono'] ?? '',
+                    'correo' => $cliente['correo'] ?? '',
+                    'productos' => $productosVenta,
+                    'pagos' => $pagosVenta,
+                    'total' => $monto_total
+                ];
+
+                $pdo->commit();
+                return $resultado;
+
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                return [
+                    'status' => 'error',
+                    'mensaje' => $e->getMessage()
                 ];
             }
-        }
-
-        // 7️⃣ Ingresos → CORREGIDO COMPLETAMENTE
-        $sqlFinanzas = "INSERT INTO tbl_ingresos_egresos (
-            id_despacho,
-            tipo,
-            monto,
-            descripcion,
-            fecha,
-            estado
-        ) VALUES (
-            :id_despacho,
-            :tipo,
-            :monto,
-            :descripcion,
-            NOW(),
-            1
-        )";
-
-        $stmtFinanzas = $this->conex->prepare($sqlFinanzas);
-        $stmtFinanzas->execute([
-            ':id_despacho' => $idDespacho,
-            ':tipo' => 'ingreso',
-            ':monto' => $monto_total,
-            ':descripcion' => 'Venta presencial #' . $idFactura . ' - ' . $descripcion
-        ]);
-
-        // 8️⃣ Respuesta para AJAX
-        $resultado = [
-            'id_factura' => $idFactura,
-            'fecha_factura' => date('Y-m-d'),
-            'nombre_cliente' => $cliente['nombre'] ?? '',
-            'cedula' => $cliente['cedula'] ?? '',
-            'telefono' => $cliente['telefono'] ?? '',
-            'correo' => $cliente['correo'] ?? '',
-            'productos' => $productosVenta,
-            'pagos' => $pagosVenta,
-            'total' => $monto_total
-        ];
-
-        $this->conex->commit();
-        return $resultado;
-
-    } catch (Exception $e) {
-        if ($this->conex->inTransaction()) {
-            $this->conex->rollBack();
-        }
-        return [
-            'status' => 'error',
-            'mensaje' => $e->getMessage()
-        ];
-    } finally {
-        if ($conexion) { 
-            $conexion->cerrar(); 
-            $this->conex = null; 
-        }
+        });
     }
-}
 
 
     public function parsearCantidadFormateada($cantidadFormateada) {
@@ -548,32 +541,19 @@ private function r_compraFisica($datos) {
         return $this->obt_cliente();
     }
     private function obt_cliente() {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $p = $this->conex->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
-        $p->execute();
-        $rows = $p->fetchAll(PDO::FETCH_ASSOC);
-        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        return $rows;
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $p = $pdo->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
+            $p->execute();
+            $rows = $p->fetchAll(PDO::FETCH_ASSOC);
+        });
     }
 
     public function listadoproductos() {
         return $this->list_productos(); 
     }
     private function list_productos() {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $r = array();
-        try{
-            $resultado = $this->conex->query("SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial,p.precio
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $resultado = $pdo->query("SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial,p.precio
                 FROM tbl_productos AS p 
                 INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
                 INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;");
@@ -607,15 +587,7 @@ private function r_compraFisica($datos) {
                 'mensaje' => $respuesta,
                 'modalSize' => isset($modalSize) ? $modalSize : 'modal-md'
             ];
-        }catch(Exception $e){
-            $r = [
-                'resultado' => 'error',
-                'mensaje' => $e->getMessage(),
-                'modalSize' => 'modal-md'
-            ];
-        }
-        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        return $r;
+        });
     }
 
     public function buscarClientes($query) {
@@ -623,49 +595,38 @@ private function r_compraFisica($datos) {
     }
 
     private function buscar_clientes($query) {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
-        $sql = "SELECT id_clientes, nombre, cedula, telefono 
-                FROM tbl_clientes 
-                WHERE activo = 1 
-                AND (nombre LIKE :query OR cedula LIKE :query)
-                ORDER BY 
-                    CASE 
-                        WHEN nombre LIKE :query_exact THEN 1
-                        WHEN cedula LIKE :query_exact THEN 2
-                        ELSE 3
-                    END,
-                    nombre
-                LIMIT 20";
-        
-        $stmt = $this->conex->prepare($sql);
-        $searchTerm = "%$query%";
-        $exactTerm = "$query%";
-        
-        $stmt->execute([
-            ':query' => $searchTerm,
-            ':query_exact' => $exactTerm
-        ]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        return $rows;
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "SELECT id_clientes, nombre, cedula, telefono 
+                    FROM tbl_clientes 
+                    WHERE activo = 1 
+                    AND (nombre LIKE :query OR cedula LIKE :query)
+                    ORDER BY 
+                        CASE 
+                            WHEN nombre LIKE :query_exact THEN 1
+                            WHEN cedula LIKE :query_exact THEN 2
+                            ELSE 3
+                        END,
+                        nombre
+                    LIMIT 20";
+            
+            $stmt = $pdo->prepare($sql);
+            $searchTerm = "%$query%";
+            $exactTerm = "$query%";
+            
+            $stmt->execute([
+                ':query' => $searchTerm,
+                ':query_exact' => $exactTerm
+            ]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        });
     }
 
     public function consultarproductos() {
         return $this->consul_productos(); 
     }
     private function consul_productos() {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        $stmt = $this->conex->prepare("
+        return $this->ejecutarConConexionSegura(function($pdo) {
+        $stmt = $pdo->prepare("
             SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial, p.precio
             FROM tbl_productos AS p 
             INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
@@ -697,212 +658,187 @@ private function r_compraFisica($datos) {
             $producto['precio'] = floatval($producto['precio']) * $tasa;
         }
 
-        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        return $registros;
+        });
     }
-
-
 
     public function getCompras() {
         return $this->g_Compras(); 
     }
     private function g_Compras() {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        $sql = "
-            SELECT 
-                f.id_factura,
-                f.fecha AS fecha_factura,
-                f.descuento,
-                c.id_clientes,
-                c.cedula,
-                c.nombre AS nombre_cliente,
-                c.direccion,
-                c.telefono,
-                c.correo,
-                d.id_despachos,
-                
-                -- Productos agrupados como JSON
-                GROUP_CONCAT(
-                    CONCAT(
-                        '{',
-                        '\"id_producto\":\"', p.id_producto, '\",',
-                        '\"codigo\":\"', p.id_producto, '\",',
-                        '\"nombre\":\"', p.nombre_producto, '\",',
-                        '\"descripcion\":\"', p.descripcion_producto, '\",',
-                        '\"modelo\":\"', m.nombre_modelo, '\",',
-                        '\"marca\":\"', mar.nombre_marca, '\",',
-                        '\"serial\":\"', p.serial, '\",',
-                        '\"precio\":\"', p.precio, '\",',
-                        '\"cantidad\":\"', fd.cantidad, '\"',
-                        '}'
-                    ) SEPARATOR ','
-                ) AS productos,
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "
+                SELECT 
+                    f.id_factura,
+                    f.fecha AS fecha_factura,
+                    f.descuento,
+                    c.id_clientes,
+                    c.cedula,
+                    c.nombre AS nombre_cliente,
+                    c.direccion,
+                    c.telefono,
+                    c.correo,
+                    d.id_despachos,
+                    
+                    -- Productos agrupados como JSON
+                    GROUP_CONCAT(
+                        CONCAT(
+                            '{',
+                            '\"id_producto\":\"', p.id_producto, '\",',
+                            '\"codigo\":\"', p.id_producto, '\",',
+                            '\"nombre\":\"', p.nombre_producto, '\",',
+                            '\"descripcion\":\"', p.descripcion_producto, '\",',
+                            '\"modelo\":\"', m.nombre_modelo, '\",',
+                            '\"marca\":\"', mar.nombre_marca, '\",',
+                            '\"serial\":\"', p.serial, '\",',
+                            '\"precio\":\"', p.precio, '\",',
+                            '\"cantidad\":\"', fd.cantidad, '\"',
+                            '}'
+                        ) SEPARATOR ','
+                    ) AS productos,
 
-                -- Pagos agrupados como JSON
-                GROUP_CONCAT(
-                    CONCAT(
-                        '{',
-                        '\"id_detalles\":\"', dp.id_detalles, '\",',
-                        '\"cuenta\":\"', dp.id_cuenta, '\",',
-                        '\"referencia\":\"', dp.referencia, '\",',
-                        '\"fecha\":\"', dp.fecha, '\",',
-                        '\"tipo\":\"', dp.tipo, '\",',
-                        '\"monto\":\"', dp.monto, '\",',
-                        '\"comprobante\":\"', COALESCE(dp.comprobante, ''), '\",',
-                        '\"estatus\":\"', dp.estatus, '\",',
-                        '\"observaciones\":\"', COALESCE(dp.observaciones, ''), '\"',
-                        '}'
-                    ) SEPARATOR ','
-                ) AS pagos
+                    -- Pagos agrupados como JSON
+                    GROUP_CONCAT(
+                        CONCAT(
+                            '{',
+                            '\"id_detalles\":\"', dp.id_detalles, '\",',
+                            '\"cuenta\":\"', dp.id_cuenta, '\",',
+                            '\"referencia\":\"', dp.referencia, '\",',
+                            '\"fecha\":\"', dp.fecha, '\",',
+                            '\"tipo\":\"', dp.tipo, '\",',
+                            '\"monto\":\"', dp.monto, '\",',
+                            '\"comprobante\":\"', COALESCE(dp.comprobante, ''), '\",',
+                            '\"estatus\":\"', dp.estatus, '\",',
+                            '\"observaciones\":\"', COALESCE(dp.observaciones, ''), '\"',
+                            '}'
+                        ) SEPARATOR ','
+                    ) AS pagos
 
-            FROM tbl_facturas f
-            INNER JOIN tbl_clientes c ON f.cliente = c.id_clientes
-            INNER JOIN tbl_despachos d ON d.id_clientes = c.id_clientes AND d.fecha_despacho = f.fecha
-            INNER JOIN tbl_despacho_detalle dd ON d.id_despachos = dd.id_despacho
-            INNER JOIN tbl_productos p ON dd.id_producto = p.id_producto
-            INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
-            INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
-            INNER JOIN tbl_factura_detalle fd ON f.id_factura = fd.factura_id AND p.id_producto = fd.id_producto
-            INNER JOIN tbl_detalles_pago dp ON f.id_factura = dp.id_factura
+                FROM tbl_facturas f
+                INNER JOIN tbl_clientes c ON f.cliente = c.id_clientes
+                INNER JOIN tbl_despachos d ON d.id_clientes = c.id_clientes AND d.fecha_despacho = f.fecha
+                INNER JOIN tbl_despacho_detalle dd ON d.id_despachos = dd.id_despacho
+                INNER JOIN tbl_productos p ON dd.id_producto = p.id_producto
+                INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
+                INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
+                INNER JOIN tbl_factura_detalle fd ON f.id_factura = fd.factura_id AND p.id_producto = fd.id_producto
+                INNER JOIN tbl_detalles_pago dp ON f.id_factura = dp.id_factura
 
-            GROUP BY f.id_factura
-            ORDER BY f.fecha DESC, f.id_factura DESC
-        ";
+                GROUP BY f.id_factura
+                ORDER BY f.fecha DESC, f.id_factura DESC
+            ";
 
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute();
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        return $rows;
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        });
     }
 
     public function getdespacho() {
         return $this->g_despacho(); 
     }
     private function g_despacho() {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        $querydespachos = 
-        'SELECT 
-            d.id_detalle,
-            r.id_despachos,
-            pro.id_producto,
-            c.id_clientes,
-            r.fecha_despacho,
-            c.nombre AS nombre_cliente,
-            pro.nombre_producto,
-            d.cantidad
-        FROM tbl_despachos AS r
-        INNER JOIN tbl_despacho_detalle AS d ON d.id_despacho = r.id_despachos
-        INNER JOIN tbl_clientes AS c ON c.id_clientes = r.id_clientes
-        INNER JOIN tbl_productos AS pro ON pro.id_producto = d.id_producto
-        ORDER BY r.id_despachos DESC;
-        ';
-        $stmtdespachos = $this->conex->prepare($querydespachos);
-        $stmtdespachos->execute();
-        $despachos = $stmtdespachos->fetchAll(PDO::FETCH_ASSOC);
-        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        return $despachos;
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $querydespachos = 
+            'SELECT 
+                d.id_detalle,
+                r.id_despachos,
+                pro.id_producto,
+                c.id_clientes,
+                r.fecha_despacho,
+                c.nombre AS nombre_cliente,
+                pro.nombre_producto,
+                d.cantidad
+            FROM tbl_despachos AS r
+            INNER JOIN tbl_despacho_detalle AS d ON d.id_despacho = r.id_despachos
+            INNER JOIN tbl_clientes AS c ON c.id_clientes = r.id_clientes
+            INNER JOIN tbl_productos AS pro ON pro.id_producto = d.id_producto
+            ORDER BY r.id_despachos DESC;
+            ';
+            $stmtdespachos = $pdo->prepare($querydespachos);
+            $stmtdespachos->execute();
+            $despachos = $stmtdespachos->fetchAll(PDO::FETCH_ASSOC);
+        });
     }
 
     public function getDetallesCompra($idDespacho) {
         return $this->g_detallesCompra($idDespacho); 
     }
     private function g_detallesCompra($idDespacho) {
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        // Productos
-        $sqlProductos = "
-            SELECT p.nombre_producto, d.cantidad, p.precio, (d.cantidad * p.precio) AS subtotal
-            FROM tbl_despacho_detalle d
-            INNER JOIN tbl_productos p ON p.id_producto = d.id_producto
-            WHERE d.id_despacho = ?
-        ";
-        $stmtProd = $this->conex->prepare($sqlProductos);
-        $stmtProd->execute([$idDespacho]);
-        $productos = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sqlProductos = "
+                SELECT p.nombre_producto, d.cantidad, p.precio, (d.cantidad * p.precio) AS subtotal
+                FROM tbl_despacho_detalle d
+                INNER JOIN tbl_productos p ON p.id_producto = d.id_producto
+                WHERE d.id_despacho = ?
+            ";
+            $stmtProd = $pdo->prepare($sqlProductos);
+            $stmtProd->execute([$idDespacho]);
+            $productos = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
 
-        // Pagos
-        $sqlPagos = "
-            SELECT dp.tipo, dp.monto, dp.fecha, dp.referencia, dp.comprobante
-            FROM tbl_detalles_pago dp
-            INNER JOIN tbl_facturas f ON f.id_factura = dp.id_factura
-            WHERE f.id_despacho = ?
-        ";
-        $stmtPagos = $this->conex->prepare($sqlPagos);
-        $stmtPagos->execute([$idDespacho]);
-        $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
+            // Pagos
+            $sqlPagos = "
+                SELECT dp.tipo, dp.monto, dp.fecha, dp.referencia, dp.comprobante
+                FROM tbl_detalles_pago dp
+                INNER JOIN tbl_facturas f ON f.id_factura = dp.id_factura
+                WHERE f.id_despacho = ?
+            ";
+            $stmtPagos = $pdo->prepare($sqlPagos);
+            $stmtPagos->execute([$idDespacho]);
+            $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
 
-        $ret = [
-            'productos' => $productos,
-            'pagos' => $pagos
-        ];
-        if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        return $ret;
+            $ret = [
+                'productos' => $productos,
+                'pagos' => $pagos
+            ];
+        });
     }
 
     public function obtenerDetallesPorDespacho($idDespacho) {
         return $this->obt_detallesPorDespacho($idDespacho); 
     }
     private function obt_detallesPorDespacho($idDespacho) {
-        $datos = [];
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $conexion = null;
-        if ($this->conex === null) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
+                // Consultar productos de esa recepción
+                $sql = "SELECT dr.id_producto, dr.cantidad, dr.costo, p.nombre 
+                        FROM tbl_detalle_recepcion_productos dr
+                        INNER JOIN tbl_productos p ON dr.id_producto = p.id
+                        WHERE dr.id_recepcion = :idRecepcion";
 
-        try {
-            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $stmt = $this->conex->prepare($sql);
+                $stmt->bindParam(':idRecepcion', $idDespacho, PDO::PARAM_INT);
+                $stmt->execute();
+                $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Consultar productos de esa recepción
-            $sql = "SELECT dr.id_producto, dr.cantidad, dr.costo, p.nombre 
-                    FROM tbl_detalle_recepcion_productos dr
-                    INNER JOIN tbl_productos p ON dr.id_producto = p.id
-                    WHERE dr.id_recepcion = :idRecepcion";
+                // Consultar todos los productos (para el <select>)
+                $sqlProductos = "SELECT id, nombre FROM tbl_productos";
+                $productosTodos = $this->conex->query($sqlProductos)->fetchAll(PDO::FETCH_ASSOC);
 
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindParam(':idRecepcion', $idDespacho, PDO::PARAM_INT);
-            $stmt->execute();
-            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Consultar todos los productos (para el <select>)
-            $sqlProductos = "SELECT id, nombre FROM tbl_productos";
-            $productosTodos = $this->conex->query($sqlProductos)->fetchAll(PDO::FETCH_ASSOC);
-
-            // Agregar opciones al array de productos
-            foreach ($productos as &$producto) {
-                $opciones = '';
-                foreach ($productosTodos as $item) {
-                    $selected = ($item['id'] == $producto['id_producto']) ? 'selected' : '';
-                    $opciones .= "<option value='{$item['id']}' $selected>{$item['nombre']}</option>";
+                // Agregar opciones al array de productos
+                foreach ($productos as &$producto) {
+                    $opciones = '';
+                    foreach ($productosTodos as $item) {
+                        $selected = ($item['id'] == $producto['id_producto']) ? 'selected' : '';
+                        $opciones .= "<option value='{$item['id']}' $selected>{$item['nombre']}</option>";
+                    }
+                    $producto['opciones'] = $opciones;
                 }
-                $producto['opciones'] = $opciones;
+
+                $datos = $productos;
+
+            } catch (Exception $e) {
+                $datos = [
+                    'error' => true,
+                    'mensaje' => $e->getMessage()
+                ];
+            } finally {
+                if ($conexion) { $conexion->cerrar(); $this->conex = null; }
             }
 
-            $datos = $productos;
-
-        } catch (Exception $e) {
-            $datos = [
-                'error' => true,
-                'mensaje' => $e->getMessage()
-            ];
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
-
-        return $datos;
+            return $datos;
+        });
     }
 }
 ?>

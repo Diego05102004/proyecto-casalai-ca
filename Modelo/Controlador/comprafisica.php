@@ -17,7 +17,7 @@ use Usuario\ProyectoCasalaiCa\Config\BD;
 define('MODULO_DESPACHO', 3);
 
 // Inicializaciones
-$k = new Comprafisica();
+$k = new Comprafisica('P');
 $data = [];
 $dolarService = new DolarService();
 $precioDolar = $dolarService->obtenerPrecioDolar();
