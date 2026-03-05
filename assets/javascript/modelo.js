@@ -458,7 +458,7 @@ $(document).ready(function () {
                     botonModificar.data("nombre", modelo.nombre_modelo);
                 }
             } else {
-                manejarErroresBackend(respuesta, false);
+                manejarErroresBackend(respuesta, true);
             }
         });
     });
