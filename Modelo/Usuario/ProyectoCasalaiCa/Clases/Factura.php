@@ -694,7 +694,7 @@ class Factura extends BD
         return $this->o_montoTotalFactura($id_factura);
     }
     private function o_montoTotalFactura($id_factura) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_factura) {
             try {
                 $sql = "SELECT 
                         ROUND(
@@ -707,26 +707,36 @@ class Factura extends BD
                     JOIN tbl_productos p ON df.id_producto = p.id_producto
                     WHERE f.id_factura = :id_factura
                     GROUP BY f.id_factura";
+                
                 $stmt = $pdo->prepare($sql);
                 $stmt->bindParam(':id_factura', $id_factura, PDO::PARAM_INT);
                 $stmt->execute();
                 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
+                // Verificación: Si no hay factura, retornamos 0 para evitar el error de offset
+                if (!$resultado) {
+                    return 0;
+                }
+
+                $tasa = 1; // Tasa por defecto por si falla la consulta del dólar
                 try {
-                    $stmt = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
-                    $stmt->execute();
+                    $stmtDolar = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
+                    $stmtDolar->execute();
+                    $resultDolar = $stmtDolar->fetch(PDO::FETCH_ASSOC);
                     
-                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if ($result && (time() - strtotime($result['fecha'])) < 86400) {
-                        $tasa = floatval($result['precio']);
+                    if ($resultDolar && (time() - strtotime($resultDolar['fecha'])) < 86400) {
+                        $tasa = floatval($resultDolar['precio']);
                     }
                 } catch (PDOException $e) {
                     error_log('Error al obtener cache del dólar: ' . $e->getMessage());
                 }
+
+                // Calculamos el total
                 $total = $resultado['total_con_impuesto'] * $tasa;
-                $pdo->cerrar();
+
+                // IMPORTANTE: Eliminamos $pdo->cerrar(); la función padre lo hace por nosotros
                 return $total;
+
             } catch (PDOException $e) {
                 error_log('Error al obtener monto total de factura: ' . $e->getMessage());
                 return false;
@@ -750,7 +760,6 @@ class Factura extends BD
                 if ($result && (time() - strtotime($result['fecha'])) < 86400) {
                     $tasa = floatval($result['precio']);
                 }
-                $pdo->cerrar();
             } catch (PDOException $e) {
                 error_log('Error al obtener cache del dólar: ' . $e->getMessage());
                 $tasa = 1; // Valor por defecto en caso de error
@@ -775,7 +784,6 @@ class Factura extends BD
             $stmt->bindParam(':tasa', $tasa);
             $stmt->execute();
             $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $pdo->cerrar();
             return $facturas;
         });
     }
