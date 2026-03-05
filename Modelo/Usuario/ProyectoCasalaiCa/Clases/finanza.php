@@ -387,7 +387,6 @@ class Finanza extends BD {
         });
     }
 
-    // CONSULTAR EGRESOS
     public function consultarEgresos() {
         return $this->c_egresos(); 
     }
