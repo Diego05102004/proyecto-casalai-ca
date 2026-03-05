@@ -6,7 +6,6 @@ use PDOException;
 
 class Catalogo extends BD {
     private $tablaCombo = 'tbl_combo';
-    private $conex;
     private $cantidad;
     private $id_producto;
     
@@ -18,13 +17,6 @@ class Catalogo extends BD {
     const ESTADOS_PERMITIDOS = ['activo', 'inactivo', 'pendiente'];
     const ACCIONES_PERMITIDAS = ['consultar', 'agregar', 'crear', 'modificar', 'eliminar', 'cambiar_estado', 'filtrar', 'buscar'];
 
-    public function __construct() {
-        $this->conex = null;
-    }
-
-
-    // Getters and Setters
-
     public function setIdProducto($id_producto){
         $this->id_producto = $id_producto;
     }
@@ -33,170 +25,144 @@ class Catalogo extends BD {
         $this->cantidad = $cantidad;
     }
 
+    public function __construct($tipo = 'P') {
+        parent::__construct($tipo);
+    }
+    
+    /**
+     * @return PDO
+     */
+
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        $conexion = new BD('P');
+        
+        try {
+            $conexion->getConexion()->beginTransaction();
+            
+            $resultado = $operation($conexion->getConexion());
+            
+            $conexion->getConexion()->commit();
+            
+            return $resultado;
+        } catch (Exception $e) {
+            if (isset($conexion) && $conexion->getConexion()->inTransaction()) {
+                $conexion->getConexion()->rollback();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            if (isset($conexion)) {
+                $conexion->cerrar();
+            }
+        }
+    }
 
     public function insertarCombo(){
         return $this->i_insertarCombo();
     }
     private function i_insertarCombo(){
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "INSERT INTO {$this->tablaCombo} (id_producto, cantidad)
                     VALUES (:id_producto, :cantidad)";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_producto', $this->id_producto);
             $stmt->bindParam(':cantidad', $this->cantidad);
             return $stmt->execute();
-        } finally {
-            if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
-        }
+        });
     }
 
     public function obtenerProductos() {
         return $this->o_obtenerProductos();
     }
     private function o_obtenerProductos() {
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, c.nombre_caracteristicas AS categoria, p.stock, p.precio
                     FROM productos p
                     INNER JOIN modelo m ON p.id_modelo = m.id_modelo
                     INNER JOIN categoria c ON p.id_categoria = c.id_categoria
                     WHERE p.estado = 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
-        }
+        });
     }
 
     public function obtenerCombos() {
         return $this->o_obtenerCombos();
     }
     private function o_obtenerCombos() {
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT c.id_combo, GROUP_CONCAT(p.nombre_producto SEPARATOR ', ') AS productos,
                     SUM(p.precio * c.cantidad) AS precio_total
                     FROM tbl_combo c
                     INNER JOIN productos p ON c.id_producto = p.id_producto
                     GROUP BY c.id_combo
                     ORDER BY c.id_combo DESC";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
-        }
+        });
     }
 
     public function eliminarCombo($id_combo){
         return $this->d_eliminarCombo($id_combo);
     }
     private function d_eliminarCombo($id_combo){
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo) {
             $sql = "DELETE FROM {$this->tablaCombo} WHERE id_combo = :id_combo";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_combo', $id_combo);
             return $stmt->execute();
-        } finally {
-            if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
-        }
+        });
     }
 
     public function obtenerUltimoIdCombo(){
         return $this->o_ultimoIdCombo();
     }
     private function o_ultimoIdCombo(){
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT MAX(id_combo) AS ultimo_id FROM {$this->tablaCombo}";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
             return $resultado['ultimo_id'];
-        } finally {
-            if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
-        }
+        });
     }
 
-    // Function to create a new combo and return its ID
     public function crearNuevoCombo() {
         return $this->c_crearNuevoCombo();
     }
     private function c_crearNuevoCombo() {
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "INSERT INTO tbl_combo (fecha_creacion) VALUES (NOW())";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             if($stmt->execute()) {
-                return $this->conex->lastInsertId();
+                return $pdo->lastInsertId();
             }
             return false;
-        } finally {
-            if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
-        }
+        });
     }
 
-    // Function to insert a product into a specific combo
     public function insertarProductoEnCombo($id_combo, $id_producto, $cantidad) {
         return $this->i_insertarProductoEnCombo($id_combo, $id_producto, $cantidad);
     }
     private function i_insertarProductoEnCombo($id_combo, $id_producto, $cantidad) {
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo, $id_producto, $cantidad) {
             $sql = "INSERT INTO {$this->tablaCombo} (id_combo, id_producto, cantidad) VALUES (:id_combo, :id_producto, :cantidad)";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_combo', $id_combo);
             $stmt->bindParam(':id_producto', $id_producto);
             $stmt->bindParam(':cantidad', $cantidad);
             return $stmt->execute();
-        } finally {
-            if (isset($created) && $created && isset($bd)) { $bd->cerrar(); }
-            if (isset($created) && $created) { $this->conex = null; }
-        }
+        });
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================
