@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'registrar':
             // Validar datos de entrada
-            $categoria = new Categoria();
+            $categoria = new Categoria('P');
             $datosValidacion = [
                 'nombre_categoria' => $_POST['nombre_categoria'] ?? '',
                 'caracteristicas' => isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : []
@@ -85,14 +85,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'consultar_categorias':
-            $categoria = new Categoria();
+            $categoria = new Categoria('P');
             $categorias_obt = $categoria->consultarCategorias();
             echo json_encode($categorias_obt);
             exit;
 
         case 'obtener_categoria':
             // Validar datos de entrada
-            $categoria = new Categoria();
+            $categoria = new Categoria('P');
             $datosValidacion = [
                 'id_categoria' => $_POST['id_categoria'] ?? null
             ];
@@ -122,7 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'modificar':
             // Validar datos de entrada
-            $categoria = new Categoria();
+            $categoria = new Categoria('P');
             $datosValidacion = [
                 'id_categoria' => $_POST['id_categoria'] ?? null,
                 'nombre_categoria' => $_POST['nombre_categoria'] ?? '',
@@ -216,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             // Validar datos de entrada
-            $categoria = new Categoria();
+            $categoria = new Categoria('P');
             $datosValidacion = [
                 'id_categoria' => $_POST['id_categoria'] ?? null
             ];
@@ -289,7 +289,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function consultarCategorias() {
-    $categoria = new Categoria();
+    $categoria = new Categoria('P');
     return $categoria->consultarCategorias();
 }
 
