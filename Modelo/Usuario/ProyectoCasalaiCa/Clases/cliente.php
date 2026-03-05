@@ -6,7 +6,6 @@ use PDOException;
 
 class cliente extends BD {
     private $tableclientes = 'tbl_clientes';
-    private $conex;
     private $nombre;
     private $direccion;
     private $telefono;
@@ -26,11 +25,6 @@ class cliente extends BD {
     const MIN_CEDULA = 8;
     const ESTADOS_PERMITIDOS = [1, 0]; // 1 = activo, 0 = inactivo
 
-    public function __construct() {
-        $this->conex = null;
-    }
-
-    // Getters y Setters
     public function setnombre($nombre) {
         $this->nombre = $nombre;
     }
@@ -78,6 +72,46 @@ class cliente extends BD {
     }
     public function setId($id) {
         $this->id = $id;
+    }
+
+    public function __construct($tipo = 'P') {
+        parent::__construct($tipo);
+    }
+    
+    /**
+     * @return PDO
+     */
+
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        $conexion = new BD('P');
+        
+        try {
+            $conexion->getConexion()->beginTransaction();
+            
+            $resultado = $operation($conexion->getConexion());
+            
+            $conexion->getConexion()->commit();
+            
+            return $resultado;
+        } catch (Exception $e) {
+            if (isset($conexion) && $conexion->getConexion()->inTransaction()) {
+                $conexion->getConexion()->rollback();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            if (isset($conexion)) {
+                $conexion->cerrar();
+            }
+        }
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================
@@ -317,247 +351,119 @@ class cliente extends BD {
      * Verifica si un cliente existe por ID
      */
     private function verificarClienteExistente($idCliente) {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE id_clientes = :id_cliente AND activo = 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarClienteExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
     
     /**
      * Verifica si una cédula ya existe (excluyendo un ID específico)
      */
     private function verificarCedulaExistente($cedula, $excluirId = null) {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = :cedula";
             $params = [':cedula' => $cedula];
             if ($excluirId !== null) {
                 $sql .= " AND id_clientes != :id_cliente";
                 $params[':id_cliente'] = $excluirId;
             }
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarCedulaExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     public function ingresarclientes() {
         return $this->r_cliente();
     }
     private function r_cliente() {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "INSERT INTO tbl_clientes (`nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`)
                     VALUES (:nombre, :cedula, :direccion, :telefono, :correo, 1)";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':direccion', $this->direccion);
             $stmt->bindParam(':telefono', $this->telefono);
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $this->correo);
             return $stmt->execute();
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     // En modelo/cliente.php
     public function listarTodosClientes() {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        try {
-            $stmt = $this->conex->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $stmt = $pdo->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            return [];
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
-    public function existeNumeroCedula($cedula, $excluir_id = null) {
-        return $this->existeNumCedula($cedula, $excluir_id); 
-    }
-    private function existeNumCedula($cedula, $excluir_id) {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+    private function existeNumeroCedula($cedula, $excluir_id = null) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($cedula, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = ?";
             $params = [$cedula];
             if ($excluir_id !== null) {
                 $sql .= " AND id_clientes != ?";
                 $params[] = $excluir_id;
             }
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     public function obtenerUltimoCliente() {
         return $this->obtUltimaCliente(); 
     }
     private function obtUltimaCliente() {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_clientes ORDER BY id_clientes DESC LIMIT 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
             return $cliente ? $cliente : null;
-        } catch (PDOException $e) {
-            return null;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     function obtenerReporteComprasClientes() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT c.nombre, COUNT(d.id_producto) AS cantidad
-FROM tbl_clientes c
-JOIN tbl_despachos ds ON c.id_clientes = ds.id_clientes
-JOIN tbl_despacho_detalle d ON ds.id_despachos = d.id_despacho
-GROUP BY c.id_clientes, c.nombre
-ORDER BY cantidad DESC
-LIMIT 10;";
-            $stmt = $this->conex->prepare($sql);
+            FROM tbl_clientes c
+            JOIN tbl_despachos ds ON c.id_clientes = ds.id_clientes
+            JOIN tbl_despacho_detalle d ON ds.id_despachos = d.id_despacho
+            GROUP BY c.id_clientes, c.nombre
+            ORDER BY cantidad DESC
+            LIMIT 10;";
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
     public function obtenerclientesPorId($id) {
         return $this->obtClientePorId($id);
     }
     private function obtClientePorId($id) {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
             $query = "SELECT * FROM tbl_clientes WHERE id_clientes = ?";
-            $stmt = $this->conex->prepare($query);
+            $stmt = $pdo->prepare($query);
             $stmt->execute([$id]);
             $clientes = $stmt->fetch(PDO::FETCH_ASSOC);
             return $clientes;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     public function modificarclientes($id) {
         return $this->m_cliente($id);
     }
     private function m_cliente($id) {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
             $sql = "UPDATE tbl_clientes SET nombre = :nombre, cedula = :cedula, direccion = :direccion, telefono = :telefono, correo = :correo, activo = :activo WHERE id_clientes = :id_clientes";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':direccion', $this->direccion);
@@ -566,92 +472,41 @@ LIMIT 10;";
             $stmt->bindParam(':correo', $this->correo);
             $stmt->bindParam(':activo', $this->activo);
             return $stmt->execute();
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     function eliminar_l($id) {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
             $sql = "UPDATE tbl_clientes SET activo = 0 WHERE id_clientes = :id_clientes";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
             return $stmt->execute();
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     public function eliminarclientes($id) {
         return $this->e_cliente($id);
     }
     private function e_cliente($id) {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
             $sql = "DELETE FROM tbl_clientes WHERE id_clientes = :id_clientes";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
             $result = $stmt->execute();
             return $result;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 
     public function getclientes() {
         return $this->g_clientes();
     }
     private function g_clientes() {
-        $conexion = null; $created = false;
-        if (!($this->conex instanceof PDO)) {
-            if (method_exists($this, 'getConexion')) {
-                $this->conex = $this->getConexion();
-            }
-            if (!($this->conex instanceof PDO)) {
-                $conexion = new BD('P');
-                $this->conex = $conexion->getConexion();
-                $created = true;
-            }
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $queryclientes = 'SELECT * FROM ' . $this->tableclientes;
-            $stmtclientes = $this->conex->prepare($queryclientes);
+            $stmtclientes = $pdo->prepare($queryclientes);
             $stmtclientes->execute();
             $clientes = $stmtclientes->fetchAll(PDO::FETCH_ASSOC);
             return $clientes;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
 }
-
-
-
-
-
-

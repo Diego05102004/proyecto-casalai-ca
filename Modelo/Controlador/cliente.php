@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'registrar':
             // Validar datos de entrada
-            $cliente = new cliente();
+            $cliente = new cliente('P');
             $datosValidacion = [
                 'nombre' => $_POST['nombre'] ?? '',
                 'cedula' => $_POST['cedula'] ?? '',
@@ -85,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         case 'obtener_clientes':
             // Validar datos de entrada
-            $cliente = new cliente();
+            $cliente = new cliente('P');
             $datosValidacion = [
                 'id_cliente' => $_POST['id_clientes'] ?? null
             ];
@@ -118,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             
             // Validar datos de entrada
-            $cliente = new cliente();
+            $cliente = new cliente('P');
             $datosValidacion = [
                 'id_cliente' => $_POST['id_clientes'] ?? null,
                 'nombre' => $_POST['nombre'] ?? '',
@@ -189,7 +189,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             // Validar datos de entrada
-            $cliente = new cliente();
+            $cliente = new cliente('P');
             $datosValidacion = [
                 'id_cliente' => $_POST['id_clientes'] ?? null
             ];
@@ -236,9 +236,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 }
-    $cliente = new cliente();
+    $cliente = new cliente('P');
 function getclientes() {
-    $cliente = new cliente();
+    $cliente = new cliente('P');
     return $cliente->getclientes();
 }
 $reporteComprasClientes = $cliente->obtenerReporteComprasClientes();
