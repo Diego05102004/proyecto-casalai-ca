@@ -17,51 +17,83 @@ class Combos extends BD {
     const ESTADOS_PERMITIDOS = ['activo', 'inactivo', 'pendiente'];
     const ACCIONES_PERMITIDAS = ['consultar', 'agregar', 'crear', 'modificar', 'eliminar', 'cambiar_estado', 'filtrar', 'buscar'];
 
-    public function __construct() {
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+    public function __construct($tipo = 'P') {
+        parent::__construct($tipo);
     }
     
-    //Metodos para los combos
-    public function obtenerCombos() {
-        $sql = "SELECT id_combo, id_producto, cantidad FROM tbl_combo";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    /**
+     * @return PDO
+     */
+
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        $conexion = new BD('P');
+        
+        try {
+            $conexion->getConexion()->beginTransaction();
+            
+            $resultado = $operation($conexion->getConexion());
+            
+            $conexion->getConexion()->commit();
+            
+            return $resultado;
+        } catch (Exception $e) {
+            if (isset($conexion) && $conexion->getConexion()->inTransaction()) {
+                $conexion->getConexion()->rollback();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            if (isset($conexion)) {
+                $conexion->cerrar();
+            }
+        }
     }
 
-
-    /*public function obtenerComboPorId($id_combo) {
-        $sql = "SELECT id_combo, id_producto, cantidad FROM tbl_combo WHERE id_combo = :id_combo";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id_combo', $id_combo);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }*/
-
+    public function obtenerCombos() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "SELECT id_combo, id_producto, cantidad FROM tbl_combo";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        });
+    }
 
     public function agregarCombo($id_producto, $cantidad) {
-        $sql = "INSERT INTO tbl_combo (id_producto, cantidad) VALUES (:id_producto, :cantidad)";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id_producto', $id_producto);
-        $stmt->bindParam(':cantidad', $cantidad);
-        return $stmt->execute();
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_producto, $cantidad) {
+            $sql = "INSERT INTO tbl_combo (id_producto, cantidad) VALUES (:id_producto, :cantidad)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_producto', $id_producto);
+            $stmt->bindParam(':cantidad', $cantidad);
+            return $stmt->execute();
+        });
     }
 
     public function eliminarCombo($id_combo) {
-        $sql = "DELETE FROM tbl_combo WHERE id_combo = :id_combo";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id_combo', $id_combo);
-        return $stmt->execute();
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo) {
+            $sql = "DELETE FROM tbl_combo WHERE id_combo = :id_combo";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_combo', $id_combo);
+            return $stmt->execute();
+        });
     }
 
     public function modificarCombo($id_combo, $id_producto, $cantidad) {
-        $sql = "UPDATE tbl_combo SET id_producto = :id_producto, cantidad = :cantidad WHERE id_combo = :id_combo";
-        $stmt = $this->conex->prepare($sql);
-        $stmt->bindParam(':id_combo', $id_combo);
-        $stmt->bindParam(':id_producto', $id_producto);
-        $stmt->bindParam(':cantidad', $cantidad);
-        return $stmt->execute();
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo, $id_producto, $cantidad) {
+            $sql = "UPDATE tbl_combo SET id_producto = :id_producto, cantidad = :cantidad WHERE id_combo = :id_combo";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_combo', $id_combo);
+            $stmt->bindParam(':id_producto', $id_producto);
+            $stmt->bindParam(':cantidad', $cantidad);
+            return $stmt->execute();
+        });
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================
@@ -284,15 +316,9 @@ class Combos extends BD {
      * Verifica si un combo existe y está activo
      */
     private function verificarComboExistente($idCombo) {
-        $created = false;
-        if (!($this->conex instanceof PDO)) {
-            $bd = new BD('P');
-            $this->conex = $bd->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT id_combo, nombre_combo, activo FROM combos WHERE id_combo = :id_combo";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_combo', $idCombo, PDO::PARAM_INT);
             $stmt->execute();
             $combo = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -306,15 +332,6 @@ class Combos extends BD {
             }
             
             return ['existe' => true, 'combo' => $combo];
-        } finally {
-            if (isset($bd) && $created) { $bd->cerrar(); }
-            if ($created) { $this->conex = null; }
-        }
+        });
     }
-
-
 }
-
-
-
-

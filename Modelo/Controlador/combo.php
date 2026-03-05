@@ -15,7 +15,7 @@ if (!isset($_SESSION['id_usuario'])) {
     exit;
 }
 
-$comboModel = new Combos();
+$comboModel = new Combos('P');
 $bitacoraModel = new Bitacora();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
