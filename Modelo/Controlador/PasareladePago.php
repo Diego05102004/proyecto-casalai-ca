@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $errores = [];
 
             // Validar datos de entrada usando las validaciones de registrar pago
-            $pasarela = new PasareladePago();
+            $pasarela = new PasareladePago('P');
             
             // Validar cada pago individualmente
             foreach ($pagos as $index => $pagoData) {
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 
             foreach ($pagos as $index => $pagoData) {
                 try {
-                    $pasarela = new PasareladePago();
+                    $pasarela = new PasareladePago('P');
                     $pasarela->setCuenta($pagoData['cuenta']);
                     $pasarela->setReferencia($pagoData['referencia']);
                     $pasarela->setFecha(date('Y-m-d'));
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $nuevo_estatus = $_POST['estatus'];
 
             // Validar datos de entrada usando las nuevas validaciones centralizadas
-            $pasarela = new PasareladePago();
+            $pasarela = new PasareladePago('P');
             $datos_validacion = [
                 'id_detalles' => $id_detalles,
                 'estatus' => $nuevo_estatus
@@ -284,7 +284,7 @@ if (isset($_POST['id_factura'])) {
     $idFactura = $_POST['id_factura'];
     
     // Validar datos de entrada usando las nuevas validaciones centralizadas
-    $pasarela = new PasareladePago();
+    $pasarela = new PasareladePago('P');
     $datos_validacion = ['id_factura' => $idFactura];
     $errores = $pasarela->validarConsultarPagos($datos_validacion);
     

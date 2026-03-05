@@ -39,106 +39,92 @@ class PasareladePago extends Factura {
     const ESTADOS_VALIDOS_CAMBIO = ['Pendiente', 'En Proceso', 'Pago Procesado', 'Anulado'];
     const EXTENSIONES_COMPROBANTE = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
 
-    public function __construct() {
-        parent::__construct();
+    
+    public function getIdDetalles() {
+        return $this->id_detalles;
     }
-    // Setters y Getters
 
-    // ID Detalles
-public function getIdDetalles() {
-    return $this->id_detalles;
-}
+    public function setIdDetalles($id_detalles) {
+        $this->id_detalles = $id_detalles;
+    }
 
-public function setIdDetalles($id_detalles) {
-    $this->id_detalles = $id_detalles;
-}
+    public function getCuenta() {
+        return $this->cuenta;
+    }
 
-// Cuenta
-public function getCuenta() {
-    return $this->cuenta;
-}
+    public function setCuenta($cuenta) {
+        $this->cuenta = $cuenta;
+    }
 
-public function setCuenta($cuenta) {
-    $this->cuenta = $cuenta;
-}
+    public function getFactura() {
+        return $this->factura;
+    }
 
-// Factura
-public function getFactura() {
-    return $this->factura;
-}
+    public function setFactura($factura) {
+        $this->factura = $factura;
+    }
 
-public function setFactura($factura) {
-    $this->factura = $factura;
-}
+    public function getTipo() {
+        return $this->tipo;
+    }
 
-// Tipo
-public function getTipo() {
-    return $this->tipo;
-}
+    public function setTipo($tipo) {
+        $this->tipo = $tipo;
+    }
 
-public function setTipo($tipo) {
-    $this->tipo = $tipo;
-}
+    public function getObservaciones() {
+        return $this->observaciones;
+    }
 
-// Observaciones
-public function getObservaciones() {
-    return $this->observaciones;
-}
+    public function setObservaciones($observaciones) {
+        $this->observaciones = $observaciones;
+    }
 
-public function setObservaciones($observaciones) {
-    $this->observaciones = $observaciones;
-}
+    public function getReferencia() {
+        return $this->referencia;
+    }
 
-// Referencia
-public function getReferencia() {
-    return $this->referencia;
-}
+    public function setReferencia($referencia) {
+        $this->referencia = $referencia;
+    }
 
-public function setReferencia($referencia) {
-    $this->referencia = $referencia;
-}
+    public function getFecha() {
+        return $this->fecha;
+    }
 
-// Fecha
-public function getFecha() {
-    return $this->fecha;
-}
+    public function setFecha($fecha) {
+        $this->fecha = $fecha;
+    }
 
-public function setFecha($fecha) {
-    $this->fecha = $fecha;
-}
+    public function getEstatus() {
+        return $this->estatus;
+    }
 
-// Estatus
-public function getEstatus() {
-    return $this->estatus;
-}
+    public function setEstatus($estatus) {
+        $this->estatus = $estatus;
+    }
 
-public function setEstatus($estatus) {
-    $this->estatus = $estatus;
-}
-// Comprobante
-public function getComprobante() {
-    return $this->comprobante;
-}
-public function setComprobante($comprobante) {
-    $this->comprobante = $comprobante;
-}
-// Monto
-public function getMonto() {
-    return $this->monto;
-}
-public function setMonto($monto) {
-    $this->monto = $monto;
-}
-// Cedula
-public function getCedula() {
-    return $this->cedula;
-}
-public function setCedula($cedula) {
-    $this->cedula = $cedula;
-}
+    public function getComprobante() {
+        return $this->comprobante;
+    }
+    public function setComprobante($comprobante) {
+        $this->comprobante = $comprobante;
+    }
 
+    public function getMonto() {
+        return $this->monto;
+    }
+    public function setMonto($monto) {
+        $this->monto = $monto;
+    }
 
-// Métodos de validación centralizados
+    public function getCedula() {
+        return $this->cedula;
+    }
+    public function setCedula($cedula) {
+        $this->cedula = $cedula;
+    }
+
     private function validarPago($datos) {
         $errores = [];
         
@@ -398,55 +384,41 @@ public function setCedula($cedula) {
     
     // Métodos auxiliares
     private function verificarPagoExistente($id_detalles) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_detalles_pago WHERE id_detalles = ?");
-            $stmt->execute([$id_detalles]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM tbl_detalles_pago WHERE id_detalles = ?");
+                $stmt->execute([$id_detalles]);
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                return false;
+            }
+        });
     }
     
     private function verificarFacturaExistente($id_factura) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_facturas WHERE id_factura = ?");
-            $stmt->execute([$id_factura]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM tbl_facturas WHERE id_factura = ?");
+                $stmt->execute([$id_factura]);
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                return false;
+            } 
+        });
     }
     
     private function verificarCuentaExistente($id_cuenta) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_cuentas WHERE id_cuenta = ?");
-            $stmt->execute([$id_cuenta]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM tbl_cuentas WHERE id_cuenta = ?");
+                $stmt->execute([$id_cuenta]);
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                return false;
+            }
+        });
     }
+
     public function pasarelaTransaccion($transaccion) {
         switch ($transaccion) {
             case 'Ingresar':
@@ -464,97 +436,79 @@ public function setCedula($cedula) {
         }
     }
 
-    
     private function pagoIngresar() {
-        $conexion = new BD('P');
-        $pdo = $conexion->getConexion();
-        try {
-            $stmt = $pdo->prepare("
-                INSERT INTO `tbl_detalles_pago`
-                (`id_factura`, `id_cuenta`, `observaciones`, `tipo`, `referencia`, `fecha`, `comprobante`, `monto`)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([
-                $this->factura,
-                $this->cuenta,
-                $this->observaciones,
-                $this->tipo,
-                $this->referencia,
-                $this->fecha,
-                $this->comprobante,
-                $this->monto
-            ]);
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $stmt = $pdo->prepare("
+                    INSERT INTO `tbl_detalles_pago`
+                    (`id_factura`, `id_cuenta`, `observaciones`, `tipo`, `referencia`, `fecha`, `comprobante`, `monto`)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([
+                    $this->factura,
+                    $this->cuenta,
+                    $this->observaciones,
+                    $this->tipo,
+                    $this->referencia,
+                    $this->fecha,
+                    $this->comprobante,
+                    $this->monto
+                ]);
 
-            $updateStmt = $pdo->prepare("
-                UPDATE `tbl_facturas` 
-                SET `estatus` = 'En Proceso' 
-                WHERE `id_factura` = ?
-            ");
-            $updateStmt->execute([$this->factura]);
+                $updateStmt = $pdo->prepare("
+                    UPDATE `tbl_facturas` 
+                    SET `estatus` = 'En Proceso' 
+                    WHERE `id_factura` = ?
+                ");
+                $updateStmt->execute([$this->factura]);
 
-            return true;
-        } catch (PDOException $e) {
-            error_log("Error en pagoIngresar: " . $e->getMessage());
-            return false;
-        } finally {
-            $conexion->cerrar();
-        }
+                return true;
+            } catch (PDOException $e) {
+                error_log("Error en pagoIngresar: " . $e->getMessage());
+                return false;
+            } 
+        });
     }
 
-private function pagoConsultar() {
-    $conexion = new BD('P');
-    $pdo = $conexion->getConexion();
-    try {
-        $sql = "SELECT 
-                dp.id_detalles, 
-                f.id_factura, 
-                cl.nombre, 
-                cl.cedula, 
-                dp.id_cuenta, 
-                c.nombre_banco AS nombre_cuenta, 
-                dp.observaciones, 
-                dp.tipo, 
-                dp.referencia, 
-                dp.fecha, 
-                dp.comprobante,
-                dp.monto, 
-                dp.estatus 
-            FROM tbl_detalles_pago dp 
-            INNER JOIN tbl_cuentas c ON dp.id_cuenta = c.id_cuenta 
-            INNER JOIN tbl_facturas f ON dp.id_factura = f.id_factura 
-            INNER JOIN tbl_clientes cl ON f.cliente = cl.id_clientes 
-            WHERE cl.cedula = :cedula";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':cedula', $this->cedula, PDO::PARAM_STR);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } finally {
-        $conexion->cerrar();
+    private function pagoConsultar() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "SELECT 
+                    dp.id_detalles, 
+                    f.id_factura, 
+                    cl.nombre, 
+                    cl.cedula, 
+                    dp.id_cuenta, 
+                    c.nombre_banco AS nombre_cuenta, 
+                    dp.observaciones, 
+                    dp.tipo, 
+                    dp.referencia, 
+                    dp.fecha, 
+                    dp.comprobante,
+                    dp.monto, 
+                    dp.estatus 
+                FROM tbl_detalles_pago dp 
+                INNER JOIN tbl_cuentas c ON dp.id_cuenta = c.id_cuenta 
+                INNER JOIN tbl_facturas f ON dp.id_factura = f.id_factura 
+                INNER JOIN tbl_clientes cl ON f.cliente = cl.id_clientes 
+                WHERE cl.cedula = :cedula";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':cedula', $this->cedula, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        });
     }
-}
-
-
 
     private function pagoConsultarTodos() {
-        $conexion = new BD('P');
-        $pdo = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT dp.id_detalles, f.id_factura, cl.nombre, cl.cedula, dp.id_cuenta, c.nombre_banco AS nombre_cuenta, dp.observaciones, dp.tipo, dp.referencia, dp.fecha, dp.comprobante,dp.monto, dp.estatus FROM tbl_detalles_pago dp INNER JOIN tbl_cuentas c ON dp.id_cuenta = c.id_cuenta INNER JOIN tbl_facturas f ON dp.id_factura = f.id_factura INNER JOIN tbl_clientes cl ON f.cliente = cl.id_clientes;";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            $conexion->cerrar();
-        }
+        });
     }
 
-
-    
-
     private function pagoModificar() {
-        $conexion = new BD('P');
-        $pdo = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "UPDATE `tbl_detalles_pago` 
                 SET `id_factura` = :id_factura,
                     `id_cuenta` = :id_cuenta,
@@ -570,67 +524,56 @@ private function pagoConsultar() {
             $stmt->bindParam(':referencia', $this->referencia);
             $stmt->bindParam(':fecha', $this->fecha);
             return $stmt->execute();
-        } finally {
-            $conexion->cerrar();
-        }
+        });
     }
 
-private function pagoProcesar() {
-    $conexion = new BD('P');
-    $pdo = $conexion->getConexion();
-    try {
-        $sql = "UPDATE `tbl_detalles_pago` 
-                SET `estatus` = :estatus
-                WHERE id_detalles = :id_detalles";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':estatus', $this->estatus);
-        $stmt->bindParam(':id_detalles', $this->id_detalles);
-        $resultado = $stmt->execute();
+    private function pagoProcesar() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "UPDATE `tbl_detalles_pago` 
+                    SET `estatus` = :estatus
+                    WHERE id_detalles = :id_detalles";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':estatus', $this->estatus);
+            $stmt->bindParam(':id_detalles', $this->id_detalles);
+            $resultado = $stmt->execute();
 
-        if ($resultado) {
-            $this->facturaProcesar($this->factura, $this->estatus);
-            if ($this->estatus === 'Pago Procesado') {
-                try {
-                    $ordenDespacho = new OrdenDespacho();
-                    $ordenDespacho->crearPorFactura($this->factura);
-                } catch (Exception $e) {
-                    error_log('Error creando orden de despacho: ' . $e->getMessage());
+            if ($resultado) {
+                $this->facturaProcesar($this->factura, $this->estatus);
+                if ($this->estatus === 'Pago Procesado') {
+                    try {
+                        $ordenDespacho = new OrdenDespacho();
+                        $ordenDespacho->crearPorFactura($this->factura);
+                    } catch (Exception $e) {
+                        error_log('Error creando orden de despacho: ' . $e->getMessage());
+                    }
                 }
             }
-        }
-        return $resultado;
-    } finally {
-        $conexion->cerrar();
+            return $resultado;
+        });
     }
-}
 
-
-
-        public function cambiarEstatus($nuevoEstatus) {
+    public function cambiarEstatus($nuevoEstatus) {
         return $this->c_cambiarEstatus($nuevoEstatus);
     }
     private function c_cambiarEstatus($nuevoEstatus) {
-        $conexion = new BD('P');
-        $pdo = $conexion->getConexion();
-        try {
-            $sql = "UPDATE tbl_detalles_pago SET estatus = :estatus WHERE id_detalles = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':estatus', $nuevoEstatus);
-            $stmt->bindParam(':id', $this->id_detalles);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            $conexion->cerrar();
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstatus){
+            try {
+                $sql = "UPDATE tbl_detalles_pago SET estatus = :estatus WHERE id_detalles = :id";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':estatus', $nuevoEstatus);
+                $stmt->bindParam(':id', $this->id_detalles);
+                return $stmt->execute();
+            } catch (PDOException $e) {
+                return false;
+            }
+        });
     }
-        public function obtenerPagoPorId($id) {
+    
+    public function obtenerPagoPorId($id) {
         return $this->o_pagoPorId($id);
     }
     private function o_pagoPorId($id) {
-        $conexion = new BD('P');
-        $pdo = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
             $sql = "SELECT 
                     dp.id_detalles,
                     dp.id_factura,
@@ -649,25 +592,16 @@ private function pagoProcesar() {
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
-        } finally {
-            $conexion->cerrar();
-        }
+        });
     }
 
-        private function pagoEliminar() {
-        $conexion = new BD('P');
-        $pdo = $conexion->getConexion();
-        try {
+    private function pagoEliminar() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "DELETE FROM tbl_detalles_pago WHERE id_detalles = :id_detalles";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_detalles', $this->id_detalles, PDO::PARAM_INT);
             return $stmt->execute();
-        } finally {
-            $conexion->cerrar();
-        }
+        });
     }
-
-
 }
 ?>
-
