@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Consulta automática para la vista
 function consultarFinanzas() {
-    $finanza = new Finanza();
+    $finanza = new Finanza('P');
     
     // Validar parámetros GET opcionales
     $datosValidacion = [
@@ -58,7 +58,7 @@ $finanzas = consultarFinanzas(); // <-- PRIMERO OBTÉN LOS DATOS
 
 // Función para generar reportes con validaciones
 function generarReporteFinanzas($parametros = []) {
-    $finanza = new Finanza();
+    $finanza = new Finanza('P');
     
     // Validar parámetros del reporte
     $datosValidacion = [

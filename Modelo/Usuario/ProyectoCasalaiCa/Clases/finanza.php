@@ -22,11 +22,6 @@ class Finanza extends BD {
     const TIPOS_PERMITIDOS = ['ingreso', 'egreso'];
     const ESTADOS_PERMITIDOS = ['1', '0', 'activo', 'inactivo'];
 
-    public function __construct() {
-        parent::__construct();
-    }
-
-    // Getters y setters
     public function getIdFinanzas() { 
         return $this->id_finanzas; 
     }
@@ -83,6 +78,46 @@ class Finanza extends BD {
         $this->id_recepcion = $id; 
     }
     
+    public function __construct($tipo = 'P') {
+    }
+    
+    /**
+     * @return PDO
+     */
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        try {
+            parent::__construct('P'); 
+            $pdo = parent::getConexion(); 
+
+            if (!$pdo instanceof \PDO) {
+                throw new \RuntimeException("La conexión PDO no es válida o es nula.");
+            }
+
+            $pdo->beginTransaction();
+            $resultado = $operation($pdo);
+            $pdo->commit();
+            
+            return $resultado;
+        } catch (\Exception $e) {
+            $pdo = parent::getConexion();
+            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            $this->cerrar();
+        }
+    }
+
     // ==================== VALIDACIONES DE BACKEND ====================
     
     /**
@@ -291,76 +326,65 @@ class Finanza extends BD {
      * Verifica si una transacción financiera existe por ID
      */
     private function verificarTransaccionExistente($idTransaccion) {
-        $conexion = new BD('P');
-        $db = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_ingresos_egresos WHERE id_finanzas = :id_finanza";
-            $stmt = $db->prepare($sql);
-            $stmt->bindValue(':id_finanza', $idTransaccion, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarTransaccionExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $sql = "SELECT COUNT(*) FROM tbl_ingresos_egresos WHERE id_finanzas = :id_finanza";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindValue(':id_finanza', $idTransaccion, PDO::PARAM_INT);
+                $stmt->execute();
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                error_log('Error en verificarTransaccionExistente: ' . $e->getMessage());
+                return false;
+            }
+        });
     }
     
     /**
      * Verifica si un despacho existe por ID
      */
     private function verificarDespachoExistente($idDespacho) {
-        $conexion = new BD('P');
-        $db = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho";
-            $stmt = $db->prepare($sql);
-            $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarDespachoExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
+                $stmt->execute();
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                error_log('Error en verificarDespachoExistente: ' . $e->getMessage());
+                return false;
+            }
+        });
     }
     
     /**
      * Verifica si una recepción existe por ID
      */
     private function verificarRecepcionExistente($idRecepcion) {
-        $conexion = new BD('P');
-        $db = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_recepciones WHERE id_recepcion = :id_recepcion";
-            $stmt = $db->prepare($sql);
-            $stmt->bindValue(':id_recepcion', $idRecepcion, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarRecepcionExistente: ' . $e->getMessage());
-            return false;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $sql = "SELECT COUNT(*) FROM tbl_recepciones WHERE id_recepcion = :id_recepcion";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindValue(':id_recepcion', $idRecepcion, PDO::PARAM_INT);
+                $stmt->execute();
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                error_log('Error en verificarRecepcionExistente: ' . $e->getMessage());
+                return false;
+            }
+        });
     }
 
-    // CONSULTAR INGRESOS
     public function consultarIngresos() {
         return $this->c_ingresos(); 
     }
     private function c_ingresos() {
-        $conexion = new BD('P');
-        $db = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_ingresos_egresos WHERE tipo='ingreso' and estado='1' ORDER BY fecha DESC";
-            $stmt = $db->query($sql);
+            $stmt = $pdo->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        });
     }
 
     // CONSULTAR EGRESOS
@@ -368,14 +392,10 @@ class Finanza extends BD {
         return $this->c_egresos(); 
     }
     private function c_egresos() {
-        $conexion = new BD('P');
-        $db = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_ingresos_egresos WHERE tipo='egreso' and estado='1' ORDER BY fecha DESC";
-            $stmt = $db->query($sql);
+            $stmt = $pdo->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-        }
+        });
     }
 }
