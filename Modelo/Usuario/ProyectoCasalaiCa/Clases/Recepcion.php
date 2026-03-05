@@ -11,7 +11,6 @@ class Recepcion extends BD{
     private $fecha;
     private $costo;
     private $estado;
-    private $conex;
     private $tablerecepcion = 'tbl_recepcion_productos';
 
     // Constantes de validación
@@ -37,10 +36,6 @@ class Recepcion extends BD{
     const MIN_ANIO = 2000;
     const MAX_MES = 12;
     const MIN_MES = 1;
-
-    public function __construct() {
-        $this->conex = null;
-    }
 
     public function getidproveedor() {
         return $this->idproveedor;
@@ -91,7 +86,46 @@ class Recepcion extends BD{
         $this->estado = $estado;
     }
 
-    // Métodos de validación centralizados
+    public function __construct($tipo = 'P') {
+    }
+    
+    /**
+     * @return PDO
+     */
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        try {
+            parent::__construct('P'); 
+            $pdo = parent::getConexion(); 
+
+            if (!$pdo instanceof \PDO) {
+                throw new \RuntimeException("La conexión PDO no es válida o es nula.");
+            }
+
+            $pdo->beginTransaction();
+            $resultado = $operation($pdo);
+            $pdo->commit();
+            
+            return $resultado;
+        } catch (\Exception $e) {
+            $pdo = parent::getConexion();
+            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            $this->cerrar();
+        }
+    }
+
     private function validarRecepcion($datos) {
         $errores = [];
         
@@ -397,109 +431,144 @@ class Recepcion extends BD{
         return $errores;
     }
     
-    // Métodos auxiliares
     private function verificarRecepcionExistente($id_recepcion) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_recepcion_productos WHERE id_recepcion = ?");
-            $stmt->execute([$id_recepcion]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM tbl_recepcion_productos WHERE id_recepcion = ?");
+                $stmt->execute([$id_recepcion]);
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                return false;
+            } 
+        });
     }
     
     private function verificarProveedorExistente($id_proveedor) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('P');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_proveedores WHERE id_proveedor = ?");
-            $stmt->execute([$id_proveedor]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM tbl_proveedores WHERE id_proveedor = ?");
+                $stmt->execute([$id_proveedor]);
+                return $stmt->fetchColumn() > 0;
+            } catch (PDOException $e) {
+                return false;
+            }
+        });
     }
 
     public function registrarRecepcion($idproducto, $cantidad, $costo) {
         return $this->r_recepcion($idproducto, $cantidad, $costo); 
     }
-
     private function r_recepcion($idproducto, $cantidad, $costo) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idproducto, $cantidad, $costo){
+            try {
+                $tiempo = date('Y-m-d');
+                $pdo->beginTransaction();
+                $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, tamanocompra, estado) 
+                    VALUES (:idproveedor, :fecha_recepcion, :correlativo, :tamanocompra, :estado)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':idproveedor', $this->idproveedor, PDO::PARAM_INT);
+                $stmt->bindParam(':fecha_recepcion', $tiempo, PDO::PARAM_STR);
+                $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
+                $stmt->bindParam(':tamanocompra', $this->tamanocompra, PDO::PARAM_STR);
+                $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
+                $stmt->execute();
 
-        try {
-            $tiempo = date('Y-m-d');
-            $this->conex->beginTransaction();
-            $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, tamanocompra, estado) 
-                VALUES (:idproveedor, :fecha_recepcion, :correlativo, :tamanocompra, :estado)";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindParam(':idproveedor', $this->idproveedor, PDO::PARAM_INT);
-            $stmt->bindParam(':fecha_recepcion', $tiempo, PDO::PARAM_STR);
-            $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
-            $stmt->bindParam(':tamanocompra', $this->tamanocompra, PDO::PARAM_STR);
-            $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
-            $stmt->execute();
+                $idRecepcion = $pdo->lastInsertId();
+                $cap = count($idproducto);
 
-            $idRecepcion = $this->conex->lastInsertId();
-            $cap = count($idproducto);
+                $productosArray = [];
 
-            $productosArray = [];
+                for ($i = 0; $i < $cap; $i++) {
+                    $sqlDetalle = "INSERT INTO tbl_detalle_recepcion_productos (id_recepcion, id_producto, cantidad, costo) 
+                        VALUES (:idRecepcion, :idProducto, :cantidad, :costo)";
+                    $stmtDetalle = $pdo->prepare($sqlDetalle);
+                    $stmtDetalle->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
+                    $stmtDetalle->bindParam(':idProducto', $idproducto[$i], PDO::PARAM_INT);
+                    $stmtDetalle->bindParam(':cantidad', $cantidad[$i], PDO::PARAM_INT);
+                    $stmtDetalle->bindParam(':costo', $costo[$i], PDO::PARAM_INT);
+                    $stmtDetalle->execute();
+                    $idDetalle = $pdo->lastInsertId();
 
-            for ($i = 0; $i < $cap; $i++) {
-                $sqlDetalle = "INSERT INTO tbl_detalle_recepcion_productos (id_recepcion, id_producto, cantidad, costo) 
-                    VALUES (:idRecepcion, :idProducto, :cantidad, :costo)";
-                $stmtDetalle = $this->conex->prepare($sqlDetalle);
-                $stmtDetalle->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':idProducto', $idproducto[$i], PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':cantidad', $cantidad[$i], PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':costo', $costo[$i], PDO::PARAM_INT);
-                $stmtDetalle->execute();
-                $idDetalle = $this->conex->lastInsertId();
+                    $sqlNombre = "SELECT id_producto FROM tbl_productos WHERE id_producto = ?";
+                    $stmtNombre = $pdo->prepare($sqlNombre);
+                    $stmtNombre->execute([$idproducto[$i]]);
+                    $idProducto = $stmtNombre->fetchColumn();
 
-                $sqlNombre = "SELECT id_producto FROM tbl_productos WHERE id_producto = ?";
-                $stmtNombre = $this->conex->prepare($sqlNombre);
-                $stmtNombre->execute([$idproducto[$i]]);
-                $idProducto = $stmtNombre->fetchColumn();
+                    $sqlNombre = "SELECT nombre_producto FROM tbl_productos WHERE id_producto = ?";
+                    $stmtNombre = $pdo->prepare($sqlNombre);
+                    $stmtNombre->execute([$idproducto[$i]]);
+                    $nombreProducto = $stmtNombre->fetchColumn();
 
-                $sqlNombre = "SELECT nombre_producto FROM tbl_productos WHERE id_producto = ?";
-                $stmtNombre = $this->conex->prepare($sqlNombre);
-                $stmtNombre->execute([$idproducto[$i]]);
-                $nombreProducto = $stmtNombre->fetchColumn();
+                    $productosArray[] = [
+                        'id_producto' => $idProducto,
+                        'cantidad' => $cantidad[$i],
+                        'costo' => $costo[$i],
+                        'iddetalles' => $idDetalle
+                    ];
 
-                $productosArray[] = [
-                    'id_producto' => $idProducto,
-                    'cantidad' => $cantidad[$i],
-                    'costo' => $costo[$i],
-                    'iddetalles' => $idDetalle
+                    $monto_total = $costo[$i] * $cantidad[$i];
+                    $descripcion = "Compra: {$nombreProducto} (x{$cantidad[$i]})";
+
+                    $sqlEgreso = "INSERT INTO tbl_ingresos_egresos (tipo, monto, descripcion, fecha, estado, id_detalle_recepcion_productos)
+                        VALUES ('egreso', ?, ?, ?, 1, LAST_INSERT_ID())";
+                    $stmtEgreso = $pdo->prepare($sqlEgreso);
+                    $stmtEgreso->execute([$monto_total, $descripcion, $tiempo]);
+                }
+                $pdo->commit();
+
+                $sqlRecepcion = "
+                    SELECT 
+                        r.id_recepcion,
+                        r.fecha, 
+                        r.correlativo, 
+                        pr.nombre_proveedor, 
+                        r.tamanocompra,
+                        SUM(d.cantidad * d.costo) AS costo_inversion,
+                        r.estado
+                    FROM tbl_recepcion_productos AS r
+                    INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
+                    INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
+                    WHERE r.id_recepcion = :idRecepcion
+                    GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
+                ";
+                $stmtRecepcion = $pdo->prepare($sqlRecepcion);
+                $stmtRecepcion->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
+                $stmtRecepcion->execute();
+                $recepcion = $stmtRecepcion->fetch(PDO::FETCH_ASSOC);
+
+                return [
+                    'id_recepcion' => $idRecepcion,
+                    'productos' => $productosArray,
+                    'recepcion' => $recepcion
                 ];
 
-                $monto_total = $costo[$i] * $cantidad[$i];
-                $descripcion = "Compra: {$nombreProducto} (x{$cantidad[$i]})";
-
-                $sqlEgreso = "INSERT INTO tbl_ingresos_egresos (tipo, monto, descripcion, fecha, estado, id_detalle_recepcion_productos)
-                    VALUES ('egreso', ?, ?, ?, 1, LAST_INSERT_ID())";
-                $stmtEgreso = $this->conex->prepare($sqlEgreso);
-                $stmtEgreso->execute([$monto_total, $descripcion, $tiempo]);
+            } catch (Exception $e) {
+                if ($pdo && $pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $e;
             }
-            $this->conex->commit();
+        });
+    }
 
-            // Consulta la recepción recién creada con todos los datos necesarios
-            $sqlRecepcion = "
-                SELECT 
+    private function existeCorrelativo($r) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($r) {
+            $sql = "SELECT COUNT(*) FROM tbl_recepcion_productos WHERE correlativo = :correlativo AND estado = 'habilitado'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':correlativo', $r['correlativo'], PDO::PARAM_STR);
+            $stmt->execute();
+            $existe = $stmt->fetchColumn();
+            return $existe > 0;
+        });
+    }
+
+    public function obtenerUltimaRecepcion() {
+        return $this->obtUltimaRecepcion(); 
+    }
+    private function obtUltimaRecepcion() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $sql = "SELECT 
                     r.id_recepcion,
                     r.fecha, 
                     r.correlativo, 
@@ -510,110 +579,28 @@ class Recepcion extends BD{
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
                 INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
-                WHERE r.id_recepcion = :idRecepcion
                 GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
-            ";
-            $stmtRecepcion = $this->conex->prepare($sqlRecepcion);
-            $stmtRecepcion->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
-            $stmtRecepcion->execute();
-            $recepcion = $stmtRecepcion->fetch(PDO::FETCH_ASSOC);
-
-            return [
-                'id_recepcion' => $idRecepcion,
-                'productos' => $productosArray,
-                'recepcion' => $recepcion // <-- Aquí tienes todos los datos para la tabla
-            ];
-
-        } catch (Exception $e) {
-            if ($this->conex && $this->conex->inTransaction()) {
-                $this->conex->rollBack();
+                ORDER BY r.id_recepcion DESC 
+                LIMIT 1";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $recepcion = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                return $recepcion ? $recepcion : null;
+                
+            } catch (PDOException $e) {
+                error_log("Error en obtUltimaRecepcion: " . $e->getMessage());
+                return null;
             }
-            throw $e;
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
-    }
-
-    public function existeCorrelativo($r) {
-        return $this->ex_correlativo($r);
-    }
-    private function ex_correlativo($correlativo) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_recepcion_productos WHERE correlativo = :correlativo AND estado = 'habilitado'";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->bindParam(':correlativo', $correlativo, PDO::PARAM_STR);
-            $stmt->execute();
-            $existe = $stmt->fetchColumn();
-            return $existe > 0;
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
-    }
-
-    public function obtenerUltimaRecepcion() {
-        return $this->obtUltimaRecepcion(); 
-    }
-    private function obtUltimaRecepcion() {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
-            $sql = "SELECT 
-                r.id_recepcion,
-                r.fecha, 
-                r.correlativo, 
-                pr.nombre_proveedor, 
-                r.tamanocompra,
-                SUM(d.cantidad * d.costo) AS costo_inversion,
-                r.estado
-            FROM tbl_recepcion_productos AS r
-            INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
-            INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
-            GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
-            ORDER BY r.id_recepcion DESC 
-            LIMIT 1";
-            
-            $stmt = $this->conex->prepare($sql);
-            $stmt->execute();
-            $recepcion = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return $recepcion ? $recepcion : null;
-            
-        } catch (PDOException $e) {
-            error_log("Error en obtUltimaRecepcion: " . $e->getMessage());
-            return null;
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
 
     public function getrecepcion(){
         return $this->g_recepcion();
     }
-
     private function g_recepcion(){
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $queryrecepciones = "
                 SELECT 
                     r.id_recepcion,
@@ -630,30 +617,18 @@ class Recepcion extends BD{
                 GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra
                 ORDER BY r.fecha DESC, r.correlativo DESC, r.tamanocompra DESC
             ";
-
-            $stmtrecepciones = $this->conex->prepare($queryrecepciones);
+            $stmtrecepciones = $pdo->prepare($queryrecepciones);
             $stmtrecepciones->execute();
             $recepciones = $stmtrecepciones->fetchAll(PDO::FETCH_ASSOC);
-
             return $recepciones;
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
 
     public function obtenerProductosPorRecepcion($id_recepcion) {
         return $this->obt_productos_recepcion($id_recepcion); 
     }
     private function obt_productos_recepcion($id_recepcion) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_recepcion){
             $sql = "
                 SELECT 
                     p.id_producto AS codigo,
@@ -669,217 +644,153 @@ class Recepcion extends BD{
                 INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
                 WHERE d.id_recepcion = :id_recepcion
             ";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_recepcion', $id_recepcion, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
 
     public function anularRecepcion($correlativo) {
         return $this->an_recepcion($correlativo); 
     }
     private function an_recepcion($correlativo) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($correlativo){
             $sql = "UPDATE tbl_recepcion_productos SET estado = 'anulado' WHERE correlativo = :correlativo";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':correlativo', $correlativo, PDO::PARAM_STR);
             $result = $stmt->execute();
             return $result ? ['status' => 'success'] : ['status' => 'error', 'message' => 'No se pudo anular la recepción'];
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
 
     public function obtenerIdRecepcionPorCorrelativo($correlativo) {
         return $this->obt_id_recepcion_por_correlativo($correlativo);
     }
     private function obt_id_recepcion_por_correlativo($correlativo) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($correlativo) {
             $sql = "SELECT id_recepcion FROM tbl_recepcion_productos WHERE correlativo = :correlativo LIMIT 1";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':correlativo', $correlativo, PDO::PARAM_STR);
             $stmt->execute();
             $id = $stmt->fetchColumn();
             return $id ? (int)$id : null;
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
 
     public function obtenerproveedor() {
         return $this->obt_proveedor(); 
     }
     private function obt_proveedor() {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
-            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $sql = "SELECT id_proveedor, nombre_proveedor FROM tbl_proveedores";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->execute();
-            $r = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $r;
-        } catch (Exception $e) {
-            return [];
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $sql = "SELECT id_proveedor, nombre_proveedor FROM tbl_proveedores";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $r = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $r;
+            } catch (Exception $e) {
+                return [];
             }
-            $this->conex = null;
-        }
+        });
     }
 
     public function listadoproductos() {
         return $this->list_productos(); 
     }
     private function list_productos() {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $r = array();
+            try {
+                $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
+                        FROM tbl_productos AS p 
+                        INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
+                        INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;";
+                $resultado = $pdo->query($sql);
 
-        $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $r = array();
-        try {
-            $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
-                    FROM tbl_productos AS p 
-                    INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
-                    INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;";
-            $resultado = $this->conex->query($sql);
-
-            if($resultado){
-                $respuesta = '';
-                foreach($resultado as $r){
-                    $respuesta = $respuesta."<tr style='cursor:pointer' onclick='colocaproducto(this);'>";
-                        $respuesta = $respuesta."<td style='display:none'>";
-                            $respuesta = $respuesta.$r['id_producto'];
-                        $respuesta = $respuesta."</td>";
-                        $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$r['id_producto'];
-                        $respuesta = $respuesta."</td>";
-                        $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$r['nombre_producto'];
-                        $respuesta = $respuesta."</td>";
-                        $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$r['nombre_modelo'];
-                        $respuesta = $respuesta."</td>";
-                        $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$r['nombre_marca'];
-                        $respuesta = $respuesta."</td>";
-                        $respuesta = $respuesta."<td>";
-                            $respuesta = $respuesta.$r['serial'];
-                        $respuesta = $respuesta."</td>";
-                    $respuesta = $respuesta."</tr>";
+                if($resultado){
+                    $respuesta = '';
+                    foreach($resultado as $r){
+                        $respuesta = $respuesta."<tr style='cursor:pointer' onclick='colocaproducto(this);'>";
+                            $respuesta = $respuesta."<td style='display:none'>";
+                                $respuesta = $respuesta.$r['id_producto'];
+                            $respuesta = $respuesta."</td>";
+                            $respuesta = $respuesta."<td>";
+                                $respuesta = $respuesta.$r['id_producto'];
+                            $respuesta = $respuesta."</td>";
+                            $respuesta = $respuesta."<td>";
+                                $respuesta = $respuesta.$r['nombre_producto'];
+                            $respuesta = $respuesta."</td>";
+                            $respuesta = $respuesta."<td>";
+                                $respuesta = $respuesta.$r['nombre_modelo'];
+                            $respuesta = $respuesta."</td>";
+                            $respuesta = $respuesta."<td>";
+                                $respuesta = $respuesta.$r['nombre_marca'];
+                            $respuesta = $respuesta."</td>";
+                            $respuesta = $respuesta."<td>";
+                                $respuesta = $respuesta.$r['serial'];
+                            $respuesta = $respuesta."</td>";
+                        $respuesta = $respuesta."</tr>";
+                    }
                 }
+                $r['resultado'] = 'listado';
+                $r['mensaje'] = $respuesta;
+            } catch (Exception $e) {
+                $r['resultado'] = 'error';
+                $r['mensaje'] = $e->getMessage();
             }
-            $r['resultado'] = 'listado';
-            $r['mensaje'] = $respuesta;
-        } catch (Exception $e) {
-            $r['resultado'] = 'error';
-            $r['mensaje'] = $e->getMessage();
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
-        return $r;
+            return $r;
+        });
     }
 
     public function consultarproductos() {
         return $this->consul_productos(); 
     }
     private function consul_productos() {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
                     FROM tbl_productos AS p 
                     INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo 
                     INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca;";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $registros;
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
 
     public function buscar() {
         return $this->bus(); 
     }
     private function bus() {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $r = array();
+            try {
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $sql = "SELECT * FROM tbl_recepcion_productos WHERE correlativo = :correlativo";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute(['correlativo' => $this->correlativo]);
+                $fila = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $r = array();
-        try {
-            $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $sql = "SELECT * FROM tbl_recepcion_productos WHERE correlativo = :correlativo";
-            $stmt = $this->conex->prepare($sql);
-            $stmt->execute(['correlativo' => $this->correlativo]);
-            $fila = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            if ($fila) {
-                $r['resultado'] = 'encontró';
-                $r['mensaje'] = 'El número de correlativo ya existe!';
+                if ($fila) {
+                    $r['resultado'] = 'encontró';
+                    $r['mensaje'] = 'El número de correlativo ya existe!';
+                }
+            } catch (Exception $e) {
+                $r['resultado'] = 'error';
+                $r['mensaje'] = $e->getMessage();
             }
-        } catch (Exception $e) {
-            $r['resultado'] = 'error';
-            $r['mensaje'] = $e->getMessage();
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
-        return $r;
+            return $r;
+        });
     }
 
     public function getRecepcionesPorProveedor($fechaInicio = null, $fechaFin = null) {
         return $this->getRecepPorProveedor($fechaInicio, $fechaFin);
     }
     private function getRecepPorProveedor($fechaInicio = null, $fechaFin = null) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
             $sql = "
                 SELECT 
                     p.nombre_proveedor AS label,
@@ -903,27 +814,17 @@ class Recepcion extends BD{
                 ORDER BY r.fecha DESC
             ";
 
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
 
     public function getProductosMasRecibidos($fechaInicio = null, $fechaFin = null, $proveedor = null) {
         return $this->getProdMasRecibidos($fechaInicio, $fechaFin, $proveedor);
     }
     private function getProdMasRecibidos($fechaInicio = null, $fechaFin = null, $proveedor = null) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin, $proveedor){
             $sql = "
                 SELECT 
                     pr.nombre_producto AS label,
@@ -954,28 +855,17 @@ class Recepcion extends BD{
                 ORDER BY r.fecha DESC
             ";
 
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
-
 
     public function getRecepcionesMensuales($anio = null) {
         return $this->getRecepMensuales($anio);
     }
     private function getRecepMensuales($anio = null) {
-        // Abrir conexión al inicio de la función
-        $conexion = new BD('P');
-        $this->conex = $conexion->getConexion();
-
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($anio) {
             $sql = "
                 SELECT 
                     MONTH(r.fecha) AS mes_num,
@@ -997,11 +887,10 @@ class Recepcion extends BD{
                 ORDER BY anio, mes_num
             ";
 
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Traducir meses al español
             $meses = [
                 1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
                 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
@@ -1014,14 +903,7 @@ class Recepcion extends BD{
             }
 
             return $resultados;
-        } finally {
-            // Cerrar conexión al finalizar la función
-            if (isset($conexion)) {
-                $conexion->cerrar();
-            }
-            $this->conex = null;
-        }
+        });
     }
-
 }
 ?>
