@@ -14,7 +14,7 @@ $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('proveedores'));
 
-$reporteProveedor = new Proveedores('P');
+$reporteProveedor = new Proveedores();
 $reporteRankingProveedores = $reporteProveedor->getRankingProveedores();
 $reporteComparacion = $reporteProveedor->getComparacionPreciosProducto();
 $reporteDependencia = $reporteProveedor->getDependenciaProveedores();
@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
             
         case 'registrar':
-            $proveedor = new Proveedores('P');
+            $proveedor = new Proveedores();
             
             $errores = $proveedor->validarRegistrar($_POST);
             
@@ -86,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'obtener_proveedor':
-            $proveedor = new Proveedores('P');
+            $proveedor = new Proveedores();
             
             $errores = $proveedor->validarDetallar($_POST['id_proveedor']);
             
@@ -111,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
             
-            $proveedor = new Proveedores('P');
+            $proveedor = new Proveedores();
             
             $errores = $proveedor->validarModificar($_POST);
             
@@ -163,7 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $proveedor = new Proveedores('P');
+            $proveedor = new Proveedores();
             
             $errores = $proveedor->validarEliminar($_POST['id_proveedor']);
             
@@ -205,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'cambiar_estado':
-            $proveedor = new Proveedores('P');
+            $proveedor = new Proveedores();
             
             $errores = $proveedor->validarCambiarEstatus($_POST['id_proveedor'], $_POST['nuevo_estatus']);
             
@@ -248,7 +248,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'generar_reporte':
-            $proveedor = new Proveedores('P');
+            $proveedor = new Proveedores();
             
             $parametros = $_POST;
             $errores = $proveedor->validarGenerarReporte($parametros);
@@ -310,7 +310,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function getproveedores($filtros = []) {
-    $proveedor = new Proveedores('P');
+    $proveedor = new Proveedores();
     
     $resultado = $proveedor->obtenerProveedoresConFiltros($filtros);
     
@@ -321,7 +321,7 @@ function getproveedores($filtros = []) {
     return $resultado['proveedores'] ?? [];
 }
 
-$proveedorModel = new Proveedores('P');
+$proveedorModel = new Proveedores();
 $reporteSuministroProveedores = $proveedorModel->obtenerReporteSuministroProveedores();
 $totalSuministrado = array_sum(array_column($reporteSuministroProveedores, 'cantidad'));
 
