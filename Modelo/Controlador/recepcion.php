@@ -47,7 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
 
-            // Preparar datos para validación
             $datos_validacion = [
                 'idproveedor' => $_POST['proveedor'],
                 'correlativo' => $_POST['correlativo'],
@@ -55,7 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'estado' => 'habilitado'
             ];
 
-            // Validar datos principales de la recepción usando las nuevas validaciones centralizadas
             $erroresPrincipales = $k->validarRegistrarRecepcion($datos_validacion);
             if (!empty($erroresPrincipales)) {
                 echo json_encode([
@@ -66,49 +64,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            // Validar detalle de productos usando las nuevas validaciones
             $productos_data = [
                 'idproducto' => $_POST['producto'],
                 'cantidad' => $_POST['cantidad'],
                 'costo' => $_POST['costo']
             ];
-            $erroresProductos = $k->validarDetalleProductos($productos_data);
-            if (!empty($erroresProductos)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en los datos de los productos',
-                    'errors' => $erroresProductos
-                ]);
-                exit;
-            }
 
-            // Setea los datos principales de la recepción
             $k->setidproveedor($_POST['proveedor']);
             $k->setcorrelativo($_POST['correlativo']);
             $k->settamanocompra($_POST['tamanocompra']);
             $k->setestado('habilitado');
 
-            // Verifica si el correlativo ya existe
-            if ($k->existeCorrelativo($_POST['correlativo'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El N° de Factura ya existe'
-                ]);
-                exit;
-            }
-
-            // Registra la recepción y los productos asociados
             $resultado = $k->registrarRecepcion(
                 $_POST['producto'],
                 $_POST['cantidad'],
                 $_POST['costo']
             );
 
-            // Obtiene la última recepción registrada
             $recepcionRegistrada = $k->obtenerUltimaRecepcion();
 
             if ($resultado && $recepcionRegistrada) {
-                // Registra la acción en la bitácora
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
@@ -123,7 +98,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $id_recepcion = $recepcionRegistrada['id_recepcion'];
 
                     if (!defined('SKIP_SIDE_EFFECTS')) {
-                        // Instanciar notificación solo cuando se usa
                         $bd_seguridad = new BD('S');
                         $pdo_seguridad = $bd_seguridad->getConexion();
                         $notificacionModel = new NotificacionModel($pdo_seguridad);
