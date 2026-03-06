@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     $pasarela->setObservaciones('');
 
                     // Validar referencia duplicada
-                    if (!$pasarela->validarCodigoReferencia()) {
+                    if ($pasarela->validarCodigoReferencia()) {
                         $errores[] = "La referencia {$pagoData['referencia']} ya existe";
                         continue;
                     }
@@ -196,7 +196,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                             'comprobante' => $comprobanteNombre
                         ];
                     } else {
-                        $errores[] = "Error al ingresar el pago con referencia {$pagoData['referencia']}";
+                        $errores[] = "Error al ingresar el pago con referencia {$pagoData['referencia']}: fallo en pasarelaTransaccion('Ingresar')";
+                        error_log("Error detallado pagoIngresar - Referencia: {$pagoData['referencia']}, Datos: " . json_encode([
+                            'cuenta' => $pagoData['cuenta'],
+                            'referencia' => $pagoData['referencia'],
+                            'tipo' => $pagoData['tipo'],
+                            'monto' => $pagoData['monto'],
+                            'factura' => $id_factura
+                        ]));
                     }
                 } catch (Exception $e) {
                     $errores[] = "Error procesando pago {$index}: " . $e->getMessage();
