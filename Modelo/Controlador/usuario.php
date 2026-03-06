@@ -37,15 +37,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'registrar':
-            $usuario = new Usuarios();
-            $usuario->setUsername($_POST['nombre_usuario']);
-            $usuario->setClave($_POST['clave_usuario']);
-            $usuario->setNombre($_POST['nombre']);
-            $usuario->setApellido($_POST['apellido_usuario']);
-            $usuario->setCorreo($_POST['correo_usuario']);
-            $usuario->setTelefono($_POST['telefono_usuario']);
-            $usuario->setRango($_POST['rango']);
-            $usuario->setCedula($_POST['cedula']);
+            header('Content-Type: application/json; charset=utf-8');
+            
+            try {
+                $usuario = new Usuarios();
+                $usuario->setUsername($_POST['nombre_usuario']);
+                $usuario->setClave($_POST['clave_usuario']);
+                $usuario->setNombre($_POST['nombre']);
+                $usuario->setApellido($_POST['apellido_usuario']);
+                $usuario->setCorreo($_POST['correo_usuario']);
+                $usuario->setTelefono($_POST['telefono_usuario']);
+                $usuario->setRango($_POST['rango']);
+                $usuario->setCedula($_POST['cedula']);
             
             // Preparar datos para validación
             $datos_validacion = [
@@ -120,6 +123,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'message' => 'Error al registrar el usuario'
                 ]);
             }
+            } catch (Exception $e) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error al procesar la solicitud: ' . $e->getMessage()
+                ]);
+            }
             exit;
 
         case 'filtrar_estatus':
@@ -171,94 +180,103 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
-            $id_usuario = $_POST['id_usuario'];
+            header('Content-Type: application/json; charset=utf-8');
             
-            // Validar datos de entrada usando las nuevas validaciones centralizadas
-            $datos_validacion = [
-                'id_usuario' => $id_usuario,
-                'username' => $_POST['nombre_usuario'],
-                'nombre' => $_POST['nombre'],
-                'apellido' => $_POST['apellido_usuario'],
-                'correo' => $_POST['correo_usuario'],
-                'telefono' => $_POST['telefono_usuario'],
-                'cedula' => $_POST['cedula'],
-                'id_rol' => $_POST['rango'],
-                'clave' => $_POST['clave_usuario'] ?? ''
-            ];
-            
-            $usuario = new Usuarios();
-            $errores = $usuario->validarModificarUsuario($datos_validacion);
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Errores de validación',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
-            
-            $usuario->setId($id_usuario);
-            $usuario->setUsername($_POST['nombre_usuario']);
-            $usuario->setNombre($_POST['nombre']);
-            $usuario->setApellido($_POST['apellido_usuario']);
-            $usuario->setCorreo($_POST['correo_usuario']);
-            $usuario->setTelefono($_POST['telefono_usuario']);
-            $usuario->setRango($_POST['rango']);
-            $usuario->setCedula($_POST['cedula']);
-            $usuario->setClave($_POST['clave_usuario'] ?? '');
-            
-            if ($usuario->existeUsuario($_POST['nombre_usuario'], $id_usuario)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre de usuario ya existe'
-                ]);
-                exit;
-            }
-            if ($usuario->existeCedula($_POST['cedula'], $id_usuario)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'La cedula ingresada pertenece a un usuario que ya existe'
-                ]);
-                exit;
-            }
-            if ($usuario->existeCorreo($_POST['correo_usuario'], $id_usuario)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El correo ingresado se encuentra en uso por un usuario que ya existe'
-                ]);
-                exit;
-            }
-                $usuarioViejo = $usuario->obtenerUsuarioPorId($id_usuario);
-            if ($usuario->modificarUsuario($id_usuario)) {
-                $usuarioActualizado = $usuario->obtenerUsuarioPorId($id_usuario);
+            try {
+                $id_usuario = $_POST['id_usuario'];
                 
-                // Registrar en bitácora
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $detalle = sprintf(
-                        'Actualización de usuario (ID: %d). Usuario: %s %s (antes) -> %s %s (después)',
-                        $id_usuario,
-                        $usuarioViejo['nombres'] ?? 'N/A',
-                        $usuarioViejo['apellidos'] ?? 'N/A',
-                        $usuarioActualizado['nombres'] ?? 'N/A',
-                        $usuarioActualizado['apellidos'] ?? 'N/A'
-                    );
-                    
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_USUARIO,
-                        'MODIFICAR',
-                        $detalle,
-                        'media'
-                    );
+                // Validar datos de entrada usando las nuevas validaciones centralizadas
+                $datos_validacion = [
+                    'id_usuario' => $id_usuario,
+                    'username' => $_POST['nombre_usuario'],
+                    'nombre' => $_POST['nombre'],
+                    'apellido' => $_POST['apellido_usuario'],
+                    'correo' => $_POST['correo_usuario'],
+                    'telefono' => $_POST['telefono_usuario'],
+                    'cedula' => $_POST['cedula'],
+                    'id_rol' => $_POST['rango'],
+                    'clave' => $_POST['clave_usuario'] ?? ''
+                ];
+                
+                $usuario = new Usuarios();
+                $errores = $usuario->validarModificarUsuario($datos_validacion);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Errores de validación',
+                        'errors' => $errores
+                    ]);
+                    exit;
                 }
                 
+                $usuario->setId($id_usuario);
+                $usuario->setUsername($_POST['nombre_usuario']);
+                $usuario->setNombre($_POST['nombre']);
+                $usuario->setApellido($_POST['apellido_usuario']);
+                $usuario->setCorreo($_POST['correo_usuario']);
+                $usuario->setTelefono($_POST['telefono_usuario']);
+                $usuario->setRango($_POST['rango']);
+                $usuario->setCedula($_POST['cedula']);
+                $usuario->setClave($_POST['clave_usuario'] ?? '');
+                
+                if ($usuario->existeUsuario($_POST['nombre_usuario'], $id_usuario)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El nombre de usuario ya existe'
+                    ]);
+                    exit;
+                }
+                if ($usuario->existeCedula($_POST['cedula'], $id_usuario)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'La cedula ingresada pertenece a un usuario que ya existe'
+                    ]);
+                    exit;
+                }
+                if ($usuario->existeCorreo($_POST['correo_usuario'], $id_usuario)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El correo ingresado se encuentra en uso por un usuario que ya existe'
+                    ]);
+                    exit;
+                }
+                    $usuarioViejo = $usuario->obtenerUsuarioPorId($id_usuario);
+                if ($usuario->modificarUsuario($id_usuario)) {
+                    $usuarioActualizado = $usuario->obtenerUsuarioPorId($id_usuario);
+                    
+                    // Registrar en bitácora
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel = new Bitacora();
+                        $detalle = sprintf(
+                            'Actualización de usuario (ID: %d). Usuario: %s %s (antes) -> %s %s (después)',
+                            $id_usuario,
+                            $usuarioViejo['nombres'] ?? 'N/A',
+                            $usuarioViejo['apellidos'] ?? 'N/A',
+                            $usuarioActualizado['nombres'] ?? 'N/A',
+                            $usuarioActualizado['apellidos'] ?? 'N/A'
+                        );
+                        
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_USUARIO,
+                            'MODIFICAR',
+                            $detalle,
+                            'media'
+                        );
+                    }
+                    
+                    echo json_encode([
+                        'status' => 'success',
+                        'usuario' => $usuarioActualizado
+                    ]);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Error al modificar el Usuario']);
+                }
+            } catch (Exception $e) {
                 echo json_encode([
-                    'status' => 'success',
-                    'usuario' => $usuarioActualizado
+                    'status' => 'error',
+                    'message' => 'Error al procesar la solicitud: ' . $e->getMessage()
                 ]);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al modificar el Usuario']);
             }
             exit;
 

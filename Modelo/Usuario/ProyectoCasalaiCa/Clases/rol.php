@@ -36,6 +36,7 @@ class Rol extends BD {
     /**
      * @return PDO
      */
+    
     public function getConexion() {
         return $this->pdo;
     }

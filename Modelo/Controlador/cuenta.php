@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
-            $cuentabanco = new Cuentabanco('P');
+            $cuentabanco = new Cuentabanco();
             $cuentabanco->setNombreBanco($_POST['nombre_banco']);
             $cuentabanco->setNumeroCuenta($_POST['numero_cuenta']);
             $cuentabanco->setRifCuenta($_POST['rif_cuenta']);
@@ -102,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            $cuentabanco = new Cuentabanco('P');
+            $cuentabanco = new Cuentabanco();
             $cuenta_obt = $cuentabanco->obtenerCuentaPorId($id_cuenta);
 
             if ($cuenta_obt !== null) {
@@ -113,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'consultar_cuentas':
-            $cuentabanco = new Cuentabanco('P');
+            $cuentabanco = new Cuentabanco();
             $cuentas_obt = $cuentabanco->consultarCuentabanco();
 
             echo json_encode($cuentas_obt);
@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            $cuentabanco = new Cuentabanco('P');
+            $cuentabanco = new Cuentabanco();
             $cuentabanco->setIdCuenta($id_cuenta);
             $cuentabanco->setNombreBanco($_POST['nombre_banco']);
             $cuentabanco->setNumeroCuenta($_POST['numero_cuenta']);
@@ -196,7 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            $cuentabanco = new Cuentabanco('P');
+            $cuentabanco = new Cuentabanco();
 
             $resultado = $cuentabanco->eliminarCuentabanco($id_cuenta);
 
@@ -253,7 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $cuentabanco = new Cuentabanco('P');
+            $cuentabanco = new Cuentabanco();
             $cuentabanco->setIdCuenta($id_cuenta);
             
             if ($cuentabanco->cambiarEstado($nuevoEstado)) {
@@ -281,12 +281,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function consultarCuentabanco() {
-    $cuentabanco = new Cuentabanco('P');
+    $cuentabanco = new Cuentabanco();
     return $cuentabanco->consultarCuentabanco();
 }
 
 function cuentasReportes() {
-    $cuentabanco = new Cuentabanco('P');
+    $cuentabanco = new Cuentabanco();
     return $cuentabanco->cuentasReportes();
 }
 

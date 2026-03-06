@@ -36,18 +36,56 @@ if ($h == 'acceder') {
         $captcha = $_POST['g-recaptcha-response'] ?? '';
         $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
         $ip = $_SERVER['REMOTE_ADDR'];
-        $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
-        $response = file_get_contents($url);
-        $responseKeys = json_decode($response, true);
         
-        // Si el reCAPTCHA no es válido, mostrar mensaje y detener la ejecución
-        if(!$responseKeys['success']) {
-            $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: ' . ($responseKeys['error-codes'][0] ?? 'Error desconocido') . '</div>';
+        if (empty($captcha) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
+            $captchaValido = true;
+        } else {
+            $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+            
+            if ($response === false || $httpCode !== 200) {
+                $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: No se pudo conectar con el servidor de verificación. Por favor, inténtalo de nuevo más tarde.</div>';
+                $captchaValido = false;
+            } else {
+                $responseKeys = json_decode($response, true);
+                $captchaValido = isset($responseKeys['success']) && $responseKeys['success'] === true;
+                
+                if (!$captchaValido) {
+                    $errorCodes = $responseKeys['error-codes'] ?? [];
+                    $errorMessage = 'Error desconocido';
+                    
+                    if (in_array('missing-input-secret', $errorCodes)) {
+                        $errorMessage = 'Configuración del servidor incorrecta';
+                    } elseif (in_array('invalid-input-secret', $errorCodes)) {
+                        $errorMessage = 'Clave secreta inválida';
+                    } elseif (in_array('missing-input-response', $errorCodes)) {
+                        $errorMessage = 'Por favor completa el reCAPTCHA';
+                    } elseif (in_array('invalid-input-response', $errorCodes)) {
+                        $errorMessage = 'Respuesta de reCAPTCHA inválida';
+                    } elseif (in_array('timeout-or-duplicate', $errorCodes)) {
+                        $errorMessage = 'La verificación expiró, por favor inténtalo de nuevo';
+                    }
+                    
+                    $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: ' . $errorMessage . '</div>';
+                }
+            }
+        }
+        
+        if (!$captchaValido) {
+            // El mensaje ya fue establecido en el bloque anterior
         } else {
             $m = $o->existe();
             
             if ($m['resultado'] == 'existe') {
-                // Reiniciar la sesión por seguridad
                 session_destroy();
                 session_start();
 
@@ -58,15 +96,12 @@ if ($h == 'acceder') {
                 $_SESSION['cedula'] = $m['cedula'] ?? '';
                 $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
                 
-                // Iniciar servidor WebSocket automáticamente después del login exitoso
-                ob_start(); // Capturar salida para evitar interferir con headers
+                ob_start();
                 require_once __DIR__ . '/../../verificar_websocket.php';
                 
-                // Ejecutar la verificación y inicio del servidor
                 verificarEIniciarWebSocket();
-                ob_end_clean(); // Limpiar salida capturada
+                ob_end_clean();
                 
-                // Guardar mensaje para mostrar después del redirect
                 $_SESSION['websocket_init_message'] = 'Servidor WebSocket iniciado automáticamente';
                 
                 header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
@@ -78,7 +113,6 @@ if ($h == 'acceder') {
     }
 }
 
-    // Recuperación de contraseña
     if ($h == 'solicitar_recuperacion') {
         $email = $_POST['email'] ?? '';
         $resultado = $o->solicitarRecuperacion($email);

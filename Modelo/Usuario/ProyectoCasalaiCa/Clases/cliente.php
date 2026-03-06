@@ -403,7 +403,7 @@ class cliente extends BD {
         });
     }
 
-    private function existeNumeroCedula($cedula, $excluir_id = null) {
+    public function existeNumeroCedula($cedula, $excluir_id = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($cedula, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = ?";
             $params = [$cedula];

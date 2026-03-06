@@ -20,7 +20,7 @@ $precioDolar = $dolarService->obtenerPrecioDolar();
 $dolarService->guardarPrecioCache($precioDolar);
 
 $productosModel = new Productos();
-$catalogoModel = new Catalogo('P');
+$catalogoModel = new Catalogo();
 $bitacoraModel = new Bitacora();
 // Manejar generación de reportes PDF
 try {

@@ -12,7 +12,7 @@ if (!isset($_SESSION['id_usuario'])) {
     exit;
 }
 
-$permisos = new Permisos('S');
+$permisos = new Permisos();
 
 $permisosActuales = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
     }
 
     $permisos->guardarPermisos($_POST['permisos'] ?? [], $roles, $modulos_permiso, $acciones);
-    $bd_seguridad = new BD('S');
+    $bd_seguridad = new BD();
     $pdo_seguridad = $bd_seguridad->getConexion();
     $notificacionesModel = new NotificacionModel($pdo_seguridad);
     $notificacionesModel->crear(

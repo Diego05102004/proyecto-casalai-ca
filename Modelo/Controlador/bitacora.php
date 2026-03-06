@@ -17,7 +17,7 @@ if (!isset($_SESSION['id_usuario'])) {
 }
 
 if (!defined('SKIP_SIDE_EFFECTS')) {
-    $bitacoraModel = new Bitacora('S');
+    $bitacoraModel = new Bitacora();
     
     $datosRegistro = [
         'id_usuario' => $_SESSION['id_usuario'],
@@ -39,7 +39,7 @@ if (!defined('SKIP_SIDE_EFFECTS')) {
     }
 }
 
-$bitacoraModel = new Bitacora('S');
+$bitacoraModel = new Bitacora();
 $registros = [];
 $erroresConsulta = [];
 

@@ -17,7 +17,7 @@ $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('rece
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Instanciar Recepcion solo si hay POST (cuando se va a usar)
-    $k = new Recepcion('P');
+    $k = new Recepcion();
     
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         case 'productos_recepcion':
             $id_recepcion = $_POST['id_recepcion'];
-            $recepcion = new Recepcion('P');
+            $recepcion = new Recepcion();
             $productos = $recepcion->obtenerProductosPorRecepcion($id_recepcion);
             echo json_encode($productos);
         break;
@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
 
-            // Preparar datos para validación
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = [
                 'idproveedor' => $_POST['proveedor'],
                 'correlativo' => $_POST['correlativo'],
@@ -55,60 +55,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'estado' => 'habilitado'
             ];
 
-            // Validar datos principales de la recepción usando las nuevas validaciones centralizadas
-            $erroresPrincipales = $k->validarRegistrarRecepcion($datos_validacion);
-            if (!empty($erroresPrincipales)) {
+            $errores = $k->validarRegistrar($datos_validacion);
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en los datos de la recepción',
-                    'errors' => $erroresPrincipales
+                    'errors' => $errores
                 ]);
                 exit;
             }
 
-            // Validar detalle de productos usando las nuevas validaciones
             $productos_data = [
                 'idproducto' => $_POST['producto'],
                 'cantidad' => $_POST['cantidad'],
                 'costo' => $_POST['costo']
             ];
-            $erroresProductos = $k->validarDetalleProductos($productos_data);
-            if (!empty($erroresProductos)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en los datos de los productos',
-                    'errors' => $erroresProductos
-                ]);
-                exit;
-            }
 
-            // Setea los datos principales de la recepción
             $k->setidproveedor($_POST['proveedor']);
             $k->setcorrelativo($_POST['correlativo']);
             $k->settamanocompra($_POST['tamanocompra']);
             $k->setestado('habilitado');
 
-            // Verifica si el correlativo ya existe
-            if ($k->existeCorrelativo($_POST['correlativo'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El N° de Factura ya existe'
-                ]);
-                exit;
-            }
-
-            // Registra la recepción y los productos asociados
             $resultado = $k->registrarRecepcion(
                 $_POST['producto'],
                 $_POST['cantidad'],
                 $_POST['costo']
             );
 
-            // Obtiene la última recepción registrada
             $recepcionRegistrada = $k->obtenerUltimaRecepcion();
 
             if ($resultado && $recepcionRegistrada) {
-                // Registra la acción en la bitácora
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
@@ -123,7 +99,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $id_recepcion = $recepcionRegistrada['id_recepcion'];
 
                     if (!defined('SKIP_SIDE_EFFECTS')) {
-                        // Instanciar notificación solo cuando se usa
                         $bd_seguridad = new BD('S');
                         $pdo_seguridad = $bd_seguridad->getConexion();
                         $notificacionModel = new NotificacionModel($pdo_seguridad);
@@ -170,9 +145,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             $correlativo = $_POST['correlativo'] ?? '';
             
-            // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = ['correlativo' => $correlativo];
-            $errores = $k->validarAnularRecepcion($datos_validacion);
+            $errores = $k->validarAnular($correlativo);
             
             if (!empty($errores)) {
                 echo json_encode([
@@ -276,15 +250,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function getrecepcion() {
-    $recepcion = new Recepcion('P');
+    $recepcion = new Recepcion();
     return $recepcion->getrecepcion(); // Consulta resumen: fecha, correlativo, proveedor, tamaño, costo inversión
 }
-$r = new Recepcion('P');
+$r = new Recepcion();
 $RecepcionesProveedor = $r->getRecepcionesPorProveedor();
 $ProductorRecibidos = $r->getProductosMasRecibidos();
 $RecepcionMensual = $r->getRecepcionesMensuales();
 
-$proveedores = (new Recepcion('P'))->obtenerproveedor();
+$proveedores = (new Recepcion())->obtenerproveedor();
 $pagina = "recepcion";
 if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
