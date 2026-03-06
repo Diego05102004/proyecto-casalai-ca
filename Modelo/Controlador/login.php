@@ -36,13 +36,59 @@ if ($h == 'acceder') {
         $captcha = $_POST['g-recaptcha-response'] ?? '';
         $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
         $ip = $_SERVER['REMOTE_ADDR'];
-        $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
-        $response = file_get_contents($url);
-        $responseKeys = json_decode($response, true);
+        
+        // Para desarrollo: permitir bypass de reCAPTCHA si está vacío
+        if (empty($captcha) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
+            // En entorno local, permitir continuar sin reCAPTCHA para pruebas
+            $captchaValido = true;
+        } else {
+            // En producción o si se proporcionó captcha, verificar con Google
+            $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
+            
+            // Usar cURL en lugar de file_get_contents para mejor manejo de errores
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+            
+            if ($response === false || $httpCode !== 200) {
+                // Error de comunicación con Google
+                $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: No se pudo conectar con el servidor de verificación. Por favor, inténtalo de nuevo más tarde.</div>';
+                $captchaValido = false;
+            } else {
+                $responseKeys = json_decode($response, true);
+                $captchaValido = isset($responseKeys['success']) && $responseKeys['success'] === true;
+                
+                if (!$captchaValido) {
+                    $errorCodes = $responseKeys['error-codes'] ?? [];
+                    $errorMessage = 'Error desconocido';
+                    
+                    // Mapear códigos de error a mensajes más claros
+                    if (in_array('missing-input-secret', $errorCodes)) {
+                        $errorMessage = 'Configuración del servidor incorrecta';
+                    } elseif (in_array('invalid-input-secret', $errorCodes)) {
+                        $errorMessage = 'Clave secreta inválida';
+                    } elseif (in_array('missing-input-response', $errorCodes)) {
+                        $errorMessage = 'Por favor completa el reCAPTCHA';
+                    } elseif (in_array('invalid-input-response', $errorCodes)) {
+                        $errorMessage = 'Respuesta de reCAPTCHA inválida';
+                    } elseif (in_array('timeout-or-duplicate', $errorCodes)) {
+                        $errorMessage = 'La verificación expiró, por favor inténtalo de nuevo';
+                    }
+                    
+                    $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: ' . $errorMessage . '</div>';
+                }
+            }
+        }
         
         // Si el reCAPTCHA no es válido, mostrar mensaje y detener la ejecución
-        if(!$responseKeys['success']) {
-            $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: ' . ($responseKeys['error-codes'][0] ?? 'Error desconocido') . '</div>';
+        if (!$captchaValido) {
+            // El mensaje ya fue establecido en el bloque anterior
         } else {
             $m = $o->existe();
             
