@@ -100,10 +100,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
         return $this->o_estadisticasAccesos();
     }
     private function o_estadisticasAccesos() {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
-            // Agrupa por semana (formato: YYYYWW)
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT 
                         YEAR(fecha_hora) * 100 + WEEK(fecha_hora, 1) AS semana,
                         COUNT(*) AS total_accesos,
@@ -114,7 +111,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                     GROUP BY semana
                     ORDER BY semana DESC
                     LIMIT 10";
-            $stmt = $co->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $semanas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -137,22 +134,14 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                 'promedio_diario' => $promedio_diario,
                 'semanas' => $semanas
             ];
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
+        });
     }
 
-    // Top usuarios más activos en el catálogo
     public function obtenerUsuariosMasActivos($limite = 10) {
         return $this->o_usuariosMasActivos($limite);
     }
     private function o_usuariosMasActivos($limite = 10) {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($limite){
             $sql = "SELECT 
                         u.id_usuario,
                         u.username,
@@ -166,7 +155,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                     GROUP BY u.id_usuario
                     ORDER BY total_accesos DESC
                     LIMIT :limite";
-            $stmt = $co->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
             $stmt->execute();
             $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -176,12 +165,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                 $usuario['porcentaje'] = $totalAccesos > 0 ? round(($usuario['total_accesos'] / $totalAccesos) * 100, 2) : 0;
             }
             return $usuarios;
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
+        });
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================
@@ -368,46 +352,6 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
         }
         
         return trim($descripcion);
-    }
-    
-    /**
-     * Verifica si un usuario existe
-     */
-    private function verificarUsuarioExistente($idUsuario) {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE id_usuario = :id_usuario";
-            $stmt = $co->prepare($sql);
-            $stmt->bindValue(':id_usuario', $idUsuario, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
-    }
-    
-    /**
-     * Verifica si un módulo existe
-     */
-    private function verificarModuloExistente($idModulo) {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_modulos WHERE nombre_modulo = :nombre_modulo";
-            $stmt = $co->prepare($sql);
-            $stmt->bindValue(':nombre_modulo', $idModulo, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
     }
 }
 

@@ -8,21 +8,17 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 
 define('MODULO_BITACORA', "Bitacora");
 
-// Permisos (si la vista los requiere)
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
 
-// Redirigir a login si no hay sesión
 if (!isset($_SESSION['id_usuario'])) {
     header('Location: ?pagina=login');
     exit;
 }
 
-// Validar y registrar acceso al módulo
 if (!defined('SKIP_SIDE_EFFECTS')) {
-    $bitacoraModel = new Bitacora();
+    $bitacoraModel = new Bitacora('S');
     
-    // Validar datos de registro
     $datosRegistro = [
         'id_usuario' => $_SESSION['id_usuario'],
         'modulo' => MODULO_BITACORA,
@@ -43,8 +39,7 @@ if (!defined('SKIP_SIDE_EFFECTS')) {
     }
 }
 
-// Validar y consultar registros
-$bitacoraModel = new Bitacora();
+$bitacoraModel = new Bitacora('S');
 $registros = [];
 $erroresConsulta = [];
 
