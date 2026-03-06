@@ -31,27 +31,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $rol = new Rol('S');
             $rol->setNombreRol($_POST['nombre_rol']);
 
-            // Preparar datos para validación
-            $datos_validacion = [
-                'nombre_rol' => $_POST['nombre_rol']
-            ];
-
             // Validar datos del rol usando las nuevas validaciones centralizadas
-            $errores = $rol->validarRegistrarRol($datos_validacion);
+            $errores = $rol->validarRegistrar($_POST);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en los datos del rol',
                     'errors' => $errores
-                ]);
-                exit;
-            }
-
-            if ($rol->existeNombreRol($_POST['nombre_rol'])) {
-
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre del rol ya existe'
                 ]);
                 exit;
             }
@@ -92,9 +78,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_rol = $_POST['id_rol'] ?? null;
 
             // Validar datos de entrada usando las nuevas validaciones centralizadas
-            $datos_validacion = ['id_rol' => $id_rol];
             $rol = new Rol('S');
-            $errores = $rol->validarConsultarRol($datos_validacion);
+            $errores = $rol->validarConsultar(['id_rol' => $id_rol]);
             
             if (!empty($errores)) {
                 echo json_encode([
@@ -124,14 +109,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $rol->setIdRol($id_rol);
             $rol->setNombreRol($_POST['nombre_rol']);
             
-            // Preparar datos para validación
-            $datos_validacion = [
-                'id_rol' => $id_rol,
-                'nombre_rol' => $_POST['nombre_rol']
-            ];
-            
             // Validar datos del rol usando las nuevas validaciones centralizadas
-            $errores = $rol->validarModificarRol($datos_validacion);
+            $errores = $rol->validarModificar($_POST);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -141,24 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Verificar que el rol exista antes de modificar
-            $rolExistente = $rol->obtenerRolPorId($id_rol);
-            if (!$rolExistente) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El rol que intenta modificar no existe'
-                ]);
-                exit;
-            }
-            
-            if ($rol->existeNombreRol($_POST['nombre_rol'], $id_rol)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre del rol ya existe'
-                ]);
-                exit;
-            }
-                 $rolViejo = $rol->obtenerRolPorId($id_rol);
+            $rolViejo = $rol->obtenerRolPorId($id_rol);
             if ($rol->modificarRol($id_rol)) {
                 $rolActualizado = $rol->obtenerRolPorId($id_rol);
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
@@ -185,9 +147,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id_rol = $_POST['id_rol'] ?? null;
             
             // Validar datos de entrada usando las nuevas validaciones centralizadas
-            $datos_validacion = ['id_rol' => $id_rol];
             $rol = new Rol('S');
-            $errores = $rol->validarEliminarRol($datos_validacion);
+            $errores = $rol->validarEliminar($id_rol);
             
             if (!empty($errores)) {
                 echo json_encode([
@@ -198,20 +159,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Verificar que el rol exista antes de eliminar
-            $rolExistente = $rol->obtenerRolPorId($id_rol);
-            if (!$rolExistente) {
-                echo json_encode(['status' => 'error', 'message' => 'El rol que intenta eliminar no existe']);
-                exit;
-            }
-            
-            if ($rol->tieneUsuariosAsignados($id_rol)) {
-                echo json_encode(['status' => 'error', 'message' => 'No se puede eliminar el rol porque tiene usuarios asignados']);
-                exit;
-            } else {
-                // Obtener datos antes de eliminar para la bitácora
-                $rolEliminado = $rol->obtenerRolPorId($id_rol);
-                if ($rol->eliminarRol($id_rol)) {
+            // Obtener datos antes de eliminar para la bitácora
+            $rolEliminado = $rol->obtenerRolPorId($id_rol);
+            if ($rol->eliminarRol($id_rol)) {
                     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
                         $bitacoraModel = new Bitacora();
                         $bitacoraModel->registrarBitacora(
@@ -223,9 +173,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         );
                     }
                 echo json_encode(['status' => 'success']);
-                } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el rol']);
-                }
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el rol']);
             }
             exit;
 

@@ -13,6 +13,8 @@ class Rol extends BD {
     const MIN_ID_ROL = 1;
     const MAX_NOMBRE_ROL = 100;
     const MIN_NOMBRE_ROL = 2;
+    const CAMPOS_OBLIGATORIOS = ['nombre_rol'];
+    const MAX_REGISTROS_PAGINA = 100;
 
     public function getIdRol() { 
         return $this->id_rol; 
@@ -68,6 +70,122 @@ class Rol extends BD {
         }
     }
 
+    private function sanitizarDatos($datos) {
+        if (!is_array($datos)) {
+            return $datos;
+        }
+        
+        $datos_sanitizados = [];
+        
+        foreach ($datos as $clave => $valor) {
+            if (is_string($valor)) {
+                $valor = trim($valor);
+                
+                $valor = htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+                
+                $valor = addslashes($valor);
+                
+                $datos_sanitizados[$clave] = $valor;
+            } else {
+                $datos_sanitizados[$clave] = $valor;
+            }
+        }
+        
+        return $datos_sanitizados;
+    }
+    
+    private function validarEsquema($datos, $operacion = 'registrar') {
+        $errores = [];
+        
+        if (!is_array($datos)) {
+            $errores['esquema'] = 'Los datos deben ser un array';
+            return $errores;
+        }
+        
+        $campos_requeridos = self::CAMPOS_OBLIGATORIOS;
+        
+        if ($operacion === 'registrar') {
+            foreach ($campos_requeridos as $campo) {
+                if (!isset($datos[$campo]) || $datos[$campo] === '' || $datos[$campo] === null) {
+                    $errores[$campo] = "El campo {$campo} es obligatorio";
+                }
+            }
+        } elseif ($operacion === 'modificar') {
+            if (!isset($datos['id_rol']) || $datos['id_rol'] === '' || $datos['id_rol'] === null) {
+                $errores['id_rol'] = 'El ID del rol es obligatorio para modificar';
+            }
+            
+            $campos_modificar = array_intersect(array_keys($datos), $campos_requeridos);
+            if (empty($campos_modificar)) {
+                $errores['modificacion'] = 'Debe proporcionar al menos un campo para modificar';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarFormato($datos) {
+        $errores = [];
+        
+        if (isset($datos['nombre_rol'])) {
+            $nombre = trim($datos['nombre_rol']);
+            if (mb_strlen($nombre) < self::MIN_NOMBRE_ROL || mb_strlen($nombre) > self::MAX_NOMBRE_ROL) {
+                $errores['nombre_rol'] = 'El nombre del rol debe tener entre ' . self::MIN_NOMBRE_ROL . ' y ' . self::MAX_NOMBRE_ROL . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre)) {
+                $errores['nombre_rol'] = 'El nombre del rol solo puede contener letras, números, espacios y caracteres especiales comunes';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarFiltros($filtros) {
+        $errores = [];
+        
+        if (isset($filtros['limite'])) {
+            $limite = (int)$filtros['limite'];
+            if ($limite <= 0 || $limite > self::MAX_REGISTROS_PAGINA) {
+                $errores['limite'] = "El límite debe estar entre 1 y " . self::MAX_REGISTROS_PAGINA . " registros";
+            }
+        }
+        
+        if (isset($filtros['pagina'])) {
+            $pagina = (int)$filtros['pagina'];
+            if ($pagina < 1) {
+                $errores['pagina'] = 'La página debe ser un número positivo';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarId($id_rol) {
+        $errores = [];
+        
+        if ($id_rol === null || $id_rol === '') {
+            $errores['id_rol'] = 'El ID del rol es obligatorio';
+        } elseif (!is_numeric($id_rol) || (int)$id_rol < self::MIN_ID_ROL || (int)$id_rol > self::MAX_ID_ROL) {
+            $errores['id_rol'] = 'El ID del rol debe ser un número entre ' . self::MIN_ID_ROL . ' y ' . self::MAX_ID_ROL;
+        }
+        
+        return $errores;
+    }
+    
+    private function validarIntegridadReferencial($id_rol, $pdo) {
+        $errores = [];
+        
+        $sql = "SELECT COUNT(*) as total FROM tbl_usuarios WHERE id_rol = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_rol]);
+        $usuarios = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        
+        if ($usuarios > 0) {
+            $errores['integridad'] = "No se puede eliminar el rol porque tiene {$usuarios} usuario(s) asignado(s)";
+        }
+        
+        return $errores;
+    }
+
     private function validarRol($datos) {
         $errores = [];
         
@@ -100,73 +218,84 @@ class Rol extends BD {
     }
     
     // Métodos públicos de validación
-    public function validarConsultarRol($datos) {
-        $errores = [];
+    public function validarConsultar($filtros = []) {
+        $filtros_default = [
+            'pagina' => 1,
+            'limite' => 50,
+            'orden' => 'nombre_rol',
+            'direccion' => 'ASC'
+        ];
         
-        // Para consultar, podemos validar por ID o sin filtros
-        if (isset($datos['id_rol'])) {
-            $id_rol = (int)$datos['id_rol'];
-            if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
-                $errores['id_rol'] = 'El ID del rol debe ser un número entre ' . self::MIN_ID_ROL . ' y ' . self::MAX_ID_ROL;
-            }
+        $filtros = array_merge($filtros_default, $filtros);
+        
+        return $this->validarFiltros($filtros);
+    }
+    
+    public function validarRegistrar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'registrar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        if ($this->existeNombreRol($datos['nombre_rol'])) {
+            $errores['nombre_rol'] = 'El nombre del rol ya existe';
         }
         
         return $errores;
     }
     
-    public function validarRegistrarRol($datos) {
-        $errores = [];
+    public function validarModificar($datos) {
+        $datos = $this->sanitizarDatos($datos);
         
-        // Para registrar, requerimos campos obligatorios
-        if (!isset($datos['nombre_rol'])) {
-            $errores['nombre_rol'] = 'El nombre del rol es obligatorio';
+        $errores = $this->validarEsquema($datos, 'modificar');
+        if (!empty($errores)) {
+            return $errores;
         }
         
-        // Validar el rol completo
-        $errores_rol = $this->validarRol($datos);
-        if (!empty($errores_rol)) {
-            $errores = array_merge($errores, $errores_rol);
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
         }
         
-        return $errores;
-    }
-    
-    public function validarModificarRol($datos) {
-        $errores = [];
-        
-        // Para modificar, el ID es obligatorio
-        if (!isset($datos['id_rol'])) {
-            $errores['id_rol'] = 'El ID del rol es obligatorio';
+        $rol_existente = $this->obtenerRolPorId($datos['id_rol']);
+        if (!$rol_existente) {
+            $errores['existencia'] = 'El rol que intenta modificar no existe';
+            return $errores;
         }
         
-        // Para modificar, el nombre también es obligatorio
-        if (!isset($datos['nombre_rol'])) {
-            $errores['nombre_rol'] = 'El nombre del rol es obligatorio';
-        }
-        
-        // Validar el rol completo
-        $errores_rol = $this->validarRol($datos);
-        if (!empty($errores_rol)) {
-            $errores = array_merge($errores, $errores_rol);
+        if (isset($datos['nombre_rol']) && 
+            $this->existeNombreRol($datos['nombre_rol'], $datos['id_rol'])) {
+            $errores['nombre_rol'] = 'El nombre del rol ya existe';
         }
         
         return $errores;
     }
     
-    public function validarEliminarRol($datos) {
-        $errores = [];
-        
-        // Para eliminar, el ID es obligatorio
-        if (!isset($datos['id_rol'])) {
-            $errores['id_rol'] = 'El ID del rol es obligatorio';
-        } else {
-            $id_rol = (int)$datos['id_rol'];
-            if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
-                $errores['id_rol'] = 'El ID del rol debe ser un número entre ' . self::MIN_ID_ROL . ' y ' . self::MAX_ID_ROL;
-            }
+    public function validarEliminar($id_rol) {
+        $errores = $this->validarId($id_rol);
+        if (!empty($errores)) {
+            return $errores;
         }
         
-        return $errores;
+        $rol = $this->obtenerRolPorId($id_rol);
+        if (!$rol) {
+            $errores['existencia'] = 'El rol que intenta eliminar no existe';
+            return $errores;
+        }
+        
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol) {
+            $errores = [];
+            $errores_integridad = $this->validarIntegridadReferencial($id_rol, $pdo);
+            $errores = array_merge($errores, $errores_integridad);
+            return $errores;
+        });
     }
 
     public function registrarRol() {
