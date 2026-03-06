@@ -351,7 +351,7 @@ class Categoria extends BD
         });
     }
     
-    private function existeNombreCategoria($nombre, $excluirId = null)
+    public function existeNombreCategoria($nombre, $excluirId = null)
     {
         return $this->ejecutarConConexionSegura(function($pdo) use ($nombre, $excluirId) {
             $sql = "SELECT COUNT(*) FROM tbl_categoria WHERE nombre_categoria = :nombre";

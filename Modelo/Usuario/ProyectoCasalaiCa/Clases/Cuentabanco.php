@@ -488,7 +488,7 @@ class Cuentabanco extends BD {
         });
     }
 
-    private function existeNumeroCuenta($numero_cuenta, $excluir_id = null) {
+    public function existeNumeroCuenta($numero_cuenta, $excluir_id = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($numero_cuenta, $excluir_id){
             $sql = "SELECT COUNT(*) FROM tbl_cuentas WHERE numero_cuenta = ?";
             $params = [$numero_cuenta];
