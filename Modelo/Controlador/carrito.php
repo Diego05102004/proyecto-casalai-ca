@@ -390,7 +390,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
-            MODULO_CARRITO,
+            'Carrito',
             'ACCESAR',
             'El usuario accedió al módulo de Carrito',
             'baja'

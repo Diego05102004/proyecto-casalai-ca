@@ -4,7 +4,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 use Usuario\ProyectoCasalaiCa\Config\BD;
-define('MODULO_DESPACHO', 3);
+define('MODULO_DESPACHO', "Despacho");
 
 $id_rol = $_SESSION['id_rol'];
 

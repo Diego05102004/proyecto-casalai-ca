@@ -7,7 +7,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Usuarios;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Rol;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
-define('MODULO_USUARIO', 1);
+define('MODULO_USUARIO', "Usuario");
 
 if (!isset($_SESSION['id_usuario'])) {
     header('Location: ?pagina=login');

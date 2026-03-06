@@ -9,7 +9,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\OrdenDespacho;
 use Usuario\ProyectoCasalaiCa\Config\BD;
 
-define('MODULO_PASARELA_PAGOS', 16); // Define el ID
+define('MODULO_PASARELA_PAGOS', "Pasarela"); // Define el ID
 $bitacoraModel = new Bitacora();
 $id_rol = $_SESSION['id_rol'];
 
@@ -148,7 +148,7 @@ if ($_SESSION['nombre_rol'] != 'Cliente') {
 $pagina = "pasarela";
 if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
-        $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], '12', 'ACCESAR', 'El usuario accedió al módulo de Pagos', 'media');
+        $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], 'Pasarela', 'ACCESAR', 'El usuario accedió al módulo de Pagos', 'media');
     }
     require_once("Vista/" . $pagina . ".php");
 } else {

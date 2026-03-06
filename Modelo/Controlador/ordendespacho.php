@@ -6,7 +6,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 use Usuario\ProyectoCasalaiCa\Config\BD;
-define('MODULO_ORDEN_DESPACHO', 14);
+define('MODULO_ORDEN_DESPACHO', "Ordenes de despacho");
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 if (!isset($_SESSION['id_usuario'])) {

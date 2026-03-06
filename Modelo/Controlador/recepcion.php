@@ -6,7 +6,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Config\BD;
 
-define('MODULO_RECEPCION', 2); // Define el ID del módulo de cuentas bancarias
+define('MODULO_RECEPCION', "Recepcion"); // Define el ID del módulo de cuentas bancarias
 
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
@@ -291,7 +291,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
         $_SESSION['id_usuario'],
-        '2',
+        'Recepcion',
         'ACCESAR',
         'El usuario accedió al módulo de Recepcion',
         'media'

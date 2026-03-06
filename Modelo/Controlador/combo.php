@@ -8,7 +8,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Combos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
 // Definir constantes para IDs de módulo
-define('MODULO_COMBOS', 11);
+define('MODULO_COMBOS', "Carrito");
 
 if (!isset($_SESSION['id_usuario'])) {
     header('Location: ?pagina=login');

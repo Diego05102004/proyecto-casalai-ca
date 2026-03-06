@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        MODULO_CATEGORIA,
+                        'Categorias',
                         'INCLUIR',
                         'El usuario incluyó la categoría: ' . $_POST['nombre_categoria'],
                         'media'
@@ -187,7 +187,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $bitacoraModel = new Bitacora();
                         $bitacoraModel->registrarBitacora(
                             $_SESSION['id_usuario'],
-                            MODULO_CATEGORIA,
+                            'Categorias',
                             'MODIFICAR',
                             'El usuario modificó la categoría ID: ' . $id_categoria,
                             'media'
@@ -252,7 +252,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        MODULO_CATEGORIA,
+                        'Categorias',
                         'ELIMINAR_FALLIDO',
                         'Intento de eliminación fallido de categoría (ID: ' . $id_categoria . '): ' . $resultado['mensaje'],
                         'media'
@@ -271,7 +271,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        MODULO_CATEGORIA,
+                        'Categorias',
                         'ELIMINAR',
                         'El usuario eliminó la categoría ID: ' . $id_categoria,
                         'media'
@@ -299,7 +299,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
-            MODULO_CATEGORIA,
+            'Categorias',
             'ACCESAR',
             'El usuario accedió al módulo de Categorias',
             'media'

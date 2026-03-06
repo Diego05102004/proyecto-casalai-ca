@@ -5,7 +5,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Rol;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
-define('MODULO_ROLES', 18);
+define('MODULO_ROLES', "Roles");
 
 $id_rol = $_SESSION['id_rol'] ?? 0;
 
