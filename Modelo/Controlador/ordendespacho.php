@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtenerOrden':
             $id = $_POST['id_despachos'] ?? null;
             if ($id !== null) {
-                $ordenModel = new OrdenDespacho('P');
+                $ordenModel = new OrdenDespacho();
                 $orden = $ordenModel->obtenerOrdenPorId($id);
                 if ($orden !== null) {
                     echo json_encode(['status' => 'success', 'datos' => $orden]);
@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'ID de orden no proporcionado']);
                 exit;
             }
-            $ordenModel = new OrdenDespacho('P');
+            $ordenModel = new OrdenDespacho();
             $ordenData = $ordenModel->obtenerDatosParaPDF($idOrden);
             if (empty($ordenData)) {
                 echo json_encode(['status' => 'error', 'message' => 'No se encontró la orden']);
@@ -106,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'Estatus no válido']);
                 exit;
             }
-            $ordendespacho = new OrdenDespacho('P');
+            $ordendespacho = new OrdenDespacho();
             $ordendespacho->setId($id);
             if ($ordendespacho->cambiarEstatus($nuevoEstatus)) {
                 if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -127,7 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 break;
             }
             $nuevo_estado = ($estado_actual === 'Por Entregar') ? 'Entregada' : 'Por Entregar';
-            $ordenModel = new OrdenDespacho('P');
+            $ordenModel = new OrdenDespacho();
             $resultado = $ordenModel->cambiarEstadoOrden($id, $nuevo_estado);
             if ($resultado['status'] === 'success') {
                 if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -145,7 +145,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'anularOrden':
-            $ordenModel = new OrdenDespacho('P');
+            $ordenModel = new OrdenDespacho();
             $idOrden = isset($_POST['id_orden_despachos']) ? (int)$_POST['id_orden_despachos'] : 0;
             if ($idOrden <= 0) {
                 header('Content-Type: application/json; charset=utf-8');
@@ -171,14 +171,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function getordendespacho() {
-    $ordendespacho = new OrdenDespacho('P');
+    $ordendespacho = new OrdenDespacho();
     return $ordendespacho->getordendespacho();
 }
 
 if (isset($_POST['obtenerDatosOrden'])) {
     error_log("Solicitud de datos de orden recibida. ID de orden: " . $_POST['obtenerDatosOrden']);
     $idOrden = $_POST['obtenerDatosOrden'];
-    $ordenModel = new OrdenDespacho('P');
+    $ordenModel = new OrdenDespacho();
     $orden = $ordenModel->DescargarOrdenDespacho($idOrden);
     if (!empty($orden) && is_array($orden)) {
         $datosOrden = reset($orden);
@@ -211,7 +211,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
         $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], MODULO_ORDEN_DESPACHO, 'ACCESAR', 'El usuario accedió al módulo de Ordenes de Despacho', 'media');
     }
     $ordendespacho = getordendespacho();
-    $ordenModel = new OrdenDespacho('P');
+    $ordenModel = new OrdenDespacho();
     $facturas = $ordenModel->obtenerFacturasDisponibles();
     require_once("Vista/" . $pagina . ".php");
 } else {

@@ -17,7 +17,7 @@ $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('rece
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Instanciar Recepcion solo si hay POST (cuando se va a usar)
-    $k = new Recepcion('P');
+    $k = new Recepcion();
     
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         case 'productos_recepcion':
             $id_recepcion = $_POST['id_recepcion'];
-            $recepcion = new Recepcion('P');
+            $recepcion = new Recepcion();
             $productos = $recepcion->obtenerProductosPorRecepcion($id_recepcion);
             echo json_encode($productos);
         break;
@@ -250,15 +250,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function getrecepcion() {
-    $recepcion = new Recepcion('P');
+    $recepcion = new Recepcion();
     return $recepcion->getrecepcion(); // Consulta resumen: fecha, correlativo, proveedor, tamaño, costo inversión
 }
-$r = new Recepcion('P');
+$r = new Recepcion();
 $RecepcionesProveedor = $r->getRecepcionesPorProveedor();
 $ProductorRecibidos = $r->getProductosMasRecibidos();
 $RecepcionMensual = $r->getRecepcionesMensuales();
 
-$proveedores = (new Recepcion('P'))->obtenerproveedor();
+$proveedores = (new Recepcion())->obtenerproveedor();
 $pagina = "recepcion";
 if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {

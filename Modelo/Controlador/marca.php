@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
-            $marca = new marca('P');
+            $marca = new marca();
             
             $errores = $marca->validarRegistrar($_POST);
             
@@ -73,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtener_marcas':
             $id_marca = $_POST['id_marca'];
             if ($id_marca !== null) {
-                $marca = new marca('P');
+                $marca = new marca();
                 $marca = $marca->obtenermarcasPorId($id_marca);
                 if ($marca !== null) {
                     echo json_encode($marca);
@@ -90,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
             
-            $marca = new marca('P');
+            $marca = new marca();
             $errores = $marca->validarModificar($_POST);
             
             if (!empty($errores)) {
@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
-            $marca = new marca('P');
+            $marca = new marca();
             $errores = $marca->validarEliminar($_POST['id_marca']);
             
             if (!empty($errores)) {
@@ -180,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 if (!function_exists('getmarcas')) {
     function getmarcas()
     {
-        $marca = new marca('P');
+        $marca = new marca();
         return $marca->getmarcas();
     }
 }

@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
-            $modelo = new modelo('P');
+            $modelo = new modelo();
             
             $errores = $modelo->validarRegistrar($_POST);
             
@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtener_modelo':
             $id_modelo = $_POST['id_modelo'];
             if ($id_modelo !== null) {
-                $modelo = new modelo('P');
+                $modelo = new modelo();
                 $modelo = $modelo->obtenerModeloPorId($id_modelo);
                 if ($modelo !== null) {
                     echo json_encode($modelo);
@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
-            $modelo = new modelo('P');
+            $modelo = new modelo();
             $errores = $modelo->validarModificar($_POST);
             
             if (!empty($errores)) {
@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
             
         case 'eliminar':
-            $modelo = new modelo('P');
+            $modelo = new modelo();
             $errores = $modelo->validarEliminar($_POST['id_modelo']);
             
             if (!empty($errores)) {
@@ -198,12 +198,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function getModelos() {
-    $modelo = new modelo('P');
+    $modelo = new modelo();
     return $modelo->getModelos();
 }
 
 function getmarcas() {
-    $marcas = new marca('P');
+    $marcas = new marca();
     return $marcas->getmarcas();
 }
 

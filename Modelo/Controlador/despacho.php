@@ -14,7 +14,7 @@ $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('desp
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $k = new Despacho('P');
+    $k = new Despacho();
 
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];

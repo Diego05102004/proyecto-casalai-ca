@@ -13,7 +13,7 @@ if (is_file("Vista/factura.php")) {
 
     if (!empty($_POST)) {
 
-        $factura = new Factura('P');
+        $factura = new Factura();
         $accion = $_POST['accion'];
         
         switch ($accion) {

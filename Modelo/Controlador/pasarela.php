@@ -16,7 +16,7 @@ $id_rol = $_SESSION['id_rol'];
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
 
-$pasarela = new PasareladePago('P');
+$pasarela = new PasareladePago();
 $cuentaModel = new Cuentabanco();
 $listadocuentas = $cuentaModel->consultarCuentabanco();
 
@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errores = [];
             foreach ($pagos as $index => $pagoData) {
                 try {
-                    $pasarela = new PasareladePago('P');
+                    $pasarela = new PasareladePago();
                     $pasarela->setCuenta($pagoData['cuenta']);
                     $pasarela->setReferencia($pagoData['referencia']);
                     $pasarela->setFecha(date('Y-m-d'));
@@ -120,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'eliminar':
-            $pasarela = new PasareladePago('P');
+            $pasarela = new PasareladePago();
             $id = $_POST['id_detalles'];
             $pasarela->setIdDetalles($id);
             if ($pasarela->pasarelaTransaccion('Eliminar')) {
