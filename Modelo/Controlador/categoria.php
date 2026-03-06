@@ -4,7 +4,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Categoria;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
-define('MODULO_CATEGORIA', 7);
+define('MODULO_CATEGORIA', "Categorias");
 
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 if (!isset($_SESSION['id_usuario'])) {
