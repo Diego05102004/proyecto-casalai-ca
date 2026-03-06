@@ -120,10 +120,7 @@ class Bitacora extends BD {
         return $this->o_estadisticasAccesos();
     }
     private function o_estadisticasAccesos() {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
-            // Agrupa por semana (formato: YYYYWW)
+        return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT 
                         YEAR(fecha_hora) * 100 + WEEK(fecha_hora, 1) AS semana,
                         COUNT(*) AS total_accesos,
@@ -134,19 +131,17 @@ class Bitacora extends BD {
                     GROUP BY semana
                     ORDER BY semana DESC
                     LIMIT 10";
-            $stmt = $co->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $semanas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Totales generales
             $sqlTotal = "SELECT COUNT(*) AS total, COUNT(DISTINCT id_usuario) AS unicos FROM tbl_bitacora WHERE id_modulo = 1";
-            $stmtTotal = $co->prepare($sqlTotal);
+            $stmtTotal = $pdo->prepare($sqlTotal);
             $stmtTotal->execute();
             $totales = $stmtTotal->fetch(PDO::FETCH_ASSOC);
 
-            // Promedio diario global
             $sqlDias = "SELECT DATEDIFF(MAX(fecha_hora), MIN(fecha_hora)) + 1 AS dias FROM tbl_bitacora WHERE id_modulo = 1";
-            $stmtDias = $co->prepare($sqlDias);
+            $stmtDias = $pdo->prepare($sqlDias);
             $stmtDias->execute();
             $dias = $stmtDias->fetchColumn();
             $promedio_diario = ($dias > 0 && $totales['total'] > 0) ? round($totales['total'] / $dias, 1) : 0;
@@ -157,22 +152,14 @@ class Bitacora extends BD {
                 'promedio_diario' => $promedio_diario,
                 'semanas' => $semanas
             ];
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
+        });
     }
 
-    // Top usuarios más activos en el catálogo
     public function obtenerUsuariosMasActivos($limite = 10) {
         return $this->o_usuariosMasActivos($limite);
     }
     private function o_usuariosMasActivos($limite = 10) {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($limite){
             $sql = "SELECT 
                         u.id_usuario,
                         u.username,
@@ -186,7 +173,7 @@ class Bitacora extends BD {
                     GROUP BY u.id_usuario
                     ORDER BY total_accesos DESC
                     LIMIT :limite";
-            $stmt = $co->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
             $stmt->execute();
             $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -196,12 +183,7 @@ class Bitacora extends BD {
                 $usuario['porcentaje'] = $totalAccesos > 0 ? round(($usuario['total_accesos'] / $totalAccesos) * 100, 2) : 0;
             }
             return $usuarios;
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
+        });
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================
@@ -387,46 +369,6 @@ class Bitacora extends BD {
         }
         
         return trim($descripcion);
-    }
-    
-    /**
-     * Verifica si un usuario existe
-     */
-    private function verificarUsuarioExistente($idUsuario) {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE id_usuario = :id_usuario";
-            $stmt = $co->prepare($sql);
-            $stmt->bindValue(':id_usuario', $idUsuario, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
-    }
-    
-    /**
-     * Verifica si un módulo existe
-     */
-    private function verificarModuloExistente($idModulo) {
-        $conexion = new BD('S');
-        $co = $conexion->getConexion();
-        try {
-            $sql = "SELECT COUNT(*) FROM tbl_modulos WHERE id_modulo = :id_modulo";
-            $stmt = $co->prepare($sql);
-            $stmt->bindValue(':id_modulo', $idModulo, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            $co = null;
-        }
     }
 }
 
