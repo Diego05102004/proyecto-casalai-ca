@@ -4,11 +4,8 @@ namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use PDO;
 use Usuario\ProyectoCasalaiCa\Config\BD;
 
-class NotificacionModel {
-    private $pdo;
-    public function __construct($pdo = null) { $this->pdo = $pdo; }
+class NotificacionModel extends BD {
     
-    // Constantes de validación
     const TIPOS_NOTIFICACION = ['pago', 'despacho', 'sistema', 'general', 'alerta'];
     const PRIORIDADES = ['baja', 'media', 'alta', 'urgente'];
     const ESTADOS_PAGO = ['procesado', 'pendiente', 'rechazado'];
@@ -22,22 +19,56 @@ class NotificacionModel {
     const MIN_ID_MODULO = 1;
     const MAX_ID_MODULO = 999;
     const MAX_LONGITUD_ACCION = 50;
+
+    public function __construct($tipo = 'S') {
+    }
+    
+    /**
+     * @return PDO
+     */
+    
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        try {
+            parent::__construct('S'); 
+            $pdo = parent::getConexion(); 
+
+            if (!$pdo instanceof \PDO) {
+                throw new \RuntimeException("La conexión PDO no es válida o es nula.");
+            }
+
+            $pdo->beginTransaction();
+            $resultado = $operation($pdo);
+            $pdo->commit();
+            
+            return $resultado;
+        } catch (\Exception $e) {
+            $pdo = parent::getConexion();
+            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            $this->cerrar();
+        }
+    }
     
     public function crear($id_usuario, $tipo, $titulo, $mensaje, $prioridad, $id_modulo, $accion, $id_referencia = null) {
-        $bd_seguridad = null; $pdo_seguridad = $this->pdo; $created = false;
-        if (!($pdo_seguridad instanceof PDO) && !is_object($pdo_seguridad)) {
-            $bd_seguridad = new BD('S');
-            $pdo_seguridad = $bd_seguridad->getConexion();
-            $created = true;
-        }
-        try {
-            // Inserción directa para un usuario específico si no se define módulo/acción
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario, $tipo, $titulo, $mensaje, $prioridad, $id_modulo, $accion, $id_referencia) {
             if ($id_modulo === null || $accion === null) {
                 $sql = "
                     INSERT INTO tbl_notificaciones (id_usuario, tipo, titulo, mensaje, id_referencia, prioridad)
                     VALUES (:id_usuario, :tipo, :titulo, :mensaje, :id_referencia, :prioridad)
                 ";
-                $stmt = $pdo_seguridad->prepare($sql);
+                $stmt = $pdo->prepare($sql);
                 $stmt->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
                 $stmt->bindParam(':tipo', $tipo);
                 $stmt->bindParam(':titulo', $titulo);
@@ -47,7 +78,6 @@ class NotificacionModel {
                 return $stmt->execute();
             }
 
-            // Inserción basada en permisos
             $sql = "
                 INSERT INTO tbl_notificaciones (id_usuario, tipo, titulo, mensaje, id_referencia, prioridad)
                 SELECT u.id_usuario, :tipo, :titulo, :mensaje, :id_referencia, :prioridad
@@ -67,7 +97,7 @@ class NotificacionModel {
                 )
             ";
 
-            $stmt = $pdo_seguridad->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':tipo', $tipo);
             $stmt->bindParam(':titulo', $titulo);
             $stmt->bindParam(':mensaje', $mensaje);
@@ -77,94 +107,55 @@ class NotificacionModel {
             $stmt->bindParam(':accion', $accion);
 
             return $stmt->execute();
-        } finally {
-            if ($bd_seguridad) { $bd_seguridad->cerrar(); }
-        }
+        });
     }
 
     public function notificarPago($id_usuario, $id_pago, $estado) {
         $titulo = "Estado de pago actualizado";
         $mensaje = "Su pago ha sido " . ($estado == 'procesado' ? "aprobado" : ($estado == 'pendiente' ? "recibido" : "rechazado"));
-        // prioridad = 'alta', sin módulo/acción, id_referencia = $id_pago
         return $this->crear($id_usuario, 'pago', $titulo, $mensaje, 'alta', null, null, $id_pago);
     }
     
     public function notificarDespacho($id_usuario, $id_despacho, $estado) {
         $titulo = "Estado de despacho";
         $mensaje = "Su pedido ha sido " . ($estado == 'enviado' ? "despachado" : "preparado para envío");
-        // prioridad = 'media', sin módulo/acción, id_referencia = $id_despacho
         return $this->crear($id_usuario, 'despacho', $titulo, $mensaje, 'media', null, null, $id_despacho);
     }
 
-
-    // Método esperado por el controlador: obtener notificaciones de un usuario
     public function obtenerNotificacionesUsuario($id_usuario) {
-        $bd_seguridad = null; $pdo_seguridad = $this->pdo; $created = false;
-        if (!($pdo_seguridad instanceof PDO) && !is_object($pdo_seguridad)) {
-            $bd_seguridad = new BD('S');
-            $pdo_seguridad = $bd_seguridad->getConexion();
-            $created = true;
-        }
-        try {
-            // Trae las últimas notificaciones del usuario (puedes ajustar LIMIT si hace falta)
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
             $sql = "SELECT * FROM tbl_notificaciones WHERE id_usuario = :id_usuario ORDER BY id_notificacion DESC";
-            $st = $pdo_seguridad->prepare($sql);
+            $st = $pdo->prepare($sql);
             $st->bindValue(':id_usuario', $id_usuario, PDO::PARAM_INT);
             $st->execute();
             return $st->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if ($bd_seguridad) { $bd_seguridad->cerrar(); }
-        }
+        });
     }
 
-    // Firma utilizada por el controlador: marcar como leída por id y usuario
     public function marcarComoLeida($id_notificacion, $id_usuario) {
-        $bd_seguridad = null; $pdo_seguridad = $this->pdo; $created = false;
-        if (!($pdo_seguridad instanceof PDO) && !is_object($pdo_seguridad)) {
-            $bd_seguridad = new BD('S');
-            $pdo_seguridad = $bd_seguridad->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_notificacion, $id_usuario) {
             $sql = "UPDATE tbl_notificaciones SET leido = 1 WHERE id_notificacion = :id AND id_usuario = :u";
-            $st = $pdo_seguridad->prepare($sql);
+            $st = $pdo->prepare($sql);
             return $st->execute([':id' => $id_notificacion, ':u' => $id_usuario]);
-        } finally {
-            if ($bd_seguridad) { $bd_seguridad->cerrar(); }
-        }
+        });
     }
 
-    // Marcar todas las notificaciones como leídas para un usuario
     public function marcarTodasComoLeidas($id_usuario) {
-        $bd_seguridad = null; $pdo_seguridad = $this->pdo; $created = false;
-        if (!($pdo_seguridad instanceof PDO) && !is_object($pdo_seguridad)) {
-            $bd_seguridad = new BD('S');
-            $pdo_seguridad = $bd_seguridad->getConexion();
-            $created = true;
-        }
-        try {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
             $sql = "UPDATE tbl_notificaciones SET leido = 1 WHERE id_usuario = :u AND leido = 0";
-            $st = $pdo_seguridad->prepare($sql);
+            $st = $pdo->prepare($sql);
             return $st->execute([':u' => $id_usuario]);
-        } finally {
-            if ($bd_seguridad) { $bd_seguridad->cerrar(); }
-        }
+        });
     }
     
-    /**
-     * Validar datos para crear/modificar notificación
-     * Esta validación se usa para el método crear() y sus variantes
-     */
     public function validarNotificacion($datos) {
         $errores = [];
         
-        // Validar que $datos sea un array
         if (!is_array($datos)) {
             $errores['datos'] = 'Los datos deben ser un array';
             return $errores;
         }
         
-        // Validar ID de usuario
         if (!isset($datos['id_usuario'])) {
             $errores['id_usuario'] = 'El ID del usuario es obligatorio';
         } else {
@@ -174,7 +165,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar tipo de notificación
         if (!isset($datos['tipo'])) {
             $errores['tipo'] = 'El tipo de notificación es obligatorio';
         } else {
@@ -184,7 +174,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar título
         if (!isset($datos['titulo'])) {
             $errores['titulo'] = 'El título es obligatorio';
         } else {
@@ -196,7 +185,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar mensaje
         if (!isset($datos['mensaje'])) {
             $errores['mensaje'] = 'El mensaje es obligatorio';
         } else {
@@ -208,7 +196,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar prioridad
         if (!isset($datos['prioridad'])) {
             $errores['prioridad'] = 'La prioridad es obligatoria';
         } else {
@@ -218,7 +205,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar ID de referencia (opcional)
         if (isset($datos['id_referencia']) && $datos['id_referencia'] !== null) {
             $id_referencia = (int)$datos['id_referencia'];
             if ($id_referencia < self::MIN_ID_REFERENCIA || $id_referencia > self::MAX_ID_REFERENCIA) {
@@ -226,7 +212,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar ID de módulo (opcional)
         if (isset($datos['id_modulo']) && $datos['id_modulo'] !== null) {
             $id_modulo = (int)$datos['id_modulo'];
             if ($id_modulo < self::MIN_ID_MODULO || $id_modulo > self::MAX_ID_MODULO) {
@@ -234,7 +219,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar acción (opcional)
         if (isset($datos['accion']) && $datos['accion'] !== null) {
             $accion = trim($datos['accion']);
             if (mb_strlen($accion) > self::MAX_LONGITUD_ACCION) {
@@ -245,29 +229,22 @@ class NotificacionModel {
         return $errores;
     }
     
-    /**
-     * Validar datos para notificaciones de pago específicamente
-     */
     public function validarNotificacionPago($datos) {
         $errores = [];
         
-        // Validar datos básicos de notificación
         $errores_basicos = $this->validarNotificacion($datos);
         if (!empty($errores_basicos)) {
             return $errores_basicos;
         }
         
-        // Validar que sea tipo 'pago'
         if ($datos['tipo'] !== 'pago') {
             $errores['tipo'] = 'Para notificación de pago, el tipo debe ser "pago"';
         }
         
-        // Validar que la prioridad sea 'alta'
         if ($datos['prioridad'] !== 'alta') {
             $errores['prioridad'] = 'Para notificación de pago, la prioridad debe ser "alta"';
         }
         
-        // Validar ID de pago (obligatorio para notificaciones de pago)
         if (!isset($datos['id_pago'])) {
             $errores['id_pago'] = 'El ID del pago es obligatorio para notificaciones de pago';
         } else {
@@ -277,7 +254,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar estado del pago (obligatorio)
         if (!isset($datos['estado'])) {
             $errores['estado'] = 'El estado del pago es obligatorio';
         } else {
@@ -290,29 +266,22 @@ class NotificacionModel {
         return $errores;
     }
     
-    /**
-     * Validar datos para notificaciones de despacho específicamente
-     */
     public function validarNotificacionDespacho($datos) {
         $errores = [];
         
-        // Validar datos básicos de notificación
         $errores_basicos = $this->validarNotificacion($datos);
         if (!empty($errores_basicos)) {
             return $errores_basicos;
         }
         
-        // Validar que sea tipo 'despacho'
         if ($datos['tipo'] !== 'despacho') {
             $errores['tipo'] = 'Para notificación de despacho, el tipo debe ser "despacho"';
         }
         
-        // Validar que la prioridad sea 'media'
         if ($datos['prioridad'] !== 'media') {
             $errores['prioridad'] = 'Para notificación de despacho, la prioridad debe ser "media"';
         }
         
-        // Validar ID de despacho (obligatorio para notificaciones de despacho)
         if (!isset($datos['id_despacho'])) {
             $errores['id_despacho'] = 'El ID del despacho es obligatorio para notificaciones de despacho';
         } else {
@@ -322,7 +291,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar estado del despacho (obligatorio)
         if (!isset($datos['estado'])) {
             $errores['estado'] = 'El estado del despacho es obligatorio';
         } else {
@@ -335,19 +303,14 @@ class NotificacionModel {
         return $errores;
     }
     
-    /**
-     * Validar datos para consultar notificaciones
-     */
     public function validarConsultarNotificaciones($datos) {
         $errores = [];
         
-        // Validar que $datos sea un array
         if (!is_array($datos)) {
             $errores['datos'] = 'Los datos deben ser un array';
             return $errores;
         }
         
-        // Validar ID de usuario (obligatorio para consulta)
         if (!isset($datos['id_usuario'])) {
             $errores['id_usuario'] = 'El ID del usuario es obligatorio para consultar notificaciones';
         } else {
@@ -357,7 +320,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar límite (opcional)
         if (isset($datos['limite'])) {
             $limite = (int)$datos['limite'];
             if ($limite < 1 || $limite > 100) {
@@ -365,7 +327,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar estado leído (opcional)
         if (isset($datos['leido'])) {
             $leido = $datos['leido'];
             if (!is_bool($leido) && $leido !== '0' && $leido !== '1') {
@@ -376,19 +337,14 @@ class NotificacionModel {
         return $errores;
     }
     
-    /**
-     * Validar datos para marcar notificación como leída
-     */
     public function validarMarcarLeida($datos) {
         $errores = [];
         
-        // Validar que $datos sea un array
         if (!is_array($datos)) {
             $errores['datos'] = 'Los datos deben ser un array';
             return $errores;
         }
         
-        // Validar ID de notificación (obligatorio)
         if (!isset($datos['id_notificacion'])) {
             $errores['id_notificacion'] = 'El ID de la notificación es obligatorio';
         } else {
@@ -398,7 +354,6 @@ class NotificacionModel {
             }
         }
         
-        // Validar ID de usuario (obligatorio para seguridad)
         if (!isset($datos['id_usuario'])) {
             $errores['id_usuario'] = 'El ID del usuario es obligatorio';
         } else {
@@ -411,19 +366,14 @@ class NotificacionModel {
         return $errores;
     }
     
-    /**
-     * Validar datos para marcar todas las notificaciones como leídas
-     */
     public function validarMarcarTodasLeidas($datos) {
         $errores = [];
         
-        // Validar que $datos sea un array
         if (!is_array($datos)) {
             $errores['datos'] = 'Los datos deben ser un array';
             return $errores;
         }
         
-        // Validar ID de usuario (obligatorio)
         if (!isset($datos['id_usuario'])) {
             $errores['id_usuario'] = 'El ID del usuario es obligatorio';
         } else {
