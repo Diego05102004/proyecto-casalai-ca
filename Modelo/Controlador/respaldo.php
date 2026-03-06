@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 require_once 'Modelo/backup.php';
 require_once 'Modelo/bitacora.php';
 require_once 'Modelo/permiso.php';
-define('MODULO_BACKUP', 17);
+define('MODULO_BACKUP', "Respaldo");
 
 // Inicialización de permisos para la vista
 $permisos = new Permisos();

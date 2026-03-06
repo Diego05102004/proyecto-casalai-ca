@@ -270,7 +270,7 @@ if (is_file("vista/" . $pagina . ".php")) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
-            '2', // ID del módulo de notificaciones
+            'Notificaciones', // ID del módulo de notificaciones
             'CONSULTAR',
             'El usuario accedió al módulo de Notificaciones',
             'baja'

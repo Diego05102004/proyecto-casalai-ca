@@ -14,7 +14,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 use Usuario\ProyectoCasalaiCa\Config\BD;
 // Constante de módulo
-define('MODULO_DESPACHO', 3);
+define('MODULO_DESPACHO', "Despacho");
 
 // Inicializaciones
 $k = new Comprafisica('P');

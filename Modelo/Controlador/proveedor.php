@@ -8,7 +8,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
 // Definir constantes para IDs de módulo y acciones
-define('MODULO_PROVEEDORES', 8); // Cambiar según tu estructura de módulos
+define('MODULO_PROVEEDORES', "Proveedores"); // Cambiar según tu estructura de módulos
 
 $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();

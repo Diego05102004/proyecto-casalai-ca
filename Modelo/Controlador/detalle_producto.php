@@ -24,7 +24,7 @@ try {
         if (isset($_SESSION['id_usuario'])) {
             $bitacoraModel->registrarBitacora(
                 $_SESSION['id_usuario'],
-                10,
+                "Catalogo",
                 'ACCESAR',
                 'El usuario accedió a detalle de producto: ' . ($producto['nombre_producto'] ?? ('ID ' . $id_producto)),
                 'baja'

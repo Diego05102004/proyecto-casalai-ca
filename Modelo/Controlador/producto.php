@@ -4,7 +4,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 
-define('MODULO_PRODUCTOS', 6);
+define('MODULO_PRODUCTOS', "Productos");
 
 $id_rol = $_SESSION['id_rol'] ?? 0;
 
@@ -517,7 +517,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
             $bitacoraModel = new Bitacora();
             $bitacoraModel->registrarBitacora(
                 $_SESSION['id_usuario'],
-                '6',
+                'Productos',
                 'ACCESAR',
                 'El usuario accedió al módulo de Productos',
                 'media'

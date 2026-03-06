@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        '4',
+                        'Marcas',
                         'INCLUIR',
                         'El usuario incluyó una nueva marca: ' . $_POST['nombre_marca'],
                         'media'
@@ -113,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        '4',
+                        'Marcas',
                         'MODIFICAR',
                         'El usuario modifico  la marca ' . $marcaVieja['nombre_marca'] . ' a ' . $marcaActualizada['nombre_marca'] . '',
                         'alta'
@@ -153,7 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        '4',
+                        'Marcas',
                         'ELIMINAR',
                         'El usuario elimino de los registros la marca ' . $eliminada['nombre_marca'] . '',
                         'alta'
@@ -192,7 +192,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
             $_SESSION['id_usuario'],
-            '4',
+            'Marcas',
             'ACCESAR',
             'El usuario accedió al módulo de marcas',
             'media'

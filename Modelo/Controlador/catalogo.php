@@ -10,7 +10,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Catalogo;
 
 // Definir constantes para IDs de módulo
-define('MODULO_CATALOGO', 10);
+define('MODULO_CATALOGO', "Catalogo");
 
 $esAdmin = isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] == 'Administrador';
 

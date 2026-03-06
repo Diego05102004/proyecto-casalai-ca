@@ -7,7 +7,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 
 $id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
 
-define('MODULO_CLIENTE', 9);
+define('MODULO_CLIENTE', "Clientes");
 
 $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();

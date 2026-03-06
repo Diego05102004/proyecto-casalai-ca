@@ -8,7 +8,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Cuentabanco;
 
-define('MODULO_PASARELA_PAGOS', 16); // Define el ID del módulo
+define('MODULO_PASARELA_PAGOS', "Pasarela"); // Define el ID del módulo
 
 // Registrar acceso al módulo si hay sesión activa
 if (!isset($_SESSION['id_usuario'])) {

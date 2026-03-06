@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 
-define('MODULO_BITACORA', 1);
+define('MODULO_BITACORA', "Bitacora");
 
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();

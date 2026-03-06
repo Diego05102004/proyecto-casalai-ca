@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora(); 
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        '5',
+                        'Modelos',
                         'INCLUIR',
                         'El usuario incluyó un nuevo modelo: ' . $_POST['nombre_modelo'],
                         'media'
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        '5',
+                        'Modelos',
                         'MODIFICAR',
                         'El usuario modifico el modelo ' . $modeloActualizado['nombre_modelo'] . '',
                         'media'
@@ -153,7 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        MODULO_MODELOS,
+                        'Modelos',
                         'ELIMINAR_FALLIDO',
                         'Intento de eliminación fallido de modelo (ID: ' . $id_modelo . '): ' . $resultado['mensaje'],
                         'media'
@@ -171,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
                         $_SESSION['id_usuario'],
-                        MODULO_MODELOS,
+                        'Modelos',
                         'ELIMINAR',
                         'El usuario eliminó el modelo ID: ' . $id_modelo,
                         'media'
@@ -215,7 +215,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
         $_SESSION['id_usuario'],
-        '5',
+        'Modelos',
         'ACCESAR',
         'El usuario accedió al módulo de Modelos',
         'media'

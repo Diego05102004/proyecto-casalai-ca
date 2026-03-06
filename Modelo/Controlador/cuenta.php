@@ -8,7 +8,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 
 // Constantes de módulo
-define('MODULO_CUENTA_BANCARIA', 15);
+define('MODULO_CUENTA_BANCARIA', "Cuentas bancarias");
 
 // Inicializaciones de clases compartidas
 $permisos = new Permisos();

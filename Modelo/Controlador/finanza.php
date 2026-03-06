@@ -7,7 +7,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
-define('MODULO_FINANZA', 16);
+define('MODULO_FINANZA', "Finanzas");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
