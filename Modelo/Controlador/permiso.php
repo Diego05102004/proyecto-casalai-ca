@@ -12,33 +12,25 @@ if (!isset($_SESSION['id_usuario'])) {
     exit;
 }
 
-// Inicializaciones
+$permisos = new Permisos('S');
 
-$permisos = new Permisos();
-
-// Obtener permisos actuales (por rol y módulo)
 $permisosActuales = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
-// Obtener roles
+
 $roles = $permisos->getRoles();
 
-// Obtener módulos
 $modulos_permiso = $permisos->getModulos();
 
-// Acciones posibles
 $acciones = ['ingresar','consultar', 'incluir', 'modificar', 'eliminar', 'generar reporte'];
 
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
-    // Validar datos antes de guardar
     $permisosForm = $_POST['permisos'] ?? [];
     
-    // Usar las nuevas validaciones centralizadas
     $errores = $permisos->validarModificarPermisos($permisosForm, $roles, $modulos_permiso, $acciones);
     
     if (!empty($errores)) {
-        // Si hay errores, mostrar mensaje de error y redirigir
         $_SESSION['error_permisos'] = $errores;
         header("Location: ?pagina=permiso&error=1");
         exit;

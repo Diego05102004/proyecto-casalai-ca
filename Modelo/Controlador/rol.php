@@ -28,10 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode($permisosActualizados);
             exit;
         case 'registrar':
-            $rol = new Rol('S');
+            $rol = new Rol();
             $rol->setNombreRol($_POST['nombre_rol']);
 
-            // Validar datos del rol usando las nuevas validaciones centralizadas
             $errores = $rol->validarRegistrar($_POST);
             if (!empty($errores)) {
                 echo json_encode([
@@ -68,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'consultar_roles':
-            $rol = new Rol('S');
+            $rol = new Rol();
             $roles_obt = $rol->consultarRoles();
 
             echo json_encode($roles_obt);
@@ -77,8 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtener_rol':
             $id_rol = $_POST['id_rol'] ?? null;
 
-            // Validar datos de entrada usando las nuevas validaciones centralizadas
-            $rol = new Rol('S');
+            $rol = new Rol();
             $errores = $rol->validarConsultar(['id_rol' => $id_rol]);
             
             if (!empty($errores)) {
@@ -105,11 +103,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'modificar':
             $id_rol  = $_POST['id_rol'];
-            $rol = new Rol('S');
+            $rol = new Rol();
             $rol->setIdRol($id_rol);
             $rol->setNombreRol($_POST['nombre_rol']);
             
-            // Validar datos del rol usando las nuevas validaciones centralizadas
             $errores = $rol->validarModificar($_POST);
             if (!empty($errores)) {
                 echo json_encode([
@@ -146,8 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'eliminar':
             $id_rol = $_POST['id_rol'] ?? null;
             
-            // Validar datos de entrada usando las nuevas validaciones centralizadas
-            $rol = new Rol('S');
+            $rol = new Rol();
             $errores = $rol->validarEliminar($id_rol);
             
             if (!empty($errores)) {
@@ -159,7 +155,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            // Obtener datos antes de eliminar para la bitácora
             $rolEliminado = $rol->obtenerRolPorId($id_rol);
             if ($rol->eliminarRol($id_rol)) {
                     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
@@ -185,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function consultarRoles() {
-    $rol = new Rol('S');
+    $rol = new Rol();
     return $rol->consultarRoles();
 }
 
