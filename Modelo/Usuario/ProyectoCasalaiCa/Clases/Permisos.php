@@ -7,9 +7,7 @@ use PDO;
 use PDOException;
 use RuntimeException;
 class Permisos extends BD {
-    private $conex;
     
-    // Constantes de validación
     const MAX_ID_ROL = 999999999;
     const MIN_ID_ROL = 1;
     const MAX_ID_MODULO = 999999999;
@@ -19,15 +17,49 @@ class Permisos extends BD {
     const ACCIONES_VALIDAS = ['ingresar', 'consultar', 'incluir', 'modificar', 'eliminar', 'generar reporte'];
     const PERMISOS_VALORES = ['on', 'off'];
     
-    public function __construct() {
-        $this->conex = null;
+    public function __construct($tipo = 'S') {
+    }
+    
+    /**
+     * @return PDO
+     */
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
+     * @param callable
+     * @return mixed
+     */
+
+    protected function ejecutarConConexionSegura($operation) {
+        try {
+            parent::__construct('S'); 
+            $pdo = parent::getConexion(); 
+
+            if (!$pdo instanceof \PDO) {
+                throw new \RuntimeException("La conexión PDO no es válida o es nula.");
+            }
+
+            $pdo->beginTransaction();
+            $resultado = $operation($pdo);
+            $pdo->commit();
+            
+            return $resultado;
+        } catch (\Exception $e) {
+            $pdo = parent::getConexion();
+            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        } finally {
+            $this->cerrar();
+        }
     }
 
-    // Métodos de validación centralizados
     private function validarPermisos($datos) {
         $errores = [];
         
-        // Validar estructura de permisos
         if (!is_array($datos)) {
             $errores['permisos'] = 'Los datos de permisos deben ser un arreglo';
             return $errores;
@@ -155,7 +187,6 @@ class Permisos extends BD {
     private function validarListas($roles, $modulos, $acciones) {
         $errores = [];
         
-        // Validar roles
         if (!is_array($roles)) {
             $errores['roles'] = 'Los datos de roles deben ser un arreglo';
         } elseif (empty($roles)) {
@@ -170,7 +201,6 @@ class Permisos extends BD {
             }
         }
         
-        // Validar módulos
         if (!is_array($modulos)) {
             $errores['modulos'] = 'Los datos de módulos deben ser un arreglo';
         } elseif (empty($modulos)) {
@@ -185,7 +215,6 @@ class Permisos extends BD {
             }
         }
         
-        // Validar acciones
         if (!is_array($acciones)) {
             $errores['acciones'] = 'Los datos de acciones deben ser un arreglo';
         } elseif (empty($acciones)) {
@@ -203,12 +232,9 @@ class Permisos extends BD {
         return $errores;
     }
     
-    // Métodos públicos de validación
     public function validarConsultarPermisos($datos) {
         $errores = [];
         
-        // Para consultar permisos, podemos validar por rol o por módulo
-        // Solo validar si se proporcionan los datos, no son obligatorios
         if (isset($datos['id_rol'])) {
             $id_rol = (int)$datos['id_rol'];
             if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
@@ -237,13 +263,11 @@ class Permisos extends BD {
     public function validarModificarPermisos($permisosForm, $roles, $modulos, $acciones) {
         $errores = [];
         
-        // Validar las listas
         $errores_listas = $this->validarListas($roles, $modulos, $acciones);
         if (!empty($errores_listas)) {
             return $errores_listas;
         }
         
-        // Validar la estructura de permisos
         $errores_permisos = $this->validarPermisos($permisosForm);
         if (!empty($errores_permisos)) {
             return $errores_permisos;
@@ -251,80 +275,33 @@ class Permisos extends BD {
         
         return $errores;
     }
-    
-    // Métodos auxiliares
-    private function verificarRolExistente($id_rol) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('S');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_rol WHERE id_rol = ?");
-            $stmt->execute([$id_rol]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
-    }
-    
-    private function verificarModuloExistente($id_modulo) {
-        $conexion = null;
-        if (!($this->conex instanceof PDO)) {
-            $conexion = new BD('S');
-            $this->conex = $conexion->getConexion();
-        }
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM tbl_modulos WHERE id_modulo = ?");
-            $stmt->execute([$id_modulo]);
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            return false;
-        } finally {
-            if ($conexion) { $conexion->cerrar(); $this->conex = null; }
-        }
-    }
 
     public function getRoles() {
         return $this->o_roles();
     }
     private function o_roles() {
-        $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
-        try {
-            $stmt = $this->conex->query("SELECT id_rol, nombre_rol FROM tbl_rol");
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $stmt = $pdo->query("SELECT id_rol, nombre_rol FROM tbl_rol");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
 
     public function getModulos() {
         return $this->o_modulos();
     }
     private function o_modulos() {
-        $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
-        try {
-            $stmt = $this->conex->query("SELECT id_modulo, nombre_modulo FROM tbl_modulos");
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $stmt = $pdo->query("SELECT id_modulo, nombre_modulo FROM tbl_modulos");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
 
-    public static function getPermisosPorRolModulo() {
-        return self::o_permisosPorRolModulo();
+    public function getPermisosPorRolModulo() {
+        return $this->o_permisosPorRolModulo();
     }
-    private static function o_permisosPorRolModulo() {
-        $conexion = new BD('S');
-        $conex = $conexion->getConexion();
-        try {
-            $stmt = $conex->query("SELECT id_rol, id_modulo, accion, estatus FROM tbl_permisos");
+    private function o_permisosPorRolModulo() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $stmt = $pdo->query("SELECT id_rol, id_modulo, accion, estatus FROM tbl_permisos");
             $permisos = [];
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 if ($row['estatus'] === 'Permitido') {
@@ -332,19 +309,13 @@ class Permisos extends BD {
                 }
             }
             return $permisos;
-        } finally {
-            if (isset($conexion)) { 
-                $conexion->cerrar(); 
-            }
-            // Eliminamos la referencia a $this->conex ya que es un método estático
-        }
+        });
     }
 
     public function getPermisosUsuarioModulo($id_rol, $nombre_modulo) {
         return $this->o_permisosUsuarioModulo($id_rol, $nombre_modulo);
     }
     private function o_permisosUsuarioModulo($id_rol, $nombre_modulo) {
-        // SuperUsuario (id_rol = 6) tiene todos los permisos
         if ((int)$id_rol === 6) {
             return [
                 'consultar' => true,
@@ -354,11 +325,8 @@ class Permisos extends BD {
                 'generar reporte' => true
             ];
         }
-        $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
-        try {
-            // Busca el id_modulo por nombre (comparación case-insensitive)
-            $stmt = $this->conex->prepare("SELECT id_modulo FROM tbl_modulos WHERE LOWER(nombre_modulo) = LOWER(?) LIMIT 1");
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol, $nombre_modulo) {
+            $stmt = $pdo->prepare("SELECT id_modulo FROM tbl_modulos WHERE LOWER(nombre_modulo) = LOWER(?) LIMIT 1");
             $stmt->execute([$nombre_modulo]);
             $modulo = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -374,8 +342,7 @@ class Permisos extends BD {
 
             $id_modulo = $modulo['id_modulo'];
 
-            // Obtiene los permisos para ese rol y módulo
-            $stmt = $this->conex->prepare("SELECT accion, estatus FROM tbl_permisos WHERE id_rol = ? AND id_modulo = ?");
+            $stmt = $pdo->prepare("SELECT accion, estatus FROM tbl_permisos WHERE id_rol = ? AND id_modulo = ?");
             $stmt->execute([$id_rol, $id_modulo]);
             $permisos = [
                 'consultar' => false,
@@ -388,25 +355,18 @@ class Permisos extends BD {
                 $permisos[$perm['accion']] = ($perm['estatus'] === 'Permitido');
             }
             return $permisos;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
 
     public function guardarPermisos($permisosForm, $roles, $modulos, $acciones) {
         return $this->g_guardarPermisos($permisosForm, $roles, $modulos, $acciones);
     }
     private function g_guardarPermisos($permisosForm, $roles, $modulos, $acciones) {
-        $conexion = new BD('S');
-        $this->conex = $conexion->getConexion();
-        try {
-            // Borra todos los permisos actuales EXCEPTO los del SuperUsuario (id_rol = 6)
-            $this->conex->exec("DELETE FROM tbl_permisos WHERE id_rol <> 6");
-            // Inserta todos los permisos posibles, EXCEPTO para el SuperUsuario
-            $stmt = $this->conex->prepare("INSERT INTO tbl_permisos (id_rol, id_modulo, accion, estatus) VALUES (?, ?, ?, ?)");
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $pdo->exec("DELETE FROM tbl_permisos WHERE id_rol <> 6");
+            $stmt = $pdo->prepare("INSERT INTO tbl_permisos (id_rol, id_modulo, accion, estatus) VALUES (?, ?, ?, ?)");
             foreach ($roles as $rol) {
-                if ($rol['id_rol'] == 6) continue; // Saltar SuperUsuario
+                if ($rol['id_rol'] == 6) continue;
                 foreach ($modulos as $modulo) {
                     foreach ($acciones as $accion) {
                         $estatus = (isset($permisosForm[$rol['id_rol']][$modulo['id_modulo']][$accion]) && $permisosForm[$rol['id_rol']][$modulo['id_modulo']][$accion] == 'on')
@@ -416,10 +376,7 @@ class Permisos extends BD {
                 }
             }
             return true;
-        } finally {
-            if (isset($conexion)) { $conexion->cerrar(); }
-            $this->conex = null;
-        }
+        });
     }
 }
 ?>
