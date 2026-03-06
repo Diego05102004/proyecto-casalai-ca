@@ -14,6 +14,10 @@ class Recepcion extends BD{
     private $tablerecepcion = 'tbl_recepcion_productos';
 
     // Constantes de validación
+    const MAX_REGISTROS_PAGINA = 100;
+    const MAX_RANGO_FECHAS_DIAS = 365;
+    const CAMPOS_OBLIGATORIOS = ['idproveedor', 'correlativo', 'tamanocompra'];
+    
     const MAX_ID_PROVEEDOR = 999999999;
     const MIN_ID_PROVEEDOR = 1;
     const MAX_CORRELATIVO = 50;
@@ -36,6 +40,8 @@ class Recepcion extends BD{
     const MIN_ANIO = 2000;
     const MAX_MES = 12;
     const MIN_MES = 1;
+    
+    const FORMATOS_REPORTE = ['pdf', 'excel', 'csv'];
 
     public function getidproveedor() {
         return $this->idproveedor;
@@ -126,11 +132,76 @@ class Recepcion extends BD{
         }
     }
 
-    private function validarRecepcion($datos) {
+    // Helper validation methods
+    private function sanitizarDatos($datos) {
+        if (!is_array($datos)) {
+            return $datos;
+        }
+        
+        $datos_sanitizados = [];
+        
+        // Sanitizar campos de texto
+        $campos_texto = ['correlativo', 'tamanocompra', 'desc', 'estado'];
+        foreach ($campos_texto as $campo) {
+            if (isset($datos[$campo])) {
+                $datos_sanitizados[$campo] = trim((string)$datos[$campo]);
+            }
+        }
+        
+        // Sanitizar campos numéricos
+        $campos_numericos = ['idproveedor', 'costo'];
+        foreach ($campos_numericos as $campo) {
+            if (isset($datos[$campo])) {
+                $datos_sanitizados[$campo] = is_numeric($datos[$campo]) ? $datos[$campo] : 0;
+            }
+        }
+        
+        // Sanitizar arrays de productos
+        if (isset($datos['idproducto']) && is_array($datos['idproducto'])) {
+            $datos_sanitizados['idproducto'] = array_map('intval', $datos['idproducto']);
+        }
+        if (isset($datos['cantidad']) && is_array($datos['cantidad'])) {
+            $datos_sanitizados['cantidad'] = array_map('intval', $datos['cantidad']);
+        }
+        if (isset($datos['costo']) && is_array($datos['costo'])) {
+            $datos_sanitizados['costo'] = array_map('floatval', $datos['costo']);
+        }
+        
+        // Mantener otros campos no especificados
+        foreach ($datos as $clave => $valor) {
+            if (!isset($datos_sanitizados[$clave])) {
+                $datos_sanitizados[$clave] = $valor;
+            }
+        }
+        
+        return $datos_sanitizados;
+    }
+    
+    private function validarEsquema($datos, $operacion = 'registrar') {
         $errores = [];
         
         if (!is_array($datos)) {
-            $errores['recepcion'] = 'Los datos de la recepción deben ser un arreglo';
+            $errores['datos'] = 'Los datos deben ser un arreglo';
+            return $errores;
+        }
+        
+        // Validar campos obligatorios según la operación
+        if ($operacion === 'registrar') {
+            foreach (self::CAMPOS_OBLIGATORIOS as $campo) {
+                if (!isset($datos[$campo]) || $datos[$campo] === '' || $datos[$campo] === null) {
+                    $errores[$campo] = 'El campo ' . $campo . ' es obligatorio';
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarFormato($datos) {
+        $errores = [];
+        
+        if (!is_array($datos)) {
+            $errores['datos'] = 'Los datos deben ser un arreglo';
             return $errores;
         }
         
@@ -145,10 +216,10 @@ class Recepcion extends BD{
         // Validar correlativo
         if (isset($datos['correlativo'])) {
             $correlativo = trim((string)$datos['correlativo']);
-            if ($correlativo === '') {
-                $errores['correlativo'] = 'El N° de Factura es obligatorio';
-            } elseif (mb_strlen($correlativo) < self::MIN_CORRELATIVO || mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
-                $errores['correlativo'] = 'El N° de Factura debe tener entre ' . self::MIN_CORRELATIVO . ' y ' . self::MAX_CORRELATIVO . ' caracteres';
+            if ($correlativo !== '' && mb_strlen($correlativo) < self::MIN_CORRELATIVO) {
+                $errores['correlativo'] = 'El N° de Factura debe tener al menos ' . self::MIN_CORRELATIVO . ' caracteres';
+            } elseif (mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
+                $errores['correlativo'] = 'El N° de Factura no debe exceder los ' . self::MAX_CORRELATIVO . ' caracteres';
             } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $correlativo)) {
                 $errores['correlativo'] = 'El N° de Factura solo puede contener letras, números y guiones';
             }
@@ -157,10 +228,10 @@ class Recepcion extends BD{
         // Validar tamaño de compra
         if (isset($datos['tamanocompra'])) {
             $tamanocompra = trim((string)$datos['tamanocompra']);
-            if ($tamanocompra === '') {
-                $errores['tamanocompra'] = 'El tamaño de compra es obligatorio';
-            } elseif (mb_strlen($tamanocompra) < self::MIN_TAMANOCOMPRA || mb_strlen($tamanocompra) > self::MAX_TAMANOCOMPRA) {
-                $errores['tamanocompra'] = 'El tamaño de compra debe tener entre ' . self::MIN_TAMANOCOMPRA . ' y ' . self::MAX_TAMANOCOMPRA . ' caracteres';
+            if ($tamanocompra !== '' && mb_strlen($tamanocompra) < self::MIN_TAMANOCOMPRA) {
+                $errores['tamanocompra'] = 'El tamaño de compra debe tener al menos ' . self::MIN_TAMANOCOMPRA . ' caracteres';
+            } elseif (mb_strlen($tamanocompra) > self::MAX_TAMANOCOMPRA) {
+                $errores['tamanocompra'] = 'El tamaño de compra no debe exceder los ' . self::MAX_TAMANOCOMPRA . ' caracteres';
             }
         }
         
@@ -198,6 +269,200 @@ class Recepcion extends BD{
         
         return $errores;
     }
+    
+    private function validarFiltros($filtros) {
+        $errores = [];
+        
+        if (!is_array($filtros)) {
+            $errores['filtros'] = 'Los filtros deben ser un arreglo';
+            return $errores;
+        }
+        
+        // Validar página
+        if (isset($filtros['pagina'])) {
+            $pagina = (int)$filtros['pagina'];
+            if ($pagina < 1) {
+                $errores['pagina'] = 'La página debe ser un número mayor a 0';
+            }
+        }
+        
+        // Validar límite
+        if (isset($filtros['limite'])) {
+            $limite = (int)$filtros['limite'];
+            if ($limite < 1 || $limite > self::MAX_REGISTROS_PAGINA) {
+                $errores['limite'] = 'El límite debe estar entre 1 y ' . self::MAX_REGISTROS_PAGINA;
+            }
+        }
+        
+        // Validar ID de recepción
+        if (isset($filtros['id_recepcion'])) {
+            $id_recepcion = (int)$filtros['id_recepcion'];
+            if ($id_recepcion < self::MIN_ID_RECEPCION || $id_recepcion > self::MAX_ID_RECEPCION) {
+                $errores['id_recepcion'] = 'El ID de la recepción debe ser un número entre ' . self::MIN_ID_RECEPCION . ' y ' . self::MAX_ID_RECEPCION;
+            }
+        }
+        
+        // Validar correlativo
+        if (isset($filtros['correlativo'])) {
+            $correlativo = trim((string)$filtros['correlativo']);
+            if ($correlativo !== '' && mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
+                $errores['correlativo'] = 'El correlativo no debe exceder los ' . self::MAX_CORRELATIVO . ' caracteres';
+            }
+        }
+        
+        // Validar fechas
+        if (isset($filtros['fecha_inicio'])) {
+            $fecha_inicio = trim((string)$filtros['fecha_inicio']);
+            if ($fecha_inicio !== '' && !$this->validarFormatoFecha($fecha_inicio)) {
+                $errores['fecha_inicio'] = 'La fecha de inicio debe tener el formato AAAA-MM-DD';
+            }
+        }
+        
+        if (isset($filtros['fecha_fin'])) {
+            $fecha_fin = trim((string)$filtros['fecha_fin']);
+            if ($fecha_fin !== '' && !$this->validarFormatoFecha($fecha_fin)) {
+                $errores['fecha_fin'] = 'La fecha de fin debe tener el formato AAAA-MM-DD';
+            }
+        }
+        
+        // Validar rango de fechas
+        if (isset($filtros['fecha_inicio']) && isset($filtros['fecha_fin'])) {
+            $fecha_inicio = strtotime($filtros['fecha_inicio']);
+            $fecha_fin = strtotime($filtros['fecha_fin']);
+            if ($fecha_inicio && $fecha_fin && $fecha_inicio > $fecha_fin) {
+                $errores['rango_fechas'] = 'La fecha de inicio no puede ser mayor a la fecha de fin';
+            }
+            
+            if ($fecha_inicio && $fecha_fin) {
+                $dias_diferencia = ($fecha_fin - $fecha_inicio) / (60 * 60 * 24);
+                if ($dias_diferencia > self::MAX_RANGO_FECHAS_DIAS) {
+                    $errores['rango_fechas'] = 'El rango de fechas no puede exceder los ' . self::MAX_RANGO_FECHAS_DIAS . ' días';
+                }
+            }
+        }
+        
+        // Validar ID de proveedor
+        if (isset($filtros['id_proveedor'])) {
+            $id_proveedor = (int)$filtros['id_proveedor'];
+            if ($id_proveedor < self::MIN_ID_PROVEEDOR || $id_proveedor > self::MAX_ID_PROVEEDOR) {
+                $errores['id_proveedor'] = 'El ID del proveedor debe ser un número entre ' . self::MIN_ID_PROVEEDOR . ' y ' . self::MAX_ID_PROVEEDOR;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarId($id_recepcion) {
+        $errores = [];
+        
+        if ($id_recepcion === null || $id_recepcion === '') {
+            $errores['id_recepcion'] = 'El ID de la recepción es obligatorio';
+        } else {
+            $id_recepcion = (int)$id_recepcion;
+            if ($id_recepcion < self::MIN_ID_RECEPCION || $id_recepcion > self::MAX_ID_RECEPCION) {
+                $errores['id_recepcion'] = 'El ID de la recepción debe ser un número entre ' . self::MIN_ID_RECEPCION . ' y ' . self::MAX_ID_RECEPCION;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarCorrelativo($correlativo) {
+        $errores = [];
+        
+        if ($correlativo === null || $correlativo === '') {
+            $errores['correlativo'] = 'El correlativo de la recepción es obligatorio';
+        } else {
+            $correlativo = trim((string)$correlativo);
+            if (mb_strlen($correlativo) < self::MIN_CORRELATIVO || mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
+                $errores['correlativo'] = 'El correlativo debe tener entre ' . self::MIN_CORRELATIVO . ' y ' . self::MAX_CORRELATIVO . ' caracteres';
+            }
+            
+            // Validar formato alfanumérico
+            if (!preg_match('/^[A-Z0-9\-]+$/', $correlativo)) {
+                $errores['correlativo'] = 'El correlativo solo puede contener letras mayúsculas, números y guiones';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarIntegridadReferencial($id_recepcion, $pdo) {
+        $errores = [];
+        
+        // Verificar si la recepción existe
+        $sql = "SELECT COUNT(*) as total FROM tbl_recepcion_productos WHERE id_recepcion = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_recepcion]);
+        $total = $stmt->fetchColumn();
+        
+        if ($total == 0) {
+            $errores['id_recepcion'] = 'La recepción no existe';
+        }
+        
+        // Verificar si la recepción ya está anulada (no se puede anular dos veces)
+        $sql = "SELECT estado FROM tbl_recepcion_productos WHERE id_recepcion = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id_recepcion]);
+        $estado = $stmt->fetchColumn();
+        
+        if ($estado === 'anulado') {
+            $errores['estado'] = 'La recepción ya está anulada';
+        }
+        
+        return $errores;
+    }
+    
+    private function validarReporte($datos) {
+        $errores = [];
+        
+        if (!is_array($datos)) {
+            $errores['datos'] = 'Los datos deben ser un arreglo';
+            return $errores;
+        }
+        
+        // Validar tipo de reporte
+        if (isset($datos['tipo_reporte'])) {
+            if (!in_array($datos['tipo_reporte'], self::FORMATOS_REPORTE)) {
+                $errores['tipo_reporte'] = 'El tipo de reporte no es válido. Tipos permitidos: ' . implode(', ', self::FORMATOS_REPORTE);
+            }
+        }
+        
+        // Validar fechas si vienen
+        if (isset($datos['fechaInicio'])) {
+            $fechaInicio = trim((string)$datos['fechaInicio']);
+            if ($fechaInicio !== '' && !$this->validarFormatoFecha($fechaInicio)) {
+                $errores['fechaInicio'] = 'La fecha de inicio debe tener el formato AAAA-MM-DD';
+            }
+        }
+        
+        if (isset($datos['fechaFin'])) {
+            $fechaFin = trim((string)$datos['fechaFin']);
+            if ($fechaFin !== '' && !$this->validarFormatoFecha($fechaFin)) {
+                $errores['fechaFin'] = 'La fecha de fin debe tener el formato AAAA-MM-DD';
+            }
+        }
+        
+        // Validar año si viene
+        if (isset($datos['anio'])) {
+            $anio = (int)$datos['anio'];
+            if ($anio < self::MIN_ANIO || $anio > self::MAX_ANIO) {
+                $errores['anio'] = 'El año debe estar entre ' . self::MIN_ANIO . ' y ' . self::MAX_ANIO;
+            }
+        }
+        
+        // Validar ID de proveedor si viene
+        if (isset($datos['proveedorId'])) {
+            $proveedorId = (int)$datos['proveedorId'];
+            if ($proveedorId < self::MIN_ID_PROVEEDOR || $proveedorId > self::MAX_ID_PROVEEDOR) {
+                $errores['proveedorId'] = 'El ID del proveedor debe ser un número entre ' . self::MIN_ID_PROVEEDOR . ' y ' . self::MAX_ID_PROVEEDOR;
+            }
+        }
+        
+        return $errores;
+    }
+    
+    // Main validation methods
     
     private function validarFormatoFecha($fecha) {
         // Validar formato AAAA-MM-DD
@@ -280,155 +545,148 @@ class Recepcion extends BD{
         return $errores;
     }
     
-    // Métodos públicos de validación
-    public function validarConsultarRecepcion($datos) {
-        $errores = [];
+    public function validarRegistrar($datos) {
+        $datos = $this->sanitizarDatos($datos);
         
-        // Para consultar, podemos validar por ID o correlativo
-        if (isset($datos['id_recepcion'])) {
-            $id_recepcion = (int)$datos['id_recepcion'];
-            if ($id_recepcion < self::MIN_ID_RECEPCION || $id_recepcion > self::MAX_ID_RECEPCION) {
-                $errores['id_recepcion'] = 'El ID de la recepción debe ser un número entre ' . self::MIN_ID_RECEPCION . ' y ' . self::MAX_ID_RECEPCION;
-            }
+        $errores = $this->validarEsquema($datos, 'registrar');
+        if (!empty($errores)) {
+            return $errores;
         }
         
-        if (isset($datos['correlativo'])) {
-            $correlativo = trim((string)$datos['correlativo']);
-            if ($correlativo !== '' && mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
-                $errores['correlativo'] = 'El correlativo no debe exceder los ' . self::MAX_CORRELATIVO . ' caracteres';
-            }
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
         }
         
         return $errores;
     }
     
-    public function validarDetallarRecepcion($datos) {
-        $errores = [];
-        
-        // Para detallar, el ID es obligatorio
-        if (!isset($datos['id_recepcion'])) {
-            $errores['id_recepcion'] = 'El ID de la recepción es obligatorio';
-        } else {
-            $id_recepcion = (int)$datos['id_recepcion'];
-            if ($id_recepcion < self::MIN_ID_RECEPCION || $id_recepcion > self::MAX_ID_RECEPCION) {
-                $errores['id_recepcion'] = 'El ID de la recepción debe ser un número entre ' . self::MIN_ID_RECEPCION . ' y ' . self::MAX_ID_RECEPCION;
-            }
-        }
-        
-        return $errores;
+    public function validarConsultar($filtros = []) {
+        return $this->validarFiltros($filtros);
     }
     
-    public function validarRegistrarRecepcion($datos) {
-        $errores = [];
-        
-        // Para registrar, requerimos campos obligatorios
-        if (!isset($datos['idproveedor'])) {
-            $errores['idproveedor'] = 'El proveedor es obligatorio';
+    public function validarDetallar($id_recepcion) {
+        $errores = $this->validarId($id_recepcion);
+        if (!empty($errores)) {
+            return $errores;
         }
         
-        if (!isset($datos['correlativo'])) {
-            $errores['correlativo'] = 'El N° de Factura es obligatorio';
-        }
-        
-        if (!isset($datos['tamanocompra'])) {
-            $errores['tamanocompra'] = 'El tamaño de compra es obligatorio';
-        }
-        
-        // Validar la recepción completa
-        $errores_recepcion = $this->validarRecepcion($datos);
-        if (!empty($errores_recepcion)) {
-            $errores = array_merge($errores, $errores_recepcion);
-        }
-        
-        // Validar productos si vienen
-        if (isset($datos['productos'])) {
-            $errores_productos = $this->validarDetalleProductos($datos['productos']);
-            if (!empty($errores_productos)) {
-                $errores = array_merge($errores, $errores_productos);
-            }
-        }
-        
-        return $errores;
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_recepcion) {
+            return $this->validarIntegridadReferencial($id_recepcion, $pdo);
+        });
     }
     
-    public function validarAnularRecepcion($datos) {
-        $errores = [];
-        
-        // Para anular, el correlativo es obligatorio
-        if (!isset($datos['correlativo'])) {
-            $errores['correlativo'] = 'El N° de Factura es obligatorio';
-        } else {
-            $correlativo = trim((string)$datos['correlativo']);
-            if ($correlativo === '') {
-                $errores['correlativo'] = 'El N° de Factura es obligatorio';
-            } elseif (mb_strlen($correlativo) < self::MIN_CORRELATIVO || mb_strlen($correlativo) > self::MAX_CORRELATIVO) {
-                $errores['correlativo'] = 'El N° de Factura debe tener entre ' . self::MIN_CORRELATIVO . ' y ' . self::MAX_CORRELATIVO . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $correlativo)) {
-                $errores['correlativo'] = 'El N° de Factura solo puede contener letras, números y guiones';
-            }
+    public function validarAnular($correlativo) {
+        $errores = $this->validarCorrelativo($correlativo);
+        if (!empty($errores)) {
+            return $errores;
         }
         
-        return $errores;
+        return $this->ejecutarConConexionSegura(function($pdo) use ($correlativo) {
+            // Obtener ID de recepción por correlativo para validación de integridad
+            $sql = "SELECT id_recepcion FROM tbl_recepcion_productos WHERE correlativo = ? LIMIT 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$correlativo]);
+            $id_recepcion = $stmt->fetchColumn();
+            
+            if (!$id_recepcion) {
+                return ['correlativo' => 'La recepción no existe'];
+            }
+            
+            return $this->validarIntegridadReferencial($id_recepcion, $pdo);
+        });
     }
     
-    public function validarReporte($datos) {
-        $errores = [];
-        
-        // Validar fechas si vienen
-        if (isset($datos['fechaInicio'])) {
-            $fechaInicio = trim((string)$datos['fechaInicio']);
-            if ($fechaInicio !== '' && !$this->validarFormatoFecha($fechaInicio)) {
-                $errores['fechaInicio'] = 'La fecha de inicio debe tener el formato AAAA-MM-DD';
-            }
-        }
-        
-        if (isset($datos['fechaFin'])) {
-            $fechaFin = trim((string)$datos['fechaFin']);
-            if ($fechaFin !== '' && !$this->validarFormatoFecha($fechaFin)) {
-                $errores['fechaFin'] = 'La fecha de fin debe tener el formato AAAA-MM-DD';
-            }
-        }
-        
-        // Validar año si viene
-        if (isset($datos['anio'])) {
-            $anio = (int)$datos['anio'];
-            if ($anio < self::MIN_ANIO || $anio > self::MAX_ANIO) {
-                $errores['anio'] = 'El año debe estar entre ' . self::MIN_ANIO . ' y ' . self::MAX_ANIO;
-            }
-        }
-        
-        // Validar ID de proveedor si viene
-        if (isset($datos['proveedorId'])) {
-            $proveedorId = (int)$datos['proveedorId'];
-            if ($proveedorId < self::MIN_ID_PROVEEDOR || $proveedorId > self::MAX_ID_PROVEEDOR) {
-                $errores['proveedorId'] = 'El ID del proveedor debe ser un número entre ' . self::MIN_ID_PROVEEDOR . ' y ' . self::MAX_ID_PROVEEDOR;
-            }
-        }
-        
-        return $errores;
+    public function validarGenerarReporte($datos) {
+        return $this->validarReporte($datos);
     }
     
-    public function validarDescarga($datos) {
-        $errores = [];
-        
-        // Para descarga, validar tipo de descarga
-        if (isset($datos['tipo_descarga'])) {
-            $tipos_validos = ['pdf', 'excel', 'csv'];
-            if (!in_array($datos['tipo_descarga'], $tipos_validos)) {
-                $errores['tipo_descarga'] = 'El tipo de descarga no es válido. Tipos permitidos: ' . implode(', ', $tipos_validos);
-            }
+    public function obtenerRecepcionesConFiltros($filtros = []) {
+        $errores = $this->validarConsultar($filtros);
+        if (!empty($errores)) {
+            return ['error' => $errores];
         }
         
-        // Validar parámetros adicionales según el tipo
-        if (isset($datos['parametros']) && is_array($datos['parametros'])) {
-            foreach ($datos['parametros'] as $parametro => $valor) {
-                if (is_string($valor) && mb_strlen($valor) > 100) {
-                    $errores[$parametro] = 'El parámetro ' . $parametro . ' es demasiado largo';
-                }
+        return $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
+            $sql = "
+                SELECT 
+                    r.id_recepcion,
+                    r.fecha, 
+                    r.correlativo, 
+                    pr.nombre_proveedor, 
+                    r.tamanocompra,
+                    SUM(d.cantidad * d.costo) AS costo_inversion,
+                    r.estado
+                FROM tbl_recepcion_productos AS r
+                INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
+                INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
+                WHERE 1=1";
+            
+            $params = [];
+            
+            // Aplicar filtros
+            if (isset($filtros['id_recepcion'])) {
+                $sql .= " AND r.id_recepcion = :id_recepcion";
+                $params[':id_recepcion'] = $filtros['id_recepcion'];
             }
-        }
-        
-        return $errores;
+            
+            if (isset($filtros['correlativo'])) {
+                $sql .= " AND r.correlativo LIKE :correlativo";
+                $params[':correlativo'] = '%' . $filtros['correlativo'] . '%';
+            }
+            
+            if (isset($filtros['id_proveedor'])) {
+                $sql .= " AND r.id_proveedor = :id_proveedor";
+                $params[':id_proveedor'] = $filtros['id_proveedor'];
+            }
+            
+            if (isset($filtros['fecha_inicio'])) {
+                $sql .= " AND r.fecha >= :fecha_inicio";
+                $params[':fecha_inicio'] = $filtros['fecha_inicio'];
+            }
+            
+            if (isset($filtros['fecha_fin'])) {
+                $sql .= " AND r.fecha <= :fecha_fin";
+                $params[':fecha_fin'] = $filtros['fecha_fin'];
+            }
+            
+            if (isset($filtros['estado'])) {
+                $sql .= " AND r.estado = :estado";
+                $params[':estado'] = $filtros['estado'];
+            }
+            
+            $sql .= " GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado";
+            $sql .= " ORDER BY r.fecha DESC, r.correlativo DESC";
+            
+            // Aplicar paginación
+            $pagina = isset($filtros['pagina']) ? (int)$filtros['pagina'] : 1;
+            $limite = isset($filtros['limite']) ? (int)$filtros['limite'] : self::MAX_REGISTROS_PAGINA;
+            $offset = ($pagina - 1) * $limite;
+            
+            $sql .= " LIMIT :offset, :limite";
+            $params[':offset'] = $offset;
+            $params[':limite'] = $limite;
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $recepciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Obtener total para paginación
+            $sql_total = str_replace("GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado ORDER BY r.fecha DESC, r.correlativo DESC LIMIT :offset, :limite", "", $sql);
+            $sql_total = str_replace("SELECT r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, SUM(d.cantidad * d.costo) AS costo_inversion, r.estado FROM", "SELECT COUNT(*) as total FROM", $sql_total);
+            
+            $stmt_total = $pdo->prepare($sql_total);
+            $stmt_total->execute($params);
+            $total = $stmt_total->fetchColumn();
+            
+            return [
+                'data' => $recepciones,
+                'total' => $total,
+                'pagina' => $pagina,
+                'limite' => $limite,
+                'total_paginas' => ceil($total / $limite)
+            ];
+        });
     }
     
     private function verificarRecepcionExistente($id_recepcion) {
@@ -458,96 +716,82 @@ class Recepcion extends BD{
     public function registrarRecepcion($idproducto, $cantidad, $costo) {
         return $this->r_recepcion($idproducto, $cantidad, $costo); 
     }
+    
     private function r_recepcion($idproducto, $cantidad, $costo) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($idproducto, $cantidad, $costo){
-            try {
-                $tiempo = date('Y-m-d');
-                $pdo->beginTransaction();
-                $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, tamanocompra, estado) 
-                    VALUES (:idproveedor, :fecha_recepcion, :correlativo, :tamanocompra, :estado)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':idproveedor', $this->idproveedor, PDO::PARAM_INT);
-                $stmt->bindParam(':fecha_recepcion', $tiempo, PDO::PARAM_STR);
-                $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
-                $stmt->bindParam(':tamanocompra', $this->tamanocompra, PDO::PARAM_STR);
-                $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
-                $stmt->execute();
+            $tiempo = date('Y-m-d');
+            $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, tamanocompra, estado) 
+                VALUES (:idproveedor, :fecha_recepcion, :correlativo, :tamanocompra, :estado)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':idproveedor', $this->idproveedor, PDO::PARAM_INT);
+            $stmt->bindParam(':fecha_recepcion', $tiempo, PDO::PARAM_STR);
+            $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
+            $stmt->bindParam(':tamanocompra', $this->tamanocompra, PDO::PARAM_STR);
+            $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
+            $stmt->execute();
 
-                $idRecepcion = $pdo->lastInsertId();
-                $cap = count($idproducto);
+            $idRecepcion = $pdo->lastInsertId();
+            $cap = count($idproducto);
 
-                $productosArray = [];
+            $productosArray = [];
 
-                for ($i = 0; $i < $cap; $i++) {
-                    $sqlDetalle = "INSERT INTO tbl_detalle_recepcion_productos (id_recepcion, id_producto, cantidad, costo) 
-                        VALUES (:idRecepcion, :idProducto, :cantidad, :costo)";
-                    $stmtDetalle = $pdo->prepare($sqlDetalle);
-                    $stmtDetalle->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
-                    $stmtDetalle->bindParam(':idProducto', $idproducto[$i], PDO::PARAM_INT);
-                    $stmtDetalle->bindParam(':cantidad', $cantidad[$i], PDO::PARAM_INT);
-                    $stmtDetalle->bindParam(':costo', $costo[$i], PDO::PARAM_INT);
-                    $stmtDetalle->execute();
-                    $idDetalle = $pdo->lastInsertId();
+            for ($i = 0; $i < $cap; $i++) {
+                $sqlDetalle = "INSERT INTO tbl_detalle_recepcion_productos (id_recepcion, id_producto, cantidad, costo) 
+                    VALUES (:idRecepcion, :idProducto, :cantidad, :costo)";
+                $stmtDetalle = $pdo->prepare($sqlDetalle);
+                $stmtDetalle->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
+                $stmtDetalle->bindParam(':idProducto', $idproducto[$i], PDO::PARAM_INT);
+                $stmtDetalle->bindParam(':cantidad', $cantidad[$i], PDO::PARAM_INT);
+                $stmtDetalle->bindParam(':costo', $costo[$i], PDO::PARAM_INT);
+                $stmtDetalle->execute();
+                $idDetalle = $pdo->lastInsertId();
 
-                    $sqlNombre = "SELECT id_producto FROM tbl_productos WHERE id_producto = ?";
-                    $stmtNombre = $pdo->prepare($sqlNombre);
-                    $stmtNombre->execute([$idproducto[$i]]);
-                    $idProducto = $stmtNombre->fetchColumn();
+                $sqlNombre = "SELECT nombre_producto FROM tbl_productos WHERE id_producto = ?";
+                $stmtNombre = $pdo->prepare($sqlNombre);
+                $stmtNombre->execute([$idproducto[$i]]);
+                $nombreProducto = $stmtNombre->fetchColumn();
 
-                    $sqlNombre = "SELECT nombre_producto FROM tbl_productos WHERE id_producto = ?";
-                    $stmtNombre = $pdo->prepare($sqlNombre);
-                    $stmtNombre->execute([$idproducto[$i]]);
-                    $nombreProducto = $stmtNombre->fetchColumn();
-
-                    $productosArray[] = [
-                        'id_producto' => $idProducto,
-                        'cantidad' => $cantidad[$i],
-                        'costo' => $costo[$i],
-                        'iddetalles' => $idDetalle
-                    ];
-
-                    $monto_total = $costo[$i] * $cantidad[$i];
-                    $descripcion = "Compra: {$nombreProducto} (x{$cantidad[$i]})";
-
-                    $sqlEgreso = "INSERT INTO tbl_ingresos_egresos (tipo, monto, descripcion, fecha, estado, id_detalle_recepcion_productos)
-                        VALUES ('egreso', ?, ?, ?, 1, LAST_INSERT_ID())";
-                    $stmtEgreso = $pdo->prepare($sqlEgreso);
-                    $stmtEgreso->execute([$monto_total, $descripcion, $tiempo]);
-                }
-                $pdo->commit();
-
-                $sqlRecepcion = "
-                    SELECT 
-                        r.id_recepcion,
-                        r.fecha, 
-                        r.correlativo, 
-                        pr.nombre_proveedor, 
-                        r.tamanocompra,
-                        SUM(d.cantidad * d.costo) AS costo_inversion,
-                        r.estado
-                    FROM tbl_recepcion_productos AS r
-                    INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
-                    INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
-                    WHERE r.id_recepcion = :idRecepcion
-                    GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
-                ";
-                $stmtRecepcion = $pdo->prepare($sqlRecepcion);
-                $stmtRecepcion->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
-                $stmtRecepcion->execute();
-                $recepcion = $stmtRecepcion->fetch(PDO::FETCH_ASSOC);
-
-                return [
-                    'id_recepcion' => $idRecepcion,
-                    'productos' => $productosArray,
-                    'recepcion' => $recepcion
+                $productosArray[] = [
+                    'id_producto' => $idproducto[$i],
+                    'cantidad' => $cantidad[$i],
+                    'costo' => $costo[$i],
+                    'iddetalles' => $idDetalle
                 ];
 
-            } catch (Exception $e) {
-                if ($pdo && $pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-                throw $e;
+                $monto_total = $costo[$i] * $cantidad[$i];
+                $descripcion = "Compra: {$nombreProducto} (x{$cantidad[$i]})";
+
+                $sqlEgreso = "INSERT INTO tbl_ingresos_egresos (tipo, monto, descripcion, fecha, estado, id_detalle_recepcion_productos)
+                    VALUES ('egreso', ?, ?, ?, 1, LAST_INSERT_ID())";
+                $stmtEgreso = $pdo->prepare($sqlEgreso);
+                $stmtEgreso->execute([$monto_total, $descripcion, $tiempo]);
             }
+
+            $sqlRecepcion = "
+                SELECT 
+                    r.id_recepcion,
+                    r.fecha, 
+                    r.correlativo, 
+                    pr.nombre_proveedor, 
+                    r.tamanocompra,
+                    SUM(d.cantidad * d.costo) AS costo_inversion,
+                    r.estado
+                FROM tbl_recepcion_productos AS r
+                INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
+                INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
+                WHERE r.id_recepcion = :idRecepcion
+                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
+            ";
+            $stmtRecepcion = $pdo->prepare($sqlRecepcion);
+            $stmtRecepcion->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
+            $stmtRecepcion->execute();
+            $recepcion = $stmtRecepcion->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'id_recepcion' => $idRecepcion,
+                'productos' => $productosArray,
+                'recepcion' => $recepcion
+            ];
         });
     }
 

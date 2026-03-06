@@ -47,6 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
 
+            // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = [
                 'idproveedor' => $_POST['proveedor'],
                 'correlativo' => $_POST['correlativo'],
@@ -54,12 +55,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'estado' => 'habilitado'
             ];
 
-            $erroresPrincipales = $k->validarRegistrarRecepcion($datos_validacion);
-            if (!empty($erroresPrincipales)) {
+            $errores = $k->validarRegistrar($datos_validacion);
+            if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error en los datos de la recepción',
-                    'errors' => $erroresPrincipales
+                    'errors' => $errores
                 ]);
                 exit;
             }
@@ -144,9 +145,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             $correlativo = $_POST['correlativo'] ?? '';
             
-            // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = ['correlativo' => $correlativo];
-            $errores = $k->validarAnularRecepcion($datos_validacion);
+            $errores = $k->validarAnular($correlativo);
             
             if (!empty($errores)) {
                 echo json_encode([
