@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode($permisosActualizados);
             exit;
         case 'registrar':
-            $rol = new Rol();
+            $rol = new Rol('S');
             $rol->setNombreRol($_POST['nombre_rol']);
 
             // Preparar datos para validación
@@ -82,7 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'consultar_roles':
-            $rol = new Rol();
+            $rol = new Rol('S');
             $roles_obt = $rol->consultarRoles();
 
             echo json_encode($roles_obt);
@@ -93,7 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = ['id_rol' => $id_rol];
-            $rol = new Rol();
+            $rol = new Rol('S');
             $errores = $rol->validarConsultarRol($datos_validacion);
             
             if (!empty($errores)) {
@@ -120,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'modificar':
             $id_rol  = $_POST['id_rol'];
-            $rol = new Rol();
+            $rol = new Rol('S');
             $rol->setIdRol($id_rol);
             $rol->setNombreRol($_POST['nombre_rol']);
             
@@ -186,7 +186,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = ['id_rol' => $id_rol];
-            $rol = new Rol();
+            $rol = new Rol('S');
             $errores = $rol->validarEliminarRol($datos_validacion);
             
             if (!empty($errores)) {
@@ -236,7 +236,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 function consultarRoles() {
-    $rol = new Rol();
+    $rol = new Rol('S');
     return $rol->consultarRoles();
 }
 

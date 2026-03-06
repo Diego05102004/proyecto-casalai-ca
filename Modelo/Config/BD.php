@@ -8,9 +8,7 @@ class BD {
     protected $pdo = null;
     private $config = [];
 
-    // $tipo: 'P' para principal, 'S' para seguridad
     public function __construct($tipo = 'P') {
-        // Cargar configuración según el tipo de conexión
         $this->loadConfig($tipo);
         
         try {
@@ -27,7 +25,6 @@ class BD {
     }
     
     private function loadConfig($tipo) {
-        // Configuración de la base de datos principal
         $mainConfig = [
             'host' => 'localhost',
             'dbname' => 'casalai',
@@ -36,7 +33,6 @@ class BD {
             'charset' => 'utf8mb4'
         ];
         
-        // Configuración de la base de datos de seguridad
         $securityConfig = [
             'host' => 'localhost',
             'dbname' => 'seguridadlai',
