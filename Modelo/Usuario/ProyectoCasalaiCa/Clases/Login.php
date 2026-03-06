@@ -392,8 +392,8 @@ class Login extends BD
                 $errores['cedula'] = 'La cédula es obligatoria';
             } elseif (mb_strlen($cedula) < self::MIN_CEDULA || mb_strlen($cedula) > self::MAX_CEDULA) {
                 $errores['cedula'] = 'La cédula debe tener entre ' . self::MIN_CEDULA . ' y ' . self::MAX_CEDULA . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $cedula)) {
-                $errores['cedula'] = 'La cédula solo puede contener letras, números y guiones';
+            } elseif (!preg_match('/^[0-9\.]+$/', $cedula)) {
+                $errores['cedula'] = 'La cédula solo puede contener números y puntos';
             }
         }
         
