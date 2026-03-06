@@ -362,16 +362,22 @@ class OrdenDespacho extends BD {
         return $this->c_PorFactura($idFactura); 
     }
     private function c_PorFactura($idFactura) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idFactura){
             try {
+                error_log("crearPorFactura - Iniciando proceso para factura ID: $idFactura");
+                
                 $sqlDup = "SELECT id_orden_despachos FROM tbl_orden_despachos WHERE id_factura = :id AND activo = 1 LIMIT 1";
                 $stmtD = $pdo->prepare($sqlDup);
                 $stmtD->bindParam(':id', $idFactura, PDO::PARAM_INT);
                 $stmtD->execute();
-                if ($stmtD->fetch(PDO::FETCH_ASSOC)) {
+                $existente = $stmtD->fetch(PDO::FETCH_ASSOC);
+                
+                if ($existente) {
+                    error_log("crearPorFactura - Ya existe una orden activa para factura $idFactura: {$existente['id_orden_despachos']}");
                     return ['status' => 'exists'];
                 }
 
+                error_log("crearPorFactura - Consultando datos de cliente para factura $idFactura");
                 $sqlCliente = "SELECT f.cliente AS id_cliente, c.nombre AS nombre_cliente
                             FROM tbl_facturas f
                             INNER JOIN tbl_clientes c ON c.id_clientes = f.cliente
@@ -380,27 +386,40 @@ class OrdenDespacho extends BD {
                 $stmtC->bindParam(':id', $idFactura, PDO::PARAM_INT);
                 $stmtC->execute();
                 $row = $stmtC->fetch(PDO::FETCH_ASSOC);
+                
                 if (!$row) {
+                    error_log("crearPorFactura - No se encontró la factura $idFactura o su cliente");
                     return ['status' => 'error', 'message' => 'Factura no encontrada'];
                 }
+                
                 $clienteId = (int)$row['id_cliente'];
                 $clienteNombre = $row['nombre_cliente'];
+                error_log("crearPorFactura - Cliente encontrado: ID=$clienteId, Nombre='$clienteNombre'");
                 
                 if ($clienteNombre === null || $clienteNombre === '') {
                     $clienteNombre = 'Cliente Desconocido';
+                    error_log("crearPorFactura - Cliente sin nombre, usando valor por defecto");
                 }
 
+                error_log("crearPorFactura - Insertando nueva orden de despacho");
                 $sqlIns = "INSERT INTO tbl_orden_despachos (id_factura, cliente, fecha_despacho, estado, activo)
                         VALUES (:id_factura, :cliente, NOW(), 'Por Entregar', 1)";
                 $stmt = $pdo->prepare($sqlIns);
                 $stmt->bindParam(':id_factura', $idFactura, PDO::PARAM_INT);
                 $stmt->bindParam(':cliente', $clienteNombre, PDO::PARAM_STR);
                 $ok = $stmt->execute();
+                
                 if ($ok) {
-                    return ['status' => 'success', 'id' => $pdo->lastInsertId()];
+                    $idOrden = $pdo->lastInsertId();
+                    error_log("crearPorFactura - Orden creada exitosamente: ID=$idOrden");
+                    return ['status' => 'success', 'id' => $idOrden];
+                } else {
+                    error_log("crearPorFactura - Error al insertar orden: " . json_encode($stmt->errorInfo()));
+                    return ['status' => 'error', 'message' => 'No se pudo crear la orden de despacho'];
                 }
-                return ['status' => 'error', 'message' => 'No se pudo crear la orden de despacho'];
             } catch (Exception $e) {
+                error_log("crearPorFactura - Excepción: " . $e->getMessage());
+                error_log("crearPorFactura - Stack trace: " . $e->getTraceAsString());
                 return ['status' => 'error', 'message' => $e->getMessage()];
             }
         });

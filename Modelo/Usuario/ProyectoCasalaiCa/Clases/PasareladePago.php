@@ -226,7 +226,7 @@ class PasareladePago extends Factura {
         return $fechaPago <= $hoy;
     }
     
-    private function validarComprobante($archivo) {
+    public function validarComprobante($archivo) {
         $errores = [];
         
         if (!is_array($archivo)) {
@@ -439,12 +439,23 @@ class PasareladePago extends Factura {
     private function pagoIngresar() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             try {
+                error_log("Intentando insertar pago con datos: " . json_encode([
+                    'factura' => $this->factura,
+                    'cuenta' => $this->cuenta,
+                    'observaciones' => $this->observaciones,
+                    'tipo' => $this->tipo,
+                    'referencia' => $this->referencia,
+                    'fecha' => $this->fecha,
+                    'comprobante' => $this->comprobante,
+                    'monto' => $this->monto
+                ]));
+                
                 $stmt = $pdo->prepare("
                     INSERT INTO `tbl_detalles_pago`
                     (`id_factura`, `id_cuenta`, `observaciones`, `tipo`, `referencia`, `fecha`, `comprobante`, `monto`)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([
+                $resultado = $stmt->execute([
                     $this->factura,
                     $this->cuenta,
                     $this->observaciones,
@@ -455,16 +466,28 @@ class PasareladePago extends Factura {
                     $this->monto
                 ]);
 
+                if (!$resultado) {
+                    error_log("Error en INSERT: " . json_encode($stmt->errorInfo()));
+                    return false;
+                }
+
+                error_log("INSERT exitoso, actualizando factura");
+
                 $updateStmt = $pdo->prepare("
                     UPDATE `tbl_facturas` 
                     SET `estatus` = 'En Proceso' 
                     WHERE `id_factura` = ?
                 ");
-                $updateStmt->execute([$this->factura]);
+                $updateResultado = $updateStmt->execute([$this->factura]);
+
+                if (!$updateResultado) {
+                    error_log("Error en UPDATE factura: " . json_encode($updateStmt->errorInfo()));
+                }
 
                 return true;
             } catch (PDOException $e) {
                 error_log("Error en pagoIngresar: " . $e->getMessage());
+                error_log("Código SQLSTATE: " . $e->getCode());
                 return false;
             } 
         });
@@ -527,6 +550,16 @@ class PasareladePago extends Factura {
         });
     }
 
+    public function validarCodigoReferencia(){
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "SELECT COUNT(*) FROM tbl_detalles_pago WHERE referencia = :referencia";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':referencia', $this->referencia);
+            $stmt->execute();
+            return $stmt->fetchColumn() > 0;
+        });
+    }
+
     private function pagoProcesar() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "UPDATE `tbl_detalles_pago` 
@@ -537,16 +570,28 @@ class PasareladePago extends Factura {
             $stmt->bindParam(':id_detalles', $this->id_detalles);
             $resultado = $stmt->execute();
 
+            error_log("pagoProcesar - Actualizando estatus pago {$this->id_detalles} a '{$this->estatus}': " . ($resultado ? 'EXITO' : 'FALLO'));
+
             if ($resultado) {
+                error_log("pagoProcesar - Llamando a facturaProcesar para factura {$this->factura}");
                 $this->facturaProcesar($this->factura, $this->estatus);
+                
+                error_log("pagoProcesar - Verificando si estatus es 'Pago Procesado': actual='{$this->estatus}'");
                 if ($this->estatus === 'Pago Procesado') {
                     try {
+                        error_log("pagoProcesar - Creando orden de despacho para factura {$this->factura}");
                         $ordenDespacho = new OrdenDespacho();
-                        $ordenDespacho->crearPorFactura($this->factura);
+                        $resultadoOrden = $ordenDespacho->crearPorFactura($this->factura);
+                        error_log("pagoProcesar - Resultado crearPorFactura: " . json_encode($resultadoOrden));
                     } catch (Exception $e) {
                         error_log('Error creando orden de despacho: ' . $e->getMessage());
+                        error_log('Stack trace: ' . $e->getTraceAsString());
                     }
+                } else {
+                    error_log("pagoProcesar - Estatus no es 'Pago Procesado', no se crea orden de despacho");
                 }
+            } else {
+                error_log("pagoProcesar - No se actualizó el estatus del pago, no se continúa el proceso");
             }
             return $resultado;
         });
