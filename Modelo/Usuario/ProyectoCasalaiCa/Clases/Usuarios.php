@@ -38,6 +38,14 @@ class Usuarios extends BD {
     const MAX_ID_ROL = 999999999;
     const MIN_ID_ROL = 1;
     const ESTADOS_VALIDOS = ['habilitado', 'deshabilitado', 'inhabilitado'];
+    
+    // Constantes adicionales para validaciones
+    const MAX_REGISTROS_PAGINA = 100;
+    const MAX_RANGO_FECHAS_DIAS = 365;
+    const FORMATOS_REPORTE = ['pdf', 'excel', 'csv'];
+    const MAX_FOTO_PERFIL = 5242880; // 5MB en bytes
+    const MIN_FOTO_PERFIL = 100; // 100 bytes mínimo
+    const CAMPOS_OBLIGATORIOS = ['username', 'clave', 'nombre', 'apellido', 'cedula', 'id_rol'];
 
     public function getUsername() { return $this->username; }
     public function setUsername($username) { $this->username = $username; }
@@ -106,6 +114,213 @@ class Usuarios extends BD {
         } finally {
             $db->cerrar();
         }
+    }
+    
+    private function sanitizarDatos($datos) {
+        if (!is_array($datos)) {
+            return $datos;
+        }
+        
+        $datos_sanitizados = [];
+        
+        // Sanitizar campos de texto
+        $campos_texto = ['username', 'nombre', 'apellido', 'correo', 'telefono', 'cedula'];
+        foreach ($campos_texto as $campo) {
+            if (isset($datos[$campo])) {
+                $datos_sanitizados[$campo] = trim((string)$datos[$campo]);
+            }
+        }
+        
+        // Sanitizar campos numéricos
+        $campos_numericos = ['id_usuario', 'id_rol'];
+        foreach ($campos_numericos as $campo) {
+            if (isset($datos[$campo])) {
+                $datos_sanitizados[$campo] = is_numeric($datos[$campo]) ? (int)$datos[$campo] : 0;
+            }
+        }
+        
+        // Sanitizar contraseña (sin trim para mantener caracteres especiales)
+        if (isset($datos['clave'])) {
+            $datos_sanitizados['clave'] = (string)$datos['clave'];
+        }
+        
+        // Sanitizar estatus
+        if (isset($datos['estatus'])) {
+            $datos_sanitizados['estatus'] = trim((string)$datos['estatus']);
+        }
+        
+        // Sanitizar foto de perfil
+        if (isset($datos['foto_perfil'])) {
+            $datos_sanitizados['foto_perfil'] = $datos['foto_perfil'];
+        }
+        
+        // Mantener otros campos no especificados
+        foreach ($datos as $clave => $valor) {
+            if (!isset($datos_sanitizados[$clave])) {
+                $datos_sanitizados[$clave] = $valor;
+            }
+        }
+        
+        return $datos_sanitizados;
+    }
+    
+    private function validarEsquema($datos, $operacion = 'registrar') {
+        $errores = [];
+        
+        if (!is_array($datos)) {
+            $errores['esquema'] = 'Los datos deben ser un arreglo';
+            return $errores;
+        }
+        
+        // Campos obligatorios según la operación
+        if ($operacion === 'registrar') {
+            foreach (self::CAMPOS_OBLIGATORIOS as $campo) {
+                if (!isset($datos[$campo]) || $datos[$campo] === '' || $datos[$campo] === null) {
+                    $errores[$campo] = 'El campo ' . $campo . ' es obligatorio';
+                }
+            }
+        } elseif ($operacion === 'modificar') {
+            if (!isset($datos['id_usuario']) || $datos['id_usuario'] === '' || $datos['id_usuario'] === null) {
+                $errores['id_usuario'] = 'El ID del usuario es obligatorio para modificar';
+            }
+            
+            $campos_modificar = array_intersect(array_keys($datos), self::CAMPOS_OBLIGATORIOS);
+            if (empty($campos_modificar)) {
+                $errores['modificacion'] = 'Debe proporcionar al menos un campo para modificar';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarFormato($datos) {
+        $errores = [];
+        
+        if (!is_array($datos)) {
+            $errores['datos'] = 'Los datos deben ser un arreglo';
+            return $errores;
+        }
+        
+        // Validar username
+        if (isset($datos['username'])) {
+            $username = trim((string)$datos['username']);
+            if ($username === '') {
+                $errores['username'] = 'El nombre de usuario es obligatorio';
+            } elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
+                $errores['username'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
+            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+                $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+            }
+        }
+        
+        // Validar clave
+        if (isset($datos['clave'])) {
+            $clave = (string)$datos['clave'];
+            if ($clave !== '') {
+                if (mb_strlen($clave) < self::MIN_CLAVE) {
+                    $errores['clave'] = 'La contraseña debe tener al menos ' . self::MIN_CLAVE . ' caracteres';
+                } elseif (!preg_match('/[A-Z]/', $clave)) {
+                    $errores['clave'] = 'La contraseña debe incluir al menos una letra mayúscula';
+                } elseif (!preg_match('/[a-z]/', $clave)) {
+                    $errores['clave'] = 'La contraseña debe incluir al menos una letra minúscula';
+                } elseif (!preg_match('/[0-9]/', $clave)) {
+                    $errores['clave'] = 'La contraseña debe incluir al menos un número';
+                }
+            }
+        }
+        
+        // Validar nombre
+        if (isset($datos['nombre'])) {
+            $nombre = trim((string)$datos['nombre']);
+            if ($nombre === '') {
+                $errores['nombre'] = 'El nombre es obligatorio';
+            } elseif (mb_strlen($nombre) < self::MIN_NOMBRE || mb_strlen($nombre) > self::MAX_NOMBRE) {
+                $errores['nombre'] = 'El nombre debe tener entre ' . self::MIN_NOMBRE . ' y ' . self::MAX_NOMBRE . ' caracteres';
+            }
+        }
+        
+        // Validar apellido
+        if (isset($datos['apellido'])) {
+            $apellido = trim((string)$datos['apellido']);
+            if ($apellido === '') {
+                $errores['apellido'] = 'El apellido es obligatorio';
+            } elseif (mb_strlen($apellido) < self::MIN_APELLIDO || mb_strlen($apellido) > self::MAX_APELLIDO) {
+                $errores['apellido'] = 'El apellido debe tener entre ' . self::MIN_APELLIDO . ' y ' . self::MAX_APELLIDO . ' caracteres';
+            }
+        }
+        
+        // Validar correo
+        if (isset($datos['correo'])) {
+            $correo = trim((string)$datos['correo']);
+            if ($correo === '') {
+                $errores['correo'] = 'El correo es obligatorio';
+            } elseif (mb_strlen($correo) > self::MAX_CORREO || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                $errores['correo'] = 'El correo no es válido';
+            }
+        }
+        
+        // Validar teléfono
+        if (isset($datos['telefono'])) {
+            $telefono = preg_replace('/\D+/', '', (string)$datos['telefono']);
+            if ($telefono === '') {
+                $errores['telefono'] = 'El teléfono es obligatorio';
+            } elseif (strlen($telefono) < self::MIN_TELEFONO || strlen($telefono) > self::MAX_TELEFONO) {
+                $errores['telefono'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO . ' y ' . self::MAX_TELEFONO . ' dígitos';
+            }
+        }
+        
+        // Validar cédula
+        if (isset($datos['cedula'])) {
+            $cedula = preg_replace('/\D+/', '', (string)$datos['cedula']);
+            if ($cedula === '') {
+                $errores['cedula'] = 'La cédula es obligatoria';
+            } elseif (strlen($cedula) < self::MIN_CEDULA || strlen($cedula) > self::MAX_CEDULA) {
+                $errores['cedula'] = 'La cédula debe tener entre ' . self::MIN_CEDULA . ' y ' . self::MAX_CEDULA . ' dígitos';
+            }
+        }
+        
+        // Validar ID del rol
+        if (isset($datos['id_rol'])) {
+            $id_rol = (int)$datos['id_rol'];
+            if ($id_rol < self::MIN_ID_ROL || $id_rol > self::MAX_ID_ROL) {
+                $errores['id_rol'] = 'Debe seleccionar un rol válido';
+            }
+        }
+        
+        // Validar estatus
+        if (isset($datos['estatus'])) {
+            $estatus = trim((string)$datos['estatus']);
+            if (!in_array($estatus, self::ESTADOS_VALIDOS)) {
+                $errores['estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
+            }
+        }
+        
+        // Validar foto de perfil
+        if (isset($datos['foto_perfil'])) {
+            $foto_perfil = $datos['foto_perfil'];
+            
+            // Validar que sea un array
+            if (!is_array($foto_perfil)) {
+                $errores['foto_perfil'] = 'Los datos de la foto deben ser un arreglo';
+            } else {
+                // Validar tamaño del archivo
+                if (isset($foto_perfil['size']) && $foto_perfil['size'] < self::MIN_FOTO_PERFIL) {
+                    $errores['foto_perfil'] = 'El archivo parece demasiado pequeño para ser una imagen';
+                } elseif ($foto_perfil['size'] > self::MAX_FOTO_PERFIL) {
+                    $errores['foto_perfil'] = 'El archivo no debe exceder los 5MB';
+                }
+                
+                // Validar tipo de archivo
+                if (isset($foto_perfil['type'])) {
+                    $tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif'];
+                    if (!in_array($foto_perfil['type'], $tipos_permitidos)) {
+                        $errores['foto_perfil'] = 'La extensión del archivo no es permitida';
+                    }
+                }
+            }
+        }
+        
+        return $errores;
     }
     
     private function validarUsuario($datos) {
@@ -448,12 +663,9 @@ class Usuarios extends BD {
     }
 
     public function clienteExiste($cedula) {
-        return $this->c_clienteExiste($cedula);
-    }
-    private function c_clienteExiste($cedula) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($cedula){
+        return $this->ejecutarConConexionSegura(function($pdoP) use ($cedula) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = ?";
-            $stmt = $pdo->prepare($sql);
+            $stmt = $pdoP->prepare($sql);
             $stmt->execute([$cedula]);
             return $stmt->fetchColumn() > 0;
         }, 'P');
@@ -464,102 +676,116 @@ class Usuarios extends BD {
     }
     private function i_ingresarUsuario() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            try {
-                $pdo->beginTransaction();
-                $claveEncriptada = password_hash($this->clave, PASSWORD_BCRYPT);
+            
+            $claveEncriptada = password_hash($this->clave, PASSWORD_BCRYPT);
 
-                $sql = "INSERT INTO tbl_usuarios (username, password, id_rol, correo, nombres, apellidos, telefono, cedula)
-                        VALUES (:username, :clave, :id_rol, :correo, :nombres, :apellidos, :telefono, :cedula)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':username', $this->username);
-                $stmt->bindParam(':clave', $claveEncriptada);
-                $stmt->bindParam(':id_rol', $this->id_rol);
-                $stmt->bindParam(':correo', $this->correo);
-                $stmt->bindParam(':nombres', $this->nombre);
-                $stmt->bindParam(':apellidos', $this->apellido);
-                $stmt->bindParam(':telefono', $this->telefono);
-                $stmt->bindParam(':cedula', $this->cedula);
-                $stmt->execute();
+            $sql = "INSERT INTO tbl_usuarios (username, password, id_rol, correo, nombres, apellidos, telefono, cedula)
+                    VALUES (:username, :clave, :id_rol, :correo, :nombres, :apellidos, :telefono, :cedula)";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':username'  => $this->username,
+                ':clave'     => $claveEncriptada,
+                ':id_rol'    => $this->id_rol,
+                ':correo'    => $this->correo,
+                ':nombres'   => $this->nombre,
+                ':apellidos' => $this->apellido,
+                ':telefono'  => $this->telefono,
+                ':cedula'    => $this->cedula
+            ]);
 
-                if (!$this->clienteExiste($this->cedula)) {
-                    $sqlCliente = "INSERT INTO tbl_clientes (nombre, cedula, telefono, direccion, correo, activo)
-                                VALUES (:nombre, :cedula, :telefono, '', :correo, 1)";
-                    $stmtCliente = $pdo->prepare($sqlCliente);
-                    $nombreCompleto = $this->nombre . ' ' . $this->apellido;
-                    $stmtCliente->bindParam(':nombre', $nombreCompleto);
-                    $stmtCliente->bindParam(':cedula', $this->cedula);
-                    $stmtCliente->bindParam(':telefono', $this->telefono);
-                    $stmtCliente->bindParam(':correo', $this->correo);
-                    $stmtCliente->execute();
-                }
-
-                $pdo->commit();
-                return true;
-            } catch (PDOException $e) {
-                if ($pdo->inTransaction()) { $pdo->rollBack(); }
-                return false;
+            if (!$this->clienteExiste($this->cedula)) {
+                $this->registrarClienteEnP();
             }
+            return true;
+
         }, 'S');
+    }
+
+    private function registrarClienteEnP() {
+        return $this->ejecutarConConexionSegura(function($pdoP) {
+            $sqlCliente = "INSERT INTO tbl_clientes (nombre, cedula, telefono, direccion, correo, activo)
+                        VALUES (:nombre, :cedula, :telefono, '', :correo, 1)";
+            
+            $stmtCliente = $pdoP->prepare($sqlCliente);
+            $nombreCompleto = $this->nombre . ' ' . $this->apellido;
+            
+            return $stmtCliente->execute([
+                ':nombre'   => $nombreCompleto,
+                ':cedula'   => $this->cedula,
+                ':telefono' => $this->telefono,
+                ':correo'   => $this->correo
+            ]);
+        }, 'P');
     }
 
     public function modificarUsuario($id_usuario) {
         return $this->m_modificarUsuario($id_usuario);
     }
+
     private function m_modificarUsuario($id_usuario) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario){
-            try {
-                $pdo->beginTransaction();
-                $claveEncriptada = !empty($this->clave) ? password_hash($this->clave, PASSWORD_BCRYPT) : null;
-
-                $sql = "UPDATE tbl_usuarios SET 
-                            username = :username, 
-                            id_rol = :id_rol,
-                            nombres = :nombre,
-                            apellidos = :apellido,
-                            correo = :correo,
-                            telefono = :telefono,
-                            cedula = :cedula";
-                if (!empty($this->clave)) {
-                    $sql .= ", password = :clave";
-                }
-                $sql .= " WHERE id_usuario = :id_usuario";
-
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':username', $this->username);
-                $stmt->bindParam(':id_rol', $this->id_rol);
-                $stmt->bindParam(':nombre', $this->nombre);
-                $stmt->bindParam(':apellido', $this->apellido);
-                $stmt->bindParam(':correo', $this->correo);
-                $stmt->bindParam(':telefono', $this->telefono);
-                $stmt->bindParam(':cedula', $this->cedula);
-                $stmt->bindParam(':id_usuario', $id_usuario);
-                if (!empty($this->clave)) {
-                    $stmt->bindParam(':clave', $claveEncriptada);
-                }
-                $stmt->execute();
-
-                if ($this->clienteExiste($this->cedula)) {
-                    $sqlCliente = "UPDATE tbl_clientes SET 
-                                    nombre = :nombre,
-                                    telefono = :telefono,
-                                    correo = :correo
-                                    WHERE cedula = :cedula";
-                    $stmtCliente = $pdo->prepare($sqlCliente);
-                    $nombreCompleto = $this->nombre . ' ' . $this->apellido;
-                    $stmtCliente->bindParam(':nombre', $nombreCompleto);
-                    $stmtCliente->bindParam(':telefono', $this->telefono);
-                    $stmtCliente->bindParam(':correo', $this->correo);
-                    $stmtCliente->bindParam(':cedula', $this->cedula);
-                    $stmtCliente->execute();
-                }
-
-                $pdo->commit();
-                return true;
-            } catch (PDOException $e) {
-                if ($pdo->inTransaction()) { $pdo->rollBack(); }
-                return false;
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
+            
+            $sql = "UPDATE tbl_usuarios SET 
+                        username = :username, 
+                        id_rol = :id_rol,
+                        nombres = :nombre,
+                        apellidos = :apellido,
+                        correo = :correo,
+                        telefono = :telefono,
+                        cedula = :cedula";
+            
+            if (!empty($this->clave)) {
+                $sql .= ", password = :clave";
             }
+            $sql .= " WHERE id_usuario = :id_usuario";
+
+            $stmt = $pdo->prepare($sql);
+            
+            $params = [
+                ':username'   => $this->username,
+                ':id_rol'      => $this->id_rol,
+                ':nombre'     => $this->nombre,
+                ':apellido'   => $this->apellido,
+                ':correo'     => $this->correo,
+                ':telefono'   => $this->telefono,
+                ':cedula'     => $this->cedula,
+                ':id_usuario' => $id_usuario
+            ];
+
+            if (!empty($this->clave)) {
+                $params[':clave'] = password_hash($this->clave, PASSWORD_BCRYPT);
+            }
+
+            $stmt->execute($params);
+
+            if ($this->clienteExiste($this->cedula)) {
+                $this->actualizarClienteEnP();
+            }
+
+            return true;
+
         }, 'S');
+    }
+
+    private function actualizarClienteEnP() {
+        return $this->ejecutarConConexionSegura(function($pdoP) {
+            $sqlCliente = "UPDATE tbl_clientes SET 
+                            nombre = :nombre,
+                            telefono = :telefono,
+                            correo = :correo
+                            WHERE cedula = :cedula";
+            
+            $stmtCliente = $pdoP->prepare($sqlCliente);
+            $nombreCompleto = $this->nombre . ' ' . $this->apellido;
+            
+            return $stmtCliente->execute([
+                ':nombre'   => $nombreCompleto,
+                ':telefono' => $this->telefono,
+                ':correo'   => $this->correo,
+                ':cedula'   => $this->cedula
+            ]);
+        }, 'P');
     }
 
     public function existeUsuario($username, $excluir_id = null) {
@@ -736,7 +962,7 @@ class Usuarios extends BD {
         return $this->g_getusuarios($estatus);
     }
     private function g_getusuarios($estatus = 'habilitado') {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($estatus){
             $queryusuarios = "SELECT usuarios.*, rol.nombre_rol 
                               FROM tbl_usuarios AS usuarios
                               INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol";
