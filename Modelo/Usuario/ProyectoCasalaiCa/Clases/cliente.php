@@ -313,18 +313,6 @@ class cliente extends BD {
         return $errores;
     }
     
-    /**
-     * Obtiene un cliente por su ID
-     */
-    private function obtenerClientePorId($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
-            $sql = "SELECT * FROM tbl_clientes WHERE id_clientes = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        });
-    }
-    
     // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
     
     /**
@@ -379,15 +367,15 @@ class cliente extends BD {
             return $errores;
         }
 
-        $cliente_existente = $this->obtenerClientePorId($datos['id_clientes']);
+        $cliente_existente = $this->obtenerclientesPorId($id);
         if (!$cliente_existente) {
             $errores['existencia'] = 'El cliente que intenta modificar no existe';
             return $errores;
         }
 
-        if (isset($datos['nombre']) && 
-            $this->existeNombre($datos['nombre'], $datos['id_clientes'])) {
-            $errores['nombre'] = 'El nombre del cliente ya existe';
+        if (isset($datos['cedula']) && 
+            $this->existeNumeroCedula($datos['cedula'], $datos['id_clientes'])) {
+            $errores['cedula'] = 'La cédula del cliente ya está registrada';
         }
         
         return $errores;
@@ -399,7 +387,7 @@ class cliente extends BD {
             return $errores;
         }
         
-        $cliente = $this->obtenerClientePorId($id);
+        $cliente = $this->obtenerclientesPorId($id);
         if (!$cliente) {
             $errores['existencia'] = 'El cliente que intenta eliminar no existe';
             return $errores;
@@ -554,6 +542,7 @@ class cliente extends BD {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
     }
+
     public function obtenerclientesPorId($id) {
         return $this->obtClientePorId($id);
     }

@@ -843,3 +843,11 @@ $(document).ready(function() {
         cargarYMostrarModalAyuda(contexto);
     });
 });
+
+function muestraMensaje(mensaje) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: mensaje
+    });
+}
