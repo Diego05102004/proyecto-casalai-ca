@@ -82,22 +82,63 @@ class Categoria extends BD
 
     // ==================== VALIDACIONES DE BACKEND ====================
     
-    /**
-     * Valida los datos para registrar una categoría
-     */
-    private function validarRegistrar($datos) {
+    private function sanitizarDatos($datos) {
+        if (!is_array($datos)) {
+            return $datos;
+        }
+        
+        $datos_sanitizados = [];
+        
+        foreach ($datos as $clave => $valor) {
+            if (is_string($valor)) {
+                $valor = trim($valor);
+                
+                $valor = htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+                
+                $valor = addslashes($valor);
+                
+                $datos_sanitizados[$clave] = $valor;
+            } else {
+                $datos_sanitizados[$clave] = $valor;
+            }
+        }
+        
+        return $datos_sanitizados;
+    }
+    
+    private function validarEsquema($datos, $operacion = 'registrar') {
         $errores = [];
         
-        // Validar nombre de la categoría
-        if (!isset($datos['nombre_categoria'])) {
-            $errores['nombre_categoria'] = 'El nombre de la categoría es obligatorio';
-        } else {
-            $nombre_categoria = trim($datos['nombre_categoria']);
-            if (empty($nombre_categoria)) {
-                $errores['nombre_categoria'] = 'El nombre de la categoría no puede estar vacío';
-            } elseif (mb_strlen($nombre_categoria) < self::MIN_NOMBRE_CATEGORIA || mb_strlen($nombre_categoria) > self::MAX_NOMBRE_CATEGORIA) {
+        if (!is_array($datos)) {
+            $errores['esquema'] = 'Los datos deben ser un array';
+            return $errores;
+        }
+        
+        if ($operacion === 'registrar') {
+            if (!isset($datos['nombre_categoria']) || $datos['nombre_categoria'] === '' || $datos['nombre_categoria'] === null) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría es obligatorio';
+            }
+        } elseif ($operacion === 'modificar') {
+            if (!isset($datos['id_categoria']) || $datos['id_categoria'] === '' || $datos['id_categoria'] === null) {
+                $errores['id_categoria'] = 'El ID de la categoría es obligatorio para modificar';
+            }
+            
+            if (!isset($datos['nombre_categoria']) || $datos['nombre_categoria'] === '' || $datos['nombre_categoria'] === null) {
+                $errores['nombre_categoria'] = 'El nombre de la categoría es obligatorio';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarFormato($datos) {
+        $errores = [];
+        
+        if (isset($datos['nombre_categoria'])) {
+            $nombre = trim($datos['nombre_categoria']);
+            if (mb_strlen($nombre) < self::MIN_NOMBRE_CATEGORIA || mb_strlen($nombre) > self::MAX_NOMBRE_CATEGORIA) {
                 $errores['nombre_categoria'] = 'El nombre de la categoría debe tener entre ' . self::MIN_NOMBRE_CATEGORIA . ' y ' . self::MAX_NOMBRE_CATEGORIA . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_categoria)) {
+            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre)) {
                 $errores['nombre_categoria'] = 'El nombre de la categoría solo puede contener letras, números, espacios y caracteres especiales comunes';
             }
         }
@@ -163,191 +204,158 @@ class Categoria extends BD
         return $errores;
     }
     
-    /**
-     * Valida los datos para consultar una categoría
-     */
-    private function validarConsultar($datos) {
+    private function validarFiltros($filtros) {
         $errores = [];
         
-        // Validar ID de la categoría
-        if (!isset($datos['id_categoria'])) {
-            $errores['id_categoria'] = 'El ID de la categoría es obligatorio';
-        } elseif (!is_numeric($datos['id_categoria']) || $datos['id_categoria'] <= 0) {
-            $errores['id_categoria'] = 'El ID de la categoría debe ser un número positivo';
-        }
-        
-        return $errores;
-    }
-    
-    /**
-     * Valida los datos para modificar una categoría
-     */
-    private function validarModificar($datos) {
-        $errores = [];
-        
-        // Validar ID de la categoría
-        if (!isset($datos['id_categoria'])) {
-            $errores['id_categoria'] = 'El ID de la categoría es obligatorio';
-        } elseif (!is_numeric($datos['id_categoria']) || $datos['id_categoria'] <= 0) {
-            $errores['id_categoria'] = 'El ID de la categoría debe ser un número positivo';
-        }
-        
-        // Validar nombre de la categoría
-        if (!isset($datos['nombre_categoria'])) {
-            $errores['nombre_categoria'] = 'El nombre de la categoría es obligatorio';
-        } else {
-            $nombre_categoria = trim($datos['nombre_categoria']);
-            if (empty($nombre_categoria)) {
-                $errores['nombre_categoria'] = 'El nombre de la categoría no puede estar vacío';
-            } elseif (mb_strlen($nombre_categoria) < self::MIN_NOMBRE_CATEGORIA || mb_strlen($nombre_categoria) > self::MAX_NOMBRE_CATEGORIA) {
-                $errores['nombre_categoria'] = 'El nombre de la categoría debe tener entre ' . self::MIN_NOMBRE_CATEGORIA . ' y ' . self::MAX_NOMBRE_CATEGORIA . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_categoria)) {
-                $errores['nombre_categoria'] = 'El nombre de la categoría solo puede contener letras, números, espacios y caracteres especiales comunes';
+        if (isset($filtros['limite'])) {
+            $limite = (int)$filtros['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe estar entre 1 y 100 registros';
             }
         }
         
-        // Validar características si existen
-        if (isset($datos['caracteristicas']) && is_array($datos['caracteristicas'])) {
-            foreach ($datos['caracteristicas'] as $index => $caracteristica) {
-                if (!is_array($caracteristica)) {
-                    $errores["caracteristica_{$index}"] = 'La característica en la posición ' . $index . ' debe ser un array';
-                    continue;
-                }
-                
-                // Validar nombre de la característica
-                $nombre_carac = trim($caracteristica['nombre'] ?? '');
-                if (!empty($nombre_carac)) {
-                    if (mb_strlen($nombre_carac) < self::MIN_NOMBRE_CARACTERISTICA || mb_strlen($nombre_carac) > self::MAX_NOMBRE_CARACTERISTICA) {
-                        $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica debe tener entre ' . self::MIN_NOMBRE_CARACTERISTICA . ' y ' . self::MAX_NOMBRE_CARACTERISTICA . ' caracteres';
-                    } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_carac)) {
-                        $errores["caracteristica_{$index}_nombre"] = 'El nombre de la característica solo puede contener letras, números, espacios y caracteres especiales comunes';
-                    }
-
-                    // Validar tipo
-                    $tipo = strtolower(trim($caracteristica['tipo'] ?? ''));
-                    if ($tipo && !in_array($tipo, self::TIPOS_CARACTERISTICA_PERMITIDOS)) {
-                        $errores["caracteristica_{$index}_tipo"] = 'El tipo de característica debe ser: ' . implode(', ', self::TIPOS_CARACTERISTICA_PERMITIDOS);
-                    }
-
-                    // Validar valor según tipo
-                    $valor = trim($caracteristica['valor'] ?? '');
-                    if (!empty($valor) && $tipo) {
-                        switch ($tipo) {
-                            case 'int':
-                                if (!is_numeric($valor) || (int)$valor < 0 || (int)$valor > self::MAX_VALOR_NUMERICO) {
-                                    $errores["caracteristica_{$index}_valor"] = 'El valor entero debe estar entre 0 y ' . self::MAX_VALOR_NUMERICO;
-                                }
-                                break;
-                            case 'float':
-                                if (!is_numeric($valor) || (float)$valor < 0 || (float)$valor > self::MAX_VALOR_DECIMAL) {
-                                    $errores["caracteristica_{$index}_valor"] = 'El valor decimal debe estar entre 0 y ' . self::MAX_VALOR_DECIMAL;
-                                }
-                                break;
-                            case 'string':
-                                if (mb_strlen($valor) > self::MAX_VALOR_STRING) {
-                                    $errores["caracteristica_{$index}_valor"] = 'El valor de texto no debe exceder los ' . self::MAX_VALOR_STRING . ' caracteres';
-                                }
-                                break;
-                        }
-                    }
-
-                    // Validar longitud máxima (string)
-                    if ($tipo === 'string' && isset($caracteristica['max'])) {
-                        $max = (int)$caracteristica['max'];
-                        if ($max <= 0 || $max > self::MAX_LONGITUD_CAMPO) {
-                            $errores["caracteristica_{$index}_max"] = 'La longitud máxima debe estar entre 1 y ' . self::MAX_LONGITUD_CAMPO . ' caracteres';
-                        }
-                    }
-                }
+        if (isset($filtros['pagina'])) {
+            $pagina = (int)$filtros['pagina'];
+            if ($pagina < 1) {
+                $errores['pagina'] = 'La página debe ser un número positivo';
+            }
+        }
+        
+        if (isset($filtros['busqueda']) && is_string($filtros['busqueda'])) {
+            $busqueda = trim($filtros['busqueda']);
+            if (mb_strlen($busqueda) > 100) {
+                $errores['busqueda'] = 'La búsqueda no debe exceder los 100 caracteres';
             }
         }
         
         return $errores;
     }
     
-    /**
-     * Valida los datos para eliminar una categoría
-     */
-    private function validarEliminar($datos) {
+    public function validarId($id_categoria) {
         $errores = [];
         
-        // Validar ID de la categoría
-        if (!isset($datos['id_categoria'])) {
+        if ($id_categoria === null || $id_categoria === '') {
             $errores['id_categoria'] = 'El ID de la categoría es obligatorio';
-        } elseif (!is_numeric($datos['id_categoria']) || $datos['id_categoria'] <= 0) {
+        } elseif (!is_numeric($id_categoria) || (int)$id_categoria <= 0) {
             $errores['id_categoria'] = 'El ID de la categoría debe ser un número positivo';
         }
         
         return $errores;
     }
     
-    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
-    
-    /**
-     * Valida los datos para registrar (método público)
-     */
-    public function validarRegistrarCategoria($datos) {
-        return $this->validarRegistrar($datos);
-    }
-    
-    /**
-     * Valida los datos para consultar (método público)
-     */
-    public function validarConsultarCategoria($datos) {
-        return $this->validarConsultar($datos);
-    }
-    
-    /**
-     * Valida los datos para modificar (método público)
-     */
-    public function validarModificarCategoria($datos) {
-        return $this->validarModificar($datos);
-    }
-    
-    /**
-     * Valida los datos para eliminar (método público)
-     */
-    public function validarEliminarCategoria($datos) {
-        return $this->validarEliminar($datos);
-    }
-    
-    /**
-     * Verifica si una categoría existe por ID
-     */
-    private function verificarCategoriaExistente($idCategoria) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT COUNT(*) FROM tbl_categoria WHERE id_categoria = :id_categoria";
+    private function obtenerCategoriaPorIdSimple($id_categoria) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria) {
+            $sql = "SELECT id_categoria, nombre_categoria FROM tbl_categoria WHERE id_categoria = ?";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':id_categoria', $idCategoria, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
+            $stmt->execute([$id_categoria]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         });
     }
     
-    /**
-     * Verifica si una categoría tiene productos asociados
-     */
-    private function verificarProductosAsociados($idCategoria) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $categoriaInfo = $this->o_categoriaPorId($idCategoria, $conexion);
-            if (!$categoriaInfo) {
-                return false;
-            }
-            
-            $this->nombre_categoria = $categoriaInfo['nombre_categoria'];
+    private function validarIntegridadReferencial($id_categoria, $pdo) {
+        $errores = [];
+        
+        // Verificar si hay productos asociados a esta categoría
+        $this->nombre_categoria = null;
+        $categoria_info = $this->o_categoriaPorId($id_categoria, $pdo);
+        if ($categoria_info) {
+            $this->nombre_categoria = $categoria_info['nombre_categoria'];
             $tabla = $this->generarNombreTabla();
             
             // Verificar si la tabla existe
             $tableExists = $pdo->query("SHOW TABLES LIKE '$tabla'")->rowCount() > 0;
             
             if ($tableExists) {
-                // Verificar si hay productos en la tabla de la categoría
                 $stmt = $pdo->query("SELECT COUNT(*) as total FROM `$tabla`");
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                return (int)$result['total'] > 0;
+                $productCount = (int)$result['total'];
+                
+                if ($productCount > 0) {
+                    $errores['integridad'] = "No se puede eliminar la categoría porque tiene {$productCount} producto(s) asociado(s)";
+                }
             }
-            
-            return false;
+        }
+        
+        return $errores;
+    }
+    
+    public function validarRegistrar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'registrar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        if ($this->existeNombreCategoria($datos['nombre_categoria'])) {
+            $errores['nombre_categoria'] = 'El nombre de la categoría ya existe';
+        }
+        
+        return $errores;
+    }
+    
+    public function validarConsultar($filtros = []) {
+        $filtros_default = [
+            'pagina' => 1,
+            'limite' => 50,
+            'orden' => 'nombre_categoria',
+            'direccion' => 'ASC'
+        ];
+        
+        $filtros = array_merge($filtros_default, $filtros);
+        
+        return $this->validarFiltros($filtros);
+    }
+    
+    public function validarModificar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'modificar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $categoria_existente = $this->obtenerCategoriaPorIdSimple($datos['id_categoria']);
+        if (!$categoria_existente) {
+            $errores['existencia'] = 'La categoría que intenta modificar no existe';
+            return $errores;
+        }
+        
+        if (isset($datos['nombre_categoria']) && 
+            $this->existeNombreCategoria($datos['nombre_categoria'], $datos['id_categoria'])) {
+            $errores['nombre_categoria'] = 'El nombre de la categoría ya existe';
+        }
+        
+        return $errores;
+    }
+    
+    public function validarEliminar($id_categoria) {
+        $errores = $this->validarId($id_categoria);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $categoria = $this->obtenerCategoriaPorIdSimple($id_categoria);
+        if (!$categoria) {
+            $errores['existencia'] = 'La categoría que intenta eliminar no existe';
+            return $errores;
+        }
+        
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria) {
+            $errores = [];
+            $errores_integridad = $this->validarIntegridadReferencial($id_categoria, $pdo);
+            $errores = array_merge($errores, $errores_integridad);
+            return $errores;
         });
     }
     

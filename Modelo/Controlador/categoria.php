@@ -25,12 +25,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             // Validar datos de entrada
             $categoria = new Categoria();
-            $datosValidacion = [
-                'nombre_categoria' => $_POST['nombre_categoria'] ?? '',
-                'caracteristicas' => isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : []
-            ];
-            
-            $errores = $categoria->validarRegistrarCategoria($datosValidacion);
+
+            $errores = $categoria->validarRegistrar($_POST);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -42,14 +38,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $categoria->setNombreCategoria($_POST['nombre_categoria']);
             $caracteristicas = isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : [];
-
-            if ($categoria->existeNombreCategoria($_POST['nombre_categoria'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre de la categoria ya existe'
-                ]);
-                exit;
-            }
 
             if ($categoria->registrarCategoria($caracteristicas)) {
                 $categoriaRegistrado = $categoria->obtenerUltimoCategoria();
@@ -93,11 +81,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtener_categoria':
             // Validar datos de entrada
             $categoria = new Categoria();
-            $datosValidacion = [
-                'id_categoria' => $_POST['id_categoria'] ?? null
-            ];
             
-            $errores = $categoria->validarConsultarCategoria($datosValidacion);
+            $errores = $categoria->validarConsultar($_POST);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -167,15 +152,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $categoria->setIdCategoria($id_categoria);
             $categoria->setNombreCategoria($nuevo_nombre);
             
-            // Verificar si el nombre ya existe (excluyendo la categoría actual)
-            if ($categoria->existeNombreCategoria($nuevo_nombre, $id_categoria)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre de la categoria ya existe'
-                ]);
-                exit;
-            }
-
             // Intentar modificar la categoría
             $resultado = $categoria->modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas);
             
@@ -217,11 +193,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'eliminar':
             // Validar datos de entrada
             $categoria = new Categoria();
-            $datosValidacion = [
-                'id_categoria' => $_POST['id_categoria'] ?? null
-            ];
             
-            $errores = $categoria->validarEliminarCategoria($datosValidacion);
+            $errores = $categoria->validarEliminar($_POST);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
