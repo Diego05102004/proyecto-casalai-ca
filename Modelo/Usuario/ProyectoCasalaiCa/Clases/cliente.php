@@ -378,24 +378,22 @@ class cliente extends BD {
         if (!empty($errores)) {
             return $errores;
         }
-        
-        $cliente_existente = $this->obtenerClientePorId($this->id);
+
+        $cliente_existente = $this->obtenerClientePorId($datos['id_clientes']);
         if (!$cliente_existente) {
             $errores['existencia'] = 'El cliente que intenta modificar no existe';
             return $errores;
         }
-    
-        if (isset($datos['cedula']) && 
-            $this->existeNumeroCedula($datos['cedula'], $this->id)) {
-            $errores['cedula'] = 'La cédula del cliente ya está registrada';
+
+        if (isset($datos['nombre']) && 
+            $this->existeNombre($datos['nombre'], $datos['id_clientes'])) {
+            $errores['nombre'] = 'El nombre del cliente ya existe';
         }
         
         return $errores;
     }
     
-    public function validarEliminar($datos) {
-        $id = $datos['id_clientes'] ?? null;
-        
+    public function validarEliminar($id) {
         $errores = $this->validarId($id);
         if (!empty($errores)) {
             return $errores;
@@ -583,15 +581,6 @@ class cliente extends BD {
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $this->correo);
             $stmt->bindParam(':activo', $this->activo);
-            return $stmt->execute();
-        });
-    }
-
-    function eliminar_l($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
-            $sql = "UPDATE tbl_clientes SET activo = 0 WHERE id_clientes = :id_clientes";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_clientes', $id);
             return $stmt->execute();
         });
     }
