@@ -20,15 +20,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             // Validar datos de entrada
             $cliente = new cliente();
-            $datosValidacion = [
-                'nombre' => $_POST['nombre'] ?? '',
-                'cedula' => $_POST['cedula'] ?? '',
-                'telefono' => $_POST['telefono'] ?? '',
-                'direccion' => $_POST['direccion'] ?? '',
-                'correo' => $_POST['correo'] ?? ''
-            ];
             
-            $errores = $cliente->validarRegistrarCliente($datosValidacion);
+            $errores = $cliente->validarRegistrar($_POST);
+
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -43,14 +37,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->settelefono($_POST['telefono']);
             $cliente->setdireccion($_POST['direccion']);
             $cliente->setcorreo($_POST['correo']);
-            
-            if ($cliente->existeNumeroCedula($_POST['cedula'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El número de Cedula ya existe'
-                ]);
-                exit;
-            }
 
             if ($cliente->ingresarclientes()) {
                 $clienteRegistrado = $cliente->obtenerUltimoCliente();
@@ -86,11 +72,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'obtener_clientes':
             // Validar datos de entrada
             $cliente = new cliente();
-            $datosValidacion = [
-                'id_cliente' => $_POST['id_clientes'] ?? null
-            ];
             
-            $errores = $cliente->validarConsultarCliente($datosValidacion);
+            $errores = $cliente->validarConsultar($_POST);
+
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -119,16 +103,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // Validar datos de entrada
             $cliente = new cliente();
-            $datosValidacion = [
-                'id_cliente' => $_POST['id_clientes'] ?? null,
-                'nombre' => $_POST['nombre'] ?? '',
-                'cedula' => $_POST['cedula'] ?? '',
-                'telefono' => $_POST['telefono'] ?? '',
-                'direccion' => $_POST['direccion'] ?? '',
-                'correo' => $_POST['correo'] ?? ''
-            ];
             
-            $errores = $cliente->validarModificarCliente($datosValidacion);
+            $errores = $cliente->validarModificar($_POST);
+
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -152,14 +129,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'El cliente que intenta modificar no existe'
-                ]);
-                exit;
-            }
-            
-            if ($cliente->existeNumeroCedula($_POST['cedula'], $id)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El número de Cedula ya existe'
                 ]);
                 exit;
             }
@@ -190,11 +159,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'eliminar':
             // Validar datos de entrada
             $cliente = new cliente();
-            $datosValidacion = [
-                'id_cliente' => $_POST['id_clientes'] ?? null
-            ];
             
-            $errores = $cliente->validarEliminarCliente($datosValidacion);
+            $errores = $cliente->validarEliminar($_POST);
+            
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
