@@ -15,6 +15,9 @@ class cliente extends BD {
     private $id;
     
     // Constantes para validaciones
+    const MAX_REGISTROS_PAGINA = 100;
+    const CAMPOS_OBLIGATORIOS = ['nombre', 'cedula'];
+    const FORMATOS_REPORTE = ['pdf', 'excel', 'csv'];
     const MAX_NOMBRE_CLIENTE = 200;
     const MIN_NOMBRE_CLIENTE = 2;
     const MAX_DIRECCION = 500;
@@ -117,65 +120,117 @@ class cliente extends BD {
     // ==================== VALIDACIONES DE BACKEND ====================
 
     /**
-     * Valida los datos para registrar un cliente
+     * Sanitiza los datos de entrada
      */
-    private function validarRegistrar($datos) {
+    private function sanitizarDatos($datos) {
+        if (!is_array($datos)) {
+            return $datos;
+        }
+        
+        $datos_sanitizados = [];
+        
+        foreach ($datos as $clave => $valor) {
+            if (is_string($valor)) {
+                $valor = trim($valor);
+                $valor = htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+                $valor = addslashes($valor);
+                $datos_sanitizados[$clave] = $valor;
+            } else {
+                $datos_sanitizados[$clave] = $valor;
+            }
+        }
+        
+        return $datos_sanitizados;
+    }
+    
+    /**
+     * Valida el esquema de datos según la operación
+     */
+    private function validarEsquema($datos, $operacion = 'registrar') {
         $errores = [];
         
-        // Validar nombre del cliente
-        if (!isset($datos['nombre'])) {
-            $errores['nombre'] = 'El nombre del cliente es obligatorio';
-        } else {
+        if (!is_array($datos)) {
+            $errores['esquema'] = 'Los datos deben ser un array';
+            return $errores;
+        }
+        
+        $campos_requeridos = self::CAMPOS_OBLIGATORIOS;
+        
+        if ($operacion === 'registrar') {
+            foreach ($campos_requeridos as $campo) {
+                if (!isset($datos[$campo]) || $datos[$campo] === '' || $datos[$campo] === null) {
+                    $errores[$campo] = "El campo {$campo} es obligatorio";
+                }
+            }
+        } elseif ($operacion === 'modificar') {
+            if (!isset($datos['id_clientes']) || $datos['id_clientes'] === '' || $datos['id_clientes'] === null) {
+                $errores['id_clientes'] = 'El ID del cliente es obligatorio para modificar';
+            }
+            
+            $campos_modificar = array_intersect(array_keys($datos), $campos_requeridos);
+            if (empty($campos_modificar)) {
+                $errores['modificacion'] = 'Debe proporcionar al menos un campo para modificar';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida el formato de los datos
+     */
+    private function validarFormato($datos) {
+        $errores = [];
+        
+        if (isset($datos['nombre'])) {
             $nombre = trim($datos['nombre']);
-            if (empty($nombre)) {
-                $errores['nombre'] = 'El nombre del cliente no puede estar vacío';
-            } elseif (mb_strlen($nombre) < self::MIN_NOMBRE_CLIENTE || mb_strlen($nombre) > self::MAX_NOMBRE_CLIENTE) {
+            if (mb_strlen($nombre) < self::MIN_NOMBRE_CLIENTE || mb_strlen($nombre) > self::MAX_NOMBRE_CLIENTE) {
                 $errores['nombre'] = 'El nombre del cliente debe tener entre ' . self::MIN_NOMBRE_CLIENTE . ' y ' . self::MAX_NOMBRE_CLIENTE . ' caracteres';
             } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre)) {
                 $errores['nombre'] = 'El nombre del cliente solo puede contener letras, números, espacios y caracteres especiales comunes';
             }
         }
         
-        // Validar cédula (formato: 1.234.567 o 12.345.678)
-        if (!isset($datos['cedula'])) {
-            $errores['cedula'] = 'La cédula del cliente es obligatoria';
-        } else {
+        if (isset($datos['cedula'])) {
             $cedula = trim($datos['cedula']);
-            if (empty($cedula)) {
-                $errores['cedula'] = 'La cédula del cliente no puede estar vacía';
-            } elseif (!preg_match('/^(?:\d{1,2}\.\d{3}\.\d{3})$/', $cedula)) {
+            if (!preg_match('/^(?:\d{1,2}\.\d{3}\.\d{3})$/', $cedula)) {
                 $errores['cedula'] = 'La cédula debe tener el formato 1.234.567 o 12.345.678';
             } elseif (mb_strlen($cedula) < self::MIN_CEDULA || mb_strlen($cedula) > self::MAX_CEDULA) {
                 $errores['cedula'] = 'La cédula debe tener entre ' . self::MIN_CEDULA . ' y ' . self::MAX_CEDULA . ' caracteres';
             }
         }
         
-        // Validar teléfono (opcional)
-        if (isset($datos['telefono'])) {
+        if (isset($datos['telefono']) && $datos['telefono'] !== '') {
             $telefono = trim($datos['telefono']);
-            if (!empty($telefono)) {
-                if (mb_strlen($telefono) < self::MIN_TELEFONO || mb_strlen($telefono) > self::MAX_TELEFONO) {
-                    $errores['telefono'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO . ' y ' . self::MAX_TELEFONO . ' caracteres';
-                } elseif (!preg_match('/^[0-9\-\+\(\)\s]+$/', $telefono)) {
-                    $errores['telefono'] = 'El teléfono solo puede contener números, guiones, paréntesis y el signo +';
-                }
+            if (mb_strlen($telefono) < self::MIN_TELEFONO || mb_strlen($telefono) > self::MAX_TELEFONO) {
+                $errores['telefono'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO . ' y ' . self::MAX_TELEFONO . ' caracteres';
+            } elseif (!preg_match('/^[0-9\-\+\(\)\s]+$/', $telefono)) {
+                $errores['telefono'] = 'El teléfono solo puede contener números, guiones, paréntesis y el signo +';
             }
         }
         
-        // Validar dirección (opcional)
-        if (isset($datos['direccion'])) {
+        if (isset($datos['direccion']) && $datos['direccion'] !== '') {
             $direccion = trim($datos['direccion']);
-            if (!empty($direccion) && mb_strlen($direccion) > self::MAX_DIRECCION) {
+            if (mb_strlen($direccion) > self::MAX_DIRECCION) {
                 $errores['direccion'] = 'La dirección no debe exceder los ' . self::MAX_DIRECCION . ' caracteres';
             }
         }
         
-        // Validar correo electrónico (opcional)
-        if (isset($datos['correo'])) {
+        if (isset($datos['correo']) && $datos['correo'] !== '') {
             $correo = trim($datos['correo']);
-            if (!empty($correo)) {
-                if (mb_strlen($correo) > self::MAX_CORREO) {
-                    $errores['correo'] = 'El correo electrónico no debe exceder los ' . self::MAX_CORREO . ' caracteres';
+            if (mb_strlen($correo) > self::MAX_CORREO) {
+                $errores['correo'] = 'El correo no debe exceder los 255 caracteres';
+            } elseif (!preg_match('/^[^@]+@[^@]+\.[^@]+$/', $correo)) {
+                $errores['correo'] = 'El correo debe tener formato usuario@dominio.extensión';
+            } else {
+                list($usuario, $dominio_completo) = explode('@', $correo, 2);
+                
+                if (strlen($usuario) > 64) {
+                    $errores['correo'] = 'El nombre de usuario no debe exceder los 64 caracteres';
+                } elseif (strlen($dominio_completo) > 253) {
+                    $errores['correo'] = 'El dominio no debe exceder los 253 caracteres';
+                } elseif (preg_match('/[<>"\s]/', $usuario)) {
+                    $errores['correo'] = 'El nombre de usuario contiene caracteres no permitidos';
                 } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
                     $errores['correo'] = 'El formato del correo electrónico no es válido';
                 }
@@ -186,91 +241,53 @@ class cliente extends BD {
     }
     
     /**
-     * Valida los datos para consultar un cliente
+     * Valida ID de cliente
      */
-    private function validarConsultar($datos) {
+    private function validarId($id) {
         $errores = [];
         
-        // Validar ID del cliente
-        if (!isset($datos['id_cliente'])) {
-            $errores['id_cliente'] = 'El ID del cliente es obligatorio';
-        } elseif (!is_numeric($datos['id_cliente']) || $datos['id_cliente'] <= 0) {
-            $errores['id_cliente'] = 'El ID del cliente debe ser un número positivo';
+        if (!is_numeric($id) || $id <= 0) {
+            $errores['id_clientes'] = 'El ID del cliente debe ser un número positivo';
         }
         
         return $errores;
     }
     
     /**
-     * Valida los datos para modificar un cliente
+     * Valida filtros para consultas
      */
-    private function validarModificar($datos) {
+    private function validarFiltros($filtros) {
         $errores = [];
         
-        // Validar ID del cliente
-        if (!isset($datos['id_cliente'])) {
-            $errores['id_cliente'] = 'El ID del cliente es obligatorio';
-        } elseif (!is_numeric($datos['id_cliente']) || $datos['id_cliente'] <= 0) {
-            $errores['id_cliente'] = 'El ID del cliente debe ser un número positivo';
-        }
-        
-        // Validar nombre del cliente
-        if (!isset($datos['nombre'])) {
-            $errores['nombre'] = 'El nombre del cliente es obligatorio';
-        } else {
-            $nombre = trim($datos['nombre']);
-            if (empty($nombre)) {
-                $errores['nombre'] = 'El nombre del cliente no puede estar vacío';
-            } elseif (mb_strlen($nombre) < self::MIN_NOMBRE_CLIENTE || mb_strlen($nombre) > self::MAX_NOMBRE_CLIENTE) {
-                $errores['nombre'] = 'El nombre del cliente debe tener entre ' . self::MIN_NOMBRE_CLIENTE . ' y ' . self::MAX_NOMBRE_CLIENTE . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre)) {
-                $errores['nombre'] = 'El nombre del cliente solo puede contener letras, números, espacios y caracteres especiales comunes';
+        // Validar página
+        if (isset($filtros['pagina'])) {
+            $pagina = (int)$filtros['pagina'];
+            if ($pagina < 1) {
+                $errores['pagina'] = 'La página debe ser un número mayor a 0';
             }
         }
         
-        // Validar cédula
-        if (!isset($datos['cedula'])) {
-            $errores['cedula'] = 'La cédula del cliente es obligatoria';
-        } else {
-            $cedula = trim($datos['cedula']);
-            if (empty($cedula)) {
-                $errores['cedula'] = 'La cédula del cliente no puede estar vacía';
-            } elseif (!preg_match('/^(?:\d{1,2}\.\d{3}\.\d{3})$/', $cedula)) {
-                $errores['cedula'] = 'La cédula debe tener el formato 1.234.567 o 12.345.678';
-            } elseif (mb_strlen($cedula) < self::MIN_CEDULA || mb_strlen($cedula) > self::MAX_CEDULA) {
-                $errores['cedula'] = 'La cédula debe tener entre ' . self::MIN_CEDULA . ' y ' . self::MAX_CEDULA . ' caracteres';
+        // Validar límite
+        if (isset($filtros['limite'])) {
+            $limite = (int)$filtros['limite'];
+            if ($limite < 1 || $limite > self::MAX_REGISTROS_PAGINA) {
+                $errores['limite'] = 'El límite debe estar entre 1 y ' . self::MAX_REGISTROS_PAGINA;
             }
         }
         
-        // Validar teléfono (opcional)
-        if (isset($datos['telefono'])) {
-            $telefono = trim($datos['telefono']);
-            if (!empty($telefono)) {
-                if (mb_strlen($telefono) < self::MIN_TELEFONO || mb_strlen($telefono) > self::MAX_TELEFONO) {
-                    $errores['telefono'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO . ' y ' . self::MAX_TELEFONO . ' caracteres';
-                } elseif (!preg_match('/^[0-9\-\+\(\)\s]+$/', $telefono)) {
-                    $errores['telefono'] = 'El teléfono solo puede contener números, guiones, paréntesis y el signo +';
-                }
+        // Validar orden
+        if (isset($filtros['orden'])) {
+            $ordenes_validos = ['id_clientes', 'nombre', 'cedula', 'telefono', 'correo'];
+            if (!in_array($filtros['orden'], $ordenes_validos)) {
+                $errores['orden'] = 'El campo de orden no es válido';
             }
         }
         
-        // Validar dirección (opcional)
-        if (isset($datos['direccion'])) {
-            $direccion = trim($datos['direccion']);
-            if (!empty($direccion) && mb_strlen($direccion) > self::MAX_DIRECCION) {
-                $errores['direccion'] = 'La dirección no debe exceder los ' . self::MAX_DIRECCION . ' caracteres';
-            }
-        }
-        
-        // Validar correo electrónico (opcional)
-        if (isset($datos['correo'])) {
-            $correo = trim($datos['correo']);
-            if (!empty($correo)) {
-                if (mb_strlen($correo) > self::MAX_CORREO) {
-                    $errores['correo'] = 'El correo electrónico no debe exceder los ' . self::MAX_CORREO . ' caracteres';
-                } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-                    $errores['correo'] = 'El formato del correo electrónico no es válido';
-                }
+        // Validar dirección
+        if (isset($filtros['direccion'])) {
+            $direcciones_validas = ['ASC', 'DESC'];
+            if (!in_array(strtoupper($filtros['direccion']), $direcciones_validas)) {
+                $errores['direccion'] = 'La dirección de orden debe ser ASC o DESC';
             }
         }
         
@@ -278,102 +295,184 @@ class cliente extends BD {
     }
     
     /**
-     * Valida los datos para eliminar un cliente
+     * Valida integridad referencial para eliminación
      */
-    private function validarEliminar($datos) {
+    private function validarIntegridadReferencial($id, $pdo) {
         $errores = [];
         
-        // Validar ID del cliente
-        if (!isset($datos['id_cliente'])) {
-            $errores['id_cliente'] = 'El ID del cliente es obligatorio';
-        } elseif (!is_numeric($datos['id_cliente']) || $datos['id_cliente'] <= 0) {
-            $errores['id_cliente'] = 'El ID del cliente debe ser un número positivo';
-        }
+        // Verificar si tiene compras asociadas
+        $sql = "SELECT COUNT(*) as total FROM tbl_compras WHERE id_clientes = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$id]);
+        $compras = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         
-        return $errores;
-    }
-    
-    /**
-     * Valida los datos para generar reporte
-     */
-    private function validarDatosReporte($datos) {
-        $errores = [];
-        
-        // Validar límite de resultados (opcional)
-        if (isset($datos['limite'])) {
-            $limite = (int)$datos['limite'];
-            if ($limite <= 0 || $limite > 100) {
-                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
-            }
+        if ($compras > 0) {
+            $errores['integridad'] = "No se puede eliminar el cliente porque tiene {$compras} compra(s) asociada(s)";
         }
         
         return $errores;
     }
     
     // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
+    
+    /**
+     * Valida los datos para registrar un cliente
+     */
+    public function validarRegistrar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'registrar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        if ($this->existeNumeroCedula($datos['cedula'])) {
+            $errores['cedula'] = 'La cédula del cliente ya está registrada';
+        }
+        
+        return $errores;
+    }
+    
+    /**
+     * Valida los datos para consultar clientes
+     */
+    public function validarConsultar($filtros = []) {
+        $filtros_default = [
+            'pagina' => 1,
+            'limite' => 50,
+            'orden' => 'nombre',
+            'direccion' => 'ASC'
+        ];
+        
+        $filtros = array_merge($filtros_default, $filtros);
+        
+        return $this->validarFiltros($filtros);
+    }
 
-    /**
-     * Valida los datos para registrar (método público)
-     */
-    public function validarRegistrarCliente($datos) {
-        return $this->validarRegistrar($datos);
+    public function validarModificar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'modificar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+
+        $cliente_existente = $this->obtenerclientesPorId($id);
+        if (!$cliente_existente) {
+            $errores['existencia'] = 'El cliente que intenta modificar no existe';
+            return $errores;
+        }
+
+        if (isset($datos['cedula']) && 
+            $this->existeNumeroCedula($datos['cedula'], $datos['id_clientes'])) {
+            $errores['cedula'] = 'La cédula del cliente ya está registrada';
+        }
+        
+        return $errores;
     }
     
-    /**
-     * Valida los datos para consultar (método público)
-     */
-    public function validarConsultarCliente($datos) {
-        return $this->validarConsultar($datos);
-    }
-    
-    /**
-     * Valida los datos para modificar (método público)
-     */
-    public function validarModificarCliente($datos) {
-        return $this->validarModificar($datos);
-    }
-    
-    /**
-     * Valida los datos para eliminar (método público)
-     */
-    public function validarEliminarCliente($datos) {
-        return $this->validarEliminar($datos);
-    }
-    
-    /**
-     * Valida los datos para reporte (método público)
-     */
-    public function validarReporte($datos) {
-        return $this->validarDatosReporte($datos);
-    }
-    
-    /**
-     * Verifica si un cliente existe por ID
-     */
-    private function verificarClienteExistente($idCliente) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE id_clientes = :id_cliente AND activo = 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
+    public function validarEliminar($id) {
+        $errores = $this->validarId($id);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $cliente = $this->obtenerclientesPorId($id);
+        if (!$cliente) {
+            $errores['existencia'] = 'El cliente que intenta eliminar no existe';
+            return $errores;
+        }
+        
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id) { 
+            $errores = [];
+            $errores_integridad = $this->validarIntegridadReferencial($id, $pdo); 
+            $errores = array_merge($errores, $errores_integridad);
+            return $errores;
         });
     }
+
+    /**
+     * Valida los datos para descargar reportes
+     */
+    public function validarDescarga($parametros) {
+        $errores = $this->validarReporte($parametros);
+        
+        if (!isset($_SESSION['id_usuario']) || !$_SESSION['id_usuario']) {
+            $errores['permisos'] = 'No tiene permisos para descargar reportes';
+        }
+        
+        return $errores;
+    }
     
     /**
-     * Verifica si una cédula ya existe (excluyendo un ID específico)
+     * Obtiene clientes con filtros aplicados
      */
-    private function verificarCedulaExistente($cedula, $excluirId = null) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = :cedula";
-            $params = [':cedula' => $cedula];
-            if ($excluirId !== null) {
-                $sql .= " AND id_clientes != :id_cliente";
-                $params[':id_cliente'] = $excluirId;
+    public function obtenerClientesConFiltros($filtros = []) {
+        $errores = $this->validarConsultar($filtros);
+        if (!empty($errores)) {
+            return ['error' => $errores];
+        }
+        
+        return $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
+            $pagina = (int)($filtros['pagina'] ?? 1);
+            $limite = (int)($filtros['limite'] ?? 50);
+            $orden = $filtros['orden'] ?? 'nombre';
+            $direccion = $filtros['direccion'] ?? 'ASC';
+            $busqueda = $filtros['busqueda'] ?? '';
+            
+            $offset = ($pagina - 1) * $limite;
+            
+            $sql = "SELECT * FROM tbl_clientes WHERE activo = 1";
+            $params = [];
+            
+            if (!empty($busqueda)) {
+                $sql .= " AND (nombre LIKE :busqueda OR cedula LIKE :busqueda OR correo LIKE :busqueda)";
+                $params[':busqueda'] = '%' . $busqueda . '%';
             }
+            
+            $sql .= " ORDER BY {$orden} {$direccion}";
+            $sql .= " LIMIT :limite OFFSET :offset";
+            
             $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            return $stmt->fetchColumn() > 0;
+            
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            
+            $stmt->execute();
+            $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $sql_total = "SELECT COUNT(*) as total FROM tbl_clientes WHERE activo = 1";
+            if (!empty($busqueda)) {
+                $sql_total .= " AND (nombre LIKE :busqueda OR cedula LIKE :busqueda OR correo LIKE :busqueda)";
+            }
+            
+            $stmt_total = $pdo->prepare($sql_total);
+            foreach ($params as $key => $value) {
+                $stmt_total->bindValue($key, $value);
+            }
+            $stmt_total->execute();
+            $total = $stmt_total->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            return [
+                'clientes' => $clientes,
+                'total' => $total,
+                'pagina' => $pagina,
+                'limite' => $limite,
+                'total_paginas' => ceil($total / $limite)
+            ];
         });
     }
 
@@ -394,7 +493,6 @@ class cliente extends BD {
         });
     }
 
-    // En modelo/cliente.php
     public function listarTodosClientes() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $stmt = $pdo->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
@@ -403,7 +501,7 @@ class cliente extends BD {
         });
     }
 
-    public function existeNumeroCedula($cedula, $excluir_id = null) {
+    private function existeNumeroCedula($cedula, $excluir_id = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($cedula, $excluir_id) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = ?";
             $params = [$cedula];
@@ -444,6 +542,7 @@ class cliente extends BD {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
     }
+
     public function obtenerclientesPorId($id) {
         return $this->obtClientePorId($id);
     }
@@ -471,15 +570,6 @@ class cliente extends BD {
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $this->correo);
             $stmt->bindParam(':activo', $this->activo);
-            return $stmt->execute();
-        });
-    }
-
-    function eliminar_l($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
-            $sql = "UPDATE tbl_clientes SET activo = 0 WHERE id_clientes = :id_clientes";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_clientes', $id);
             return $stmt->execute();
         });
     }
