@@ -80,7 +80,7 @@ $(document).ready(function () {
 
                     $filter.find('label').css({ 'margin-bottom': '0' });
 
-                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir-comprafisica' });
                     var $btn = $('<button>', {
                         id: 'btnIncluirVenta',
                         'class': 'btn-incluir',
@@ -982,11 +982,36 @@ $(document).ready(function () {
                 return;
             } else {
                 $("#tablaConsultas").show();
-                $(".space-btn-incluir").show();
+                $(".space-btn-incluir-comprafisica").show();
                 $("#mensaje-permiso").remove();
             }
 
             if (permisos.incluir) {
+                if ($('#btnIncluirVenta').length === 0) {
+                    var $filter = $('.dataTables_filter');
+
+                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir-comprafisica' });
+                    var $btn = $('<button>', {
+                        id: 'btnIncluirVenta',
+                        'class': 'btn-incluir',
+                        type: 'button',
+                        title: 'Incluir Venta Presencial'
+                    }).append($('<img>', { src: 'assets/img/plus.svg' }));
+                    $btnWrapper.append($btn);
+
+                    if ($filter.length) {
+                        $filter.css({
+                            display: 'flex',
+                            'align-items': 'center',
+                            'justify-content': 'flex-end',
+                            gap: '10px'
+                        });
+                        $filter.find('label').css({ 'margin-bottom': '0' });
+                        $filter.append($btnWrapper);
+                    } else {
+                        $('.contenedor-tabla').prepend($btnWrapper);
+                    }
+                }
                 $("#btnIncluirVenta").show();
             } else {
                 $("#btnIncluirVenta").hide();

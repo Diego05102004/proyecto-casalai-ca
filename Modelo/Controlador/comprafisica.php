@@ -19,17 +19,29 @@ define('MODULO_DESPACHO', "Despacho");
 // Inicializaciones
 $k = new Comprafisica();
 $data = [];
+
+// Evitar llamadas HTTP lentas al BCV en cada request; usar cache si existe
 $dolarService = new DolarService();
-$precioDolar = $dolarService->obtenerPrecioDolar();
-$dolarService->guardarPrecioCache($precioDolar);
+$precioDolar = 35.50;
+try {
+    $bdCache = new BD('P');
+    $pdoCache = $bdCache->getConexion();
+    $stmtCache = $pdoCache->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
+    $stmtCache->execute();
+    $cache = $stmtCache->fetch(PDO::FETCH_ASSOC);
+    if ($cache && isset($cache['precio'], $cache['fecha']) && (time() - strtotime($cache['fecha'])) < 86400) {
+        $precioDolar = (float) $cache['precio'];
+    } else {
+        $precioDolar = $dolarService->obtenerPrecioDolar();
+        $dolarService->guardarPrecioCache($precioDolar);
+    }
+} catch (Exception $e) {
+    // Si falla el cache o la consulta, usar el método existente (que ya hace fallback)
+    $precioDolar = $dolarService->obtenerPrecioDolar();
+}
 
 // Manejar generación de reportes PDF
 try {
-    $dolarService = new DolarService();
-    $precioDolar = $dolarService->obtenerPrecioDolar();
-    $dolarService->guardarPrecioCache($precioDolar);
-
-    // Asignar a $data
     $data['monitors'] = [
         'bcv' => [
             'price' => $precioDolar,
@@ -37,14 +49,13 @@ try {
         ]
     ];
 } catch (Exception $e) {
-    // En caso de error, usar valores por defecto
     $data['monitors'] = [
         'bcv' => [
             'price' => 35.50,
             'updated' => date('Y-m-d H:i:s') . ' (valor por defecto)'
         ]
     ];
-    error_log('Error obteniendo precio dólar: ' . $e->getMessage());
+    error_log('Error asignando precio dólar: ' . $e->getMessage());
 }
 $id_rol = $_SESSION['id_rol'] ?? 0; // valor por defecto seguro
 
@@ -54,7 +65,7 @@ $facturaModel = new Factura();
 
 // Usar un nombre de módulo consistente sin acentos para evitar desajustes con la BD
 $permisos = new Permisos();
-$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, 'compra fisica');
+$permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('compra fisica'));
 
 if (is_file("Vista/" . $pagina . ".php")) {
     $accion = $_POST['accion'] ?? '';
@@ -228,6 +239,9 @@ if (is_file("Vista/" . $pagina . ".php")) {
             case 'permisos_tiempo_real':
                 header('Content-Type: application/json; charset=utf-8');
                 $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, 'compra fisica');
+                if (is_array($permisosActualizados) && !array_key_exists('incluir', $permisosActualizados) && array_key_exists('ingresar', $permisosActualizados)) {
+                    $permisosActualizados['incluir'] = (bool) $permisosActualizados['ingresar'];
+                }
                 echo json_encode($permisosActualizados);
                 exit;
 

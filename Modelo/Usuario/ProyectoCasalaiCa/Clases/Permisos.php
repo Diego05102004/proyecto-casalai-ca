@@ -318,11 +318,13 @@ class Permisos extends BD {
     private function o_permisosUsuarioModulo($id_rol, $nombre_modulo) {
         if ((int)$id_rol === 6) {
             return [
+                'ingresar' => true,
                 'consultar' => true,
                 'incluir' => true,
                 'modificar' => true,
                 'eliminar' => true,
-                'generar reporte' => true
+                'generar reporte' => true,
+                'generar re' => true
             ];
         }
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol, $nombre_modulo) {
@@ -347,12 +349,36 @@ class Permisos extends BD {
             $permisos = [
                 'consultar' => false,
                 'incluir' => false,
+                'ingresar' => false,
                 'modificar' => false,
                 'eliminar' => false,
                 'generar reporte' => false
             ];
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $perm) {
-                $permisos[$perm['accion']] = ($perm['estatus'] === 'Permitido');
+                $accionRaw = isset($perm['accion']) ? (string) $perm['accion'] : '';
+                $accion = strtolower(trim($accionRaw));
+                $accion = preg_replace('/\s+/', ' ', $accion);
+                if ($accion === 'reportar') {
+                    $accion = 'generar reporte';
+                }
+                if ($accion === 'incluir') {
+                    $accion = 'incluir';
+                }
+                if ($accion === 'ingresar') {
+                    $accion = 'ingresar';
+                }
+                if ($accion === 'consultar') {
+                    $accion = 'consultar';
+                }
+                if ($accion === 'modificar') {
+                    $accion = 'modificar';
+                }
+                if ($accion === 'eliminar') {
+                    $accion = 'eliminar';
+                }
+                if (array_key_exists($accion, $permisos)) {
+                    $permisos[$accion] = ($perm['estatus'] === 'Permitido');
+                }
             }
             return $permisos;
         });

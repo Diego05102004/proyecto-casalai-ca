@@ -1,12 +1,18 @@
 <?php $idRol = $_SESSION['id_rol']; // o el rol actual del usuario
 $idModulo = 21;
 
-if ((isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUsuarioEntrar[$idRol][$idModulo]['consultar'] === true) || $_SESSION['nombre_rol'] == 'SuperUsuario') { ?>
+$tienePermisoConsultar = (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUsuarioEntrar[$idRol][$idModulo]['consultar'] === true);
+if (!$tienePermisoConsultar && isset($permisosUsuario['consultar']) && $permisosUsuario['consultar'] === true) {
+    $tienePermisoConsultar = true;
+}
+
+if ($tienePermisoConsultar || $_SESSION['nombre_rol'] == 'SuperUsuario') { ?>
 
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
+    <meta charset="UTF-8">
 	<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'header.php'; ?>
@@ -515,7 +521,7 @@ const productosDisponibles = <?= json_encode(array_map(function($prod) {
         'nombre_producto' => $prod['nombre_producto'],
         'precio' => $prod['precio'],
         ];
-}, $productos)) ?>;
+}, is_array($productos) ? $productos : [])) ?>;
 
 // Función para crear un nuevo bloque vacío de producto
 function crearBloqueProducto(productosDisponibles) {
@@ -567,18 +573,18 @@ $(document).on('click', '.btn-eliminar-producto', function () {
 
 <!-- jQuery primero -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="assets/javascript/comprafisica.js"></script>
-<script src="assets/public/js/chart.js"></script>
-<script src="assets/public/js/html2canvas.min.js"></script>
-<script src="assets/public/js/jspdf.umd.min.js"></script>
 <script src="assets/public/js/jquery-3.7.1.min.js"></script>
 <script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="assets/public/js/jquery.dataTables.min.js"></script>
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="assets/javascript/validaciones.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/public/js/chart.js"></script>
+<script src="assets/public/js/html2canvas.min.js"></script>
+<script src="assets/public/js/jspdf.umd.min.js"></script>
+<script src="assets/javascript/comprafisica.js"></script>
 
 <script>
 // Funciones de validación

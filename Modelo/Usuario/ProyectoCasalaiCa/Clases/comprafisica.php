@@ -545,6 +545,7 @@ class Comprafisica extends BD{
             $p = $pdo->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
             $p->execute();
             $rows = $p->fetchAll(PDO::FETCH_ASSOC);
+            return $rows;
         });
     }
 
@@ -587,6 +588,7 @@ class Comprafisica extends BD{
                 'mensaje' => $respuesta,
                 'modalSize' => isset($modalSize) ? $modalSize : 'modal-md'
             ];
+            return $r;
         });
     }
 
@@ -618,6 +620,7 @@ class Comprafisica extends BD{
                 ':query_exact' => $exactTerm
             ]);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $rows;
         });
     }
 
@@ -658,6 +661,7 @@ class Comprafisica extends BD{
             $producto['precio'] = floatval($producto['precio']) * $tasa;
         }
 
+        return $registros;
         });
     }
 
@@ -730,6 +734,7 @@ class Comprafisica extends BD{
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $rows;
         });
     }
 
