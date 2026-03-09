@@ -569,7 +569,7 @@ class Categoria extends BD
     public function eliminarCategoria($id_categoria){
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria) {
             try {
-                $categoriaInfo = $this->o_categoriaPorId($id_categoria, $conexion);
+                $categoriaInfo = $this->o_categoriaPorId($id_categoria, $pdo);
                 if (!$categoriaInfo) {
                     return ['status' => 'error', 'mensaje' => 'Categoría no encontrada'];
                 }
@@ -653,7 +653,7 @@ class Categoria extends BD
     {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria, $conexion){
             $sql = "SELECT id_categoria, nombre_categoria FROM tbl_categoria WHERE id_categoria = :id_categoria ORDER BY id_categoria DESC";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_categoria', $id_categoria, PDO::PARAM_INT);
             $stmt->execute();
             $categoria = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -668,10 +668,10 @@ class Categoria extends BD
             $caracteristicas = [];
             
             // Verificar si la tabla existe
-            $tableExists = $this->conex->query("SHOW TABLES LIKE '$tabla'")->rowCount() > 0;
+            $tableExists = $pdo->query("SHOW TABLES LIKE '$tabla'")->rowCount() > 0;
             
             if ($tableExists) {
-                $cols = $this->conex->query("SHOW COLUMNS FROM `$tabla`")->fetchAll(PDO::FETCH_ASSOC);
+                $cols = $pdo->query("SHOW COLUMNS FROM `$tabla`")->fetchAll(PDO::FETCH_ASSOC);
                 foreach ($cols as $col) {
                     if (!in_array($col['Field'], ['id', 'id_producto'])) {
                         $tipo = 'string';
@@ -708,7 +708,7 @@ class Categoria extends BD
     {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT id_categoria, nombre_categoria FROM tbl_categoria ORDER BY id_categoria DESC";
-            $stmt = $this->conex->prepare($sql);
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });

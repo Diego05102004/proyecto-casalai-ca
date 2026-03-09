@@ -1,7 +1,44 @@
-<?php $idRol = $_SESSION['id_rol']; // o el rol actual del usuario
-$idModulo = 7;
+<?php 
+$idRol = $_SESSION['id_rol']; 
+$idModulo = "Categorias";  // Corregido: "Categorias" en lugar de "categoria"
 
-if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUsuarioEntrar[$idRol][$idModulo]['consultar'] === true) { ?>
+// Encontrar el ID del módulo usando el nombre
+$moduloId = null;
+if (isset($modulos)) {
+    foreach ($modulos as $modulo) {
+        if (strtolower($modulo['nombre_modulo']) === strtolower($idModulo)) {
+            $moduloId = $modulo['id_modulo'];
+            break;
+        }
+    }
+}
+
+// Verificar permisos usando el ID del módulo
+$tienePermisoConsultar = false;
+if ($moduloId && isset($permisosUsuarioEntrar[$idRol][$moduloId]['consultar'])) {
+    $tienePermisoConsultar = $permisosUsuarioEntrar[$idRol][$moduloId]['consultar'] === true;
+}
+
+// Debug: mostrar información de permisos
+if (defined('DEBUG_PERMISOS') && DEBUG_PERMISOS) {
+    echo "<div style='background: #e6f3ff; padding: 10px; margin: 10px;'>";
+    echo "<h3>Debug Permisos en Vista</h3>";
+    echo "<pre>";
+    echo "ID Rol: $idRol\n";
+    echo "Nombre Módulo: $idModulo\n";
+    echo "ID Módulo encontrado: " . ($moduloId ?? 'No encontrado') . "\n";
+    echo "Tiene permiso consultar: " . ($tienePermisoConsultar ? 'SÍ' : 'NO') . "\n";
+    echo "Permisos disponibles para este rol y módulo:\n";
+    if ($moduloId && isset($permisosUsuarioEntrar[$idRol][$moduloId])) {
+        print_r($permisosUsuarioEntrar[$idRol][$moduloId]);
+    } else {
+        echo "No se encontraron permisos para este rol y módulo\n";
+    }
+    echo "</pre>";
+    echo "</div>";
+}
+
+if ($tienePermisoConsultar) { ?>
 
     <!DOCTYPE html>
     <html lang="es">
@@ -318,7 +355,37 @@ selectTipo.addEventListener('change', function() {
 
     <?php
 } else {
-    header("Location: ?pagina=acceso-denegado");
-    exit;
+    echo "<div style='padding: 20px; text-align: center; background-color: #ffe6e6; border: 1px solid #ff0000; margin: 20px;'>";
+    echo "<h3>❌ Acceso Denegado - Categorías</h3>";
+    echo "<p>No tienes permisos para consultar las categorías.</p>";
+    echo "<p>Verifica con el administrador que tu rol tenga los permisos necesarios.</p>";
+    
+    echo "<div style='text-align: left; background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px;'>";
+    echo "<h4>🔍 Información de Depuración:</h4>";
+    echo "<pre>";
+    echo "ID Rol: " . $idRol . "\n";
+    echo "Nombre Módulo buscado: " . $idModulo . "\n";
+    echo "ID Módulo encontrado: " . ($moduloId ?? '❌ No encontrado') . "\n";
+    echo "¿Tiene permiso consultar?: " . ($tienePermisoConsultar ? '✅ SÍ' : '❌ NO') . "\n";
+    echo "\n--- Módulos Disponibles ---\n";
+    if (isset($modulos)) {
+        foreach ($modulos as $modulo) {
+            echo "ID: " . $modulo['id_modulo'] . " - Nombre: " . $modulo['nombre_modulo'] . "\n";
+        }
+    } else {
+        echo "❌ La variable \$modulos no está definida\n";
+    }
+    
+    echo "\n--- Permisos para tu Rol ---\n";
+    if (isset($permisosUsuarioEntrar[$idRol])) {
+        foreach ($permisosUsuarioEntrar[$idRol] as $id_mod => $permisos) {
+            echo "Módulo ID: $id_mod - Permisos: " . json_encode($permisos) . "\n";
+        }
+    } else {
+        echo "❌ No se encontraron permisos para el rol $idRol\n";
+    }
+    echo "</pre>";
+    echo "</div>";
+    echo "</div>";
 }
 ?>
