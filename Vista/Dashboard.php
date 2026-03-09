@@ -240,7 +240,7 @@ if (!isset($_SESSION['name'])) {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 760px) {
   .carousel-item {
     flex: 0 0 85%;
   }
@@ -248,6 +248,9 @@ if (!isset($_SESSION['name'])) {
   .carousel-btn {
     display: none;
   }
+
+  .carousel-btn.prev { left: 10%; }
+  .carousel-btn.next { right: 250px; }
 
 }
   </style>
