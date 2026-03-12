@@ -381,12 +381,32 @@ $(document).ready(function() {
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX Error:', status, error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de conexión',
-                        text: 'Ocurrió un error al comunicarse con el servidor'
+                    console.error('Error AJAX completo en registro:', {
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText,
+                        statusCode: xhr.status
                     });
+                    
+                    // Si es error 500, mostrar información detallada
+                    if (xhr.status === 500) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error del servidor (500)',
+                            html: `
+                                <p><strong>Error interno del servidor</strong></p>
+                                <p>Revise la consola del navegador para más detalles.</p>
+                                <p><small>Response: ${xhr.responseText.substring(0, 200)}...</small></p>
+                            `,
+                            confirmButtonText: 'Entendido'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de conexión',
+                            text: 'Ocurrió un error al comunicarse con el servidor'
+                        });
+                    }
                 }
             });
         }

@@ -426,6 +426,18 @@ class cliente extends BD {
     }
 
     /**
+     * Obtiene el último cliente registrado
+     */
+    public function obtenerUltimoCliente() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "SELECT * FROM tbl_clientes ORDER BY id_clientes DESC LIMIT 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        });
+    }
+
+    /**
      * Obtiene clientes con filtros aplicados
      */
     public function obtenerClientesConFiltros($filtros = []) {
@@ -493,14 +505,22 @@ class cliente extends BD {
     private function r_cliente() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "INSERT INTO tbl_clientes (`nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`)
-                    VALUES (:nombre, :cedula, :direccion, :telefono, :correo, 1)";
+                    VALUES (:nombre, :cedula, :direccion, :telefono, :correo, :activo)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':nombre', $this->nombre);
             $stmt->bindParam(':direccion', $this->direccion);
             $stmt->bindParam(':telefono', $this->telefono);
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $this->correo);
-            return $stmt->execute();
+            $stmt->bindParam(':activo', $this->activo);
+            $resultado = $stmt->execute();
+            
+            // Si la inserción fue exitosa, retornar el ID del nuevo registro
+            if ($resultado) {
+                return $pdo->lastInsertId();
+            }
+            
+            return false;
         });
     }
 

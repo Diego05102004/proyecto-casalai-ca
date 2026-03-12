@@ -1,5 +1,33 @@
 <?php
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 ob_start();
+
+// Manejo de errores para depuración
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // No mostrar errores en output, pero registrarlos
+
+// Capturar cualquier error fatal
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        error_log("Error fatal: " . $error['message'] . " en " . $error['file'] . " línea " . $error['line']);
+        
+        // Enviar respuesta JSON si hay headers
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Error fatal del servidor',
+                'debug' => $error['message'] . " en línea " . $error['line']
+            ]);
+        }
+    }
+});
+
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\cliente;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
@@ -47,6 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->settelefono($_POST['telefono']);
             $cliente->setdireccion($_POST['direccion']);
             $cliente->setcorreo($_POST['correo']);
+            $cliente->setactivo(1);
             
             if ($cliente->ingresarclientes()) {
                 $clienteRegistrado = $cliente->obtenerUltimoCliente();
