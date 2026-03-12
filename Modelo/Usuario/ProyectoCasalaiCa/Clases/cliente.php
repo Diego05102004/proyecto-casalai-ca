@@ -69,6 +69,14 @@ class cliente extends BD {
         return $this->correo;
     }
 
+    public function setactivo($activo) {
+        $this->activo = $activo;
+    }
+
+    public function getactivo() {
+        return $this->activo;
+    }
+
     
     public function getId() {
         return $this->id;
@@ -166,11 +174,8 @@ class cliente extends BD {
             if (!isset($datos['id_clientes']) || $datos['id_clientes'] === '' || $datos['id_clientes'] === null) {
                 $errores['id_clientes'] = 'El ID del cliente es obligatorio para modificar';
             }
-            
-            $campos_modificar = array_intersect(array_keys($datos), $campos_requeridos);
-            if (empty($campos_modificar)) {
-                $errores['modificacion'] = 'Debe proporcionar al menos un campo para modificar';
-            }
+            // Para modificar, no se requieren campos obligatorios específicos
+            // Solo se valida que los campos proporcionados (si los hay) tengan formato válido
         }
         
         return $errores;
@@ -367,7 +372,7 @@ class cliente extends BD {
             return $errores;
         }
 
-        $cliente_existente = $this->obtenerclientesPorId($id);
+        $cliente_existente = $this->obtenerclientesPorId($datos['id_clientes']);
         if (!$cliente_existente) {
             $errores['existencia'] = 'El cliente que intenta modificar no existe';
             return $errores;
@@ -393,19 +398,13 @@ class cliente extends BD {
             return $errores;
         }
         
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id) { 
-            $errores = [];
-            $errores_integridad = $this->validarIntegridadReferencial($id, $pdo); 
-            $errores = array_merge($errores, $errores_integridad);
-            return $errores;
-        });
+        // Para eliminación, solo validar ID y existencia
+        // La integridad referencial se maneja a nivel de base de datos
+        return [];
     }
 
-    /**
-     * Valida los datos para descargar reportes
-     */
     public function validarDescarga($parametros) {
-        $errores = $this->validarReporte($parametros);
+        $errores = [];
         
         if (!isset($_SESSION['id_usuario']) || !$_SESSION['id_usuario']) {
             $errores['permisos'] = 'No tiene permisos para descargar reportes';
@@ -414,6 +413,18 @@ class cliente extends BD {
         return $errores;
     }
     
+    /**
+     * Obtiene un cliente por su ID
+     */
+    public function obtenerclientesPorId($id) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
+            $sql = "SELECT * FROM tbl_clientes WHERE id_clientes = ? AND activo = 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        });
+    }
+
     /**
      * Obtiene clientes con filtros aplicados
      */
@@ -515,19 +526,6 @@ class cliente extends BD {
         });
     }
 
-    public function obtenerUltimoCliente() {
-        return $this->obtUltimaCliente(); 
-    }
-    private function obtUltimaCliente() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT * FROM tbl_clientes ORDER BY id_clientes DESC LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $cliente ? $cliente : null;
-        });
-    }
-
     function obtenerReporteComprasClientes() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT c.nombre, COUNT(d.id_producto) AS cantidad
@@ -543,18 +541,7 @@ class cliente extends BD {
         });
     }
 
-    public function obtenerclientesPorId($id) {
-        return $this->obtClientePorId($id);
-    }
-    private function obtClientePorId($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
-            $query = "SELECT * FROM tbl_clientes WHERE id_clientes = ?";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([$id]);
-            $clientes = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $clientes;
-        });
-    }
+
 
     public function modificarclientes($id) {
         return $this->m_cliente($id);

@@ -410,8 +410,29 @@ $(document).ready(function() {
                 }
                 if(callback) callback(respuesta);
             },
-            error: function () {
-                Swal.fire('Error', 'Error en la solicitud AJAX', 'error');
+            error: function(xhr, status, error) {
+                console.error('Error AJAX completo:', {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    statusCode: xhr.status
+                });
+                
+                // Si es error 500, mostrar información detallada
+                if (xhr.status === 500) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error del servidor (500)',
+                        html: `
+                            <p><strong>Error interno del servidor</strong></p>
+                            <p>Revise la consola del navegador para más detalles.</p>
+                            <p><small>Response: ${xhr.responseText.substring(0, 200)}...</small></p>
+                        `,
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    Swal.fire('Error', 'Error en la solicitud AJAX', 'error');
+                }
             }
         });
     }

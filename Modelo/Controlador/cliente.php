@@ -5,7 +5,17 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 
-$id_rol = $_SESSION['id_rol']; // Asegúrate de tener este dato en sesión
+// Verificar que la sesión esté iniciada
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    echo json_encode(['status' => 'error', 'message' => 'Sesión no iniciada']);
+    exit;
+}
+
+$id_rol = isset($_SESSION['id_rol']) ? $_SESSION['id_rol'] : null;
+if (!$id_rol) {
+    echo json_encode(['status' => 'error', 'message' => 'No hay rol de usuario en sesión']);
+    exit;
+}
 
 define('MODULO_CLIENTE', "Clientes");
 
@@ -37,19 +47,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->settelefono($_POST['telefono']);
             $cliente->setdireccion($_POST['direccion']);
             $cliente->setcorreo($_POST['correo']);
-
+            
             if ($cliente->ingresarclientes()) {
                 $clienteRegistrado = $cliente->obtenerUltimoCliente();
+                error_log("Cliente registrado: " . print_r($clienteRegistrado, true));
 
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CLIENTE,
-                        'INCLUIR',
-                        'El usuario incluyó al cliente: ' . $_POST['nombre'],
-                        'alta'
-                    );
+                    try {
+                        $bitacoraModel = new Bitacora();
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_CLIENTE,
+                            'INCLUIR',
+                            'El usuario incluyó al cliente: ' . $_POST['nombre'],
+                            'alta'
+                        );
+                    } catch (Exception $bitacoraError) {
+                        error_log("Error en bitácora (registrar): " . $bitacoraError->getMessage());
+                    }
                 }
 
                 echo json_encode([
@@ -59,8 +74,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
             } else {
                 echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error al registrar el cliente'
+                    'status' => 'error', 
+                    'message' => 'Error al registrar el Cliente',
+                    'debug' => 'La función ingresarclientes() retornó false'
                 ]);
             }
             exit;
@@ -98,13 +114,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
-            ob_clean();
+            // Limpiar cualquier salida previa y establecer cabeceras
+            if (ob_get_length()) ob_clean();
             header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-cache, must-revalidate');
             
             // Validar datos de entrada
             $cliente = new cliente();
             
+            // Depuración: registrar lo que se recibe
+            error_log("Datos recibidos para modificar: " . print_r($_POST, true));
+            
             $errores = $cliente->validarModificar($_POST);
+            error_log("Errores de validación modificar: " . print_r($errores, true));
 
             if (!empty($errores)) {
                 echo json_encode([
@@ -122,9 +144,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->settelefono($_POST['telefono']);
             $cliente->setdireccion($_POST['direccion']);
             $cliente->setcorreo($_POST['correo']);
+            $cliente->setactivo(1); // Establecer cliente como activo
             
             // Verificar que el cliente exista antes de modificar
             $clienteExistente = $cliente->obtenerclientesPorId($id);
+            error_log("Cliente existente para modificar: " . ($clienteExistente ? 'Sí' : 'No'));
+            
             if (!$clienteExistente) {
                 echo json_encode([
                     'status' => 'error',
@@ -133,18 +158,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            if ($cliente->modificarclientes($id)) {
+            $resultado = $cliente->modificarclientes($id);
+            error_log("Resultado de modificación: " . ($resultado ? 'Exitoso' : 'Fallido'));
+            
+            if ($resultado) {
                 $clienteModificado = $cliente->obtenerclientesPorId($id);
 
                 if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CLIENTE,
-                        'MODIFICAR',
-                        'El usuario modificó el cliente ID: ' . $id,
-                        'media'
-                    );
+                    try {
+                        $bitacoraModel = new Bitacora();
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_CLIENTE,
+                            'MODIFICAR',
+                            'El usuario modificó el cliente ID: ' . $id,
+                            'media'
+                        );
+                    } catch (Exception $bitacoraError) {
+                        error_log("Error en bitácora (modificar): " . $bitacoraError->getMessage());
+                    }
                 }
 
                 echo json_encode([
@@ -152,80 +184,136 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'cliente' => $clienteModificado
                 ]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al modificar el cliente']);
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => 'Error al modificar el cliente',
+                    'debug' => 'La función modificarclientes() retornó false'
+                ]);
             }
             exit;
 
         case 'eliminar':
+            // Limpiar cualquier salida previa y establecer cabeceras
+            if (ob_get_length()) ob_clean();
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-cache, must-revalidate');
+            
             // Validar datos de entrada
             $cliente = new cliente();
             
-            $errores = $cliente->validarEliminar($_POST);
+            // Extraer ID del POST
+            $id = isset($_POST['id_clientes']) ? $_POST['id_clientes'] : null;
             
-            if (!empty($errores)) {
+            // Depuración: registrar lo que se recibe
+            error_log("Datos recibidos para eliminar: " . print_r($_POST, true));
+            error_log("ID extraído: " . $id);
+            
+            if (!$id) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Datos inválidos',
-                    'errors' => $errores
+                    'message' => 'ID del cliente no proporcionado',
+                    'debug' => 'POST data: ' . json_encode($_POST)
                 ]);
                 exit;
             }
             
-            $id = $_POST['id_clientes'];
-            
-            // Verificar que el cliente exista antes de eliminar
-            $clienteExistente = $cliente->obtenerclientesPorId($id);
-            if (!$clienteExistente) {
-                echo json_encode(['status' => 'error', 'message' => 'El cliente que intenta eliminar no existe']);
-                exit;
-            }
-            
-            if ($cliente->eliminarclientes($id)) {
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CLIENTE,
-                        'ELIMINAR',
-                        'El usuario eliminó el cliente ID: ' . $id,
-                        'media'
-                    );
+            try {
+                $errores = $cliente->validarEliminar($id);
+                error_log("Errores de validación: " . print_r($errores, true));
+                
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Datos inválidos',
+                        'errors' => $errores
+                    ]);
+                    exit;
                 }
+                
+                // Verificar que el cliente exista antes de eliminar
+                $clienteExistente = $cliente->obtenerclientesPorId($id);
+                error_log("Cliente existente: " . ($clienteExistente ? 'Sí' : 'No'));
+                
+                if (!$clienteExistente) {
+                    echo json_encode(['status' => 'error', 'message' => 'El cliente que intenta eliminar no existe']);
+                    exit;
+                }
+                
+                $resultado = $cliente->eliminarclientes($id);
+                error_log("Resultado de eliminación: " . ($resultado ? 'Exitoso' : 'Fallido'));
+                
+                if ($resultado) {
+                    // Registrar en bitácora si corresponde
+                    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+                        try {
+                            $bitacoraModel = new Bitacora();
+                            $bitacoraModel->registrarBitacora(
+                                $_SESSION['id_usuario'],
+                                MODULO_CLIENTE,
+                                'ELIMINAR',
+                                'El usuario eliminó el cliente ID: ' . $id,
+                                'media'
+                            );
+                        } catch (Exception $bitacoraError) {
+                            error_log("Error en bitácora: " . $bitacoraError->getMessage());
+                        }
+                    }
 
-                echo json_encode(['status' => 'success']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el Cliente']);
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Cliente eliminado correctamente'
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'error', 
+                        'message' => 'Error al eliminar el Cliente',
+                        'debug' => 'La función eliminarclientes() retornó false'
+                    ]);
+                }
+            } catch (Exception $e) {
+                error_log("Excepción en eliminar: " . $e->getMessage());
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en el servidor: ' . $e->getMessage(),
+                    'debug' => 'Exception: ' . $e->getTraceAsString()
+                ]);
             }
             exit;
 
         default:
             echo json_encode(['status' => 'error', 'message' => 'Acción no válida']);
-        exit;
+            exit;
     }
 }
-    $cliente = new cliente();
+
+// Función para obtener clientes (usada por otras partes del sistema)
 function getclientes() {
     $cliente = new cliente();
     return $cliente->getclientes();
 }
-$reporteComprasClientes = $cliente->obtenerReporteComprasClientes();
-$totalComprasClientes = array_sum(array_column($reporteComprasClientes, 'cantidad'));
-$pagina = "cliente";
-if (is_file("Vista/" . $pagina . ".php")) {
-    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-        $bitacoraModel = new Bitacora();
-        $bitacoraModel->registrarBitacora(
-        $_SESSION['id_usuario'],
-        '9',
-        'ACCESAR',
-        'El usuario accedió al módulo de Clientes',
-        'media'
-    );
-}
-    $clientes = getclientes();
-    require_once("Vista/" . $pagina . ".php");
-} else {
-    echo "Página en construcción";
+
+// Código para carga de la página (solo si no es una solicitud AJAX)
+if ($_SERVER["REQUEST_METHOD"] != "POST") {
+    $cliente = new cliente();
+    $reporteComprasClientes = $cliente->obtenerReporteComprasClientes();
+    $totalComprasClientes = array_sum(array_column($reporteComprasClientes, 'cantidad'));
+    $pagina = "cliente";
+    if (is_file("Vista/" . $pagina . ".php")) {
+        if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                '9',
+                'ACCESAR',
+                'El usuario accedió al módulo de Clientes',
+                'media'
+            );
+        }
+        $clientes = getclientes();
+        require_once("Vista/" . $pagina . ".php");
+    } else {
+        echo "Página en construcción";
+    }
 }
 
 ob_end_flush();
