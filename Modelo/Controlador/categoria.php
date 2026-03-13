@@ -5,6 +5,9 @@ ini_set('display_errors', 1);
 
 define('DEBUG_PERMISOS', false);
 
+// Cargar autoloader de Composer
+require_once __DIR__ . '/../../vendor/autoload.php';
+
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Categoria;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
@@ -155,7 +158,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
             
-            $errores = $categoria->validarModificarCategoria($datosValidacion);
+            $errores = $categoria->validarModificar($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',

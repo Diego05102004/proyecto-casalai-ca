@@ -64,9 +64,19 @@ class Categoria extends BD
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // Solo iniciar transacción si no hay una activa
+            $transactionStarted = false;
+            if (!$pdo->inTransaction()) {
+                $pdo->beginTransaction();
+                $transactionStarted = true;
+            }
+            
             $resultado = $operation($pdo);
-            $pdo->commit();
+            
+            // Solo hacer commit si iniciamos la transacción
+            if ($transactionStarted && $pdo->inTransaction()) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
@@ -329,10 +339,34 @@ class Categoria extends BD
             return $errores;
         }
         
+        // Verificar integridad referencial sin crear nueva transacción
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria) {
             $errores = [];
-            $errores_integridad = $this->validarIntegridadReferencial($id_categoria, $pdo);
-            $errores = array_merge($errores, $errores_integridad);
+            
+            // Obtener información de la categoría
+            $sql = "SELECT nombre_categoria FROM tbl_categoria WHERE id_categoria = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$id_categoria]);
+            $categoria_info = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($categoria_info) {
+                $this->nombre_categoria = $categoria_info['nombre_categoria'];
+                $tabla = $this->generarNombreTabla();
+                
+                // Verificar si la tabla existe
+                $tableExists = $pdo->query("SHOW TABLES LIKE '$tabla'")->rowCount() > 0;
+                
+                if ($tableExists) {
+                    $stmt = $pdo->query("SELECT COUNT(*) as total FROM `$tabla`");
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $productCount = (int)$result['total'];
+                    
+                    if ($productCount > 0) {
+                        $errores['integridad'] = "No se puede eliminar la categoría porque tiene {$productCount} producto(s) asociado(s)";
+                    }
+                }
+            }
+            
             return $errores;
         });
     }
@@ -369,11 +403,43 @@ class Categoria extends BD
     private function r_registrarCategoria($caracteristicas)
     {
         return $this->ejecutarConConexionSegura(function($pdo) use ($caracteristicas) {
-            $resultado = $this->r_Categoria();
-            if ($resultado) {
-                return $this->crearTablaCategoria($caracteristicas);
+            // Insertar categoría directamente
+            $sql = "INSERT INTO tbl_categoria (nombre_categoria) VALUES (:nombre_categoria)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':nombre_categoria', $this->nombre_categoria);
+            
+            if (!$stmt->execute()) {
+                return false;
             }
-            return false;
+            
+            // Crear tabla de categoría
+            $nombreTabla = $this->generarNombreTabla();
+            $sql = "CREATE TABLE IF NOT EXISTS `$nombreTabla` (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            id_producto INT NOT NULL,
+        ";
+
+            foreach ($caracteristicas as $carac) {
+                $campo = strtolower(str_replace(' ', '_', $carac['nombre']));
+                switch ($carac['tipo']) {
+                    case 'int':
+                        $sql .= "`$campo` INT,";
+                        break;
+                    case 'float':
+                        $sql .= "`$campo` FLOAT,";
+                        break;
+                    case 'string':
+                        $max = (int) ($carac['max'] ?? 255);
+                        $sql .= "`$campo` VARCHAR($max),";
+                        break;
+                }
+            }
+            // Elimina la última coma y cierra el paréntesis
+            $sql = rtrim($sql, ',') . ",
+            FOREIGN KEY (id_producto) REFERENCES tbl_productos(id_producto) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+            
+            return $pdo->exec($sql) !== false;
         });
     }
 

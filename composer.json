@@ -2,9 +2,8 @@
     "name": "usuario/proyecto-casalai-ca",
     "autoload": {
         "psr-4": {
-            "Usuario\\ProyectoCasalaiCa\\": "Modelo/Usuario/ProyectoCasalaiCa",
-            "Usuario\\ProyectoCasalaiCa\\Config\\": "Modelo/Config",
-            "Usuario\\ProyectoCasalaiCa\\Modelo\\Clases\\": "Modelo/Usuario/ProyectoCasalaiCa/Clases"
+            "Usuario\\ProyectoCasalaiCa\\": "Modelo/Usuario/ProyectoCasalaiCa/",
+            "Usuario\\ProyectoCasalaiCa\\Config\\": "Modelo/Config/"
         },
         "classmap": [
             "Modelo/Usuario/ProyectoCasalaiCa/Clases"
