@@ -167,29 +167,7 @@ class Categoria extends BD
                     $errores["caracteristica_{$index}_tipo"] = 'El tipo de característica debe ser: ' . implode(', ', self::TIPOS_CARACTERISTICA_PERMITIDOS);
                 }
 
-                // Validar valor según tipo
-                $valor = trim($caracteristica['valor'] ?? '');
-                if (empty($valor)) {
-                    $errores["caracteristica_{$index}_valor"] = 'El valor de la característica es obligatorio';
-                } else {
-                    switch ($tipo) {
-                        case 'int':
-                            if (!is_numeric($valor) || (int)$valor < 0 || (int)$valor > self::MAX_VALOR_NUMERICO) {
-                                $errores["caracteristica_{$index}_valor"] = 'El valor entero debe estar entre 0 y ' . self::MAX_VALOR_NUMERICO;
-                            }
-                            break;
-                        case 'float':
-                            if (!is_numeric($valor) || (float)$valor < 0 || (float)$valor > self::MAX_VALOR_DECIMAL) {
-                                $errores["caracteristica_{$index}_valor"] = 'El valor decimal debe estar entre 0 y ' . self::MAX_VALOR_DECIMAL;
-                            }
-                            break;
-                        case 'string':
-                            if (mb_strlen($valor) > self::MAX_VALOR_STRING) {
-                                $errores["caracteristica_{$index}_valor"] = 'El valor de texto no debe exceder los ' . self::MAX_VALOR_STRING . ' caracteres';
-                            }
-                            break;
-                    }
-                }
+  
 
                 // Validar longitud máxima (string)
                 if ($tipo === 'string' && isset($caracteristica['max'])) {
