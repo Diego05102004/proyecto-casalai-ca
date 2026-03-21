@@ -388,8 +388,19 @@ class Permisos extends BD {
         return $this->g_guardarPermisos($permisosForm, $roles, $modulos, $acciones);
     }
     private function g_guardarPermisos($permisosForm, $roles, $modulos, $acciones) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $pdo->exec("DELETE FROM tbl_permisos WHERE id_rol <> 6");
+        return $this->ejecutarConConexionSegura(function($pdo) use ($permisosForm, $roles, $modulos, $acciones) {
+            // Solo eliminar permisos de los roles que se están procesando (excepto rol 6)
+            $rolesProcesar = array_filter($roles, function($rol) {
+                return $rol['id_rol'] != 6;
+            });
+            
+            if (!empty($rolesProcesar)) {
+                $rolesIds = array_column($rolesProcesar, 'id_rol');
+                $placeholders = str_repeat('?,', count($rolesIds) - 1) . '?';
+                $stmtDelete = $pdo->prepare("DELETE FROM tbl_permisos WHERE id_rol IN ($placeholders)");
+                $stmtDelete->execute($rolesIds);
+            }
+            
             $stmt = $pdo->prepare("INSERT INTO tbl_permisos (id_rol, id_modulo, accion, estatus) VALUES (?, ?, ?, ?)");
             foreach ($roles as $rol) {
                 if ($rol['id_rol'] == 6) continue;
