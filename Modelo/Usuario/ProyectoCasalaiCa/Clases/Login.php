@@ -287,9 +287,9 @@ class Login extends BD
                 $errores['password'] = 'La contraseña es obligatoria';
             } elseif (mb_strlen($password) < 6 || mb_strlen($password) > 15) {
                 $errores['password'] = 'La contraseña debe tener entre 6 y 15 caracteres';
-            } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"\'<>,.?\/\\]).+$/', $password)) {
+            } /* elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"\'<>,.?\/\\]).+$/', $password)) {
                 $errores['password'] = 'La contraseña debe tener al menos una mayúscula, un número y un carácter especial';
-            }
+            }*/
         }
         
         return $errores;
