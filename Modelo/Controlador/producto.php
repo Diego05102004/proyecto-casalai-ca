@@ -42,6 +42,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $Seriales = $_POST['Seriales'] ?? '';
             $Categoria = $_POST['Categoria'] ?? '';
             $Precio = $_POST['Precio'] ?? 0;
+            $Producto->setNombreP($nombre_producto);
+            $Producto->setDescripcionP($descripcion_producto);
+            $Producto->setIdModelo($modelo);
+            $Producto->setStockActual($Stock_Actual);
+            $Producto->setStockMax($Stock_Maximo);
+            $Producto->setStockMin($Stock_Minimo);
+            $Producto->setClausulaDeGarantia($Clausula_garantia);
+            $Producto->setCodigo($Seriales);
+            $Producto->setCategoria($Categoria);
+            $Producto->setPrecio($Precio);
             
             error_log("Datos extraídos:");
             error_log("  nombre_producto: " . $nombre_producto);
@@ -279,7 +289,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             'error' => $_FILES['imagen']['error'],
                             'size' => $_FILES['imagen']['size']
                         ];
-                        $errores_imagen = $Producto->validarImagen($imagenData);
+                        $errores_imagen = $Producto->validarImagen($imagenData, false); // false = imagen opcional en edición
                         
                         if (!empty($errores_imagen)) {
                             header('Content-Type: application/json; charset=utf-8');

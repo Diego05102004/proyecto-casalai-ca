@@ -388,8 +388,13 @@ class Productos extends BD{
         return $errores;
     }
     
-    private function validarImagen($archivo) {
+    public function validarImagen($archivo, $requerida = true) {
         $errores = [];
+        
+        // Si no es requerida y no se envió archivo, no hay error
+        if (!$requerida && (!isset($archivo) || $archivo['error'] === UPLOAD_ERR_NO_FILE)) {
+            return $errores;
+        }
         
         if (!is_array($archivo)) {
             $errores['imagen'] = 'Los datos de la imagen deben ser un arreglo';
@@ -676,7 +681,12 @@ class Productos extends BD{
     private function g_ingresarProducto($datosCategoria) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($datosCategoria){
             try {
-                $pdo->beginTransaction();
+                // Solo iniciar transacción si no hay una activa
+                $transaccionIniciada = false;
+                if (!$pdo->inTransaction()) {
+                    $pdo->beginTransaction();
+                    $transaccionIniciada = true;
+                }
 
                 if (empty($datosCategoria['tabla_categoria'])) {
                     throw new PDOException("No se especificó la tabla de categoría.");
@@ -692,7 +702,9 @@ class Productos extends BD{
                 $idCategoria = $stmtCatId->fetchColumn();
 
                 if (!$idCategoria) {
-                    $pdo->rollBack();
+                    if ($transaccionIniciada && $pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
                     throw new PDOException("No se encontró la categoría '$nombreCategoria' en la base de datos.");
                 }
 
@@ -715,7 +727,9 @@ class Productos extends BD{
 
                 if (!$stmt->execute()) {
                     $errorInfo = $stmt->errorInfo();
-                    $pdo->rollBack();
+                    if ($transaccionIniciada && $pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
                     throw new PDOException("Error SQL al insertar producto: " . $errorInfo[2]);
                 }
 
@@ -738,12 +752,17 @@ class Productos extends BD{
 
                     if (!$stmtCat->execute()) {
                         $errorInfo = $stmtCat->errorInfo();
-                        $pdo->rollBack();
+                        if ($transaccionIniciada && $pdo->inTransaction()) {
+                            $pdo->rollBack();
+                        }
                         throw new PDOException("Error SQL al insertar características: " . $errorInfo[2]);
                     }
                 }
 
-                $pdo->commit();
+                // Solo hacer commit si iniciamos la transacción
+                if ($transaccionIniciada && $pdo->inTransaction()) {
+                    $pdo->commit();
+                }
                 return $idProducto;
 
             } catch (PDOException $e) {
@@ -929,7 +948,12 @@ class Productos extends BD{
     private function m_modificarProducto($id, $datosCategoria) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id, $datosCategoria){
             try {
-                $pdo->beginTransaction();
+                // Solo iniciar transacción si no hay una activa
+                $transaccionIniciada = false;
+                if (!$pdo->inTransaction()) {
+                    $pdo->beginTransaction();
+                    $transaccionIniciada = true;
+                }
 
                 $sqlActual = "SELECT c.nombre_categoria 
                             FROM tbl_productos p
@@ -961,7 +985,9 @@ class Productos extends BD{
                 $idCategoria = $stmtCatId->fetchColumn();
 
                 if (!$idCategoria) {
-                    $pdo->rollBack();
+                    if ($transaccionIniciada && $pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
                     throw new PDOException("No se encontró la categoría '$nombreCategoriaNueva' en la base de datos.");
                 }
 
@@ -1035,7 +1061,10 @@ class Productos extends BD{
                     }
                 }
 
-                $pdo->commit();
+                // Solo hacer commit si iniciamos la transacción
+                if ($transaccionIniciada && $pdo->inTransaction()) {
+                    $pdo->commit();
+                }
                 return true;
 
             } catch (PDOException $e) {
