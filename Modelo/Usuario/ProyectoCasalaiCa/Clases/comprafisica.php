@@ -296,45 +296,6 @@ class Comprafisica extends BD{
     public function validarDetallarVenta($datos) {
         return $this->validarDetallar($datos);
     }
-    
-    /**
-     * Verifica si un cliente existe y está activo
-     */
-    private function verificarClienteExistente($idCliente) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE id_clientes = :id_cliente AND activo = 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        });
-    }
-    
-    /**
-     * Verifica si un producto existe y está activo
-     */
-    private function verificarProductoExistente($idProducto) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT COUNT(*) FROM tbl_productos WHERE id_producto = :id_producto AND estado = 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        });
-    }
-    
-    /**
-     * Verifica si un despacho existe
-     */
-    private function verificarDespachoExistente($idDespacho) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT COUNT(*) FROM tbl_despachos WHERE id_despachos = :id_despacho";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':id_despacho', $idDespacho, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        });
-    }
 
     public function registrarCompraFisica($datos) {
         return $this->r_compraFisica($datos);
