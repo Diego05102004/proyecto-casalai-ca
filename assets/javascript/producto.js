@@ -198,15 +198,18 @@ function validarModeloCampo(campoConfig) {
     return error;
 }
 
-function validarImagenCampo(campoConfig) {
+function validarImagenCampo(campoConfig, requerida = true) {
     const { $campo, $span } = obtenerCampoConfig(campoConfig);
     const tieneArchivo = ($campo[0] && $campo[0].files && $campo[0].files.length > 0) || ($campo.val() && $campo.val().trim() !== '');
     let error = null;
 
-    if (!tieneArchivo) {
+    if (!tieneArchivo && requerida) {
         marcarCampoInvalido($campo, $span, '*Debe seleccionar una imagen*');
         error = 'Debe seleccionar una imagen';
-    } else {
+    } else if (!tieneArchivo && !requerida) {
+        // Si no es requerida y no hay archivo, limpiar validación
+        marcarCampoValido($campo, $span);
+    } else if (tieneArchivo) {
         marcarCampoValido($campo, $span);
     }
 
@@ -396,7 +399,8 @@ function validarFormularioProducto(config) {
     }
 
     if (campos.imagen) {
-        const error = validarImagenCampo(campos.imagen);
+        const esRequerida = config.tipo === 'registrar'; // Solo requerida en registro
+        const error = validarImagenCampo(campos.imagen, esRequerida);
         if (error) errores.push(error);
     }
 

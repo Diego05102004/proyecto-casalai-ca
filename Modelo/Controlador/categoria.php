@@ -225,7 +225,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Validar datos de entrada
             $categoria = new Categoria();
             
-            $errores = $categoria->validarEliminar($_POST);
+            $errores = $categoria->validarEliminar($_POST['id_categoria'] ?? null);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
