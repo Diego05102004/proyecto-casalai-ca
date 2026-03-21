@@ -167,7 +167,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
                 ];
 
                 // Validar datos de entrada
-                $errores = $k->validarRegistrarVenta($datosVenta);
+                $errores = $k->validarRegistrar($datosVenta);
                 if (!empty($errores)) {
                     echo json_encode([
                         'status' => 'error',
@@ -247,11 +247,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
 
             case 'obtener_detalles':
                 // Validar datos de entrada
-                $datosValidacion = [
-                    'id_despacho' => $_POST['id_despachos'] ?? null
-                ];
-                
-                $errores = $k->validarDetallarVenta($datosValidacion);
+                $errores = $k->validarDetallar($_POST['id_despachos'] ?? null);
                 if (!empty($errores)) {
                     echo json_encode([
                         'status' => 'error',
