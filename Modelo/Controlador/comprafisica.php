@@ -1,6 +1,9 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
+// Forzar logging para depuración
+error_log("[COMPRFISICA-CONTROLADOR] Inicio del controlador - " . date('Y-m-d H:i:s'));
+
 // Página y dependencias
 $pagina = 'comprafisica';
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Comprafisica;
@@ -88,6 +91,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
     }
 
     if (!empty($_POST)) {
+        error_log("[COMPRFISICA-CONTROLADOR] POST recibido - Acción: $accion");
         switch ($accion) {
             case 'listado':
                 $respuesta = $k->listadoproductos();
@@ -101,12 +105,20 @@ if (is_file("Vista/" . $pagina . ".php")) {
                 }
                 header('Content-Type: application/json; charset=utf-8');
 
+                // Logging para depuración
+                error_log("[COMPRFISICA] Iniciando caso 'registrar'");
+                error_log("[COMPRFISICA] POST data: " . json_encode($_POST));
+                
                 $idCliente = $_POST['cliente'] ?? null;
                 $productos = $_POST['producto'] ?? [];
                 $cantidades = $_POST['cantidad'] ?? [];
                 $pagos = $_POST['pagos'] ?? [];
                 $montoTotal = $_POST['monto_total'] ?? 0;
                 $cambio = $_POST['cambio_efectivo'] ?? 0;
+                
+                error_log("[COMPRFISICA] Datos procesados - Cliente: $idCliente, Productos: " . json_encode($productos));
+                error_log("[COMPRFISICA] Cantidades: " . json_encode($cantidades));
+                error_log("[COMPRFISICA] Pagos: " . json_encode($pagos));
 
                 // Preparar productos
                 $detalleProductos = [];
@@ -167,8 +179,10 @@ if (is_file("Vista/" . $pagina . ".php")) {
                 ];
 
                 // Validar datos de entrada
+                error_log("[COMPRFISICA] Validando datos de entrada");
                 $errores = $k->validarRegistrar($datosVenta);
                 if (!empty($errores)) {
+                    error_log("[COMPRFISICA] Errores de validación: " . json_encode($errores));
                     echo json_encode([
                         'status' => 'error',
                         'message' => 'Error en los datos de la venta',
@@ -176,12 +190,25 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     ]);
                     exit;
                 }
+                error_log("[COMPRFISICA] Datos validados correctamente");
 
                 // Registrar en el modelo
-                $resultado = $k->registrarCompraFisica($datosVenta);
+                error_log("[COMPRFISICA] Llamando a registrarCompraFisica con datos: " . json_encode($datosVenta));
+                try {
+                    $resultado = $k->registrarCompraFisica($datosVenta);
+                    error_log("[COMPRFISICA] Resultado del modelo: " . json_encode($resultado));
+                } catch (Exception $e) {
+                    error_log("[COMPRFISICA] Excepción en modelo: " . $e->getMessage());
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Excepción al registrar compra: ' . $e->getMessage()
+                    ]);
+                    exit;
+                }
 
                 // Verificar si el registro fue exitoso
                 if (isset($resultado['status']) && $resultado['status'] === 'error') {
+                    error_log("[COMPRFISICA] Error detectado en resultado del modelo");
                     // Hubo un error en el modelo
                     $response = [
                         'resultado' => 'error',
@@ -227,7 +254,9 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     ];
                 }
 
+                error_log("[COMPRFISICA] Enviando respuesta: " . json_encode($response));
                 echo json_encode($response);
+                error_log("[COMPRFISICA] Respuesta enviada exitosamente");
                 break;
 
             case 'buscar_clientes':
@@ -294,4 +323,5 @@ if (is_file("Vista/" . $pagina . ".php")) {
 } else {
     echo "pagina en construccion";
 }
-?>
+
+error_log("[COMPRFISICA-CONTROLADOR] Fin del controlador - " . date('Y-m-d H:i:s'));

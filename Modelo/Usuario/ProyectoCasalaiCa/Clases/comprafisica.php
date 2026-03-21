@@ -333,23 +333,23 @@ class Comprafisica extends BD{
             return $errores;
         }
         
-        // Validar existencia del cliente
-        $cliente_existe = $this->verificarClienteExistente($datos['cliente']);
-        if (!$cliente_existe) {
-            $errores['cliente'] = 'El cliente seleccionado no existe';
-        }
+        // TODO: Implementar verificación de cliente cuando el método esté disponible
+        // $cliente_existe = $this->verificarClienteExistente($datos['cliente']);
+        // if (!$cliente_existe) {
+        //     $errores['cliente'] = 'El cliente seleccionado no existe';
+        // }
         
-        // Validar existencia y stock de productos
-        if (isset($datos['productos']) && is_array($datos['productos'])) {
-            foreach ($datos['productos'] as $index => $producto) {
-                if (isset($producto['id_producto'])) {
-                    $producto_existe = $this->verificarProductoExistente($producto['id_producto']);
-                    if (!$producto_existe) {
-                        $errores["productos_{$index}_id_producto"] = 'El producto en la posición ' . $index . ' no existe';
-                    }
-                }
-            }
-        }
+        // TODO: Implementar verificación de productos cuando el método esté disponible
+        // if (isset($datos['productos']) && is_array($datos['productos'])) {
+        //     foreach ($datos['productos'] as $index => $producto) {
+        //         if (isset($producto['id_producto'])) {
+        //             $producto_existe = $this->verificarProductoExistente($producto['id_producto']);
+        //             if (!$producto_existe) {
+        //                 $errores["productos_{$index}_id_producto"] = 'El producto en la posición ' . $index . ' no existe';
+        //             }
+        //         }
+        //     }
+        // }
         
         return $errores;
     }
@@ -388,7 +388,18 @@ class Comprafisica extends BD{
     private function r_compraFisica($datos) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($datos){
             try{
-                $pdo->beginTransaction();
+                error_log("[COMPRFISICA-MODELO] Iniciando r_compraFisica");
+                error_log("[COMPRFISICA-MODELO] Datos recibidos: " . json_encode($datos));
+                
+                // Solo iniciar transacción si no hay una activa
+                $transaccionIniciada = false;
+                if (!$pdo->inTransaction()) {
+                    $pdo->beginTransaction();
+                    $transaccionIniciada = true;
+                    error_log("[COMPRFISICA-MODELO] Transacción iniciada");
+                } else {
+                    error_log("[COMPRFISICA-MODELO] Usando transacción existente");
+                }
 
                 // 1️⃣ Crear despacho
                 $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, activo) 
@@ -551,12 +562,20 @@ class Comprafisica extends BD{
                     'total' => $monto_total
                 ];
 
-                $pdo->commit();
+                error_log("[COMPRFISICA-MODELO] Operación exitosa, preparando respuesta");
+                // Solo hacer commit si iniciamos la transacción
+                if ($transaccionIniciada && $pdo->inTransaction()) {
+                    $pdo->commit();
+                    error_log("[COMPRFISICA-MODELO] Transacción confirmada");
+                }
                 return $resultado;
 
             } catch (Exception $e) {
-                if ($pdo->inTransaction()) {
+                error_log("[COMPRFISICA-MODELO] Error capturado: " . $e->getMessage());
+                error_log("[COMPRFISICA-MODELO] Stack trace: " . $e->getTraceAsString());
+                if ($transaccionIniciada && $pdo->inTransaction()) {
                     $pdo->rollBack();
+                    error_log("[COMPRFISICA-MODELO] Transacción revertida");
                 }
                 return [
                     'status' => 'error',

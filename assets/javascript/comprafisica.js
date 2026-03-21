@@ -1245,11 +1245,59 @@ $(document).ready(function () {
             return 1;
         } else {
             etiquetamensaje.text(mensaje);
-            return 0;
-        }
     }
+    return existe;
+}
 
-    // Función para enviar AJAX
+setInterval(calcularTotal, 1000); // Recalcula el total cada segundo
+setInterval(calcularCambio, 1000);
+
+// Función para limpiar el formulario
+function borrar() {
+    $("#recepcion1 tr").remove();
+    $("#descripcion").val("");
+}
+
+// Función para mostrar mensajes
+function muestraMensaje(
+    tipo = "success",
+    titulo = "",
+    mensaje = ""
+) {
+    Swal.fire({
+        icon: tipo,
+        title: titulo,
+        text: mensaje,
+        showConfirmButton: true,
+        confirmButtonText: 'Aceptar',
+    });
+}
+
+// Función para validar por Keypress
+function validarkeypress(er, e) {
+    key = e.keyCode;
+    tecla = String.fromCharCode(key);
+    a = er.test(tecla);
+
+    if (!a) {
+        e.preventDefault();
+    }
+}
+
+// Función para validar por keyup
+function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
+    a = er.test(etiqueta.val());
+
+    if (a) {
+        etiquetamensaje.text("");
+        return 1;
+    } else {
+        etiquetamensaje.text(mensaje);
+        return 0;
+    }
+}
+
+// Función para enviar AJAX
 function enviaAjax(datos, callback) {
     $.ajax({
         async: true,
