@@ -84,23 +84,68 @@ class Comprafisica extends BD{
 
     // ==================== VALIDACIONES DE BACKEND ====================
     
-    /**
-     * Valida los datos para registrar una venta física
-     */
-    private function validarRegistrar($datos) {
+    private function sanitizarDatos($datos) {
+        if (!is_array($datos)) {
+            return $datos;
+        }
+        
+        $datos_sanitizados = [];
+        
+        foreach ($datos as $clave => $valor) {
+            if (is_string($valor)) {
+                $valor = trim($valor);
+                
+                $valor = htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
+                
+                $valor = addslashes($valor);
+                
+                $datos_sanitizados[$clave] = $valor;
+            } else {
+                $datos_sanitizados[$clave] = $valor;
+            }
+        }
+        
+        return $datos_sanitizados;
+    }
+    
+    private function validarEsquema($datos, $operacion = 'registrar') {
+        $errores = [];
+        
+        if (!is_array($datos)) {
+            $errores['esquema'] = 'Los datos deben ser un array';
+            return $errores;
+        }
+        
+        if ($operacion === 'registrar') {
+            // Validar campos obligatorios para registrar
+            if (!isset($datos['cliente']) || $datos['cliente'] === '' || $datos['cliente'] === null) {
+                $errores['cliente'] = 'El ID del cliente es obligatorio';
+            }
+            
+            if (!isset($datos['productos']) || !is_array($datos['productos']) || empty($datos['productos'])) {
+                $errores['productos'] = 'Debe agregar al menos un producto';
+            }
+            
+            if (!isset($datos['pagos']) || !is_array($datos['pagos']) || empty($datos['pagos'])) {
+                $errores['pagos'] = 'Debe registrar al menos un método de pago';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    private function validarFormato($datos) {
         $errores = [];
         
         // Validar ID del cliente
-        if (!isset($datos['cliente'])) {
-            $errores['cliente'] = 'El ID del cliente es obligatorio';
-        } elseif (!is_numeric($datos['cliente']) || $datos['cliente'] <= 0) {
-            $errores['cliente'] = 'El ID del cliente debe ser un número positivo';
+        if (isset($datos['cliente'])) {
+            if (!is_numeric($datos['cliente']) || (int)$datos['cliente'] <= 0) {
+                $errores['cliente'] = 'El ID del cliente debe ser un número positivo';
+            }
         }
         
         // Validar productos
-        if (!isset($datos['productos']) || !is_array($datos['productos']) || empty($datos['productos'])) {
-            $errores['productos'] = 'Debe agregar al menos un producto';
-        } else {
+        if (isset($datos['productos']) && is_array($datos['productos'])) {
             foreach ($datos['productos'] as $index => $producto) {
                 if (!is_array($producto)) {
                     $errores["productos_$index"] = 'El producto en la posición ' . $index . ' debe ser un array';
@@ -127,9 +172,7 @@ class Comprafisica extends BD{
         }
         
         // Validar pagos
-        if (!isset($datos['pagos']) || !is_array($datos['pagos']) || empty($datos['pagos'])) {
-            $errores['pagos'] = 'Debe registrar al menos un método de pago';
-        } else {
+        if (isset($datos['pagos']) && is_array($datos['pagos'])) {
             foreach ($datos['pagos'] as $index => $pago) {
                 if (!is_array($pago)) {
                     $errores["pagos_$index"] = 'El pago en la posición ' . $index . ' debe ser un array';
@@ -196,105 +239,41 @@ class Comprafisica extends BD{
             }
         }
         
+        // Validar descripción (opcional)
+        if (isset($datos['descripcion'])) {
+            $descripcion = trim($datos['descripcion']);
+            if (mb_strlen($descripcion) > self::MAX_DESCRIPCION) {
+                $errores['descripcion'] = 'La descripción no debe exceder los ' . self::MAX_DESCRIPCION . ' caracteres';
+            }
+        }
         return $errores;
     }
     
-    /**
-     * Valida los datos para consultar ventas
-     */
-    private function validarConsultar($datos) {
-        $errores = [];
+    public function validarConsultar($filtros = []) {
+        $filtros_default = [
+            'pagina' => 1,
+            'limite' => 50,
+            'orden' => 'fecha',
+            'direccion' => 'DESC'
+        ];
         
-        // Validar ID de despacho (opcional)
-        if (isset($datos['id_despacho'])) {
-            if (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
-                $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
-            }
+        $filtros = array_merge($filtros_default, $filtros);
+        
+        return $this->validarFiltros($filtros);
+    }
+    
+    public function validarDetallar($id_venta) {
+        $errores = $this->validarId($id_venta);
+        if (!empty($errores)) {
+            return $errores;
         }
         
-        // Validar límite de resultados (opcional)
-        if (isset($datos['limite'])) {
-            $limite = (int)$datos['limite'];
-            if ($limite <= 0 || $limite > 100) {
-                $errores['limite'] = 'El límite debe ser un número positivo entre 1 y 100';
-            }
-        }
-        
-        // Validar fecha de inicio (opcional)
-        if (isset($datos['fecha_inicio'])) {
-            $fechaInicio = trim($datos['fecha_inicio']);
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio)) {
-                $errores['fecha_inicio'] = 'La fecha de inicio debe tener formato YYYY-MM-DD';
-            } else {
-                $partes = explode('-', $fechaInicio);
-                if (!checkdate($partes[1], $partes[2], $partes[0])) {
-                    $errores['fecha_inicio'] = 'La fecha de inicio no es válida';
-                }
-            }
-        }
-        
-        // Validar fecha de fin (opcional)
-        if (isset($datos['fecha_fin'])) {
-            $fechaFin = trim($datos['fecha_fin']);
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
-                $errores['fecha_fin'] = 'La fecha de fin debe tener formato YYYY-MM-DD';
-            } else {
-                $partes = explode('-', $fechaFin);
-                if (!checkdate($partes[1], $partes[2], $partes[0])) {
-                    $errores['fecha_fin'] = 'La fecha de fin no es válida';
-                }
-            }
-        }
-        
-        // Validar que la fecha de fin no sea anterior a la de inicio
-        if (isset($datos['fecha_inicio']) && isset($datos['fecha_fin']) && !isset($errores['fecha_inicio']) && !isset($errores['fecha_fin'])) {
-            $fechaInicio = new \DateTime($datos['fecha_inicio']);
-            $fechaFin = new \DateTime($datos['fecha_fin']);
-            if ($fechaFin < $fechaInicio) {
-                $errores['fecha_fin'] = 'La fecha de fin no puede ser anterior a la fecha de inicio';
-            }
+        $venta = $this->obtenerVentaPorId($id_venta);
+        if (!$venta) {
+            $errores['existencia'] = 'La venta solicitada no existe';
         }
         
         return $errores;
-    }
-    
-    /**
-     * Valida los datos para detallar una venta
-     */
-    private function validarDetallar($datos) {
-        $errores = [];
-        
-        // Validar ID del despacho
-        if (!isset($datos['id_despacho'])) {
-            $errores['id_despacho'] = 'El ID del despacho es obligatorio';
-        } elseif (!is_numeric($datos['id_despacho']) || $datos['id_despacho'] <= 0) {
-            $errores['id_despacho'] = 'El ID del despacho debe ser un número positivo';
-        }
-        
-        return $errores;
-    }
-    
-    // ==================== MÉTODOS PÚBLICOS DE VALIDACIÓN ====================
-    
-    /**
-     * Valida los datos para registrar (método público)
-     */
-    public function validarRegistrarVenta($datos) {
-        return $this->validarRegistrar($datos);
-    }
-    
-    /**
-     * Valida los datos para consultar (método público)
-     */
-    public function validarConsultarVentas($datos) {
-        return $this->validarConsultar($datos);
-    }
-    
-    /**
-     * Valida los datos para detallar (método público)
-     */
-    public function validarDetallarVenta($datos) {
-        return $this->validarDetallar($datos);
     }
 
     public function registrarCompraFisica($datos) {
