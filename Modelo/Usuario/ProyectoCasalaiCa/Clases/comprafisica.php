@@ -249,6 +249,111 @@ class Comprafisica extends BD{
         return $errores;
     }
     
+    private function validarFiltros($filtros) {
+        $errores = [];
+        
+        if (isset($filtros['limite'])) {
+            $limite = (int)$filtros['limite'];
+            if ($limite <= 0 || $limite > 100) {
+                $errores['limite'] = 'El límite debe estar entre 1 y 100 registros';
+            }
+        }
+        
+        if (isset($filtros['pagina'])) {
+            $pagina = (int)$filtros['pagina'];
+            if ($pagina < 1) {
+                $errores['pagina'] = 'La página debe ser un número positivo';
+            }
+        }
+        
+        if (isset($filtros['id_cliente'])) {
+            $id_cliente = $filtros['id_cliente'];
+            if (!is_numeric($id_cliente) || (int)$id_cliente <= 0) {
+                $errores['id_cliente'] = 'El ID del cliente debe ser un número positivo';
+            }
+        }
+        
+        if (isset($filtros['fecha_inicio']) && isset($filtros['fecha_fin'])) {
+            $fecha_inicio = strtotime($filtros['fecha_inicio']);
+            $fecha_fin = strtotime($filtros['fecha_fin']);
+            
+            if ($fecha_inicio && $fecha_fin) {
+                if ($fecha_inicio > $fecha_fin) {
+                    $errores['fechas'] = 'La fecha de inicio no puede ser mayor a la fecha fin';
+                }
+                
+                $dias_diferencia = ($fecha_fin - $fecha_inicio) / (60 * 60 * 24);
+                if ($dias_diferencia > 365) {
+                    $errores['rango_fechas'] = 'El rango de fechas no puede exceder 365 días';
+                }
+            }
+        }
+        
+        if (isset($filtros['busqueda']) && is_string($filtros['busqueda'])) {
+            $busqueda = trim($filtros['busqueda']);
+            if (mb_strlen($busqueda) > 100) {
+                $errores['busqueda'] = 'La búsqueda no debe exceder los 100 caracteres';
+            }
+        }
+        
+        return $errores;
+    }
+    
+    public function validarId($id_venta) {
+        $errores = [];
+        
+        if ($id_venta === null || $id_venta === '') {
+            $errores['id_venta'] = 'El ID de la venta es obligatorio';
+        } elseif (!is_numeric($id_venta) || (int)$id_venta <= 0) {
+            $errores['id_venta'] = 'El ID de la venta debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+    
+    private function obtenerVentaPorId($id_venta) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_venta) {
+            $sql = "SELECT * FROM {$this->tablerecepcion} WHERE id_despachos = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$id_venta]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        });
+    }
+    
+    public function validarRegistrar($datos) {
+        $datos = $this->sanitizarDatos($datos);
+        
+        $errores = $this->validarEsquema($datos, 'registrar');
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        $errores = $this->validarFormato($datos);
+        if (!empty($errores)) {
+            return $errores;
+        }
+        
+        // Validar existencia del cliente
+        $cliente_existe = $this->verificarClienteExistente($datos['cliente']);
+        if (!$cliente_existe) {
+            $errores['cliente'] = 'El cliente seleccionado no existe';
+        }
+        
+        // Validar existencia y stock de productos
+        if (isset($datos['productos']) && is_array($datos['productos'])) {
+            foreach ($datos['productos'] as $index => $producto) {
+                if (isset($producto['id_producto'])) {
+                    $producto_existe = $this->verificarProductoExistente($producto['id_producto']);
+                    if (!$producto_existe) {
+                        $errores["productos_{$index}_id_producto"] = 'El producto en la posición ' . $index . ' no existe';
+                    }
+                }
+            }
+        }
+        
+        return $errores;
+    }
+    
     public function validarConsultar($filtros = []) {
         $filtros_default = [
             'pagina' => 1,
