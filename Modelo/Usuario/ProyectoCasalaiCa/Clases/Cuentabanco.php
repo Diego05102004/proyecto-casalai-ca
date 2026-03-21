@@ -25,7 +25,7 @@ class Cuentabanco extends BD {
     const MAX_RIF_CUENTA = 12;
     const MIN_RIF_CUENTA = 9;
     const ESTADOS_PERMITIDOS = ['habilitado', 'inhabilitado'];
-    const TIPOS_PAGO_PERMITIDOS = ['efectivo', 'transferencia', 'zelle', 'pago_movil', 'tarjeta', 'cheque'];
+    const TIPOS_PAGO_PERMITIDOS = ['efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'tarjeta', 'cheque'];
 
     public function getIdCuenta() { 
         return $this->id_cuenta; 
@@ -129,96 +129,124 @@ class Cuentabanco extends BD {
     }
     
     private function validarRegistrar($datos) {
+        error_log("[CUENTA-BANCO] Iniciando validación de registrar cuenta");
+        error_log("[CUENTA-BANCO] Datos recibidos: " . json_encode($datos));
+        
         $errores = [];
         
         if (!isset($datos['nombre_banco'])) {
+            error_log("[CUENTA-BANCO] Error: nombre_banco no está definido");
             $errores['nombre_banco'] = 'El nombre del banco es obligatorio';
         } else {
             $nombre_banco = trim($datos['nombre_banco']);
             if (empty($nombre_banco)) {
+                error_log("[CUENTA-BANCO] Error: nombre_banco está vacío");
                 $errores['nombre_banco'] = 'El nombre del banco no puede estar vacío';
             } elseif (mb_strlen($nombre_banco) < self::MIN_NOMBRE_BANCO || mb_strlen($nombre_banco) > self::MAX_NOMBRE_BANCO) {
+                error_log("[CUENTA-BANCO] Error: nombre_banco longitud inválida - " . mb_strlen($nombre_banco) . " caracteres");
                 $errores['nombre_banco'] = 'El nombre del banco debe tener entre ' . self::MIN_NOMBRE_BANCO . ' y ' . self::MAX_NOMBRE_BANCO . ' caracteres';
             } elseif (!preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s\-\.\&\']+$/', $nombre_banco)) {
+                error_log("[CUENTA-BANCO] Error: nombre_banco contiene caracteres inválidos - " . $nombre_banco);
                 $errores['nombre_banco'] = 'El nombre del banco solo puede contener letras, números, espacios y caracteres especiales comunes';
             }
         }
         
         if (!isset($datos['numero_cuenta'])) {
+            error_log("[CUENTA-BANCO] Error: numero_cuenta no está definido");
             $errores['numero_cuenta'] = 'El número de cuenta es obligatorio';
         } else {
             $numero_cuenta = trim($datos['numero_cuenta']);
             if (empty($numero_cuenta)) {
+                error_log("[CUENTA-BANCO] Error: numero_cuenta está vacío");
                 $errores['numero_cuenta'] = 'El número de cuenta no puede estar vacío';
             } else {
                 $numero_limpio = preg_replace('/\D+/', '', $numero_cuenta);
                 if (empty($numero_limpio)) {
+                    error_log("[CUENTA-BANCO] Error: numero_cuenta no contiene dígitos - " . $numero_cuenta);
                     $errores['numero_cuenta'] = 'El número de cuenta debe contener solo dígitos';
                 } elseif (mb_strlen($numero_limpio) < self::MIN_NUMERO_CUENTA || mb_strlen($numero_limpio) > self::MAX_NUMERO_CUENTA) {
+                    error_log("[CUENTA-BANCO] Error: numero_cuenta longitud inválida - " . mb_strlen($numero_limpio) . " dígitos");
                     $errores['numero_cuenta'] = 'El número de cuenta debe tener entre ' . self::MIN_NUMERO_CUENTA . ' y ' . self::MAX_NUMERO_CUENTA . ' dígitos';
                 }
             }
         }
         
         if (!isset($datos['rif_cuenta'])) {
+            error_log("[CUENTA-BANCO] Error: rif_cuenta no está definido");
             $errores['rif_cuenta'] = 'El RIF de la cuenta es obligatorio';
         } else {
             $rif_cuenta = trim($datos['rif_cuenta']);
             if (empty($rif_cuenta)) {
+                error_log("[CUENTA-BANCO] Error: rif_cuenta está vacío");
                 $errores['rif_cuenta'] = 'El RIF de la cuenta no puede estar vacío';
             } else {
                 $rif_limpio = str_replace(['-', ' '], '', strtoupper($rif_cuenta));
                 if (!preg_match('/^[VEJGCP][0-9]{8,9}$/', $rif_limpio)) {
+                    error_log("[CUENTA-BANCO] Error: rif_cuenta formato inválido - " . $rif_limpio);
                     $errores['rif_cuenta'] = 'El formato del RIF no es válido. Debe ser como: V123456789, J123456789, G123456789, P123456789 o C123456789';
                 } elseif (mb_strlen($rif_limpio) < self::MIN_RIF_CUENTA || mb_strlen($rif_limpio) > self::MAX_RIF_CUENTA) {
+                    error_log("[CUENTA-BANCO] Error: rif_cuenta longitud inválida - " . mb_strlen($rif_limpio) . " caracteres");
                     $errores['rif_cuenta'] = 'El RIF debe tener ' . self::MIN_RIF_CUENTA . ' caracteres (letra + 8-9 dígitos)';
                 }
             }
         }
         
         if (!isset($datos['telefono_cuenta'])) {
+            error_log("[CUENTA-BANCO] Error: telefono_cuenta no está definido");
             $errores['telefono_cuenta'] = 'El teléfono de la cuenta es obligatorio';
         } else {
             $telefono_cuenta = trim($datos['telefono_cuenta']);
             if (empty($telefono_cuenta)) {
+                error_log("[CUENTA-BANCO] Error: telefono_cuenta está vacío");
                 $errores['telefono_cuenta'] = 'El teléfono de la cuenta no puede estar vacío';
             } else {
                 $telefono_limpio = preg_replace('/\D+/', '', $telefono_cuenta);
                 if (empty($telefono_limpio)) {
+                    error_log("[CUENTA-BANCO] Error: telefono_cuenta no contiene dígitos - " . $telefono_cuenta);
                     $errores['telefono_cuenta'] = 'El teléfono debe contener solo dígitos';
                 } elseif (mb_strlen($telefono_limpio) < self::MIN_TELEFONO_CUENTA || mb_strlen($telefono_limpio) > self::MAX_TELEFONO_CUENTA) {
+                    error_log("[CUENTA-BANCO] Error: telefono_cuenta longitud inválida - " . mb_strlen($telefono_limpio) . " dígitos");
                     $errores['telefono_cuenta'] = 'El teléfono debe tener entre ' . self::MIN_TELEFONO_CUENTA . ' y ' . self::MAX_TELEFONO_CUENTA . ' dígitos';
                 }
             }
         }
         
         if (!isset($datos['correo_cuenta'])) {
+            error_log("[CUENTA-BANCO] Error: correo_cuenta no está definido");
             $errores['correo_cuenta'] = 'El correo de la cuenta es obligatorio';
         } else {
             $correo_cuenta = trim($datos['correo_cuenta']);
             if (empty($correo_cuenta)) {
+                error_log("[CUENTA-BANCO] Error: correo_cuenta está vacío");
                 $errores['correo_cuenta'] = 'El correo de la cuenta no puede estar vacío';
             } elseif (mb_strlen($correo_cuenta) > self::MAX_CORREO_CUENTA) {
+                error_log("[CUENTA-BANCO] Error: correo_cuenta excede longitud máxima - " . mb_strlen($correo_cuenta) . " caracteres");
                 $errores['correo_cuenta'] = 'El correo no debe exceder los ' . self::MAX_CORREO_CUENTA . ' caracteres';
             } elseif (!filter_var($correo_cuenta, FILTER_VALIDATE_EMAIL)) {
+                error_log("[CUENTA-BANCO] Error: correo_cuenta formato inválido - " . $correo_cuenta);
                 $errores['correo_cuenta'] = 'El formato del correo electrónico no es válido';
             }
         }
         
         if (!isset($datos['metodos_pago'])) {
+            error_log("[CUENTA-BANCO] Error: metodos_pago no está definido");
             $errores['metodos_pago'] = 'Debe seleccionar al menos un método de pago';
         } else {
             $metodos_pago = $datos['metodos_pago'];
+            error_log("[CUENTA-BANCO] metodos_pago recibidos: " . json_encode($metodos_pago));
+            
             if (is_array($metodos_pago)) {
                 $metodos_pago = array_filter($metodos_pago, function($metodo) {
                     return !empty($metodo);
                 });
             }
             if (empty($metodos_pago)) {
+                error_log("[CUENTA-BANCO] Error: metodos_pago está vacío después de filtrar");
                 $errores['metodos_pago'] = 'Debe seleccionar al menos un método de pago válido';
             } else {
                 foreach ($metodos_pago as $metodo) {
                     if (!in_array($metodo, self::TIPOS_PAGO_PERMITIDOS)) {
+                        error_log("[CUENTA-BANCO] Error: método de pago no permitido - " . $metodo);
                         $errores['metodos_pago'] = 'Los métodos de pago permitidos son: ' . implode(', ', self::TIPOS_PAGO_PERMITIDOS);
                         break;
                     }
@@ -226,6 +254,7 @@ class Cuentabanco extends BD {
             }
         }
         
+        error_log("[CUENTA-BANCO] Validación completada. Errores encontrados: " . json_encode($errores));
         return $errores;
     }
     

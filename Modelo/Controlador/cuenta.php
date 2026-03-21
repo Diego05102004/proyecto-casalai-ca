@@ -33,6 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
+            error_log("[CUENTA-CONTROLADOR] Iniciando caso 'registrar'");
+            error_log("[CUENTA-CONTROLADOR] POST recibido: " . json_encode($_POST));
+            
             $cuentabanco = new Cuentabanco();
             $cuentabanco->setNombreBanco($_POST['nombre_banco']);
             $cuentabanco->setNumeroCuenta($_POST['numero_cuenta']);
@@ -40,6 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cuentabanco->setTelefonoCuenta($_POST['telefono_cuenta']);
             $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
             $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
+            
             // Validar datos de entrada
             $datosValidacion = [
                 'nombre_banco' => $_POST['nombre_banco'] ?? '',
@@ -50,7 +54,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'metodos_pago' => $_POST['metodos_pago'] ?? []
             ];
             
+            error_log("[CUENTA-CONTROLADOR] Datos a validar: " . json_encode($datosValidacion));
+            
             $errores = $cuentabanco->validarRegistrarCuenta($datosValidacion);
+            error_log("[CUENTA-CONTROLADOR] Errores de validación: " . json_encode($errores));
+            
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
