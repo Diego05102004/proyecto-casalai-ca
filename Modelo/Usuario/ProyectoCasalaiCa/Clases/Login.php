@@ -285,8 +285,10 @@ class Login extends BD
             $password = $datos['password'];
             if (empty($password)) {
                 $errores['password'] = 'La contraseña es obligatoria';
-            } elseif (mb_strlen($password) < self::MIN_PASSWORD || mb_strlen($password) > self::MAX_PASSWORD) {
-                $errores['password'] = 'La contraseña debe tener entre ' . self::MIN_PASSWORD . ' y ' . self::MAX_PASSWORD . ' caracteres';
+            } elseif (mb_strlen($password) < 6 || mb_strlen($password) > 15) {
+                $errores['password'] = 'La contraseña debe tener entre 6 y 15 caracteres';
+            } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"\'<>,.?\/\\]).+$/', $password)) {
+                $errores['password'] = 'La contraseña debe tener al menos una mayúscula, un número y un carácter especial';
             }
         }
         
@@ -320,10 +322,10 @@ class Login extends BD
             $clave = $datos['clave'];
             if (empty($clave)) {
                 $errores['clave'] = 'La contraseña es obligatoria';
-            } elseif (mb_strlen($clave) < self::MIN_PASSWORD || mb_strlen($clave) > self::MAX_PASSWORD) {
-                $errores['clave'] = 'La contraseña debe tener entre ' . self::MIN_PASSWORD . ' y ' . self::MAX_PASSWORD . ' caracteres';
-            } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', $clave)) {
-                $errores['clave'] = 'La contraseña debe contener al menos una letra mayúscula, una letra minúscula y un número';
+            } elseif (mb_strlen($clave) < 6 || mb_strlen($clave) > 15) {
+                $errores['clave'] = 'La contraseña debe tener entre 6 y 15 caracteres';
+            } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"\'<>,.?\/\\]).+$/', $clave)) {
+                $errores['clave'] = 'La contraseña debe tener al menos una mayúscula, un número y un carácter especial';
             }
         }
         
