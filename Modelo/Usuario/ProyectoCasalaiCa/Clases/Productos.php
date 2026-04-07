@@ -948,35 +948,12 @@ class Productos extends BD{
     private function m_modificarProducto($id, $datosCategoria) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id, $datosCategoria){
             try {
-                // Solo iniciar transacción si no hay una activa
-                $transaccionIniciada = false;
-                if (!$pdo->inTransaction()) {
-                    $pdo->beginTransaction();
-                    $transaccionIniciada = true;
-                }
-
-                $sqlActual = "SELECT c.nombre_categoria 
-                            FROM tbl_productos p
-                            INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
-                            WHERE p.id_producto = :id_producto";
-                $stmtActual = $pdo->prepare($sqlActual);
-                $stmtActual->bindParam(':id_producto', $id);
-                $stmtActual->execute();
-                $nombreCategoriaActual = $stmtActual->fetchColumn();
-                $tablaCategoriaActual = 'cat_' . strtolower(str_replace(' ', '_', $nombreCategoriaActual));
-
+                // Validar que la nueva categoría exista ANTES de hacer cambios
                 if (empty($datosCategoria['Categoria'])) {
                     throw new PDOException("No se especificó la tabla de categoría.");
                 }
                 $tablaCategoriaNueva = $datosCategoria['Categoria']; 
-
-                if ($tablaCategoriaActual !== $tablaCategoriaNueva) {
-                    $sqlDelete = "DELETE FROM `$tablaCategoriaActual` WHERE id_producto = :id_producto";
-                    $stmtDelete = $pdo->prepare($sqlDelete);
-                    $stmtDelete->bindParam(':id_producto', $id);
-                    $stmtDelete->execute();
-                }
-
+                
                 $nombreCategoriaNueva = str_replace('_', ' ', ucfirst(str_replace('cat_', '', $tablaCategoriaNueva)));
                 $sqlCatId = "SELECT id_categoria FROM tbl_categoria WHERE LOWER(nombre_categoria) = LOWER(:nombre_categoria) LIMIT 1";
                 $stmtCatId = $pdo->prepare($sqlCatId);
@@ -985,13 +962,31 @@ class Productos extends BD{
                 $idCategoria = $stmtCatId->fetchColumn();
 
                 if (!$idCategoria) {
-                    if ($transaccionIniciada && $pdo->inTransaction()) {
-                        $pdo->rollBack();
-                    }
                     throw new PDOException("No se encontró la categoría '$nombreCategoriaNueva' en la base de datos.");
                 }
 
-                // 5. Actualizar producto principal
+                // Obtener categoría actual del producto
+                $sqlActual = "SELECT c.nombre_categoria 
+                            FROM tbl_productos p
+                            LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
+                            WHERE p.id_producto = :id_producto";
+                $stmtActual = $pdo->prepare($sqlActual);
+                $stmtActual->bindParam(':id_producto', $id);
+                $stmtActual->execute();
+                $nombreCategoriaActual = $stmtActual->fetchColumn();
+                
+                // Solo eliminar de la tabla anterior si realmente existe y es diferente
+                if ($nombreCategoriaActual) {
+                    $tablaCategoriaActual = 'cat_' . strtolower(str_replace(' ', '_', $nombreCategoriaActual));
+                    if ($tablaCategoriaActual !== $tablaCategoriaNueva) {
+                        $sqlDelete = "DELETE FROM `$tablaCategoriaActual` WHERE id_producto = :id_producto";
+                        $stmtDelete = $pdo->prepare($sqlDelete);
+                        $stmtDelete->bindParam(':id_producto', $id);
+                        $stmtDelete->execute();
+                    }
+                }
+
+                // Actualizar producto principal
                 $sql = "UPDATE tbl_productos 
                         SET serial = :serial_p,
                             nombre_producto = :nombre_producto,
@@ -1019,6 +1014,7 @@ class Productos extends BD{
                 $stmt->bindParam(':precio', $this->precio);
                 $stmt->execute();
 
+                // Insertar o actualizar características en la nueva tabla de categoría
                 if (!empty($tablaCategoriaNueva) && !empty($datosCategoria['carac']) && is_array($datosCategoria['carac'])) {
                     $caracteristicas = $datosCategoria['carac'];
                     $campos = array_keys($caracteristicas);
@@ -1043,7 +1039,6 @@ class Productos extends BD{
                         }
                         if (!$stmtCat->execute()) {
                             $errorInfo = $stmtCat->errorInfo();
-                            $pdo->rollBack();
                             throw new PDOException("Error SQL al actualizar características: " . $errorInfo[2]);
                         }
                     } else {
@@ -1055,22 +1050,14 @@ class Productos extends BD{
                         }
                         if (!$stmtCat->execute()) {
                             $errorInfo = $stmtCat->errorInfo();
-                            $pdo->rollBack();
                             throw new PDOException("Error SQL al insertar características: " . $errorInfo[2]);
                         }
                     }
                 }
 
-                // Solo hacer commit si iniciamos la transacción
-                if ($transaccionIniciada && $pdo->inTransaction()) {
-                    $pdo->commit();
-                }
                 return true;
 
             } catch (PDOException $e) {
-                if ($pdo && $pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
                 throw new PDOException('Error al modificar producto: ' . $e->getMessage());
             }
         });
@@ -1297,7 +1284,7 @@ class Productos extends BD{
                     return $stmt->execute();
                 }
             } catch (PDOException $e) {
-                return $e->getMessage();
+                throw $e;
             }
         });
     }

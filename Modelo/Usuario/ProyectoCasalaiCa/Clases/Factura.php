@@ -141,64 +141,56 @@ class Factura extends BD
 
     private function facturaIngresar() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            try {
-                // Validar datos básicos antes de iniciar la transacción
-                $erroresValidacion = $this->validarDatosRegistro();
-                if (!empty($erroresValidacion)) {
-                    return ['error' => implode(' ', $erroresValidacion)];
-                }
-
-                $pdo->beginTransaction();
-
-                // Buscar ID del cliente por su cédula
-                $stmtCliente = $pdo->prepare("SELECT id_clientes FROM tbl_clientes WHERE cedula = ?");
-                $stmtCliente->execute([$this->cliente]); // aquí $this->cliente sería la cédula
-                $clienteData = $stmtCliente->fetch(PDO::FETCH_ASSOC);
-
-                if (!$clienteData) {
-                    throw new PDOException("No se encontró un cliente con la cédula indicada.");
-                }
-
-                $id_cliente = $clienteData['id_clientes'];
-
-                // Insertar en tabla factura
-                $stmt = $pdo->prepare("INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$this->fecha, $id_cliente, $this->descuento, $this->estatus]);
-
-                $factura_id = $pdo->lastInsertId();
-                if (!$factura_id) {
-                    throw new PDOException("No se pudo insertar la factura.");
-                }
-
-                // Validar que $this->id_producto y $this->cantidad sean arrays y tengan la misma longitud
-                if (!is_array($this->id_producto) || !is_array($this->cantidad) || count($this->id_producto) !== count($this->cantidad)) {
-                    throw new PDOException("Datos de productos y cantidades inválidos o no coinciden.");
-                }
-
-                $detalle_insertados = 0;
-                $stmt2 = $pdo->prepare("INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) VALUES (?, ?, ?)");
-
-                foreach ($this->id_producto as $index => $id_producto) {
-                    $cantidad = $this->cantidad[$index];
-
-                    if (empty($id_producto) || empty($cantidad)) {
-                        throw new PDOException("Producto o cantidad vacío en el índice $index.");
-                    }
-
-                    $stmt2->execute([$factura_id, $id_producto, $cantidad]);
-                    $detalle_insertados += $stmt2->rowCount();
-                }
-
-                if ($detalle_insertados !== count($this->id_producto)) {
-                    throw new PDOException("No se insertaron todos los detalles de la factura.");
-                }
-
-                $pdo->commit();
-                return true;
-            } catch (PDOException $e) {
-                if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
-                return ['error' => $e->getMessage()];
+            // Validar datos básicos antes de iniciar la transacción
+            $erroresValidacion = $this->validarDatosRegistro();
+            if (!empty($erroresValidacion)) {
+                return ['error' => implode(' ', $erroresValidacion)];
             }
+
+            // Buscar ID del cliente por su cédula
+            $stmtCliente = $pdo->prepare("SELECT id_clientes FROM tbl_clientes WHERE cedula = ?");
+            $stmtCliente->execute([$this->cliente]); // aquí $this->cliente sería la cédula
+            $clienteData = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+
+            if (!$clienteData) {
+                throw new PDOException("No se encontró un cliente con la cédula indicada.");
+            }
+
+            $id_cliente = $clienteData['id_clientes'];
+
+            // Insertar en tabla factura
+            $stmt = $pdo->prepare("INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$this->fecha, $id_cliente, $this->descuento, $this->estatus]);
+
+            $factura_id = $pdo->lastInsertId();
+            if (!$factura_id) {
+                throw new PDOException("No se pudo insertar la factura.");
+            }
+
+            // Validar que $this->id_producto y $this->cantidad sean arrays y tengan la misma longitud
+            if (!is_array($this->id_producto) || !is_array($this->cantidad) || count($this->id_producto) !== count($this->cantidad)) {
+                throw new PDOException("Datos de productos y cantidades inválidos o no coinciden.");
+            }
+
+            $detalle_insertados = 0;
+            $stmt2 = $pdo->prepare("INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) VALUES (?, ?, ?)");
+
+            foreach ($this->id_producto as $index => $id_producto) {
+                $cantidad = $this->cantidad[$index];
+
+                if (empty($id_producto) || empty($cantidad)) {
+                    throw new PDOException("Producto o cantidad vacío en el índice $index.");
+                }
+
+                $stmt2->execute([$factura_id, $id_producto, $cantidad]);
+                $detalle_insertados += $stmt2->rowCount();
+            }
+
+            if ($detalle_insertados !== count($this->id_producto)) {
+                throw new PDOException("No se insertaron todos los detalles de la factura.");
+            }
+
+            return true;
         });
     }
 
@@ -786,6 +778,62 @@ class Factura extends BD
     
     // ==================== VALIDACIONES DE BACKEND ====================
     
+    /**
+     * Valida los datos para el registro de una nueva factura
+     */
+    private function validarDatosRegistro() {
+        $errores = [];
+        
+        // Validar fecha
+        if (empty($this->fecha)) {
+            $errores[] = 'La fecha es obligatoria';
+        } elseif (!strtotime($this->fecha)) {
+            $errores[] = 'La fecha no tiene un formato válido';
+        }
+        
+        // Validar cliente (cedula)
+        if (empty($this->cliente)) {
+            $errores[] = 'La cédula del cliente es obligatoria';
+        } elseif (mb_strlen($this->cliente) < self::MIN_CLIENTE || mb_strlen($this->cliente) > self::MAX_CLIENTE) {
+            $errores[] = 'La cédula del cliente debe tener entre ' . self::MIN_CLIENTE . ' y ' . self::MAX_CLIENTE . ' caracteres';
+        }
+        
+        // Validar descuento
+        if (!is_numeric($this->descuento)) {
+            $errores[] = 'El descuento debe ser un número';
+        } elseif ($this->descuento < self::MIN_DESCUENTO || $this->descuento > self::MAX_DESCUENTO) {
+            $errores[] = 'El descuento debe estar entre ' . self::MIN_DESCUENTO . ' y ' . self::MAX_DESCUENTO;
+        }
+        
+        // Validar estatus
+        if (empty($this->estatus)) {
+            $errores[] = 'El estatus es obligatorio';
+        } elseif (!in_array($this->estatus, self::ESTADOS_PERMITIDOS)) {
+            $errores[] = 'El estatus no es válido. Valores permitidos: ' . implode(', ', self::ESTADOS_PERMITIDOS);
+        }
+        
+        // Validar productos
+        if (empty($this->id_producto) || !is_array($this->id_producto)) {
+            $errores[] = 'Debe seleccionar al menos un producto';
+        }
+        
+        // Validar cantidades
+        if (empty($this->cantidad) || !is_array($this->cantidad)) {
+            $errores[] = 'Debe especificar las cantidades de los productos';
+        } elseif (count($this->id_producto) !== count($this->cantidad)) {
+            $errores[] = 'El número de productos y cantidades debe coincidir';
+        } else {
+            // Validar cada cantidad
+            foreach ($this->cantidad as $index => $cantidad) {
+                if (!is_numeric($cantidad) || $cantidad < self::MIN_CANTIDAD || $cantidad > self::MAX_CANTIDAD) {
+                    $errores[] = 'La cantidad del producto ' . ($index + 1) . ' debe estar entre ' . self::MIN_CANTIDAD . ' y ' . self::MAX_CANTIDAD;
+                }
+            }
+        }
+        
+        return $errores;
+    }
+
     /**
      * Valida los datos para consultar facturas
      */

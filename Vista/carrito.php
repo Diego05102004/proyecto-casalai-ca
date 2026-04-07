@@ -222,7 +222,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         <div class="ghost"></div>
     </div>
 
-    <table class="tabladeConsultas tabla">
+    <table class="tabladeConsultas tabla" id="tabla-carrito">
         <thead>
             <tr>
                 <th>Imagen y Serial</th>
@@ -282,7 +282,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                 <?php endforeach; ?>
                 <tr class="table-active">
                     <td colspan="4" class="text-end fw-bold">TOTAL:</td>
-                    <td class="fw-bold"><?php echo number_format($total*$data['monitors']['bcv']['price'], 2); ?> BS</td>
+                    <td class="fw-bold" id="total-carrito"><?php echo number_format($total*$data['monitors']['bcv']['price'], 2); ?> BS</td>
                     <td></td>
                 </tr>
             <?php else: ?>

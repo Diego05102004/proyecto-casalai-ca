@@ -192,7 +192,6 @@ class Carrito extends BD{
     }
     private function a_agregarCombo($id_carrito, $id_combo) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_carrito, $id_combo) {
-            $pdo->beginTransaction();
             $sqlDetalles = "SELECT id_producto, cantidad FROM combo_detalle WHERE id_combo = :id_combo";
             $stmtDetalles = $pdo->prepare($sqlDetalles);
             $stmtDetalles->bindParam(':id_combo', $id_combo);
@@ -207,7 +206,6 @@ class Carrito extends BD{
                 $stmtInsert->bindParam(':cantidad', $detalle['cantidad']);
                 $stmtInsert->execute();
             }
-            $pdo->commit();
             return true;
         });
     }
@@ -255,7 +253,6 @@ class Carrito extends BD{
                     throw new PDOException("Uno o más productos tienen datos incompletos o inválidos.");
                 }
             }
-            $pdo->beginTransaction();
             $sqlCompra = "INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) 
                           VALUES (NOW(), :id_cliente, 0, 'Borrador')";
             $stmtCompra = $pdo->prepare($sqlCompra);
@@ -286,7 +283,6 @@ class Carrito extends BD{
             $stmtVaciar->bindValue(':id_carrito', $id_carrito);
             $stmtVaciar->execute();
 
-            $pdo->commit();
             return true;
         });
     }

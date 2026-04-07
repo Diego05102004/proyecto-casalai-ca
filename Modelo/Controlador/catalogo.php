@@ -253,9 +253,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 // Validar datos usando las nuevas validaciones centralizadas
                 $datos_validacion = [
                     'id_producto' => $id_producto,
-                    'cantidad' => $cantidad,
-                    'id_combo' => $id_combo
+                    'cantidad' => $cantidad
                 ];
+                
+                // Solo incluir id_combo si es mayor que 0
+                if ($id_combo > 0) {
+                    $datos_validacion['id_combo'] = $id_combo;
+                }
                 $errores = $catalogoModel->validarAgregarCarrito($datos_validacion);
                 
                 if (!empty($errores)) {

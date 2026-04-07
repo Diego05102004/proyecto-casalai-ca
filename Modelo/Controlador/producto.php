@@ -278,6 +278,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $productoViejo = $Producto->obtenerProductoPorId($id);
 
+            // ESTABLECER DATOS EN EL OBJETO PRODUCTO (FALTABA)
+            $Producto->setNombreP($_POST['nombre_producto'] ?? '');
+            $Producto->setDescripcionP($_POST['descripcion_producto'] ?? '');
+            $Producto->setIdModelo($_POST['modelo'] ?? null);
+            $Producto->setStockActual($_POST['Stock_Actual'] ?? 0);
+            $Producto->setStockMax($_POST['Stock_Maximo'] ?? 0);
+            $Producto->setStockMin($_POST['Stock_Minimo'] ?? 0);
+            $Producto->setClausulaDeGarantia($_POST['Clausula_garantia'] ?? '');
+            $Producto->setCodigo($_POST['Seriales'] ?? '');
+            $Producto->setPrecio($_POST['Precio'] ?? 0);
+
             try {
                 if ($Producto->modificarProducto($id, $_POST)) {
                     // Procesar imagen si existe

@@ -1,16 +1,44 @@
 <?php
+// Configuración de errores - deshabilitar display para evitar HTML
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
 ob_start();
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
+
 // Evitar caché en páginas protegidas
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
+
+// Cargar autoloader
+require_once __DIR__ . '/../../vendor/autoload.php';
+
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\DolarService;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Carrito;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
+
+// Función de respuesta JSON segura
+function jsonResponse($data) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data);
+    exit;
+}
+
+// Función de manejo de errores
+set_error_handler(function($severity, $message, $file, $line) {
+    error_log("Error PHP: $message in $file on line $line");
+    jsonResponse(['status' => 'error', 'message' => "Error interno: $message"]);
+});
+
+// Función de manejo de excepciones
+set_exception_handler(function($exception) {
+    error_log("Excepción no capturada: " . $exception->getMessage() . " in " . $exception->getFile() . " on line " . $exception->getLine());
+    jsonResponse(['status' => 'error', 'message' => "Excepción: " . $exception->getMessage()]);
+});
 
 define('MODULO_CARRITO', 11);
 
@@ -19,12 +47,17 @@ if (!isset($_SESSION['id_usuario'])) {
     exit;
 }
 
-$permisosModel = new Permisos();
-$permisosUsuario = $permisosModel->getPermisosPorRolModulo();
-$data = [];
-$dolarService = new DolarService();
-$precioDolar = $dolarService->obtenerPrecioDolar();
-$dolarService->guardarPrecioCache($precioDolar);
+try {
+    $permisosModel = new Permisos();
+    $permisosUsuario = $permisosModel->getPermisosPorRolModulo();
+    $data = [];
+    $dolarService = new DolarService();
+    $precioDolar = $dolarService->obtenerPrecioDolar();
+    $dolarService->guardarPrecioCache($precioDolar);
+} catch (Exception $e) {
+    error_log("Error inicializando servicios: " . $e->getMessage());
+    // Continuar aunque fallen los servicios adicionales
+}
 
 // Manejar generación de reportes PDF
 try {
@@ -49,8 +82,8 @@ try {
     ];
     error_log('Error obteniendo precio dólar: ' . $e->getMessage());
 }
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    header('Content-Type: application/json; charset=utf-8');
     $accion = $_POST['accion'] ?? '';
     
     switch ($accion) {
@@ -247,82 +280,92 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'registrar_compra':
-            if (!isset($_SESSION['cedula'])) {
-                echo json_encode(['status' => 'error', 'message' => 'Sesión de cliente no válida']);
-                break;
-            }
-
-            $productos = $_POST['productos'] ?? [];
-            $cantidades = $_POST['cantidad'] ?? [];
-
-            if (!is_array($productos) || !is_array($cantidades) || empty($productos) || count($productos) !== count($cantidades)) {
-                echo json_encode(['status' => 'error', 'message' => 'Datos de productos o cantidades inválidos']);
-                break;
-            }
-
-            $productosValidados = [];
-            $cantidadesValidadas = [];
-            $productoModel = new Productos();
-            $errorMensaje = null;
-
-            foreach ($productos as $index => $idProductoRaw) {
-                $idProducto = (int)$idProductoRaw;
-                $cantidad = isset($cantidades[$index]) ? (int)$cantidades[$index] : 0;
-
-                if ($idProducto <= 0 || $cantidad <= 0) {
-                    $errorMensaje = 'Todos los productos deben tener un ID y cantidad válidos';
-                    break;
-                }
-
-                $producto = $productoModel->obtenerProductoPorId($idProducto);
-                if (!$producto) {
-                    $errorMensaje = 'Uno de los productos de la compra no existe';
-                    break;
-                }
-
-                if ($cantidad > (int)($producto['stock'] ?? 0)) {
-                    $errorMensaje = 'No hay stock suficiente para uno de los productos de la compra';
-                    break;
-                }
-
-                $productosValidados[] = $idProducto;
-                $cantidadesValidadas[] = $cantidad;
-            }
-
-            if ($errorMensaje !== null) {
-                echo json_encode(['status' => 'error', 'message' => $errorMensaje]);
-                break;
-            }
-
-            $factura = new Factura();
-            // Aquí se debe obtener el ID del cliente de la sesión
-            $factura->setCliente($_SESSION['cedula']); // Obtener de la sesión
-            $factura->setFecha(date('Y-m-d H:i:s'));
-            $factura->setDescuento(0); // Descuento inicial
-            $factura->setEstatus('Borrador'); // Estado inicial de la compra
-            $factura->setIdProducto($productosValidados);
-            $factura->setCantidad($cantidadesValidadas);
             try {
+                // Verificar sesión
+                if (!isset($_SESSION['cedula'])) {
+                    jsonResponse(['status' => 'error', 'message' => 'Sesión de cliente no válida']);
+                }
+
+                // Obtener datos
+                $productos = $_POST['productos'] ?? [];
+                $cantidades = $_POST['cantidad'] ?? [];
+
+                // Validar datos básicos
+                if (!is_array($productos) || !is_array($cantidades) || empty($productos) || count($productos) !== count($cantidades)) {
+                    jsonResponse(['status' => 'error', 'message' => 'Datos de productos o cantidades inválidos']);
+                }
+
+                // Validar productos
+                $productosValidados = [];
+                $cantidadesValidadas = [];
+                $productoModel = new Productos();
+                $errorMensaje = null;
+
+                foreach ($productos as $index => $idProductoRaw) {
+                    $idProducto = (int)$idProductoRaw;
+                    $cantidad = isset($cantidades[$index]) ? (int)$cantidades[$index] : 0;
+
+                    if ($idProducto <= 0 || $cantidad <= 0) {
+                        $errorMensaje = 'Todos los productos deben tener un ID y cantidad válidos';
+                        break;
+                    }
+
+                    $producto = $productoModel->obtenerProductoPorId($idProducto);
+                    if (!$producto) {
+                        $errorMensaje = 'Uno de los productos de la compra no existe';
+                        break;
+                    }
+
+                    if ($cantidad > (int)($producto['stock'] ?? 0)) {
+                        $errorMensaje = 'No hay stock suficiente para uno de los productos de la compra';
+                        break;
+                    }
+
+                    $productosValidados[] = $idProducto;
+                    $cantidadesValidadas[] = $cantidad;
+                }
+
+                if ($errorMensaje !== null) {
+                    jsonResponse(['status' => 'error', 'message' => $errorMensaje]);
+                }
+
+                // Crear factura
+                $factura = new Factura();
+                $factura->setCliente($_SESSION['cedula']);
+                $factura->setFecha(date('Y-m-d H:i:s'));
+                $factura->setDescuento(0);
+                $factura->setEstatus('Borrador');
+                $factura->setIdProducto($productosValidados);
+                $factura->setCantidad($cantidadesValidadas);
+
+                // Procesar factura
                 $resultado = $factura->facturaTransaccion("Ingresar");
 
                 if (is_array($resultado) && isset($resultado['error'])) {
-
-                    echo json_encode(['status' => 'error', 'message' => $resultado['error']]);
+                    jsonResponse(['status' => 'error', 'message' => $resultado['error']]);
                 } elseif ($resultado === true) {
-                    // Todo fue exitoso
-                    $carrito = new Carrito();   
-                    $carritoCliente = $carrito->obtenerCarritoPorCliente($_SESSION['id_usuario']);
-                    $id_carrito = $carritoCliente['id_carrito'];
-                    $carrito->eliminarTodoElCarrito($id_carrito);
-                    echo json_encode(['status' => 'success', 'message' => 'Registro de Pedido se registro correctamente (Falta Pagar el pedido)']);
+                    // Vaciar carrito después de crear factura
+                    try {
+                        $carrito = new Carrito();   
+                        $carritoCliente = $carrito->obtenerCarritoPorCliente($_SESSION['id_usuario']);
+                        if ($carritoCliente) {
+                            $id_carrito = $carritoCliente['id_carrito'];
+                            $carrito->eliminarTodoElCarrito($id_carrito);
+                        }
+                    } catch (Exception $e) {
+                        error_log("Error vaciando carrito: " . $e->getMessage());
+                        // Continuar aunque falle el vaciado del carrito
+                    }
+                    
+                    jsonResponse(['status' => 'success', 'message' => 'Registro de Pedido se registro correctamente (Falta Pagar el pedido)']);
                 } else {
-                    // Fallback genérico
-                    echo json_encode(['status' => 'error', 'message' => 'Error desconocido al registrar la compra']);
+                    jsonResponse(['status' => 'error', 'message' => 'Error desconocido al registrar la compra']);
                 }
-            } catch (Exception $e) {
-                echo json_encode(['status' => 'error', 'message' => 'Excepción: ' . $e->getMessage()]);
-            }
 
+            } catch (Exception $e) {
+                error_log("Excepción en registrar_compra: " . $e->getMessage());
+                jsonResponse(['status' => 'error', 'message' => 'Excepción: ' . $e->getMessage()]);
+            }
             break;
 
         case 'filtrar_por_marca':

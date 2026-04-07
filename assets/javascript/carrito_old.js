@@ -1,4 +1,7 @@
 $(document).ready(function() {
+    // Asignar eventos iniciales al cargar la página
+    asignarEventosCarrito();
+
     // Manejar registro de compra
     $('#registrar-compra').on('click', function() {
         const datos = [];
@@ -51,37 +54,13 @@ $(document).ready(function() {
                         accion: 'registrar_compra',
                         productos: datos.map(d => d.id_producto),
                         cantidad: datos.map(d => d.cantidad)
-                    },
-                    dataType: 'json' // Esperamos JSON pero manejaremos errores
-                }).then(response => {
-                    // Si llegamos aquí, jQuery ya parseó JSON correctamente
-                    return response;
-                }).catch(error => {
-                    console.error('Error en AJAX:', error);
-                    console.error('Respuesta del servidor:', error.responseText);
-                    
-                    let errorMessage = 'Error en la solicitud';
-                    
-                    // Si hay respuesta de texto, mostrarla
-                    if (error.responseText) {
-                        // Si parece HTML, extraer solo el texto
-                        if (error.responseText.includes('<')) {
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = error.responseText;
-                            errorMessage = tempDiv.textContent || tempDiv.innerText || 'Error del servidor';
-                        } else {
-                            errorMessage = error.responseText;
-                        }
-                    } else if (error.responseJSON && error.responseJSON.message) {
-                        errorMessage = error.responseJSON.message;
-                    } else if (error.statusText) {
-                        errorMessage = `Error: ${error.statusText}`;
-                    } else if (typeof error === 'string') {
-                        errorMessage = error;
                     }
-                    
-                    Swal.showValidationMessage(errorMessage);
-                    throw error; // Re-lanzar el error para que SweetAlert lo maneje
+                }).then(response => {
+                    return JSON.parse(response);
+                }).catch(error => {
+                    Swal.showValidationMessage(
+                        `Error en la solicitud: ${error}`
+                    );
                 });
             },
             allowOutsideClick: () => !Swal.isLoading()
@@ -128,31 +107,21 @@ $(document).ready(function() {
                         accion: 'eliminar_todo_carrito'
                     },
                     success: function(response) {
-                        try {
-                            // Si response ya es un objeto, usarlo directamente, sino parsearlo
-                            const data = typeof response === 'string' ? JSON.parse(response) : response;
-                            if (data.status === 'success') {
-                                Swal.fire(
-                                    'Carrito vaciado!',
-                                    data.message,
-                                    'success'
-                                ).then(() => {
-                                    // Recargar la página completamente
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: data.message
-                                });
-                            }
-                        } catch (e) {
-                            console.error('Error procesando respuesta:', e, response);
+                        response = JSON.parse(response);
+                        if (response.status === 'success') {
+                            Swal.fire(
+                                'Carrito vaciado!',
+                                response.message,
+                                'success'
+                            ).then(() => {
+                                // Recargar la página completamente
+                                location.reload();
+                            });
+                        } else {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'Error al procesar la respuesta del servidor'
+                                text: response.message
                             });
                         }
                     }
@@ -180,17 +149,12 @@ $(document).ready(function() {
                 cantidad: cantidad
             },
             success: function(response) {
-                try {
-                    const data = typeof response === 'string' ? JSON.parse(response) : response;
-                    if (data.status === 'success') {
-                        // Recargar la página completamente
-                        location.reload();
-                    } else {
-                        Swal.fire('Error', data.message, 'error');
-                    }
-                } catch (e) {
-                    console.error('Error procesando respuesta:', e, response);
-                    Swal.fire('Error', 'Error al procesar la respuesta del servidor', 'error');
+                response = JSON.parse(response);
+                if (response.status === 'success') {
+                    // Recargar la página completamente
+                    location.reload();
+                } else {
+                    Swal.fire('Error', response.message, 'error');
                 }
             }
         });
@@ -219,12 +183,11 @@ $(document).ready(function() {
                         id_carrito_detalle: idCarritoDetalle
                     },
                     success: function(response) {
-                    try {
-                        const data = typeof response === 'string' ? JSON.parse(response) : response;
-                        if (data.status === 'success') {
+                        response = JSON.parse(response);
+                        if (response.status === 'success') {
                             Swal.fire(
                                 'Eliminado!',
-                                data.message,
+                                response.message,
                                 'success'
                             ).then(() => {
                                 // Recargar la página completamente
@@ -234,18 +197,10 @@ $(document).ready(function() {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: data.message
+                                text: response.message
                             });
                         }
-                    } catch (e) {
-                        console.error('Error procesando respuesta:', e, response);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Error al procesar la respuesta del servidor'
-                        });
                     }
-                }
                 });
             }
         });
@@ -295,3 +250,50 @@ $(document).ready(function() {
         // cargarYMostrarModalAyuda(); // Sin contexto específico
     });
 });
+
+// ...
+
+// Función para cargar y mostrar el modal de ayuda con contexto específico
+// function cargarYMostrarModalAyuda(contexto = null) {
+//     // ...
+// }
+
+// ...
+                            // Abrir modal
+                            modalAyudaInstance.openModal();
+                        } else {
+                            console.error('La función inicializarModalAyudaUsuario no está disponible');
+                        }
+                    })
+                    .fail(function() {
+                        console.error('Error al cargar el JavaScript del modal de ayuda');
+                    });
+            } else {
+                // Si el JS ya está cargado, solo abrir el modal existente
+                if (typeof inicializarModalAyudaUsuario === 'function') {
+                    const modalAyudaInstance = inicializarModalAyudaUsuario();
+
+                    // Abrir modal con contexto si se proporciona
+                    if (contexto) {
+                        setTimeout(() => {
+                            const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                            if (slideIndex !== undefined) {
+                                modalAyudaInstance.goToSlide(slideIndex);
+                            }
+                        }, 300);
+                    }
+
+                    // Abrir modal
+                    modalAyudaInstance.openModal();
+                }
+            }
+        })
+        .fail(function() {
+            console.error('Error al cargar el HTML del modal');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cargar el contenido de ayuda'
+            });
+        });
+}
