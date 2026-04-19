@@ -51,7 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $datos_validacion = [
                 'idproveedor' => $_POST['proveedor'],
                 'correlativo' => $_POST['correlativo'],
-                'tamanocompra' => $_POST['tamanocompra'],
                 'estado' => 'habilitado'
             ];
 
@@ -73,7 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $k->setidproveedor($_POST['proveedor']);
             $k->setcorrelativo($_POST['correlativo']);
-            $k->settamanocompra($_POST['tamanocompra']);
             $k->setestado('habilitado');
 
             $resultado = $k->registrarRecepcion(

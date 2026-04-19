@@ -113,64 +113,25 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
                     <input type="hidden" name="accion" value="registrar">
 
-                    <div class="envolver-form">
-
-                        <label for="correlativo">N° de Factura del Proveedor</label>
-
-                        <input type="text" placeholder="N° de Factura" class="control-form" maxlength="6" id="correlativo" name="correlativo" />
-
-                        <span class="span-value" id="scorrelativo"></span>
-
-                    </div>
-
-
-
                     <div class="grupo-form">
 
                         <div class="grupo-interno">
-
-                            <label for="proveedor">Proveedor</label>
-
-                            <select class="form-select" name="proveedor" id="proveedor">
-
-                                <option value="" hidden>Seleccione el Proveedor</option>
-
-                                <?php
-
-                                foreach ($proveedores  as $proveedor) {
-
-                                    echo "<option value='" . $proveedor['id_proveedor'] . "'>" . $proveedor['nombre_proveedor'] . "</option>";
-
-                                } ?>
-
-                            </select>
-
-                            <span class="span-value" id="sproveedor"></span>
-
+                            <label for="correlativo">N° de Factura del Proveedor</label>
+                            <input type="text" placeholder="N° de Factura" class="control-form" maxlength="6" id="correlativo" name="correlativo" />
+                            <span class="span-value" id="scorrelativo"></span>
                         </div>
-
-
 
                         <div class="grupo-interno">
-
-                            <label for="tamanocompra">Tamaño de la compra</label>
-
-                            <select class="form-select" name="tamanocompra" id="tamanocompra">
-
-                                <option value="" hidden>Seleccione el Tamaño</option>
-
-                                <option value="Pequeño">Pequeño</option>
-
-                                <option value="Mediano">Mediano</option>
-
-                                <option value="Grande">Grande</option>
-
+                            <label for="proveedor">Proveedor</label>
+                            <select class="form-select" name="proveedor" id="proveedor">
+                                <option value="" hidden>Seleccione el Proveedor</option>
+                                <?php
+                                foreach ($proveedores  as $proveedor) {
+                                    echo "<option value='" . $proveedor['id_proveedor'] . "'>" . $proveedor['nombre_proveedor'] . "</option>";
+                                } ?>
                             </select>
-
-                            <span class="span-value" id="stamanocompra"></span>
-
+                            <span class="span-value" id="sproveedor"></span>
                         </div>
-
                     </div>
 
         
@@ -349,8 +310,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
                 <th>PROVEEDOR</th>
 
-                <th>TAMAÑO DE LA COMPRA</th>
-
                 <th>COSTO DE INVERSIÓN</th>
 
                 <th>ACCIONES</th>
@@ -400,16 +359,6 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             <span class="campo-nombres">
 
                                 <?= htmlspecialchars($recepcion['nombre_proveedor']) ?>
-
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            <span class="campo-nombres">
-
-                                <?= htmlspecialchars($recepcion['tamanocompra']) ?>
 
                             </span>
 

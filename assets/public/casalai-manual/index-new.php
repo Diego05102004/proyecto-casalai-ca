@@ -1768,7 +1768,6 @@ $modulos = [
                                                     <li class="mb-2"><strong>Paso 1:</strong> Haga clic en el botón <strong>"Nueva Recepción"</strong> en la parte superior derecha.</li>
                                                     <li class="mb-2"><strong>Paso 2:</strong> Ingrese el <strong>N° de la factura</strong>.</li>
                                                     <li class="mb-2"><strong>Paso 3:</strong> Seleccione el <strong>proveedor</strong>.</li>
-                                                    <li class="mb-2"><strong>Paso 4:</strong> Seleccione el <strong>tamaño de la compra</strong>.</li>
                                                     <li class="mb-2"><strong>Paso 5:</strong> Haga clic en <strong>"Lista de Productos"</strong> y seleccione los productos recibidos, costo por unidad y cantidad.</li>
                                                     <li class="mb-2"><strong>Paso 6:</strong> Haga clic en <strong>"Registrar"</strong>.</li>
                                                 </ol>

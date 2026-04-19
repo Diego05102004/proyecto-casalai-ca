@@ -888,7 +888,6 @@ CREATE TABLE `tbl_recepcion_productos` (
   `id_proveedor` int(11) NOT NULL,
   `fecha` date NOT NULL,
   `correlativo` varchar(255) NOT NULL,
-  `tamanocompra` enum('Pequeño','Mediano','Grande') NOT NULL,
   `estado` enum('habilitado','anulado') NOT NULL DEFAULT 'habilitado'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -896,9 +895,9 @@ CREATE TABLE `tbl_recepcion_productos` (
 -- Volcado de datos para la tabla `tbl_recepcion_productos`
 --
 
-INSERT INTO `tbl_recepcion_productos` (`id_recepcion`, `id_proveedor`, `fecha`, `correlativo`, `tamanocompra`, `estado`) VALUES
-(10, 1, '2025-07-22', '1235', 'Mediano', 'habilitado'),
-(11, 1, '2025-07-27', '00012', 'Grande', 'habilitado');
+INSERT INTO `tbl_recepcion_productos` (`id_recepcion`, `id_proveedor`, `fecha`, `correlativo`, `estado`) VALUES
+(10, 1, '2025-07-22', '1235', 'habilitado'),
+(11, 1, '2025-07-27', '00012', 'habilitado');
 
 --
 -- Índices para tablas volcadas

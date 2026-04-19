@@ -120,7 +120,7 @@ $(document).ready(function () {
         }
     }
 
-    protegerSelects(['proveedor', 'tamanocompra']);
+    protegerSelects(['proveedor']);
 
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", "Atención", $("#mensajes").html());
@@ -150,16 +150,6 @@ $(document).ready(function () {
         }
     });
 
-    $("#tamanocompra").on("change", function() {
-        if ($(this).val()) {
-            $(this).removeClass("is-invalid").addClass("is-valid");
-            $("#stamanocompra").text("");
-        } else {
-            $(this).removeClass("is-valid").addClass("is-invalid");
-            $("#stamanocompra").text("*Debe seleccionar un tamaño de compra*");
-        }
-    });
-
     function validarEnvioRecepcion(){
         let correlativo = document.getElementById("correlativo");
         correlativo.value = space(correlativo.value).trim();
@@ -183,16 +173,6 @@ $(document).ready(function () {
             mensajes('error', 'Verifique el proveedor', 'El campo esta vacio');
             return false;
         }
-
-        if($("#tamanocompra").val()) {
-            $("#tamanocompra").removeClass("is-invalid").addClass("is-valid");
-            $("#stamanocompra").text("");
-        } else {
-            $("#tamanocompra").removeClass("is-valid").addClass("is-invalid");
-            $("#stamanocompra").text("*Debe seleccionar un tamaño de compra*");
-            mensajes('error', 'Verifique el tamaño de compra', 'El campo esta vacio');
-            return false;
-        }
         return true;
     }
 
@@ -201,7 +181,6 @@ $(document).ready(function () {
             `<span class="campo-numeros">${recepcion.fecha ? formatearFecha(recepcion.fecha) : ''}</span>`,
             `<span class="campo-numeros">${recepcion.correlativo}</span>`,
             `<span class="campo-nombres">${recepcion.nombre_proveedor}</span>`,
-            `<span class="campo-nombres">${recepcion.tamanocompra}</span>`,
             `<span class="campo-numeros">${Number(recepcion.costo_inversion).toLocaleString('es-VE', {minimumFractionDigits:2})}</span>`,
             `<ul>
                 <button class="btn-detalle"
@@ -244,17 +223,12 @@ $(document).ready(function () {
         $("#proveedor").val("");
         $("#proveedor").removeClass("is-valid is-invalid");
         $("#proveedor").prop('checked', false);
-        $("#tamanocompra").val("");
-        $("#tamanocompra").removeClass("is-valid is-invalid");
-        $("#tamanocompra").prop('checked', false);
     }
 
     $('#ingresarRecepcion').on('reset', function() {
         setTimeout(function() {
             $("#proveedor").val("");
             $("#proveedor").removeClass("is-valid is-invalid");
-            $("#tamanocompra").val("");
-            $("#tamanocompra").removeClass("is-valid is-invalid");
         }, 0);
     });
 
@@ -263,8 +237,6 @@ $(document).ready(function () {
         $('#scorrelativo').text('');
         $("#proveedor").removeClass("is-valid is-invalid");
         $("#proveedor").prop('checked', false);
-        $("#tamanocompra").removeClass("is-valid is-invalid");
-        $("#tamanocompra").prop('checked', false);
         $('#registrarRecepcionModal').modal('show');
     });
 

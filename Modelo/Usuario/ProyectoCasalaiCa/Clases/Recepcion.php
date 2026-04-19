@@ -6,7 +6,6 @@ use PDOException;
 class Recepcion extends BD{
     private $idproveedor;
     private $correlativo;
-    private $tamanocompra;
     private $desc;
     private $fecha;
     private $costo;
@@ -16,14 +15,12 @@ class Recepcion extends BD{
     // Constantes de validación
     const MAX_REGISTROS_PAGINA = 100;
     const MAX_RANGO_FECHAS_DIAS = 365;
-    const CAMPOS_OBLIGATORIOS = ['idproveedor', 'correlativo', 'tamanocompra'];
+    const CAMPOS_OBLIGATORIOS = ['idproveedor', 'correlativo'];
     
     const MAX_ID_PROVEEDOR = 999999999;
     const MIN_ID_PROVEEDOR = 1;
     const MAX_CORRELATIVO = 50;
     const MIN_CORRELATIVO = 3;
-    const MAX_TAMANOCOMPRA = 100;
-    const MIN_TAMANOCOMPRA = 2;
     const MAX_DESCRIPCION = 500;
     const MIN_DESCRIPCION = 0;
     const MAX_COSTO = 999999.99;
@@ -55,13 +52,6 @@ class Recepcion extends BD{
     }
     public function setcorrelativo($correlativo) {
         $this->correlativo = $correlativo;
-    }
-
-    public function gettamanocompra() {
-        return $this->tamanocompra;
-    }
-    public function settamanocompra($tamanocompra) {
-        $this->tamanocompra = $tamanocompra;
     }
 
     public function getdesc() {
@@ -141,7 +131,7 @@ class Recepcion extends BD{
         $datos_sanitizados = [];
         
         // Sanitizar campos de texto
-        $campos_texto = ['correlativo', 'tamanocompra', 'desc', 'estado'];
+        $campos_texto = ['correlativo', 'desc', 'estado'];
         foreach ($campos_texto as $campo) {
             if (isset($datos[$campo])) {
                 $datos_sanitizados[$campo] = trim((string)$datos[$campo]);
@@ -222,16 +212,6 @@ class Recepcion extends BD{
                 $errores['correlativo'] = 'El N° de Factura no debe exceder los ' . self::MAX_CORRELATIVO . ' caracteres';
             } elseif (!preg_match('/^[a-zA-Z0-9\-]+$/', $correlativo)) {
                 $errores['correlativo'] = 'El N° de Factura solo puede contener letras, números y guiones';
-            }
-        }
-        
-        // Validar tamaño de compra
-        if (isset($datos['tamanocompra'])) {
-            $tamanocompra = trim((string)$datos['tamanocompra']);
-            if ($tamanocompra !== '' && mb_strlen($tamanocompra) < self::MIN_TAMANOCOMPRA) {
-                $errores['tamanocompra'] = 'El tamaño de compra debe tener al menos ' . self::MIN_TAMANOCOMPRA . ' caracteres';
-            } elseif (mb_strlen($tamanocompra) > self::MAX_TAMANOCOMPRA) {
-                $errores['tamanocompra'] = 'El tamaño de compra no debe exceder los ' . self::MAX_TAMANOCOMPRA . ' caracteres';
             }
         }
         
@@ -614,7 +594,6 @@ class Recepcion extends BD{
                     r.fecha, 
                     r.correlativo, 
                     pr.nombre_proveedor, 
-                    r.tamanocompra,
                     SUM(d.cantidad * d.costo) AS costo_inversion,
                     r.estado
                 FROM tbl_recepcion_productos AS r
@@ -655,7 +634,7 @@ class Recepcion extends BD{
                 $params[':estado'] = $filtros['estado'];
             }
             
-            $sql .= " GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado";
+            $sql .= " GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado";
             $sql .= " ORDER BY r.fecha DESC, r.correlativo DESC";
             
             // Aplicar paginación
@@ -672,8 +651,8 @@ class Recepcion extends BD{
             $recepciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Obtener total para paginación
-            $sql_total = str_replace("GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado ORDER BY r.fecha DESC, r.correlativo DESC LIMIT :offset, :limite", "", $sql);
-            $sql_total = str_replace("SELECT r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, SUM(d.cantidad * d.costo) AS costo_inversion, r.estado FROM", "SELECT COUNT(*) as total FROM", $sql_total);
+            $sql_total = str_replace("GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado ORDER BY r.fecha DESC, r.correlativo DESC LIMIT :offset, :limite", "", $sql);
+            $sql_total = str_replace("SELECT r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, SUM(d.cantidad * d.costo) AS costo_inversion, r.estado FROM", "SELECT COUNT(*) as total FROM", $sql_total);
             
             $stmt_total = $pdo->prepare($sql_total);
             $stmt_total->execute($params);
@@ -720,13 +699,12 @@ class Recepcion extends BD{
     private function r_recepcion($idproducto, $cantidad, $costo) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($idproducto, $cantidad, $costo){
             $tiempo = date('Y-m-d');
-            $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, tamanocompra, estado) 
-                VALUES (:idproveedor, :fecha_recepcion, :correlativo, :tamanocompra, :estado)";
+            $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, estado) 
+                VALUES (:idproveedor, :fecha_recepcion, :correlativo, :estado)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':idproveedor', $this->idproveedor, PDO::PARAM_INT);
             $stmt->bindParam(':fecha_recepcion', $tiempo, PDO::PARAM_STR);
             $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
-            $stmt->bindParam(':tamanocompra', $this->tamanocompra, PDO::PARAM_STR);
             $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
             $stmt->execute();
 
@@ -773,14 +751,13 @@ class Recepcion extends BD{
                     r.fecha, 
                     r.correlativo, 
                     pr.nombre_proveedor, 
-                    r.tamanocompra,
                     SUM(d.cantidad * d.costo) AS costo_inversion,
                     r.estado
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
                 INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
                 WHERE r.id_recepcion = :idRecepcion
-                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
+                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado
             ";
             $stmtRecepcion = $pdo->prepare($sqlRecepcion);
             $stmtRecepcion->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
@@ -817,13 +794,12 @@ class Recepcion extends BD{
                     r.fecha, 
                     r.correlativo, 
                     pr.nombre_proveedor, 
-                    r.tamanocompra,
                     SUM(d.cantidad * d.costo) AS costo_inversion,
                     r.estado
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
                 INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
-                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra, r.estado
+                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado
                 ORDER BY r.id_recepcion DESC 
                 LIMIT 1";
                 
@@ -851,15 +827,14 @@ class Recepcion extends BD{
                     r.fecha, 
                     r.correlativo, 
                     pr.nombre_proveedor, 
-                    r.tamanocompra,
                     SUM(d.cantidad * d.costo) AS costo_inversion,
                     r.estado
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
                 INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
                 WHERE r.estado = 'habilitado'
-                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.tamanocompra
-                ORDER BY r.fecha DESC, r.correlativo DESC, r.tamanocompra DESC
+                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado
+                ORDER BY r.fecha DESC, r.correlativo DESC
             ";
             $stmtrecepciones = $pdo->prepare($queryrecepciones);
             $stmtrecepciones->execute();
