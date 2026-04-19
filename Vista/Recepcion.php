@@ -54,6 +54,87 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="accion" value="registrar">
+                    
+                    <!-- Estado inicial del modal: Botón para importar factura -->
+                    <div id="paso_inicial_importar" class="ia-section">
+                        <div class="ia-header">
+                            <h6><i class="fas fa-file-import"></i> Importar Factura</h6>
+                            <small class="text-muted">Seleccione una fotografía de la factura para comenzar con el registro</small>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" id="ia_btn_importar_factura" class="btn btn-primary btn-lg">
+                                <i class="fas fa-camera"></i> Importar Factura
+                            </button>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Debe importar la factura antes de poder registrar la recepción
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 1: Carga de Factura (oculto inicialmente) -->
+                    <div id="paso1_carga_factura" class="ia-section" style="display: none;">
+                        <div class="ia-header">
+                            <h6><i class="fas fa-camera"></i> Cargar Factura</h6>
+                            <small class="text-muted">Cargue una fotografía de la factura para continuar</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="ia_factura_imagen" class="required">
+                                <i class="fas fa-file-image"></i> Seleccionar Factura <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" id="ia_factura_imagen" name="ia_factura_imagen" 
+                                   class="form-control" accept="image/*" required>
+                            <small class="form-text text-muted">
+                                Formatos permitidos: JPG, PNG, BMP. Tamaño máximo: 10MB
+                            </small>
+                            <div id="ia_imagen_preview" class="mt-2"></div>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="ia-botones-container mb-3">
+                            <button type="button" id="ia_btn_continuar" class="btn btn-primary btn-sm" disabled>
+                                <i class="fas fa-arrow-right"></i> Continuar al Formulario
+                            </button>
+                            <button type="button" id="ia_btn_limpiar" class="btn btn-secondary btn-sm ml-2">
+                                <i class="fas fa-eraser"></i> Limpiar
+                            </button>
+                            <button type="button" id="ia_btn_cancelar" class="btn btn-danger btn-sm ml-2">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <div class="ia-estado-indicator float-right">
+                                <span id="ia_estado_conexion" class="badge badge-secondary">
+                                    <i class="fas fa-circle"></i> Desconectado
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Mensaje de procesamiento -->
+                        <div id="ia_procesando" class="alert alert-info" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Procesando factura con IA...
+                        </div>
+                        
+                        <!-- Contenedor para resultados de IA (oculto inicialmente) -->
+                        <div id="ia_resultados_container" class="ia-resultados-container" style="display: none;">
+                            <!-- Los resultados se mostrarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 2: Formulario de Recepción (oculto inicialmente) -->
+                    <div id="paso2_formulario_recepcion" style="display: none;">
+                        <div class="ia-section">
+                            <div class="ia-header">
+                                <h6><i class="fas fa-clipboard-list"></i> Completar Datos de Recepción</h6>
+                                <small class="text-muted">La IA verificará automáticamente los datos al registrar</small>
+                            </div>
+                            <div id="ia_resumen_factura" class="alert alert-success" style="display: none;">
+                                <i class="fas fa-check-circle"></i> <strong>Factura procesada:</strong> <span id="ia_resumen_texto"></span>
+                            </div>
+                        </div>
+                        
+                        <hr class="ia-divider">
+                    
                     <div class="grupo-form">
                         <div class="grupo-interno">
                             <label for="correlativo">N° de Factura del Proveedor</label>
@@ -98,11 +179,18 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             <tbody id="recepcion1"></tbody>
                         </table>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="boton-form btn-primary" type="submit">Registrar</button>
-                    <button class="boton-reset btn-primary" type="reset">Limpiar</button>
-                </div>
+                    <div class="modal-footer">
+                        <button class="boton-form btn-primary" type="submit">
+                            <i class="fas fa-save"></i> Registrar Recepción
+                        </button>
+                        <button class="boton-reset btn-primary" type="reset">
+                            <i class="fas fa-redo"></i> Limpiar Formulario
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="ia_btn_volver">
+                            <i class="fas fa-arrow-left"></i> Volver a Cargar Factura
+                        </button>
+                    </div>
+                </div> <!-- Cierre del paso2_formulario_recepcion -->
             </form>
 
             <div class="modal fade" tabindex="-1" role="dialog" id="modalp">
@@ -806,12 +894,157 @@ $(document).on('click', '.modal .close', function() {
 </script>
 
 <?php include 'footer.php'; ?>
+
+<!-- Estilos CSS para componentes IA -->
+<style>
+.ia-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.ia-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #007bff;
+}
+
+.ia-header h6 {
+    color: #007bff;
+    margin: 0;
+    font-weight: 600;
+}
+
+.ia-header .fas {
+    margin-right: 8px;
+}
+
+.ia-section .required::after {
+    content: ' *';
+    color: #dc3545;
+}
+
+.ia-botones-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ia-estado-indicator .badge {
+    font-size: 0.8em;
+    padding: 5px 10px;
+}
+
+.ia-estado-indicator .badge-success {
+    background-color: #28a745;
+}
+
+.ia-estado-indicator .badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.ia-estado-indicator .badge-danger {
+    background-color: #dc3545;
+}
+
+.ia-divider {
+    border: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #007bff, transparent);
+    margin: 20px 0;
+}
+
+.ia-resultados-container {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.ia-resultados-container .alert {
+    margin-bottom: 0;
+    border-radius: 8px;
+}
+
+.ia-resultados-container .badge {
+    font-size: 0.9em;
+    padding: 6px 12px;
+}
+
+.ia-imagen-preview img {
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ia-imagen-preview .mt-1 {
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.ia-resultados-container .progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.ia-resultados-container .progress-bar {
+    border-radius: 4px;
+}
+
+.ia-resultados-container .list-unstyled li {
+    padding: 8px;
+    margin: 4px 0;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+}
+
+.ia-resultados-container .badge-danger {
+    background-color: #dc3545;
+}
+
+.ia-resultados-container .badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.ia-resultados-container .badge-info {
+    background-color: #17a2b8;
+}
+
+.ia-resultados-container .badge-success {
+    background-color: #28a745;
+}
+
+@media (max-width: 768px) {
+    .ia-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ia-botones-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .ia-estado-indicator {
+        margin-top: 10px;
+        text-align: center;
+    }
+}
+</style>
+
+<!-- Cliente JavaScript del Microservicio IA -->
+<script src="assets/javascript/ia-recepcion.js"></script>
 <script src="assets/javascript/recepcion.js"></script>
-<script src="assets/public/js/chart.js"></script>
-<script src="assets/public/js/html2canvas.min.js"></script>
-<script src="assets/public/js/jspdf.umd.min.js"></script>
-<script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="assets/public/js/jquery-3.7.1.min.js"></script>
 <script src="assets/public/js/jquery.dataTables.min.js"></script>
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
