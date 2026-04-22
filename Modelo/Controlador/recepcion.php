@@ -64,60 +64,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            // Procesar datos de verificación IA si existen
-            $datos_ia = null;
-            if (isset($_POST['ia_verificacion']) && !empty($_POST['ia_verificacion'])) {
-                $datos_ia = json_decode($_POST['ia_verificacion'], true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    $datos_ia = null;
-                }
-            }
-
-            // Procesar imagen de factura si se subió
-            $ruta_factura = null;
-            if (isset($_FILES['ia_factura_imagen']) && $_FILES['ia_factura_imagen']['error'] === UPLOAD_ERR_OK) {
-                $archivo_factura = $_FILES['ia_factura_imagen'];
-                
-                // Validar tipo de archivo
-                $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/bmp'];
-                if (!in_array($archivo_factura['type'], $tipos_permitidos)) {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Tipo de archivo no permitido. Use JPG, PNG o BMP.',
-                        'errors' => ['ia_factura_imagen' => 'Tipo de archivo inválido']
-                    ]);
-                    exit;
-                }
-                
-                // Validar tamaño (máximo 10MB)
-                $tamano_maximo = 10 * 1024 * 1024; // 10MB
-                if ($archivo_factura['size'] > $tamano_maximo) {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'El archivo es demasiado grande. Máximo 10MB.',
-                        'errors' => ['ia_factura_imagen' => 'Archivo demasiado grande']
-                    ]);
-                    exit;
-                }
-                
-                // Generar nombre único y guardar archivo
-                $extension = pathinfo($archivo_factura['name'], PATHINFO_EXTENSION);
-                $nombre_archivo = 'factura_' . date('Y-m-d_H-i-s') . '_' . uniqid() . '.' . $extension;
-                $ruta_destino = 'assets/img/comprobantes/facturas/' . $nombre_archivo;
-                
-                // Crear directorio si no existe
-                $directorio_destino = dirname($ruta_destino);
-                if (!is_dir($directorio_destino)) {
-                    mkdir($directorio_destino, 0755, true);
-                }
-                
-                if (move_uploaded_file($archivo_factura['tmp_name'], $ruta_destino)) {
-                    $ruta_factura = $ruta_destino;
-                } else {
-                    error_log("Error al guardar la factura: " . $archivo_factura['error']);
-                }
-            }
-
             $productos_data = [
                 'idproducto' => $_POST['producto'],
                 'cantidad' => $_POST['cantidad'],

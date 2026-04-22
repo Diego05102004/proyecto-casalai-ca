@@ -1,3 +1,4 @@
+// Sistema de protección de selects
 function protegerSelects(selectIds, interval = 1000) {
     const originales = {};
 
@@ -118,7 +119,7 @@ $(document).ready(function () {
             tablaRecepcion = $tabla.DataTable();
         }
     }
-    
+
     protegerSelects(['proveedor']);
 
     if($.trim($("#mensajes").text()) != ""){
@@ -172,8 +173,7 @@ $(document).ready(function () {
             mensajes('error', 'Verifique el proveedor', 'El campo esta vacio');
             return false;
         }
-
-         return true;
+        return true;
     }
 
     function agregarFilaRecepcion(recepcion) {
@@ -223,13 +223,13 @@ $(document).ready(function () {
         $("#proveedor").val("");
         $("#proveedor").removeClass("is-valid is-invalid");
         $("#proveedor").prop('checked', false);
-        }
+    }
 
     $('#ingresarRecepcion').on('reset', function() {
         setTimeout(function() {
             $("#proveedor").val("");
             $("#proveedor").removeClass("is-valid is-invalid");
-            }, 0);
+        }, 0);
     });
 
     $(document).on('click', '#btnIncluirRecepcion', function() {
@@ -237,8 +237,6 @@ $(document).ready(function () {
         $('#scorrelativo').text('');
         $("#proveedor").removeClass("is-valid is-invalid");
         $("#proveedor").prop('checked', false);
-        // Mostrar paso inicial al abrir el modal
-        mostrarPasoInicial();
         $('#registrarRecepcionModal').modal('show');
     });
 
@@ -357,431 +355,6 @@ function enviarAjax(datos, callback) {
         }
     });
 }
-
-// =================================================================
-// CÓDIGO DE INTEGRACIÓN IA - MICROSERVICIO RECEPCIÓN
-// =================================================================
-
-// Variables globales para la IA
-let iaClient = null;
-let iaDatosFactura = null;
-
-// Funciones para manejar el flujo de 3 pasos
-function mostrarPasoInicial() {
-    $('#paso_inicial_importar').show();
-    $('#paso1_carga_factura').hide();
-    $('#paso2_formulario_recepcion').hide();
-    $('#ia_resumen_factura').hide();
-    iaDatosFactura = null;
-}
-
-function mostrarPaso1() {
-    $('#paso_inicial_importar').hide();
-    $('#paso1_carga_factura').show();
-    $('#paso2_formulario_recepcion').hide();
-    $('#ia_resumen_factura').hide();
-    iaDatosFactura = null;
-}
-
-function mostrarPaso2() {
-    $('#paso_inicial_importar').hide();
-    $('#paso1_carga_factura').hide();
-    $('#paso2_formulario_recepcion').show();
-    $('#ia_resumen_factura').show();
-}
-
-// Inicializar cliente IA
-function inicializarIA() {
-    try {
-        // Verificar que la clase IARecepcionClient esté disponible
-        if (typeof IARecepcionClient === 'undefined') {
-            console.error('ERROR: La clase IARecepcionClient no está definida. El script ia-recepcion.js no se cargó correctamente.');
-            actualizarEstadoIA(false);
-            return;
-        }
-        
-        iaClient = new IARecepcionClient({
-            apiUrl: 'http://localhost:8000',
-            timeout: 30000
-        });
-        
-        // Verificar conexión
-        if (iaClient && typeof iaClient.verificarConexion === 'function') {
-            iaClient.verificarConexion().then(conectado => {
-                actualizarEstadoIA(conectado);
-            }).catch(error => {
-                console.error('Error verificando conexión IA:', error);
-                actualizarEstadoIA(false);
-            });
-        } else {
-            console.error('El método verificarConexion no está disponible en el cliente IA');
-            actualizarEstadoIA(false);
-        }
-        
-        console.log('Cliente IA inicializado exitosamente');
-    } catch (error) {
-        console.error('Error inicializando cliente IA:', error);
-        actualizarEstadoIA(false);
-    }
-}
-
-// Actualizar indicador de estado de IA
-function actualizarEstadoIA(conectado) {
-    const estadoSpan = document.getElementById('ia_estado_conexion');
-    if (estadoSpan) {
-        if (conectado) {
-            estadoSpan.className = 'badge badge-success';
-            estadoSpan.innerHTML = '<i class="fas fa-circle"></i> Conectado';
-        } else {
-            estadoSpan.className = 'badge badge-danger';
-            estadoSpan.innerHTML = '<i class="fas fa-circle"></i> Desconectado';
-        }
-    }
-}
-
-function procesarFacturaAutomaticamente() {
-    const inputImagen = document.getElementById('ia_factura_imagen');
-    const archivo = inputImagen.files[0];
-    
-    if (!archivo) {
-        return;
-    }
-    
-    // Validar archivo
-    const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/bmp'];
-    if (!tiposPermitidos.includes(archivo.type)) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Archivo no válido',
-            text: 'Por favor, seleccione una imagen en formato JPG, PNG o BMP.',
-            confirmButtonText: 'Entendido'
-        });
-        return;
-    }
-    
-    // Validar tamaño
-    if (archivo.size > 10 * 1024 * 1024) { // 10MB
-        Swal.fire({
-            icon: 'error',
-            title: 'Archivo demasiado grande',
-            text: 'El tamaño máximo permitido es de 10MB.',
-            confirmButtonText: 'Entendido'
-        });
-        return;
-    }
-    
-    // Mostrar preview
-    mostrarPreviewImagen(archivo);
-    
-    // Procesar con IA
-    $('#ia_procesando').show();
-    $('#ia_btn_continuar').prop('disabled', true);
-    
-    iaClient.procesarFactura(archivo, 'spa')
-        .then(resultado => {
-            iaDatosFactura = resultado;
-            
-            // Mostrar resumen
-            $('#ia_resumen_texto').text(
-                `N°: ${resultado.numero_factura} - ${resultado.productos.length} productos detectados`
-            );
-            
-            // Habilitar botón continuar
-            $('#ia_btn_continuar').prop('disabled', false);
-            $('#ia_procesando').hide();
-            
-            // Mostrar resultados básicos
-            mostrarResultadosBasicos(resultado);
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Factura Procesada',
-                text: `Se detectaron ${resultado.productos.length} productos con ${Math.round(resultado.confianza_general * 100)}% de confianza.`,
-                timer: 2000,
-                showConfirmButton: false
-            });
-        })
-        .catch(error => {
-            console.error('Error procesando factura:', error);
-            $('#ia_procesando').hide();
-            $('#ia_btn_continuar').prop('disabled', false);
-            
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al Procesar',
-                text: 'No se pudo procesar la factura. Intente con una imagen más clara.',
-                confirmButtonText: 'Entendido'
-            });
-        });
-}
-
-function mostrarPreviewImagen(archivo) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        $('#ia_imagen_preview').html(`
-            <div class="ia-imagen-preview">
-                <img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px;">
-                <div class="mt-1">
-                    <small class="text-muted">${archivo.name} (${(archivo.size / 1024).toFixed(1)} KB)</small>
-                </div>
-            </div>
-        `);
-    };
-    reader.readAsDataURL(archivo);
-}
-
-function mostrarResultadosBasicos(resultado) {
-    const productosHtml = resultado.productos.map((producto, index) => `
-        <div class="alert alert-light border-left-info mb-2">
-            <strong>Producto ${index + 1}:</strong> ${producto.nombre}<br>
-            <small>
-                Modelo: ${producto.modelo} | 
-                Marca: ${producto.marca} | 
-                Costo: $${producto.costo.toFixed(2)} | 
-                Cantidad: ${producto.cantidad}
-            </small>
-        </div>
-    `).join('');
-    
-    $('#ia_resultados_container').html(`
-        <div class="text-left">
-            <h6><i class="fas fa-robot"></i> Información Detectada</h6>
-            <div class="mb-2">
-                <strong>N° Factura:</strong> ${resultado.numero_factura}<br>
-                <strong>Proveedor:</strong> ${resultado.nombre_proveedor}<br>
-                <strong>Confianza:</strong> ${Math.round(resultado.confianza_general * 100)}%
-            </div>
-            <strong>Productos Detectados:</strong>
-            ${productosHtml}
-        </div>
-    `).show();
-}
-
-// Eventos del nuevo flujo
-$(document).on('click', '#ia_btn_importar_factura', function() {
-    console.log('Click en importar factura');
-    mostrarPaso1();
-});
-
-$(document).on('change', '#ia_factura_imagen', function() {
-    const archivo = this.files[0];
-    if (archivo) {
-        // Procesar automáticamente
-        procesarFacturaAutomaticamente();
-    } else {
-        $('#ia_btn_continuar').prop('disabled', true);
-        $('#ia_imagen_preview').empty();
-        $('#ia_resultados_container').hide();
-    }
-});
-
-$(document).on('click', '#ia_btn_continuar', function() {
-    if (iaDatosFactura) {
-        mostrarPaso2();
-    } else {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Espere Procesamiento',
-            text: 'La factura aún se está procesando. Por favor espere.',
-            confirmButtonText: 'Entendido'
-        });
-    }
-});
-
-$(document).on('click', '#ia_btn_limpiar', function() {
-    // Limpiar todo
-    $('#ia_factura_imagen').val('');
-    $('#ia_imagen_preview').empty();
-    $('#ia_resultados_container').hide();
-    $('#ia_procesando').hide();
-    $('#ia_btn_continuar').prop('disabled', true);
-    iaDatosFactura = null;
-});
-
-$(document).on('click', '#ia_btn_cancelar', function() {
-    // Volver al paso inicial
-    mostrarPasoInicial();
-});
-
-$(document).on('click', '#ia_btn_volver', function() {
-    mostrarPaso1();
-});
-
-// Modificar el envío del formulario para incluir verificación IA
-$(document).on('submit', '#ingresarRecepcion', function(e) {
-    e.preventDefault();
-    
-    // Validación básica primero
-    if (!validarEnvioRecepcion() || !verificaproductos()) {
-        return;
-    }
-    
-    // Verificar que se haya procesado la factura
-    if (!iaDatosFactura) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Factura Requerida',
-            text: 'Debe cargar y procesar una factura antes de registrar la recepción.',
-            confirmButtonText: 'Entendido'
-        });
-        return;
-    }
-    
-    // Verificación automática con IA
-    if (iaClient && iaDatosFactura) {
-        // Preparar datos del formulario
-        const datosFormulario = {
-            correlativo: $('#correlativo').val(),
-            proveedor: $('#proveedor').val(),
-            productos: []
-        };
-        
-        // Obtener productos del formulario
-        $('#recepcion1 tr').each(function() {
-            const idProducto = $(this).find('input[name="producto[]"]').val();
-            const cantidad = $(this).find('input[name="cantidad[]"]').val();
-            const costo = $(this).find('input[name="costos[]"]').val();
-            
-            if (idProducto) {
-                datosFormulario.productos.push({
-                    id_producto: idProducto,
-                    cantidad: parseInt(cantidad),
-                    costo: parseFloat(costo)
-                });
-            }
-        });
-        
-        // Verificar coherencia con IA
-        iaClient.verificarCoherencia(datosFormulario, iaDatosFactura)
-            .then(resultadoVerificacion => {
-                if (resultadoVerificacion.accion_recomendada === 'bloquear') {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Verificación IA - Bloqueado',
-                        html: `
-                            <p>La inteligencia artificial ha detectado discrepancias críticas que impiden el registro.</p>
-                            <div class="text-left">
-                                <strong>Discrepancias encontradas:</strong><br>
-                                ${resultadoVerificacion.discrepancias.map(d => 
-                                    `&bull; ${d.campo}: "${d.valor_factura}" vs "${d.valor_formulario}"`
-                                ).join('<br>')}
-                            </div>
-                            <p class="mt-3"><strong>Por favor, corrija los datos antes de continuar.</strong></p>
-                        `,
-                        showConfirmButton: true,
-                        confirmButtonText: 'Entendido'
-                    });
-                    return;
-                }
-                
-                // Si hay advertencias, mostrarlas pero permitir continuar
-                if (resultadoVerificacion.accion_recomendada === 'requiere_revision' || 
-                    resultadoVerificacion.accion_recomendada === 'advertencia') {
-                    
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Verificación IA - Advertencia',
-                        html: `
-                            <p>La inteligencia artificial ha detectado algunas discrepancias:</p>
-                            <div class="text-left">
-                                <strong>Discrepancias:</strong><br>
-                                ${resultadoVerificacion.discrepancias.map(d => 
-                                    `&bull; ${d.campo}: "${d.valor_factura}" vs "${d.valor_formulario}"`
-                                ).join('<br>')}
-                            </div>
-                            <p class="mt-3"><strong>¿Desea continuar con el registro?</strong></p>
-                        `,
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, continuar',
-                        cancelButtonText: 'No, revisar datos'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            enviarFormularioRecepcion(resultadoVerificacion);
-                        }
-                    });
-                    return;
-                }
-                
-                // Si todo está bien, enviar directamente
-                enviarFormularioRecepcion(resultadoVerificacion);
-            })
-            .catch(error => {
-                console.error('Error en verificación IA:', error);
-                // En caso de error con IA, preguntar si desea continuar
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Error en Verificación IA',
-                    text: 'No se pudo verificar con la IA. ¿Desea continuar sin verificación?',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, continuar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        enviarFormularioRecepcion(null);
-                    }
-                });
-            });
-    } else {
-        // Si no hay IA, enviar normal
-        enviarFormularioRecepcion(null);
-    }
-});
-
-// Función separada para enviar el formulario
-function enviarFormularioRecepcion(resultadoVerificacion) {
-    var datos = new FormData($('#ingresarRecepcion')[0]);
-    datos.append("accion", "registrar");
-    
-    // Agregar datos de verificación IA si existen
-    if (resultadoVerificacion) {
-        datos.append("ia_verificacion", JSON.stringify(resultadoVerificacion));
-    }
-    
-    enviarAjax(datos, function(respuesta){
-        if(respuesta.status === "success" || respuesta.resultado === "success"){
-            
-            // Mostrar mensaje de éxito
-            Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: respuesta.message || 'Recepción registrada correctamente',
-                showConfirmButton: true,
-            });
-            
-            // Limpiar el formulario
-            resetRecepcion();
-            
-            // Limpiar la tabla de productos del modal
-            const tablaRecepcion = document.getElementById('recepcion1');
-            if (tablaRecepcion) {
-                tablaRecepcion.innerHTML = '';
-            }
-            
-            // Agregar la nueva recepción a la tabla
-            if(respuesta.recepcion){
-                agregarFilaRecepcion(respuesta.recepcion);
-            }
-            
-            // Cerrar modal y volver al paso 1
-            $('#registrarRecepcionModal').modal('hide');
-            mostrarPasoInicial();
-            
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: respuesta.message || 'No se pudo registrar la recepción',
-                showConfirmButton: true
-            });
-        }
-    });
-}
-
-// Inicializar IA cuando el documento esté listo
-$(document).ready(function() {
-    console.log('Recepción lista - Inicializando sistema IA...');
-    inicializarIA();
-});
 
 
     $(document).on('click', '.btn-anular', function (e) {
