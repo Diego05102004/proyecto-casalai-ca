@@ -33,6 +33,84 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         background-color: #f8d7da !important;
         opacity: 0.6;
     }
+    
+    /* ESTILOS GUARDIÁN IA */
+    .guardian-ia-section {
+        border: 2px dashed #667eea;
+        padding: 15px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+        margin-bottom: 20px;
+    }
+    .guardian-ia-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .guardian-ia-header h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+    .guardian-ia-header p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 0.9em;
+    }
+    .btn-analizar-ia {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-analizar-ia:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-analizar-ia:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    .preview-factura-img {
+        max-width: 100%;
+        max-height: 200px;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .panel-resultados-ia {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .spinner-ia {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .verificacion-exitosa {
+        border-left: 4px solid #28a745 !important;
+        background: #d4edda !important;
+    }
+    .verificacion-bloqueada {
+        border-left: 4px solid #dc3545 !important;
+        background: #f8d7da !important;
+    }
+    .verificacion-advertencia {
+        border-left: 4px solid #ffc107 !important;
+        background: #fff3cd !important;
+    }
 </style>
 
 <body class="fondo" style=" height: 100vh; background-image: url(assets/img/fondo.jpg); background-size: cover; background-position: center; background-repeat: no-repeat;">
@@ -54,6 +132,35 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="accion" value="registrar">
+                    
+                    <!-- SECCIÓN IA: FOTO DE FACTURA Y VERIFICACIÓN -->
+                    <div class="alert alert-info mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                        <h6 class="mb-2"><i class="fas fa-robot"></i> <strong>Guardián IA - Verificación Asistida</strong></h6>
+                        <p class="mb-2 small">Suba una foto de la factura física para que el sistema verifique la coherencia de los datos antes del registro.</p>
+                    </div>
+                    
+                    <div class="grupo-form mb-3" style="border: 2px dashed #667eea; padding: 15px; border-radius: 8px; background: #f8f9ff;">
+                        <div class="grupo-interno" style="flex: 1;">
+                            <label for="foto-factura-ia"><i class="fas fa-camera"></i> Foto de la Factura del Proveedor</label>
+                            <input type="file" class="control-form" id="foto-factura-ia" name="foto_factura" accept="image/*,.pdf" />
+                            <small class="text-muted"> La imagen se analizará automáticamente con IA al subirla. Formatos: JPG, PNG, PDF. Máx: 5MB</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview de imagen -->
+                    <div id="preview-factura-container" class="mb-3 d-none">
+                        <label>Vista previa:</label>
+                        <img id="preview-factura-img" src="" alt="Preview" style="max-width: 100%; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </div>
+                    
+                    <!-- Panel de resultados del IA -->
+                    <div id="panel-resultados-ia" class="d-none mb-3"></div>
+                    
+                    <!-- Alertas del sistema IA -->
+                    <div id="alertas-recepcion-ia"></div>
+                    
+                    <hr style="border-top: 2px solid #667eea; margin: 20px 0;">
+                    
                     <div class="grupo-form">
                         <div class="grupo-interno">
                             <label for="correlativo">N° de Factura del Proveedor</label>
@@ -802,6 +909,470 @@ function eliminarBackdropSeguro() {
 $(document).on('click', '.modal .close', function() {
     $(this).closest('.modal').modal('hide');
     eliminarBackdropSeguro();
+});
+</script>
+
+<!-- INTEGRACIÓN GUARDIÁN IA - FASE 1: VERIFICACIÓN ASISTIDA -->
+<script src="microservicio/javascript/asistente_recepcion.js"></script>
+<script>
+$(document).ready(function() {
+    // Estado de verificación IA
+    let iaVerificada = false;
+    let iaFacturaId = null;
+    
+    // Configuración del Asistente IA
+    const asistenteIA = new AsistenteRecepcionIA({
+        apiUrl: 'http://localhost:8000',
+        debug: true,
+        selectores: {
+            inputImagen: '#foto-factura-ia',
+            previewImagen: '#preview-factura-img',
+            panelResultados: '#panel-resultados-ia',
+            alertasContainer: '#alertas-recepcion-ia',
+            formulario: '#ingresarRecepcion'
+        },
+        callbacks: {
+            onExtraccionExitosa: function(resultado) {
+                console.log('✅ Extracción exitosa:', resultado);
+                iaFacturaId = resultado.factura_id;
+                
+                // Auto-llenar campos si hay datos extraídos
+                if (resultado.numero_factura && !$('#correlativo').val()) {
+                    $('#correlativo').val(resultado.numero_factura);
+                }
+                
+                // Notificar éxito de extracción con SweetAlert
+                Swal.fire({
+                    icon: 'info',
+                    title: '🤖 Factura Analizada',
+                    html: `<b>N° Factura detectado:</b> ${resultado.numero_factura || 'No detectado'}<br>
+                           <b>Proveedor:</b> ${resultado.nombre_proveedor || 'No detectado'}<br>
+                           <b>Confianza:</b> ${(resultado.confianza_promedio * 100).toFixed(1)}%<br><br>
+                           Complete los datos del formulario y presione <b>"Verificar y Registrar"</b> para validar.`,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#667eea'
+                });
+            },
+            onError: function(error) {
+                console.error('❌ Error IA:', error);
+                iaVerificada = false;
+                actualizarEstadoBotonRegistrar();
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error del Guardián IA',
+                    text: 'No se pudo analizar la factura. Verifique que el microservicio esté activo.',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        }
+    });
+
+    // Función para verificar si el formulario está completo
+    function formularioCompleto() {
+        const correlativo = $('#correlativo').val().trim();
+        const proveedor = $('#proveedor').val();
+        const productos = $('#tablarecepcion tbody tr').length;
+        
+        return correlativo !== '' && proveedor !== '' && productos > 0;
+    }
+
+    // Función para actualizar estado del botón registrar
+    function actualizarEstadoBotonRegistrar() {
+        const formularioOk = formularioCompleto();
+        const imagenCargada = $('#foto-factura-ia')[0].files.length > 0;
+        
+        // Si hay imagen, requiere verificación IA exitosa
+        // Si no hay imagen, solo requiere formulario completo
+        const puedeRegistrar = formularioOk && (!imagenCargada || iaVerificada);
+        
+        const $btnRegistrar = $('#ingresarRecepcion button[type="submit"]');
+        $btnRegistrar.prop('disabled', !puedeRegistrar);
+        
+        // Cambiar texto según estado
+        if (imagenCargada && !iaVerificada && formularioOk) {
+            $btnRegistrar.html('<i class="fas fa-shield-alt"></i> Verificar con IA');
+        } else if (puedeRegistrar) {
+            $btnRegistrar.html('<i class="fas fa-check"></i> Registrar Recepción');
+        } else {
+            $btnRegistrar.html('Complete todos los campos');
+        }
+    }
+
+    // Monitorear cambios en el formulario
+    $('#ingresarRecepcion').on('input change', 'input, select', function() {
+        actualizarEstadoBotonRegistrar();
+    });
+    
+    // Observar cambios en la tabla de productos
+    const observer = new MutationObserver(function() {
+        actualizarEstadoBotonRegistrar();
+    });
+    observer.observe(document.getElementById('recepcion1'), { childList: true, subtree: true });
+
+    // ANÁLISIS AUTOMÁTICO + COMPARACIÓN INMEDIATA al subir imagen
+    $('#foto-factura-ia').on('change', async function() {
+        const archivo = this.files[0];
+        
+        if (!archivo) {
+            $('#preview-factura-container').addClass('d-none');
+            iaVerificada = false;
+            iaFacturaId = null;
+            actualizarEstadoBotonRegistrar();
+            return;
+        }
+        
+        // Validar tamaño (5MB máximo)
+        if (archivo.size > 5 * 1024 * 1024) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Archivo muy grande',
+                text: 'El archivo debe ser menor a 5MB.',
+                confirmButtonColor: '#ffc107'
+            });
+            this.value = '';
+            iaVerificada = false;
+            actualizarEstadoBotonRegistrar();
+            return;
+        }
+        
+        // Mostrar preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            $('#preview-factura-img').attr('src', e.target.result);
+            $('#preview-factura-container').removeClass('d-none');
+        };
+        reader.readAsDataURL(archivo);
+        
+        // PASO 1: Extracción con loading
+        Swal.fire({
+            title: '🤖 Guardián IA Analizando...',
+            html: 'Extrayendo texto de la factura con OCR + PLN',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Ejecutar análisis de extracción
+        const resultadoExtraer = await asistenteIA.extraerDesdeImagen(archivo);
+        
+        if (!resultadoExtraer.exito) {
+            Swal.close();
+            iaVerificada = false;
+            iaFacturaId = null;
+            actualizarEstadoBotonRegistrar();
+            return;
+        }
+        
+        iaFacturaId = resultadoExtraer.data.factura_id;
+        $('#panel-resultados-ia').removeClass('d-none');
+        
+        // PASO 2: Si hay datos en el formulario, comparar inmediatamente
+        const hayDatosFormulario = $('#correlativo').val().trim() !== '' || 
+                                   $('#proveedor').val() !== '' ||
+                                   $('#tablarecepcion tbody tr').length > 0;
+        
+        if (hayDatosFormulario) {
+            Swal.update({
+                title: '🔍 Comparando datos...',
+                html: 'Verificando coherencia entre factura y formulario'
+            });
+            
+            // Recopilar datos actuales del formulario
+            const productos = [];
+            $('#tablarecepcion tbody tr').each(function() {
+                const $row = $(this);
+                productos.push({
+                    nombre: $row.find('td:eq(3)').text().trim(),
+                    modelo: $row.find('td:eq(4)').text().trim(),
+                    marca: $row.find('td:eq(5)').text().trim(),
+                    serial: $row.find('td:eq(6)').text().trim(),
+                    costo: parseFloat($row.find('td:eq(7) input').val()) || 0,
+                    cantidad: parseInt($row.find('td:eq(8) input').val()) || 1
+                });
+            });
+            
+            const datosFormulario = {
+                numero_factura: $('#correlativo').val(),
+                nombre_proveedor: $('#proveedor option:selected').text(),
+                productos: productos
+            };
+            
+            // Comparar con IA
+            const resultadoVerificar = await asistenteIA.verificarCoherencia(iaFacturaId, datosFormulario);
+            
+            Swal.close();
+            
+            if (resultadoVerificar.exito) {
+                // ✅ Todo coincide - mostrar éxito y permitir registro
+                iaVerificada = true;
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '✅ Verificación Exitosa',
+                    html: `<b>Factura analizada:</b> ${resultadoExtraer.data.numero_factura || 'No detectado'}<br>
+                           <b>Proveedor detectado:</b> ${resultadoExtraer.data.nombre_proveedor || 'No detectado'}<br>
+                           <b>Confianza:</b> ${(resultadoExtraer.data.confianza_promedio * 100).toFixed(1)}%<br><br>
+                           <span style="color:green;">✓ Los datos coinciden con la factura</span>`,
+                    confirmButtonText: 'Perfecto, continuar',
+                    confirmButtonColor: '#28a745',
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+            } else {
+                // ❌ Hay discrepancias - mostrar inmediatamente
+                const hayCriticas = resultadoVerificar.discrepancias.some(d => d.severidad === 'CRITICA');
+                
+                // Construir mensaje de discrepancias
+                let mensajeHtml = '<div style="text-align:left; max-height:300px; overflow-y:auto;">';
+                resultadoVerificar.discrepancias.forEach(d => {
+                    const icono = d.severidad === 'CRITICA' ? '🔴' : 
+                                 d.severidad === 'ALTA' ? '🟠' : 
+                                 d.severidad === 'MEDIA' ? '🟡' : '🟢';
+                    mensajeHtml += `<div style="margin:8px 0; padding:10px; background:#f8f9fa; border-radius:4px; border-left:4px solid ${d.severidad === 'CRITICA' ? '#dc3545' : d.severidad === 'ALTA' ? '#ffc107' : '#17a2b8'};">
+                        <b>${icono} ${d.campo}</b> <span style="font-size:0.85em; padding:2px 8px; border-radius:4px; background:${d.severidad === 'CRITICA' ? '#dc3545' : d.severidad === 'ALTA' ? '#ffc107' : '#17a2b8'}; color:${d.severidad === 'CRITICA' ? 'white' : 'black'};">${d.severidad}</span><br>
+                        <small style="color:#666;">📄 Factura: <b>${d.valor_factura}</b></small><br>
+                        <small style="color:#666;">📝 Formulario: <b>${d.valor_formulario}</b></small>
+                    </div>`;
+                });
+                mensajeHtml += '</div>';
+                
+                if (hayCriticas) {
+                    // Bloquear - discrepancias críticas
+                    iaVerificada = false;
+                    
+                    await Swal.fire({
+                        icon: 'error',
+                        title: '🔴 Discrepancias Críticas Detectadas',
+                        html: `<div style="margin-bottom:15px;">Se encontraron diferencias importantes entre la factura y los datos ingresados:</div>${mensajeHtml}<div style="margin-top:15px; padding:10px; background:#f8d7da; border-radius:4px; color:#721c24;"><b>⚠️ Debe corregir estos datos antes de poder registrar la recepción.</b></div>`,
+                        confirmButtonText: 'Entendido, corregiré',
+                        confirmButtonColor: '#dc3545',
+                        width: '650px'
+                    });
+                } else {
+                    // Advertencia - permitir continuar con confirmación
+                    const confirmacion = await Swal.fire({
+                        icon: 'warning',
+                        title: '⚠️ Diferencias Encontradas',
+                        html: `<div style="margin-bottom:15px;">La factura difiere de los datos ingresados:</div>${mensajeHtml}<div style="margin-top:15px;">¿Desea continuar de todos modos?</div>`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, continuar',
+                        cancelButtonText: 'Corregir primero',
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#28a745',
+                        width: '650px'
+                    });
+                    
+                    iaVerificada = confirmacion.isConfirmed;
+                }
+            }
+        } else {
+            // No hay datos para comparar aún
+            Swal.close();
+            
+            Swal.fire({
+                icon: 'info',
+                title: '📄 Factura Analizada',
+                html: `<b>N° Factura detectado:</b> ${resultadoExtraer.data.numero_factura || 'No detectado'}<br>
+                       <b>Proveedor:</b> ${resultadoExtraer.data.nombre_proveedor || 'No detectado'}<br>
+                       <b>Confianza:</b> ${(resultadoExtraer.data.confianza_promedio * 100).toFixed(1)}%<br><br>
+                       Complete el formulario y la comparación automática se realizará al registrar.`,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#667eea'
+            });
+        }
+        
+        actualizarEstadoBotonRegistrar();
+    });
+
+    // SUBMIT del formulario con verificación IA completa
+    $('#ingresarRecepcion').on('submit', async function(e) {
+        e.preventDefault();
+        
+        const archivo = $('#foto-factura-ia')[0].files[0];
+        
+        // Validar formulario completo
+        if (!formularioCompleto()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Formulario incompleto',
+                text: 'Complete todos los campos requeridos.',
+                confirmButtonColor: '#ffc107'
+            });
+            return false;
+        }
+        
+        // Si hay imagen pero no se analizó, analizar automáticamente primero
+        if (archivo && !iaFacturaId) {
+            Swal.fire({
+                title: '🤖 Analizando factura...',
+                html: 'Procesando imagen automáticamente',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Analizar automáticamente
+            const resultado = await asistenteIA.extraerDesdeImagen(archivo);
+            
+            if (!resultado.exito) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de análisis',
+                    text: 'No se pudo analizar la factura. Intente nuevamente.',
+                    confirmButtonColor: '#dc3545'
+                });
+                return false;
+            }
+            
+            iaFacturaId = resultado.data.factura_id;
+            $('#panel-resultados-ia').removeClass('d-none');
+            Swal.close();
+        }
+        
+        // Si no hay imagen, permitir registro directo con confirmación
+        if (!archivo) {
+            const confirmacion = await Swal.fire({
+                icon: 'question',
+                title: '¿Continuar sin factura?',
+                text: 'No ha subido una imagen de la factura para verificación. ¿Desea continuar de todos modos?',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545'
+            });
+            
+            if (!confirmacion.isConfirmed) {
+                return false;
+            }
+            
+            this.submit();
+            return true;
+        }
+        
+        // VERIFICACIÓN COMPLETA CON IA (con imagen)
+        Swal.fire({
+            title: '🔍 Verificando con Guardián IA...',
+            html: 'Comparando datos del formulario con la factura',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Recopilar datos del formulario
+        const productos = [];
+        $('#tablarecepcion tbody tr').each(function() {
+            const $row = $(this);
+            productos.push({
+                nombre: $row.find('td:eq(3)').text().trim(),
+                modelo: $row.find('td:eq(4)').text().trim(),
+                marca: $row.find('td:eq(5)').text().trim(),
+                serial: $row.find('td:eq(6)').text().trim(),
+                costo: parseFloat($row.find('td:eq(7) input').val()) || 0,
+                cantidad: parseInt($row.find('td:eq(8) input').val()) || 1
+            });
+        });
+        
+        const datosFormulario = {
+            numero_factura: $('#correlativo').val(),
+            nombre_proveedor: $('#proveedor option:selected').text(),
+            productos: productos
+        };
+        
+        // Verificar coherencia
+        const resultado = await asistenteIA.verificarCoherencia(iaFacturaId, datosFormulario);
+        
+        if (resultado.exito) {
+            // Sin discrepancias - mostrar éxito y registrar
+            iaVerificada = true;
+            
+            await Swal.fire({
+                icon: 'success',
+                title: '✅ Verificación Exitosa',
+                html: 'Los datos coinciden con la factura.<br>Registrando recepción...',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+            
+            this.submit();
+        } else {
+            // Hay discrepancias
+            const hayCriticas = resultado.discrepancias.some(d => d.severidad === 'CRITICA');
+            
+            // Construir mensaje de discrepancias
+            let mensajeHtml = '<div style="text-align:left; max-height:300px; overflow-y:auto;">';
+            resultado.discrepancias.forEach(d => {
+                const icono = d.severidad === 'CRITICA' ? '🔴' : 
+                             d.severidad === 'ALTA' ? '🟠' : 
+                             d.severidad === 'MEDIA' ? '🟡' : '🟢';
+                mensajeHtml += `<div style="margin:8px 0; padding:8px; background:#f8f9fa; border-radius:4px;">
+                    <b>${icono} ${d.campo}</b> <span class="badge bg-${d.severidad === 'CRITICA' ? 'danger' : d.severidad === 'ALTA' ? 'warning' : 'info'}">${d.severidad}</span><br>
+                    <small>Factura: ${d.valor_factura}</small><br>
+                    <small>Formulario: ${d.valor_formulario}</small>
+                </div>`;
+            });
+            mensajeHtml += '</div>';
+            
+            if (hayCriticas) {
+                // Bloquear registro
+                Swal.fire({
+                    icon: 'error',
+                    title: '🔴 REGISTRO BLOQUEADO',
+                    html: `<b>Discrepancias críticas encontradas:</b><br>${mensajeHtml}<br>
+                           <b>Corrija los datos antes de continuar.</b>`,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc3545',
+                    width: '600px'
+                });
+                iaVerificada = false;
+            } else {
+                // Advertencia pero permitir continuar
+                const confirmacion = await Swal.fire({
+                    icon: 'warning',
+                    title: '⚠️ Diferencias Detectadas',
+                    html: `${mensajeHtml}<br>¿Desea continuar de todos modos?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, continuar',
+                    cancelButtonText: 'Corregir',
+                    confirmButtonColor: '#ffc107',
+                    cancelButtonColor: '#28a745',
+                    width: '600px'
+                });
+                
+                if (confirmacion.isConfirmed) {
+                    iaVerificada = true;
+                    this.submit();
+                }
+            }
+            
+            actualizarEstadoBotonRegistrar();
+        }
+    });
+
+    // Limpiar al cerrar modal
+    $('#registrarRecepcionModal').on('hidden.bs.modal', function() {
+        asistenteIA.limpiarCache();
+        iaVerificada = false;
+        iaFacturaId = null;
+        $('#preview-factura-container').addClass('d-none');
+        $('#panel-resultados-ia').addClass('d-none').html('').removeClass('verificacion-exitosa verificacion-bloqueada verificacion-advertencia');
+        $('#alertas-recepcion-ia').html('');
+        $('#foto-factura-ia').val('');
+        $('#ingresarRecepcion button[type="submit"]').html('Registrar').prop('disabled', false);
+    });
+    
+    // Estado inicial del botón
+    actualizarEstadoBotonRegistrar();
 });
 </script>
 
