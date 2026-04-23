@@ -10,12 +10,11 @@ if (isset($_SESSION['id_usuario']) && !empty($_SESSION['id_usuario'])) {
 }
 
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Login;
-
 // Verificar si se ha enviado el formulario
 if (!empty($_POST)) {
     $o = new Login();
     $h = $_POST['accion'] ?? '';
-
+    
 if ($h == 'acceder') {
     // Validar datos de entrada
     $datosValidacion = [
@@ -86,6 +85,13 @@ if ($h == 'acceder') {
             $m = $o->existe();
             
             if ($m['resultado'] == 'existe') {
+                // Registrar login exitoso en sistema de seguridad
+                $username = $_POST['username'] ?? '';
+                $seguridad->registrarPeticion($direccionIP, $username, [
+                    'accion' => 'login_exitoso',
+                    'username' => $username
+                ]);
+                
                 session_destroy();
                 session_start();
 
@@ -106,6 +112,15 @@ if ($h == 'acceder') {
                 
                 header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
                 exit;
+            } elseif ($m['resultado'] == 'bloqueado') {
+                // Registrar intento de login a usuario bloqueado
+                $username = $_POST['username'] ?? '';
+                $seguridad->registrarPeticion($direccionIP, $username, [
+                    'accion' => 'login_usuario_bloqueado',
+                    'username' => $username
+                ]);
+                
+                $mensaje = '<div class="error">' . ($m['mensaje'] ?? 'Usuario bloqueado') . '</div>';
             } else {
                 $mensaje = '<div class="error">' . ($m['mensaje'] ?? 'Error en las credenciales') . '</div>';
             }

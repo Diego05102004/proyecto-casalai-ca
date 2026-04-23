@@ -98,7 +98,8 @@ class Login extends BD
                         u.username, 
                         u.password,
                         u.cedula,
-                        u.foto_perfil
+                        u.foto_perfil,
+                        u.intentos_fallidos
                     FROM 
                         tbl_usuarios u 
                     INNER JOIN 
@@ -112,17 +113,36 @@ class Login extends BD
             $fila = $p->fetch(PDO::FETCH_ASSOC);
 
             if ($fila) {
-                if (password_verify($this->password, $fila['password'])) {
-                    $r['resultado']   = 'existe';
-                    $r['mensaje']     = $fila['username'];
-                    $r['nombre_rol']  = $fila['nombre_rol'];
-                    $r['id_usuario']  = $fila['id_usuario']; 
-                    $r['id_rol']      = $fila['id_rol']; 
-                    $r['cedula']      = $fila['cedula'];
-                    $r['foto_perfil'] = $fila['foto_perfil'];
+                // Verificar si el usuario está bloqueado por intentos fallidos
+                if ($fila['intentos_fallidos'] >= 3) {
+                    $r['resultado'] = 'bloqueado';
+                    $r['mensaje']   = "Usuario bloqueado por exceder el número de intentos fallidos. Contacte al administrador.";
                 } else {
-                    $r['resultado'] = 'noexiste';
-                    $r['mensaje']   = "Error en usuario o contraseña!!!";
+                    if (password_verify($this->password, $fila['password'])) {
+                        // Contraseña correcta: reiniciar intentos fallidos y permitir acceso
+                        $this->reiniciarIntentosFallidos($this->username);
+                        
+                        $r['resultado']   = 'existe';
+                        $r['mensaje']     = $fila['username'];
+                        $r['nombre_rol']  = $fila['nombre_rol'];
+                        $r['id_usuario']  = $fila['id_usuario']; 
+                        $r['id_rol']      = $fila['id_rol']; 
+                        $r['cedula']      = $fila['cedula'];
+                        $r['foto_perfil'] = $fila['foto_perfil'];
+                    } else {
+                        // Contraseña incorrecta: incrementar intentos fallidos
+                        $this->incrementarIntentosFallidos($this->username);
+                        $nuevosIntentos = $fila['intentos_fallidos'] + 1;
+                        $intentosRestantes = 3 - $nuevosIntentos;
+                        
+                        if ($intentosRestantes > 0) {
+                            $r['resultado'] = 'noexiste';
+                            $r['mensaje']   = "Error en usuario o contraseña. Intentos restantes: $intentosRestantes";
+                        } else {
+                            $r['resultado'] = 'bloqueado';
+                            $r['mensaje']   = "Usuario bloqueado por exceder el número de intentos fallidos. Contacte al administrador.";
+                        }
+                    }
                 }
             } else {
                 $r['resultado'] = 'noexiste';
@@ -466,6 +486,64 @@ class Login extends BD
             error_log('Error en verificarCedulaExistente: ' . $e->getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Obtiene los intentos fallidos de un usuario por username
+     */
+    public function obtenerIntentosFallidos($username) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
+            $sql = "SELECT intentos_fallidos FROM tbl_usuarios WHERE username = :username";
+            $p = $pdo->prepare($sql);
+            $p->bindParam(':username', $username);
+            $p->execute();
+            
+            $resultado = $p->fetch(PDO::FETCH_ASSOC);
+            return $resultado ? (int)$resultado['intentos_fallidos'] : 0;
+        }, 'S');
+    }
+    
+    /**
+     * Incrementa los intentos fallidos de un usuario
+     */
+    public function incrementarIntentosFallidos($username) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
+            $sql = "UPDATE tbl_usuarios SET intentos_fallidos = intentos_fallidos + 1 WHERE username = :username";
+            $p = $pdo->prepare($sql);
+            $p->bindParam(':username', $username);
+            $p->execute();
+            
+            return $p->rowCount() > 0;
+        }, 'S');
+    }
+    
+    /**
+     * Reinicia los intentos fallidos de un usuario (cuando inicia sesión correctamente)
+     */
+    public function reiniciarIntentosFallidos($username) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
+            $sql = "UPDATE tbl_usuarios SET intentos_fallidos = 0 WHERE username = :username";
+            $p = $pdo->prepare($sql);
+            $p->bindParam(':username', $username);
+            $p->execute();
+            
+            return $p->rowCount() > 0;
+        }, 'S');
+    }
+    
+    /**
+     * Verifica si un usuario está bloqueado por intentos fallidos
+     */
+    public function estaUsuarioBloqueado($username) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
+            $sql = "SELECT intentos_fallidos FROM tbl_usuarios WHERE username = :username";
+            $p = $pdo->prepare($sql);
+            $p->bindParam(':username', $username);
+            $p->execute();
+            
+            $resultado = $p->fetch(PDO::FETCH_ASSOC);
+            return $resultado ? (int)$resultado['intentos_fallidos'] >= 3 : false;
+        }, 'S');
     }
 }
 
