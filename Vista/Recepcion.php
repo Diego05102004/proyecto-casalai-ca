@@ -132,6 +132,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="accion" value="registrar">
+                    <input type="hidden" id="ia_verificada" name="ia_verificada" value="false">
                     
                     <!-- SECCIÓN IA: FOTO DE FACTURA Y VERIFICACIÓN -->
                     <div class="alert alert-info mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
@@ -1294,6 +1295,7 @@ $(document).ready(function() {
         if (resultado.exito) {
             // Sin discrepancias - mostrar éxito y registrar
             iaVerificada = true;
+            $('#ia_verificada').val('true'); // Actualizar campo oculto
             
             await Swal.fire({
                 icon: 'success',

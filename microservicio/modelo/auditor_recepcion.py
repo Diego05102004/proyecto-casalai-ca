@@ -73,15 +73,15 @@ class AuditorRecepcion:
     UMBRAL_CONFIANZA_ALTA = 0.85
     UMBRAL_CONFIANZA_MEDIA = 0.60
     PATRONES = {
-        'numero_factura': [r'(?:factura|n[°º]|nro|numero|#)\s*[.:]?\s*([A-Z0-9\-]{5,20})', r'(?:factura)\s*(?:n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)', r'(?:invoice|inv)\s*(?:#|n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)'],
-        'proveedor': [r'(?:proveedor|vendedor|supplier|vendor|de|from)[:\s]+([A-Z][A-Za-z0-9\s&.,]+(?:S\.A|S\.R\.L|C\.A|LLC|INC|LTDA)?)', r'(?:razon social|nombre)[:\s]+([A-Z][A-Za-z0-9\s&.,]+)'],
+        'numero_factura': [r'(?:factura|n[°º]|nro|numero|#)\s*[.:]?\s*([A-Z0-9\-]{5,20})', r'(?:factura)\s*(?:n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)', r'(?:invoice|inv)\s*(?:#|n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)', r'(\d{6,10})'],
+        'proveedor': [r'(?:proveedor|vendedor|supplier|vendor|de|from)[:\s]+([A-Z][A-Za-z0-9\s&.,]+(?:S\.A|S\.R\.L|C\.A|LLC|INC|LTDA)?)', r'(?:razon social|nombre)[:\s]+([A-Z][A-Za-z0-9\s&.,]+)', r'eBay|Amazon|MercadoLibre|AliExpress'],
         'fecha': [r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', r'(\d{4}[/-]\d{1,2}[/-]\d{1,2})'],
-        'producto': [r'(?:descripcion|producto|articulo|item)[:\s]+([^\n]+)'],
-        'modelo': [r'(?:modelo|model|mod)[:\s]+([A-Z0-9\-]+)'],
-        'marca': [r'(?:marca|brand|fabricante)[:\s]+([A-Za-z0-9\s]+)'],
-        'serial': [r'(?:serial|s/n|serie|sn)[:\s]+([A-Z0-9\-]+)'],
-        'cantidad': [r'(?:cantidad|qty|quantity|cant)[:\s]+(\d+)', r'(?:und|unidades|units?)[:\s]+(\d+)'],
-        'costo': [r'(?:precio|costo|price|valor|unitario|p/u)[:\s]+[\$]?\s*(\d+[.,]?\d*)', r'[\$]\s*(\d+[.,]?\d{2})'],
+        'producto': [r'(?:descripcion|producto|articulo|item)[:\s]+([^\n]+)', r'([A-Z][a-zA-Z0-9\s\-\+]+(?:Printer|Laptop|Desktop|Monitor|Phone|Tablet|Camera|Headphones|Speaker|Mouse|Keyboard|Router|Modem|Scanner|Copier))'],
+        'modelo': [r'(?:modelo|model|mod)[:\s]+([A-Z0-9\-]+)', r'([A-Z0-9]{3,15}(?:\s*[A-Z0-9\-]+)*)'],
+        'marca': [r'(?:marca|brand|fabricante)[:\s]+([A-Za-z0-9\s]+)', r'(HP|Canon|Epson|Brother|Xerox|Dell|Lenovo|Asus|Samsung|LG|Sony|Apple|Microsoft|Logitech|Intel|AMD|NVIDIA)'],
+        'serial': [r'(?:serial|s/n|serie|sn)[:\s]+([A-Z0-9\-]+)', r'(?:SN|S/N)[:\s]*([A-Z0-9\-]+)'],
+        'cantidad': [r'(?:cantidad|qty|quantity|cant)[:\s]+(\d+)', r'(?:und|unidades|units?)[:\s]+(\d+)', r'(\d+)\s*(?:und|unidades|units?)'],
+        'costo': [r'(?:precio|costo|price|valor|unitario|p/u)[:\s]+[\$]?\s*(\d+[.,]?\d*)', r'[\$]\s*(\d+[.,]?\d{2})', r'(\d+[.,]\d{2})'],
         'total': [r'(?:total|monto total|importe)[:\s]+[\$]?\s*(\d+[.,]?\d{2})', r'total\s*[\$]?\s*(\d+[.,]?\d{2})']
     }
 
@@ -202,14 +202,96 @@ class AuditorRecepcion:
     def _extraer_productos(self, texto: str) -> List[ProductoExtraido]:
         productos = []
         lineas = texto.split('\n')
+        
+        # Método 1: Buscar líneas con patrones de productos específicos
         for i, linea in enumerate(lineas):
             if any(indicador in linea.lower() for indicador in ['producto', 'descripcion', 'articulo', 'item', 'codigo', 'sku']):
                 prod = self._parsear_linea_producto(linea, lineas[i:i+3])
                 if prod and prod.nombre: productos.append(prod)
+        
+        # Método 2: Parsing inteligente para facturas como eBay
+        if not productos:
+            productos = self._extraer_productos_ebay_style(texto)
+        
+        # Método 3: Extracción general como fallback
         if not productos:
             prod = self._extraer_producto_general(texto)
             if prod: productos.append(prod)
+            
         return productos
+
+    def _extraer_productos_ebay_style(self, texto: str) -> List[ProductoExtraido]:
+        """Extrae productos de facturas con formato eBay/e-commerce"""
+        productos = []
+        lineas = texto.split('\n')
+        
+        for i, linea in enumerate(lineas):
+            # Buscar patrones como "HP: DeskJet 2775 HP 0002 $1520.00 2 $3040.00"
+            if '$' in linea and any(marca in linea.upper() for marca in ['HP', 'CANON', 'EPSON', 'DELL', 'LENOVO']):
+                prod = self._parsear_linea_ebay(linea)
+                if prod: productos.append(prod)
+        
+        return productos
+
+    def _parsear_linea_ebay(self, linea: str) -> Optional[ProductoExtraido]:
+        """Parsea líneas con formato eBay: MARCA: Modelo MARCA Serial Precio Cantidad Total"""
+        try:
+            prod = ProductoExtraido()
+            
+            # Extraer marca (primera palabra antes de ":")
+            if ':' in linea:
+                marca_part = linea.split(':')[0].strip()
+                if marca_part.upper() in ['HP', 'CANON', 'EPSON', 'DELL', 'LENOVO', 'ASUS', 'SAMSUNG']:
+                    prod.marca = marca_part
+            
+            # Extraer modelo (después de ":" hasta el siguiente número o marca)
+            resto = linea
+            if ':' in linea:
+                resto = linea.split(':', 1)[1].strip()
+            
+            # Buscar patrones de modelo
+            import re
+            modelo_match = re.search(r'([A-Za-z0-9\s\-\+]{3,20})', resto)
+            if modelo_match:
+                prod.modelo = modelo_match.group(1).strip()
+            
+            # Extraer precio
+            precio_match = re.search(r'\$(\d+[.,]\d{2})', linea)
+            if precio_match:
+                prod.costo_unitario = float(precio_match.group(1).replace(',', ''))
+            
+            # Extraer cantidad
+            cantidad_match = re.search(r'\$(\d+[.,]\d{2})\s+(\d+)', linea)
+            if cantidad_match:
+                prod.cantidad = int(cantidad_match.group(2))
+            else:
+                # Buscar número antes del precio total
+                cantidad_match = re.search(r'(\d+)\s+\$\d+[.,]\d{2}', linea)
+                if cantidad_match:
+                    prod.cantidad = int(cantidad_match.group(1))
+            
+            # Extraer serial
+            serial_match = re.search(r'([A-Z0-9]{4,10})', linea)
+            if serial_match and len(serial_match.group(1)) >= 4:
+                prod.serial = serial_match.group(1)
+            
+            # Asignar nombre basado en marca y modelo
+            if prod.marca and prod.modelo:
+                prod.nombre = f"{prod.marca} {prod.modelo}"
+            elif prod.modelo:
+                prod.nombre = prod.modelo
+            elif prod.marca:
+                prod.nombre = f"Producto {prod.marca}"
+            
+            # Calcular confianza
+            campos_llenos = sum([bool(prod.nombre), bool(prod.modelo), bool(prod.marca), prod.cantidad > 0, prod.costo_unitario > 0])
+            prod.confianza = campos_llenos / 5.0
+            
+            return prod if prod.nombre else None
+            
+        except Exception as e:
+            logger.warning(f"Error parseando línea eBay: {e}")
+            return None
 
     def _parsear_linea_producto(self, linea: str, contexto: List[str]) -> Optional[ProductoExtraido]:
         prod = ProductoExtraido()

@@ -47,7 +47,95 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
 
-            // Validar datos de entrada usando las nuevas validaciones centralizadas
+            // VALIDACIÓN MEJORADA: Verificar datos requeridos
+            if (!isset($_POST['proveedor']) || empty($_POST['proveedor'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Debe seleccionar un proveedor',
+                    'field' => 'proveedor'
+                ]);
+                exit;
+            }
+
+            if (!isset($_POST['correlativo']) || empty(trim($_POST['correlativo']))) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Debe ingresar el número de factura',
+                    'field' => 'correlativo'
+                ]);
+                exit;
+            }
+
+            if (!isset($_POST['producto']) || !is_array($_POST['producto']) || empty($_POST['producto'][0])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Debe agregar al menos un producto',
+                    'field' => 'producto'
+                ]);
+                exit;
+            }
+
+            if (!isset($_POST['cantidad']) || !is_array($_POST['cantidad'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Las cantidades son requeridas',
+                    'field' => 'cantidad'
+                ]);
+                exit;
+            }
+
+            if (!isset($_POST['costo']) || !is_array($_POST['costo'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Los costos son requeridos',
+                    'field' => 'costo'
+                ]);
+                exit;
+            }
+
+            // Validar que cada producto tenga datos válidos
+            foreach ($_POST['producto'] as $index => $id_producto) {
+                if (empty($id_producto)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => "El producto en la fila " . ($index + 1) . " es inválido",
+                        'field' => 'producto_' . $index
+                    ]);
+                    exit;
+                }
+
+                $cantidad = floatval($_POST['cantidad'][$index] ?? 0);
+                if ($cantidad <= 0) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => "La cantidad en la fila " . ($index + 1) . " debe ser mayor a 0",
+                        'field' => 'cantidad_' . $index
+                    ]);
+                    exit;
+                }
+
+                $costo = floatval($_POST['costo'][$index] ?? 0);
+                if ($costo <= 0) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => "El costo en la fila " . ($index + 1) . " debe ser mayor a 0",
+                        'field' => 'costo_' . $index
+                    ]);
+                    exit;
+                }
+            }
+
+            // Si hay verificación IA, verificar que esté aprobada
+            if (isset($_POST['ia_verificada']) && $_POST['ia_verificada'] !== 'true') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La verificación con IA no fue completada. Corrija las discrepancias primero.',
+                    'field' => 'ia_verificacion'
+                ]);
+                exit;
+            }
+
+            // Validación adicional usando las validaciones existentes
             $datos_validacion = [
                 'idproveedor' => $_POST['proveedor'],
                 'correlativo' => $_POST['correlativo'],
