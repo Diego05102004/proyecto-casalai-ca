@@ -92,7 +92,16 @@ class AuditorRecepcion:
         logger.info("AuditorRecepcion inicializado - Fase 1: Verificación Asistida")
 
     def _cargar_configuracion(self, config_path: Optional[str]) -> Dict:
-        config_default = {'tesseract_cmd': 'tesseract', 'idioma_ocr': 'spa+eng', 'preprocesamiento': True,
+        # Configurar ruta de Tesseract para Windows
+        tesseract_cmd = 'tesseract'
+        import platform
+        if platform.system() == 'Windows':
+            tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+            if Path(tesseract_path).exists():
+                tesseract_cmd = tesseract_path
+                logger.info(f"Tesseract encontrado en: {tesseract_path}")
+        
+        config_default = {'tesseract_cmd': tesseract_cmd, 'idioma_ocr': 'spa+eng', 'preprocesamiento': True,
             'guardar_cache': True, 'umbral_exactitud': 0.90, 'tolerancia_costo': 0.05, 'tolerancia_cantidad': 0}
         if config_path and Path(config_path).exists():
             try:
@@ -165,6 +174,10 @@ class AuditorRecepcion:
         return binaria
 
     def _ejecutar_ocr(self, imagen: np.ndarray) -> str:
+        # Configurar pytesseract con la ruta específica
+        if 'tesseract_cmd' in self.config and self.config['tesseract_cmd'] != 'tesseract':
+            pytesseract.pytesseract.tesseract_cmd = self.config['tesseract_cmd']
+        
         config_tesseract = '--psm 6 --oem 3'
         return pytesseract.image_to_string(imagen, lang=self.config['idioma_ocr'], config=config_tesseract)
 
@@ -364,8 +377,16 @@ class AuditorRecepcion:
             raise ValueError("Procesamiento de PDF no disponible. Instale pdf2image: pip install pdf2image")
         
         try:
-            # Convertir PDF a lista de imágenes
-            imagenes = convert_from_path(ruta_pdf, dpi=200, fmt='jpeg')
+            # Configurar ruta de Poppler para Windows
+            import platform
+            if platform.system() == 'Windows':
+                poppler_path = r"C:\Poppler\poppler-25.12.0\Library\bin"
+                if Path(poppler_path).exists():
+                    imagenes = convert_from_path(ruta_pdf, dpi=200, fmt='jpeg', poppler_path=poppler_path)
+                else:
+                    imagenes = convert_from_path(ruta_pdf, dpi=200, fmt='jpeg')
+            else:
+                imagenes = convert_from_path(ruta_pdf, dpi=200, fmt='jpeg')
             
             if not imagenes:
                 raise ValueError("No se pudo extraer ninguna imagen del PDF")

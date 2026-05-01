@@ -3,3 +3,16 @@
 2026-05-01 11:10:25,068 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
 2026-05-01 11:11:00,394 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501111100_07f70752_factura_ebay_corregida.pdf
 2026-05-01 11:11:00,403 - modelo.auditor_recepcion - ERROR - Error convirtiendo PDF temp_uploads\fact_20260501111100_07f70752_factura_ebay_corregida.pdf: Unable to get page count. Is poppler installed and in PATH?
+2026-05-01 11:21:47,038 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-05-01 11:22:41,050 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501112241_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:22:41,824 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501112241_07f70752_factura_ebay_corregida_page_0.jpg
+2026-05-01 11:33:08,216 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-05-01 11:33:08,216 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-05-01 11:33:50,953 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501113350_9fa77997_Gemini_Generated_Image_xzhtacxzhtacxzht.png
+2026-05-01 11:33:53,759 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-05-01 11:34:52,395 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501113452_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:34:52,746 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501113452_07f70752_factura_ebay_corregida_page_0.jpg
+2026-05-01 11:34:56,332 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-05-01 11:40:40,436 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501114040_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:40:40,612 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501114040_07f70752_factura_ebay_corregida_page_0.jpg
+2026-05-01 11:40:44,125 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
