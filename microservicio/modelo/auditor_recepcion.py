@@ -12,9 +12,20 @@ import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
+try:
+    from pdf2image import convert_from_path
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+    logger.warning("pdf2image no disponible. Los PDFs no podrán procesarse.")
+
+# Asegurar que el directorio de logs exista
+BASE_DIR = Path(__file__).parent.parent
+LOGS_DIR = BASE_DIR / "logs_metricas"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.FileHandler('logs_metricas/auditor_recepcion.log'), logging.StreamHandler()])
+    handlers=[logging.FileHandler(str(LOGS_DIR / 'auditor_recepcion.log')), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -138,6 +149,10 @@ class AuditorRecepcion:
         return self.verificar_coherencia(id_temp, datos_formulario)
 
     def _preprocesar_imagen(self, ruta_imagen: str) -> np.ndarray:
+        # Verificar si es un PDF y convertir a imagen
+        if ruta_imagen.lower().endswith('.pdf'):
+            ruta_imagen = self._convertir_pdf_a_imagen(ruta_imagen)
+        
         imagen = cv2.imread(ruta_imagen)
         if imagen is None:
             raise ValueError(f"No se pudo cargar: {ruta_imagen}")
@@ -342,6 +357,29 @@ class AuditorRecepcion:
                         eliminados += 1
                 except: pass
         return eliminados
+
+    def _convertir_pdf_a_imagen(self, ruta_pdf: str) -> str:
+        """Convierte PDF a imagen para procesamiento OCR"""
+        if not PDF_AVAILABLE:
+            raise ValueError("Procesamiento de PDF no disponible. Instale pdf2image: pip install pdf2image")
+        
+        try:
+            # Convertir PDF a lista de imágenes
+            imagenes = convert_from_path(ruta_pdf, dpi=200, fmt='jpeg')
+            
+            if not imagenes:
+                raise ValueError("No se pudo extraer ninguna imagen del PDF")
+            
+            # Guardar la primera página como imagen temporal
+            ruta_imagen_temp = ruta_pdf.replace('.pdf', '_page_0.jpg')
+            imagenes[0].save(ruta_imagen_temp, 'JPEG', quality=95)
+            
+            logger.info(f"PDF convertido a imagen: {ruta_imagen_temp}")
+            return ruta_imagen_temp
+            
+        except Exception as e:
+            logger.error(f"Error convirtiendo PDF {ruta_pdf}: {e}")
+            raise ValueError(f"No se pudo procesar el PDF: {str(e)}")
 
     def exportar_historial(self, ruta: str) -> bool:
         try:

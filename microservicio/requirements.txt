@@ -18,7 +18,7 @@ numpy>=1.24.0
 
 # Opcional: Mejoras de OCR
 # easyocr>=1.7.0  # Alternativa a Tesseract
-# pdf2image>=1.16.3  # Para procesar PDFs
+pdf2image>=1.16.3  # Para procesar PDFs
 
 # Opcional: Logging avanzado
 # structlog>=23.0.0

@@ -1,0 +1,5 @@
+2026-05-01 11:07:14,582 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-05-01 11:08:26,995 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501110826_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:10:25,068 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-05-01 11:11:00,394 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501111100_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:11:00,403 - modelo.auditor_recepcion - ERROR - Error convirtiendo PDF temp_uploads\fact_20260501111100_07f70752_factura_ebay_corregida.pdf: Unable to get page count. Is poppler installed and in PATH?
