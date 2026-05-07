@@ -13,6 +13,12 @@ if (is_file("Vista/gestionarfactura.php")) {
     $id_factura = $_POST['descargarFactura'];
     $factura->setId($id_factura);
     $res = $factura->facturaTransaccion('DescargarFactura');
+    
+    // Debug: verificar si $res tiene datos
+    if (empty($res)) {
+        die("Error: No se encontraron datos para la factura ID: $id_factura");
+    }
+    
     require_once("Vista/descargarfactura.php");
     exit; // para evitar que se ejecute el resto
 }

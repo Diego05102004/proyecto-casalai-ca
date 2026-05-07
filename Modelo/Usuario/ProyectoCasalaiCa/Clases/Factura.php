@@ -736,7 +736,7 @@ class Factura extends BD
         return $this->f_descargar($id_factura);
     }
     private function f_descargar($id_factura) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_factura) {
             try {
                 $stmt = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
                 $stmt->execute();
@@ -753,12 +753,28 @@ class Factura extends BD
                 $tasa = 1; // Valor por defecto en caso de error
             }
 
-            // Consulta de la factura
+            // DEBUG: Verificar si la factura existe
+            $stmt_check = $pdo->prepare("SELECT COUNT(*) as count FROM tbl_facturas WHERE id_factura = ?");
+            $stmt_check->execute([$id_factura]);
+            $count_factura = $stmt_check->fetch(PDO::FETCH_ASSOC);
+            
+            if ($count_factura['count'] == 0) {
+                die("DEBUG: La factura ID $id_factura NO existe en tbl_facturas");
+            }
+
+            // DEBUG: Verificar si tiene detalles
+            $stmt_check_detalle = $pdo->prepare("SELECT COUNT(*) as count FROM tbl_factura_detalle WHERE factura_id = ?");
+            $stmt_check_detalle->execute([$id_factura]);
+            $count_detalle = $stmt_check_detalle->fetch(PDO::FETCH_ASSOC);
+            
+            if ($count_detalle['count'] == 0) {
+                die("DEBUG: La factura ID $id_factura existe pero NO tiene detalles en tbl_factura_detalle");
+            }
+
+            // Consulta de la factura (misma estructura que la consulta funcional de la tabla)
             $sql = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
                         p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
-                        p.precio, 
-                        p.precio * :tasa AS precio_convertido,
-                        df.cantidad, f.descuento
+                        p.precio, df.cantidad, f.descuento, f.estatus
                     FROM tbl_factura_detalle df
                     JOIN tbl_facturas f ON f.id_factura = df.factura_id
                     JOIN tbl_clientes c ON c.id_clientes = f.cliente
@@ -769,9 +785,24 @@ class Factura extends BD
 
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_factura', $id_factura, PDO::PARAM_INT);
-            $stmt->bindParam(':tasa', $tasa);
             $stmt->execute();
             $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // DEBUG: Mostrar resultados
+            if (empty($facturas)) {
+                die("DEBUG: La consulta SQL no devolvió resultados. SQL: $sql, ID: $id_factura");
+            } else {
+                // DEBUG: Mostrar cantidad de resultados
+                error_log("DEBUG: Se encontraron " . count($facturas) . " resultados para factura ID $id_factura");
+            }
+            
+            // Agregar precio_convertido después de la consulta (si es necesario)
+            if (!empty($facturas)) {
+                foreach ($facturas as &$factura) {
+                    $factura['precio_convertido'] = $factura['precio'] * $tasa;
+                }
+            }
+            
             return $facturas;
         });
     }
