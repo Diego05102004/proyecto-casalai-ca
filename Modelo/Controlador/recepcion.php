@@ -16,8 +16,6 @@ $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('recepcion'));
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Instanciar Recepcion solo si hay POST (cuando se va a usar)
-    $k = new Recepcion();
     
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
@@ -27,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     switch ($accion) {
         case 'listado':
+            $k = new Recepcion();
             $respuesta = $k->listadoproductos();
             echo json_encode($respuesta);
         break;
@@ -47,7 +46,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
 
-            // VALIDACIÓN MEJORADA: Verificar datos requeridos
+            $k = new Recepcion();
+
+            /* VALIDACIÓN MEJORADA: Verificar datos requeridos
             if (!isset($_POST['proveedor']) || empty($_POST['proveedor'])) {
                 echo json_encode([
                     'status' => 'error',
@@ -93,7 +94,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            // Validar que cada producto tenga datos válidos
             foreach ($_POST['producto'] as $index => $id_producto) {
                 if (empty($id_producto)) {
                     echo json_encode([
@@ -125,7 +125,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            // Si hay verificación IA, verificar que esté aprobada
             if (isset($_POST['ia_verificada']) && $_POST['ia_verificada'] !== 'true') {
                 echo json_encode([
                     'status' => 'error',
@@ -133,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'field' => 'ia_verificacion'
                 ]);
                 exit;
-            }
+            }*/
 
             // Validación adicional usando las validaciones existentes
             $datos_validacion = [
@@ -214,6 +213,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'buscar':
+            $k = new Recepcion();
             $correlativo = $_POST['correlativo'] ?? null;
             $k->setcorrelativo($correlativo);
             $respuesta = $k->buscar();
@@ -229,6 +229,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         case 'anular':
             header('Content-Type: application/json; charset=utf-8');
+            $k = new Recepcion();
             $correlativo = $_POST['correlativo'] ?? '';
             
             $datos_validacion = ['correlativo' => $correlativo];
@@ -292,6 +293,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'reportes_recepcion':
             header('Content-Type: application/json; charset=utf-8');
+            $k = new Recepcion();
             // Parámetros opcionales
             $fechaInicio = $_POST['fechaInicio'] ?? null;
             $fechaFin    = $_POST['fechaFin'] ?? null;
