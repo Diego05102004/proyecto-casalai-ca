@@ -2074,3 +2074,165 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+-- =====================================================================
+-- COMPONENTE DE OPTIMIZACIÓN Y CONCURRENCIA: MÓDULO DE ROLES
+-- =====================================================================
+
+-- Cambiamos el delimitador para que MySQL reconozca todo el bloque del procedimiento
+DELIMITER //
+
+-- ---------------------------------------------------------------------
+-- 1. PROCEDIMIENTO PARA REGISTRAR ROL
+-- ---------------------------------------------------------------------
+CREATE PROCEDURE sp_registrar_rol(
+    IN p_nombre_rol VARCHAR(15),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nuevo_id INT;
+
+    -- Manejador de excepciones: si algo falla, hace ROLLBACK y lanza el error
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar el rol de forma atómica.';
+    END;
+
+    -- Configuración estricta del aislamiento conforme a la guía
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Operación DML principal
+    INSERT INTO `tbl_rol` (`nombre_rol`) 
+    VALUES (p_nombre_rol);
+
+    -- Captura del ID autogenerado
+    SET v_nuevo_id = LAST_INSERT_ID();
+
+    -- Inserción obligatoria en Bitácora (Garantiza Atomicidad)
+    INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Roles', 
+        'REGISTRAR', 
+        JSON_OBJECT('id_rol', v_nuevo_id, 'nombre_rol', p_nombre_rol), 
+        NULL, 
+        p_id_usuario_auditor, 
+        'media', 
+        CONCAT('Se registró un nuevo rol en el sistema: ', p_nombre_rol)
+    );
+
+    COMMIT;
+END //
+
+-- ---------------------------------------------------------------------
+-- 2. PROCEDIMIENTO PARA MODIFICAR ROL
+-- ---------------------------------------------------------------------
+CREATE PROCEDURE sp_modificar_rol(
+    IN p_id_rol INT,
+    IN p_nuevo_nombre VARCHAR(15),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_viejo_nombre VARCHAR(15);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo modificar el rol de forma atómica.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- CONSULTA CON BLOQUEO EXCLUSIVO (FOR UPDATE)
+    -- Rescatamos el estado antiguo protegiendo la fila de modificaciones concurrentes
+    SELECT `nombre_rol` INTO v_viejo_nombre 
+    FROM `tbl_rol` 
+    WHERE `id_rol` = p_id_rol 
+    FOR UPDATE;
+
+    -- Operación DML de actualización
+    UPDATE `tbl_rol` 
+    SET `nombre_rol` = p_nuevo_nombre 
+    WHERE `id_rol` = p_id_rol;
+
+    -- Inserción en Bitácora guardando estados Viejo y Nuevo en JSON
+    INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Roles', 
+        'MODIFICAR', 
+        JSON_OBJECT('id_rol', p_id_rol, 'nombre_rol', p_nuevo_nombre), 
+        JSON_OBJECT('id_rol', p_id_rol, 'nombre_rol', v_viejo_nombre), 
+        p_id_usuario_auditor, 
+        'media', 
+        CONCAT('Se modificó el rol ID ', p_id_rol, ' de "', v_viejo_nombre, '" a "', p_nuevo_nombre, '".')
+    );
+
+    COMMIT;
+END //
+
+-- ---------------------------------------------------------------------
+-- 3. PROCEDIMIENTO PARA ELIMINAR ROL (CON CONTROL DE RESTRICCIÓN)
+-- ---------------------------------------------------------------------
+CREATE PROCEDURE sp_eliminar_rol(
+    IN p_id_rol INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_rol_eliminado VARCHAR(15);
+    DECLARE v_cantidad_permisos INT;
+
+    -- MANEJADOR ESPECÍFICO PARA EL ESCENARIO #1 (Error 1451: Llave foránea restrictiva)
+    DECLARE EXIT HANDLER FOR 1451
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación denegada: No se puede eliminar el rol porque tiene usuarios activos asignados.';
+    END;
+
+    -- Manejador general para cualquier otro tipo de error
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar la eliminación del rol.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo del rol antes de destruirlo
+    SELECT `nombre_rol` INTO v_nombre_rol_eliminado 
+    FROM `tbl_rol` 
+    WHERE `id_rol` = p_id_rol 
+    FOR UPDATE;
+
+    -- Contamos las dependencias en cascada antes de que desaparezcan
+    SELECT COUNT(*) INTO v_cantidad_permisos 
+    FROM `tbl_permisos` 
+    WHERE `id_rol` = p_id_rol;
+
+    -- Operación DML de eliminación física (Dispara cascada en tbl_permisos)
+    DELETE FROM `tbl_rol` 
+    WHERE `id_rol` = p_id_rol;
+
+    -- Registro atómico en bitácora con prioridad ALTA
+    INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Roles', 
+        'ELIMINAR', 
+        NULL, 
+        JSON_OBJECT('id_rol', p_id_rol, 'nombre_rol', v_nombre_rol_eliminado, 'permisos_eliminados_en_cascada', v_cantidad_permisos), 
+        p_id_usuario_auditor, 
+        'alta', 
+        CONCAT('Se eliminó el rol "', v_nombre_rol_eliminado, '" (ID: ', p_id_rol, '). Remoción automática de ', v_cantidad_permisos, ' permisos asociados.')
+    );
+
+    COMMIT;
+END //
+
+-- Restablecemos el delimitador estándar de MySQL
+DELIMITER ;

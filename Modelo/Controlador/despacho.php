@@ -14,7 +14,6 @@ $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('desp
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $k = new Despacho();
 
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
@@ -24,6 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     switch ($accion) {
         case 'listado':
+            $k = new Despacho();
             $respuesta = $k->listadoproductos();
             echo json_encode($respuesta);
         break;
@@ -35,6 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         break;
 
         case 'obtener_detalles':
+            $k = new Despacho();
             // Validar datos de entrada
             $datosValidacion = [
                 'id_despacho' => $_POST['id_despachos'] ?? null
@@ -60,6 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         break;
 
         case 'cambiar_estado_despacho':
+            $k = new Despacho();
             // Validar datos de entrada
             $datosValidacion = [
                 'id_despacho' => $_POST['id'] ?? null,
@@ -118,6 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'anular':
+            $k = new Despacho();
             // Validar datos de entrada
             $datosValidacion = [
                 'id_despacho' => $_POST['id_despachos'] ?? null
@@ -187,8 +190,6 @@ function getdespacho() {
     $despacho = new Despacho();
     return $despacho->getdespacho();
 }
-
-// vista inicial
 
 // Reportes de despacho (restaurados)
 $despacho = new Despacho();
