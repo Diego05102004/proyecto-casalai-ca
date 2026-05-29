@@ -503,13 +503,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Funciones auxiliares y carga de vista
 
 function obtenerModelos() {
-    $producto = new Productos();
-    return $producto->obtenerModelos();
+    $Producto = new Productos();
+    return $Producto->obtenerModelos();
 }
 
 function obtenerProductos() {
-    $producto = new Productos();
-    return $producto->obtenerProductos();
+    $Producto = new Productos();
+    return $Producto->obtenerProductos();
 }
 
 $productoModel = new Productos();

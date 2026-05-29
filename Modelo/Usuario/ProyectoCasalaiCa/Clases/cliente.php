@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 
@@ -13,6 +14,10 @@ class cliente extends BD {
     private $correo;
     private $activo = 1;
     private $id;
+    private $encryption;
+    
+    // Campos que deben ser cifrados (NOTA: cédula no se cifra porque se usa para búsquedas)
+    const CAMPOS_CIFRADOS = ['nombre', 'direccion', 'telefono', 'correo'];
     
     // Constantes para validaciones
     const MAX_REGISTROS_PAGINA = 100;
@@ -86,6 +91,7 @@ class cliente extends BD {
     }
 
     public function __construct($tipo = 'P') {
+        $this->encryption = new Encryption();
     }
     
     /**
@@ -417,24 +423,38 @@ class cliente extends BD {
      * Obtiene un cliente por su ID
      */
     public function obtenerclientesPorId($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id) {
             $sql = "SELECT * FROM tbl_clientes WHERE id_clientes = ? AND activo = 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     /**
      * Obtiene el último cliente registrado
      */
     public function obtenerUltimoCliente() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_clientes ORDER BY id_clientes DESC LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     /**
@@ -446,7 +466,7 @@ class cliente extends BD {
             return ['error' => $errores];
         }
         
-        return $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
             $pagina = (int)($filtros['pagina'] ?? 1);
             $limite = (int)($filtros['limite'] ?? 50);
             $orden = $filtros['orden'] ?? 'nombre';
@@ -497,6 +517,13 @@ class cliente extends BD {
                 'total_paginas' => ceil($total / $limite)
             ];
         });
+        
+        // Descifrar datos personales de los clientes
+        if (isset($resultado['clientes'])) {
+            $resultado['clientes'] = $this->encryption->decryptResults($resultado['clientes'], self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     public function ingresarclientes() {
@@ -504,14 +531,20 @@ class cliente extends BD {
     }
     private function r_cliente() {
         return $this->ejecutarConConexionSegura(function($pdo) {
+            // Cifrar datos personales antes de insertar
+            $nombre_cifrado = $this->encryption->encrypt($this->nombre);
+            $direccion_cifrada = $this->encryption->encrypt($this->direccion);
+            $telefono_cifrado = $this->encryption->encrypt($this->telefono);
+            $correo_cifrado = $this->encryption->encrypt($this->correo);
+            
             $sql = "INSERT INTO tbl_clientes (`nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`)
                     VALUES (:nombre, :cedula, :direccion, :telefono, :correo, :activo)";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':nombre', $this->nombre);
-            $stmt->bindParam(':direccion', $this->direccion);
-            $stmt->bindParam(':telefono', $this->telefono);
+            $stmt->bindParam(':nombre', $nombre_cifrado);
+            $stmt->bindParam(':direccion', $direccion_cifrada);
+            $stmt->bindParam(':telefono', $telefono_cifrado);
             $stmt->bindParam(':cedula', $this->cedula);
-            $stmt->bindParam(':correo', $this->correo);
+            $stmt->bindParam(':correo', $correo_cifrado);
             $stmt->bindParam(':activo', $this->activo);
             $resultado = $stmt->execute();
             
@@ -525,11 +558,16 @@ class cliente extends BD {
     }
 
     public function listarTodosClientes() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $stmt = $pdo->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     private function existeNumeroCedula($cedula, $excluir_id = null) {
@@ -547,7 +585,7 @@ class cliente extends BD {
     }
 
     function obtenerReporteComprasClientes() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT c.nombre, COUNT(d.id_producto) AS cantidad
             FROM tbl_clientes c
             JOIN tbl_despachos ds ON c.id_clientes = ds.id_clientes
@@ -559,6 +597,11 @@ class cliente extends BD {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
 
@@ -568,14 +611,20 @@ class cliente extends BD {
     }
     private function m_cliente($id) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
+            // Cifrar datos personales antes de actualizar
+            $nombre_cifrado = $this->encryption->encrypt($this->nombre);
+            $direccion_cifrada = $this->encryption->encrypt($this->direccion);
+            $telefono_cifrado = $this->encryption->encrypt($this->telefono);
+            $correo_cifrado = $this->encryption->encrypt($this->correo);
+            
             $sql = "UPDATE tbl_clientes SET nombre = :nombre, cedula = :cedula, direccion = :direccion, telefono = :telefono, correo = :correo, activo = :activo WHERE id_clientes = :id_clientes";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
-            $stmt->bindParam(':nombre', $this->nombre);
-            $stmt->bindParam(':direccion', $this->direccion);
-            $stmt->bindParam(':telefono', $this->telefono);
+            $stmt->bindParam(':nombre', $nombre_cifrado);
+            $stmt->bindParam(':direccion', $direccion_cifrada);
+            $stmt->bindParam(':telefono', $telefono_cifrado);
             $stmt->bindParam(':cedula', $this->cedula);
-            $stmt->bindParam(':correo', $this->correo);
+            $stmt->bindParam(':correo', $correo_cifrado);
             $stmt->bindParam(':activo', $this->activo);
             return $stmt->execute();
         });
@@ -598,12 +647,17 @@ class cliente extends BD {
         return $this->g_clientes();
     }
     private function g_clientes() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $queryclientes = 'SELECT * FROM ' . $this->tableclientes;
             $stmtclientes = $pdo->prepare($queryclientes);
             $stmtclientes->execute();
             $clientes = $stmtclientes->fetchAll(PDO::FETCH_ASSOC);
             return $clientes;
         });
+        
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 }

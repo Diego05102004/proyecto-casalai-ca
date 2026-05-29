@@ -3,7 +3,7 @@
 define('ROOT_PATH', dirname(__DIR__));
 
 define('MODEL_PATH', ROOT_PATH . '/Modelo');
-define('CONTROLLER_PATH', ROOT_PATH . '\Controlador');
+define('CONTROLLER_PATH', ROOT_PATH . '/Controlador');
 define('VIEW_PATH', ROOT_PATH . '/Vista');
 define('CONFIG_PATH', ROOT_PATH);
 
@@ -42,6 +42,6 @@ function loadController($controller) {
 }
 
 // Cargar archivos de configuración
-require_once CONFIG_PATH . '\Config\Config.php';
-require_once CONFIG_PATH . '\Config\database.php';
+require_once CONFIG_PATH . '/Config/Config.php';
+require_once CONFIG_PATH . '/Config/database.php';
 ?>
