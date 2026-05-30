@@ -18,10 +18,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `seguridadlai`
+-- Base de datos: `casalai_seguridad`
 --
-CREATE DATABASE IF NOT EXISTS `seguridadlai` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `seguridadlai`;
+CREATE DATABASE IF NOT EXISTS `casalai_seguridad` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `casalai_seguridad`;
 
 -- --------------------------------------------------------
 

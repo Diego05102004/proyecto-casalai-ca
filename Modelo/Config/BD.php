@@ -27,7 +27,7 @@ class BD {
     private function loadConfig($tipo) {
         $mainConfig = [
             'host' => 'localhost',
-            'dbname' => 'casalai',
+            'dbname' => 'casalai_principal',
             'user' => 'root',
             'pass' => '',
             'charset' => 'utf8mb4'
@@ -35,7 +35,7 @@ class BD {
         
         $securityConfig = [
             'host' => 'localhost',
-            'dbname' => 'seguridadlai',
+            'dbname' => 'casalai_seguridad',
             'user' => 'root',
             'pass' => '',
             'charset' => 'utf8mb4'
