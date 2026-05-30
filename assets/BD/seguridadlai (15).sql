@@ -2183,9 +2183,12 @@ CREATE PROCEDURE sp_eliminar_rol(
     IN p_id_usuario_auditor INT
 )
 BEGIN
+    -- 1. TODAS las declaraciones de variables al inicio estricto
     DECLARE v_nombre_rol_eliminado VARCHAR(15);
     DECLARE v_cantidad_permisos INT;
+    DECLARE v_cantidad_usuarios INT;
 
+    -- 2. Declaraciones de manejadores de errores (Handlers)
     -- MANEJADOR ESPECÍFICO PARA EL ESCENARIO #1 (Error 1451: Llave foránea restrictiva)
     DECLARE EXIT HANDLER FOR 1451
     BEGIN
@@ -2200,6 +2203,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar la eliminación del rol.';
     END;
 
+    -- 3. Inicio de la lógica operativa y transaccional
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
@@ -2214,11 +2218,12 @@ BEGIN
     FROM `tbl_permisos` 
     WHERE `id_rol` = p_id_rol;
 
-    DECLARE v_cantidad_usuarios INT;
+    -- Contamos cuántos usuarios tienen este rol asignado
     SELECT COUNT(*) INTO v_cantidad_usuarios 
     FROM `tbl_usuarios` 
     WHERE `id_rol` = p_id_rol;
 
+    -- Si hay usuarios asignados, disparamos una excepción manual
     IF v_cantidad_usuarios > 0 THEN
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = 'Error: No se puede eliminar el rol porque tiene usuarios activos asignados.';
