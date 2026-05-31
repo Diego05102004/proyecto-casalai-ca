@@ -6,12 +6,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ⚠️ Si ya hay una sesión activa, redirigir a acceso-denegado
-if (isset($_SESSION['id_usuario']) && !empty($_SESSION['id_usuario'])) {
-    header('Location: ?pagina=acceso-denegado');
-    exit;
-}
+// Importar la clase Auth para generación de token JWT
+require_once __DIR__ . '/../Config/Auth.php';
 
+use Usuario\ProyectoCasalaiCa\Config\Auth;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Login;
 // Verificar si se ha enviado el formulario
 if (!empty($_POST)) {
@@ -97,6 +95,16 @@ if ($h == 'acceder') {
                 $_SESSION['id_rol'] = $m['id_rol'] ?? '';
                 $_SESSION['cedula'] = $m['cedula'] ?? '';
                 $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
+                
+                // Generar token JWT después de iniciar sesión exitosamente
+                try {
+                    $token = Auth::generateToken($_SESSION['id_usuario'], $_SESSION['nombre_rol']);
+                    Auth::setTokenCookie($token);
+                    $_SESSION['jwt_token_created'] = true;
+                } catch (Exception $e) {
+                    error_log("Error al generar JWT en login: " . $e->getMessage());
+                    // Continuar con el flujo normal incluso si falla la generación del token
+                }
                 
                 ob_start();
                 require_once __DIR__ . '/../../verificar_websocket.php';

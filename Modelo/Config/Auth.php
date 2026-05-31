@@ -128,6 +128,26 @@ class Auth {
     }
     
     /**
+     * Obtiene el token JWT de la cookie o del header Authorization
+     * 
+     * @return string|null Token JWT o null si no existe
+     */
+    public static function getToken() {
+        // Primero buscar en cookie HttpOnly
+        if (isset($_COOKIE[self::$cookieName])) {
+            return $_COOKIE[self::$cookieName];
+        }
+        // Si no está en cookie, buscar en header Authorization: Bearer
+        elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+            if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                return $matches[1];
+            }
+        }
+        return null;
+    }
+    
+    /**
      * Valida un token JWT y retorna el payload decodificado
      * Soporte híbrido: busca primero en cookie, luego en header Authorization
      * 
@@ -138,21 +158,12 @@ class Auth {
         try {
             // Si no se proporciona token, buscar en cookie o header
             if ($token === null) {
-                // Primero buscar en cookie HttpOnly
-                if (isset($_COOKIE[self::$cookieName])) {
-                    $token = $_COOKIE[self::$cookieName];
-                }
-                // Si no está en cookie, buscar en header Authorization: Bearer
-                elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-                    $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-                    if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                        $token = $matches[1];
-                    }
-                }
-                // Si no está en ninguna parte, retornar false
-                if ($token === null) {
-                    return false;
-                }
+                $token = self::getToken();
+            }
+            
+            // Si no está en ninguna parte, retornar false
+            if ($token === null) {
+                return false;
             }
             
             // Decodificar y validar el token
@@ -229,7 +240,8 @@ class Auth {
     }
     
     /**
-     * Envía una respuesta JSON de error de autenticación
+     * Envía una respuesta de error de autenticación
+     * Detecta si es una solicitud API o web y responde apropiadamente
      * 
      * @param string $message Mensaje de error
      * @param int $code Código HTTP (default: 401)
@@ -237,12 +249,137 @@ class Auth {
      */
     public static function sendAuthError($message = 'No autorizado', $code = 401) {
         http_response_code($code);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => false,
-            'message' => $message,
-            'code' => $code
-        ]);
+        
+        // Obtener el token actual para depuración
+        $token = self::getToken();
+        
+        // Detectar si es una solicitud API (AJAX o Accept: application/json)
+        $isApiRequest = isset($_SERVER['HTTP_ACCEPT']) && 
+                        strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false;
+        $isAjaxRequest = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        
+        if ($isApiRequest || $isAjaxRequest) {
+            // Respuesta JSON para API/AJAX
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => false,
+                'message' => $message,
+                'code' => $code,
+                'debug_token' => $token ? substr($token, 0, 50) . '...' : 'No token found'
+            ]);
+        } else {
+            // Respuesta HTML para navegadores web
+            header('Content-Type: text/html; charset=utf-8');
+            $tokenDisplay = $token ? htmlspecialchars(substr($token, 0, 100)) : 'No token found';
+            echo '<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error de Autenticación</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .error-container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+        }
+        .error-icon {
+            font-size: 64px;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .token-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .token-info h3 {
+            margin-top: 0;
+            color: #495057;
+            font-size: 16px;
+        }
+        .token-info code {
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            word-break: break-all;
+            display: block;
+            margin-top: 10px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">🔒</div>
+        <h1>Error de Autenticación</h1>
+        <p>' . htmlspecialchars($message) . '</p>
+        
+        <div class="token-info">
+            <h3>Información de Depuración:</h3>
+            <p><strong>Token encontrado:</strong> ' . ($token ? 'Sí' : 'No') . '</p>
+            <p><strong>Token (primeros 100 caracteres):</strong></p>
+            <code>' . $tokenDisplay . '</code>
+        </div>
+        
+        <div>
+            <a href="?pagina=login" class="btn">Ir al Login</a>
+            <a href="test_jwt.php" class="btn btn-secondary">Generar Nuevo Token</a>
+        </div>
+    </div>
+    <script>
+        // Mostrar alert y redirigir después de 5 segundos
+        setTimeout(function() {
+            alert("' . htmlspecialchars($message) . '\\n\\nToken: ' . $tokenDisplay . '");
+        }, 500);
+    </script>
+</body>
+</html>';
+        }
         exit;
     }
     
