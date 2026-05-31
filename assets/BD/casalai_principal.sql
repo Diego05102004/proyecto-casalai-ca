@@ -236,7 +236,7 @@ CREATE TABLE `tbl_clientes` (
   `nombre` varchar(255) DEFAULT NULL,
   `cedula` varchar(10) DEFAULT NULL,
   `direccion` text DEFAULT NULL,
-  `telefono` varchar(15) DEFAULT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
   `correo` varchar(255) DEFAULT NULL,
   `activo` tinyint(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
