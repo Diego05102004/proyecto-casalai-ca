@@ -665,6 +665,13 @@ class Cuentabanco extends BD {
             
             return $cuenta_obt;
         }, false);
+
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+
+        return $resultado;
     }
 /*
     public function consultarCuentabanco() {
@@ -703,6 +710,11 @@ class Cuentabanco extends BD {
             
             return $cuentas_obt;
         }, false);
+
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     public function cuentasReportes() {

@@ -238,12 +238,12 @@ $(document).ready(function () {
     });
 
     $("#correo_cuenta").on("keypress", function (e) {
-        validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóúñÑ0-9._%+\-@\b]*$/, e);
+        validarKeyPress(/^[A-Za-zÁÉÍÓÚáéíóú0-9._%+\-@\b]*$/, e);
     });
 
     $("#correo_cuenta").on("keyup", function () {
         validarKeyUp(
-        /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
+        /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóú]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/,
         $(this),
         $("#scorreo_cuenta"),
         "*Debe terminar en @gmail.com, @outlook.com, @yahoo.com o @icloud.com*"
