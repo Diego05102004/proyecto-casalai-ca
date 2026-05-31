@@ -29,7 +29,7 @@ El archivo `Modelo/Config/database.php` tiene credenciales locales. Debes actual
 // En Modelo/Config/database.php:
 define('DB_PRINCIPAL', [
     'host' => 'localhost',  // O el host que te proporcione tu hosting (InfinityFree usa: sqlxxx.infinityfree.com)
-    'dbname' => 'casalai',  // Nombre de tu base de datos en el hosting
+    'dbname' => 'casalai_principal',  // Nombre de tu base de datos en el hosting
     'user' => 'tu_usuario',  // Usuario de base de datos del hosting
     'pass' => 'tu_contraseña',  // Contraseña de base de datos del hosting
     'charset' => 'utf8'
@@ -37,7 +37,7 @@ define('DB_PRINCIPAL', [
 ```
 
 **IMPORTANTE**: 
-- Crea la base de datos `casalai` en tu hosting usando el archivo `assets/BD/casalai.sql`
+- Crea la base de datos `casalai_principal` en tu hosting usando el archivo `assets/BD/casalai_principal.sql`
 - En InfinityFree, el host de base de datos NO es localhost, revisa en tu panel
 - Verifica que el usuario tenga permisos suficientes
 

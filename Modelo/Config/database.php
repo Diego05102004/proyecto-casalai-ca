@@ -1,17 +1,17 @@
 <?php
-// Base de Datos Principal "casalai"
+// Base de Datos Principal "casalai_principal"
 define('DB_PRINCIPAL', [
     'host' => 'localhost',
-    'dbname' => 'casalai',
+    'dbname' => 'casalai_principal',
     'user' => 'root',
     'pass' => '',
     'charset' => 'utf8'
 ]);
 
-// Base de Datos Secundaria "seguridadlai"
+// Base de Datos Secundaria "casalai_seguridad"
 define('DB_SEGURIDAD', [
     'host' => 'localhost',
-    'dbname' => 'seguridadlai',
+    'dbname' => 'casalai_seguridad',
     'user' => 'root',
     'pass' => '',
     'charset' => 'utf8'

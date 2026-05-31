@@ -18,10 +18,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `casalai`
+-- Base de datos: `casalai_principal`
 --
-CREATE DATABASE IF NOT EXISTS `casalai` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `casalai`;
+CREATE DATABASE IF NOT EXISTS `casalai_principal` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `casalai_principal`;
 
 -- --------------------------------------------------------
 
@@ -236,7 +236,7 @@ CREATE TABLE `tbl_clientes` (
   `nombre` varchar(255) DEFAULT NULL,
   `cedula` varchar(10) DEFAULT NULL,
   `direccion` text DEFAULT NULL,
-  `telefono` varchar(15) DEFAULT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
   `correo` varchar(255) DEFAULT NULL,
   `activo` tinyint(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -303,11 +303,11 @@ INSERT INTO `tbl_combo_detalle` (`id_detalle`, `id_combo`, `id_producto`, `canti
 
 CREATE TABLE `tbl_cuentas` (
   `id_cuenta` int(11) NOT NULL,
-  `nombre_banco` varchar(20) NOT NULL,
+  `nombre_banco` varchar(255) NOT NULL,
   `numero_cuenta` varchar(25) DEFAULT NULL,
   `rif_cuenta` varchar(15) NOT NULL,
-  `telefono_cuenta` varchar(15) DEFAULT NULL,
-  `correo_cuenta` varchar(50) DEFAULT NULL,
+  `telefono_cuenta` varchar(255) DEFAULT NULL,
+  `correo_cuenta` varchar(255) DEFAULT NULL,
   `metodos` set('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $') NOT NULL,
   `estado` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -1388,3 +1388,524 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+-- -----------------------------------------------------------------------------
+-- 1. PROCEDIMIENTO: REGISTRAR/INCLUIR CLIENTE
+-- -----------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE sp_registrar_cliente(
+    IN p_nombre VARCHAR(255),
+    IN p_cedula VARCHAR(10),
+    IN p_direccion TEXT,
+    IN p_telefono VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nuevo_id_cliente INT;
+
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar el registro del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Inserción física (Por defecto inicia activo = 1)
+    INSERT INTO `tbl_clientes` (`nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`)
+    VALUES (p_nombre, p_cedula, p_direccion, p_telefono, p_correo, 1);
+
+    -- Captura síncrona del ID asignado
+    SET v_nuevo_id_cliente = LAST_INSERT_ID();
+
+    -- Auditoría atómica en bitácora
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Clientes', 
+        'INCLUIR', 
+        JSON_OBJECT('id_clientes', v_nuevo_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'correo', p_correo, 'activo', 1), 
+        NULL, 
+        p_id_usuario_auditor,
+        'media', 
+        CONCAT('Se incluyó un nuevo cliente en el sistema: ', p_nombre, ' (C.I: ', p_cedula, ')')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 2. PROCEDIMIENTO: CONSULTAR CLIENTE (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_consultar_cliente(
+    IN p_id_cliente INT
+)
+BEGIN
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo realizar la consulta del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Ejecución de consulta garantizando concurrencia segura
+    SELECT `id_clientes`, `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`
+    FROM `tbl_clientes` 
+    WHERE `id_clientes` = p_id_cliente 
+    LIMIT 1 
+    LOCK IN SHARE MODE;
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 3. PROCEDIMIENTO: MODIFICAR DATOS DEL CLIENTE
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_modificar_cliente(
+    IN p_id_cliente INT,
+    IN p_nombre VARCHAR(255),
+    IN p_cedula VARCHAR(10),
+    IN p_direccion TEXT,
+    IN p_telefono VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    -- Declaración estricta de variables de respaldo histórico al inicio
+    DECLARE v_nombre_viejo VARCHAR(255);
+    DECLARE v_cedula_viejo VARCHAR(10);
+    DECLARE v_direccion_viejo TEXT;
+    DECLARE v_telefono_viejo VARCHAR(255);
+    DECLARE v_correo_viejo VARCHAR(255);
+    DECLARE v_activo_viejo TINYINT;
+
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudieron actualizar los datos del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo de fila y extracción del estado previo completo
+    SELECT `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`
+    INTO v_nombre_viejo, v_cedula_viejo, v_direccion_viejo, v_telefono_viejo, v_correo_viejo, v_activo_viejo
+    FROM `tbl_clientes`
+    WHERE `id_clientes` = p_id_cliente
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Actualización física de la fila
+    UPDATE `tbl_clientes` 
+    SET `nombre` = p_nombre, 
+        `cedula` = p_cedula, 
+        `direccion` = p_direccion, 
+        `telefono` = p_telefono, 
+        `correo` = p_correo 
+    WHERE `id_clientes` = p_id_cliente;
+
+    -- Volcado síncrono a bitácora mapeando estados (JSON Viejo vs JSON Nuevo)
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(),
+        'Clientes',
+        'MODIFICAR',
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'direccion', p_direccion, 'telefono', p_telefono, 'correo', p_correo, 'activo', v_activo_viejo),
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', v_nombre_viejo, 'cedula', v_cedula_viejo, 'direccion', v_direccion_viejo, 'telefono', v_telefono_viejo, 'correo', v_correo_viejo, 'activo', v_activo_viejo),
+        p_id_usuario_auditor, 
+        'media',
+        CONCAT('Se actualizaron los datos de contacto del cliente: ', p_nombre, '.')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 4. PROCEDIMIENTO: ELIMINAR CLIENTE (FÍSICO CON PROTECCIÓN RELACIONAL)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_eliminar_cliente(
+    IN p_id_cliente INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_eliminado VARCHAR(255);
+    DECLARE v_cedula_eliminado VARCHAR(10);
+
+    -- MANEJADOR ESPECÍFICO PARA EL ESCENARIO DE LLAVE FORÁNEA (Error 1451)
+    DECLARE EXIT HANDLER FOR 1451
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación denegada: No se puede eliminar el cliente porque posee registros históricos asociados (Facturas o Despachos).';
+    END;
+
+    -- Manejador general para cualquier otro tipo de error
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar la eliminación física del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo de seguridad y captura pre-mortem
+    SELECT `nombre`, `cedula` INTO v_nombre_eliminado, v_cedula_eliminado
+    FROM `tbl_clientes`
+    WHERE `id_clientes` = p_id_cliente
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Remoción física del registro
+    DELETE FROM `tbl_clientes`
+    WHERE `id_clientes` = p_id_cliente;
+
+    -- Registro de expulsión en bitácora con prioridad ALTA
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Clientes', 
+        'ELIMINAR', 
+        NULL, 
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', v_nombre_eliminado, 'cedula', v_cedula_eliminado), 
+        p_id_usuario_auditor, 
+        'alta', 
+        CONCAT('Se eliminó físicamente al cliente "', IFNULL(v_nombre_eliminado, 'Desconocido'), '" (C.I: ', IFNULL(v_cedula_eliminado, 'Desconocido'), ') del sistema.')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------------------------------
+-- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR CUENTA bancaria
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_registrar_cuenta(
+    IN p_nombre_banco VARCHAR(255),
+    IN p_numero_cuenta VARCHAR(25),
+    IN p_rif_cuenta VARCHAR(15),
+    IN p_telefono_cuenta VARCHAR(255),
+    IN p_correo_cuenta VARCHAR(255),
+    IN p_metodos SET('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $'),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nueva_id_cuenta INT;
+
+    -- Manejador general de excepciones transaccionales
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar la cuenta bancaria.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Inserción física en la tabla (Inicia por defecto como 'habilitado')
+    INSERT INTO `tbl_cuentas` 
+    (`nombre_banco`, `numero_cuenta`, `rif_cuenta`, `telefono_cuenta`, `correo_cuenta`, `metodos`, `estado`)
+    VALUES 
+    (p_nombre_banco, p_numero_cuenta, p_rif_cuenta, p_telefono_cuenta, p_correo_cuenta, p_metodos, 'habilitado');
+
+    -- Captura síncrona del ID autogenerado
+    SET v_nueva_id_cuenta = LAST_INSERT_ID();
+
+    -- Registro atómico en la bitácora de seguridad
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Cuentas bancarias', 
+        'INCLUIR', 
+        JSON_OBJECT('id_cuenta', v_nueva_id_cuenta, 'nombre_banco', p_nombre_banco, 'numero_cuenta', p_numero_cuenta, 'rif_cuenta', p_rif_cuenta, 'metodos', p_metodos, 'estado', 'habilitado'), 
+        NULL, 
+        p_id_usuario_auditor,
+        'media', 
+        CONCAT('Se registró una nueva cuenta bancaria: ', p_nombre_banco, ' (RIF: ', p_rif_cuenta, ')')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 2. PROCEDIMIENTO: CONSULTAR CUENTA (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_consultar_cuenta $$
+
+CREATE PROCEDURE sp_consultar_cuenta()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al cargar la tabla de cuentas.';
+    END;
+
+    -- Trae todas las columnas de forma segura y compatible
+    SELECT * FROM `tbl_cuentas` 
+    ORDER BY `id_cuenta` DESC;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_cuenta_por_id $$
+
+CREATE PROCEDURE sp_obtener_cuenta_por_id(
+    IN p_id_cuenta INT
+)
+BEGIN
+    -- Manejador de seguridad
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al consultar la cuenta por ID.';
+    END;
+
+    -- SELECT * hereda automáticamente cualquier columna que tengas en tu tabla real
+    SELECT * FROM `tbl_cuentas` 
+    WHERE `id_cuenta` = p_id_cuenta 
+    LIMIT 1;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 3. PROCEDIMIENTO: MODIFICAR DATOS DE LA CUENTA
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_modificar_cuenta(
+    IN p_id_cuenta INT,
+    IN p_nombre_banco VARCHAR(255),
+    IN p_numero_cuenta VARCHAR(25),
+    IN p_rif_cuenta VARCHAR(15),
+    IN p_telefono_cuenta VARCHAR(255),
+    IN p_correo_cuenta VARCHAR(255),
+    IN p_metodos SET('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $'),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    -- Agrupación estricta de declaraciones de variables al inicio del bloque
+    DECLARE v_nombre_banco_viejo VARCHAR(255);
+    DECLARE v_numero_cuenta_viejo VARCHAR(25);
+    DECLARE v_rif_cuenta_viejo VARCHAR(15);
+    DECLARE v_telefono_cuenta_viejo VARCHAR(255);
+    DECLARE v_correo_cuenta_viejo VARCHAR(255);
+    DECLARE v_metodos_viejo SET('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $');
+    DECLARE v_estado_viejo ENUM('habilitado','inhabilitado');
+
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudieron actualizar los datos de la cuenta.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo de fila (FOR UPDATE) y extracción del estado histórico viejo
+    SELECT `nombre_banco`, `numero_cuenta`, `rif_cuenta`, `telefono_cuenta`, `correo_cuenta`, `metodos`, `estado`
+    INTO v_nombre_banco_viejo, v_numero_cuenta_viejo, v_rif_cuenta_viejo, v_telefono_cuenta_viejo, v_correo_cuenta_viejo, v_metodos_viejo, v_estado_viejo
+    FROM `tbl_cuentas`
+    WHERE `id_cuenta` = p_id_cuenta
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Actualización física de la tupla
+    UPDATE `tbl_cuentas` 
+    SET `nombre_banco` = p_nombre_banco, 
+        `numero_cuenta` = p_numero_cuenta, 
+        `rif_cuenta` = p_rif_cuenta, 
+        `telefono_cuenta` = p_telefono_cuenta, 
+        `correo_cuenta` = p_correo_cuenta, 
+        `metodos` = p_metodos 
+    WHERE `id_cuenta` = p_id_cuenta;
+
+    -- Volcado a bitácora mapeando los objetos JSON de estado antiguo y nuevo
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(),
+        'Cuentas bancarias',
+        'MODIFICAR',
+        JSON_OBJECT('id_cuenta', p_id_cuenta, 'nombre_banco', p_nombre_banco, 'numero_cuenta', p_numero_cuenta, 'rif_cuenta', p_rif_cuenta, 'telefono_cuenta', p_telefono_cuenta, 'correo_cuenta', p_correo_cuenta, 'metodos', p_metodos, 'estado', v_estado_viejo),
+        JSON_OBJECT('id_cuenta', p_id_cuenta, 'nombre_banco', v_nombre_banco_viejo, 'numero_cuenta', v_numero_cuenta_viejo, 'rif_cuenta', v_rif_cuenta_viejo, 'telefono_cuenta', v_telefono_cuenta_viejo, 'correo_cuenta', v_correo_cuenta_viejo, 'metodos', v_metodos_viejo, 'estado', v_estado_viejo),
+        p_id_usuario_auditor, 
+        'media',
+        CONCAT('Se actualizaron los datos de la cuenta bancaria: ', p_nombre_banco, '.')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 4. PROCEDIMIENTO: CAMBIAR ESTATUS (HABILITAR / INHABILITAR LÓGICO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_cambiar_estatus_cuenta(
+    IN p_id_cuenta INT,
+    IN p_nuevo_estado ENUM('habilitado','inhabilitado'),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_banco VARCHAR(255);
+    DECLARE v_estado_previo ENUM('habilitado','inhabilitado');
+
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo alterar el estado de la cuenta.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo y extracción del estado previo
+    SELECT `nombre_banco`, `estado` INTO v_nombre_banco, v_estado_previo
+    FROM `tbl_cuentas`
+    WHERE `id_cuenta` = p_id_cuenta
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Modificación física del campo ENUM
+    UPDATE `tbl_cuentas`
+    SET `estado` = p_nuevo_estado
+    WHERE `id_cuenta` = p_id_cuenta;
+
+    -- Registro conciso en bitácora
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Cuentas bancarias', 
+        'MODIFICAR', 
+        JSON_OBJECT('id_cuenta', p_id_cuenta, 'estado', p_nuevo_estado), 
+        JSON_OBJECT('id_cuenta', p_id_cuenta, 'estado', v_estado_previo), 
+        p_id_usuario_auditor, 
+        'media',
+        CONCAT('Se cambió el estado de la cuenta bancaria "', IFNULL(v_nombre_banco, 'Desconocido'), '" a: ', p_nuevo_estado, '.')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 5. PROCEDIMIENTO: ELIMINAR CUENTA (FÍSICO CON FILTRO DE LLAVE FORÁNEA)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_eliminar_cuenta(
+    IN p_id_cuenta INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_banco_eliminar VARCHAR(255);
+    DECLARE v_rif_cuenta_eliminar VARCHAR(15);
+
+    -- MANEJADOR ESPECÍFICO PARA RESTRICCIÓN RELACIONAL (Error 1451)
+    -- Si la cuenta ya está vinculada a pagos de facturas o compras, impide el borrado.
+    DECLARE EXIT HANDLER FOR 1451
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación denegada: No se puede eliminar la cuenta porque registra movimientos históricos en el sistema. Considere inhabilitarla.';
+    END;
+
+    -- Manejador de fallas generales
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar la eliminación física de la cuenta.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo de seguridad y extracción forense pre-mortem
+    SELECT `nombre_banco`, `rif_cuenta` INTO v_nombre_banco_eliminar, v_rif_cuenta_eliminar
+    FROM `tbl_cuentas`
+    WHERE `id_cuenta` = p_id_cuenta
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Remoción física del registro
+    DELETE FROM `tbl_cuentas`
+    WHERE `id_cuenta` = p_id_cuenta;
+
+    -- Envío síncrono a bitácora con prioridad ALTA
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Cuentas bancarias', 
+        'ELIMINAR', 
+        NULL, 
+        JSON_OBJECT('id_cuenta', p_id_cuenta, 'nombre_banco', v_nombre_banco_eliminar, 'rif_cuenta', v_rif_cuenta_eliminar), 
+        p_id_usuario_auditor, 
+        'alta', 
+        CONCAT('Se eliminó físicamente del sistema la cuenta bancaria "', IFNULL(v_nombre_banco_eliminar, 'Desconocido'), '" (RIF: ', IFNULL(v_rif_cuenta_eliminar, 'Desconocido'), ').')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+
+CREATE DATABASE IF NOT EXISTS `casalai_seguridad`;
+USE `casalai_seguridad`;
+
+CREATE TABLE IF NOT EXISTS `tbl_bitacora` (
+  `id_bitacora` int(11) NOT NULL,
+  `fecha_hora` text NOT NULL,
+  `nombre_modulo` varchar(50) NOT NULL,
+  `accion` varchar(50) NOT NULL,
+  `datos_nuevos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`datos_nuevos`)),
+  `datos_viejos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`datos_viejos`)),
+  `id_usuario` int(11) NOT NULL,
+  `prioridad` enum('baja','media','alta') NOT NULL DEFAULT 'media',
+  `descripcion` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

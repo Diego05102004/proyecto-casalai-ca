@@ -30,7 +30,7 @@ class Backup {
         if ($this->tipo === 'S') {
             return [
                 'host' => 'localhost',
-                'dbname' => 'seguridadlai',
+                'dbname' => 'casalai_seguridad',
                 'user' => 'root',
                 'pass' => '',
                 'charset' => 'utf8mb4'
@@ -38,7 +38,7 @@ class Backup {
         } else {
             return [
                 'host' => 'localhost',
-                'dbname' => 'casalai',
+                'dbname' => 'casalai_principal',
                 'user' => 'root',
                 'pass' => '',
                 'charset' => 'utf8mb4'

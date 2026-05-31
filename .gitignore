@@ -4,3 +4,4 @@
 
 # PHPUnit cache
 .phpunit.result.cache
+cl-app/

@@ -18,10 +18,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `seguridadlai`
+-- Base de datos: `casalai_seguridad`
 --
-CREATE DATABASE IF NOT EXISTS `seguridadlai` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `seguridadlai`;
+CREATE DATABASE IF NOT EXISTS `casalai_seguridad` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `casalai_seguridad`;
 
 -- --------------------------------------------------------
 
@@ -63,7 +63,7 @@ INSERT INTO `seguridad_ip` (`id_seguridad_ip`, `direccion_ip`, `username`, `tipo
 -- Estructura de tabla para la tabla `tbl_bitacora`
 --
 
-CREATE TABLE `tbl_bitacora` (
+CREATE TABLE IF NOT EXISTS `tbl_bitacora` (
   `id_bitacora` int(11) NOT NULL,
   `fecha_hora` text NOT NULL,
   `nombre_modulo` varchar(50) NOT NULL,
@@ -1863,17 +1863,17 @@ INSERT INTO `tbl_rol` (`id_rol`, `nombre_rol`) VALUES
 
 CREATE TABLE `tbl_usuarios` (
   `id_usuario` int(11) NOT NULL,
-  `username` varchar(20) DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
   `cedula` varchar(10) DEFAULT NULL,
   `id_rol` int(11) NOT NULL,
-  `correo` varchar(50) DEFAULT NULL,
-  `nombres` varchar(50) DEFAULT NULL,
-  `apellidos` varchar(50) DEFAULT NULL,
-  `telefono` varchar(15) DEFAULT NULL,
+  `correo` varchar(255) DEFAULT NULL,
+  `nombres` varchar(255) DEFAULT NULL,
+  `apellidos` varchar(255) DEFAULT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
   `intentos_fallidos` int(11) DEFAULT 0,
   `estatus` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado',
-  `foto_perfil` varchar(100) DEFAULT NULL
+  `foto_perfil` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -2081,7 +2081,7 @@ COMMIT;
 -- =====================================================================
 
 -- Cambiamos el delimitador para que MySQL reconozca todo el bloque del procedimiento
-DELIMITER //
+DELIMITER $$
 
 -- ---------------------------------------------------------------------
 -- 1. PROCEDIMIENTO PARA REGISTRAR ROL
@@ -2116,20 +2116,48 @@ BEGIN
     VALUES (
         NOW(), 
         'Roles', 
-        'REGISTRAR', 
+        'INCLUIR', 
         JSON_OBJECT('id_rol', v_nuevo_id, 'nombre_rol', p_nombre_rol), 
         NULL, 
         p_id_usuario_auditor, 
         'media', 
-        CONCAT('Se registró un nuevo rol en el sistema: ', p_nombre_rol)
+        CONCAT('Se incluyó un nuevo rol en el sistema: ', p_nombre_rol)
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
+
+-- =========================================================================
+-- 2. PROCEDIMIENTO: CONSULTAR ROL (Para validaciones de carga compartida)
+-- =========================================================================
+
+DELIMITER $$
+
+CREATE PROCEDURE `sp_consultar_rol_usuario`(
+    IN p_id_rol INT
+)
+BEGIN
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    SELECT `id_rol`, `nombre_rol` 
+    FROM `tbl_rol` 
+    WHERE `id_rol` = p_id_rol 
+    LOCK IN SHARE MODE;
+
+    COMMIT;
+END $$
+
+DELIMITER ;
 
 -- ---------------------------------------------------------------------
--- 2. PROCEDIMIENTO PARA MODIFICAR ROL
+-- 3. PROCEDIMIENTO PARA MODIFICAR ROL
 -- ---------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_modificar_rol(
     IN p_id_rol INT,
     IN p_nuevo_nombre VARCHAR(15),
@@ -2173,19 +2201,27 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- ---------------------------------------------------------------------
--- 3. PROCEDIMIENTO PARA ELIMINAR ROL (CON CONTROL DE RESTRICCIÓN)
+-- 4. PROCEDIMIENTO PARA ELIMINAR ROL (CON CONTROL DE RESTRICCIÓN)
 -- ---------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_eliminar_rol(
     IN p_id_rol INT,
     IN p_id_usuario_auditor INT
 )
 BEGIN
+    -- 1. TODAS las declaraciones de variables al inicio estricto
     DECLARE v_nombre_rol_eliminado VARCHAR(15);
     DECLARE v_cantidad_permisos INT;
+    DECLARE v_cantidad_usuarios INT;
 
+    -- 2. Declaraciones de manejadores de errores (Handlers)
     -- MANEJADOR ESPECÍFICO PARA EL ESCENARIO #1 (Error 1451: Llave foránea restrictiva)
     DECLARE EXIT HANDLER FOR 1451
     BEGIN
@@ -2200,6 +2236,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar la eliminación del rol.';
     END;
 
+    -- 3. Inicio de la lógica operativa y transaccional
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
@@ -2213,6 +2250,17 @@ BEGIN
     SELECT COUNT(*) INTO v_cantidad_permisos 
     FROM `tbl_permisos` 
     WHERE `id_rol` = p_id_rol;
+
+    -- Contamos cuántos usuarios tienen este rol asignado
+    SELECT COUNT(*) INTO v_cantidad_usuarios 
+    FROM `tbl_usuarios` 
+    WHERE `id_rol` = p_id_rol;
+
+    -- Si hay usuarios asignados, disparamos una excepción manual
+    IF v_cantidad_usuarios > 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Error: No se puede eliminar el rol porque tiene usuarios activos asignados.';
+    END IF;
 
     -- Operación DML de eliminación física (Dispara cascada en tbl_permisos)
     DELETE FROM `tbl_rol` 
@@ -2228,11 +2276,282 @@ BEGIN
         JSON_OBJECT('id_rol', p_id_rol, 'nombre_rol', v_nombre_rol_eliminado, 'permisos_eliminados_en_cascada', v_cantidad_permisos), 
         p_id_usuario_auditor, 
         'alta', 
-        CONCAT('Se eliminó el rol "', v_nombre_rol_eliminado, '" (ID: ', p_id_rol, '). Remoción automática de ', v_cantidad_permisos, ' permisos asociados.')
+        CONCAT('Se eliminó el rol "', v_nombre_rol_eliminado, '" (ID: ', p_id_rol, ').')
     );
 
     COMMIT;
-END //
+END $$
 
--- Restablecemos el delimitador estándar de MySQL
+DELIMITER ;
+
+-- =========================================================================
+-- 1. PROCEDIMIENTO: INCLUIR USUARIO
+-- =========================================================================
+
+DELIMITER $$
+
+CREATE PROCEDURE `sp_incluir_usuario`(
+    IN p_username VARCHAR(255),
+    IN p_password VARCHAR(255),
+    IN p_cedula VARCHAR(10),
+    IN p_id_rol INT,
+    IN p_correo VARCHAR(255),
+    IN p_nombres VARCHAR(255),
+    IN p_apellidos VARCHAR(255),
+    IN p_telefono VARCHAR(255),
+    IN p_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nuevo_id INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar el usuario.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Validación concurrente: Asegura que el rol no sea eliminado mientras registramos
+    SELECT `id_rol` FROM `tbl_rol` WHERE `id_rol` = p_id_rol LOCK IN SHARE MODE;
+
+    INSERT INTO `tbl_usuarios` 
+    (`username`, `password`, `cedula`, `id_rol`, `correo`, `nombres`, `apellidos`, `telefono`, `intentos_fallidos`, `estatus`, `foto_perfil`)
+    VALUES 
+    (p_username, p_password, p_cedula, p_id_rol, p_correo, p_nombres, p_apellidos, p_telefono, 0, 'habilitado', NULL);
+
+    SET v_nuevo_id = LAST_INSERT_ID();
+
+    INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Usuario', 
+        'INCLUIR', 
+        JSON_OBJECT('id_usuario', v_nuevo_id, 'username', p_username, 'cedula', p_cedula, 'id_rol', p_id_rol, 'correo', p_correo, 'estatus', 'habilitado'), 
+        NULL, 
+        p_usuario_auditor,
+        'media', 
+        CONCAT('Se incluyó un nuevo usuario en el sistema: ', p_username, ' (C.I: ', p_cedula, ')')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- =========================================================================
+-- 2. PROCEDIMIENTO: CONSULTAR USUARIO (Para validaciones de carga compartida)
+-- =========================================================================
+
+DELIMITER $$
+
+CREATE PROCEDURE `sp_consultar_usuario`(
+    IN p_id_usuario INT
+)
+BEGIN
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    SELECT `id_usuario`, `username`, `cedula`, `id_rol`, `correo`, `nombres`, `apellidos`, `telefono`, `estatus` 
+    FROM `tbl_usuarios` 
+    WHERE `id_usuario` = p_id_usuario 
+    LOCK IN SHARE MODE;
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- =========================================================================
+-- 3. PROCEDIMIENTO: MODIFICAR USUARIO
+-- =========================================================================
+
+DELIMITER $$
+
+CREATE PROCEDURE `sp_modificar_usuario`(
+    IN p_id_usuario_modificar INT,
+    IN p_nuevo_username VARCHAR(255),
+    IN p_nuevo_cedula VARCHAR(10),
+    IN p_nuevo_id_rol INT,
+    IN p_nuevo_correo VARCHAR(255),
+    IN p_nuevo_nombres VARCHAR(255),
+    IN p_nuevo_apellidos VARCHAR(255),
+    IN p_nuevo_telefono VARCHAR(255),
+    IN p_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_username VARCHAR(255);
+    DECLARE v_cedula VARCHAR(10);
+    DECLARE v_id_rol INT;
+    DECLARE v_correo VARCHAR(255);
+    DECLARE v_nombres VARCHAR(255);
+    DECLARE v_apellidos VARCHAR(255);
+    DECLARE v_telefono VARCHAR(255);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo modificar el usuario.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Validar que el nuevo rol exista antes de proceder
+    SELECT `id_rol` FROM `tbl_rol` WHERE `id_rol` = p_nuevo_id_rol LOCK IN SHARE MODE;
+
+    -- Bloqueo pesimista y captura del estado anterior
+    SELECT username, cedula, id_rol, correo, nombres, apellidos, telefono 
+    INTO v_username, v_cedula, v_id_rol, v_correo, v_nombres, v_apellidos, v_telefono
+    FROM tbl_usuarios
+    WHERE id_usuario = p_id_usuario_modificar
+    LIMIT 1 FOR UPDATE;
+
+    UPDATE tbl_usuarios 
+    SET username = p_nuevo_username, 
+        cedula = p_nuevo_cedula, 
+        id_rol = p_nuevo_id_rol, 
+        correo = p_nuevo_correo, 
+        nombres = p_nuevo_nombres, 
+        apellidos = p_nuevo_apellidos, 
+        telefono = p_nuevo_telefono 
+    WHERE id_usuario = p_id_usuario_modificar;
+
+    INSERT INTO tbl_bitacora (fecha_hora, nombre_modulo, accion, datos_nuevos, datos_viejos, id_usuario, prioridad, descripcion)
+    VALUES (
+        NOW(),
+        'Usuario',
+        'MODIFICAR',
+        JSON_OBJECT(
+            'id_usuario', p_id_usuario_modificar, 
+            'username', p_nuevo_username, 
+            'cedula', p_nuevo_cedula, 
+            'id_rol', p_nuevo_id_rol, 
+            'correo', p_nuevo_correo, 
+            'nombres', p_nuevo_nombres,
+            'apellidos', p_nuevo_apellidos,
+            'telefono', p_nuevo_telefono
+        ),
+        JSON_OBJECT(
+            'id_usuario', p_id_usuario_modificar, 
+            'username', v_username, 
+            'cedula', v_cedula, 
+            'id_rol', v_id_rol, 
+            'correo', v_correo,
+            'nombres', v_nombres,
+            'apellidos', v_apellidos,
+            'telefono', v_telefono
+        ),
+        p_usuario_auditor, 
+        'media',
+        CONCAT('Se modificaron los datos del usuario: ', p_id_usuario_modificar, '.')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- =========================================================================
+-- 4. PROCEDIMIENTO: CAMBIAR ESTATUS (Habilitar/Inhabilitar)
+-- =========================================================================
+
+DELIMITER $$
+
+CREATE PROCEDURE `sp_cambiar_estatus_usuario`(
+    IN p_id_usuario_estatus INT,
+    IN p_nuevo_estatus ENUM('habilitado','inhabilitado'),
+    IN p_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_username VARCHAR(255);
+    DECLARE v_estatus ENUM('habilitado','inhabilitado');
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo cambiar el estatus.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    SELECT `username`, `estatus` INTO v_username, v_estatus
+    FROM `tbl_usuarios`
+    WHERE `id_usuario` = p_id_usuario_estatus
+    LIMIT 1 FOR UPDATE;
+
+    UPDATE `tbl_usuarios`
+    SET `estatus` = p_nuevo_estatus
+    WHERE `id_usuario` = p_id_usuario_estatus;
+
+    INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Usuario', 
+        'MODIFICAR', 
+        JSON_OBJECT('id_usuario', p_id_usuario_estatus, 'estatus', p_nuevo_estatus), 
+        JSON_OBJECT('id_usuario', p_id_usuario_estatus, 'estatus', v_estatus), 
+        p_usuario_auditor, 
+        'media',
+        CONCAT('Se cambió el estatus del usuario "', IFNULL(v_username, 'Desconocido'), '" de ', IFNULL(v_estatus, 'Desconocido'), ' a ', p_nuevo_estatus, '.')
+    );
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+-- =========================================================================
+-- 5. PROCEDIMIENTO: ELIMINAR USUARIO
+-- =========================================================================
+
+DELIMITER $$
+
+CREATE PROCEDURE `sp_eliminar_usuario`(
+    IN p_id_usuario_eliminar INT,
+    IN p_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_username VARCHAR(255);
+    DECLARE v_cedula VARCHAR(10);
+    DECLARE v_cant_notificaciones INT;
+    DECLARE v_cant_recuperaciones INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo eliminar el usuario.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    SELECT `username`, `cedula` INTO v_username, v_cedula
+    FROM `tbl_usuarios`
+    WHERE `id_usuario` = p_id_usuario_eliminar
+    LIMIT 1 FOR UPDATE;
+
+    SET v_cant_notificaciones = (SELECT COUNT(*) FROM `tbl_notificaciones` WHERE `id_usuario` = p_id_usuario_eliminar);
+    SET v_cant_recuperaciones = (SELECT COUNT(*) FROM `tbl_recuperar` WHERE `id_usuario` = p_id_usuario_eliminar);
+
+    DELETE FROM `tbl_usuarios`
+    WHERE `id_usuario` = p_id_usuario_eliminar;
+
+    INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Usuario', 
+        'ELIMINAR', 
+        NULL, 
+        JSON_OBJECT('id_usuario', p_id_usuario_eliminar, 'username', v_username, 'cedula', v_cedula), 
+        p_usuario_auditor, 
+        'alta', 
+        CONCAT('Se eliminó el usuario "', IFNULL(v_username, 'Desconocido'), '" (C.I: ', IFNULL(v_cedula, 'Desconocido'), ').')
+    );
+
+    COMMIT;
+END $$
+
 DELIMITER ;
