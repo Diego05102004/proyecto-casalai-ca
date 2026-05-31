@@ -975,17 +975,28 @@ class Cuentabanco extends BD {
     }
 
     private function estadoCuenta($nuevoEstado, $id_usuario_auditor) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstado, $id_usuario_auditor) {
-            $sql = "CALL sp_cambiar_estado_cuenta(:id_cuenta, :estado, :id_usuario_auditor)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':estado', $nuevoEstado);
-            $stmt->bindParam(':id_cuenta', $this->id_cuenta, \PDO::PARAM_INT);
-            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
-
-            $resultado = $stmt->execute();
-            $stmt->closeCursor();
-            return $resultado;
-        });
+    try {
+        parent::__construct('P');
+        $pdo = parent::getConexion();
+ 
+        if (!$pdo instanceof \PDO) {
+            throw new \RuntimeException("La conexión PDO no es válida o es nula.");
+        }
+ 
+        $sql = "CALL sp_cambiar_estado_cuenta(:id_cuenta, :estado, :id_usuario_auditor)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':estado', $nuevoEstado);
+        $stmt->bindParam(':id_cuenta', $this->id_cuenta, \PDO::PARAM_INT);
+        $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+ 
+        $resultado = $stmt->execute();
+        $stmt->closeCursor();
+        return $resultado;
+    } catch (\Exception $e) {
+        throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+    } finally {
+        $this->cerrar();
     }
+}
 }
 ?>

@@ -1604,7 +1604,7 @@ DELIMITER ;
 
 
 -- -----------------------------------------------------------------------------
--- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR CUENTA bancaria
+-- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR CUENTA BANCARIA
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -1688,20 +1688,17 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS sp_obtener_cuenta_por_id $$
 
-CREATE PROCEDURE sp_obtener_cuenta_por_id(
-    IN p_id_cuenta INT
-)
+CREATE PROCEDURE sp_obtener_cuenta_por_id()
 BEGIN
-    -- Manejador de seguridad
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al consultar la cuenta por ID.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al cargar la tabla de cuentas.';
     END;
 
-    -- SELECT * hereda automáticamente cualquier columna que tengas en tu tabla real
+    -- Trae todas las columnas de forma segura con Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_cuentas` 
-    WHERE `id_cuenta` = p_id_cuenta 
-    LIMIT 1;
+    ORDER BY `id_cuenta` DESC
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;
@@ -1784,7 +1781,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE sp_cambiar_estatus_cuenta(
+CREATE PROCEDURE sp_cambiar_estado_cuenta(
     IN p_id_cuenta INT,
     IN p_nuevo_estado ENUM('habilitado','inhabilitado'),
     IN p_id_usuario_auditor INT
