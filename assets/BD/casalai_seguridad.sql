@@ -2428,12 +2428,12 @@ END //
 -- =========================================================================
 CREATE PROCEDURE `sp_cambiar_estatus_usuario`(
     IN p_id_usuario_estatus INT,
-    IN p_nuevo_estatus VARCHAR(20),
+    IN p_nuevo_estatus ENUM('habilitado','inhabilitado'),
     IN p_usuario_auditor INT
 )
 BEGIN
     DECLARE v_username VARCHAR(255);
-    DECLARE v_estatus VARCHAR(20);
+    DECLARE v_estatus ENUM('habilitado','inhabilitado');
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
