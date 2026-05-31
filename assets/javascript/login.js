@@ -1,4 +1,28 @@
 $(document).ready(function(){
+        // Verificar si el token JWT fue creado después del login
+        if (window.performance && window.performance.navigation.type === 1) {
+            // La página fue recargada (posiblemente después de un redirect)
+            console.log('Página recargada después de login');
+        }
+        
+        // Verificar si existe la cookie del token JWT
+        function checkTokenCookie() {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith('jwt_token=')) {
+                    console.log('✅ Token JWT encontrado en cookie');
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // Verificar token al cargar la página
+        if (checkTokenCookie()) {
+            console.log('Token JWT creado correctamente');
+        }
+        
         // Toggle mostrar/ocultar contraseña (login y registro)
         $(document).on('click', '.toggle-password', function(){
           var target = $(this).data('target');
