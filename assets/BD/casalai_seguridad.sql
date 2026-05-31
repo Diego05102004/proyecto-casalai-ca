@@ -2127,8 +2127,26 @@ BEGIN
     COMMIT;
 END //
 
+-- =========================================================================
+-- 2. PROCEDIMIENTO: CONSULTAR ROL (Para validaciones de carga compartida)
+-- =========================================================================
+CREATE PROCEDURE `sp_consultar_rol_usuario`(
+    IN p_id_rol INT
+)
+BEGIN
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    SELECT `id_rol`, `nombre_rol` 
+    FROM `tbl_rol` 
+    WHERE `id_rol` = p_id_rol 
+    LOCK IN SHARE MODE;
+
+    COMMIT;
+END //
+
 -- ---------------------------------------------------------------------
--- 2. PROCEDIMIENTO PARA MODIFICAR ROL
+-- 3. PROCEDIMIENTO PARA MODIFICAR ROL
 -- ---------------------------------------------------------------------
 CREATE PROCEDURE sp_modificar_rol(
     IN p_id_rol INT,
@@ -2176,7 +2194,7 @@ BEGIN
 END //
 
 -- ---------------------------------------------------------------------
--- 3. PROCEDIMIENTO PARA ELIMINAR ROL (CON CONTROL DE RESTRICCIÓN)
+-- 4. PROCEDIMIENTO PARA ELIMINAR ROL (CON CONTROL DE RESTRICCIÓN)
 -- ---------------------------------------------------------------------
 CREATE PROCEDURE sp_eliminar_rol(
     IN p_id_rol INT,
@@ -2255,14 +2273,14 @@ END //
 -- 1. PROCEDIMIENTO: INCLUIR USUARIO
 -- =========================================================================
 CREATE PROCEDURE `sp_incluir_usuario`(
-    IN p_username VARCHAR(50),
+    IN p_username VARCHAR(255),
     IN p_password VARCHAR(255),
-    IN p_cedula VARCHAR(20),
+    IN p_cedula VARCHAR(10),
     IN p_id_rol INT,
-    IN p_correo VARCHAR(100),
-    IN p_nombres VARCHAR(100),
-    IN p_apellidos VARCHAR(100),
-    IN p_telefono VARCHAR(20),
+    IN p_correo VARCHAR(255),
+    IN p_nombres VARCHAR(255),
+    IN p_apellidos VARCHAR(255),
+    IN p_telefono VARCHAR(255),
     IN p_usuario_auditor INT
 )
 BEGIN
@@ -2303,18 +2321,18 @@ BEGIN
 END //
 
 -- =========================================================================
--- 2. PROCEDIMIENTO: CONSULTAR ROL (Para validaciones de carga compartida)
+-- 2. PROCEDIMIENTO: CONSULTAR USUARIO (Para validaciones de carga compartida)
 -- =========================================================================
-CREATE PROCEDURE `sp_consultar_rol_usuario`(
-    IN p_id_rol INT
+CREATE PROCEDURE `sp_consultar_usuario`(
+    IN p_id_usuario INT
 )
 BEGIN
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
-    SELECT `id_rol`, `nombre_rol` 
-    FROM `tbl_rol` 
-    WHERE `id_rol` = p_id_rol 
+    SELECT `id_usuario`, `username`, `cedula`, `id_rol`, `correo`, `nombres`, `apellidos`, `telefono`, `estatus` 
+    FROM `tbl_usuarios` 
+    WHERE `id_usuario` = p_id_usuario 
     LOCK IN SHARE MODE;
 
     COMMIT;
@@ -2325,23 +2343,23 @@ END //
 -- =========================================================================
 CREATE PROCEDURE `sp_modificar_usuario`(
     IN p_id_usuario_modificar INT,
-    IN p_nuevo_username VARCHAR(50),
-    IN p_nuevo_cedula VARCHAR(20),
+    IN p_nuevo_username VARCHAR(255),
+    IN p_nuevo_cedula VARCHAR(10),
     IN p_nuevo_id_rol INT,
-    IN p_nuevo_correo VARCHAR(100),
-    IN p_nuevo_nombres VARCHAR(100),
-    IN p_nuevo_apellidos VARCHAR(100),
-    IN p_nuevo_telefono VARCHAR(20),
+    IN p_nuevo_correo VARCHAR(255),
+    IN p_nuevo_nombres VARCHAR(255),
+    IN p_nuevo_apellidos VARCHAR(255),
+    IN p_nuevo_telefono VARCHAR(255),
     IN p_usuario_auditor INT
 )
 BEGIN
-    DECLARE v_username VARCHAR(50);
-    DECLARE v_cedula VARCHAR(20);
+    DECLARE v_username VARCHAR(255);
+    DECLARE v_cedula VARCHAR(10);
     DECLARE v_id_rol INT;
-    DECLARE v_correo VARCHAR(100);
-    DECLARE v_nombres VARCHAR(100);
-    DECLARE v_apellidos VARCHAR(100);
-    DECLARE v_telefono VARCHAR(20);
+    DECLARE v_correo VARCHAR(255);
+    DECLARE v_nombres VARCHAR(255);
+    DECLARE v_apellidos VARCHAR(255);
+    DECLARE v_telefono VARCHAR(255);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -2414,7 +2432,7 @@ CREATE PROCEDURE `sp_cambiar_estatus_usuario`(
     IN p_usuario_auditor INT
 )
 BEGIN
-    DECLARE v_username VARCHAR(50);
+    DECLARE v_username VARCHAR(255);
     DECLARE v_estatus VARCHAR(20);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -2458,8 +2476,8 @@ CREATE PROCEDURE `sp_eliminar_usuario`(
     IN p_usuario_auditor INT
 )
 BEGIN
-    DECLARE v_username VARCHAR(50);
-    DECLARE v_cedula VARCHAR(20);
+    DECLARE v_username VARCHAR(255);
+    DECLARE v_cedula VARCHAR(10);
     DECLARE v_cant_notificaciones INT;
     DECLARE v_cant_recuperaciones INT;
 
