@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 
@@ -26,6 +27,11 @@ class Proveedores extends BD {
     private $observacion;
     private $activo=1;
     private $tableproveedor= 'tbl_proveedores';
+    private $encryption;
+    
+    // Campos que deben ser cifrados (NOTA: rif NO se cifra porque se usa para búsquedas)
+    // Los nombres de campos deben coincidir con los de la base de datos
+    const CAMPOS_CIFRADOS = ['nombre_proveedor', 'nombre_representante', 'telefono_1', 'telefono_2', 'direccion_proveedor', 'correo_proveedor'];
 
     public function getNombre() {
         return $this->nombre;
@@ -108,6 +114,7 @@ class Proveedores extends BD {
     }
     
     public function __construct($tipo = 'P') {
+        $this->encryption = new Encryption();
     }
     
     /**
@@ -561,7 +568,7 @@ class Proveedores extends BD {
             return ['error' => $errores];
         }
         
-        return $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
             $pagina = (int)($filtros['pagina'] ?? 1);
             $limite = (int)($filtros['limite'] ?? 50);
             $orden = $filtros['orden'] ?? 'nombre_proveedor';
@@ -613,7 +620,14 @@ class Proveedores extends BD {
                 'total_paginas' => ceil($total / $limite)
             ];
             
-        }); 
+        });
+        
+        // Descifrar datos personales de los proveedores
+        if (isset($resultado['proveedores'])) {
+            $resultado['proveedores'] = $this->encryption->decryptResults($resultado['proveedores'], self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     private function existeNombreProveedor($nombre, $excluir_id = null) {
@@ -663,17 +677,25 @@ class Proveedores extends BD {
     }
     private function r_proveedor() {
         return $this->ejecutarConConexionSegura(function($pdo) {
+            // Cifrar datos personales antes de insertar
+            $nombre_cifrado = $this->encryption->encrypt($this->nombre);
+            $representante_cifrado = $this->encryption->encrypt($this->representante);
+            $telefono1_cifrado = $this->encryption->encrypt($this->telefono1);
+            $telefono2_cifrado = $this->encryption->encrypt($this->telefono2);
+            $direccion_cifrada = $this->encryption->encrypt($this->direccion);
+            $correo_cifrado = $this->encryption->encrypt($this->correo);
+            
             $sql = "INSERT INTO tbl_proveedores (`nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`)
                     VALUES (:nombre, :rif1, :representante, :rif2, :correo, :direccion, :telefono1, :telefono2, :observacion)";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':nombre', $this->nombre);
+            $stmt->bindParam(':nombre', $nombre_cifrado);
             $stmt->bindParam(':rif1', $this->rif1);
-            $stmt->bindParam(':representante', $this->representante);
+            $stmt->bindParam(':representante', $representante_cifrado);
             $stmt->bindParam(':rif2', $this->rif2);
-            $stmt->bindParam(':correo', $this->correo);
-            $stmt->bindParam(':direccion', $this->direccion);
-            $stmt->bindParam(':telefono1', $this->telefono1);
-            $stmt->bindParam(':telefono2', $this->telefono2);
+            $stmt->bindParam(':correo', $correo_cifrado);
+            $stmt->bindParam(':direccion', $direccion_cifrada);
+            $stmt->bindParam(':telefono1', $telefono1_cifrado);
+            $stmt->bindParam(':telefono2', $telefono2_cifrado);
             $stmt->bindParam(':observacion', $this->observacion);
             return $stmt->execute();
         });
@@ -683,12 +705,19 @@ class Proveedores extends BD {
         return $this->obtUltimoProveedor(); 
     }
     private function obtUltimoProveedor() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_proveedores ORDER BY id_proveedor DESC LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     public function obtenerReporteSuministroProveedores() {
@@ -696,7 +725,7 @@ class Proveedores extends BD {
     }
 
     private function obtReporteSuministroProveedores() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT p.nombre_proveedor, SUM(dp.cantidad) AS cantidad
                     FROM tbl_proveedores p
                     JOIN tbl_recepcion_productos r ON p.id_proveedor = r.id_proveedor
@@ -708,18 +737,30 @@ class Proveedores extends BD {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     public function obtenerProveedorPorId($id_proveedor) {
         return $this->obtProveedorPorId($id_proveedor);
     }
     private function obtProveedorPorId($id_proveedor) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
             $query = "SELECT * FROM tbl_proveedores WHERE id_proveedor = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$id_proveedor]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     public function modificarProveedor($id_proveedor) {
@@ -727,17 +768,25 @@ class Proveedores extends BD {
     }
     private function m_proveedor($id_proveedor) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
+            // Cifrar datos personales antes de actualizar
+            $nombre_cifrado = $this->encryption->encrypt($this->nombre);
+            $representante_cifrado = $this->encryption->encrypt($this->representante);
+            $telefono1_cifrado = $this->encryption->encrypt($this->telefono1);
+            $telefono2_cifrado = $this->encryption->encrypt($this->telefono2);
+            $direccion_cifrada = $this->encryption->encrypt($this->direccion);
+            $correo_cifrado = $this->encryption->encrypt($this->correo);
+            
             $sql = "UPDATE tbl_proveedores SET nombre_proveedor = :nombre, rif_proveedor = :rif1, nombre_representante = :representante, rif_representante = :rif2, correo_proveedor = :correo, direccion_proveedor = :direccion, telefono_1 = :telefono1, telefono_2 = :telefono2, observacion = :observacion WHERE id_proveedor = :id_proveedor";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_proveedor', $id_proveedor);
-            $stmt->bindParam(':nombre', $this->nombre);
+            $stmt->bindParam(':nombre', $nombre_cifrado);
             $stmt->bindParam(':rif1', $this->rif1);
-            $stmt->bindParam(':representante', $this->representante);
+            $stmt->bindParam(':representante', $representante_cifrado);
             $stmt->bindParam(':rif2', $this->rif2);
-            $stmt->bindParam(':correo', $this->correo);
-            $stmt->bindParam(':direccion', $this->direccion);
-            $stmt->bindParam(':telefono1', $this->telefono1);
-            $stmt->bindParam(':telefono2', $this->telefono2);
+            $stmt->bindParam(':correo', $correo_cifrado);
+            $stmt->bindParam(':direccion', $direccion_cifrada);
+            $stmt->bindParam(':telefono1', $telefono1_cifrado);
+            $stmt->bindParam(':telefono2', $telefono2_cifrado);
             $stmt->bindParam(':observacion', $this->observacion);
             return $stmt->execute();
         });
@@ -771,7 +820,7 @@ class Proveedores extends BD {
         return $this->getRankingProv();
     }
     private function getRankingProv() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "
                 SELECT p.nombre_proveedor, pr.nombre_producto, d.cantidad, d.costo, d.cantidad*d.costo AS total, r.fecha
                 FROM tbl_recepcion_productos r
@@ -785,13 +834,18 @@ class Proveedores extends BD {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales del proveedor
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     public function getComparacionPreciosProducto() {
         return $this->getComparacionPreciosProd();
     }
     private function getComparacionPreciosProd() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "
                 SELECT 
                     pr.id_producto,
@@ -820,13 +874,18 @@ class Proveedores extends BD {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales del proveedor
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     public function getDependenciaProveedores() {
         return $this->getDependenciaProv();
     }
     private function getDependenciaProv() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "
                 SELECT p.nombre_proveedor, SUM(d.cantidad * d.costo) AS monto_total_pagado, 
                 ROUND( (SUM(d.cantidad * d.costo) * 100.0 / (SELECT SUM(d2.cantidad * d2.costo) 
@@ -843,6 +902,11 @@ class Proveedores extends BD {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales del proveedor
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
 

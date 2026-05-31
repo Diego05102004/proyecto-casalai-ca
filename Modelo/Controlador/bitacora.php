@@ -3,18 +3,29 @@ ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Importar la clase Auth para validación JWT
+require_once __DIR__ . '/../Config/Auth.php';
+
+use Usuario\ProyectoCasalaiCa\Config\Auth;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 
 define('MODULO_BITACORA', "Bitacora");
 
+// Verificar autenticación JWT y autorización (solo Administrador y SuperUsuario)
+$payload = Auth::requireAuth(['Administrador', 'SuperUsuario']);
+
+// Obtener datos del usuario desde el JWT
+$userId = Auth::getUserId($payload);
+$userRole = Auth::getUserRole($payload);
+
+// Establecer variables de sesión para compatibilidad con código existente
+$_SESSION['id_usuario'] = $userId;
+$_SESSION['rol'] = $userRole;
+
 $permisos = new Permisos();
 $permisosUsuario = $permisos->getPermisosPorRolModulo();
-
-if (!isset($_SESSION['id_usuario'])) {
-    header('Location: ?pagina=login');
-    exit;
-}
 
 if (!defined('SKIP_SIDE_EFFECTS')) {
     $bitacoraModel = new Bitacora();

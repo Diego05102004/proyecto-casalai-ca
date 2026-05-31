@@ -2,6 +2,7 @@
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 use RuntimeException;
@@ -13,8 +14,15 @@ class Bitacora extends BD {
     const ACCIONES_PERMITIDAS = ['ACCESAR', 'CREAR', 'MODIFICAR', 'ELIMINAR', 'RESTAURAR', 'DESCARGAR', 'GENERAR', 'CONSULTAR', 'CAMBIAR_ESTADO', 'EXPORTAR', 'IMPORTAR'];
     const MODULOS_PERMITIDOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; // IDs de módulos válidos
     const NOMBRES_PERMITIDOS = ["Usuario", "Recepcion", "Despacho", "Marcas", "Modelos", "Productos", "Categorias", "Proveedores", "Clientes", "Catalogo", "Carrito", "Pasarela", "Pedidos", "Ordenes de despacho", "Cuentas bancarias", "Finanzas", "Permisos", "Roles", "Bitacora", "Respaldo", "Compra Fisica", "Perfil de Usuario", "Notificaciones"];
+    
+    // Campos cifrados de usuarios (para descifrar en bitácora)
+    const CAMPOS_CIFRADOS_USUARIOS = ['nombres', 'apellidos', 'correo', 'telefono'];
+    
+    private $encryption;
+    
     public function __construct() {
         parent::__construct();
+        $this->encryption = new Encryption();
     }
 
     // Registrar acción en la bitácora
@@ -75,6 +83,8 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
                     b.prioridad,
                     b.id_usuario,
                     u.username,
+                    u.nombres,
+                    u.apellidos,
                     m.nombre_modulo AS modulo
                 FROM tbl_bitacora b
                 INNER JOIN tbl_usuarios u ON b.id_usuario = u.id_usuario
@@ -84,7 +94,30 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
             $stmt = $co->prepare($sql);
             $stmt->bindValue(':limite', (int)$limit, PDO::PARAM_INT);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Descifrar datos personales de los usuarios
+            if (is_array($registros) && !empty($registros)) {
+                $registros = $this->encryption->decryptResults($registros, self::CAMPOS_CIFRADOS_USUARIOS);
+                
+                // Descifrar datos dentro de los campos JSON (datos_viejos y datos_nuevos)
+                // y también descifrar la descripción que puede contener datos cifrados
+                foreach ($registros as &$registro) {
+                    // Descifrar descripción (puede contener datos cifrados en texto)
+                    if (isset($registro['descripcion']) && !empty($registro['descripcion'])) {
+                        $registro['descripcion'] = $this->descifrarDescripcion($registro['descripcion']);
+                    }
+                    
+                    if (isset($registro['datos_viejos']) && !empty($registro['datos_viejos'])) {
+                        $registro['datos_viejos'] = $this->descifrarDatosJson($registro['datos_viejos']);
+                    }
+                    if (isset($registro['datos_nuevos']) && !empty($registro['datos_nuevos'])) {
+                        $registro['datos_nuevos'] = $this->descifrarDatosJson($registro['datos_nuevos']);
+                    }
+                }
+            }
+            
+            return $registros;
         } catch (PDOException $e) {
             return [];
         } finally {
@@ -93,6 +126,88 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
             }
             $co = null;
         }
+    }
+    
+    /**
+     * Descifra datos cifrados dentro de una descripción de texto
+     * @param string $descripcion Descripción que puede contener datos cifrados
+     * @return string Descripción con datos descifrados
+     */
+    private function descifrarDescripcion($descripcion) {
+        if (empty($descripcion)) {
+            return $descripcion;
+        }
+        
+        // Buscar patrones de datos cifrados (base64 largo)
+        // Los datos cifrados con AES-256-CBC + Base64 suelen tener longitud > 40
+        $resultado = preg_replace_callback('/([A-Za-z0-9+\/=]{40,})/', function($matches) {
+            $textoCifrado = $matches[1];
+            $descifrado = $this->encryption->decrypt($textoCifrado);
+            // Si el descifrado es diferente al original, usar el descifrado
+            if ($descifrado !== $textoCifrado) {
+                return $descifrado;
+            }
+            return $textoCifrado;
+        }, $descripcion);
+        
+        return $resultado;
+    }
+    
+    /**
+     * Descifra datos dentro de un JSON que puede contener campos cifrados
+     * @param string $jsonString JSON con datos cifrados
+     * @return string JSON con datos descifrados
+     */
+    private function descifrarDatosJson($jsonString) {
+        if (empty($jsonString)) {
+            return $jsonString;
+        }
+        
+        // Decodificar JSON
+        $datos = json_decode($jsonString, true);
+        
+        if (!is_array($datos)) {
+            // Si no es JSON válido, intentar descifrar directamente
+            return $this->encryption->decrypt($jsonString);
+        }
+        
+        // Campos que pueden estar cifrados (combinación de todos los módulos)
+        $camposCifrados = [
+            'nombres', 'apellidos', 'correo', 'telefono',
+            'nombre_proveedor', 'nombre_representante', 'telefono_1', 'telefono_2', 'direccion_proveedor', 'correo_proveedor',
+            'nombre_banco', 'telefono_cuenta', 'correo_cuenta',
+            'nombre', 'direccion', 'telefono', 'correo'
+        ];
+        
+        // Función recursiva para descifrar arrays anidados
+        $descifrarRecursivo = function($data) use ($camposCifrados, &$descifrarRecursivo) {
+            if (is_array($data)) {
+                foreach ($data as $key => $value) {
+                    if (is_array($value)) {
+                        $data[$key] = $descifrarRecursivo($value);
+                    } elseif (is_string($value) && !empty($value)) {
+                        // Si la clave está en la lista de campos cifrados, descifrar
+                        if (in_array($key, $camposCifrados)) {
+                            $data[$key] = $this->encryption->decrypt($value);
+                        }
+                        // También intentar descifrar valores que parezcan cifrados (base64 largo)
+                        elseif (strlen($value) > 40 && preg_match('/^[A-Za-z0-9+\/=]+$/', $value)) {
+                            $descifrado = $this->encryption->decrypt($value);
+                            // Si el descifrado es diferente al original, usar el descifrado
+                            if ($descifrado !== $value) {
+                                $data[$key] = $descifrado;
+                            }
+                        }
+                    }
+                }
+            }
+            return $data;
+        };
+        
+        $datos = $descifrarRecursivo($datos);
+        
+        // Volver a codificar como JSON
+        return json_encode($datos);
     }
 
     // Estadísticas de accesos semanales al catálogo
@@ -141,7 +256,7 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
         return $this->o_usuariosMasActivos($limite);
     }
     private function o_usuariosMasActivos($limite = 10) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($limite){
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($limite){
             $sql = "SELECT 
                         u.id_usuario,
                         u.username,
@@ -166,6 +281,13 @@ private function r_registrarBitacora($id_usuario, $modulo, $accion, $descripcion
             }
             return $usuarios;
         });
+        
+        // Descifrar datos personales de los usuarios
+        if (is_array($resultado) && !empty($resultado)) {
+            $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_USUARIOS);
+        }
+        
+        return $resultado;
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================

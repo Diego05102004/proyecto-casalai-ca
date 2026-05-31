@@ -4,20 +4,23 @@ namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use PDO;
 use PDOException;
 use RuntimeException;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 
 class Backup {
     private $tipo;
     private $config;
+    private $encryption;
     
     // Constantes para validaciones
     const MAX_NOMBRE_ARCHIVO = 255;
-    const EXTENSIONES_PERMITIDAS = ['sql'];
+    const EXTENSIONES_PERMITIDAS = ['sql', 'enc']; // SQL y encriptado
     const TIPOS_BACKUP_PERMITIDOS = ['P', 'S']; // Principal, Seguridad
     const TAMANO_MAXIMO_BACKUP = 104857600; // 100MB en bytes
 
     public function __construct($tipo = 'P') {
         $this->tipo = $tipo;
         $this->config = $this->getDatabaseConfig();
+        $this->encryption = new Encryption();
     }
 
     /**
@@ -74,11 +77,18 @@ public function generar($nombreArchivo) {
     
     // Configurar la ruta del archivo de respaldo
     $rutaCarpeta = __DIR__ . '/../../../../Modelo/db/respaldo/';
-    if (!str_ends_with($nombreArchivo, '.sql')) {
-        $nombreArchivo .= '.sql';
-        $resultado['archivo'] = $nombreArchivo;
+    
+    // Generar nombre de archivo temporal .sql
+    $nombreArchivoTemp = $nombreArchivo;
+    if (!str_ends_with($nombreArchivoTemp, '.sql')) {
+        $nombreArchivoTemp .= '.sql';
     }
-    $rutaArchivo = $rutaCarpeta . $nombreArchivo;
+    $rutaArchivoTemp = $rutaCarpeta . $nombreArchivoTemp;
+    
+    // Nombre final del archivo encriptado
+    $nombreArchivoFinal = str_replace('.sql', '.enc', $nombreArchivoTemp);
+    $resultado['archivo'] = $nombreArchivoFinal;
+    $rutaArchivoFinal = $rutaCarpeta . $nombreArchivoFinal;
 
     // Crear directorio si no existe
     if (!is_dir($rutaCarpeta)) {
@@ -131,7 +141,7 @@ public function generar($nombreArchivo) {
         '--events',
         '--set-charset',
         '--single-transaction',
-        '--result-file=' . escapeshellarg($rutaArchivo),
+        '--result-file=' . escapeshellarg($rutaArchivoTemp),
         escapeshellarg($config['dbname']),
         '2>&1'
     ];
@@ -145,21 +155,40 @@ public function generar($nombreArchivo) {
     exec($comando, $output, $exitCode);
     
     // Verificar si el archivo se creó correctamente
-    $archivoExiste = file_exists($rutaArchivo);
-    $tamanoArchivo = $archivoExiste ? filesize($rutaArchivo) : 0;
+    $archivoExiste = file_exists($rutaArchivoTemp);
+    $tamanoArchivo = $archivoExiste ? filesize($rutaArchivoTemp) : 0;
     
     if ($archivoExiste && $tamanoArchivo > 0) {
         // Agregar encabezado SQL al inicio del archivo
         $header = $this->getSqlHeader($config['dbname']);
-        $currentContent = file_get_contents($rutaArchivo);
-        file_put_contents($rutaArchivo, $header . $currentContent);
+        $currentContent = file_get_contents($rutaArchivoTemp);
+        file_put_contents($rutaArchivoTemp, $header . $currentContent);
         
-        // Actualizar el tamaño después de agregar el encabezado
-        $tamanoArchivo = filesize($rutaArchivo);
-        
-        $resultado['success'] = true;
-        $resultado['message'] = 'Respaldo generado correctamente';
-        $resultado['tamano'] = $tamanoArchivo;
+        // Encriptar el archivo
+        try {
+            $contenidoSql = file_get_contents($rutaArchivoTemp);
+            $contenidoEncriptado = $this->encryption->encrypt($contenidoSql);
+            file_put_contents($rutaArchivoFinal, $contenidoEncriptado);
+            
+            // Eliminar el archivo temporal
+            unlink($rutaArchivoTemp);
+            
+            // Actualizar el tamaño del archivo encriptado
+            $tamanoArchivo = filesize($rutaArchivoFinal);
+            
+            $resultado['success'] = true;
+            $resultado['message'] = 'Respaldo generado y encriptado correctamente';
+            $resultado['tamano'] = $tamanoArchivo;
+        } catch (Exception $e) {
+            $errorMsg = "Error al encriptar el respaldo: " . $e->getMessage();
+            error_log($errorMsg);
+            // Si falla la encriptación, mantener el archivo SQL sin encriptar
+            $resultado['archivo'] = $nombreArchivoTemp;
+            $resultado['success'] = true;
+            $resultado['message'] = 'Respaldo generado sin encriptación (error de encriptación)';
+            $resultado['tamano'] = filesize($rutaArchivoTemp);
+            $resultado['error'] = $errorMsg;
+        }
     } else {
         $errorMsg = $archivoExiste ? 'El archivo de respaldo está vacío' : 'No se pudo crear el archivo de respaldo';
         $resultado['error'] = $errorMsg . ' (Código: ' . $exitCode . ')';
@@ -239,6 +268,25 @@ private function getSqlFooter() {
             return false;
         }
         
+        // Determinar si el archivo está encriptado
+        $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+        $rutaArchivoSql = $rutaArchivo;
+        
+        if ($extension === 'enc') {
+            // Desencriptar el archivo
+            try {
+                $contenidoEncriptado = file_get_contents($rutaArchivo);
+                $contenidoSql = $this->encryption->decrypt($contenidoEncriptado);
+                
+                // Crear archivo temporal SQL
+                $rutaArchivoSql = $rutaCarpeta . 'temp_restore_' . time() . '.sql';
+                file_put_contents($rutaArchivoSql, $contenidoSql);
+            } catch (Exception $e) {
+                error_log("Error al desencriptar el respaldo: " . $e->getMessage());
+                return false;
+            }
+        }
+        
         // Configurar el comando mysql
         $mysql = 'C:\\xampp\\mysql\\bin\\mysql.exe';
         
@@ -250,7 +298,7 @@ private function getSqlFooter() {
             escapeshellarg($config['pass']),
             escapeshellarg($config['host']),
             $config['dbname'],
-            $rutaArchivo
+            $rutaArchivoSql
         );
         
         // Ejecutar el comando
@@ -266,6 +314,11 @@ private function getSqlFooter() {
         $logMessage .= '[' . date('c') . "] Salida: " . implode("\n", $output) . "\n";
         
         file_put_contents($logFile, $logMessage, FILE_APPEND);
+        
+        // Eliminar archivo temporal si se creó
+        if ($extension === 'enc' && file_exists($rutaArchivoSql)) {
+            unlink($rutaArchivoSql);
+        }
         
         if ($resultado !== 0) {
             error_log("Error al restaurar el respaldo. Código: $resultado, Archivo: $rutaArchivo");
@@ -294,13 +347,15 @@ private function getSqlFooter() {
         }
         
         foreach ($files as $file) {
-            if (preg_match('/\.sql$/i', $file)) {
+            // Mostrar tanto archivos .sql como .enc
+            if (preg_match('/\.(sql|enc)$/i', $file)) {
                 $filePath = $ruta . $file;
                     $fileInfo = [
                         'nombre' => $file,
                         'tamano' => $this->formatearTamano(filesize($filePath)),
                         'fecha_modificacion' => date('d/m/Y H:i:s', filemtime($filePath)),
-                        'tipo' => $this->obtenerTipoBackup($file)
+                        'tipo' => $this->obtenerTipoBackup($file),
+                        'encriptado' => (preg_match('/\.enc$/i', $file) ? true : false)
                     ];
                     $archivos[] = $fileInfo;
                 }
@@ -378,7 +433,7 @@ private function getSqlFooter() {
             // Validar extensión
             $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
             if (!empty($extension) && !in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
-                $errores['nombre_archivo'] = 'La extensión del archivo debe ser .sql';
+                $errores['nombre_archivo'] = 'La extensión del archivo debe ser .sql o .enc';
             }
         }
         
@@ -415,7 +470,7 @@ private function getSqlFooter() {
             // Validar extensión
             $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
             if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
-                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql';
+                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql o .enc';
             }
             
             // Validar que el archivo exista
@@ -471,7 +526,7 @@ private function getSqlFooter() {
             // Validar extensión
             $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
             if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
-                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql';
+                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql o .enc';
             }
             
             // Validar que el archivo exista
@@ -526,7 +581,7 @@ private function getSqlFooter() {
             // Validar extensión
             $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
             if (!in_array($extension, self::EXTENSIONES_PERMITIDAS)) {
-                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql';
+                $errores['nombre_archivo'] = 'El archivo debe tener extensión .sql o .enc';
             }
             
             // Validar que el archivo exista

@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 
@@ -14,6 +15,10 @@ class Cuentabanco extends BD {
     private $correo_cuenta;
     private $metodos_pago;
     private $estado;
+    private $encryption;
+    
+    // Campos que deben ser cifrados (NOTA: numero_cuenta y rif NO se cifran porque se usan para búsquedas/identificación)
+    const CAMPOS_CIFRADOS = ['nombre_banco', 'telefono_cuenta', 'correo_cuenta'];
     
     const MAX_NOMBRE_BANCO = 100;
     const MIN_NOMBRE_BANCO = 3;
@@ -89,6 +94,7 @@ class Cuentabanco extends BD {
     }
 
     public function __construct($tipo = 'P') {
+        $this->encryption = new Encryption();
     }
     
     /**
@@ -502,16 +508,21 @@ class Cuentabanco extends BD {
     }
     private function r_cuentabanco() {
         return $this->ejecutarConConexionSegura(function($pdo) {
+            // Cifrar datos personales antes de insertar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
+            
             $sql = "INSERT INTO tbl_cuentas 
             (nombre_banco, numero_cuenta, rif_cuenta, telefono_cuenta, correo_cuenta, metodos)
             VALUES (:nombre_banco, :numero_cuenta, :rif_cuenta, :telefono_cuenta, :correo_cuenta, :metodos)";
 
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':nombre_banco', $this->nombre_banco);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
             $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
             $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $this->telefono_cuenta);
-            $stmt->bindParam(':correo_cuenta', $this->correo_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
             $stmt->bindParam(':metodos', $this->metodos_pago);
             return $stmt->execute();
         });
@@ -535,43 +546,62 @@ class Cuentabanco extends BD {
         return $this->obtUltimaCuenta(); 
     }
     private function obtUltimaCuenta() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_cuentas ORDER BY id_cuenta DESC LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $cuenta = $stmt->fetch(PDO::FETCH_ASSOC);
             return $cuenta ? $cuenta : null;
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
     
     public function obtenerCuentaPorId($id_cuenta) {
         return $this->cuentaporid($id_cuenta); 
     }
     private function cuentaporid($id_cuenta) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
             $query = "SELECT * FROM tbl_cuentas WHERE id_cuenta = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$id_cuenta]);
             $cuenta_obt = $stmt->fetch(PDO::FETCH_ASSOC);
             return $cuenta_obt;
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     public function consultarCuentabanco() {
         return $this->c_cuentabanco(); 
     }
     private function c_cuentabanco() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_cuentas ORDER BY id_cuenta DESC";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $cuentas_obt = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $cuentas_obt;
         });
+        
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     public function cuentasReportes() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT 
             c.id_cuenta,
             c.nombre_banco,
@@ -593,6 +623,13 @@ class Cuentabanco extends BD {
             $cuentas_obt = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $cuentas_obt;
         });
+        
+        // Descifrar datos personales de cuentas bancarias y del cliente
+        // Incluimos campos de tbl_cuentas y tbl_clientes
+        $camposADescifrar = array_merge(self::CAMPOS_CIFRADOS, ['nombre']);
+        $resultado = $this->encryption->decryptResults($resultado, $camposADescifrar);
+        
+        return $resultado;
     }
 
     public function modificarCuentabanco($id_cuenta) {
@@ -600,6 +637,11 @@ class Cuentabanco extends BD {
     }
     private function m_cuentabanco($id_cuenta) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
+            // Cifrar datos personales antes de actualizar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
+            
             $sql = "UPDATE tbl_cuentas SET nombre_banco = :nombre_banco, numero_cuenta = :numero_cuenta, 
             rif_cuenta = :rif_cuenta, telefono_cuenta = :telefono_cuenta, correo_cuenta = :correo_cuenta, 
             metodos = :metodos
@@ -607,11 +649,11 @@ class Cuentabanco extends BD {
 
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_cuenta', $id_cuenta);
-            $stmt->bindParam(':nombre_banco', $this->nombre_banco);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
             $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
             $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $this->telefono_cuenta);
-            $stmt->bindParam(':correo_cuenta', $this->correo_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
             $stmt->bindParam(':metodos', $this->metodos_pago);
             return $stmt->execute();
         });

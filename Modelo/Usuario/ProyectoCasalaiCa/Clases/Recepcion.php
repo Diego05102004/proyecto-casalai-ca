@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 class Recepcion extends BD{
@@ -11,7 +12,11 @@ class Recepcion extends BD{
     private $costo;
     private $estado;
     private $tablerecepcion = 'tbl_recepcion_productos';
-
+    private $encryption;
+    
+    // Campos cifrados de proveedores (para descifrar en reportes)
+    const CAMPOS_CIFRADOS_PROVEEDORES = ['nombre_proveedor', 'nombre_representante', 'telefono_1', 'telefono_2', 'direccion_proveedor', 'correo_proveedor'];
+    
     // Constantes de validación
     const MAX_REGISTROS_PAGINA = 100;
     const MAX_RANGO_FECHAS_DIAS = 365;
@@ -83,6 +88,7 @@ class Recepcion extends BD{
     }
 
     public function __construct($tipo = 'P') {
+        $this->encryption = new Encryption();
     }
     
     /**
@@ -587,7 +593,7 @@ class Recepcion extends BD{
             return ['error' => $errores];
         }
         
-        return $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($filtros) {
             $sql = "
                 SELECT 
                     r.id_recepcion,
@@ -666,6 +672,13 @@ class Recepcion extends BD{
                 'total_paginas' => ceil($total / $limite)
             ];
         });
+        
+        // Descifrar datos personales del proveedor
+        if (isset($resultado['data']) && is_array($resultado['data'])) {
+            $resultado['data'] = $this->encryption->decryptResults($resultado['data'], self::CAMPOS_CIFRADOS_PROVEEDORES);
+        }
+        
+        return $resultado;
     }
     
     private function verificarRecepcionExistente($id_recepcion) {
@@ -764,6 +777,11 @@ class Recepcion extends BD{
             $stmtRecepcion->execute();
             $recepcion = $stmtRecepcion->fetch(PDO::FETCH_ASSOC);
 
+            // Descifrar datos personales del proveedor
+            if ($recepcion && is_array($recepcion)) {
+                $recepcion = $this->encryption->decryptArray($recepcion, self::CAMPOS_CIFRADOS_PROVEEDORES);
+            }
+
             return [
                 'id_recepcion' => $idRecepcion,
                 'productos' => $productosArray,
@@ -787,7 +805,7 @@ class Recepcion extends BD{
         return $this->obtUltimaRecepcion(); 
     }
     private function obtUltimaRecepcion() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             try {
                 $sql = "SELECT 
                     r.id_recepcion,
@@ -814,13 +832,20 @@ class Recepcion extends BD{
                 return null;
             }
         });
+        
+        // Descifrar datos personales del proveedor
+        if ($resultado && is_array($resultado)) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS_PROVEEDORES);
+        }
+        
+        return $resultado;
     }
 
     public function getrecepcion(){
         return $this->g_recepcion();
     }
     private function g_recepcion(){
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $queryrecepciones = "
                 SELECT 
                     r.id_recepcion,
@@ -841,6 +866,11 @@ class Recepcion extends BD{
             $recepciones = $stmtrecepciones->fetchAll(PDO::FETCH_ASSOC);
             return $recepciones;
         });
+        
+        // Descifrar datos personales del proveedor
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_PROVEEDORES);
+        
+        return $resultado;
     }
 
     public function obtenerProductosPorRecepcion($id_recepcion) {
@@ -901,7 +931,7 @@ class Recepcion extends BD{
         return $this->obt_proveedor(); 
     }
     private function obt_proveedor() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             try {
                 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $sql = "SELECT id_proveedor, nombre_proveedor FROM tbl_proveedores";
@@ -913,6 +943,11 @@ class Recepcion extends BD{
                 return [];
             }
         });
+        
+        // Descifrar datos personales del proveedor
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_PROVEEDORES);
+        
+        return $resultado;
     }
 
     public function listadoproductos() {
@@ -1009,7 +1044,7 @@ class Recepcion extends BD{
         return $this->getRecepPorProveedor($fechaInicio, $fechaFin);
     }
     private function getRecepPorProveedor($fechaInicio = null, $fechaFin = null) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
             $sql = "
                 SELECT 
                     p.nombre_proveedor AS label,
@@ -1037,13 +1072,22 @@ class Recepcion extends BD{
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales del proveedor
+        // Incluimos el alias 'label' que corresponde a nombre_proveedor
+        $camposADescifrar = array_merge(self::CAMPOS_CIFRADOS_PROVEEDORES, ['label']);
+        if (is_array($resultado) && !empty($resultado)) {
+            $resultado = $this->encryption->decryptResults($resultado, $camposADescifrar);
+        }
+        
+        return $resultado;
     }
 
     public function getProductosMasRecibidos($fechaInicio = null, $fechaFin = null, $proveedor = null) {
         return $this->getProdMasRecibidos($fechaInicio, $fechaFin, $proveedor);
     }
     private function getProdMasRecibidos($fechaInicio = null, $fechaFin = null, $proveedor = null) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin, $proveedor){
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin, $proveedor){
             $sql = "
                 SELECT 
                     pr.nombre_producto AS label,
@@ -1078,6 +1122,15 @@ class Recepcion extends BD{
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
+        
+        // Descifrar datos personales del proveedor
+        // Incluimos el alias 'proveedor' que corresponde a nombre_proveedor
+        $camposADescifrar = array_merge(self::CAMPOS_CIFRADOS_PROVEEDORES, ['proveedor']);
+        if (is_array($resultado) && !empty($resultado)) {
+            $resultado = $this->encryption->decryptResults($resultado, $camposADescifrar);
+        }
+        
+        return $resultado;
     }
 
     public function getRecepcionesMensuales($anio = null) {

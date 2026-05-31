@@ -1,6 +1,7 @@
 <?php 
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 class Usuarios extends BD {
@@ -18,6 +19,11 @@ class Usuarios extends BD {
     private $estatus = 1;
     private $usuarios;
     private $cedula;
+    private $encryption;
+    
+    // Campos que deben ser cifrados (NOTA: cédula NO se cifra porque se usa para búsquedas)
+    // Los nombres de campos deben coincidir con los de la base de datos (nombres, apellidos)
+    const CAMPOS_CIFRADOS = ['nombres', 'apellidos', 'correo', 'telefono'];
 
     // Constantes de validación
     const MAX_ID_USUARIO = 999999999;
@@ -85,6 +91,7 @@ class Usuarios extends BD {
 
     public function __construct($tipo = 'S') {
         parent::__construct($tipo);
+        $this->encryption = new Encryption();
     }
 
     /**
@@ -678,6 +685,12 @@ class Usuarios extends BD {
         return $this->ejecutarConConexionSegura(function($pdo) {
             
             $claveEncriptada = password_hash($this->clave, PASSWORD_BCRYPT);
+            
+            // Cifrar datos personales antes de insertar
+            $nombre_cifrado = $this->encryption->encrypt($this->nombre);
+            $apellido_cifrado = $this->encryption->encrypt($this->apellido);
+            $correo_cifrado = $this->encryption->encrypt($this->correo);
+            $telefono_cifrado = $this->encryption->encrypt($this->telefono);
 
             $sql = "INSERT INTO tbl_usuarios (username, password, id_rol, correo, nombres, apellidos, telefono, cedula)
                     VALUES (:username, :clave, :id_rol, :correo, :nombres, :apellidos, :telefono, :cedula)";
@@ -687,10 +700,10 @@ class Usuarios extends BD {
                 ':username'  => $this->username,
                 ':clave'     => $claveEncriptada,
                 ':id_rol'    => $this->id_rol,
-                ':correo'    => $this->correo,
-                ':nombres'   => $this->nombre,
-                ':apellidos' => $this->apellido,
-                ':telefono'  => $this->telefono,
+                ':correo'    => $correo_cifrado,
+                ':nombres'   => $nombre_cifrado,
+                ':apellidos' => $apellido_cifrado,
+                ':telefono'  => $telefono_cifrado,
                 ':cedula'    => $this->cedula
             ]);
 
@@ -726,6 +739,12 @@ class Usuarios extends BD {
     private function m_modificarUsuario($id_usuario) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
             
+            // Cifrar datos personales antes de actualizar
+            $nombre_cifrado = $this->encryption->encrypt($this->nombre);
+            $apellido_cifrado = $this->encryption->encrypt($this->apellido);
+            $correo_cifrado = $this->encryption->encrypt($this->correo);
+            $telefono_cifrado = $this->encryption->encrypt($this->telefono);
+            
             $sql = "UPDATE tbl_usuarios SET 
                         username = :username, 
                         id_rol = :id_rol,
@@ -745,10 +764,10 @@ class Usuarios extends BD {
             $params = [
                 ':username'   => $this->username,
                 ':id_rol'      => $this->id_rol,
-                ':nombre'     => $this->nombre,
-                ':apellido'   => $this->apellido,
-                ':correo'     => $this->correo,
-                ':telefono'   => $this->telefono,
+                ':nombre'     => $nombre_cifrado,
+                ':apellido'   => $apellido_cifrado,
+                ':correo'     => $correo_cifrado,
+                ':telefono'   => $telefono_cifrado,
                 ':cedula'     => $this->cedula,
                 ':id_usuario' => $id_usuario
             ];
@@ -853,7 +872,7 @@ class Usuarios extends BD {
         return $this->o_ultimoUsuario();
     }
     private function o_ultimoUsuario() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT usuarios.*, rol.nombre_rol 
                     FROM tbl_usuarios AS usuarios
                     INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
@@ -866,13 +885,20 @@ class Usuarios extends BD {
             
             return $usuario ?: null;
         }, 'S');
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     public function obtenerUsuarioPorId($id_usuario) {
         return $this->o_usuarioPorId($id_usuario);
     }
     private function o_usuarioPorId($id_usuario) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
             $query = "SELECT usuarios.*, rol.nombre_rol 
                       FROM tbl_usuarios AS usuarios
                       INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
@@ -881,6 +907,13 @@ class Usuarios extends BD {
             $stmt->execute([$id_usuario]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }, 'S');
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
 
     public function eliminarUsuario($id_usuario) {
@@ -962,7 +995,7 @@ class Usuarios extends BD {
         return $this->g_getusuarios($estatus);
     }
     private function g_getusuarios($estatus = 'habilitado') {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($estatus){
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($estatus){
             $queryusuarios = "SELECT usuarios.*, rol.nombre_rol 
                               FROM tbl_usuarios AS usuarios
                               INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol";
@@ -981,5 +1014,10 @@ class Usuarios extends BD {
             $stmtusuarios->execute();
             return $stmtusuarios->fetchAll(PDO::FETCH_ASSOC);
         }, 'S');
+        
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 }
