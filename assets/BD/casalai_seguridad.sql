@@ -2261,7 +2261,7 @@ BEGIN
         JSON_OBJECT('id_rol', p_id_rol, 'nombre_rol', v_nombre_rol_eliminado, 'permisos_eliminados_en_cascada', v_cantidad_permisos), 
         p_id_usuario_auditor, 
         'alta', 
-        CONCAT('Se eliminó el rol "', v_nombre_rol_eliminado, '" (ID: ', p_id_rol, '). Remoción automática de ', v_cantidad_permisos, ' permisos asociados.')
+        CONCAT('Se eliminó el rol "', v_nombre_rol_eliminado, '" (ID: ', p_id_rol, ').')
     );
 
     COMMIT;
