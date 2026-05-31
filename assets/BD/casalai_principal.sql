@@ -1673,9 +1673,10 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al cargar la tabla de cuentas.';
     END;
 
-    -- Trae todas las columnas de forma segura y compatible
+    -- Trae todas las columnas de forma segura con Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_cuentas` 
-    ORDER BY `id_cuenta` DESC;
+    ORDER BY `id_cuenta` DESC
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;
@@ -1688,16 +1689,20 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS sp_obtener_cuenta_por_id $$
 
-CREATE PROCEDURE sp_obtener_cuenta_por_id()
+CREATE PROCEDURE sp_obtener_cuenta_por_id(
+    IN p_id_cuenta INT
+)
 BEGIN
+    -- Manejador de fallas generales con mensaje personalizado
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al cargar la tabla de cuentas.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información de la cuenta bancaria.';
     END;
 
-    -- Trae todas las columnas de forma segura con Bloqueo Compartido (Shared Lock)
+    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_cuentas` 
-    ORDER BY `id_cuenta` DESC
+    WHERE `id_cuenta` = p_id_cuenta
+    LIMIT 1
     LOCK IN SHARE MODE;
 END $$
 

@@ -109,7 +109,12 @@ class Cuentabanco extends BD {
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -118,14 +123,23 @@ class Cuentabanco extends BD {
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -564,7 +578,7 @@ class Cuentabanco extends BD {
             $resultado = $stmt->execute();
             $stmt->closeCursor(); // Liberar la conexión adecuadamente despues de ejecutar
             return $resultado;
-        });
+        }, false);
     }
 
     public function existeNumeroCuenta($numero_cuenta, $excluir_id = null) {
@@ -645,7 +659,7 @@ class Cuentabanco extends BD {
             $stmt->closeCursor(); 
             
             return $cuenta_obt;
-        });
+        }, false);
     }
 /*
     public function consultarCuentabanco() {
@@ -683,7 +697,7 @@ class Cuentabanco extends BD {
             $stmt->closeCursor(); 
             
             return $cuentas_obt;
-        });
+        }, false);
     }
 
     public function cuentasReportes() {
@@ -775,7 +789,7 @@ class Cuentabanco extends BD {
             $resultado = $stmt->execute();
             $stmt->closeCursor(); // Liberar la conexión adecuadamente despues de ejecutar
             return $resultado;
-        });
+        }, false);
     }
 /*
     public function eliminarCuentabanco($id_cuenta) {
@@ -855,7 +869,7 @@ class Cuentabanco extends BD {
                     'total_pagos' => 0
                 ];
             }
-        });
+        }, false);
     }
 
     private function tienePagosAsociados($id_cuenta) {
@@ -975,28 +989,17 @@ class Cuentabanco extends BD {
     }
 
     private function estadoCuenta($nuevoEstado, $id_usuario_auditor) {
-    try {
-        parent::__construct('P');
-        $pdo = parent::getConexion();
- 
-        if (!$pdo instanceof \PDO) {
-            throw new \RuntimeException("La conexión PDO no es válida o es nula.");
-        }
- 
-        $sql = "CALL sp_cambiar_estado_cuenta(:id_cuenta, :estado, :id_usuario_auditor)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':estado', $nuevoEstado);
-        $stmt->bindParam(':id_cuenta', $this->id_cuenta, \PDO::PARAM_INT);
-        $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
- 
-        $resultado = $stmt->execute();
-        $stmt->closeCursor();
-        return $resultado;
-    } catch (\Exception $e) {
-        throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
-    } finally {
-        $this->cerrar();
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstado, $id_usuario_auditor) {
+            $sql = "CALL sp_cambiar_estado_cuenta(:id_cuenta, :estado, :id_usuario_auditor)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':estado', $nuevoEstado);
+            $stmt->bindParam(':id_cuenta', $this->id_cuenta, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
-}
 }
 ?>
