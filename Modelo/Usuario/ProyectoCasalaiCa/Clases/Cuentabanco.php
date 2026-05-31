@@ -551,6 +551,11 @@ class Cuentabanco extends BD {
     // 2. El método privado procesa el CALL enviando el parámetro extra
     private function r_cuentabanco($id_usuario_auditor) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor) {
+
+            // Cifrar datos personales antes de insertar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
             
             $sql = "CALL sp_registrar_cuenta(
                 :nombre_banco, 
@@ -563,11 +568,11 @@ class Cuentabanco extends BD {
             )";
 
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':nombre_banco', $this->nombre_banco);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
             $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
             $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $this->telefono_cuenta);
-            $stmt->bindParam(':correo_cuenta', $this->correo_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
             
             // SOLUCCIÓN CRÍTICA: Convertir el Array de checkboxes a String separado por comas para el tipo SET
             $metodosString = is_array($this->metodos_pago) ? implode(',', $this->metodos_pago) : $this->metodos_pago;
@@ -767,6 +772,12 @@ class Cuentabanco extends BD {
 
     private function m_cuentabanco($id_cuenta, $id_usuario_auditor) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta, $id_usuario_auditor){
+
+            // Cifrar datos personales antes de actualizar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
+
             $sql = "CALL sp_modificar_cuenta(
                 :id_cuenta, :nombre_banco, :numero_cuenta, :rif_cuenta, 
                 :telefono_cuenta, :correo_cuenta, :metodos, :id_usuario_auditor
@@ -774,11 +785,11 @@ class Cuentabanco extends BD {
 
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_cuenta', $id_cuenta, \PDO::PARAM_INT);
-            $stmt->bindParam(':nombre_banco', $this->nombre_banco);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
             $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
             $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $this->telefono_cuenta);
-            $stmt->bindParam(':correo_cuenta', $this->correo_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
             
             // SOLUCCIÓN CRÍTICA: Convertir el Array de checkboxes a String separado por comas para el tipo SET
             $metodosString = is_array($this->metodos_pago) ? implode(',', $this->metodos_pago) : $this->metodos_pago;
