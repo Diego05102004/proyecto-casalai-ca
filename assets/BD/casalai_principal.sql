@@ -303,11 +303,11 @@ INSERT INTO `tbl_combo_detalle` (`id_detalle`, `id_combo`, `id_producto`, `canti
 
 CREATE TABLE `tbl_cuentas` (
   `id_cuenta` int(11) NOT NULL,
-  `nombre_banco` varchar(20) NOT NULL,
+  `nombre_banco` varchar(255) NOT NULL,
   `numero_cuenta` varchar(25) DEFAULT NULL,
   `rif_cuenta` varchar(15) NOT NULL,
-  `telefono_cuenta` varchar(15) DEFAULT NULL,
-  `correo_cuenta` varchar(50) DEFAULT NULL,
+  `telefono_cuenta` varchar(255) DEFAULT NULL,
+  `correo_cuenta` varchar(255) DEFAULT NULL,
   `metodos` set('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $') NOT NULL,
   `estado` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -1388,3 +1388,202 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+
+DELIMITER //
+
+-- -----------------------------------------------------------------------------
+-- 1. PROCEDIMIENTO: REGISTRAR/INCLUIR CLIENTE
+-- -----------------------------------------------------------------------------
+CREATE PROCEDURE sp_registrar_cliente(
+    IN p_nombre VARCHAR(255),
+    IN p_cedula VARCHAR(10),
+    IN p_direccion TEXT,
+    IN p_telefono VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nuevo_id_cliente INT;
+
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar el registro del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Inserción física (Por defecto inicia activo = 1)
+    INSERT INTO `tbl_clientes` (`nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`)
+    VALUES (p_nombre, p_cedula, p_direccion, p_telefono, p_correo, 1);
+
+    -- Captura síncrona del ID asignado
+    SET v_nuevo_id_cliente = LAST_INSERT_ID();
+
+    -- Auditoría atómica en bitácora
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Clientes', 
+        'INCLUIR', 
+        JSON_OBJECT('id_clientes', v_nuevo_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'correo', p_correo, 'activo', 1), 
+        NULL, 
+        p_id_usuario_auditor,
+        'media', 
+        CONCAT('Se incluyó un nuevo cliente en el sistema: ', p_nombre, ' (C.I: ', p_cedula, ')')
+    );
+
+    COMMIT;
+END //
+
+-- -----------------------------------------------------------------------------
+-- 2. PROCEDIMIENTO: CONSULTAR CLIENTE (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+CREATE PROCEDURE sp_consultar_cliente(
+    IN p_id_cliente INT
+)
+BEGIN
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo realizar la consulta del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Ejecución de consulta garantizando concurrencia segura
+    SELECT `id_clientes`, `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`
+    FROM `tbl_clientes` 
+    WHERE `id_clientes` = p_id_cliente 
+    LIMIT 1 
+    LOCK IN SHARE MODE;
+
+    COMMIT;
+END //
+
+-- -----------------------------------------------------------------------------
+-- 3. PROCEDIMIENTO: MODIFICAR DATOS DEL CLIENTE
+-- -----------------------------------------------------------------------------
+CREATE PROCEDURE sp_modificar_cliente(
+    IN p_id_cliente INT,
+    IN p_nombre VARCHAR(255),
+    IN p_cedula VARCHAR(10),
+    IN p_direccion TEXT,
+    IN p_telefono VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    -- Declaración estricta de variables de respaldo histórico al inicio
+    DECLARE v_nombre_viejo VARCHAR(255);
+    DECLARE v_cedula_viejo VARCHAR(10);
+    DECLARE v_direccion_viejo TEXT;
+    DECLARE v_telefono_viejo VARCHAR(255);
+    DECLARE v_correo_viejo VARCHAR(255);
+    DECLARE v_activo_viejo TINYINT;
+
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudieron actualizar los datos del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo de fila y extracción del estado previo completo
+    SELECT `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`
+    INTO v_nombre_viejo, v_cedula_viejo, v_direccion_viejo, v_telefono_viejo, v_correo_viejo, v_activo_viejo
+    FROM `tbl_clientes`
+    WHERE `id_clientes` = p_id_cliente
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Actualización física de la fila
+    UPDATE `tbl_clientes` 
+    SET `nombre` = p_nombre, 
+        `cedula` = p_cedula, 
+        `direccion` = p_direccion, 
+        `telefono` = p_telefono, 
+        `correo` = p_correo 
+    WHERE `id_clientes` = p_id_cliente;
+
+    -- Volcado síncrono a bitácora mapeando estados (JSON Viejo vs JSON Nuevo)
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(),
+        'Clientes',
+        'MODIFICAR',
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'direccion', p_direccion, 'telefono', p_telefono, 'correo', p_correo, 'activo', v_activo_viejo),
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', v_nombre_viejo, 'cedula', v_cedula_viejo, 'direccion', v_direccion_viejo, 'telefono', v_telefono_viejo, 'correo', v_correo_viejo, 'activo', v_activo_viejo),
+        p_id_usuario_auditor, 
+        'media',
+        CONCAT('Se actualizaron los datos de contacto del cliente: ', p_nombre, '.')
+    );
+
+    COMMIT;
+END //
+
+-- -----------------------------------------------------------------------------
+-- 4. PROCEDIMIENTO: ELIMINAR CLIENTE (FÍSICO CON PROTECCIÓN RELACIONAL)
+-- -----------------------------------------------------------------------------
+CREATE PROCEDURE sp_eliminar_cliente(
+    IN p_id_cliente INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_eliminado VARCHAR(255);
+    DECLARE v_cedula_eliminado VARCHAR(10);
+
+    -- MANEJADOR ESPECÍFICO PARA EL ESCENARIO DE LLAVE FORÁNEA (Error 1451)
+    DECLARE EXIT HANDLER FOR 1451
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación denegada: No se puede eliminar el cliente porque posee registros históricos asociados (Facturas o Despachos).';
+    END;
+
+    -- Manejador general para cualquier otro tipo de error
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo procesar la eliminación física del cliente.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo de seguridad y captura pre-mortem
+    SELECT `nombre`, `cedula` INTO v_nombre_eliminado, v_cedula_eliminado
+    FROM `tbl_clientes`
+    WHERE `id_clientes` = p_id_cliente
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Remoción física del registro
+    DELETE FROM `tbl_clientes`
+    WHERE `id_clientes` = p_id_cliente;
+
+    -- Registro de expulsión en bitácora con prioridad ALTA
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Clientes', 
+        'ELIMINAR', 
+        NULL, 
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', v_nombre_eliminado, 'cedula', v_cedula_eliminado), 
+        p_id_usuario_auditor, 
+        'alta', 
+        CONCAT('Se eliminó físicamente al cliente "', IFNULL(v_nombre_eliminado, 'Desconocido'), '" (C.I: ', IFNULL(v_cedula_eliminado, 'Desconocido'), ') del sistema.')
+    );
+
+    COMMIT;
+END //
+
+DELIMITER ;
