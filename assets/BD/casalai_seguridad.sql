@@ -63,7 +63,7 @@ INSERT INTO `seguridad_ip` (`id_seguridad_ip`, `direccion_ip`, `username`, `tipo
 -- Estructura de tabla para la tabla `tbl_bitacora`
 --
 
-CREATE TABLE `tbl_bitacora` (
+CREATE TABLE IF NOT EXISTS `tbl_bitacora` (
   `id_bitacora` int(11) NOT NULL,
   `fecha_hora` text NOT NULL,
   `nombre_modulo` varchar(50) NOT NULL,
@@ -2081,7 +2081,7 @@ COMMIT;
 -- =====================================================================
 
 -- Cambiamos el delimitador para que MySQL reconozca todo el bloque del procedimiento
-DELIMITER //
+DELIMITER $$
 
 -- ---------------------------------------------------------------------
 -- 1. PROCEDIMIENTO PARA REGISTRAR ROL
@@ -2125,11 +2125,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- =========================================================================
 -- 2. PROCEDIMIENTO: CONSULTAR ROL (Para validaciones de carga compartida)
 -- =========================================================================
+
+DELIMITER $$
+
 CREATE PROCEDURE `sp_consultar_rol_usuario`(
     IN p_id_rol INT
 )
@@ -2143,11 +2148,16 @@ BEGIN
     LOCK IN SHARE MODE;
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- ---------------------------------------------------------------------
 -- 3. PROCEDIMIENTO PARA MODIFICAR ROL
 -- ---------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_modificar_rol(
     IN p_id_rol INT,
     IN p_nuevo_nombre VARCHAR(15),
@@ -2191,11 +2201,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- ---------------------------------------------------------------------
 -- 4. PROCEDIMIENTO PARA ELIMINAR ROL (CON CONTROL DE RESTRICCIÓN)
 -- ---------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_eliminar_rol(
     IN p_id_rol INT,
     IN p_id_usuario_auditor INT
@@ -2265,13 +2280,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
 
-
+DELIMITER ;
 
 -- =========================================================================
 -- 1. PROCEDIMIENTO: INCLUIR USUARIO
 -- =========================================================================
+
+DELIMITER $$
+
 CREATE PROCEDURE `sp_incluir_usuario`(
     IN p_username VARCHAR(255),
     IN p_password VARCHAR(255),
@@ -2318,11 +2336,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- =========================================================================
 -- 2. PROCEDIMIENTO: CONSULTAR USUARIO (Para validaciones de carga compartida)
 -- =========================================================================
+
+DELIMITER $$
+
 CREATE PROCEDURE `sp_consultar_usuario`(
     IN p_id_usuario INT
 )
@@ -2336,11 +2359,16 @@ BEGIN
     LOCK IN SHARE MODE;
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- =========================================================================
 -- 3. PROCEDIMIENTO: MODIFICAR USUARIO
 -- =========================================================================
+
+DELIMITER $$
+
 CREATE PROCEDURE `sp_modificar_usuario`(
     IN p_id_usuario_modificar INT,
     IN p_nuevo_username VARCHAR(255),
@@ -2421,11 +2449,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- =========================================================================
 -- 4. PROCEDIMIENTO: CAMBIAR ESTATUS (Habilitar/Inhabilitar)
 -- =========================================================================
+
+DELIMITER $$
+
 CREATE PROCEDURE `sp_cambiar_estatus_usuario`(
     IN p_id_usuario_estatus INT,
     IN p_nuevo_estatus ENUM('habilitado','inhabilitado'),
@@ -2466,11 +2499,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- =========================================================================
 -- 5. PROCEDIMIENTO: ELIMINAR USUARIO
 -- =========================================================================
+
+DELIMITER $$
+
 CREATE PROCEDURE `sp_eliminar_usuario`(
     IN p_id_usuario_eliminar INT,
     IN p_usuario_auditor INT
@@ -2514,6 +2552,6 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
 
 DELIMITER ;

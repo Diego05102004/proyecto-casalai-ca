@@ -1390,12 +1390,11 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 
-
-DELIMITER //
-
 -- -----------------------------------------------------------------------------
 -- 1. PROCEDIMIENTO: REGISTRAR/INCLUIR CLIENTE
 -- -----------------------------------------------------------------------------
+DELIMITER $$
+
 CREATE PROCEDURE sp_registrar_cliente(
     IN p_nombre VARCHAR(255),
     IN p_cedula VARCHAR(10),
@@ -1438,11 +1437,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 2. PROCEDIMIENTO: CONSULTAR CLIENTE (CON BLOQUEO COMPARTIDO)
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_consultar_cliente(
     IN p_id_cliente INT
 )
@@ -1465,11 +1469,16 @@ BEGIN
     LOCK IN SHARE MODE;
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 3. PROCEDIMIENTO: MODIFICAR DATOS DEL CLIENTE
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_modificar_cliente(
     IN p_id_cliente INT,
     IN p_nombre VARCHAR(255),
@@ -1529,11 +1538,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 4. PROCEDIMIENTO: ELIMINAR CLIENTE (FÍSICO CON PROTECCIÓN RELACIONAL)
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_eliminar_cliente(
     IN p_id_cliente INT,
     IN p_id_usuario_auditor INT
@@ -1584,13 +1598,17 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
 
+DELIMITER ;
 
 
 -- -----------------------------------------------------------------------------
--- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR CUENTA FINANCIERA
+-- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR CUENTA bancaria
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_registrar_cuenta(
     IN p_nombre_banco VARCHAR(255),
     IN p_numero_cuenta VARCHAR(25),
@@ -1607,7 +1625,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar la cuenta financiera.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar la cuenta bancaria.';
     END;
 
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -1632,42 +1650,68 @@ BEGIN
         NULL, 
         p_id_usuario_auditor,
         'media', 
-        CONCAT('Se registró una nueva cuenta financiera: ', p_nombre_banco, ' (RIF: ', p_rif_cuenta, ')')
+        CONCAT('Se registró una nueva cuenta bancaria: ', p_nombre_banco, ' (RIF: ', p_rif_cuenta, ')')
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 2. PROCEDIMIENTO: CONSULTAR CUENTA (CON BLOQUEO COMPARTIDO)
 -- -----------------------------------------------------------------------------
-CREATE PROCEDURE sp_consultar_cuenta(
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_consultar_cuenta $$
+
+CREATE PROCEDURE sp_consultar_cuenta()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al cargar la tabla de cuentas.';
+    END;
+
+    -- Trae todas las columnas de forma segura y compatible
+    SELECT * FROM `tbl_cuentas` 
+    ORDER BY `id_cuenta` DESC;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_cuenta_por_id $$
+
+CREATE PROCEDURE sp_obtener_cuenta_por_id(
     IN p_id_cuenta INT
 )
 BEGIN
-    -- Manejador general de excepciones
+    -- Manejador de seguridad
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo consultar la cuenta bancaria.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al consultar la cuenta por ID.';
     END;
 
-    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-    START TRANSACTION;
-
-    -- Consulta protegida con bloqueo compartido para concurrencia segura
-    SELECT `id_cuenta`, `nombre_banco`, `numero_cuenta`, `rif_cuenta`, `telefono_cuenta`, `correo_cuenta`, `metodos`, `estado`
-    FROM `tbl_cuentas` 
+    -- SELECT * hereda automáticamente cualquier columna que tengas en tu tabla real
+    SELECT * FROM `tbl_cuentas` 
     WHERE `id_cuenta` = p_id_cuenta 
-    LIMIT 1 
-    LOCK IN SHARE MODE;
+    LIMIT 1;
+END $$
 
-    COMMIT;
-END //
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 3. PROCEDIMIENTO: MODIFICAR DATOS DE LA CUENTA
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_modificar_cuenta(
     IN p_id_cuenta INT,
     IN p_nombre_banco VARCHAR(255),
@@ -1730,11 +1774,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 4. PROCEDIMIENTO: CAMBIAR ESTATUS (HABILITAR / INHABILITAR LÓGICO)
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_cambiar_estatus_cuenta(
     IN p_id_cuenta INT,
     IN p_nuevo_estado ENUM('habilitado','inhabilitado'),
@@ -1780,11 +1829,16 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
+
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 5. PROCEDIMIENTO: ELIMINAR CUENTA (FÍSICO CON FILTRO DE LLAVE FORÁNEA)
 -- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_eliminar_cuenta(
     IN p_id_cuenta INT,
     IN p_id_usuario_auditor INT
@@ -1836,6 +1890,22 @@ BEGIN
     );
 
     COMMIT;
-END //
+END $$
 
 DELIMITER ;
+
+
+CREATE DATABASE IF NOT EXISTS `casalai_seguridad`;
+USE `casalai_seguridad`;
+
+CREATE TABLE IF NOT EXISTS `tbl_bitacora` (
+  `id_bitacora` int(11) NOT NULL,
+  `fecha_hora` text NOT NULL,
+  `nombre_modulo` varchar(50) NOT NULL,
+  `accion` varchar(50) NOT NULL,
+  `datos_nuevos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`datos_nuevos`)),
+  `datos_viejos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`datos_viejos`)),
+  `id_usuario` int(11) NOT NULL,
+  `prioridad` enum('baja','media','alta') NOT NULL DEFAULT 'media',
+  `descripcion` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
