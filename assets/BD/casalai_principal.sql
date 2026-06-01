@@ -1401,6 +1401,7 @@ CREATE PROCEDURE sp_registrar_cliente(
     IN p_direccion TEXT,
     IN p_telefono VARCHAR(255),
     IN p_correo VARCHAR(255),
+    IN p_activo TINYINT(1),
     IN p_id_usuario_auditor INT
 )
 BEGIN
@@ -1447,9 +1448,9 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE sp_consultar_cliente(
-    IN p_id_cliente INT
-)
+DROP PROCEDURE IF EXISTS sp_consultar_cliente $$
+
+CREATE PROCEDURE sp_consultar_cliente()
 BEGIN
     -- Manejador general de excepciones
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -1461,14 +1462,40 @@ BEGIN
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
-    -- Ejecución de consulta garantizando concurrencia segura
-    SELECT `id_clientes`, `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`
+    -- Seleccionamos los datos visibles + los campos de control del Frontend
+    SELECT `id_clientes`, `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo` 
     FROM `tbl_clientes` 
-    WHERE `id_clientes` = p_id_cliente 
-    LIMIT 1 
+    ORDER BY `id_clientes` DESC
     LOCK IN SHARE MODE;
 
     COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_cliente_por_id $$
+
+CREATE PROCEDURE sp_obtener_cliente_por_id(
+    IN p_id_cliente INT
+)
+BEGIN
+    -- Manejador de fallas generales con mensaje personalizado
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del cliente.';
+    END;
+
+    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
+    SELECT * FROM `tbl_clientes` 
+    WHERE `id_clientes` = p_id_cliente
+    LIMIT 1
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;
@@ -1486,6 +1513,7 @@ CREATE PROCEDURE sp_modificar_cliente(
     IN p_direccion TEXT,
     IN p_telefono VARCHAR(255),
     IN p_correo VARCHAR(255),
+    IN p_activo TINYINT,
     IN p_id_usuario_auditor INT
 )
 BEGIN
@@ -1521,7 +1549,8 @@ BEGIN
         `cedula` = p_cedula, 
         `direccion` = p_direccion, 
         `telefono` = p_telefono, 
-        `correo` = p_correo 
+        `correo` = p_correo,
+        `activo` = p_activo 
     WHERE `id_clientes` = p_id_cliente;
 
     -- Volcado síncrono a bitácora mapeando estados (JSON Viejo vs JSON Nuevo)
@@ -1530,7 +1559,7 @@ BEGIN
         NOW(),
         'Clientes',
         'MODIFICAR',
-        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'direccion', p_direccion, 'telefono', p_telefono, 'correo', p_correo, 'activo', v_activo_viejo),
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'direccion', p_direccion, 'telefono', p_telefono, 'correo', p_correo, 'activo', p_activo),
         JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', v_nombre_viejo, 'cedula', v_cedula_viejo, 'direccion', v_direccion_viejo, 'telefono', v_telefono_viejo, 'correo', v_correo_viejo, 'activo', v_activo_viejo),
         p_id_usuario_auditor, 
         'media',
@@ -1604,7 +1633,7 @@ DELIMITER ;
 
 
 -- -----------------------------------------------------------------------------
--- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR CUENTA bancaria
+-- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR CUENTA BANCARIA
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -1673,9 +1702,10 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al cargar la tabla de cuentas.';
     END;
 
-    -- Trae todas las columnas de forma segura y compatible
+    -- Trae todas las columnas de forma segura con Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_cuentas` 
-    ORDER BY `id_cuenta` DESC;
+    ORDER BY `id_cuenta` DESC
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;
@@ -1692,16 +1722,17 @@ CREATE PROCEDURE sp_obtener_cuenta_por_id(
     IN p_id_cuenta INT
 )
 BEGIN
-    -- Manejador de seguridad
+    -- Manejador de fallas generales con mensaje personalizado
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al consultar la cuenta por ID.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información de la cuenta bancaria.';
     END;
 
-    -- SELECT * hereda automáticamente cualquier columna que tengas en tu tabla real
+    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_cuentas` 
-    WHERE `id_cuenta` = p_id_cuenta 
-    LIMIT 1;
+    WHERE `id_cuenta` = p_id_cuenta
+    LIMIT 1
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;
@@ -1784,7 +1815,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE sp_cambiar_estatus_cuenta(
+CREATE PROCEDURE sp_cambiar_estado_cuenta(
     IN p_id_cuenta INT,
     IN p_nuevo_estado ENUM('habilitado','inhabilitado'),
     IN p_id_usuario_auditor INT

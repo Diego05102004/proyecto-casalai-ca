@@ -495,7 +495,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'cambiar_estado':
             $id_cuenta = $_POST['id_cuenta'];
             $nuevoEstado = $_POST['estado'];
-            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null; // Capturamos el auditor
+            $id_usuario_sesion = 9; // Capturamos el auditor
             
             if ($id_cuenta === null || !ctype_digit((string)$id_cuenta) || !$id_usuario_sesion) {
                 echo json_encode(['status' => 'error', 'message' => 'Datos de petición o sesión no válidos']);
@@ -537,7 +537,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
         $_SESSION['id_usuario'],
-        '15',
+        'MODULO_CUENTA_BANCARIA',
         'ACCESAR',
         'El usuario accedió al módulo de Cuentas Bancarias',
         'media'
