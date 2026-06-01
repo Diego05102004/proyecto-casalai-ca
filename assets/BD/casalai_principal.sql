@@ -1401,6 +1401,7 @@ CREATE PROCEDURE sp_registrar_cliente(
     IN p_direccion TEXT,
     IN p_telefono VARCHAR(255),
     IN p_correo VARCHAR(255),
+    IN p_activo tinyint(1),
     IN p_id_usuario_auditor INT
 )
 BEGIN
