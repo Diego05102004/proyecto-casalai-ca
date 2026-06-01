@@ -1449,9 +1449,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS sp_consultar_cliente $$
 
-CREATE PROCEDURE sp_consultar_cliente(
-    IN p_id_cliente INT
-)
+CREATE PROCEDURE sp_consultar_cliente()
 BEGIN
     -- Manejador general de excepciones
     DECLARE EXIT HANDLER FOR SQLEXCEPTION

@@ -701,11 +701,11 @@ class cliente extends BD {
     }
     private function g_clientes() {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) {
-            $queryclientes = "CALL sp_consultar_cuenta()";
+            $queryclientes = "CALL sp_consultar_cliente()";
             $stmtclientes = $pdo->prepare($queryclientes);
             $stmtclientes->execute();
             $clientes = $stmtclientes->fetchAll(PDO::FETCH_ASSOC);
-            $stmt->closeCursor();
+            $stmtclientes->closeCursor();
             return $clientes;
         }, false);
         
