@@ -19,12 +19,59 @@ use Exception;
 class Auth {
     
     /**
-     * Clave secreta para firmar los tokens JWT
-     * En producción, esta debe almacenarse en variables de entorno
+     * Carga variables de entorno desde archivo .env
      * 
-     * @var string
+     * @return void
      */
-    private static $secretKey = 'd6e32e8d9c57eeef6fb09bebe9cb579bc75836c0d8327914bf689369d4e5f76b';
+    private static function loadEnv() {
+        $envFile = __DIR__ . '/../../.env';
+        if (file_exists($envFile)) {
+            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                if (strpos(trim($line), '#') === 0) {
+                    continue;
+                }
+                list($name, $value) = explode('=', $line, 2);
+                $name = trim($name);
+                $value = trim($value);
+                if (!array_key_exists($name, $_SERVER) && !array_key_exists($name, $_ENV)) {
+                    putenv("$name=$value");
+                    $_ENV[$name] = $value;
+                    $_SERVER[$name] = $value;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Obtiene la clave secreta desde variables de entorno
+     * 
+     * @return string Clave secreta
+     */
+    private static function getSecretKey() {
+        self::loadEnv();
+        return $_ENV['JWT_SECRET_KEY'] ?? 'd6e32e8d9c57eeef6fb09bebe9cb579bc75836c0d8327914bf689369d4e5f76b';
+    }
+    
+    /**
+     * Obtiene el issuer desde variables de entorno
+     * 
+     * @return string Issuer
+     */
+    private static function getIssuer() {
+        self::loadEnv();
+        return $_ENV['JWT_ISSUER'] ?? 'https://tu-dominio.com';
+    }
+    
+    /**
+     * Obtiene el audience desde variables de entorno
+     * 
+     * @return string Audience
+     */
+    private static function getAudience() {
+        self::loadEnv();
+        return $_ENV['JWT_AUDIENCE'] ?? 'proyecto-casalai-ca';
+    }
     
     /**
      * Algoritmo de firma del token
@@ -65,10 +112,12 @@ class Auth {
                 'exp' => $expire,             // Tiempo de expiración
                 'sub' => $userId,             // ID del usuario (subject)
                 'role' => $userRole,          // Rol del usuario
-                'type' => 'access'            // Tipo de token
+                'type' => 'access',           // Tipo de token
+                'iss' => self::getIssuer(),   // Issuer (quién emitió el token)
+                'aud' => self::getAudience()  // Audience (a quién está destinado)
             ];
             
-            $token = JWT::encode($payload, self::$secretKey, self::$algorithm);
+            $token = JWT::encode($payload, self::getSecretKey(), self::$algorithm);
             
             return $token;
         } catch (Exception $e) {
@@ -167,10 +216,22 @@ class Auth {
             }
             
             // Decodificar y validar el token
-            $decoded = JWT::decode($token, new Key(self::$secretKey, self::$algorithm));
+            $decoded = JWT::decode($token, new Key(self::getSecretKey(), self::$algorithm));
             
             // Convertir a array
             $payload = (array) $decoded;
+            
+            // Validar issuer (iss)
+            if (isset($payload['iss']) && $payload['iss'] !== self::getIssuer()) {
+                error_log("Token inválido: issuer no coincide");
+                return false;
+            }
+            
+            // Validar audience (aud)
+            if (isset($payload['aud']) && $payload['aud'] !== self::getAudience()) {
+                error_log("Token inválido: audience no coincide");
+                return false;
+            }
             
             return $payload;
             
