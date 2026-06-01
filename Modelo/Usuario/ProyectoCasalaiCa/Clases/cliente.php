@@ -23,10 +23,10 @@ class cliente extends BD {
     const MAX_REGISTROS_PAGINA = 100;
     const CAMPOS_OBLIGATORIOS = ['nombre', 'cedula'];
     const FORMATOS_REPORTE = ['pdf', 'excel', 'csv'];
-    const MAX_NOMBRE_CLIENTE = 200;
+    const MAX_NOMBRE_CLIENTE = 255;
     const MIN_NOMBRE_CLIENTE = 2;
     const MAX_DIRECCION = 500;
-    const MAX_TELEFONO = 20;
+    const MAX_TELEFONO = 255;
     const MIN_TELEFONO = 7;
     const MAX_CORREO = 255;
     const MAX_CEDULA = 12;
@@ -106,7 +106,12 @@ class cliente extends BD {
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -115,14 +120,23 @@ class cliente extends BD {
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -423,12 +437,19 @@ class cliente extends BD {
      * Obtiene un cliente por su ID
      */
     public function obtenerclientesPorId($id) {
+        return $this->obt_clientesPorId($id); 
+    }
+
+    private function obt_clientesPorId($id) {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id) {
-            $sql = "SELECT * FROM tbl_clientes WHERE id_clientes = ? AND activo = 1";
+            $sql = "CALL sp_obtener_cliente_por_id(:id_clientes)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        });
+
+            $cliente_obt = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $cliente_obt;
+        }, false);
         
         // Descifrar datos personales
         if ($resultado) {
@@ -441,12 +462,18 @@ class cliente extends BD {
     /**
      * Obtiene el último cliente registrado
      */
-    public function obtenerUltimoCliente() {
+    public function obtenerUltimoCliente($id) {
+        return $this->obt_UltimoCliente($id); 
+    }
+
+    private function obt_UltimoCliente() {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_clientes ORDER BY id_clientes DESC LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $cliente ? $cliente : null;
         });
         
         // Descifrar datos personales
@@ -526,19 +553,27 @@ class cliente extends BD {
         return $resultado;
     }
 
-    public function ingresarclientes() {
-        return $this->r_cliente();
+    public function ingresarclientes($id_usuario_auditor) {
+        return $this->r_cliente($id_usuario_auditor);
     }
-    private function r_cliente() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+    private function r_cliente($id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor) {
             // Cifrar datos personales antes de insertar
             $nombre_cifrado = $this->encryption->encrypt($this->nombre);
             $direccion_cifrada = $this->encryption->encrypt($this->direccion);
             $telefono_cifrado = $this->encryption->encrypt($this->telefono);
             $correo_cifrado = $this->encryption->encrypt($this->correo);
             
-            $sql = "INSERT INTO tbl_clientes (`nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`)
-                    VALUES (:nombre, :cedula, :direccion, :telefono, :correo, :activo)";
+            $sql = "CALL sp_registrar_cliente(
+                :nombre, 
+                :direccion, 
+                :telefono, 
+                :cedula, 
+                :correo, 
+                :activo, 
+                :id_usuario_auditor
+            )";
+
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':nombre', $nombre_cifrado);
             $stmt->bindParam(':direccion', $direccion_cifrada);
@@ -546,15 +581,17 @@ class cliente extends BD {
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $correo_cifrado);
             $stmt->bindParam(':activo', $this->activo);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT); 
             $resultado = $stmt->execute();
             
-            // Si la inserción fue exitosa, retornar el ID del nuevo registro
+            $retorno = false;
             if ($resultado) {
-                return $pdo->lastInsertId();
+                $retorno = $pdo->lastInsertId();
             }
             
-            return false;
-        });
+            $stmt->closeCursor();
+            return $retorno;
+        }, false);
     }
 
     public function listarTodosClientes() {
@@ -580,7 +617,10 @@ class cliente extends BD {
             }
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            return $stmt->fetchColumn() > 0;
+            
+            $existe = $stmt->fetchColumn() > 0;
+            $stmt->closeCursor();
+            return $existe;
         });
     }
 
@@ -604,20 +644,28 @@ class cliente extends BD {
         return $resultado;
     }
 
-
-
-    public function modificarclientes($id) {
-        return $this->m_cliente($id);
+    public function modificarclientes($id, $id_usuario_auditor) {
+        return $this->m_cliente($id, $id_usuario_auditor);
     }
-    private function m_cliente($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
+    private function m_cliente($id, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $id_usuario_auditor) {
             // Cifrar datos personales antes de actualizar
             $nombre_cifrado = $this->encryption->encrypt($this->nombre);
             $direccion_cifrada = $this->encryption->encrypt($this->direccion);
             $telefono_cifrado = $this->encryption->encrypt($this->telefono);
             $correo_cifrado = $this->encryption->encrypt($this->correo);
             
-            $sql = "UPDATE tbl_clientes SET nombre = :nombre, cedula = :cedula, direccion = :direccion, telefono = :telefono, correo = :correo, activo = :activo WHERE id_clientes = :id_clientes";
+            $sql = "CALL sp_modificar_cliente(
+                :id_clientes,
+                :nombre, 
+                :direccion, 
+                :telefono, 
+                :cedula, 
+                :correo, 
+                :activo, 
+                :id_usuario_auditor
+            )";
+            
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
             $stmt->bindParam(':nombre', $nombre_cifrado);
@@ -626,21 +674,26 @@ class cliente extends BD {
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $correo_cifrado);
             $stmt->bindParam(':activo', $this->activo);
-            return $stmt->execute();
-        });
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
 
-    public function eliminarclientes($id) {
-        return $this->e_cliente($id);
+    public function eliminarclientes($id, $id_usuario_auditor) {
+        return $this->e_cliente($id, $id_usuario_auditor);
     }
-    private function e_cliente($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
-            $sql = "DELETE FROM tbl_clientes WHERE id_clientes = :id_clientes";
+    private function e_cliente($id, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $id_usuario_auditor){
+            $sql = "CALL sp_eliminar_cliente(:id_clientes, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_clientes', $id);
             $result = $stmt->execute();
+            $stmt->closeCursor();
             return $result;
-        });
+        }, false);
     }
 
     public function getclientes() {
@@ -648,12 +701,13 @@ class cliente extends BD {
     }
     private function g_clientes() {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) {
-            $queryclientes = 'SELECT * FROM ' . $this->tableclientes;
+            $queryclientes = "CALL sp_consultar_cuenta()";
             $stmtclientes = $pdo->prepare($queryclientes);
             $stmtclientes->execute();
             $clientes = $stmtclientes->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
             return $clientes;
-        });
+        }, false);
         
         // Descifrar datos personales
         $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);

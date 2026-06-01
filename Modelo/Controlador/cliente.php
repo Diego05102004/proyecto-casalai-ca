@@ -56,6 +56,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     switch ($accion) {
         case 'registrar':
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
             // Validar datos de entrada
             $cliente = new cliente();
             
@@ -77,24 +86,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->setcorreo($_POST['correo']);
             $cliente->setactivo(1);
             
-            if ($cliente->ingresarclientes()) {
+            if ($cliente->ingresarclientes($id_usuario_sesion)) {
                 $clienteRegistrado = $cliente->obtenerUltimoCliente();
                 error_log("Cliente registrado: " . print_r($clienteRegistrado, true));
-
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    try {
-                        $bitacoraModel = new Bitacora();
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_CLIENTE,
-                            'INCLUIR',
-                            'El usuario incluyó al cliente: ' . $_POST['nombre'],
-                            'alta'
-                        );
-                    } catch (Exception $bitacoraError) {
-                        error_log("Error en bitácora (registrar): " . $bitacoraError->getMessage());
-                    }
-                }
 
                 echo json_encode([
                     'status' => 'success',
@@ -147,6 +141,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (ob_get_length()) ob_clean();
             header('Content-Type: application/json; charset=utf-8');
             header('Cache-Control: no-cache, must-revalidate');
+
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+
+            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta) || !$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de cuenta o sesión de usuario no válida'
+                ]);
+                exit;
+            }
             
             // Validar datos de entrada
             $cliente = new cliente();
@@ -187,26 +191,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            $resultado = $cliente->modificarclientes($id);
+            $resultado = $cliente->modificarclientes($id, $id_usuario_sesion);
             error_log("Resultado de modificación: " . ($resultado ? 'Exitoso' : 'Fallido'));
             
             if ($resultado) {
                 $clienteModificado = $cliente->obtenerclientesPorId($id);
-
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    try {
-                        $bitacoraModel = new Bitacora();
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_CLIENTE,
-                            'MODIFICAR',
-                            'El usuario modificó el cliente ID: ' . $id,
-                            'media'
-                        );
-                    } catch (Exception $bitacoraError) {
-                        error_log("Error en bitácora (modificar): " . $bitacoraError->getMessage());
-                    }
-                }
 
                 echo json_encode([
                     'status' => 'success',
@@ -226,6 +215,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (ob_get_length()) ob_clean();
             header('Content-Type: application/json; charset=utf-8');
             header('Cache-Control: no-cache, must-revalidate');
+
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+
+            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta) || !$id_usuario_sesion) {
+                echo json_encode(['status' => 'error', 'message' => 'Petición no válida']);
+                exit;
+            }
             
             // Validar datos de entrada
             $cliente = new cliente();
@@ -268,26 +264,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     exit;
                 }
                 
-                $resultado = $cliente->eliminarclientes($id);
+                $resultado = $cliente->eliminarclientes($id, $id_usuario_sesion);
                 error_log("Resultado de eliminación: " . ($resultado ? 'Exitoso' : 'Fallido'));
                 
                 if ($resultado) {
-                    // Registrar en bitácora si corresponde
-                    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                        try {
-                            $bitacoraModel = new Bitacora();
-                            $bitacoraModel->registrarBitacora(
-                                $_SESSION['id_usuario'],
-                                MODULO_CLIENTE,
-                                'ELIMINAR',
-                                'El usuario eliminó el cliente ID: ' . $id,
-                                'media'
-                            );
-                        } catch (Exception $bitacoraError) {
-                            error_log("Error en bitácora: " . $bitacoraError->getMessage());
-                        }
-                    }
-
                     echo json_encode([
                         'status' => 'success',
                         'message' => 'Cliente eliminado correctamente'

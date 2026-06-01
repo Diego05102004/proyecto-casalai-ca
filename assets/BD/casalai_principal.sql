@@ -1447,6 +1447,8 @@ DELIMITER ;
 
 DELIMITER $$
 
+DROP PROCEDURE IF EXISTS sp_consultar_cliente $$
+
 CREATE PROCEDURE sp_consultar_cliente(
     IN p_id_cliente INT
 )
@@ -1461,14 +1463,39 @@ BEGIN
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
-    -- Ejecución de consulta garantizando concurrencia segura
-    SELECT `id_clientes`, `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo`
-    FROM `tbl_clientes` 
-    WHERE `id_clientes` = p_id_cliente 
-    LIMIT 1 
+    -- Trae todas las columnas de forma segura con Bloqueo Compartido (Shared Lock)
+    SELECT * FROM `tbl_clientes` 
+    ORDER BY `id_clientes` DESC
     LOCK IN SHARE MODE;
 
     COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_cliente_por_id $$
+
+CREATE PROCEDURE sp_obtener_cliente_por_id(
+    IN p_id_cliente INT
+)
+BEGIN
+    -- Manejador de fallas generales con mensaje personalizado
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del cliente.';
+    END;
+
+    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
+    SELECT * FROM `tbl_clientes` 
+    WHERE `id_clientes` = p_id_cliente
+    LIMIT 1
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;
