@@ -1401,7 +1401,7 @@ CREATE PROCEDURE sp_registrar_cliente(
     IN p_direccion TEXT,
     IN p_telefono VARCHAR(255),
     IN p_correo VARCHAR(255),
-    IN p_activo tinyint(1),
+    IN p_activo TINYINT(1),
     IN p_id_usuario_auditor INT
 )
 BEGIN
@@ -1462,8 +1462,9 @@ BEGIN
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
-    -- Trae todas las columnas de forma segura con Bloqueo Compartido (Shared Lock)
-    SELECT * FROM `tbl_clientes` 
+    -- Seleccionamos los datos visibles + los campos de control del Frontend
+    SELECT `id_clientes`, `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo` 
+    FROM `tbl_clientes` 
     ORDER BY `id_clientes` DESC
     LOCK IN SHARE MODE;
 
@@ -1512,6 +1513,7 @@ CREATE PROCEDURE sp_modificar_cliente(
     IN p_direccion TEXT,
     IN p_telefono VARCHAR(255),
     IN p_correo VARCHAR(255),
+    IN p_activo TINYINT,
     IN p_id_usuario_auditor INT
 )
 BEGIN
@@ -1547,7 +1549,8 @@ BEGIN
         `cedula` = p_cedula, 
         `direccion` = p_direccion, 
         `telefono` = p_telefono, 
-        `correo` = p_correo 
+        `correo` = p_correo,
+        `activo` = p_activo 
     WHERE `id_clientes` = p_id_cliente;
 
     -- Volcado síncrono a bitácora mapeando estados (JSON Viejo vs JSON Nuevo)
@@ -1556,7 +1559,7 @@ BEGIN
         NOW(),
         'Clientes',
         'MODIFICAR',
-        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'direccion', p_direccion, 'telefono', p_telefono, 'correo', p_correo, 'activo', v_activo_viejo),
+        JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', p_nombre, 'cedula', p_cedula, 'direccion', p_direccion, 'telefono', p_telefono, 'correo', p_correo, 'activo', p_activo),
         JSON_OBJECT('id_clientes', p_id_cliente, 'nombre', v_nombre_viejo, 'cedula', v_cedula_viejo, 'direccion', v_direccion_viejo, 'telefono', v_telefono_viejo, 'correo', v_correo_viejo, 'activo', v_activo_viejo),
         p_id_usuario_auditor, 
         'media',

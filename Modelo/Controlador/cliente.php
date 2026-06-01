@@ -142,12 +142,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             header('Cache-Control: no-cache, must-revalidate');
 
+            $id_cliente = $_POST['id_clientes'];
             $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
 
-            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta) || !$id_usuario_sesion) {
+            if ($id_cliente === null || !ctype_digit((string)$id_cliente) || !$id_usuario_sesion) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'ID de cuenta o sesión de usuario no válida'
+                    'message' => 'ID del cliente o sesión de usuario no válida'
                 ]);
                 exit;
             }
@@ -216,18 +217,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             header('Cache-Control: no-cache, must-revalidate');
 
-            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
-
-            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta) || !$id_usuario_sesion) {
-                echo json_encode(['status' => 'error', 'message' => 'Petición no válida']);
-                exit;
-            }
-            
             // Validar datos de entrada
             $cliente = new cliente();
             
             // Extraer ID del POST
             $id = isset($_POST['id_clientes']) ? $_POST['id_clientes'] : null;
+
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+
+            if ($id === null || !ctype_digit((string)$id) || !$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID del cliente o sesión de usuario no válida'
+                ]);
+                exit;
+            }
             
             // Depuración: registrar lo que se recibe
             error_log("Datos recibidos para eliminar: " . print_r($_POST, true));

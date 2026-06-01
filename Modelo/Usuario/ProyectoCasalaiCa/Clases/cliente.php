@@ -444,7 +444,7 @@ class cliente extends BD {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id) {
             $sql = "CALL sp_obtener_cliente_por_id(:id_clientes)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id]);
+            $stmt->execute([':id_clientes' => $id]);
 
             $cliente_obt = $stmt->fetch(\PDO::FETCH_ASSOC);
             $stmt->closeCursor();
@@ -462,8 +462,8 @@ class cliente extends BD {
     /**
      * Obtiene el último cliente registrado
      */
-    public function obtenerUltimoCliente($id) {
-        return $this->obt_UltimoCliente($id); 
+    public function obtenerUltimoCliente() {
+        return $this->obt_UltimoCliente(); 
     }
 
     private function obt_UltimoCliente() {
@@ -566,9 +566,9 @@ class cliente extends BD {
             
             $sql = "CALL sp_registrar_cliente(
                 :nombre, 
+                :cedula, 
                 :direccion, 
                 :telefono, 
-                :cedula, 
                 :correo, 
                 :activo, 
                 :id_usuario_auditor
@@ -576,21 +576,20 @@ class cliente extends BD {
 
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':nombre', $nombre_cifrado);
+            $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':direccion', $direccion_cifrada);
             $stmt->bindParam(':telefono', $telefono_cifrado);
-            $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $correo_cifrado);
             $stmt->bindParam(':activo', $this->activo);
             $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT); 
+            
             $resultado = $stmt->execute();
             
-            $retorno = false;
-            if ($resultado) {
-                $retorno = $pdo->lastInsertId();
-            }
-            
+            // Cerramos el cursor inmediatamente para limpiar la conexión
             $stmt->closeCursor();
-            return $retorno;
+            
+            // Retornamos true si se ejecutó correctamente, de lo contrario false
+            return $resultado ? true : false;
         }, false);
     }
 
@@ -658,20 +657,20 @@ class cliente extends BD {
             $sql = "CALL sp_modificar_cliente(
                 :id_clientes,
                 :nombre, 
+                :cedula, 
                 :direccion, 
                 :telefono, 
-                :cedula, 
                 :correo, 
                 :activo, 
                 :id_usuario_auditor
             )";
             
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_clientes', $id);
+            $stmt->bindParam(':id_clientes', $id, \PDO::PARAM_INT);
             $stmt->bindParam(':nombre', $nombre_cifrado);
+            $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':direccion', $direccion_cifrada);
             $stmt->bindParam(':telefono', $telefono_cifrado);
-            $stmt->bindParam(':cedula', $this->cedula);
             $stmt->bindParam(':correo', $correo_cifrado);
             $stmt->bindParam(':activo', $this->activo);
             $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
@@ -689,7 +688,10 @@ class cliente extends BD {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id, $id_usuario_auditor){
             $sql = "CALL sp_eliminar_cliente(:id_clientes, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_clientes', $id);
+
+            $stmt->bindParam(':id_clientes', $id, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
             $result = $stmt->execute();
             $stmt->closeCursor();
             return $result;
