@@ -2090,25 +2090,39 @@ CREATE PROCEDURE sp_registrar_rol(
 BEGIN
     DECLARE v_nuevo_id INT;
 
-    -- Manejador de excepciones: si algo falla, hace ROLLBACK y lanza el error
+    -- Manejador de excepciones unificado para garantizar la atomicidad total
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar el rol de forma atómica.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar el rol y sus permisos de forma atómica.';
     END;
 
-    -- Configuración estricta del aislamiento conforme a la guía
+    -- Nivel de aislamiento estricto
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
-    -- Operación DML principal
+    -- 1. Insertar el nuevo rol físico
     INSERT INTO `tbl_rol` (`nombre_rol`) 
     VALUES (p_nombre_rol);
 
-    -- Captura del ID autogenerado
+    -- Captura inmediata del ID autogenerado
     SET v_nuevo_id = LAST_INSERT_ID();
 
-    -- Inserción obligatoria en Bitácora (Garantiza Atomicidad)
+    -- 2. Inserción masiva de permisos (Reemplaza los bucles foreach de PHP)
+    -- Cruza dinámicamente cada id_modulo con las 6 acciones deseadas
+    INSERT INTO `tbl_permisos` (`accion`, `id_rol`, `id_modulo`, `estatus`)
+    SELECT a.accion, v_nuevo_id, m.id_modulo, 'No Permitido'
+    FROM `tbl_modulos` m
+    CROSS JOIN (
+        SELECT 'Ingresar' AS accion UNION ALL
+        SELECT 'Incluir'   UNION ALL
+        SELECT 'Consultar' UNION ALL
+        SELECT 'Modificar' UNION ALL
+        SELECT 'Eliminar'  UNION ALL
+        SELECT 'Reportar'
+    ) a;
+
+    -- 3. Inserción obligatoria en Bitácora (Permanece intacta)
     INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
     VALUES (
         NOW(), 
@@ -2132,9 +2146,9 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE `sp_consultar_rol_usuario`(
-    IN p_id_rol INT
-)
+DROP PROCEDURE IF EXISTS sp_consultar_rol $$
+
+CREATE PROCEDURE sp_consultar_rol()
 BEGIN
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
@@ -2145,6 +2159,33 @@ BEGIN
     LOCK IN SHARE MODE;
 
     COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_rol_por_id $$
+
+CREATE PROCEDURE sp_obtener_rol_por_id(
+    IN p_id_rol INT
+)
+BEGIN
+    -- Manejador de fallas generales con mensaje personalizado
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del rol.';
+    END;
+
+    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
+    SELECT * FROM `tbl_rol` 
+    WHERE `id_rol` = p_id_rol
+    LIMIT 1
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;

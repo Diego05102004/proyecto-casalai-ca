@@ -11,7 +11,7 @@ class Rol extends BD {
     // Constantes de validación
     const MAX_ID_ROL = 999999999;
     const MIN_ID_ROL = 1;
-    const MAX_NOMBRE_ROL = 100;
+    const MAX_NOMBRE_ROL = 15;
     const MIN_NOMBRE_ROL = 2;
     const CAMPOS_OBLIGATORIOS = ['nombre_rol'];
     const MAX_REGISTROS_PAGINA = 100;
@@ -46,7 +46,12 @@ class Rol extends BD {
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('S'); 
             $pdo = parent::getConexion(); 
@@ -55,14 +60,23 @@ class Rol extends BD {
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -299,46 +313,25 @@ class Rol extends BD {
         });
     }
 
-    public function registrarRol() {
-        return $this->r_Rol();
+    public function registrarRol($id_usuario_auditor) {
+        return $this->m_registrarRol($id_usuario_auditor);
     }
-    private function r_Rol() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            try {
-                $sql = "INSERT INTO tbl_rol (nombre_rol) VALUES (:nombre_rol)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':nombre_rol', $this->nombre_rol);
-                $stmt->execute();
 
-                $id_rol = $pdo->lastInsertId();
-
-                $sqlModulos = "SELECT id_modulo FROM tbl_modulos";
-                $stmtMod = $pdo->prepare($sqlModulos);
-                $stmtMod->execute();
-                $modulos = $stmtMod->fetchAll(PDO::FETCH_COLUMN);
-
-                $acciones = ['Ingresar', 'Incluir', 'Consultar', 'Modificar', 'Eliminar', 'Reportar'];
-
-                $sqlPermiso = "INSERT INTO tbl_permisos (accion, id_rol, id_modulo, estatus) 
-                            VALUES (:accion, :id_rol, :id_modulo, 'No Permitido')";
-                $stmtPermiso = $pdo->prepare($sqlPermiso);
-
-                foreach ($modulos as $id_modulo) {
-                    foreach ($acciones as $accion) {
-                        $stmtPermiso->execute([
-                            ':accion' => $accion,
-                            ':id_rol' => $id_rol,
-                            ':id_modulo' => $id_modulo
-                        ]);
-                    }
-                }
-                return true;
-
-            } catch (PDOException $e) {
-                echo "Error al registrar el rol y asignar permisos: " . $e->getMessage();
-                return false;
-            }
-        });
+    private function m_registrarRol($id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor) {
+            
+            $sql = "CALL sp_registrar_rol(:nombre_rol, :id_usuario_auditor)";
+            
+            $stmt = $pdo->prepare($sql);
+            
+            $stmt->bindValue(':nombre_rol', $this->nombre_rol);
+            $stmt->bindValue(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            
+            return $resultado;
+        }, false);
     }
 
     private function existeNombreRol($nombre_rol, $excluir_id = null) {
@@ -380,12 +373,13 @@ class Rol extends BD {
     }
     private function rolporid($id_rol) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol) {
-            $query = "SELECT * FROM tbl_rol WHERE id_rol = ?";
+            $query = "CALL sp_obtener_rol_por_id(:id_rol)";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([$id_rol]);
+            $stmt->execute([':id_rol' => $id_rol]);
             $rol_obt = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
             return $rol_obt;
-        });
+        }, false);
     }
 
     public function consultarRoles() {
@@ -393,39 +387,52 @@ class Rol extends BD {
     }
     private function c_roles() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT id_rol, nombre_rol FROM tbl_rol ORDER BY id_rol DESC";
+            $sql = "CALL sp_consultar_rol()";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $roles_obt = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
             return $roles_obt;
-        });
+        }, false);
     }
 
-    public function modificarRol($id_rol) {
-        return $this->m_rol($id_rol); 
+    public function modificarRol($id_rol, $id_usuario_auditor) {
+        return $this->m_rol($id_rol, $id_usuario_auditor); 
     }
-    private function m_rol($id_rol) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol) {
-            $sql = "UPDATE tbl_rol SET nombre_rol = :nombre_rol WHERE id_rol = :id_rol";
+    private function m_rol($id_rol, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol, $id_usuario_auditor) {
+            
+            $sql = "CALL sp_modificar_cliente(
+                :id_clientes,
+                :nombre_rol,
+                :id_usuario_auditor
+            )";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_rol', $id_rol);
+            $stmt->bindParam(':id_rol', $id_rol, \PDO::PARAM_INT);
             $stmt->bindParam(':nombre_rol', $this->nombre_rol);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
             $ok = $stmt->execute();
+            $stmt->closeCursor();
             return $ok;
-        });
+        }, false);
     }
 
-    public function eliminarRol($id_rol) {
-        return $this->e_rol($id_rol); 
+    public function eliminarRol($id_rol, $id_usuario_auditor) {
+        return $this->e_rol($id_rol, $id_usuario_auditor); 
     }
-    private function e_rol($id_rol) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol) {
-            $sql = "DELETE FROM tbl_rol WHERE id_rol = :id_rol";
+    private function e_rol($id_rol, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol, $id_usuario_auditor) {
+            $sql = "CALL sp_eliminar_rol(:id_clientes, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_rol', $id_rol);
+            $stmt->bindParam(':id_rol', $id_rol, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
             $result = $stmt->execute();
+            $stmt->closeCursor();
             return $result;
-        });
+        }, false);
     }
 
     public function tieneUsuariosAsignados($id_rol) {

@@ -846,7 +846,7 @@ class Usuarios extends BD {
             
             return $stmt->fetchColumn() > 0;
 
-        }, 'S');
+        });
     }
 
     public function existeCedula($cedula, $excluir_id = null) {
@@ -865,7 +865,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        }, 'S');
+        });
     }
 
     public function existeCorreo($correo, $excluir_id = null) {
@@ -885,7 +885,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        }, 'S');
+        });
     }
 
     public function obtenerUltimoUsuario() {
@@ -904,7 +904,7 @@ class Usuarios extends BD {
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
             
             return $usuario ?: null;
-        }, 'S');
+        });
         
         // Descifrar datos personales
         if ($resultado) {
@@ -988,7 +988,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }, 'S');
+        });
     }
 
     public function actualizarPerfil($id_usuario, $datos) {
@@ -1018,7 +1018,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             return $stmt->execute($params);
             
-        }, 'S');
+        });
     }
 
     public function getusuarios($estatus = 'habilitado') {
