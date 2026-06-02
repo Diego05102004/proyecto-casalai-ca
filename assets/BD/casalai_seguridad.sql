@@ -2076,16 +2076,13 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 
--- =====================================================================
--- COMPONENTE DE OPTIMIZACIÓN Y CONCURRENCIA: MÓDULO DE ROLES
--- =====================================================================
-
--- Cambiamos el delimitador para que MySQL reconozca todo el bloque del procedimiento
-DELIMITER $$
 
 -- ---------------------------------------------------------------------
 -- 1. PROCEDIMIENTO PARA REGISTRAR ROL
 -- ---------------------------------------------------------------------
+
+DELIMITER $$
+
 CREATE PROCEDURE sp_registrar_rol(
     IN p_nombre_rol VARCHAR(15),
     IN p_id_usuario_auditor INT
@@ -2346,19 +2343,80 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE `sp_consultar_usuario`(
-    IN p_id_usuario INT
+DROP PROCEDURE IF EXISTS sp_consultar_usuario $$
+
+CREATE PROCEDURE sp_consultar_usuario(
+    IN p_estatus VARCHAR(50)
 )
 BEGIN
+    -- Manejador general de excepciones
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo realizar la consulta de los usuarios.';
+    END;
+
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
 
-    SELECT `id_usuario`, `username`, `cedula`, `id_rol`, `correo`, `nombres`, `apellidos`, `telefono`, `estatus` 
-    FROM `tbl_usuarios` 
-    WHERE `id_usuario` = p_id_usuario 
+    -- Consulta con INNER JOIN y filtro dinámico integrado
+    SELECT 
+        u.`id_usuario`, 
+        u.`username`, 
+        u.`cedula`, 
+        u.`id_rol`, 
+        r.`nombre_rol`,
+        u.`correo`, 
+        u.`nombres`, 
+        u.`apellidos`, 
+        u.`telefono`, 
+        u.`estatus` 
+    FROM `tbl_usuarios` AS u
+    INNER JOIN `tbl_rol` AS r ON u.`id_rol` = r.`id_rol`
+    WHERE (p_estatus = 'todos' OR u.`estatus` = p_estatus)
+    ORDER BY u.`id_usuario` DESC
     LOCK IN SHARE MODE;
 
     COMMIT;
+END $$
+
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_usuario_por_id $$
+
+CREATE PROCEDURE sp_obtener_usuario_por_id(
+    IN p_id_usuario INT
+)
+BEGIN
+    -- Manejador de fallas generales con mensaje personalizado
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del usuario.';
+    END;
+
+    -- Selecciona el usuario específico con su rol usando Bloqueo Compartido (Shared Lock)
+    SELECT 
+        u.`id_usuario`, 
+        u.`username`, 
+        u.`cedula`, 
+        u.`id_rol`, 
+        r.`nombre_rol`,
+        u.`correo`, 
+        u.`nombres`, 
+        u.`apellidos`, 
+        u.`telefono`, 
+        u.`estatus`
+    FROM `tbl_usuarios` AS u
+    INNER JOIN `tbl_rol` AS r ON u.`id_rol` = r.`id_rol`
+    WHERE u.`id_usuario` = p_id_usuario
+    LIMIT 1
+    LOCK IN SHARE MODE;
 END $$
 
 DELIMITER ;
@@ -2370,17 +2428,18 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE `sp_modificar_usuario`(
-    IN p_id_usuario_modificar INT,
-    IN p_nuevo_username VARCHAR(255),
-    IN p_nuevo_cedula VARCHAR(10),
-    IN p_nuevo_id_rol INT,
-    IN p_nuevo_correo VARCHAR(255),
-    IN p_nuevo_nombres VARCHAR(255),
-    IN p_nuevo_apellidos VARCHAR(255),
-    IN p_nuevo_telefono VARCHAR(255),
-    IN p_usuario_auditor INT
+    IN p_id_usuario INT,
+    IN p_username VARCHAR(255),
+    IN p_cedula VARCHAR(10),
+    IN p_id_rol INT,
+    IN p_correo VARCHAR(255),
+    IN p_nombres VARCHAR(255),
+    IN p_apellidos VARCHAR(255),
+    IN p_telefono VARCHAR(255),
+    IN p_id_usuario_auditor INT
 )
 BEGIN
+    -- Variables para almacenar el respaldo histórico
     DECLARE v_username VARCHAR(255);
     DECLARE v_cedula VARCHAR(10);
     DECLARE v_id_rol INT;
@@ -2389,6 +2448,7 @@ BEGIN
     DECLARE v_apellidos VARCHAR(255);
     DECLARE v_telefono VARCHAR(255);
 
+    -- Manejador de excepciones
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -2399,42 +2459,44 @@ BEGIN
     START TRANSACTION;
 
     -- Validar que el nuevo rol exista antes de proceder
-    SELECT `id_rol` FROM `tbl_rol` WHERE `id_rol` = p_nuevo_id_rol LOCK IN SHARE MODE;
+    SELECT `id_rol` FROM `tbl_rol` WHERE `id_rol` = p_id_rol LOCK IN SHARE MODE;
 
-    -- Bloqueo pesimista y captura del estado anterior
-    SELECT username, cedula, id_rol, correo, nombres, apellidos, telefono 
+    -- Bloqueo pesimista y captura del estado anterior completo
+    SELECT `username`, `cedula`, `id_rol`, `correo`, `nombres`, `apellidos`, `telefono` 
     INTO v_username, v_cedula, v_id_rol, v_correo, v_nombres, v_apellidos, v_telefono
-    FROM tbl_usuarios
-    WHERE id_usuario = p_id_usuario_modificar
+    FROM `tbl_usuarios`
+    WHERE `id_usuario` = p_id_usuario
     LIMIT 1 FOR UPDATE;
 
-    UPDATE tbl_usuarios 
-    SET username = p_nuevo_username, 
-        cedula = p_nuevo_cedula, 
-        id_rol = p_nuevo_id_rol, 
-        correo = p_nuevo_correo, 
-        nombres = p_nuevo_nombres, 
-        apellidos = p_nuevo_apellidos, 
-        telefono = p_nuevo_telefono 
-    WHERE id_usuario = p_id_usuario_modificar;
+    -- Actualización física (Excluyendo explícitamente el campo de contraseña)
+    UPDATE `tbl_usuarios` 
+    SET `username`  = p_username, 
+        `cedula`    = p_cedula, 
+        `id_rol`    = p_id_rol, 
+        `correo`    = p_correo, 
+        `nombres`   = p_nombres, 
+        `apellidos` = p_apellidos, 
+        `telefono`  = p_telefono 
+    WHERE `id_usuario` = p_id_usuario;
 
-    INSERT INTO tbl_bitacora (fecha_hora, nombre_modulo, accion, datos_nuevos, datos_viejos, id_usuario, prioridad, descripcion)
+    -- Volcado a bitácora mapeando los estados en JSON
+    INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
     VALUES (
         NOW(),
         'Usuario',
         'MODIFICAR',
         JSON_OBJECT(
-            'id_usuario', p_id_usuario_modificar, 
-            'username', p_nuevo_username, 
-            'cedula', p_nuevo_cedula, 
-            'id_rol', p_nuevo_id_rol, 
-            'correo', p_nuevo_correo, 
-            'nombres', p_nuevo_nombres,
-            'apellidos', p_nuevo_apellidos,
-            'telefono', p_nuevo_telefono
+            'id_usuario', p_id_usuario, 
+            'username', p_username, 
+            'cedula', p_cedula, 
+            'id_rol', p_id_rol, 
+            'correo', p_correo, 
+            'nombres', p_nombres,
+            'apellidos', p_apellidos,
+            'telefono', p_telefono
         ),
         JSON_OBJECT(
-            'id_usuario', p_id_usuario_modificar, 
+            'id_usuario', p_id_usuario, 
             'username', v_username, 
             'cedula', v_cedula, 
             'id_rol', v_id_rol, 
@@ -2443,9 +2505,9 @@ BEGIN
             'apellidos', v_apellidos,
             'telefono', v_telefono
         ),
-        p_usuario_auditor, 
+        p_id_usuario_auditor, 
         'media',
-        CONCAT('Se modificaron los datos del usuario: ', p_id_usuario_modificar, '.')
+        CONCAT('Se modificaron los datos de identidad y contacto del usuario con ID: ', p_id_usuario, '.')
     );
 
     COMMIT;
@@ -2460,7 +2522,7 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE `sp_cambiar_estatus_usuario`(
-    IN p_id_usuario_estatus INT,
+    IN p_id_usuario INT,
     IN p_nuevo_estatus ENUM('habilitado','inhabilitado'),
     IN p_usuario_auditor INT
 )
@@ -2471,7 +2533,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo cambiar el estatus.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo cambiar el estatus del usuario.';
     END;
 
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -2479,20 +2541,20 @@ BEGIN
 
     SELECT `username`, `estatus` INTO v_username, v_estatus
     FROM `tbl_usuarios`
-    WHERE `id_usuario` = p_id_usuario_estatus
+    WHERE `id_usuario` = p_id_usuario
     LIMIT 1 FOR UPDATE;
 
     UPDATE `tbl_usuarios`
     SET `estatus` = p_nuevo_estatus
-    WHERE `id_usuario` = p_id_usuario_estatus;
+    WHERE `id_usuario` = p_id_usuario;
 
     INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
     VALUES (
         NOW(), 
         'Usuario', 
         'MODIFICAR', 
-        JSON_OBJECT('id_usuario', p_id_usuario_estatus, 'estatus', p_nuevo_estatus), 
-        JSON_OBJECT('id_usuario', p_id_usuario_estatus, 'estatus', v_estatus), 
+        JSON_OBJECT('id_usuario', p_id_usuario, 'estatus', p_nuevo_estatus), 
+        JSON_OBJECT('id_usuario', p_id_usuario, 'estatus', v_estatus), 
         p_usuario_auditor, 
         'media',
         CONCAT('Se cambió el estatus del usuario "', IFNULL(v_username, 'Desconocido'), '" de ', IFNULL(v_estatus, 'Desconocido'), ' a ', p_nuevo_estatus, '.')
@@ -2510,7 +2572,7 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE `sp_eliminar_usuario`(
-    IN p_id_usuario_eliminar INT,
+    IN p_id_usuario INT,
     IN p_usuario_auditor INT
 )
 BEGIN
@@ -2530,14 +2592,14 @@ BEGIN
 
     SELECT `username`, `cedula` INTO v_username, v_cedula
     FROM `tbl_usuarios`
-    WHERE `id_usuario` = p_id_usuario_eliminar
+    WHERE `id_usuario` = p_id_usuario
     LIMIT 1 FOR UPDATE;
 
-    SET v_cant_notificaciones = (SELECT COUNT(*) FROM `tbl_notificaciones` WHERE `id_usuario` = p_id_usuario_eliminar);
-    SET v_cant_recuperaciones = (SELECT COUNT(*) FROM `tbl_recuperar` WHERE `id_usuario` = p_id_usuario_eliminar);
+    SET v_cant_notificaciones = (SELECT COUNT(*) FROM `tbl_notificaciones` WHERE `id_usuario` = p_id_usuario);
+    SET v_cant_recuperaciones = (SELECT COUNT(*) FROM `tbl_recuperar` WHERE `id_usuario` = p_id_usuario);
 
     DELETE FROM `tbl_usuarios`
-    WHERE `id_usuario` = p_id_usuario_eliminar;
+    WHERE `id_usuario` = p_id_usuario;
 
     INSERT INTO `tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
     VALUES (
@@ -2545,7 +2607,7 @@ BEGIN
         'Usuario', 
         'ELIMINAR', 
         NULL, 
-        JSON_OBJECT('id_usuario', p_id_usuario_eliminar, 'username', v_username, 'cedula', v_cedula), 
+        JSON_OBJECT('id_usuario', p_id_usuario, 'username', v_username, 'cedula', v_cedula), 
         p_usuario_auditor, 
         'alta', 
         CONCAT('Se eliminó el usuario "', IFNULL(v_username, 'Desconocido'), '" (C.I: ', IFNULL(v_cedula, 'Desconocido'), ').')

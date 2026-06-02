@@ -495,7 +495,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'cambiar_estado':
             $id_cuenta = $_POST['id_cuenta'];
             $nuevoEstado = $_POST['estado'];
-            $id_usuario_sesion = 9; // Capturamos el auditor
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
             
             if ($id_cuenta === null || !ctype_digit((string)$id_cuenta) || !$id_usuario_sesion) {
                 echo json_encode(['status' => 'error', 'message' => 'Datos de petición o sesión no válidos']);
@@ -512,7 +512,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // MODIFICACIÓN: Enviamos el ID del usuario al método
             if ($cuentabanco->cambiarEstado($nuevoEstado, $id_usuario_sesion)) {
-                // ELIMINADO: El bloque manual de $bitacoraModel para éxito ya no es necesario.
                 echo json_encode(['status' => 'success']);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Error al cambiar el estado']);
