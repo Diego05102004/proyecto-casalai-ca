@@ -2155,7 +2155,7 @@ BEGIN
 
     SELECT `id_rol`, `nombre_rol` 
     FROM `tbl_rol` 
-    WHERE `id_rol` = p_id_rol 
+    ORDER BY `id_rol`
     LOCK IN SHARE MODE;
 
     COMMIT;
