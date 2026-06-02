@@ -402,8 +402,8 @@ class Rol extends BD {
     private function m_rol($id_rol, $id_usuario_auditor) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol, $id_usuario_auditor) {
             
-            $sql = "CALL sp_modificar_cliente(
-                :id_clientes,
+            $sql = "CALL sp_modificar_rol(
+                :id_rol,
                 :nombre_rol,
                 :id_usuario_auditor
             )";
@@ -424,7 +424,7 @@ class Rol extends BD {
     }
     private function e_rol($id_rol, $id_usuario_auditor) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_rol, $id_usuario_auditor) {
-            $sql = "CALL sp_eliminar_rol(:id_clientes, :id_usuario_auditor)";
+            $sql = "CALL sp_eliminar_rol(:id_rol, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_rol', $id_rol, \PDO::PARAM_INT);
             $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
