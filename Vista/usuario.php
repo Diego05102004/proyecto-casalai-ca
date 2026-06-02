@@ -76,7 +76,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                     <option value="" hidden>Seleccione el rol del usuario</option>
                                     <?php
                                     foreach ($selecionarRol as $rol) {
-                                        if($rol['nombre_rol'] != 'SuperUsuario') {
+                                        if($rol['nombre_rol'] != 'SuperUsuario' && $rol['nombre_rol'] != 'Cliente') {
                                             echo '<option value="' . $rol['id_rol'] . '">' . htmlspecialchars($rol['nombre_rol']) . '</option>';
                                         }
                                     }
