@@ -18,7 +18,7 @@ class RateLimiter {
     /**
      * Configuración de rate limiting
      */
-    const MAX_ATTEMPTS = 1;           // Máximo de intentos fallidos permitidos
+    const MAX_ATTEMPTS = 5;           // Máximo de intentos fallidos permitidos
     const BLOCK_DURATION = 900;       // Duración del bloqueo en segundos (15 minutos)
     const ATTEMPT_WINDOW = 300;       // Ventana de tiempo para contar intentos (5 minutos)
     /**
