@@ -532,17 +532,17 @@ $(document).ready(function () {
         }
     }
 
-    // Validación de entrada para el campo buscarCliente (solo letras con o sin acento y espacios)
+    // Validación de entrada para el campo buscarCliente (letras, números y espacios para buscar por nombre o cédula)
     $("#buscarCliente").on("keypress", function (e) {
-        validarKeyPress(/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]*$/, e);
+        validarKeyPress(/^[a-zA-Z0-9ÁÉÍÓÚáéíóúñÑ\s.]*$/, e);
     });
 
     $("#buscarCliente").on("keyup", function () {
         validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/,
+            /^[a-zA-Z0-9ÁÉÍÓÚáéíóúñÑ\s.]{2,50}$/,
             $(this),
             $("#scliente"),
-            "*Solo letras, de 2 a 50 caracteres*"
+            "*Solo letras, números y puntos, de 2 a 50 caracteres*"
         );
     });
 

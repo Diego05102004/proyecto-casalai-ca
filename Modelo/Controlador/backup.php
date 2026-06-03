@@ -129,14 +129,15 @@ try {
         }
 
         foreach ($files as $file) {
-            if (preg_match('/\.sql$/i', $file)) {
+            if (preg_match('/\.(sql|enc)$/i', $file)) {
                 $filePath = $ruta . $file;
                 $archivos[] = [
                     'nombre' => $file,
                     'tamano' => file_exists($filePath) ? filesize($filePath) : 0,
                     'tamano_text' => file_exists($filePath) ? filesize($filePath) : 0,
                     'fecha_modificacion' => file_exists($filePath) ? date('Y-m-d H:i:s', filemtime($filePath)) : '',
-                    'tipo' => (stripos($file, 'seguridad') !== false) ? 'Seguridad' : 'Principal'
+                    'tipo' => (stripos($file, 'seguridad') !== false) ? 'Seguridad' : 'Principal',
+                    'encriptado' => (preg_match('/\.enc$/i', $file) ? true : false)
                 ];
             }
         }

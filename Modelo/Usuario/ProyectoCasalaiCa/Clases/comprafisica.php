@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 
@@ -10,6 +11,10 @@ class Comprafisica extends BD{
     private $desc;
     private $fecha;
     private $tablerecepcion = 'tbl_despachos';
+    private $encryption;
+    
+    // Campos cifrados de clientes
+    const CAMPOS_CIFRADOS_CLIENTES = ['nombre', 'direccion', 'telefono', 'correo'];
     
     // Constantes para validaciones
     const MAX_DESCRIPCION = 500;
@@ -43,6 +48,7 @@ class Comprafisica extends BD{
     }
 
     public function __construct($tipo = 'P') {
+        $this->encryption = new Encryption();
     }
     
     /**
@@ -605,12 +611,19 @@ class Comprafisica extends BD{
         return $this->obt_cliente();
     }
     private function obt_cliente() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $p = $pdo->prepare("SELECT id_clientes, nombre, cedula FROM tbl_clientes WHERE activo = 1 ORDER BY nombre");
             $p->execute();
             $rows = $p->fetchAll(PDO::FETCH_ASSOC);
             return $rows;
         });
+        
+        // Descifrar datos personales de los clientes
+        if (is_array($resultado) && !empty($resultado)) {
+            $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_CLIENTES);
+        }
+        
+        return $resultado;
     }
 
     public function listadoproductos() {
@@ -661,7 +674,7 @@ class Comprafisica extends BD{
     }
 
     private function buscar_clientes($query) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($query) {
             $sql = "SELECT id_clientes, nombre, cedula, telefono 
                     FROM tbl_clientes 
                     WHERE activo = 1 
@@ -686,6 +699,13 @@ class Comprafisica extends BD{
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $rows;
         });
+        
+        // Descifrar datos personales de los clientes
+        if (is_array($resultado) && !empty($resultado)) {
+            $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_CLIENTES);
+        }
+        
+        return $resultado;
     }
 
     public function consultarproductos() {
@@ -733,7 +753,7 @@ class Comprafisica extends BD{
         return $this->g_Compras(); 
     }
     private function g_Compras() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "
                 SELECT 
                     f.id_factura,
@@ -800,13 +820,22 @@ class Comprafisica extends BD{
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $rows;
         });
+        
+        // Descifrar datos personales de los clientes
+        if (is_array($resultado) && !empty($resultado)) {
+            // Incluir alias en la lista de campos a descifrar
+            $camposADescifrar = array_merge(self::CAMPOS_CIFRADOS_CLIENTES, ['nombre_cliente']);
+            $resultado = $this->encryption->decryptResults($resultado, $camposADescifrar);
+        }
+        
+        return $resultado;
     }
 
     public function getdespacho() {
         return $this->g_despacho(); 
     }
     private function g_despacho() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $querydespachos = 
             'SELECT 
                 d.id_detalle,
@@ -826,7 +855,15 @@ class Comprafisica extends BD{
             $stmtdespachos = $pdo->prepare($querydespachos);
             $stmtdespachos->execute();
             $despachos = $stmtdespachos->fetchAll(PDO::FETCH_ASSOC);
+            return $despachos;
         });
+        
+        // Descifrar datos personales de los clientes
+        if (is_array($resultado) && !empty($resultado)) {
+            $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_CLIENTES);
+        }
+        
+        return $resultado;
     }
 
     public function getDetallesCompra($idDespacho) {

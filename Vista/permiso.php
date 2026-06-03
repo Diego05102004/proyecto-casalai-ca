@@ -54,7 +54,7 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                 <br>
                 <select id="selectorRol" class="selector-reporte">
                     <?php
-                    $excluidos = ['administrador','superusuario'];
+                    $excluidos = ['administrador','superusuario', 'cliente'];
                     $rolesSinSuper = array_filter($roles, function ($rol) use ($excluidos) {
                         return !in_array(strtolower(str_replace(' ', '', $rol['nombre_rol'])), $excluidos);
                     });

@@ -76,7 +76,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                     <option value="" hidden>Seleccione el rol del usuario</option>
                                     <?php
                                     foreach ($selecionarRol as $rol) {
-                                        if($rol['nombre_rol'] != 'SuperUsuario') {
+                                        if($rol['nombre_rol'] != 'SuperUsuario' && $rol['nombre_rol'] != 'Cliente') {
                                             echo '<option value="' . $rol['id_rol'] . '">' . htmlspecialchars($rol['nombre_rol']) . '</option>';
                                         }
                                     }
@@ -150,28 +150,28 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 <tr data-id="<?php echo $usuario['id_usuario']; ?>">
                     <td>
                         <span class="campo-nombres">
-                            <?php echo htmlspecialchars($usuario['nombres']); ?>
-                            <?php echo htmlspecialchars($usuario['apellidos']); ?>
+                            <?php echo htmlspecialchars($usuario['nombres'] ?? ''); ?>
+                            <?php echo htmlspecialchars($usuario['apellidos'] ?? ''); ?>
                         </span>
                     </td>
                     <td>
                         <span class="campo-tex-num">
-                            <?php echo htmlspecialchars($usuario['correo']); ?>
+                            <?php echo htmlspecialchars($usuario['correo'] ?? ''); ?>
                         </span>
                     </td>
                     <td>
                         <span class="campo-nombres">
-                            <?php echo htmlspecialchars($usuario['username']); ?>
+                            <?php echo htmlspecialchars($usuario['username'] ?? ''); ?>
                         </span>
                     </td>
                     <td>
                         <span class="campo-numeros">
-                            <?php echo htmlspecialchars($usuario['telefono']); ?>
+                            <?php echo htmlspecialchars($usuario['telefono'] ?? ''); ?>
                         </span>
                     </td>
                     <td>
                         <span class="campo-rango">
-                            <?php echo htmlspecialchars($usuario['nombre_rol']); ?>
+                            <?php echo htmlspecialchars($usuario['nombre_rol'] ?? ''); ?>
                         </span>
                     </td>
                     <td>
@@ -181,7 +181,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                             data-id="<?php echo $usuario['id_usuario']; ?>"
                             style="cursor: pointer;"
                             title="Cambiar Estatus">
-                            <?php echo htmlspecialchars($usuario['estatus']); ?>
+                            <?php echo htmlspecialchars($usuario['estatus'] ?? ''); ?>
                             <?php endif; ?>
                         </span>
                     </td>
@@ -191,13 +191,13 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                                 <button class="btn-modificar"
                                     title="Modificar Usuario"
                                     data-id="<?php echo $usuario['id_usuario']; ?>"
-                                    data-username="<?php echo htmlspecialchars($usuario['username']); ?>"
-                                    data-nombres="<?php echo htmlspecialchars($usuario['nombres']); ?>"
-                                    data-apellidos="<?php echo htmlspecialchars($usuario['apellidos']); ?>"
-                                    data-cedula="<?php echo htmlspecialchars($usuario['cedula']); ?>"
-                                    data-correo="<?php echo htmlspecialchars($usuario['correo']); ?>"
-                                    data-telefono="<?php echo htmlspecialchars($usuario['telefono']); ?>"
-                                    data-clave="<?php echo htmlspecialchars($usuario['password']); ?>"
+                                    data-username="<?php echo htmlspecialchars($usuario['username'] ?? ''); ?>"
+                                    data-nombres="<?php echo htmlspecialchars($usuario['nombres'] ?? ''); ?>"
+                                    data-apellidos="<?php echo htmlspecialchars($usuario['apellidos'] ?? ''); ?>"
+                                    data-cedula="<?php echo htmlspecialchars($usuario['cedula'] ?? ''); ?>"
+                                    data-correo="<?php echo htmlspecialchars($usuario['correo'] ?? ''); ?>"
+                                    data-telefono="<?php echo htmlspecialchars($usuario['telefono'] ?? ''); ?>"
+                                    data-clave="<?php echo htmlspecialchars($usuario['password'] ?? ''); ?>"
                                     data-rango="<?php echo htmlspecialchars($usuario['id_rol']); ?>">
                                     <img src="assets/img/pencil.svg">
                                 </button>
@@ -245,7 +245,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                     </div>
                     <div class="form-group">
                         <label for="modificarcedula">Cédula</label>
-                        <input type="text" class="form-control" id="modificarcedula" name="cedula" maxlength="12" required>
+                        <input type="text" class="form-control" id="modificarcedula" name="cedula" maxlength="10" required>
                         <span class="span-value-modal" id="smodificarcedula"></span>
                     </div>
                     <div class="form-group">

@@ -6,12 +6,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ⚠️ Si ya hay una sesión activa, redirigir a acceso-denegado
-if (isset($_SESSION['id_usuario']) && !empty($_SESSION['id_usuario'])) {
-    header('Location: ?pagina=acceso-denegado');
-    exit;
-}
+// Importar la clase Auth para generación de token JWT
+require_once __DIR__ . '/../Config/Auth.php';
+// Importar la clase RateLimiter para control de seguridad
+require_once __DIR__ . '/../Config/RateLimiter.php';
 
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+use Usuario\ProyectoCasalaiCa\Config\RateLimiter;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Login;
 // Verificar si se ha enviado el formulario
 if (!empty($_POST)) {
@@ -19,99 +20,130 @@ if (!empty($_POST)) {
     $h = $_POST['accion'] ?? '';
     
 if ($h == 'acceder') {
-    // Validar datos de entrada
-    $datosValidacion = [
-        'username' => $_POST['username'] ?? '',
-        'password' => $_POST['password'] ?? ''
-    ];
+    // Verificar rate limiting antes de procesar el login
+    $username = $_POST['username'] ?? '';
+    $rateLimitCheck = RateLimiter::checkLoginAttempt($username);
     
-    $errores = $o->validarInicioSesionDatos($datosValidacion);
-    if (!empty($errores)) {
-        $mensaje = '<div class="error">Por favor corrija los siguientes errores:<br>';
-        foreach ($errores as $campo => $error) {
-            $mensaje .= "• $error<br>";
-        }
-        $mensaje .= '</div>';
+    if (!$rateLimitCheck['allowed']) {
+        $mensaje = '<div class="error">' . htmlspecialchars($rateLimitCheck['message']) . '</div>';
     } else {
-        $o->setUsername($_POST['username'] ?? '');
-        $o->setPassword($_POST['password'] ?? '');
-        $captcha = $_POST['g-recaptcha-response'] ?? '';
-        $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
-        $ip = $_SERVER['REMOTE_ADDR'];
+        // Validar datos de entrada
+        $datosValidacion = [
+            'username' => $username,
+            'password' => $_POST['password'] ?? ''
+        ];
         
-        if (empty($captcha) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
-            $captchaValido = true;
+        $errores = $o->validarInicioSesionDatos($datosValidacion);
+        if (!empty($errores)) {
+            $mensaje = '<div class="error">Por favor corrija los siguientes errores:<br>';
+            foreach ($errores as $campo => $error) {
+                $mensaje .= "• $error<br>";
+            }
+            $mensaje .= '</div>';
+            // Registrar intento fallido por validación
+            RateLimiter::recordFailedLogin($username);
         } else {
-            $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
+            $o->setUsername($username);
+            $o->setPassword($_POST['password'] ?? '');
+            $captcha = $_POST['g-recaptcha-response'] ?? '';
+            $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
+            $ip = $_SERVER['REMOTE_ADDR'];
             
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
-            
-            if ($response === false || $httpCode !== 200) {
-                $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: No se pudo conectar con el servidor de verificación. Por favor, inténtalo de nuevo más tarde.</div>';
-                $captchaValido = false;
+            if (empty($captcha) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
+                $captchaValido = true;
             } else {
-                $responseKeys = json_decode($response, true);
-                $captchaValido = isset($responseKeys['success']) && $responseKeys['success'] === true;
+                $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
                 
-                if (!$captchaValido) {
-                    $errorCodes = $responseKeys['error-codes'] ?? [];
-                    $errorMessage = 'Error desconocido';
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlError = curl_error($ch);
+                curl_close($ch);
+                
+                if ($response === false || $httpCode !== 200) {
+                    $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: No se pudo conectar con el servidor de verificación. Por favor, inténtalo de nuevo más tarde.</div>';
+                    $captchaValido = false;
+                    // Registrar intento fallido por error de captcha
+                    RateLimiter::recordFailedLogin($username);
+                } else {
+                    $responseKeys = json_decode($response, true);
+                    $captchaValido = isset($responseKeys['success']) && $responseKeys['success'] === true;
                     
-                    if (in_array('missing-input-secret', $errorCodes)) {
-                        $errorMessage = 'Configuración del servidor incorrecta';
-                    } elseif (in_array('invalid-input-secret', $errorCodes)) {
-                        $errorMessage = 'Clave secreta inválida';
-                    } elseif (in_array('missing-input-response', $errorCodes)) {
-                        $errorMessage = 'Por favor completa el reCAPTCHA';
-                    } elseif (in_array('invalid-input-response', $errorCodes)) {
-                        $errorMessage = 'Respuesta de reCAPTCHA inválida';
-                    } elseif (in_array('timeout-or-duplicate', $errorCodes)) {
-                        $errorMessage = 'La verificación expiró, por favor inténtalo de nuevo';
+                    if (!$captchaValido) {
+                        $errorCodes = $responseKeys['error-codes'] ?? [];
+                        $errorMessage = 'Error desconocido';
+                        
+                        if (in_array('missing-input-secret', $errorCodes)) {
+                            $errorMessage = 'Configuración del servidor incorrecta';
+                        } elseif (in_array('invalid-input-secret', $errorCodes)) {
+                            $errorMessage = 'Clave secreta inválida';
+                        } elseif (in_array('missing-input-response', $errorCodes)) {
+                            $errorMessage = 'Por favor completa el reCAPTCHA';
+                        } elseif (in_array('invalid-input-response', $errorCodes)) {
+                            $errorMessage = 'Respuesta de reCAPTCHA inválida';
+                        } elseif (in_array('timeout-or-duplicate', $errorCodes)) {
+                            $errorMessage = 'La verificación expiró, por favor inténtalo de nuevo';
+                        }
+                        
+                        $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: ' . $errorMessage . '</div>';
+                        // Registrar intento fallido por captcha inválido
+                        RateLimiter::recordFailedLogin($username);
                     }
-                    
-                    $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: ' . $errorMessage . '</div>';
                 }
             }
-        }
-        
-        if (!$captchaValido) {
-            // El mensaje ya fue establecido en el bloque anterior
-        } else {
-            $m = $o->existe();
             
-            if ($m['resultado'] == 'existe') {
-                session_destroy();
-                session_start();
-
-                $_SESSION['name'] = $m['mensaje'] ?? '';
-                $_SESSION['nombre_rol'] = $m['nombre_rol'] ?? '';
-                $_SESSION['id_usuario'] = $m['id_usuario'] ?? '';
-                $_SESSION['id_rol'] = $m['id_rol'] ?? '';
-                $_SESSION['cedula'] = $m['cedula'] ?? '';
-                $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
-                
-                ob_start();
-                require_once __DIR__ . '/../../verificar_websocket.php';
-                
-                verificarEIniciarWebSocket();
-                ob_end_clean();
-                
-                $_SESSION['websocket_init_message'] = 'Servidor WebSocket iniciado automáticamente';
-                
-                header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
-                exit;
-            } elseif ($m['resultado'] == 'bloqueado') {
-                $mensaje = '<div class="error">' . ($m['mensaje'] ?? 'Usuario bloqueado') . '</div>';
+            if (!$captchaValido) {
+                // El mensaje ya fue establecido en el bloque anterior
             } else {
-                $mensaje = '<div class="error">' . ($m['mensaje'] ?? 'Error en las credenciales') . '</div>';
+                $m = $o->existe();
+                
+                if ($m['resultado'] == 'existe') {
+                    // Registrar login exitoso
+                    RateLimiter::recordSuccessfulLogin($username);
+                    
+                    session_destroy();
+                    session_start();
+
+                    $_SESSION['name'] = $m['mensaje'] ?? '';
+                    $_SESSION['nombre_rol'] = $m['nombre_rol'] ?? '';
+                    $_SESSION['id_usuario'] = $m['id_usuario'] ?? '';
+                    $_SESSION['id_rol'] = $m['id_rol'] ?? '';
+                    $_SESSION['cedula'] = $m['cedula'] ?? '';
+                    $_SESSION['foto_perfil'] = $m['foto_perfil'] ?? '';
+                    
+                    // Generar token JWT después de iniciar sesión exitosamente
+                    try {
+                        $token = Auth::generateToken($_SESSION['id_usuario'], $_SESSION['nombre_rol']);
+                        Auth::setTokenCookie($token);
+                        $_SESSION['jwt_token_created'] = true;
+                    } catch (Exception $e) {
+                        error_log("Error al generar JWT en login: " . $e->getMessage());
+                        // Continuar con el flujo normal incluso si falla la generación del token
+                    }
+                    
+                    ob_start();
+                    require_once __DIR__ . '/../../verificar_websocket.php';
+                    
+                    verificarEIniciarWebSocket();
+                    ob_end_clean();
+                    
+                    $_SESSION['websocket_init_message'] = 'Servidor WebSocket iniciado automáticamente';
+                    
+                    header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
+                    exit;
+                } elseif ($m['resultado'] == 'bloqueado') {
+                    $mensaje = '<div class="error">' . ($m['mensaje'] ?? 'Usuario bloqueado') . '</div>';
+                    // Registrar intento fallido por usuario bloqueado
+                    RateLimiter::recordFailedLogin($username);
+                } else {
+                    $mensaje = '<div class="error">' . ($m['mensaje'] ?? 'Error en las credenciales') . '</div>';
+                    // Registrar intento fallido por credenciales incorrectas
+                    RateLimiter::recordFailedLogin($username);
+                }
             }
         }
     }

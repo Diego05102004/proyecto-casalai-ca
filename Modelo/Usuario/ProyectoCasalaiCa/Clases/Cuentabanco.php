@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 
@@ -14,10 +15,14 @@ class Cuentabanco extends BD {
     private $correo_cuenta;
     private $metodos_pago;
     private $estado;
+    private $encryption;
+    
+    // Campos que deben ser cifrados (NOTA: numero_cuenta y rif NO se cifran porque se usan para búsquedas/identificación)
+    const CAMPOS_CIFRADOS = ['nombre_banco', 'telefono_cuenta', 'correo_cuenta'];
     
     const MAX_NOMBRE_BANCO = 100;
     const MIN_NOMBRE_BANCO = 3;
-    const MAX_NUMERO_CUENTA = 30;
+    const MAX_NUMERO_CUENTA = 25;
     const MIN_NUMERO_CUENTA = 10;
     const MAX_TELEFONO_CUENTA = 15;
     const MIN_TELEFONO_CUENTA = 7;
@@ -25,7 +30,7 @@ class Cuentabanco extends BD {
     const MAX_RIF_CUENTA = 12;
     const MIN_RIF_CUENTA = 9;
     const ESTADOS_PERMITIDOS = ['habilitado', 'inhabilitado'];
-    const TIPOS_PAGO_PERMITIDOS = ['efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'tarjeta', 'cheque'];
+    const TIPOS_PAGO_PERMITIDOS = ['Pago Movil', 'Transferencia', 'Zelle', 'Efectivo', 'Efectivo $'];
 
     public function getIdCuenta() { 
         return $this->id_cuenta; 
@@ -89,6 +94,7 @@ class Cuentabanco extends BD {
     }
 
     public function __construct($tipo = 'P') {
+        $this->encryption = new Encryption();
     }
     
     /**
@@ -103,7 +109,12 @@ class Cuentabanco extends BD {
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -112,14 +123,23 @@ class Cuentabanco extends BD {
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -496,25 +516,74 @@ class Cuentabanco extends BD {
     public function validarReporteCuentas($datos) {
         return $this->validarReporte($datos);
     }
-
+/*
     public function registrarCuentabanco() {
         return $this->r_cuentabanco(); 
     }
     private function r_cuentabanco() {
         return $this->ejecutarConConexionSegura(function($pdo) {
+            // Cifrar datos personales antes de insertar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
+            
             $sql = "INSERT INTO tbl_cuentas 
             (nombre_banco, numero_cuenta, rif_cuenta, telefono_cuenta, correo_cuenta, metodos)
             VALUES (:nombre_banco, :numero_cuenta, :rif_cuenta, :telefono_cuenta, :correo_cuenta, :metodos)";
 
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':nombre_banco', $this->nombre_banco);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
             $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
             $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $this->telefono_cuenta);
-            $stmt->bindParam(':correo_cuenta', $this->correo_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
             $stmt->bindParam(':metodos', $this->metodos_pago);
             return $stmt->execute();
         });
+    }
+        */
+
+    // 1. El método público ahora recibe obligatoriamente el ID del usuario que audita
+    public function registrarCuentabanco($id_usuario_auditor) {
+        return $this->r_cuentabanco($id_usuario_auditor); 
+    }
+
+    // 2. El método privado procesa el CALL enviando el parámetro extra
+    private function r_cuentabanco($id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor) {
+
+            // Cifrar datos personales antes de insertar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
+            
+            $sql = "CALL sp_registrar_cuenta(
+                :nombre_banco, 
+                :numero_cuenta, 
+                :rif_cuenta, 
+                :telefono_cuenta, 
+                :correo_cuenta, 
+                :metodos, 
+                :id_usuario_auditor
+            )";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
+            $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
+            $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
+            
+            // SOLUCCIÓN CRÍTICA: Convertir el Array de checkboxes a String separado por comas para el tipo SET
+            $metodosString = is_array($this->metodos_pago) ? implode(',', $this->metodos_pago) : $this->metodos_pago;
+            $stmt->bindParam(':metodos', $metodosString);
+            
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $resultado = $stmt->execute();
+            $stmt->closeCursor(); // Liberar la conexión adecuadamente despues de ejecutar
+            return $resultado;
+        }, false);
     }
 
     public function existeNumeroCuenta($numero_cuenta, $excluir_id = null) {
@@ -527,7 +596,10 @@ class Cuentabanco extends BD {
             }
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            return $stmt->fetchColumn() > 0;
+
+            $existe = $stmt->fetchColumn() > 0;
+            $stmt->closeCursor();
+            return $existe;
         });
     }
 
@@ -535,43 +607,118 @@ class Cuentabanco extends BD {
         return $this->obtUltimaCuenta(); 
     }
     private function obtUltimaCuenta() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_cuentas ORDER BY id_cuenta DESC LIMIT 1";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $cuenta = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
             return $cuenta ? $cuenta : null;
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
     }
-    
+/*
     public function obtenerCuentaPorId($id_cuenta) {
         return $this->cuentaporid($id_cuenta); 
     }
     private function cuentaporid($id_cuenta) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
             $query = "SELECT * FROM tbl_cuentas WHERE id_cuenta = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$id_cuenta]);
             $cuenta_obt = $stmt->fetch(PDO::FETCH_ASSOC);
             return $cuenta_obt;
         });
+        
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+        
+        return $resultado;
+    }
+        */
+    public function obtenerCuentaPorId($id_cuenta) {
+        return $this->cuentaporid($id_cuenta); 
     }
 
+    private function cuentaporid($id_cuenta) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
+            // REEMPLAZO: Invocamos el procedimiento almacenado específico por ID
+            $sql = "CALL sp_obtener_cuenta_por_id(:id_cuenta)";
+            $stmt = $pdo->prepare($sql);
+            
+            // Vinculamos de manera segura tipando el parámetro como entero
+            $stmt->bindParam(':id_cuenta', $id_cuenta, \PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $cuenta_obt = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            // ¡CRÍTICO! Liberamos la conexión de los metadatos del procedimiento
+            $stmt->closeCursor(); 
+            
+            return $cuenta_obt;
+        }, false);
+
+        // Descifrar datos personales
+        if ($resultado) {
+            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
+        }
+
+        return $resultado;
+    }
+/*
     public function consultarCuentabanco() {
         return $this->c_cuentabanco(); 
     }
     private function c_cuentabanco() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT * FROM tbl_cuentas ORDER BY id_cuenta DESC";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $cuentas_obt = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $cuentas_obt;
         });
+        
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
+    }
+        */
+
+    public function consultarCuentabanco() {
+        return $this->c_cuentabanco(); 
+    }
+
+    private function c_cuentabanco() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "CALL sp_consultar_cuenta()";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            
+            $cuentas_obt = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            // ¡CRÍTICO! Limpia el canal de MySQL para que la conexión quede libre
+            $stmt->closeCursor(); 
+            
+            return $cuentas_obt;
+        }, false);
+
+        // Descifrar datos personales
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     public function cuentasReportes() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT 
             c.id_cuenta,
             c.nombre_banco,
@@ -591,15 +738,28 @@ class Cuentabanco extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $cuentas_obt = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
             return $cuentas_obt;
         });
+        
+        // Descifrar datos personales de cuentas bancarias y del cliente
+        // Incluimos campos de tbl_cuentas y tbl_clientes
+        $camposADescifrar = array_merge(self::CAMPOS_CIFRADOS, ['nombre']);
+        $resultado = $this->encryption->decryptResults($resultado, $camposADescifrar);
+        
+        return $resultado;
     }
-
+/*
     public function modificarCuentabanco($id_cuenta) {
         return $this->m_cuentabanco($id_cuenta); 
     }
     private function m_cuentabanco($id_cuenta) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
+            // Cifrar datos personales antes de actualizar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
+            
             $sql = "UPDATE tbl_cuentas SET nombre_banco = :nombre_banco, numero_cuenta = :numero_cuenta, 
             rif_cuenta = :rif_cuenta, telefono_cuenta = :telefono_cuenta, correo_cuenta = :correo_cuenta, 
             metodos = :metodos
@@ -607,16 +767,54 @@ class Cuentabanco extends BD {
 
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_cuenta', $id_cuenta);
-            $stmt->bindParam(':nombre_banco', $this->nombre_banco);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
             $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
             $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $this->telefono_cuenta);
-            $stmt->bindParam(':correo_cuenta', $this->correo_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
             $stmt->bindParam(':metodos', $this->metodos_pago);
             return $stmt->execute();
         });
     }
+        */
 
+    public function modificarCuentabanco($id_cuenta, $id_usuario_auditor) {
+        return $this->m_cuentabanco($id_cuenta, $id_usuario_auditor); 
+    }
+
+    private function m_cuentabanco($id_cuenta, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta, $id_usuario_auditor){
+
+            // Cifrar datos personales antes de actualizar
+            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
+            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
+            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
+
+            $sql = "CALL sp_modificar_cuenta(
+                :id_cuenta, :nombre_banco, :numero_cuenta, :rif_cuenta, 
+                :telefono_cuenta, :correo_cuenta, :metodos, :id_usuario_auditor
+            )";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_cuenta', $id_cuenta, \PDO::PARAM_INT);
+            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
+            $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
+            $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
+            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
+            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
+            
+            // SOLUCCIÓN CRÍTICA: Convertir el Array de checkboxes a String separado por comas para el tipo SET
+            $metodosString = is_array($this->metodos_pago) ? implode(',', $this->metodos_pago) : $this->metodos_pago;
+            $stmt->bindParam(':metodos', $metodosString);
+            
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $resultado = $stmt->execute();
+            $stmt->closeCursor(); // Liberar la conexión adecuadamente despues de ejecutar
+            return $resultado;
+        }, false);
+    }
+/*
     public function eliminarCuentabanco($id_cuenta) {
         return $this->e_cuentabanco($id_cuenta);
     }
@@ -657,6 +855,45 @@ class Cuentabanco extends BD {
             }
         });
     }
+        */
+    public function eliminarCuentabanco($id_cuenta, $id_usuario_auditor) {
+        return $this->e_cuentabanco($id_cuenta, $id_usuario_auditor);
+    }
+
+    private function e_cuentabanco($id_cuenta, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta, $id_usuario_auditor) {
+            $pagosAsociados = $this->tienePagosAsociados($id_cuenta);
+            if ($pagosAsociados['tiene_pagos']) {
+                return [
+                    'status' => 'error', 
+                    'type' => 'business_rule',
+                    'message' => 'No se puede eliminar la cuenta porque tiene pagos asociados.',
+                    'pagos' => $pagosAsociados['pagos'],
+                    'total_pagos' => $pagosAsociados['total']
+                ];
+            }
+            
+            // Si no tiene pagos asociados, llamamos de manera segura al procedimiento físico de borrado
+            $sql = "CALL sp_eliminar_cuenta(:id_cuenta, :id_usuario_auditor)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_cuenta', $id_cuenta, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            $result = $stmt->execute();
+            $stmt->closeCursor();
+            
+            if ($result) {
+                return ['status' => 'success'];
+            } else {
+                return [
+                    'status' => 'error', 
+                    'type' => 'database_error',
+                    'message' => 'Error al ejecutar la eliminación en el servidor.',
+                    'pagos' => [],
+                    'total_pagos' => 0
+                ];
+            }
+        }, false);
+    }
 
     private function tienePagosAsociados($id_cuenta) {
         return $this->ejecutarConConexionSegura(function($pdo) {
@@ -665,7 +902,9 @@ class Cuentabanco extends BD {
                 $stmt = $pdo->prepare($sql);
                 $stmt->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
                 $stmt->execute();
+                
                 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+                $stmt->closeCursor();
                 $count = (int)$resultado['total'];
 
                 if ($count > 0) {
@@ -682,6 +921,7 @@ class Cuentabanco extends BD {
                     $stmtPagos->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
                     $stmtPagos->execute();
                     $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
+                    $stmtPagos->closeCursor();
                     
                     return [
                         'tiene_pagos' => true,
@@ -695,7 +935,9 @@ class Cuentabanco extends BD {
                 $stmt = $pdo->prepare($sql);
                 $stmt->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
                 $stmt->execute();
+                
                 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+                $stmt->closeCursor();
                 $count = (int)$resultado['total'];
 
                 if ($count > 0) {
@@ -710,6 +952,7 @@ class Cuentabanco extends BD {
                     $stmtPagos->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
                     $stmtPagos->execute();
                     $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
+                    $stmtPagos->closeCursor();
                     
                     return [
                         'tiene_pagos' => true,
@@ -734,14 +977,18 @@ class Cuentabanco extends BD {
             $sql = "SHOW COLUMNS FROM tbl_cuentas LIKE 'estado'";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
-            if ($stmt->rowCount() == 0) {
+            
+            $columnExists = $stmt->rowCount() == 0;
+            $stmt->closeCursor();
+
+            if ($columnExists) {
                 $alterSql = "ALTER TABLE tbl_cuentas 
                 ADD estado ENUM('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado'";
                 $pdo->exec($alterSql);
             }
         });
     }
-
+/*
     public function cambiarEstado($nuevoEstado) {
         return $this->estadoCuenta($nuevoEstado); 
     }
@@ -758,6 +1005,24 @@ class Cuentabanco extends BD {
                 return false;
             }
         });
+    }
+        */
+    public function cambiarEstado($nuevoEstado, $id_usuario_auditor) {
+        return $this->estadoCuenta($nuevoEstado, $id_usuario_auditor); 
+    }
+
+    private function estadoCuenta($nuevoEstado, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstado, $id_usuario_auditor) {
+            $sql = "CALL sp_cambiar_estado_cuenta(:id_cuenta, :estado, :id_usuario_auditor)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':estado', $nuevoEstado);
+            $stmt->bindParam(':id_cuenta', $this->id_cuenta, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
 }
 ?>

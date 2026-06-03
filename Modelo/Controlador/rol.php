@@ -28,6 +28,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo json_encode($permisosActualizados);
             exit;
         case 'registrar':
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $rol = new Rol();
             $rol->setNombreRol($_POST['nombre_rol']);
 
@@ -41,18 +51,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            if ($rol->registrarRol()) {
+            if ($rol->registrarRol($id_usuario_sesion)) {
                 $rolRegistrado = $rol->obtenerUltimoRol();
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_ROLES,
-                        'INCLUIR',
-                        'El usuario incluyó un nuevo rol: ' . $_POST['nombre_rol'],
-                        'media'
-                    );
-                }
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Rol registrado correctamente',
@@ -103,6 +103,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'modificar':
             $id_rol  = $_POST['id_rol'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $rol = new Rol();
             $rol->setIdRol($id_rol);
             $rol->setNombreRol($_POST['nombre_rol']);
@@ -118,19 +128,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             $rolViejo = $rol->obtenerRolPorId($id_rol);
-            if ($rol->modificarRol($id_rol)) {
+            if ($rol->modificarRol($id_rol, $id_usuario_sesion)) {
                 $rolActualizado = $rol->obtenerRolPorId($id_rol);
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_ROLES,
-                        'MODIFICAR',
-                        'El usuario modificó el rol: ' . $_POST['nombre_rol']. ' (Antes: ' . ($rolViejo ? $rolViejo['nombre_rol'] : 'Desconocido') . ')',
-                        'media'
-                    );
-                }
-
                 echo json_encode([
                     'status' => 'success',
                     'rol' => $rolActualizado
@@ -142,6 +141,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             $id_rol = $_POST['id_rol'] ?? null;
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
             
             $rol = new Rol();
             $errores = $rol->validarEliminar($id_rol);
@@ -156,17 +164,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             $rolEliminado = $rol->obtenerRolPorId($id_rol);
-            if ($rol->eliminarRol($id_rol)) {
-                    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                        $bitacoraModel = new Bitacora();
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_ROLES,
-                            'ELIMINAR',
-                            'El usuario eliminó el rol: ' . ($rolEliminado ? $rolEliminado['nombre_rol'] : 'ID ' . $id_rol),
-                            'media'
-                        );
-                    }
+            if ($rol->eliminarRol($id_rol, $id_usuario_sesion)) {
                 echo json_encode(['status' => 'success']);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el rol']);

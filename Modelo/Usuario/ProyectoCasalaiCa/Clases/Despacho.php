@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 
@@ -13,6 +14,10 @@ class Despacho extends BD{
     private $estado;
     private $correlativo;
     private $tablerecepcion = 'tbl_despachos';
+    private $encryption;
+    
+    // Campos cifrados de clientes (para descifrar en reportes)
+    const CAMPOS_CIFRADOS_CLIENTES = ['nombre', 'direccion', 'telefono', 'correo'];
     
     // Constantes para validaciones
     const MAX_DESCRIPCION = 500;
@@ -65,6 +70,7 @@ class Despacho extends BD{
     }
 
     public function __construct($tipo = 'P') {
+        $this->encryption = new Encryption();
     }
     
     /**
@@ -351,7 +357,7 @@ class Despacho extends BD{
         return $this->obt_cliente();
     }
     private function obt_cliente() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             try{
                 $p = $pdo->prepare("SELECT * FROM tbl_clientes");
                 $p->execute();
@@ -360,6 +366,13 @@ class Despacho extends BD{
                 return ['error' => true, 'mensaje' => $e->getMessage()];
             }
         });
+        
+        // Descifrar datos personales de los clientes
+        if (is_array($resultado) && !isset($resultado['error'])) {
+            $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_CLIENTES);
+        }
+        
+        return $resultado;
     }
 
     public function listadoproductos() {
@@ -606,7 +619,7 @@ class Despacho extends BD{
     }
 
     public function getDespachosPorCliente($fechaInicio = null, $fechaFin = null) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($fechaInicio, $fechaFin){
             try {
                 $sql = "
                     SELECT 
@@ -637,6 +650,13 @@ class Despacho extends BD{
                 return ['error' => true, 'mensaje' => $e->getMessage()];
             }
         });
+        
+        // Descifrar datos personales de los clientes
+        if (is_array($resultado) && !isset($resultado['error'])) {
+            $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS_CLIENTES);
+        }
+        
+        return $resultado;
     }
 
     public function getDespachosPorTipoCompra($fechaInicio = null, $fechaFin = null) {
