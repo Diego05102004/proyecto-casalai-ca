@@ -10,8 +10,7 @@
  */
 
 require_once __DIR__ . '/config.php';
-
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Login;
+require_once __DIR__ . '/../Modelo/Usuario/ProyectoCasalaiCa/Clases/Login.php';
 
 // Solo permitir método POST
 validateMethod(['POST']);
