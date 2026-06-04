@@ -223,29 +223,33 @@ class Productos extends BD{
      */
 
     protected function ejecutarConConexionSegura($operation) {
-        try {
-            parent::__construct('P'); 
-            $pdo = parent::getConexion(); 
+    try {
+        parent::__construct('P'); 
+        $pdo = parent::getConexion(); 
 
-            if (!$pdo instanceof \PDO) {
-                throw new \RuntimeException("La conexión PDO no es válida o es nula.");
-            }
-
-            $pdo->beginTransaction();
-            $resultado = $operation($pdo);
-            $pdo->commit();
-            
-            return $resultado;
-        } catch (\Exception $e) {
-            $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
-        } finally {
-            $this->cerrar();
+        if (!$pdo instanceof \PDO) {
+            throw new \RuntimeException("La conexión PDO no es válida o es nula.");
         }
+
+        // ELIMINADO: $pdo->beginTransaction(); ya que el procedimiento maneja su propia transacción
+        
+        $resultado = $operation($pdo);
+        
+        // ELIMINADO: $pdo->commit();
+        
+        return $resultado;
+    } catch (\Exception $e) {
+        $pdo = parent::getConexion();
+        // El rollback se ejecutará aquí solo si por alguna razón una consulta externa dejó una transacción abierta
+        if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+    } finally {
+        $this->cerrar();
     }
+}
+
 
     private function validarProducto($datos) {
         $errores = [];
@@ -681,97 +685,78 @@ class Productos extends BD{
     private function g_ingresarProducto($datosCategoria) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($datosCategoria){
             try {
-                // Solo iniciar transacción si no hay una activa
-                $transaccionIniciada = false;
-                if (!$pdo->inTransaction()) {
-                    $pdo->beginTransaction();
-                    $transaccionIniciada = true;
-                }
-
+                // Obtener el nombre de la categoría desde la tabla de categoría
                 if (empty($datosCategoria['tabla_categoria'])) {
                     throw new PDOException("No se especificó la tabla de categoría.");
                 }
                 $tablaCategoria = $datosCategoria['tabla_categoria'];
-
+                
+                // Extraer el nombre de la categoría del nombre de la tabla
                 $nombreCategoria = str_replace('_', ' ', ucfirst(str_replace('cat_', '', $tablaCategoria)));
 
-                $sqlCatId = "SELECT id_categoria FROM tbl_categoria WHERE LOWER(nombre_categoria) = LOWER(:nombre_categoria) LIMIT 1";
-                $stmtCatId = $pdo->prepare($sqlCatId);
-                $stmtCatId->bindParam(':nombre_categoria', $nombreCategoria);
-                $stmtCatId->execute();
-                $idCategoria = $stmtCatId->fetchColumn();
-
-                if (!$idCategoria) {
-                    if ($transaccionIniciada && $pdo->inTransaction()) {
-                        $pdo->rollBack();
-                    }
-                    throw new PDOException("No se encontró la categoría '$nombreCategoria' en la base de datos.");
+                // Construir el JSON de características
+                $caracteristicasJson = null;
+                if (!empty($datosCategoria['carac']) && is_array($datosCategoria['carac'])) {
+                    $caracteristicasJson = json_encode($datosCategoria['carac']);
                 }
 
-                // 3. Insertar producto principal
-                $sql = "INSERT INTO tbl_productos (`serial`, `nombre_producto`, `descripcion_producto`, `id_modelo`, `id_categoria`, `stock`, `stock_minimo`, `stock_maximo`, `clausula_garantia`, `precio`, `estado`)
-                        VALUES (:serial_p, :nombre_producto, :descripcion_producto, :modelo, :categoria, :stock_actual, :stock_minimo, :stock_maximo, :clausula_garantia, :precio, 'habilitado')";
+                // Obtener el ID del usuario auditor de la sesión
+                $idUsuarioAuditor = $_SESSION['id_usuario'] ?? 1; // Default a 1 si no hay sesión
+
+                // Llamar al procedimiento almacenado con parámetro OUT
+                $sql = "CALL sp_registrar_producto(
+                    :serial,
+                    :nombre_producto,
+                    :descripcion_producto,
+                    :id_modelo,
+                    :stock,
+                    :stock_minimo,
+                    :stock_maximo,
+                    :clausula_garantia,
+                    :precio,
+                    :estado,
+                    :nombre_categoria,
+                    :id_usuario_auditor,
+                    :caracteristicas,
+                    :imagen,
+                    @id_producto
+                )";
 
                 $stmt = $pdo->prepare($sql);
-
-                $stmt->bindParam(':serial_p', $this->serial);
+                
+                $stmt->bindParam(':serial', $this->serial);
                 $stmt->bindParam(':nombre_producto', $this->nombre_producto);
                 $stmt->bindParam(':descripcion_producto', $this->descripcion_p);
-                $stmt->bindParam(':modelo', $this->id_modelo);
-                $stmt->bindParam(':categoria', $idCategoria); // Usar el id_categoria obtenido
-                $stmt->bindParam(':stock_actual', $this->stock_actual);
+                $stmt->bindParam(':id_modelo', $this->id_modelo);
+                $stmt->bindParam(':stock', $this->stock_actual);
                 $stmt->bindParam(':stock_minimo', $this->stock_min);
                 $stmt->bindParam(':stock_maximo', $this->stock_max);
                 $stmt->bindParam(':clausula_garantia', $this->clausula_garantia);
                 $stmt->bindParam(':precio', $this->precio);
+                $stmt->bindValue(':estado', 'habilitado');
+                $stmt->bindParam(':nombre_categoria', $nombreCategoria);
+                $stmt->bindParam(':id_usuario_auditor', $idUsuarioAuditor);
+                $stmt->bindParam(':caracteristicas', $caracteristicasJson);
+                $stmt->bindParam(':imagen', $this->imagen);
 
                 if (!$stmt->execute()) {
                     $errorInfo = $stmt->errorInfo();
-                    if ($transaccionIniciada && $pdo->inTransaction()) {
-                        $pdo->rollBack();
-                    }
-                    throw new PDOException("Error SQL al insertar producto: " . $errorInfo[2]);
+                    throw new PDOException("Error al ejecutar procedimiento almacenado: " . $errorInfo[2]);
                 }
 
-                $idProducto = $pdo->lastInsertId();
+                $stmt->closeCursor();
 
-                // 4. Insertar características dinámicas en la tabla de la categoría
-                if (!empty($tablaCategoria) && !empty($datosCategoria['carac']) && is_array($datosCategoria['carac'])) {
-                    $caracteristicas = $datosCategoria['carac'];
-
-                    $campos = array_keys($caracteristicas);
-                    $placeholders = array_map(function($k){ return ':' . $k; }, $campos);
-
-                    $sqlCat = "INSERT INTO `$tablaCategoria` (id_producto, " . implode(',', $campos) . ") VALUES (:id_producto, " . implode(',', $placeholders) . ")";
-                    $stmtCat = $pdo->prepare($sqlCat);
-                    $stmtCat->bindParam(':id_producto', $idProducto);
-
-                    foreach ($caracteristicas as $campo => $valor) {
-                        $stmtCat->bindValue(':' . $campo, $valor);
-                    }
-
-                    if (!$stmtCat->execute()) {
-                        $errorInfo = $stmtCat->errorInfo();
-                        if ($transaccionIniciada && $pdo->inTransaction()) {
-                            $pdo->rollBack();
-                        }
-                        throw new PDOException("Error SQL al insertar características: " . $errorInfo[2]);
-                    }
-                }
-
-                // Solo hacer commit si iniciamos la transacción
-                if ($transaccionIniciada && $pdo->inTransaction()) {
-                    $pdo->commit();
-                }
+                // Obtener el ID del producto insertado desde la variable de sesión
+                $stmt = $pdo->query("SELECT @id_producto AS id_producto");
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $idProducto = $result['id_producto'];
+                
                 return $idProducto;
 
             } catch (PDOException $e) {
-                if ($pdo && $pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
                 throw new PDOException("Error al ingresar producto: " . $e->getMessage());
             }
-        });
+        }, false);
     }
 
     public function actualizarstockProducto($id_producto, $cantidad) {
@@ -948,134 +933,104 @@ class Productos extends BD{
     private function m_modificarProducto($id, $datosCategoria) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id, $datosCategoria){
             try {
-                // Validar que la nueva categoría exista ANTES de hacer cambios
-                if (empty($datosCategoria['Categoria'])) {
-                    throw new PDOException("No se especificó la tabla de categoría.");
+                // Validar que la categoría exista
+                if (empty($this->categoria)) {
+                    throw new PDOException("No se especificó la categoría.");
                 }
-                $tablaCategoriaNueva = $datosCategoria['Categoria']; 
                 
-                $nombreCategoriaNueva = str_replace('_', ' ', ucfirst(str_replace('cat_', '', $tablaCategoriaNueva)));
-                $sqlCatId = "SELECT id_categoria FROM tbl_categoria WHERE LOWER(nombre_categoria) = LOWER(:nombre_categoria) LIMIT 1";
-                $stmtCatId = $pdo->prepare($sqlCatId);
-                $stmtCatId->bindParam(':nombre_categoria', $nombreCategoriaNueva);
-                $stmtCatId->execute();
-                $idCategoria = $stmtCatId->fetchColumn();
-
-                if (!$idCategoria) {
-                    throw new PDOException("No se encontró la categoría '$nombreCategoriaNueva' en la base de datos.");
-                }
-
-                // Obtener categoría actual del producto
-                $sqlActual = "SELECT c.nombre_categoria 
-                            FROM tbl_productos p
-                            LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
-                            WHERE p.id_producto = :id_producto";
-                $stmtActual = $pdo->prepare($sqlActual);
-                $stmtActual->bindParam(':id_producto', $id);
-                $stmtActual->execute();
-                $nombreCategoriaActual = $stmtActual->fetchColumn();
+                // Transformar el nombre de la categoría como en el registro
+                $nombreCategoria = str_replace('_', ' ', ucfirst(str_replace('cat_', '', $this->categoria)));
                 
-                // Solo eliminar de la tabla anterior si realmente existe y es diferente
-                if ($nombreCategoriaActual) {
-                    $tablaCategoriaActual = 'cat_' . strtolower(str_replace(' ', '_', $nombreCategoriaActual));
-                    if ($tablaCategoriaActual !== $tablaCategoriaNueva) {
-                        $sqlDelete = "DELETE FROM `$tablaCategoriaActual` WHERE id_producto = :id_producto";
-                        $stmtDelete = $pdo->prepare($sqlDelete);
-                        $stmtDelete->bindParam(':id_producto', $id);
-                        $stmtDelete->execute();
-                    }
+                // Construir el JSON de características
+                $caracteristicasJson = null;
+                if (!empty($datosCategoria['carac']) && is_array($datosCategoria['carac'])) {
+                    $caracteristicasJson = json_encode($datosCategoria['carac']);
                 }
 
-                // Actualizar producto principal
-                $sql = "UPDATE tbl_productos 
-                        SET serial = :serial_p,
-                            nombre_producto = :nombre_producto,
-                            descripcion_producto = :descripcion_producto,
-                            id_modelo = :modelo,
-                            id_categoria = :categoria,
-                            stock = :stock_actual,
-                            stock_minimo = :stock_minimo,
-                            stock_maximo = :stock_maximo,
-                            clausula_garantia = :clausula_garantia,
-                            precio = :precio
-                        WHERE id_producto = :id_producto";
+                // Obtener el ID del usuario auditor de la sesión
+                $idUsuarioAuditor = $_SESSION['id_usuario'] ?? 1;
+
+                // Llamar al procedimiento almacenado con parámetro OUT
+                $sql = "CALL sp_modificar_producto(
+                    :id_producto,
+                    :serial,
+                    :nombre_producto,
+                    :descripcion_producto,
+                    :id_modelo,
+                    :stock,
+                    :stock_minimo,
+                    :stock_maximo,
+                    :clausula_garantia,
+                    :precio,
+                    :estado,
+                    :nombre_categoria,
+                    :id_usuario_auditor,
+                    :caracteristicas,
+                    :imagen,
+                    @resultado
+                )";
 
                 $stmt = $pdo->prepare($sql);
+                
                 $stmt->bindParam(':id_producto', $id);
-                $stmt->bindParam(':serial_p', $this->serial);
+                $stmt->bindParam(':serial', $this->serial);
                 $stmt->bindParam(':nombre_producto', $this->nombre_producto);
                 $stmt->bindParam(':descripcion_producto', $this->descripcion_p);
-                $stmt->bindParam(':modelo', $this->id_modelo);
-                $stmt->bindParam(':categoria', $idCategoria);
-                $stmt->bindParam(':stock_actual', $this->stock_actual);
+                $stmt->bindParam(':id_modelo', $this->id_modelo);
+                $stmt->bindParam(':stock', $this->stock_actual);
                 $stmt->bindParam(':stock_minimo', $this->stock_min);
                 $stmt->bindParam(':stock_maximo', $this->stock_max);
                 $stmt->bindParam(':clausula_garantia', $this->clausula_garantia);
                 $stmt->bindParam(':precio', $this->precio);
-                $stmt->execute();
+                $stmt->bindValue(':estado', 'habilitado');
+                $stmt->bindParam(':nombre_categoria', $nombreCategoria);
+                $stmt->bindParam(':id_usuario_auditor', $idUsuarioAuditor);
+                $stmt->bindParam(':caracteristicas', $caracteristicasJson);
+                $stmt->bindParam(':imagen', $this->imagen);
 
-                // Insertar o actualizar características en la nueva tabla de categoría
-                if (!empty($tablaCategoriaNueva) && !empty($datosCategoria['carac']) && is_array($datosCategoria['carac'])) {
-                    $caracteristicas = $datosCategoria['carac'];
-                    $campos = array_keys($caracteristicas);
-                    $placeholders = array_map(function($k){ return ':' . $k; }, $campos);
-
-                    $sqlCheck = "SELECT COUNT(*) FROM `$tablaCategoriaNueva` WHERE id_producto = :id_producto";
-                    $stmtCheck = $pdo->prepare($sqlCheck);
-                    $stmtCheck->bindParam(':id_producto', $id);
-                    $stmtCheck->execute();
-                    $existe = $stmtCheck->fetchColumn() > 0;
-
-                    if ($existe) {
-                        $set = [];
-                        foreach ($campos as $campo) {
-                            $set[] = "`$campo` = :$campo";
-                        }
-                        $sqlCat = "UPDATE `$tablaCategoriaNueva` SET " . implode(', ', $set) . " WHERE id_producto = :id_producto";
-                        $stmtCat = $pdo->prepare($sqlCat);
-                        $stmtCat->bindParam(':id_producto', $id);
-                        foreach ($caracteristicas as $campo => $valor) {
-                            $stmtCat->bindValue(':' . $campo, $valor);
-                        }
-                        if (!$stmtCat->execute()) {
-                            $errorInfo = $stmtCat->errorInfo();
-                            throw new PDOException("Error SQL al actualizar características: " . $errorInfo[2]);
-                        }
-                    } else {
-                        $sqlCat = "INSERT INTO `$tablaCategoriaNueva` (id_producto, " . implode(',', $campos) . ") VALUES (:id_producto, " . implode(',', $placeholders) . ")";
-                        $stmtCat = $pdo->prepare($sqlCat);
-                        $stmtCat->bindParam(':id_producto', $id);
-                        foreach ($caracteristicas as $campo => $valor) {
-                            $stmtCat->bindValue(':' . $campo, $valor);
-                        }
-                        if (!$stmtCat->execute()) {
-                            $errorInfo = $stmtCat->errorInfo();
-                            throw new PDOException("Error SQL al insertar características: " . $errorInfo[2]);
-                        }
-                    }
+                if (!$stmt->execute()) {
+                    $errorInfo = $stmt->errorInfo();
+                    throw new PDOException("Error al ejecutar procedimiento almacenado: " . $errorInfo[2]);
                 }
 
-                return true;
+                $stmt->closeCursor();
+
+                // Obtener el resultado desde la variable de sesión
+                $stmt = $pdo->query("SELECT @resultado AS resultado");
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $resultado = $result['resultado'];
+                
+                return $resultado == 1;
 
             } catch (PDOException $e) {
                 throw new PDOException('Error al modificar producto: ' . $e->getMessage());
             }
-        });
+        }, false);
     }
 
-    public function eliminarProducto($id) {
-        return $this->e_eliminarProducto($id);
+    public function eliminarProducto($id, $id_usuario) {
+        return $this->e_eliminarProducto($id, $id_usuario);
     }
-    private function e_eliminarProducto($id) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
+    private function e_eliminarProducto($id, $id_usuario) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $id_usuario){
             try {
-                $sql = "DELETE FROM `tbl_productos` WHERE id_producto = :id";
+                $sql = "CALL sp_eliminar_producto(:id_producto, :id_usuario_auditor)";
                 $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':id', $id);
-                $stmt->execute();
+                $stmt->bindParam(':id_producto', $id);
+                $stmt->bindParam(':id_usuario_auditor', $id_usuario);
+                $result = $stmt->execute();
+                $stmt->closeCursor();
+            
+                if ($result) {
+                    return [
+                        'success' => true,
+                        'message' => 'Producto eliminado exitosamente.'
+                    ];
+                }
+                
                 return [
-                    'success' => true,
-                    'message' => 'Producto eliminado exitosamente.'
+                    'success' => false,
+                    'message' => 'No se pudo eliminar el producto.'
                 ];
             } catch (PDOException $e) {
                 if ($e->getCode() == '23000') {
@@ -1090,7 +1045,7 @@ class Productos extends BD{
                     ];
                 }
             }
-        });
+        }, false);
     }
 
     public function obtenerModelos() {

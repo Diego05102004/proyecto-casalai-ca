@@ -53,6 +53,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $Producto->setCategoria($Categoria);
             $Producto->setPrecio($Precio);
             
+            // Procesar imagen ANTES de insertar el producto
+            $ruta_imagen = null;
+            if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
+                $imagenData = [
+                    'name' => $_FILES['imagen']['name'],
+                    'tmp_name' => $_FILES['imagen']['tmp_name'],
+                    'error' => $_FILES['imagen']['error'],
+                    'size' => $_FILES['imagen']['size']
+                ];
+                $errores_imagen = $Producto->validarImagen($imagenData);
+                
+                if (!empty($errores_imagen)) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error en la validación de la imagen',
+                        'errors' => $errores_imagen
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit;
+                } else {
+                    $directorio = "../assets/img/productos/";
+                    if (!is_dir($directorio)) {
+                        mkdir($directorio, 0755, true);
+                    }
+                    $nombre_original = $_FILES['imagen']['name'];
+                    $extension = strtolower(pathinfo($nombre_original, PATHINFO_EXTENSION));
+                    // Usar timestamp para nombre único ya que aún no tenemos id_producto
+                    $nombre_nuevo = "producto_" . time() . "_" . uniqid() . "." . $extension;
+                    $ruta_destino = $directorio . $nombre_nuevo;
+
+                    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_destino)) {
+                        $ruta_imagen = $ruta_destino;
+                        $Producto->setImagen($ruta_imagen);
+                    }
+                }
+            } else {
+                $Producto->setImagen(null);
+            }
+            
             error_log("Datos extraídos:");
             error_log("  nombre_producto: " . $nombre_producto);
             error_log("  descripcion_producto: " . $descripcion_producto);
@@ -122,61 +161,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $resultado = $Producto->ingresarProducto($_POST);
                     if ($resultado) {
                         $id_producto = $resultado;
-                        if (!defined('SKIP_SIDE_EFFECTS')) {
-                            $bitacoraModel = new Bitacora();
-                            $bitacoraModel->registrarBitacora(
-                                $_SESSION['id_usuario'],
-                                MODULO_PRODUCTOS,
-                                'INCLUIR',
-                                'El usuario incluyó un nuevo producto: ' . ($_POST['nombre_producto'] ?? ''),
-                                'media'
-                            );
-                        }
-
                         $respuesta = [
                             'status' => 'success',
-                            'id_producto' => $id_producto
+                            'id_producto' => $id_producto,
+                            'imagen' => $ruta_imagen,
+                            'mensaje' => $ruta_imagen ? "Producto registrado e imagen guardada correctamente." : "Producto registrado correctamente."
                         ];
-
-                        // Procesar imagen si fue enviada
-                        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
-                            // Validar imagen usando las nuevas validaciones
-                            $imagenData = [
-                                'name' => $_FILES['imagen']['name'],
-                                'tmp_name' => $_FILES['imagen']['tmp_name'],
-                                'error' => $_FILES['imagen']['error'],
-                                'size' => $_FILES['imagen']['size']
-                            ];
-                            $errores_imagen = $Producto->validarImagen($imagenData);
-                            
-                            if (!empty($errores_imagen)) {
-                                $respuesta['imagen_error'] = $errores_imagen;
-                            } else {
-                                $directorio = "../assets/img/productos/";
-                                if (!is_dir($directorio)) {
-                                    mkdir($directorio, 0755, true);
-                                }
-                                $nombre_original = $_FILES['imagen']['name'];
-                                $extension = strtolower(pathinfo($nombre_original, PATHINFO_EXTENSION));
-                                $nombre_nuevo = "producto_" . $id_producto . "." . $extension;
-                                $ruta_destino = $directorio . $nombre_nuevo;
-
-                                if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_destino)) {
-                                    // Intentar guardar nombre en BD si el método existe
-                                    if (method_exists($Producto, 'guardarImagenProducto')) {
-                                        // Guardar la ruta relativa completa, no solo el nombre
-                                        $Producto->guardarImagenProducto($id_producto, $ruta_destino);
-                                    }
-                                    $respuesta['imagen'] = $ruta_destino;
-                                    $respuesta['mensaje'] = "Producto registrado e imagen guardada correctamente.";
-                                } else {
-                                    $respuesta['imagen'] = null;
-                                    $respuesta['mensaje'] = "Producto registrado, pero error al guardar la imagen.";
-                                }
-                            }
-                        } else {
-                            $respuesta['mensaje'] = "Producto registrado correctamente.";
-                        }
 
                         header('Content-Type: application/json; charset=utf-8');
                         echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
@@ -187,6 +177,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         exit;
                     }
                 } catch (Exception $e) {
+                    error_log("Error al registrar producto: " . $e->getMessage());
+                    error_log("Stack trace: " . $e->getTraceAsString());
                     header('Content-Type: application/json; charset=utf-8');
                     echo json_encode(['status' => 'error', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
                     exit;
@@ -287,79 +279,71 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $Producto->setStockMin($_POST['Stock_Minimo'] ?? 0);
             $Producto->setClausulaDeGarantia($_POST['Clausula_garantia'] ?? '');
             $Producto->setCodigo($_POST['Seriales'] ?? '');
+            $Producto->setCategoria($_POST['Categoria'] ?? '');
             $Producto->setPrecio($_POST['Precio'] ?? 0);
+
+            // Procesar imagen ANTES de modificar el producto
+            $imagen_actual = $productoViejo['imagen'] ?? null;
+            if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
+                // Validar imagen usando las nuevas validaciones
+                $imagenData = [
+                    'name' => $_FILES['imagen']['name'],
+                    'tmp_name' => $_FILES['imagen']['tmp_name'],
+                    'error' => $_FILES['imagen']['error'],
+                    'size' => $_FILES['imagen']['size']
+                ];
+                $errores_imagen = $Producto->validarImagen($imagenData, false);
+                
+                if (!empty($errores_imagen)) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error en la imagen',
+                        'imagen_errors' => $errores_imagen
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
+                
+                $directorio = "../assets/img/productos/";
+                if (!is_dir($directorio)) {
+                    mkdir($directorio, 0755, true);
+                }
+                $nombre_original = $_FILES['imagen']['name'];
+                $extension = strtolower(pathinfo($nombre_original, PATHINFO_EXTENSION));
+                $nombre_nuevo = "producto_" . $id . "." . $extension;
+                $ruta_destino = $directorio . $nombre_nuevo;
+
+                if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_destino)) {
+                    $Producto->setImagen($ruta_destino);
+                    // Eliminar imagen anterior
+                    if ($imagen_actual && file_exists($imagen_actual)) {
+                        @unlink($imagen_actual);
+                    }
+                } else {
+                    $Producto->setImagen($imagen_actual);
+                }
+            } else {
+                // Mantener imagen actual si no se subió una nueva
+                $Producto->setImagen($imagen_actual);
+            }
 
             try {
                 if ($Producto->modificarProducto($id, $_POST)) {
-                    // Procesar imagen si existe
-                    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
-                        // Validar imagen usando las nuevas validaciones
-                        $imagenData = [
-                            'name' => $_FILES['imagen']['name'],
-                            'tmp_name' => $_FILES['imagen']['tmp_name'],
-                            'error' => $_FILES['imagen']['error'],
-                            'size' => $_FILES['imagen']['size']
-                        ];
-                        $errores_imagen = $Producto->validarImagen($imagenData, false); // false = imagen opcional en edición
-                        
-                        if (!empty($errores_imagen)) {
-                            header('Content-Type: application/json; charset=utf-8');
-                            echo json_encode([
-                                'status' => 'error',
-                                'message' => 'Error en la imagen',
-                                'imagen_errors' => $errores_imagen
-                            ], JSON_UNESCAPED_UNICODE);
-                            exit;
-                        }
-                        
-                        $directorio = "../assets/img/productos/";
-                        if (!is_dir($directorio)) {
-                            mkdir($directorio, 0755, true);
-                        }
-                        // Eliminar imagen anterior
-                        $extensiones = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-                        foreach ($extensiones as $ext) {
-                            $ruta_antigua = $directorio . 'producto_' . $id . '.' . $ext;
-                            if (file_exists($ruta_antigua)) {
-                                @unlink($ruta_antigua);
-                            }
-                        }
-                        // Guardar la nueva imagen
-                        $nombre_original = $_FILES['imagen']['name'];
-                        $extension = strtolower(pathinfo($nombre_original, PATHINFO_EXTENSION));
-                        $nombre_nuevo = "producto_" . $id . "." . $extension;
-                        $ruta_destino = $directorio . $nombre_nuevo;
-                        if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_destino)) {
-                            if (method_exists($Producto, 'guardarImagenProducto')) {
-                                // Guardar la ruta relativa completa, no solo el nombre
-                                $Producto->guardarImagenProducto($id, $ruta_destino);
-                            }
-                            header('Content-Type: application/json; charset=utf-8');
-                            echo json_encode(['status' => 'success', 'mensaje' => 'Producto modificado e imagen actualizada'], JSON_UNESCAPED_UNICODE);
-                            exit;
-                        } else {
-                            header('Content-Type: application/json; charset=utf-8');
-                            echo json_encode(['status' => 'error', 'message' => 'Error al guardar la imagen'], JSON_UNESCAPED_UNICODE);
-                            exit;
-                        }
-                    } else {
-                        // Sin imagen, solo éxito en modificación
-                        $productoActualizado = $Producto->obtenerProductoPorId($id);
-                        if (!defined('SKIP_SIDE_EFFECTS')) {
-                            $bitacoraModel = new Bitacora();
-                            $bitacoraModel->registrarBitacora(
-                                $_SESSION['id_usuario'],
-                                MODULO_PRODUCTOS,
-                                'MODIFICAR',
-                                'El usuario modificó el producto: ' . ($_POST['nombre_producto'] ?? '') . ' | Antes: ' . json_encode($productoViejo) . ' | Después: ' . json_encode($productoActualizado),
-                                'media'
-                            );
-                        }
-
-                        header('Content-Type: application/json; charset=utf-8');
-                        echo json_encode(['status' => 'success', 'mensaje' => 'Producto modificado correctamente'], JSON_UNESCAPED_UNICODE);
-                        exit;
+                    $productoActualizado = $Producto->obtenerProductoPorId($id);
+                    if (!defined('SKIP_SIDE_EFFECTS')) {
+                        $bitacoraModel = new Bitacora();
+                        $bitacoraModel->registrarBitacora(
+                            $_SESSION['id_usuario'],
+                            MODULO_PRODUCTOS,
+                            'MODIFICAR',
+                            'El usuario modificó el producto: ' . ($_POST['nombre_producto'] ?? '') . ' | Antes: ' . json_encode($productoViejo) . ' | Después: ' . json_encode($productoActualizado),
+                            'media'
+                        );
                     }
+
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['status' => 'success', 'mensaje' => 'Producto modificado correctamente'], JSON_UNESCAPED_UNICODE);
+                    exit;
                 } else {
                     header('Content-Type: application/json; charset=utf-8');
                     echo json_encode(['status' => 'error', 'message' => 'Error al modificar el producto'], JSON_UNESCAPED_UNICODE);
@@ -401,19 +385,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $response = $producto->eliminarProducto($id_producto);
+            $id_usuario = $_SESSION['id_usuario'];
+            $response = $producto->eliminarProducto($id_producto, $id_usuario);
             if (is_array($response) && ($response['success'] ?? false)) {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_PRODUCTOS,
-                        'ELIMINAR',
-                        'El usuario eliminó el producto ID: ' . $id_producto,
-                        'media'
-                    );
-                }
 
                 echo json_encode(['status' => 'success', 'message' => $response['message']], JSON_UNESCAPED_UNICODE);
             } else {

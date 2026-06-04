@@ -389,30 +389,23 @@ class Permisos extends BD {
     }
     private function g_guardarPermisos($permisosForm, $roles, $modulos, $acciones) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($permisosForm, $roles, $modulos, $acciones) {
-            // Solo eliminar permisos de los roles que se están procesando (excepto rol 6)
-            $rolesProcesar = array_filter($roles, function($rol) {
-                return $rol['id_rol'] != 6;
-            });
-            
-            if (!empty($rolesProcesar)) {
-                $rolesIds = array_column($rolesProcesar, 'id_rol');
-                $placeholders = str_repeat('?,', count($rolesIds) - 1) . '?';
-                $stmtDelete = $pdo->prepare("DELETE FROM tbl_permisos WHERE id_rol IN ($placeholders)");
-                $stmtDelete->execute($rolesIds);
+            try {
+                // Convertir arrays a JSON para pasar al procedimiento almacenado
+                $permisosJson = json_encode($permisosForm);
+                $rolesJson = json_encode($roles);
+                $modulosJson = json_encode($modulos);
+                $accionesJson = json_encode($acciones);
+
+                // Llamar al procedimiento almacenado con LOCK IN SHARE MODE
+                $sql = "CALL sp_guardar_permisos(?, ?, ?, ?)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$permisosJson, $rolesJson, $modulosJson, $accionesJson]);
+                $stmt->closeCursor();
+
+                return true;
+            } catch (PDOException $e) {
+                throw new PDOException('Error al guardar permisos: ' . $e->getMessage());
             }
-            
-            $stmt = $pdo->prepare("INSERT INTO tbl_permisos (id_rol, id_modulo, accion, estatus) VALUES (?, ?, ?, ?)");
-            foreach ($roles as $rol) {
-                if ($rol['id_rol'] == 6) continue;
-                foreach ($modulos as $modulo) {
-                    foreach ($acciones as $accion) {
-                        $estatus = (isset($permisosForm[$rol['id_rol']][$modulo['id_modulo']][$accion]) && $permisosForm[$rol['id_rol']][$modulo['id_modulo']][$accion] == 'on')
-                            ? 'Permitido' : 'No Permitido';
-                        $stmt->execute([$rol['id_rol'], $modulo['id_modulo'], $accion, $estatus]);
-                    }
-                }
-            }
-            return true;
         });
     }
 }
