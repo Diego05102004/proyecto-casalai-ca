@@ -28,7 +28,7 @@ BEGIN
 
     -- Bloqueo exclusivo de la tabla de permisos para evitar modificaciones concurrentes
     -- FOR UPDATE bloquea todas las filas para lectura y escritura
-    SELECT * FROM tbl_permisos FOR UPDATE;
+    SELECT * FROM tbl_permisos LOCK IN SHARE MODE;
 
     -- Eliminar permisos existentes de los roles especificados (excepto rol 6)
     SET v_roles_count = JSON_LENGTH(p_roles_json);
