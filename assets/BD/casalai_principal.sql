@@ -1443,7 +1443,7 @@ END $$
 DELIMITER ;
 
 -- -----------------------------------------------------------------------------
--- 2. PROCEDIMIENTO: CONSULTAR CLIENTE (CON BLOQUEO COMPARTIDO)
+-- 2. PROCEDIMIENTO: CONSULTAR CLIENTE
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -1474,7 +1474,7 @@ END $$
 DELIMITER ;
 
 -- -----------------------------------------------------------------------------
--- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -1491,7 +1491,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del cliente.';
     END;
 
-    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_clientes` 
     WHERE `id_clientes` = p_id_cliente
     LIMIT 1
@@ -1688,7 +1687,7 @@ END $$
 DELIMITER ;
 
 -- -----------------------------------------------------------------------------
--- 2. PROCEDIMIENTO: CONSULTAR CUENTA (CON BLOQUEO COMPARTIDO)
+-- 2. PROCEDIMIENTO: CONSULTAR CUENTA
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -1702,7 +1701,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error estructural al cargar la tabla de cuentas.';
     END;
 
-    -- Trae todas las columnas de forma segura con Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_cuentas` 
     ORDER BY `id_cuenta` DESC;
 END $$
@@ -1710,7 +1708,7 @@ END $$
 DELIMITER ;
 
 -- -----------------------------------------------------------------------------
--- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -1727,7 +1725,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información de la cuenta bancaria.';
     END;
 
-    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_cuentas` 
     WHERE `id_cuenta` = p_id_cuenta
     LIMIT 1
