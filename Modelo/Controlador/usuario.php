@@ -40,6 +40,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             
             try {
+                $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+                if (!$id_usuario_sesion) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                    ]);
+                    exit;
+                }
+                
                 $usuario = new Usuarios();
                 $usuario->setUsername($_POST['nombre_usuario']);
                 $usuario->setClave($_POST['clave_usuario']);
@@ -49,80 +59,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $usuario->setTelefono($_POST['telefono_usuario']);
                 $usuario->setRango($_POST['rango']);
                 $usuario->setCedula($_POST['cedula']);
-            
-            // Preparar datos para validación
-            $datos_validacion = [
-                'username' => $_POST['nombre_usuario'],
-                'clave' => $_POST['clave_usuario'],
-                'nombre' => $_POST['nombre'],
-                'apellido' => $_POST['apellido_usuario'],
-                'correo' => $_POST['correo_usuario'],
-                'telefono' => $_POST['telefono_usuario'],
-                'cedula' => $_POST['cedula'],
-                'id_rol' => $_POST['rango']
-            ];
-            
-            // Validar datos del usuario usando las nuevas validaciones centralizadas
-            $errores = $usuario->validarRegistrarUsuario($datos_validacion);
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Errores de validación',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
-
-            if ($usuario->existeUsuario($_POST['nombre_usuario'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El nombre de usuario ya existe'
-                ]);
-                exit;
-            }
-            
-            if ($usuario->existeCedula($_POST['cedula'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'La cedula ingresada pertenece a un usuario que ya existe'
-                ]);
-                exit;
-            }
-            
-            if ($usuario->existeCorreo($_POST['correo_usuario'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El correo ingresado se encuentra en uso por un usuario que ya existe'
-                ]);
-                exit;
-            }
-
-            if ($usuario->ingresarUsuario()) {
-                $usuarioRegistrado = $usuario->obtenerUltimoUsuario();
                 
-                // Registrar en bitácora
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_USUARIO,
-                        'INCLUIR',
-                        'El usuario incluyó un nuevo usuario: ' . $_POST['nombre_usuario'],
-                        'media'
-                    );
+                // Preparar datos para validación
+                $datos_validacion = [
+                    'username' => $_POST['nombre_usuario'],
+                    'clave' => $_POST['clave_usuario'],
+                    'nombre' => $_POST['nombre'],
+                    'apellido' => $_POST['apellido_usuario'],
+                    'correo' => $_POST['correo_usuario'],
+                    'telefono' => $_POST['telefono_usuario'],
+                    'cedula' => $_POST['cedula'],
+                    'id_rol' => $_POST['rango']
+                ];
+                
+                // Validar datos del usuario usando las nuevas validaciones centralizadas
+                $errores = $usuario->validarRegistrarUsuario($datos_validacion);
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Errores de validación',
+                        'errors' => $errores
+                    ]);
+                    exit;
+                }
+
+                if ($usuario->existeUsuario($_POST['nombre_usuario'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El nombre de usuario ya existe'
+                    ]);
+                    exit;
                 }
                 
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Usuario registrado correctamente',
-                    'usuario' => $usuarioRegistrado
-                ]);
-            } else {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error al registrar el usuario'
-                ]);
-            }
+                if ($usuario->existeCedula($_POST['cedula'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'La cedula ingresada pertenece a un usuario que ya existe'
+                    ]);
+                    exit;
+                }
+                
+                if ($usuario->existeCorreo($_POST['correo_usuario'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'El correo ingresado se encuentra en uso por un usuario que ya existe'
+                    ]);
+                    exit;
+                }
+
+                if ($usuario->ingresarUsuario($id_usuario_sesion)) {
+                    $usuarioRegistrado = $usuario->obtenerUltimoUsuario();
+                    
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Usuario registrado correctamente',
+                        'usuario' => $usuarioRegistrado
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error al registrar el usuario'
+                    ]);
+                }
             } catch (Exception $e) {
                 echo json_encode([
                     'status' => 'error',
@@ -184,6 +182,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             try {
                 $id_usuario = $_POST['id_usuario'];
+                $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+                
+                if (!$id_usuario_sesion) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                    ]);
+                    exit;
+                }
                 
                 // Validar datos de entrada usando las nuevas validaciones centralizadas
                 $datos_validacion = [
@@ -241,29 +248,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     exit;
                 }
                     $usuarioViejo = $usuario->obtenerUsuarioPorId($id_usuario);
-                if ($usuario->modificarUsuario($id_usuario)) {
+                if ($usuario->modificarUsuario($id_usuario, $id_usuario_sesion)) {
                     $usuarioActualizado = $usuario->obtenerUsuarioPorId($id_usuario);
-                    
-                    // Registrar en bitácora
-                    if (!defined('SKIP_SIDE_EFFECTS')) {
-                        $bitacoraModel = new Bitacora();
-                        $detalle = sprintf(
-                            'Actualización de usuario (ID: %d). Usuario: %s %s (antes) -> %s %s (después)',
-                            $id_usuario,
-                            $usuarioViejo['nombres'] ?? 'N/A',
-                            $usuarioViejo['apellidos'] ?? 'N/A',
-                            $usuarioActualizado['nombres'] ?? 'N/A',
-                            $usuarioActualizado['apellidos'] ?? 'N/A'
-                        );
-                        
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_USUARIO,
-                            'MODIFICAR',
-                            $detalle,
-                            'media'
-                        );
-                    }
                     
                     echo json_encode([
                         'status' => 'success',
@@ -282,6 +268,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'eliminar':
             $id_usuario = $_POST['id_usuario'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+                
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
             
             // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = ['id_usuario' => $id_usuario];
@@ -300,19 +295,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Obtener datos del usuario antes de eliminarlo
             $usuarioAEliminar = $usuarioModel->obtenerUsuarioPorId($id_usuario);
             
-            if ($usuarioModel->eliminarUsuario($id_usuario)) {
-                // Registrar en bitácora
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_USUARIO,
-                        'ELIMINAR',
-                        'Eliminación del usuario: ' . $usuarioAEliminar . '',
-                        'media'
-                    );
-                }
-                
+            if ($usuarioModel->eliminarUsuario($id_usuario, $id_usuario_sesion)) {
                 echo json_encode(['status' => 'success']);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Error al eliminar el usuario']);
@@ -322,6 +305,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'cambiar_estatus':
             $id_usuario = $_POST['id_usuario'];
             $nuevoEstatus = $_POST['nuevo_estatus'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
             
             // Validar datos de entrada usando las nuevas validaciones centralizadas
             $datos_validacion = [
@@ -343,19 +335,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $usuario->setId($id_usuario);
             
-            if ($usuario->cambiarEstatus($nuevoEstatus)) {
-                // Registrar en bitácora
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_USUARIO,
-                        'MODIFICAR',
-                        'Cambio de estatus de usuario: ' . $id_usuario . ' a ' . $nuevoEstatus,
-                        'media'
-                    );
-                }
-                
+            if ($usuario->cambiarEstatus($nuevoEstatus, $id_usuario_sesion)) {
                 echo json_encode(['status' => 'success']);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Error al cambiar el estatus']);

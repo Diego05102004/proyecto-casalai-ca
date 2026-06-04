@@ -13,6 +13,7 @@ class Login extends BD
 {
     private ?string $username = null;
     private ?string $password = null;
+    private ?PDO $pdo = null;
     
     const MAX_USERNAME = 50;
     const MIN_USERNAME = 3;
@@ -344,7 +345,7 @@ class Login extends BD
                 $errores['clave'] = 'La contraseña es obligatoria';
             } elseif (mb_strlen($clave) < 6 || mb_strlen($clave) > 15) {
                 $errores['clave'] = 'La contraseña debe tener entre 6 y 15 caracteres';
-            } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"\'<>,.?\/\\]).+$/', $clave)) {
+            } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"\'<>,.?\/\\\\]).+$/', $clave)) {
                 $errores['clave'] = 'La contraseña debe tener al menos una mayúscula, un número y un carácter especial';
             }
         }

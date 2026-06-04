@@ -28,22 +28,22 @@ class Usuarios extends BD {
     // Constantes de validación
     const MAX_ID_USUARIO = 999999999;
     const MIN_ID_USUARIO = 1;
-    const MAX_USERNAME = 50;
+    const MAX_USERNAME = 255;
     const MIN_USERNAME = 3;
     const MAX_CLAVE = 255;
     const MIN_CLAVE = 8;
-    const MAX_NOMBRE = 100;
+    const MAX_NOMBRE = 255;
     const MIN_NOMBRE = 2;
-    const MAX_APELLIDO = 100;
+    const MAX_APELLIDO = 255;
     const MIN_APELLIDO = 2;
-    const MAX_CORREO = 150;
-    const MAX_TELEFONO = 15;
+    const MAX_CORREO = 255;
+    const MAX_TELEFONO = 255;
     const MIN_TELEFONO = 7;
     const MAX_CEDULA = 10;
     const MIN_CEDULA = 6;
     const MAX_ID_ROL = 999999999;
     const MIN_ID_ROL = 1;
-    const ESTADOS_VALIDOS = ['habilitado', 'deshabilitado', 'inhabilitado'];
+    const ESTADOS_VALIDOS = ['habilitado', 'inhabilitado'];
     
     // Constantes adicionales para validaciones
     const MAX_REGISTROS_PAGINA = 100;
@@ -95,31 +95,53 @@ class Usuarios extends BD {
     }
 
     /**
+     * @return PDO
+     */
+    public function getConexion() {
+        return $this->pdo;
+    }
+    
+    /**
      * @param callable
-     * @param string
+     * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation, $tipo = 'S') {
-        $db = new BD($tipo); 
-        $pdo = $db->getConexion();
-
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
+            parent::__construct('S'); 
+            $pdo = parent::getConexion(); 
+
             if (!$pdo instanceof \PDO) {
-                throw new \RuntimeException("La conexión PDO [$tipo] no es válida.");
+                throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
-            $resultado = $operation($pdo);
-            $pdo->commit();
-            return $resultado;
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
 
+            $resultado = $operation($pdo);
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
+            
+            return $resultado;
         } catch (\Exception $e) {
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            $pdo = parent::getConexion();
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            throw new \RuntimeException("Error en BD [$tipo]: " . $e->getMessage());
+            throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
         } finally {
-            $db->cerrar();
+            $this->cerrar();
         }
     }
     
@@ -668,7 +690,7 @@ class Usuarios extends BD {
         
         return $errores;
     }
-
+/*
     public function clienteExiste($cedula) {
         return $this->ejecutarConConexionSegura(function($pdoP) use ($cedula) {
             $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = ?";
@@ -676,13 +698,13 @@ class Usuarios extends BD {
             $stmt->execute([$cedula]);
             return $stmt->fetchColumn() > 0;
         }, 'P');
-    }
+    }*/
 
-    public function ingresarUsuario() {
-        return $this->i_ingresarUsuario();
+    public function ingresarUsuario($id_usuario_auditor) {
+        return $this->i_ingresarUsuario($id_usuario_auditor);
     }
-    private function i_ingresarUsuario() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+    private function i_ingresarUsuario($id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor) {
             
             $claveEncriptada = password_hash($this->clave, PASSWORD_BCRYPT);
             
@@ -692,29 +714,35 @@ class Usuarios extends BD {
             $correo_cifrado = $this->encryption->encrypt($this->correo);
             $telefono_cifrado = $this->encryption->encrypt($this->telefono);
 
-            $sql = "INSERT INTO tbl_usuarios (username, password, id_rol, correo, nombres, apellidos, telefono, cedula)
-                    VALUES (:username, :clave, :id_rol, :correo, :nombres, :apellidos, :telefono, :cedula)";
-            
+            $sql = "CALL sp_incluir_usuario(
+                :username, 
+                :clave, 
+                :cedula, 
+                :id_rol, 
+                :correo, 
+                :nombres, 
+                :apellidos,
+                :telefono, 
+                :id_usuario_auditor
+            )";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                ':username'  => $this->username,
-                ':clave'     => $claveEncriptada,
-                ':id_rol'    => $this->id_rol,
-                ':correo'    => $correo_cifrado,
-                ':nombres'   => $nombre_cifrado,
-                ':apellidos' => $apellido_cifrado,
-                ':telefono'  => $telefono_cifrado,
-                ':cedula'    => $this->cedula
-            ]);
+            $stmt->bindParam(':username', $this->username);
+            $stmt->bindParam(':clave', $claveEncriptada);
+            $stmt->bindParam(':cedula', $this->cedula);
+            $stmt->bindParam(':id_rol', $this->id_rol);
+            $stmt->bindParam(':correo', $correo_cifrado);
+            $stmt->bindParam(':nombres', $nombre_cifrado);
+            $stmt->bindParam(':apellidos', $apellido_cifrado);
+            $stmt->bindParam(':telefono', $telefono_cifrado);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
 
-            if (!$this->clienteExiste($this->cedula)) {
-                $this->registrarClienteEnP();
-            }
-            return true;
-
-        }, 'S');
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado ? true : false;
+        }, false);
     }
-
+/*
     private function registrarClienteEnP() {
         return $this->ejecutarConConexionSegura(function($pdoP) {
             $sqlCliente = "INSERT INTO tbl_clientes (nombre, cedula, telefono, direccion, correo, activo)
@@ -730,63 +758,55 @@ class Usuarios extends BD {
                 ':correo'   => $this->correo
             ]);
         }, 'P');
+    }*/
+
+    public function modificarUsuario($id_usuario, $id_usuario_auditor) {
+        return $this->m_modificarUsuario($id_usuario, $id_usuario_auditor);
     }
 
-    public function modificarUsuario($id_usuario) {
-        return $this->m_modificarUsuario($id_usuario);
-    }
-
-    private function m_modificarUsuario($id_usuario) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
+    private function m_modificarUsuario($id_usuario, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario, $id_usuario_auditor) {
             
-            // Cifrar datos personales antes de actualizar
-            $nombre_cifrado = $this->encryption->encrypt($this->nombre);
+            // 1. Cifrar datos personales antes de actualizar
+            $nombre_cifrado   = $this->encryption->encrypt($this->nombre);
             $apellido_cifrado = $this->encryption->encrypt($this->apellido);
-            $correo_cifrado = $this->encryption->encrypt($this->correo);
+            $correo_cifrado   = $this->encryption->encrypt($this->correo);
             $telefono_cifrado = $this->encryption->encrypt($this->telefono);
             
-            $sql = "UPDATE tbl_usuarios SET 
-                        username = :username, 
-                        id_rol = :id_rol,
-                        nombres = :nombre,
-                        apellidos = :apellido,
-                        correo = :correo,
-                        telefono = :telefono,
-                        cedula = :cedula";
+            // 2. Sentencia SQL fija con 9 parámetros (Sin clave)
+            $sql = "CALL sp_modificar_usuario(
+                :id_usuario,
+                :username,  
+                :cedula, 
+                :id_rol, 
+                :correo, 
+                :nombres, 
+                :apellidos,
+                :telefono, 
+                :id_usuario_auditor
+            )";
             
-            if (!empty($this->clave)) {
-                $sql .= ", password = :clave";
-            }
-            $sql .= " WHERE id_usuario = :id_usuario";
-
             $stmt = $pdo->prepare($sql);
             
-            $params = [
-                ':username'   => $this->username,
-                ':id_rol'      => $this->id_rol,
-                ':nombre'     => $nombre_cifrado,
-                ':apellido'   => $apellido_cifrado,
-                ':correo'     => $correo_cifrado,
-                ':telefono'   => $telefono_cifrado,
-                ':cedula'     => $this->cedula,
-                ':id_usuario' => $id_usuario
-            ];
-
-            if (!empty($this->clave)) {
-                $params[':clave'] = password_hash($this->clave, PASSWORD_BCRYPT);
-            }
-
-            $stmt->execute($params);
-
-            if ($this->clienteExiste($this->cedula)) {
-                $this->actualizarClienteEnP();
-            }
-
-            return true;
-
-        }, 'S');
+            // 3. Vinculación exacta de los 9 parámetros
+            $stmt->bindValue(':id_usuario', $id_usuario, \PDO::PARAM_INT);
+            $stmt->bindValue(':username', $this->username);
+            $stmt->bindValue(':cedula', $this->cedula);
+            $stmt->bindValue(':id_rol', $this->id_rol, \PDO::PARAM_INT);
+            $stmt->bindValue(':correo', $correo_cifrado);
+            $stmt->bindValue(':nombres', $nombre_cifrado);
+            $stmt->bindValue(':apellidos', $apellido_cifrado);
+            $stmt->bindValue(':telefono', $telefono_cifrado);
+            $stmt->bindValue(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            // 4. Ejecución
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            
+            return $resultado;
+        }, false);
     }
-
+/*
     private function actualizarClienteEnP() {
         return $this->ejecutarConConexionSegura(function($pdoP) {
             $sqlCliente = "UPDATE tbl_clientes SET 
@@ -805,7 +825,7 @@ class Usuarios extends BD {
                 ':cedula'   => $this->cedula
             ]);
         }, 'P');
-    }
+    }*/
 
     public function existeUsuario($username, $excluir_id = null) {
         return $this->e_existeUsuario($username, $excluir_id);
@@ -826,7 +846,7 @@ class Usuarios extends BD {
             
             return $stmt->fetchColumn() > 0;
 
-        }, 'S');
+        });
     }
 
     public function existeCedula($cedula, $excluir_id = null) {
@@ -845,7 +865,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        }, 'S');
+        });
     }
 
     public function existeCorreo($correo, $excluir_id = null) {
@@ -865,7 +885,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchColumn() > 0;
-        }, 'S');
+        });
     }
 
     public function obtenerUltimoUsuario() {
@@ -884,7 +904,7 @@ class Usuarios extends BD {
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
             
             return $usuario ?: null;
-        }, 'S');
+        });
         
         // Descifrar datos personales
         if ($resultado) {
@@ -899,14 +919,19 @@ class Usuarios extends BD {
     }
     private function o_usuarioPorId($id_usuario) {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
-            $query = "SELECT usuarios.*, rol.nombre_rol 
-                      FROM tbl_usuarios AS usuarios
-                      INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol
-                      WHERE usuarios.id_usuario = ?";
+            // Cambiamos la consulta estructurada por la invocación al procedimiento
+            $query = "CALL sp_obtener_usuario_por_id(:id_usuario)";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([$id_usuario]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        }, 'S');
+
+            // Pasamos el ID de forma asociativa y segura
+            $stmt->execute([':id_usuario' => $id_usuario]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // CRUCIAL: Liberar el cursor para que no tranque futuras consultas en la misma petición PHP
+            $stmt->closeCursor(); 
+
+            return $usuario;
+        }, false);
         
         // Descifrar datos personales
         if ($resultado) {
@@ -916,33 +941,38 @@ class Usuarios extends BD {
         return $resultado;
     }
 
-    public function eliminarUsuario($id_usuario) {
-        return $this->d_eliminarUsuario($id_usuario);
+    public function eliminarUsuario($id_usuario, $id_usuario_auditor) {
+        return $this->d_eliminarUsuario($id_usuario, $id_usuario_auditor);
     }
-    private function d_eliminarUsuario($id_usuario) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario) {
-            $sql = "DELETE FROM tbl_usuarios WHERE id_usuario = :id_usuario";
+    private function d_eliminarUsuario($id_usuario, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario, $id_usuario_auditor) {
+            $sql = "CALL sp_eliminar_usuario(:id_usuario, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_usuario', $id_usuario);
-            return $stmt->execute();
-        }, 'S');
+
+            $stmt->bindParam(':id_usuario', $id_usuario, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $result = $stmt->execute();
+            $stmt->closeCursor();
+            return $result;
+        }, false);
     }
 
-    public function cambiarEstatus($nuevoEstatus) {
-        return $this->c_cambiarEstatus($nuevoEstatus);
+    public function cambiarEstatus($nuevoEstatus, $id_usuario_auditor) {
+        return $this->c_cambiarEstatus($nuevoEstatus, $id_usuario_auditor);
     }
-    private function c_cambiarEstatus($nuevoEstatus) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstatus) {
-            try {
-                $sql = "UPDATE tbl_usuarios SET estatus = :estatus WHERE id_usuario = :id_usuario";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':estatus', $nuevoEstatus);
-                $stmt->bindParam(':id_usuario', $this->id_usuario);
-                return $stmt->execute();
-            } catch (PDOException $e) {
-                return false;
-            }
-        }, 'S');
+    private function c_cambiarEstatus($nuevoEstatus, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstatus, $id_usuario_auditor) {
+            $sql = "CALL sp_cambiar_estatus_usuario(:id_usuario, :estatus, :id_usuario_auditor)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':estatus', $nuevoEstatus);
+            $stmt->bindParam(':id_usuario', $this->id_usuario, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
 
     public function obtenerReporteRoles() {
@@ -958,7 +988,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }, 'S');
+        });
     }
 
     public function actualizarPerfil($id_usuario, $datos) {
@@ -988,7 +1018,7 @@ class Usuarios extends BD {
             $stmt = $pdo->prepare($sql);
             return $stmt->execute($params);
             
-        }, 'S');
+        });
     }
 
     public function getusuarios($estatus = 'habilitado') {
@@ -996,24 +1026,17 @@ class Usuarios extends BD {
     }
     private function g_getusuarios($estatus = 'habilitado') {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($estatus){
-            $queryusuarios = "SELECT usuarios.*, rol.nombre_rol 
-                              FROM tbl_usuarios AS usuarios
-                              INNER JOIN tbl_rol AS rol ON usuarios.id_rol = rol.id_rol";
-            
-            if ($estatus !== 'todos') {
-                $queryusuarios .= " WHERE usuarios.estatus = :estatus";
-            }
-            
-            $queryusuarios .= " ORDER BY usuarios.id_usuario DESC";
+            $queryusuarios = "CALL sp_consultar_usuario(:estatus)";
+
             $stmtusuarios = $pdo->prepare($queryusuarios);
-            
-            if ($estatus !== 'todos') {
-                $stmtusuarios->bindParam(':estatus', $estatus);
-            }
-            
+            $stmtusuarios->bindParam(':estatus', $estatus, PDO::PARAM_STR);
+
             $stmtusuarios->execute();
-            return $stmtusuarios->fetchAll(PDO::FETCH_ASSOC);
-        }, 'S');
+            $usuarios = $stmtusuarios->fetchAll(PDO::FETCH_ASSOC);
+            $stmtusuarios->closeCursor();
+
+            return $usuarios;
+        }, false);
         
         // Descifrar datos personales
         $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
