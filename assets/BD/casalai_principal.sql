@@ -1466,7 +1466,7 @@ BEGIN
     SELECT `id_clientes`, `nombre`, `cedula`, `direccion`, `telefono`, `correo`, `activo` 
     FROM `tbl_clientes` 
     ORDER BY `id_clientes` DESC
-    LOCK IN SHARE MODE;
+    FOR UPDATE;
 
     COMMIT;
 END $$
@@ -1495,7 +1495,7 @@ BEGIN
     SELECT * FROM `tbl_clientes` 
     WHERE `id_clientes` = p_id_cliente
     LIMIT 1
-    LOCK IN SHARE MODE;
+    FOR UPDATE;
 END $$
 
 DELIMITER ;
@@ -1731,7 +1731,7 @@ BEGIN
     SELECT * FROM `tbl_cuentas` 
     WHERE `id_cuenta` = p_id_cuenta
     LIMIT 1
-    LOCK IN SHARE MODE;
+    FOR UPDATE;
 END $$
 
 DELIMITER ;
