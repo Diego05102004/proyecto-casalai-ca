@@ -1,5 +1,9 @@
-
 <?php
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
 // Verificar si hay un error en la carga de notificaciones
 $error = $error ?? null;
 ?>
@@ -49,6 +53,7 @@ $error = $error ?? null;
 
 <script src="assets/javascript/notificacion.js"></script>
 
+<script src="assets/javascript/jwt_validator.js"></script>
 <?php include 'footer.php'; ?>
 </body>
 </html>

@@ -1,4 +1,9 @@
 <?php
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
 // Verificar que $datos esté definido y sea válido
 if (!isset($datos) || !is_array($datos) || empty($datos)) {
     die("Error: No se pudo cargar la variable datos.");
@@ -86,5 +91,6 @@ $data = json_encode(array_column($datos, "stock"));
     });  
     </script>
 
+<script src="assets/javascript/jwt_validator.js"></script>
 </body>
 </html>

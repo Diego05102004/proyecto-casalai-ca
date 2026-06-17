@@ -1,4 +1,9 @@
-<?php $idRol = $_SESSION['id_rol']; // o el rol actual del usuario
+<?php require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
+$idRol = $_SESSION['id_rol']; // o el rol actual del usuario
 $idModulo = 8;
 
 if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUsuarioEntrar[$idRol][$idModulo]['consultar'] === true) { ?>
@@ -1274,6 +1279,7 @@ aria-labelledby="modificarProveedorModalLabel" aria-hidden="true">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
 
+<script src="assets/javascript/jwt_validator.js"></script>
 </body>
 </html>
 <?php

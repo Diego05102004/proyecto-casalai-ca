@@ -472,8 +472,8 @@ class Comprafisica extends BD{
                 $descripcion = rtrim($descripcion, ', ');
 
                 // 3️⃣ Crear factura
-                $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento) 
-                            VALUES (:cliente, :fecha, 0)";
+                $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento, estatus) 
+                            VALUES (:cliente, :fecha, 0, 'Pagada en Oficina')";
                 $stmtFactura = $pdo->prepare($sqlFactura);
                 $stmtFactura->execute([
                     ':cliente' => $datos['cliente'],

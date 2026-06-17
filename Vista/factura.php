@@ -1,4 +1,9 @@
-<?php if ($_SESSION) { ?>
+<?php require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
+if ($_SESSION) { ?>
 
 <?php require_once 'Modelo/despacho.php' ; require_once 'controlador/factura.php' ; ?>
     <!DOCTYPE html>
@@ -235,6 +240,8 @@
 
         <?php include 'footer.php'; ?>
         <script src="assets/javascript/validaciones.js"></script>
+        
+<script src="assets/javascript/jwt_validator.js"></script>
     </body>
 
     </html>

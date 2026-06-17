@@ -2,7 +2,11 @@
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 $idRol = $_SESSION['id_rol'] ?? 0; // rol por defecto en pruebas si no hay sesión
 $idModulo = 17;
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
 
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
 if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[$idRol][$idModulo]['consultar'] === true) {?>
 
 
@@ -338,6 +342,8 @@ protegerSelects(['selectorRol']);
         title="Visualizar Ayuda">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
+    
+<script src="assets/javascript/jwt_validator.js"></script>
 </body>
 </html>
 

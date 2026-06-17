@@ -60,7 +60,7 @@ class Auth {
      */
     private static function getIssuer() {
         self::loadEnv();
-        return $_ENV['JWT_ISSUER'] ?? 'https://tu-dominio.com';
+        return $_ENV['JWT_ISSUER'] ?? 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/';
     }
     
     /**
@@ -311,6 +311,19 @@ class Auth {
     public static function sendAuthError($message = 'No autorizado', $code = 401) {
         http_response_code($code);
         
+        // Destruir la sesión cuando el token expira o es inválido
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION = [];
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/');
+        }
+        session_destroy();
+        
+        // Limpiar también la cookie del token JWT
+        self::clearTokenCookie();
+        
         // Obtener el token actual para depuración
         $token = self::getToken();
         
@@ -420,16 +433,10 @@ class Auth {
         <h1>Error de Autenticación</h1>
         <p>' . htmlspecialchars($message) . '</p>
         
-        <div class="token-info">
-            <h3>Información de Depuración:</h3>
-            <p><strong>Token encontrado:</strong> ' . ($token ? 'Sí' : 'No') . '</p>
-            <p><strong>Token (primeros 100 caracteres):</strong></p>
-            <code>' . $tokenDisplay . '</code>
-        </div>
+
         
         <div>
             <a href="?pagina=login" class="btn">Ir al Login</a>
-            <a href="test_jwt.php" class="btn btn-secondary">Generar Nuevo Token</a>
         </div>
     </div>
     <script>

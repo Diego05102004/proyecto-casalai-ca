@@ -172,8 +172,13 @@ class Factura extends BD
                 throw new PDOException("Datos de productos y cantidades inválidos o no coinciden.");
             }
 
+            // Preparar la consulta para obtener el precio del producto
+            $stmtPrecio = $pdo->prepare("SELECT precio FROM tbl_productos WHERE id_producto = ?");
+
+            // Modificar la inserción para incluir precio_unitario
+            $stmt2 = $pdo->prepare("INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)");
+
             $detalle_insertados = 0;
-            $stmt2 = $pdo->prepare("INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) VALUES (?, ?, ?)");
 
             foreach ($this->id_producto as $index => $id_producto) {
                 $cantidad = $this->cantidad[$index];
@@ -182,7 +187,18 @@ class Factura extends BD
                     throw new PDOException("Producto o cantidad vacío en el índice $index.");
                 }
 
-                $stmt2->execute([$factura_id, $id_producto, $cantidad]);
+                // 1. Buscar el precio actual del producto en la base de datos
+                $stmtPrecio->execute([$id_producto]);
+                $productoData = $stmtPrecio->fetch(PDO::FETCH_ASSOC);
+
+                if (!$productoData) {
+                    throw new PDOException("El producto con ID $id_producto no existe.");
+                }
+
+                $precio_actual = $productoData['precio'];
+
+                // 2. Insertar el detalle incluyendo el precio copiado
+                $stmt2->execute([$factura_id, $id_producto, $cantidad, $precio_actual]);
                 $detalle_insertados += $stmt2->rowCount();
             }
 
@@ -193,6 +209,7 @@ class Factura extends BD
             return true;
         });
     }
+
 
     public function obtenerUltimaFactura() {
         return $this->o_ultimaFactura();

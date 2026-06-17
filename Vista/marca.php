@@ -1,4 +1,9 @@
-<?php $idRol = $_SESSION['id_rol']; // o el rol actual del usuario
+<?php 
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();$idRol = $_SESSION['id_rol']; // o el rol actual del usuario
 
 $idModulo = 4;
 
@@ -283,6 +288,7 @@ aria-labelledby="registrarMarcaModalLabel" aria-hidden="true">
 
     </button>
 
+<script src="assets/javascript/jwt_validator.js"></script>
 </body>
 
 </html>

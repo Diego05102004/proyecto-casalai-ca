@@ -1,4 +1,9 @@
 <?php 
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
 $idRol = $_SESSION['id_rol']; 
 $idModulo = "Categorias";  // Corregido: "Categorias" en lugar de "categoria"
 
@@ -349,6 +354,8 @@ selectTipo.addEventListener('change', function() {
         title="Visualizar Ayuda">
         <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
     </button>
+    
+<script src="assets/javascript/jwt_validator.js"></script>
     </body>
 
     </html>

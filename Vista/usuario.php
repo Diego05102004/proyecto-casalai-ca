@@ -1,4 +1,10 @@
-<?php $idRol = $_SESSION['id_rol']; // o el rol actual del usuario
+<?php 
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
+$idRol = $_SESSION['id_rol']; // o el rol actual del usuario
 $idModulo = 1;
 
 if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUsuarioEntrar[$idRol][$idModulo]['consultar'] === true) { ?>
@@ -492,6 +498,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
         <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
         <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
         
+<script src="assets/javascript/jwt_validator.js"></script>
         <!-- Cargar lógica del módulo al final, con todas las dependencias listas -->
         <script src="assets/javascript/usuario.js"></script>
         <script src="assets/public/bootstrap/js/sidebar.js"></script>

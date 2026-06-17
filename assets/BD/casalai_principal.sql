@@ -1391,6 +1391,101 @@ COMMIT;
 
 
 -- -----------------------------------------------------------------------------
+-- DISPARADORES: `tbl_factura_detalle`
+-- -----------------------------------------------------------------------------
+DELIMITER $$
+CREATE TRIGGER `trg_descontar_stock_detalle_insert` AFTER INSERT ON `tbl_factura_detalle` FOR EACH ROW BEGIN
+    DECLARE v_estatus VARCHAR(50);
+    DECLARE v_stock_actual INT;
+    DECLARE v_mensaje_error VARCHAR(255);
+
+    -- 1. Obtener el estatus de la factura a la que pertenece este detalle
+    SELECT estatus INTO v_estatus 
+    FROM tbl_facturas 
+    WHERE id_factura = NEW.factura_id;
+
+    -- 2. Si la factura está "Pagada en Oficina", procesamos el inventario
+    IF v_estatus = 'Pagada en Oficina' THEN
+        
+        -- Obtener el stock actual del producto que se está intentando insertar
+        SELECT stock INTO v_stock_actual 
+        FROM tbl_productos 
+        WHERE id_producto = NEW.id_producto;
+
+        -- 3. Validar si hay suficiente stock para la cantidad solicitada
+        IF v_stock_actual < NEW.cantidad THEN
+            SET v_mensaje_error = CONCAT('Error: Stock insuficiente para el producto ID ', NEW.id_producto, '. Disponible: ', v_stock_actual, ', Solicitado: ', NEW.cantidad);
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_mensaje_error;
+        ELSE
+            -- 4. Si hay stock, se descuenta de inmediato
+            UPDATE tbl_productos 
+            SET stock = stock - NEW.cantidad
+            WHERE id_producto = NEW.id_producto;
+        END IF;
+
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_descontar_stock_online` AFTER INSERT ON `tbl_factura_detalle` FOR EACH ROW BEGIN
+    DECLARE v_estatus VARCHAR(50);
+    DECLARE v_stock_actual INT;
+    DECLARE v_mensaje_error VARCHAR(255);
+
+    -- 1. Obtener el estatus de la factura a la que pertenece este detalle
+    SELECT estatus INTO v_estatus 
+    FROM tbl_facturas 
+    WHERE id_factura = NEW.factura_id;
+
+    -- 2. Si la factura está en "Borrador", procesamos el inventario
+    IF v_estatus = 'Borrador' THEN
+        
+        -- Obtener el stock actual del producto que se está intentando insertar
+        SELECT stock INTO v_stock_actual 
+        FROM tbl_productos 
+        WHERE id_producto = NEW.id_producto;
+
+        -- 3. Validar si hay suficiente stock para la cantidad solicitada
+        IF v_stock_actual < NEW.cantidad THEN
+            SET v_mensaje_error = CONCAT('Error: Stock insuficiente para el producto ID ', NEW.id_producto, '. Disponible: ', v_stock_actual, ', Solicitado: ', NEW.cantidad);
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_mensaje_error;
+        ELSE
+            -- 4. Si hay stock, se descuenta de inmediato
+            UPDATE tbl_productos 
+            SET stock = stock - NEW.cantidad
+            WHERE id_producto = NEW.id_producto;
+        END IF;
+
+    END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- EVENTO LIBERAR STOCK SI LA FACTURA SE ANULA POR EL TIEMPO
+-- -----------------------------------------------------------------------------
+CREATE DEFINER=`root`@`localhost` EVENT `evt_liberar_stock_borradores` ON SCHEDULE EVERY 5 MINUTE STARTS '2026-06-16 21:20:47' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+    -- 1. Devolver los productos al stock de las facturas en 'Borrador' vencidas (más de 2 horas)
+    UPDATE tbl_productos p
+    JOIN tbl_factura_detalle df ON p.id_producto = df.id_producto
+    JOIN tbl_facturas f ON df.factura_id = f.id_factura
+    SET p.stock = p.stock + df.cantidad
+    WHERE f.estatus = 'Borrador'
+      AND f.fecha < NOW() - INTERVAL 1 HOUR;
+
+    -- 2. Cambiar el estatus de esas facturas para que no se procesen de nuevo
+    UPDATE tbl_facturas
+    SET estatus = 'Anulada por Tiempo'
+    WHERE estatus = 'Borrador'
+      AND fecha < NOW() - INTERVAL 1 HOUR;
+
+END$$
+
+DELIMITER ;
+-- -----------------------------------------------------------------------------
 -- 1. PROCEDIMIENTO: REGISTRAR/INCLUIR CLIENTE
 -- -----------------------------------------------------------------------------
 DELIMITER $$

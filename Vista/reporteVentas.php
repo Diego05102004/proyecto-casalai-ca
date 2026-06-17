@@ -1,4 +1,10 @@
-<?php if ($_SESSION) {?>
+<?php 
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
+if ($_SESSION) {?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -716,6 +722,7 @@ function renderReporteDespachos(datos, labelKey, valueKey, canvasId, tablaId, ti
     });
 </script>
 
+<script src="assets/javascript/jwt_validator.js"></script>
 <button 
     class="btn-ayuda"
     title="Visualizar Ayuda">

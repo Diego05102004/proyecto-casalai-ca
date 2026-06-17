@@ -1,5 +1,10 @@
 <?php
 // Verificar si el usuario ha iniciado sesión
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
 if (!isset($_SESSION['name'])) {
     // Redirigir al usuario a la página de inicio de sesión
     header('Location: .');
@@ -556,6 +561,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+
+<script src="assets/javascript/jwt_validator.js"></script>
 <?php include 'footer.php'; ?>
 </body>
 </html>

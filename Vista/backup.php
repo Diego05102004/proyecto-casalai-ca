@@ -1,4 +1,10 @@
-<?php if ($_SESSION['nombre_rol'] == 'Administrador' || $_SESSION['nombre_rol'] == 'SuperUsuario') { ?>
+<?php // Importar clase de autenticación JWT
+require_once __DIR__ . '/../Modelo/Config/Auth.php';
+
+// Validar token JWT antes de cualquier otra operación
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+$payload = Auth::requireAuth();
+if ($_SESSION['nombre_rol'] == 'Administrador' || $_SESSION['nombre_rol'] == 'SuperUsuario') { ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -147,6 +153,8 @@
     >
     <img src="assets/img/info-ayuda.svg" alt="Ayuda" width="20" height="20">
 </button>
+
+<script src="assets/javascript/jwt_validator.js"></script>
 </body>
 </html>
 <?php
