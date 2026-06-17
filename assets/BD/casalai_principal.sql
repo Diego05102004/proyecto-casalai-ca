@@ -1394,6 +1394,7 @@ COMMIT;
 -- DISPARADORES: `tbl_factura_detalle`
 -- -----------------------------------------------------------------------------
 DELIMITER $$
+
 CREATE TRIGGER `trg_descontar_stock_detalle_insert` AFTER INSERT ON `tbl_factura_detalle` FOR EACH ROW BEGIN
     DECLARE v_estatus VARCHAR(50);
     DECLARE v_stock_actual INT;
@@ -1424,10 +1425,12 @@ CREATE TRIGGER `trg_descontar_stock_detalle_insert` AFTER INSERT ON `tbl_factura
         END IF;
 
     END IF;
-END
-$$
+END $$
+
 DELIMITER ;
+
 DELIMITER $$
+
 CREATE TRIGGER `trg_descontar_stock_online` AFTER INSERT ON `tbl_factura_detalle` FOR EACH ROW BEGIN
     DECLARE v_estatus VARCHAR(50);
     DECLARE v_stock_actual INT;
@@ -1458,8 +1461,8 @@ CREATE TRIGGER `trg_descontar_stock_online` AFTER INSERT ON `tbl_factura_detalle
         END IF;
 
     END IF;
-END
-$$
+END $$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -1467,6 +1470,8 @@ DELIMITER ;
 -- -----------------------------------------------------------------------------
 -- EVENTO LIBERAR STOCK SI LA FACTURA SE ANULA POR EL TIEMPO
 -- -----------------------------------------------------------------------------
+DELIMITER $$
+
 CREATE DEFINER=`root`@`localhost` EVENT `evt_liberar_stock_borradores` ON SCHEDULE EVERY 5 MINUTE STARTS '2026-06-16 21:20:47' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
     -- 1. Devolver los productos al stock de las facturas en 'Borrador' vencidas (más de 2 horas)
     UPDATE tbl_productos p
@@ -1482,7 +1487,7 @@ CREATE DEFINER=`root`@`localhost` EVENT `evt_liberar_stock_borradores` ON SCHEDU
     WHERE estatus = 'Borrador'
       AND fecha < NOW() - INTERVAL 1 HOUR;
 
-END$$
+END $$
 
 DELIMITER ;
 -- -----------------------------------------------------------------------------
