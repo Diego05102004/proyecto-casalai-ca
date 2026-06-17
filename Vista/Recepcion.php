@@ -412,50 +412,51 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
     </div>
 
     <div class="report-section" id="reporteProveedores">
-    <h2 class="titulo-form">Recepciones por Proveedor</h2>
-    <div class="chart-container">
-        <div class="chart-canvas">
-            <canvas id="graficoProveedores" width="400" height="400"></canvas>
+        <h2 class="titulo-form">Recepciones por Proveedor</h2>
+        <div class="chart-container">
+            <div class="chart-canvas">
+                <canvas id="graficoProveedores" width="400" height="400"></canvas>
+            </div>
+            <div class="chart-table">
+                <div id="tablaProveedores"></div>
+            </div>
         </div>
-        <div class="chart-table">
-            <div id="tablaProveedores"></div>
+        <div class="download-buttons">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteProveedores','Reporte_Recepciones_Proveedores.pdf')">Descargar PDF</button>
+            <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">Descargar Gráfico</button>
         </div>
     </div>
-    <div class="download-buttons">
-        <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteProveedores','Reporte_Recepciones_Proveedores.pdf')">Descargar PDF</button>
-        <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProveedores','Grafico_Recepciones_Proveedores.png')">Descargar Gráfico</button>
-    </div>
-</div>
 <div class="divider"></div>
-<div class="report-section" id="reporteProductos">
-    <h2 class="titulo-form">Productos más Recibidos</h2>
-    <div class="chart-container">
-        <div class="chart-canvas">
-            <canvas id="graficoProductos" width="400" height="400"></canvas>
+    <div class="report-section" id="reporteProductos">
+        <h2 class="titulo-form">Productos más Recibidos</h2>
+        <div class="chart-container">
+            <div class="chart-canvas">
+                <canvas id="graficoProductos" width="400" height="400"></canvas>
+            </div>
+            <div class="chart-table">
+                <div id="tablaProductos"></div>
+            </div>
         </div>
-        <div class="chart-table">
-            <div id="tablaProductos"></div>
+        <div class="download-buttons">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteProductos','Reporte_Recepciones_Productos.pdf')">Descargar PDF</button>
+            <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">Descargar Gráfico</button>
         </div>
     </div>
-    <div class="download-buttons">
-        <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteProductos','Reporte_Recepciones_Productos.pdf')">Descargar PDF</button>
-        <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoProductos','Grafico_Recepciones_Productos.png')">Descargar Gráfico</button>
-    </div>
-</div>
 <div class="divider"></div>
-<div class="report-section" id="reporteMensualRecepcion">
-    <h2 class="titulo-form">Recepciones Mensuales</h2>
-    <div class="chart-container">
-        <div class="chart-canvas">
-            <canvas id="graficoMensualRecepcion" width="400" height="400"></canvas>
+    <div class="report-section" id="reporteMensualRecepcion">
+        <h2 class="titulo-form">Recepciones Mensuales</h2>
+        <div class="chart-container">
+            <div class="chart-canvas">
+                <canvas id="graficoMensualRecepcion" width="400" height="400"></canvas>
+            </div>
+            <div class="chart-table">
+                <div id="tablaMensualRecepcion"></div>
+            </div>
         </div>
-        <div class="chart-table">
-            <div id="tablaMensualRecepcion"></div>
+        <div class="download-buttons">
+            <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteMensualRecepcion','Reporte_Recepciones_Mensual.pdf')">Descargar PDF</button>
+            <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">Descargar Gráfico</button>
         </div>
-    </div>
-    <div class="download-buttons">
-        <button class="btn btn-primary btn-download" onclick="descargarPDFRecepcion('reporteMensualRecepcion','Reporte_Recepciones_Mensual.pdf')">Descargar PDF</button>
-        <button class="btn btn-primary btn-download" style="color: white;" onclick="descargarImagenRecepcion('graficoMensualRecepcion','Grafico_Recepciones_Mensual.png')">Descargar Gráfico</button>
     </div>
 </div>
 
@@ -1001,8 +1002,6 @@ $(document).ready(function() {
             $btnRegistrar.html('<i class="fas fa-shield-alt"></i> Verificar con IA');
         } else if (puedeRegistrar) {
             $btnRegistrar.html('<i class="fas fa-check"></i> Registrar Recepción');
-        } else {
-            $btnRegistrar.html('Complete todos los campos');
         }
     }
 

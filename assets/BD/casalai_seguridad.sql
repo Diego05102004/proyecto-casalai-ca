@@ -2141,7 +2141,7 @@ END $$
 DELIMITER ;
 
 -- =========================================================================
--- 2. PROCEDIMIENTO: CONSULTAR ROL (Para validaciones de carga compartida)
+-- 2. PROCEDIMIENTO: CONSULTAR ROL
 -- =========================================================================
 
 DELIMITER $$
@@ -2156,7 +2156,7 @@ BEGIN
     SELECT `id_rol`, `nombre_rol` 
     FROM `tbl_rol` 
     ORDER BY `id_rol`
-    LOCK IN SHARE MODE;
+    FOR UPDATE;
 
     COMMIT;
 END $$
@@ -2164,7 +2164,7 @@ END $$
 DELIMITER ;
 
 -- -----------------------------------------------------------------------------
--- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -2181,11 +2181,10 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del rol.';
     END;
 
-    -- Selecciona la cuenta específica usando Bloqueo Compartido (Shared Lock)
     SELECT * FROM `tbl_rol` 
     WHERE `id_rol` = p_id_rol
     LIMIT 1
-    LOCK IN SHARE MODE;
+    FOR UPDATE;
 END $$
 
 DELIMITER ;
@@ -2379,7 +2378,7 @@ END $$
 DELIMITER ;
 
 -- =========================================================================
--- 2. PROCEDIMIENTO: CONSULTAR USUARIO (Para validaciones de carga compartida)
+-- 2. PROCEDIMIENTO: CONSULTAR USUARIO
 -- =========================================================================
 
 DELIMITER $$
@@ -2416,7 +2415,7 @@ BEGIN
     INNER JOIN `tbl_rol` AS r ON u.`id_rol` = r.`id_rol`
     WHERE (p_estatus = 'todos' OR u.`estatus` = p_estatus)
     ORDER BY u.`id_usuario` DESC
-    LOCK IN SHARE MODE;
+    FOR UPDATE;
 
     COMMIT;
 END $$
@@ -2424,7 +2423,7 @@ END $$
 DELIMITER ;
 
 -- -----------------------------------------------------------------------------
--- PROCEDIMIENTO: OBTENER CUENTA POR ID (CON BLOQUEO COMPARTIDO)
+-- PROCEDIMIENTO: OBTENER CUENTA POR ID
 -- -----------------------------------------------------------------------------
 
 DELIMITER $$
@@ -2441,7 +2440,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del usuario.';
     END;
 
-    -- Selecciona el usuario específico con su rol usando Bloqueo Compartido (Shared Lock)
     SELECT 
         u.`id_usuario`, 
         u.`username`, 
@@ -2457,7 +2455,7 @@ BEGIN
     INNER JOIN `tbl_rol` AS r ON u.`id_rol` = r.`id_rol`
     WHERE u.`id_usuario` = p_id_usuario
     LIMIT 1
-    LOCK IN SHARE MODE;
+    FOR UPDATE;
 END $$
 
 DELIMITER ;
