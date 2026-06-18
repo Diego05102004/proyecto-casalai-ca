@@ -1916,7 +1916,7 @@ CREATE TABLE `v_ips_bloqueadas` (
 --
 DROP TABLE IF EXISTS `v_ips_bloqueadas`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_ips_bloqueadas`  AS SELECT `si`.`direccion_ip` AS `direccion_ip`, `si`.`username` AS `username`, `si`.`motivo_bloqueo` AS `motivo_bloqueo`, `si`.`fecha_bloqueo` AS `fecha_bloqueo`, `si`.`fecha_desbloqueo` AS `fecha_desbloqueo`, `si`.`nivel_riesgo` AS `nivel_riesgo`, timestampdiff(MINUTE,`si`.`fecha_bloqueo`,current_timestamp()) AS `minutos_bloqueado` FROM `seguridad_ip` AS `si` WHERE `si`.`esta_bloqueado` = 1 AND (`si`.`fecha_desbloqueo` is null OR `si`.`fecha_desbloqueo` > current_timestamp()) ;
+CREATE ALGORITHM=UNDEFINED  SQL SECURITY DEFINER VIEW `v_ips_bloqueadas`  AS SELECT `si`.`direccion_ip` AS `direccion_ip`, `si`.`username` AS `username`, `si`.`motivo_bloqueo` AS `motivo_bloqueo`, `si`.`fecha_bloqueo` AS `fecha_bloqueo`, `si`.`fecha_desbloqueo` AS `fecha_desbloqueo`, `si`.`nivel_riesgo` AS `nivel_riesgo`, timestampdiff(MINUTE,`si`.`fecha_bloqueo`,current_timestamp()) AS `minutos_bloqueado` FROM `seguridad_ip` AS `si` WHERE `si`.`esta_bloqueado` = 1 AND (`si`.`fecha_desbloqueo` is null OR `si`.`fecha_desbloqueo` > current_timestamp()) ;
 
 --
 -- Índices para tablas volcadas

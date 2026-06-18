@@ -1472,7 +1472,7 @@ DELIMITER ;
 -- -----------------------------------------------------------------------------
 DELIMITER $$
 
-CREATE DEFINER=`root`@`localhost` EVENT `evt_liberar_stock_borradores` ON SCHEDULE EVERY 5 MINUTE STARTS '2026-06-16 21:20:47' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+CREATE EVENT `evt_liberar_stock_borradores` ON SCHEDULE EVERY 5 MINUTE STARTS '2026-06-16 21:20:47' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
     -- 1. Devolver los productos al stock de las facturas en 'Borrador' vencidas (más de 2 horas)
     UPDATE tbl_productos p
     JOIN tbl_factura_detalle df ON p.id_producto = df.id_producto
