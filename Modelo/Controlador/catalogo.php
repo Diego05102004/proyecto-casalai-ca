@@ -1,5 +1,8 @@
 <?php
 ob_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;

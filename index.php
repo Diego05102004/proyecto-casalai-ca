@@ -1,6 +1,4 @@
 <?php 
-ob_start();
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 ini_set('log_errors', 1);
@@ -94,4 +92,3 @@ else {
         exit;
     }
 }
-ob_end_flush();
