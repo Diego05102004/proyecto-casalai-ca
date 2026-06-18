@@ -20,10 +20,7 @@ if ($is_localhost) {
     }
 }
 
-// Iniciar sesión si no está iniciada
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+
 
 // Página por defecto
 $pagina = "catalogo"; 
