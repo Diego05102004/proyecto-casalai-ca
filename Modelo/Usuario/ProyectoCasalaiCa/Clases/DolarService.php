@@ -32,7 +32,6 @@ class DolarService {
                 throw new \RuntimeException('El BCV denegó el acceso. Código HTTP: ' . $httpCode);
             }
             
-            // NUEVA EXPRESIÓN REGULAR: Busca id="dolar" o id='dolar' y captura el primer número decimal que encuentre después
             if (preg_match('/id=["\']dolar["\'].*?([\d]+[\.,][\d]+)/s', $html, $matches)) {
                 // Limpiar el formato (quitar puntos de miles si existen y cambiar coma decimal por punto)
                 $precioDolar = str_replace(',', '.', str_replace('.', '', $matches[1]));
@@ -42,7 +41,6 @@ class DolarService {
                 $this->guardarPrecioCache($valor);
                 return $valor;
             } else {
-                // SALVAvIDAS: Guarda el HTML recibido en la misma carpeta para auditarlo si falla
                 file_put_contents(__DIR__ . '/bcv_debug.html', $html);
                 throw new \RuntimeException('La estructura HTML del BCV cambió. No se encontró ningún valor numérico cerca de id="dolar".');
             }
