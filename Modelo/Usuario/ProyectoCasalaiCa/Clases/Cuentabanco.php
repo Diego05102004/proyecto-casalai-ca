@@ -516,32 +516,6 @@ class Cuentabanco extends BD {
     public function validarReporteCuentas($datos) {
         return $this->validarReporte($datos);
     }
-/*
-    public function registrarCuentabanco() {
-        return $this->r_cuentabanco(); 
-    }
-    private function r_cuentabanco() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            // Cifrar datos personales antes de insertar
-            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
-            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
-            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
-            
-            $sql = "INSERT INTO tbl_cuentas 
-            (nombre_banco, numero_cuenta, rif_cuenta, telefono_cuenta, correo_cuenta, metodos)
-            VALUES (:nombre_banco, :numero_cuenta, :rif_cuenta, :telefono_cuenta, :correo_cuenta, :metodos)";
-
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
-            $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
-            $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
-            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
-            $stmt->bindParam(':metodos', $this->metodos_pago);
-            return $stmt->execute();
-        });
-    }
-        */
 
     // 1. El método público ahora recibe obligatoriamente el ID del usuario que audita
     public function registrarCuentabanco($id_usuario_auditor) {
@@ -623,27 +597,7 @@ class Cuentabanco extends BD {
         
         return $resultado;
     }
-/*
-    public function obtenerCuentaPorId($id_cuenta) {
-        return $this->cuentaporid($id_cuenta); 
-    }
-    private function cuentaporid($id_cuenta) {
-        $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
-            $query = "SELECT * FROM tbl_cuentas WHERE id_cuenta = ?";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([$id_cuenta]);
-            $cuenta_obt = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $cuenta_obt;
-        });
-        
-        // Descifrar datos personales
-        if ($resultado) {
-            $resultado = $this->encryption->decryptArray($resultado, self::CAMPOS_CIFRADOS);
-        }
-        
-        return $resultado;
-    }
-        */
+
     public function obtenerCuentaPorId($id_cuenta) {
         return $this->cuentaporid($id_cuenta); 
     }
@@ -673,25 +627,6 @@ class Cuentabanco extends BD {
 
         return $resultado;
     }
-/*
-    public function consultarCuentabanco() {
-        return $this->c_cuentabanco(); 
-    }
-    private function c_cuentabanco() {
-        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT * FROM tbl_cuentas ORDER BY id_cuenta DESC";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            $cuentas_obt = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $cuentas_obt;
-        });
-        
-        // Descifrar datos personales
-        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
-        
-        return $resultado;
-    }
-        */
 
     public function consultarCuentabanco() {
         return $this->c_cuentabanco(); 
@@ -749,34 +684,6 @@ class Cuentabanco extends BD {
         
         return $resultado;
     }
-/*
-    public function modificarCuentabanco($id_cuenta) {
-        return $this->m_cuentabanco($id_cuenta); 
-    }
-    private function m_cuentabanco($id_cuenta) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_cuenta){
-            // Cifrar datos personales antes de actualizar
-            $nombre_banco_cifrado = $this->encryption->encrypt($this->nombre_banco);
-            $telefono_cuenta_cifrado = $this->encryption->encrypt($this->telefono_cuenta);
-            $correo_cuenta_cifrado = $this->encryption->encrypt($this->correo_cuenta);
-            
-            $sql = "UPDATE tbl_cuentas SET nombre_banco = :nombre_banco, numero_cuenta = :numero_cuenta, 
-            rif_cuenta = :rif_cuenta, telefono_cuenta = :telefono_cuenta, correo_cuenta = :correo_cuenta, 
-            metodos = :metodos
-            WHERE id_cuenta = :id_cuenta";
-
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_cuenta', $id_cuenta);
-            $stmt->bindParam(':nombre_banco', $nombre_banco_cifrado);
-            $stmt->bindParam(':numero_cuenta', $this->numero_cuenta);
-            $stmt->bindParam(':rif_cuenta', $this->rif_cuenta);
-            $stmt->bindParam(':telefono_cuenta', $telefono_cuenta_cifrado);
-            $stmt->bindParam(':correo_cuenta', $correo_cuenta_cifrado);
-            $stmt->bindParam(':metodos', $this->metodos_pago);
-            return $stmt->execute();
-        });
-    }
-        */
 
     public function modificarCuentabanco($id_cuenta, $id_usuario_auditor) {
         return $this->m_cuentabanco($id_cuenta, $id_usuario_auditor); 
@@ -814,48 +721,7 @@ class Cuentabanco extends BD {
             return $resultado;
         }, false);
     }
-/*
-    public function eliminarCuentabanco($id_cuenta) {
-        return $this->e_cuentabanco($id_cuenta);
-    }
 
-    private function e_cuentabanco($id_cuenta) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $pagosAsociados = $this->tienePagosAsociados($id_cuenta);
-            if ($pagosAsociados['tiene_pagos']) {
-                return [
-                    'status' => 'error', 
-                    'message' => 'No se puede eliminar la cuenta porque tiene pagos asociados.',
-                    'pagos' => $pagosAsociados['pagos'],
-                    'total_pagos' => $pagosAsociados['total']
-                ];
-            }
-            try {
-                $sql = "DELETE FROM tbl_cuentas WHERE id_cuenta = :id_cuenta";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':id_cuenta', $id_cuenta, PDO::PARAM_INT);
-                $result = $stmt->execute();
-                if ($result) {
-                    return ['status' => 'success'];
-                } else {
-                    return [
-                        'status' => 'error', 
-                        'message' => 'Error al eliminar la cuenta bancaria',
-                        'pagos' => [],
-                        'total_pagos' => 0
-                    ];
-                }
-            } catch (PDOException $e) {
-                return [
-                    'status' => 'error', 
-                    'message' => 'Error inesperado: ' . $e->getMessage(),
-                    'pagos' => [],
-                    'total_pagos' => 0
-                ];
-            }
-        });
-    }
-        */
     public function eliminarCuentabanco($id_cuenta, $id_usuario_auditor) {
         return $this->e_cuentabanco($id_cuenta, $id_usuario_auditor);
     }
@@ -988,25 +854,7 @@ class Cuentabanco extends BD {
             }
         });
     }
-/*
-    public function cambiarEstado($nuevoEstado) {
-        return $this->estadoCuenta($nuevoEstado); 
-    }
-    private function estadoCuenta($nuevoEstado) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            try {
-                $sql = "UPDATE tbl_cuentas SET estado = :estado WHERE id_cuenta = :id_cuenta";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':estado', $nuevoEstado);
-                $stmt->bindParam(':id_cuenta', $this->id_cuenta);
-                $result = $stmt->execute();
-                return $result;
-            } catch (PDOException $e) {
-                return false;
-            }
-        });
-    }
-        */
+
     public function cambiarEstado($nuevoEstado, $id_usuario_auditor) {
         return $this->estadoCuenta($nuevoEstado, $id_usuario_auditor); 
     }
