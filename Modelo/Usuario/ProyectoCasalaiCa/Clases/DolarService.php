@@ -8,7 +8,7 @@ use RuntimeException;
 
 class DolarService {
     private $url = 'https://www.bcv.org.ve';
-    
+
     public function obtenerPrecioDolar() {
         try {
             // Usar cURL para obtener el contenido de la página
@@ -24,28 +24,76 @@ class DolarService {
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             
             if (curl_errno($ch)) {
-                throw new PDOException('Error al conectar con BCV: ' . curl_error($ch));
+                throw new \RuntimeException('Error de cURL: ' . curl_error($ch));
             }
-            
             curl_close($ch);
             
             if ($httpCode !== 200) {
-                throw new PDOException('Error HTTP: ' . $httpCode);
+                throw new \RuntimeException('El BCV denegó el acceso. Código HTTP: ' . $httpCode);
             }
             
-            // Buscar el div con id="dolar" y el strong con class="strong-tb" dentro
-            if (preg_match('/<div id="dolar".*?<strong class="strong-tb">\s*([\d,]+)\s*<\/strong>/s', $html, $matches)) {
+            if (preg_match('/id=["\']dolar["\'].*?([\d]+[\.,][\d]+)/s', $html, $matches)) {
+                // Limpiar el formato (quitar puntos de miles si existen y cambiar coma decimal por punto)
                 $precioDolar = str_replace(',', '.', str_replace('.', '', $matches[1]));
-                return floatval($precioDolar);
+                $valor = floatval($precioDolar);
+                
+                // Guardar en la base de datos
+                $this->guardarPrecioCache($valor);
+                return $valor;
             } else {
-                throw new PDOException('No se pudo encontrar el precio del dólar en la página del BCV');
+                file_put_contents(__DIR__ . '/bcv_debug.html', $html);
+                throw new \RuntimeException('La estructura HTML del BCV cambió. No se encontró ningún valor numérico cerca de id="dolar".');
             }
             
-        } catch (PDOException $e) {
-            // En caso de error, usar un valor por defecto o de caché
-            error_log('Error obteniendo precio del dólar: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            error_log('Fallo Crítico en Módulo Dólar: ' . $e->getMessage());
             return $this->obtenerPrecioCache();
         }
+    }
+
+    public function obtenerRegistroDelDia() {
+        try {
+            $conexion = new BD('P');
+            $db = $conexion->getConexion();
+            $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache WHERE DATE(fecha) = CURDATE() ORDER BY fecha DESC LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                return $row;
+            }
+            // Si no hay registro del día, obtener desde fuente y devolver el nuevo registro
+            $precio = $this->obtenerPrecioDolar();
+            // Reconsultar para obtener fecha actualizada
+            $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache WHERE DATE(fecha) = CURDATE() ORDER BY fecha DESC LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                return $row;
+            }
+        } catch (\Exception $e) {
+            error_log('Error al obtener registro del día del dólar: ' . $e->getMessage());
+        }
+        // Fallback: último registro disponible
+        return $this->obtenerUltimoRegistro();
+    }
+
+    public function obtenerPrecioDelDia() {
+        $registro = $this->obtenerRegistroDelDia();
+        return isset($registro['precio']) ? floatval($registro['precio']) : $this->obtenerPrecioCache();
+    }
+
+    private function obtenerUltimoRegistro() {
+        try {
+            $conexion = new BD('P');
+            $db = $conexion->getConexion();
+            $stmt = $db->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) return $row;
+        } catch (\Exception $e) {
+            error_log('Error al obtener último registro del dólar: ' . $e->getMessage());
+        }
+        return ['precio' => 35.50, 'fecha' => date('Y-m-d H:i:s')];
     }
     
     private function obtenerPrecioCache() {
@@ -62,7 +110,7 @@ class DolarService {
             if ($result && (time() - strtotime($result['fecha'])) < 86400) { // Usar cache si tiene menos de 24 horas
                 return floatval($result['precio']);
             }
-        } catch (PDOException $e) {
+        } catch (\Exception $e) {
             error_log('Error al obtener cache del dólar: ' . $e->getMessage());
         }
         
@@ -75,26 +123,22 @@ class DolarService {
             $conexion = new BD('P');
             $db = $conexion->getConexion();
             
-            $stmt = $db->prepare("INSERT INTO dolar_cache (precio, fecha) VALUES (?, NOW())");
-            $stmt->execute([$precio]);
+            $stmt = $db->prepare("SELECT id FROM dolar_cache WHERE DATE(fecha) = CURDATE() ORDER BY fecha DESC LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($row && isset($row['id'])) {
+                $update = $db->prepare("UPDATE dolar_cache SET precio = ?, fecha = NOW() WHERE id = ?");
+                $update->execute([$precio, $row['id']]);
+            } else {
+                $insert = $db->prepare("INSERT INTO dolar_cache (precio, fecha) VALUES (?, NOW())");
+                $insert->execute([$precio]);
+            }
             return true;
-        } catch (PDOException $e) {
+        } catch (\Exception $e) {
             error_log('Error al guardar cache del dólar: ' . $e->getMessage());
             return false;
         }
-    }
-
-    // Métodos de compatibilidad usados por vistas: NewNavBar.php
-    public function obtenerPrecioDelDia() {
-        return $this->obtenerPrecioDolar();
-    }
-
-    public function obtenerRegistroDelDia() {
-        $precio = $this->obtenerPrecioDolar();
-        return [
-            'precio' => $precio,
-            'fecha' => date('Y-m-d H:i:s'),
-        ];
     }
 }
 ?>

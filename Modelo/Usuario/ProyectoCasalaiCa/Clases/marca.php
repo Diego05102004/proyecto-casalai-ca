@@ -9,7 +9,7 @@ class marca extends BD {
     private $nombre_marca;
     private $id_marca;
     
-    const MAX_NOMBRE_MARCA = 100;
+    const MAX_NOMBRE_MARCA = 25;
     const MIN_NOMBRE_MARCA = 2;
     const MAX_ID_MARCA = 999999999;
     const MIN_ID_MARCA = 1;
@@ -43,7 +43,12 @@ class marca extends BD {
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -52,14 +57,23 @@ class marca extends BD {
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -82,17 +96,23 @@ class marca extends BD {
         });
     }
 
-    public function registrarMarca() {
-        return $this->r_marca();
+    public function registrarMarca($id_usuario_auditor) {
+        return $this->r_marca($id_usuario_auditor);
     }
-    private function r_marca() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "INSERT INTO tbl_marcas (nombre_marca)
-                    VALUES (:nombre_marca)";
+    private function r_marca($id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor){
+            $sql = "CALL sp_registrar_marca(:nombre_marca, :id_usuario_auditor)";
+
             $stmt = $pdo->prepare($sql);
+
             $stmt->bindParam(':nombre_marca', $this->nombre_marca);
-            return $stmt->execute();
-        });
+            $stmt->bindValue(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            
+            return $resultado;
+        }, false);
     }
 
     public function obtenerUltimaMarca() {
@@ -125,36 +145,54 @@ class marca extends BD {
     }
     private function obtmarcasPorId($id_marca) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
-            $query = "SELECT nombre_marca FROM tbl_marcas WHERE id_marca = ?";
+            $query = "CALL sp_obtener_marca_por_id(:id_marca)";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([$id_marca]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        });
+            $stmt->execute([':id_marca' => $id_marca]);
+            $marca_obt = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $marca_obt;
+        }, false);
     }
 
-    public function modificarmarcas($id_marca) {
-        return $this->m_marcas($id_marca);
+    public function modificarmarcas($id_marca, $id_usuario_auditor) {
+        return $this->m_marcas($id_marca, $id_usuario_auditor);
     }
-    private function m_marcas($id_marca) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
-            $sql = "UPDATE tbl_marcas SET nombre_marca = :nombre_marca WHERE id_marca = :id_marca";
+    private function m_marcas($id_marca, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca, $id_usuario_auditor) {
+            
+            $sql = "CALL sp_modificar_marca(
+                :id_marca,
+                :nombre_marca,
+                :id_usuario_auditor
+            )";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_marca', $id_marca);
+            $stmt->bindParam(':id_marca', $id_marca, \PDO::PARAM_INT);
             $stmt->bindParam(':nombre_marca', $this->nombre_marca);
-            return $stmt->execute();
-        });
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $ok = $stmt->execute();
+            $stmt->closeCursor();
+            return $ok;
+        }, false);
     }
 
-    public function eliminarmarcas($id_marca) {
-        return $this->e_marcas($id_marca);
+    public function eliminarmarcas($id_marca, $id_usuario_auditor) {
+        return $this->e_marcas($id_marca, $id_usuario_auditor);
     }
-    private function e_marcas($id_marca) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca) {
-            $sql = "DELETE FROM tbl_marcas WHERE id_marca = :id_marca";
+    private function e_marcas($id_marca, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_marca, $id_usuario_auditor) {
+            $sql = "CALL sp_eliminar_marca(:id_marca, :id_usuario_auditor)";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_marca', $id_marca);
-            return $stmt->execute();
-        });
+
+            $stmt->bindParam(':id_marca', $id_marca, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $result = $stmt->execute();
+            $stmt->closeCursor();
+            return $result;
+        }, false);
     }
 
     public function getmarcas() {
@@ -162,11 +200,13 @@ class marca extends BD {
     }
     private function g_marcas() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $querymarcas = 'SELECT id_marca, nombre_marca FROM ' . $this->tablemarcas. ' ORDER BY id_marca DESC';
+            $querymarcas = "CALL sp_consultar_marcas()";
             $stmtmarcas = $pdo->prepare($querymarcas);
             $stmtmarcas->execute();
-            return $stmtmarcas->fetchAll(PDO::FETCH_ASSOC);
-        });
+            $roles_obt = $stmtmarcas->fetchAll(PDO::FETCH_ASSOC);
+            $stmtmarcas->closeCursor();
+            return $roles_obt;
+        }, false);
     }
     
     // ==================== VALIDACIONES DE BACKEND ====================

@@ -23,6 +23,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     switch ($accion) {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
+
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $marca = new marca();
             
             $errores = $marca->validarRegistrar($_POST);
@@ -38,20 +49,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $marca->setnombre_marca($_POST['nombre_marca']);
 
-            if ($marca->registrarMarca()) {
+            if ($marca->registrarMarca($id_usuario_sesion)) {
                 $marcaRegistrada = $marca->obtenerUltimaMarca();
-
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Marcas',
-                        'INCLUIR',
-                        'El usuario incluyó una nueva marca: ' . $_POST['nombre_marca'],
-                        'media'
-                    );
-                }
-
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Marca registrada correctamente',
@@ -89,6 +88,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'modificar':
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
+
+            $id_marca = $_POST['id_marca'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
             
             $marca = new marca();
             $errores = $marca->validarModificar($_POST);
@@ -101,25 +111,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $id_marca = (int)$_POST['id_marca'];
+
             $marca->setIdMarca($id_marca);
             $marca->setnombre_marca($_POST['nombre_marca']);
 
             $marcaVieja = $marca->obtenermarcasPorId($id_marca);
-            if ($marca->modificarmarcas($id_marca)) {
+            if ($marca->modificarmarcas($id_marca, $id_usuario_sesion)) {
                 $marcaActualizada = $marca->obtenermarcasPorId($id_marca);
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Marcas',
-                        'MODIFICAR',
-                        'El usuario modifico  la marca ' . $marcaVieja['nombre_marca'] . ' a ' . $marcaActualizada['nombre_marca'] . '',
-                        'alta'
-                    );
-                }
-
+                
                 echo json_encode([
                     'status' => 'success',
                     'marca' => $marcaActualizada
@@ -133,6 +132,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
+            $id_marca = $_POST['id_marca'] ?? null;
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $marca = new marca();
             $errores = $marca->validarEliminar($_POST['id_marca']);
             
@@ -144,22 +154,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $id_marca = (int)$_POST['id_marca'];
+        
             $eliminada = $marca->obtenermarcasPorId($id_marca);
             
-            if ($marca->eliminarmarcas($id_marca)) {
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Marcas',
-                        'ELIMINAR',
-                        'El usuario elimino de los registros la marca ' . $eliminada['nombre_marca'] . '',
-                        'alta'
-                    );
-                }
-
+            if ($marca->eliminarmarcas($id_marca, $id_usuario_sesion)) {
                 echo json_encode(['status' => 'success']);
             } else {
                 echo json_encode([

@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     switch ($accion) {
-                case 'permisos_tiempo_real':
+        case 'permisos_tiempo_real':
             header('Content-Type: application/json; charset=utf-8');
             $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, 'Roles');
             echo json_encode($permisosActualizados);

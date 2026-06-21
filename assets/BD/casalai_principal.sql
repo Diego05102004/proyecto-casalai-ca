@@ -2021,6 +2021,195 @@ END $$
 
 DELIMITER ;
 
+DELIMITER $$
+
+/* =========================================================================
+   1. PROCEDIMIENTO PARA REGISTRAR (INCLUIR) UNA MARCA
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_registrar_marca $$
+
+CREATE PROCEDURE sp_registrar_marca(
+    IN p_nombre_marca VARCHAR(25),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_id_marca INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error al registrar la marca. Operación cancelada.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    INSERT INTO `tbl_marcas` (`nombre_marca`) 
+    VALUES (p_nombre_marca);
+
+    SET v_id_marca = LAST_INSERT_ID();
+
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Marcas',
+        'INCLUIR',
+        JSON_OBJECT('id_marca', v_id_marca, 'nombre_marca', TRIM(p_nombre_marca)),
+        NULL,
+        p_id_usuario_auditor,
+        'media',
+        CONCAT('El usuario incluyó una nueva marca en el sistema: "', TRIM(p_nombre_marca), '".')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   2. PROCEDIMIENTO PARA MODIFICAR UNA MARCA
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_modificar_marca $$
+
+CREATE PROCEDURE sp_modificar_marca(
+    IN p_id_marca INT,
+    IN p_nombre_marca VARCHAR(25),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    -- Variables para almacenar estados anteriores y validaciones
+    DECLARE v_nombre_marca_viejo VARCHAR(25);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error al modificar la marca. Cambios revertidos.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    SELECT `nombre_marca` INTO v_nombre_marca_viejo 
+    FROM `tbl_marcas` 
+    WHERE `id_marca` = p_id_marca 
+    FOR UPDATE;
+
+    -- Actualización efectiva del registro
+    UPDATE `tbl_marcas` 
+    SET `nombre_marca` = p_nombre_marca 
+    WHERE `id_marca` = p_id_marca;
+
+    -- Registro detallado en bitácora mapeando el estado de antes y después
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Marcas',
+        'MODIFICAR',
+        JSON_OBJECT('id_marca', p_id_marca, 'nombre_marca', p_nombre_marca),
+        JSON_OBJECT('id_marca', p_id_marca, 'nombre_marca', v_nombre_marca_viejo),
+        p_id_usuario_auditor,
+        'media',
+        CONCAT('Se modificó la marca con ID ', p_id_marca, '. Nombre anterior: "', v_nombre_marca_viejo, '", Nombre nuevo: "', p_nombre_marca, '".')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   3. PROCEDIMIENTO PARA ELIMINAR UNA MARCA
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_eliminar_marca $$
+
+CREATE PROCEDURE sp_eliminar_marca(
+    IN p_id_marca INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_marca_eliminar VARCHAR(25);
+
+    -- El manejador interceptará también fallos por restricción de clave foránea (FK)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar la marca. Es posible que esté asociada a productos existentes.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo defensivo FOR UPDATE del registro candidato a eliminación
+    SELECT `nombre_marca` INTO v_nombre_marca_eliminar 
+    FROM `tbl_marcas` 
+    WHERE `id_marca` = p_id_marca 
+    FOR UPDATE;
+
+    DELETE FROM `tbl_marcas` 
+    WHERE `id_marca` = p_id_marca;
+
+    -- Envío síncrono a bitácora con prioridad ALTA por ser destrucción de datos
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Marcas',
+        'ELIMINAR',
+        NULL,
+        JSON_OBJECT('id_marca', p_id_marca, 'nombre_marca', v_nombre_marca_eliminar),
+        p_id_usuario_auditor,
+        'alta',
+        CONCAT('Se eliminó físicamente del sistema la marca "', v_nombre_marca_eliminar, '" (ID: ', p_id_marca, ').')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   4. PROCEDIMIENTO PARA CONSULTAR TODAS LAS MARCAS (Lectura limpia u optimizada)
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_consultar_marcas $$
+
+CREATE PROCEDURE sp_consultar_marcas()
+BEGIN
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+    
+    SELECT `id_marca`, `nombre_marca` 
+    FROM `tbl_marcas` 
+    ORDER BY `nombre_marca` DESC
+    FOR UPDATE;
+    
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   5. PROCEDIMIENTO PARA CONSULTAR UNA MARCA ESPECÍFICA POR ID
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_obtener_marca_por_id $$
+
+CREATE PROCEDURE sp_obtener_marca_por_id(
+    IN p_id_marca INT
+)
+BEGIN
+    -- Manejador de fallas generales con mensaje personalizado
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información de la marca.';
+    END;
+
+    SELECT * FROM `tbl_marcas` 
+    WHERE `id_marca` = p_id_marca
+    LIMIT 1
+    FOR UPDATE;
+END $$
+
+DELIMITER ;
 
 -- -----------------------------------------------------------------------------
 -- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR PRODUCTO

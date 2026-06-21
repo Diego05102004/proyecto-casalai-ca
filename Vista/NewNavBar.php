@@ -429,18 +429,16 @@ if (!empty($_SESSION['foto_perfil'])) {
         </div>
     </div>
 
-    <!-- Overlay para el menú lateral -->
     <div class="overlay" id="overlay"></div>
 
-        <!-- Panel de Tasa de Cambio -->
-        <div class="tasa-cambio-panel" id="tasa-cambio-panel">
+    <div class="tasa-cambio-panel" id="tasa-cambio-panel">
         <h2>Tipo de Cambio <IMG src="assets/img/currency-exchange.svg" alt="Tasa" class="local-icon" style="width: 20px; height: 20px;"></h2>
         <div class="tasa-info">
             <div class="tasa-valor">
                 <strong>1 USD = <?= $tasaBCVFormateada ?> BS</strong>
             </div>
             <div class="tasa-actualizacion">
-                <small>Actualizado: <?= $tasaFechaFormateada ?></small>
+                <small>Actualizado: <?= date("d/m/Y g:i A", strtotime(str_replace('/', '-', $tasaFechaFormateada))) ?></small>
             </div>
             <div class="tasa-fuente">
                 <small>Fuente: Banco Central de Venezuela</small>
