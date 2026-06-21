@@ -33,8 +33,8 @@ class DolarService {
                 throw new PDOException('Error HTTP: ' . $httpCode);
             }
             
-            // Buscar el div con id="dolar" y el strong dentro
-            if (preg_match('/<div id="dolar".*?<strong>\s*([\d,]+)\s*<\/strong>/s', $html, $matches)) {
+            // Buscar el div con id="dolar" y el strong con class="strong-tb" dentro
+            if (preg_match('/<div id="dolar".*?<strong class="strong-tb">\s*([\d,]+)\s*<\/strong>/s', $html, $matches)) {
                 $precioDolar = str_replace(',', '.', str_replace('.', '', $matches[1]));
                 return floatval($precioDolar);
             } else {
