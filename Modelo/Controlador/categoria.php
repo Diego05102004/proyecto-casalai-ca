@@ -70,19 +70,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $categoria->setNombreCategoria($_POST['nombre_categoria']);
             $caracteristicas = isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : [];
 
-            if ($categoria->registrarCategoria($caracteristicas)) {
+            if ($categoria->registrarCategoria($caracteristicas, $_SESSION['id_usuario'])) {
                 $categoriaRegistrado = $categoria->obtenerUltimoCategoria();
-
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Categorias',
-                        'INCLUIR',
-                        'El usuario incluyó la categoría: ' . $_POST['nombre_categoria'],
-                        'media'
-                    );
-                }
 
                 echo json_encode([
                     'status' => 'success',
@@ -184,25 +173,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $categoria->setNombreCategoria($nuevo_nombre);
             
             // Intentar modificar la categoría
-            $resultado = $categoria->modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas);
+            $resultado = $categoria->modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas, $_SESSION['id_usuario']);
             
             if ($resultado === true) {
                 $categoriaActualizada = $categoria->obtenerCategoriaPorId($id_categoria);
-
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    try {
-                        $bitacoraModel = new Bitacora();
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            'Categorias',
-                            'MODIFICAR',
-                            'El usuario modificó la categoría ID: ' . $id_categoria,
-                            'media'
-                        );
-                    } catch (Exception $e) {
-                        error_log('Error al registrar en bitácora: ' . $e->getMessage());
-                    }
-                }
                 
                 echo json_encode([
                     'status' => 'success',
@@ -248,7 +222,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Intentar eliminar la categoría
-            $resultado = $categoria->eliminarCategoria($id_categoria);
+            $resultado = $categoria->eliminarCategoria($id_categoria, $_SESSION['id_usuario']);
 
             if ($resultado['status'] === 'error') {
                 // Registrar en bitácora el intento fallido

@@ -2555,6 +2555,451 @@ DELIMITER ;
 
 
 
+-- -----------------------------------------------------------------------------
+-- 1. PROCEDIMIENTO: MODIFICAR CATEGORIA
+-- -----------------------------------------------------------------------------
+
+
+DELIMITER $$
+CREATE PROCEDURE `sp_modificar_categoria`(
+    IN p_id_categoria INT,
+    IN p_nuevo_nombre VARCHAR(255),
+    IN p_caracteristicas JSON,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_actual VARCHAR(255);
+    DECLARE v_tabla_antigua VARCHAR(255);
+    DECLARE v_tabla_nueva VARCHAR(255);
+    DECLARE v_datos_viejos JSON;
+    DECLARE v_contador INT DEFAULT 0;
+    DECLARE v_total_caracteristicas INT;
+    DECLARE v_nombre_campo VARCHAR(255);
+    DECLARE v_tipo_campo VARCHAR(50);
+    DECLARE v_max_length INT;
+    DECLARE v_max_length_raw JSON;
+    DECLARE v_tipo_sql VARCHAR(100);
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_column_name VARCHAR(255);
+    DECLARE v_column_type VARCHAR(100);
+    DECLARE v_column_exists INT;
+    
+    
+    DECLARE cur_columns CURSOR FOR 
+        SELECT COLUMN_NAME, COLUMN_TYPE 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = 'casalai_principal' 
+        AND TABLE_NAME = v_tabla_antigua 
+        AND COLUMN_NAME NOT IN ('id', 'id_producto');
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+        @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @error_message = CONCAT('Error interno: ', @text, ' (SQLSTATE: ', @sqlstate, ', Errno: ', @errno, ')');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = @error_message;
+    END;
+
+    
+    SELECT nombre_categoria INTO v_nombre_actual 
+    FROM tbl_categoria 
+    WHERE id_categoria = p_id_categoria;
+    
+    IF v_nombre_actual IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Categor??a no encontrada';
+    END IF;
+    
+    
+    IF p_nuevo_nombre IS NULL OR TRIM(p_nuevo_nombre) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de la categor??a no puede estar vac??o';
+    END IF;
+    
+    
+    SET v_tabla_antigua = CONCAT('cat_', LOWER(REPLACE(v_nombre_actual, ' ', '_')));
+    SET v_tabla_nueva = CONCAT('cat_', LOWER(REPLACE(p_nuevo_nombre, ' ', '_')));
+    
+    
+    SET v_datos_viejos = JSON_OBJECT('id_categoria', p_id_categoria, 'nombre_categoria', v_nombre_actual, 'tabla', v_tabla_antigua);
+    
+    
+    SET done = FALSE;
+    OPEN cur_columns;
+    
+    read_loop: LOOP
+        FETCH cur_columns INTO v_column_name, v_column_type;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        
+        SET v_contador = 0;
+        SET v_total_caracteristicas = JSON_LENGTH(p_caracteristicas);
+        SET v_column_exists = 0;
+        
+        WHILE v_contador < v_total_caracteristicas DO
+            SET v_nombre_campo = LOWER(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(p_caracteristicas, CONCAT('$[', v_contador, '].nombre'))), ' ', '_'));
+            
+            IF v_nombre_campo = v_column_name THEN
+                SET v_column_exists = 1;
+            END IF;
+            
+            SET v_contador = v_contador + 1;
+        END WHILE;
+        
+        
+        IF v_column_exists = 0 THEN
+            SET @drop_sql = CONCAT('ALTER TABLE `', v_tabla_antigua, '` DROP COLUMN `', v_column_name, '`');
+            PREPARE stmt FROM @drop_sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END LOOP;
+    
+    CLOSE cur_columns;
+    
+    
+    UPDATE tbl_categoria 
+    SET nombre_categoria = p_nuevo_nombre 
+    WHERE id_categoria = p_id_categoria;
+    
+    
+    IF v_tabla_antigua != v_tabla_nueva THEN
+        SET @rename_sql = CONCAT('RENAME TABLE `', v_tabla_antigua, '` TO `', v_tabla_nueva, '`');
+        PREPARE stmt FROM @rename_sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+    
+    
+    SET v_total_caracteristicas = JSON_LENGTH(p_caracteristicas);
+    SET v_contador = 0;
+    
+    WHILE v_contador < v_total_caracteristicas DO
+        SET v_nombre_campo = LOWER(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(p_caracteristicas, CONCAT('$[', v_contador, '].nombre'))), ' ', '_'));
+        SET v_tipo_campo = JSON_UNQUOTE(JSON_EXTRACT(p_caracteristicas, CONCAT('$[', v_contador, '].tipo')));
+        SET v_max_length_raw = JSON_EXTRACT(p_caracteristicas, CONCAT('$[', v_contador, '].max'));
+        
+        
+        IF v_max_length_raw IS NULL THEN
+            SET v_max_length = 255;
+        ELSE
+            
+            SET v_max_length = CAST(JSON_UNQUOTE(v_max_length_raw) AS UNSIGNED);
+            IF v_max_length = 0 OR v_max_length > 255 THEN
+                SET v_max_length = 255;
+            END IF;
+        END IF;
+        
+        
+        CASE v_tipo_campo
+            WHEN 'int' THEN
+                SET v_tipo_sql = 'INT';
+            WHEN 'float' THEN
+                SET v_tipo_sql = 'FLOAT';
+            WHEN 'string' THEN
+                SET v_tipo_sql = CONCAT('VARCHAR(', v_max_length, ')');
+            ELSE
+                SET v_tipo_sql = CONCAT('VARCHAR(', v_max_length, ')');
+        END CASE;
+        
+        
+        SELECT COUNT(*) INTO v_column_exists
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = 'casalai_principal' 
+        AND TABLE_NAME = v_tabla_nueva 
+        AND COLUMN_NAME = v_nombre_campo;
+        
+        IF v_column_exists = 0 THEN
+            
+            SET @add_sql = CONCAT('ALTER TABLE `', v_tabla_nueva, '` ADD COLUMN `', v_nombre_campo, '` ', v_tipo_sql);
+            PREPARE stmt FROM @add_sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ELSE
+            
+            SELECT COLUMN_TYPE INTO v_column_type
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = 'casalai_principal' 
+            AND TABLE_NAME = v_tabla_nueva 
+            AND COLUMN_NAME = v_nombre_campo;
+            
+            
+            IF v_column_type != v_tipo_sql THEN
+                SET @modify_sql = CONCAT('ALTER TABLE `', v_tabla_nueva, '` MODIFY COLUMN `', v_nombre_campo, '` ', v_tipo_sql);
+                PREPARE stmt FROM @modify_sql;
+                EXECUTE stmt;
+                DEALLOCATE PREPARE stmt;
+            END IF;
+        END IF;
+        
+        SET v_contador = v_contador + 1;
+    END WHILE;
+    
+    
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Categor??as', 
+        'MODIFICAR', 
+        JSON_OBJECT('id_categoria', p_id_categoria, 'nombre_categoria', p_nuevo_nombre, 'tabla', v_tabla_nueva, 'caracteristicas', p_caracteristicas), 
+        v_datos_viejos, 
+        p_id_usuario_auditor,
+        'media', 
+        CONCAT('Se modific?? la categor??a: ', v_nombre_actual, ' -> ', p_nuevo_nombre)
+    );
+END$$
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 2. PROCEDIMIENTO: AGREGAR CATEGORIA
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+CREATE PROCEDURE `sp_registrar_categoria`(
+    IN p_nombre_categoria VARCHAR(255),
+    IN p_caracteristicas JSON,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nuevo_id_categoria INT;
+    DECLARE v_nombre_tabla VARCHAR(255);
+    DECLARE v_sql_create TEXT;
+    DECLARE v_contador INT DEFAULT 0;
+    DECLARE v_total_caracteristicas INT;
+    DECLARE v_nombre_campo VARCHAR(255);
+    DECLARE v_tipo_campo VARCHAR(50);
+    DECLARE v_max_length INT;
+    DECLARE v_max_length_raw JSON;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+        @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        SET @error_message = CONCAT('Error interno: ', @text, ' (SQLSTATE: ', @sqlstate, ', Errno: ', @errno, ')');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = @error_message;
+    END;
+
+    SET v_nombre_tabla = CONCAT('cat_', LOWER(REPLACE(p_nombre_categoria, ' ', '_')));
+
+    INSERT INTO `tbl_categoria` (`nombre_categoria`)
+    VALUES (p_nombre_categoria);
+
+    SET v_nuevo_id_categoria = LAST_INSERT_ID();
+
+    SET v_sql_create = CONCAT('CREATE TABLE IF NOT EXISTS `', v_nombre_tabla, '` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        id_producto INT NOT NULL,');
+    
+    SET v_total_caracteristicas = JSON_LENGTH(p_caracteristicas);
+    
+    WHILE v_contador < v_total_caracteristicas DO
+        SET v_nombre_campo = LOWER(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(p_caracteristicas, CONCAT('$[', v_contador, '].nombre'))), ' ', '_'));
+        SET v_tipo_campo = JSON_UNQUOTE(JSON_EXTRACT(p_caracteristicas, CONCAT('$[', v_contador, '].tipo')));
+        SET v_max_length_raw = JSON_EXTRACT(p_caracteristicas, CONCAT('$[', v_contador, '].max'));
+        
+        IF v_max_length_raw IS NULL THEN
+            SET v_max_length = 255;
+        ELSE
+            SET v_max_length = CAST(JSON_UNQUOTE(v_max_length_raw) AS UNSIGNED);
+            IF v_max_length = 0 OR v_max_length > 255 THEN
+                SET v_max_length = 255;
+            END IF;
+        END IF;
+        
+        CASE v_tipo_campo
+            WHEN 'int' THEN
+                SET v_sql_create = CONCAT(v_sql_create, CONCAT(' `', v_nombre_campo, '` INT,'));
+            WHEN 'float' THEN
+                SET v_sql_create = CONCAT(v_sql_create, CONCAT(' `', v_nombre_campo, '` FLOAT,'));
+            WHEN 'string' THEN
+                SET v_sql_create = CONCAT(v_sql_create, CONCAT(' `', v_nombre_campo, '` VARCHAR(', v_max_length, '),'));
+        END CASE;
+        
+        SET v_contador = v_contador + 1;
+    END WHILE;
+    
+    SET v_sql_create = CONCAT(LEFT(v_sql_create, LENGTH(v_sql_create) - 1), 
+        ', FOREIGN KEY (id_producto) REFERENCES tbl_productos(id_producto) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;');
+    
+    SET @sql = v_sql_create;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Categor??as', 
+        'INCLUIR', 
+        JSON_OBJECT('id_categoria', v_nuevo_id_categoria, 'nombre_categoria', p_nombre_categoria, 'tabla', v_nombre_tabla, 'caracteristicas', p_caracteristicas), 
+        NULL, 
+        p_id_usuario_auditor,
+        'media', 
+        CONCAT('Se incluy?? una nueva categor??a en el sistema: ', p_nombre_categoria)
+    );
+END$$
+DELIMITER ;
+
+-- -----------------------------------------------------------------------------
+-- 3. PROCEDIMIENTO: ELIMINAR CATEGORIA
+-- -----------------------------------------------------------------------------
+
+DELIMITER $$
+CREATE PROCEDURE `sp_eliminar_categoria`(IN `p_id_categoria` INT, IN `p_nombre_tabla` VARCHAR(255), IN `p_id_usuario_auditor` INT)
+BEGIN
+    -- 1. DECLARACIÓN DE VARIABLES LOCALES AL INICIO ESTRICTO
+    DECLARE v_nombre_categoria VARCHAR(255);
+    DECLARE v_productos_count INT;
+    DECLARE v_datos_viejos JSON;
+    DECLARE v_error_msg VARCHAR(500);
+
+    -- 2. MANEJAdores de EXCEPCIONES (Deben ir antes de cualquier comando ejecutable)
+    -- MANEJADOR ESPECÍFICO PARA EL ESCENARIO DE LLAVE FORÁNEA (Error 1451)
+    DECLARE EXIT HANDLER FOR 1451
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación denegada: No se puede eliminar la categoría porque posee registros históricos asociados.';
+    END;
+
+    -- Manejador general para cualquier otro tipo de error
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        GET DIAGNOSTICS CONDITION 1
+        @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
+        
+        -- Mensajes específicos según el código de error
+        IF @errno = 1146 THEN
+            SET v_error_msg = 'Error: La tabla especificada no existe en la base de datos';
+        ELSEIF @errno = 1050 THEN
+            SET v_error_msg = 'Error: La tabla ya existe (conflicto de nombres)';
+        ELSEIF @errno = 1062 THEN
+            SET v_error_msg = 'Error: Duplicidad de datos en la base de datos';
+        ELSEIF @errno = 1213 THEN
+            SET v_error_msg = 'Error: Conflicto de bloqueo, intente nuevamente';
+        ELSE
+            SET v_error_msg = CONCAT('Error interno (Código: ', @errno, '): ', @text);
+        END IF;
+        
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+    END;
+
+    -- 3. INICIO DE LÓGICA Y TRANSACCIONES
+
+    -- Validación de parámetros de entrada (Movido aquí de forma segura)
+    IF p_id_categoria IS NULL OR p_id_categoria <= 0 THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ID de categoría inválido';
+    END IF;
+    
+    IF p_nombre_tabla IS NULL OR p_nombre_tabla = '' THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Nombre de tabla inválido';
+    END IF;
+    
+    IF p_id_usuario_auditor IS NULL OR p_id_usuario_auditor <= 0 THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ID de usuario auditor inválido';
+    END IF;
+
+    -- Bloqueo exclusivo de seguridad y captura pre-mortem
+    SELECT nombre_categoria INTO v_nombre_categoria 
+    FROM tbl_categoria 
+    WHERE id_categoria = p_id_categoria
+    LIMIT 1
+    FOR UPDATE;
+        
+    -- Validación de existencia
+    IF v_nombre_categoria IS NULL THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Categoría no encontrada';
+    END IF;
+        
+    -- Preparación del objeto JSON de auditoría
+    SET v_datos_viejos = JSON_OBJECT('id_categoria', p_id_categoria, 'nombre_categoria', v_nombre_categoria, 'tabla', p_nombre_tabla);
+        
+    -- Verificar si la tabla dinámica existe
+    SET @table_exists = 0;
+    SELECT COUNT(*) INTO @table_exists
+    FROM INFORMATION_SCHEMA.TABLES 
+    WHERE TABLE_SCHEMA = 'casalai_principal' 
+    AND TABLE_NAME = p_nombre_tabla;
+        
+    IF @table_exists > 0 THEN
+        -- Inicializamos la variable de usuario para el conteo
+        SET @prod_count = 0;
+        
+        -- Construcción limpia del SQL dinámico
+        SET @count_sql = CONCAT('SELECT COUNT(*) INTO @prod_count FROM `', p_nombre_tabla, '`');
+        PREPARE stmt FROM @count_sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+                
+        SET v_productos_count = @prod_count;
+                
+        IF v_productos_count > 0 THEN
+            ROLLBACK;
+            SET v_error_msg = CONCAT('No se puede eliminar porque tiene ', v_productos_count, ' productos asociados');
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+        END IF;
+                
+        -- Eliminar la tabla dinámica
+        SET @drop_sql = CONCAT('DROP TABLE IF EXISTS `', p_nombre_tabla, '`');
+        PREPARE stmt FROM @drop_sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+        
+        -- Verificar que la tabla se eliminó correctamente
+        SET @table_exists_after = 0;
+        SELECT COUNT(*) INTO @table_exists_after
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_SCHEMA = 'casalai_principal' 
+        AND TABLE_NAME = p_nombre_tabla;
+        
+        IF @table_exists_after > 0 THEN
+            ROLLBACK;
+            SET v_error_msg = CONCAT('No se pudo eliminar la tabla dinámica: ', p_nombre_tabla);
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+        END IF;
+    END IF;
+        
+    -- Remoción física del registro
+    DELETE FROM tbl_categoria WHERE id_categoria = p_id_categoria;
+    
+    -- Verificar que la categoría se eliminó correctamente
+    SET @categoria_deleted = 0;
+    SELECT COUNT(*) INTO @categoria_deleted
+    FROM tbl_categoria 
+    WHERE id_categoria = p_id_categoria;
+    
+    IF @categoria_deleted > 0 THEN
+        ROLLBACK;
+        SET v_error_msg = CONCAT('No se pudo eliminar el registro de la categoría con ID: ', p_id_categoria);
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+    END IF;
+        
+    -- Registro de expulsión en bitácora con prioridad ALTA
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (`fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`)
+    VALUES (
+        NOW(), 
+        'Categorías', 
+        'ELIMINAR', 
+        NULL, 
+        v_datos_viejos, 
+        p_id_usuario_auditor, 
+        'alta', 
+        CONCAT('Se eliminó físicamente la categoría "', IFNULL(v_nombre_categoria, 'Desconocido'), '" del sistema y su tabla asociada: ', p_nombre_tabla)
+    );
+
+
+END$$
+DELIMITER ;
+
+
 
 CREATE DATABASE IF NOT EXISTS `casalai_seguridad`;
 USE `casalai_seguridad`;
