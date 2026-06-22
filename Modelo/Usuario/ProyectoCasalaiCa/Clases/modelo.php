@@ -10,7 +10,7 @@ class modelo extends BD{
     private $id_modelo;
     
     // Constantes para validaciones
-    const MAX_NOMBRE_MODELO = 100;
+    const MAX_NOMBRE_MODELO = 25;
     const MIN_NOMBRE_MODELO = 2;
     const MAX_ID_MODELO = 999999999;
     const MIN_ID_MODELO = 1;
@@ -55,7 +55,12 @@ class modelo extends BD{
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -64,14 +69,23 @@ class modelo extends BD{
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -94,18 +108,21 @@ class modelo extends BD{
         });
     }
 
-    public function registrarModelo() {
-        return $this->r_modelos();
+    public function registrarModelo($id_usuario_auditor) {
+        return $this->r_modelos($id_usuario_auditor);
     }
-    private function r_modelos() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "INSERT INTO tbl_modelos (nombre_modelo, id_marca)
-                    VALUES (:nombre_modelo, :id_marca)";
+    private function r_modelos($id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor){
+            $sql = "CALL sp_registrar_modelo(:nombre_modelo, :id_marca, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':nombre_modelo', $this->nombre_modelo);
             $stmt->bindParam(':id_marca', $this->id_marca);
-            return $stmt->execute();
-        });
+            $stmt->bindValue(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
 
     public function obtenerUltimoModelo() {
@@ -129,44 +146,58 @@ class modelo extends BD{
     }
     private function obtModeloPorId($id_modelo) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
-            $sql = "SELECT * FROM tbl_modelos WHERE id_modelo = ?";
+            $sql = "CALL sp_obtener_modelo_por_id(:id_modelo)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$id_modelo]);
-            $modelo = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $modelo;
-        });
+            $stmt->execute([':id_modelo' => $id_modelo]);
+            $modelo_obt = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $modelo_obt;
+        }, false);
     }
 
-    public function getmarcas() {
-        return $this->g_marcas();
+    public function getModelos() {
+        return $this->g_modelos();
     }
-    private function g_marcas() {
+    private function g_modelos() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $query = "SELECT id_marca, nombre_marca FROM tbl_marcas ORDER BY nombre_marca ASC";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        });
+            $querymodelos = "CALL sp_consultar_modelos()";
+            $stmtmodelos = $pdo->prepare($querymodelos);
+            $stmtmodelos->execute();
+            $modelos = $stmtmodelos->fetchAll(PDO::FETCH_ASSOC);
+            $stmtmodelos->closeCursor();
+            return $modelos;
+        }, false);
     }
 
-    public function modificarModelo($id_modelo) {
-        return $this->m_modelo($id_modelo);
+    public function modificarModelo($id_modelo, $id_usuario_auditor) {
+        return $this->m_modelo($id_modelo, $id_usuario_auditor);
     }
-    private function m_modelo($id_modelo) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
-            $sql = "UPDATE tbl_modelos SET nombre_modelo = :nombre_modelo, id_marca = :id_marca WHERE id_modelo = :id_modelo";
+    private function m_modelo($id_modelo, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo, $id_usuario_auditor){
+
+            $sql = "CALL sp_modificar_modelo(
+                :id_modelo,
+                :nombre_modelo,
+                :id_marca,
+                :id_usuario_auditor
+            )";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_modelo', $id_modelo);
-            $stmt->bindParam(':id_marca', $this->id_marca);
+            $stmt->bindParam(':id_modelo', $id_modelo, \PDO::PARAM_INT);
             $stmt->bindParam(':nombre_modelo', $this->nombre_modelo);
-            return $stmt->execute();
-        });
+            $stmt->bindParam(':id_marca', $this->id_marca, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $ok = $stmt->execute();
+            $stmt->closeCursor();
+            return $ok;
+        }, false);
     }
 
-    public function eliminarModelo($id_modelo) {
-        return $this->e_modelo($id_modelo);
+    public function eliminarModelo($id_modelo, $id_usuario_auditor) {
+        return $this->e_modelo($id_modelo, $id_usuario_auditor);
     }
-    private function e_modelo($id_modelo) {
+    private function e_modelo($id_modelo, $id_usuario_auditor) {
         $productosAsociados = $this->tieneProductosAsociados($id_modelo);
         
         if ($productosAsociados['tiene_productos']) {
@@ -178,23 +209,17 @@ class modelo extends BD{
             ];
         }
 
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo){
-            $sql = "DELETE FROM tbl_modelos WHERE id_modelo = :id_modelo";
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_modelo, $id_usuario_auditor){
+            $sql = "CALL sp_eliminar_modelo(:id_modelo, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_modelo', $id_modelo);
+
+            $stmt->bindParam(':id_modelo', $id_modelo, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
             $result = $stmt->execute();
-            
-            if ($result) {
-                return ['status' => 'success'];
-            } else {
-                return [
-                    'status' => 'error', 
-                    'mensaje' => 'Error al eliminar el modelo',
-                    'productos' => [],
-                    'total_productos' => 0
-                ];
-            }
-        });
+            $stmt->closeCursor();
+            return $result;
+        }, false);
     }
 
     public function tieneProductosAsociados($id_modelo) {
@@ -247,23 +272,18 @@ class modelo extends BD{
         });
     }
 
-    public function getModelos() {
-        return $this->g_modelos();
+    public function getmarcas() {
+        return $this->g_marcas();
     }
-    private function g_modelos() {
+    private function g_marcas() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $querymodelos = 'SELECT mo.id_modelo,
-            mo.id_marca,
-            mo.nombre_modelo,
-            ma.nombre_marca 
-            FROM tbl_modelos AS mo
-            INNER JOIN tbl_marcas AS ma ON mo.id_marca = ma.id_marca
-            ORDER BY mo.id_modelo DESC';
-            $stmtmodelos = $pdo->prepare($querymodelos);
-            $stmtmodelos->execute();
-            $modelos = $stmtmodelos->fetchAll(PDO::FETCH_ASSOC);
-            return $modelos;
-        });
+            $query = "CALL sp_consultar_marcas()";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute();
+            $marcas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            return $marcas;
+        }, false);
     }
 
     // ==================== VALIDACIONES DE BACKEND ====================

@@ -203,9 +203,9 @@ class marca extends BD {
             $querymarcas = "CALL sp_consultar_marcas()";
             $stmtmarcas = $pdo->prepare($querymarcas);
             $stmtmarcas->execute();
-            $roles_obt = $stmtmarcas->fetchAll(PDO::FETCH_ASSOC);
+            $marcas = $stmtmarcas->fetchAll(PDO::FETCH_ASSOC);
             $stmtmarcas->closeCursor();
-            return $roles_obt;
+            return $marcas;
         }, false);
     }
     

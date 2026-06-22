@@ -29,6 +29,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $modelo = new modelo();
             
             $errores = $modelo->validarRegistrar($_POST);
@@ -45,20 +55,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $modelo->setnombre_modelo($_POST['nombre_modelo']);
             $modelo->setid_marca($_POST['id_marca']);
 
-            if ($modelo->registrarModelo()) {
+            if ($modelo->registrarModelo($id_usuario_sesion)) {
                 $modeloRegistrado = $modelo->obtenerUltimoModelo();
-                
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora(); 
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Modelos',
-                        'INCLUIR',
-                        'El usuario incluyó un nuevo modelo: ' . $_POST['nombre_modelo'],
-                        'media'
-                    );
-                }
-                
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'modelo registrado correctamente',
@@ -88,6 +86,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'modificar':
+            $id_modelo = $_POST['id_modelo'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $modelo = new modelo();
             $errores = $modelo->validarModificar($_POST);
             
@@ -100,25 +109,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $id_modelo = (int)$_POST['id_modelo'];
             $modelo->setIdModelo($id_modelo);
             $modelo->setnombre_modelo($_POST['nombre_modelo']);
             $modelo->setid_marca($_POST['id_marca']);
 
-            if ($modelo->modificarModelo($id_modelo)) {
+            if ($modelo->modificarModelo($id_modelo, $id_usuario_sesion)) {
                 $modeloActualizado = $modelo->obtenerModeloConMarcaPorId($id_modelo);
-                
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Modelos',
-                        'MODIFICAR',
-                        'El usuario modifico el modelo ' . $modeloActualizado['nombre_modelo'] . '',
-                        'media'
-                    );
-                }
-                
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Modelo modificado correctamente',
@@ -133,6 +129,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
             
         case 'eliminar':
+            $id_modelo = $_POST['id_modelo'] ?? null;
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $modelo = new modelo();
             $errores = $modelo->validarEliminar($_POST['id_modelo']);
             
@@ -144,55 +151,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $id_modelo = (int)$_POST['id_modelo'];
-            $resultado = $modelo->eliminarModelo($id_modelo);
 
-            if (is_array($resultado) && $resultado['status'] === 'error') {
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Modelos',
-                        'ELIMINAR_FALLIDO',
-                        'Intento de eliminación fallido de modelo (ID: ' . $id_modelo . '): ' . $resultado['mensaje'],
-                        'media'
-                    );
-                }
-                
-                echo json_encode([
-                    'status' => 'error', 
-                    'message' => $resultado['mensaje'],
-                    'productos' => $resultado['productos'] ?? [],
-                    'total_productos' => $resultado['total_productos'] ?? 0
-                ]);
-            } else if ($resultado['status'] === 'success') {
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        'Modelos',
-                        'ELIMINAR',
-                        'El usuario eliminó el modelo ID: ' . $id_modelo,
-                        'media'
-                    );
-                }
-                
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Modelo eliminado correctamente'
-                ]);
+            $eliminado = $modelo->obtenerModeloPorId($id_modelo);
+            
+            if ($modelo->eliminarModelo($id_modelo, $id_usuario_sesion)) {
+                echo json_encode(['status' => 'success']);
             } else {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error al eliminar el modelo'
+                    'message' => 'Error al eliminar la modelo'
                 ]);
             }
             exit;
 
         default:
             echo json_encode(['status' => 'error', 'message' => 'Acción no válida']);
-            break;
+        break;
     }
     exit;
 }

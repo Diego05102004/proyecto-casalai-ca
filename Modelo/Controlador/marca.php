@@ -170,7 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         default:
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['status' => 'error', 'message' => 'Acción no válida']);
-            exit;
+        exit;
     }
 }
 

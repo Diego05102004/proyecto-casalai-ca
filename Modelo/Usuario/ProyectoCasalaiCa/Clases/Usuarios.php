@@ -690,15 +690,6 @@ class Usuarios extends BD {
         
         return $errores;
     }
-/*
-    public function clienteExiste($cedula) {
-        return $this->ejecutarConConexionSegura(function($pdoP) use ($cedula) {
-            $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = ?";
-            $stmt = $pdoP->prepare($sql);
-            $stmt->execute([$cedula]);
-            return $stmt->fetchColumn() > 0;
-        }, 'P');
-    }*/
 
     public function ingresarUsuario($id_usuario_auditor) {
         return $this->i_ingresarUsuario($id_usuario_auditor);
@@ -742,23 +733,6 @@ class Usuarios extends BD {
             return $resultado ? true : false;
         }, false);
     }
-/*
-    private function registrarClienteEnP() {
-        return $this->ejecutarConConexionSegura(function($pdoP) {
-            $sqlCliente = "INSERT INTO tbl_clientes (nombre, cedula, telefono, direccion, correo, activo)
-                        VALUES (:nombre, :cedula, :telefono, '', :correo, 1)";
-            
-            $stmtCliente = $pdoP->prepare($sqlCliente);
-            $nombreCompleto = $this->nombre . ' ' . $this->apellido;
-            
-            return $stmtCliente->execute([
-                ':nombre'   => $nombreCompleto,
-                ':cedula'   => $this->cedula,
-                ':telefono' => $this->telefono,
-                ':correo'   => $this->correo
-            ]);
-        }, 'P');
-    }*/
 
     public function modificarUsuario($id_usuario, $id_usuario_auditor) {
         return $this->m_modificarUsuario($id_usuario, $id_usuario_auditor);
@@ -806,26 +780,6 @@ class Usuarios extends BD {
             return $resultado;
         }, false);
     }
-/*
-    private function actualizarClienteEnP() {
-        return $this->ejecutarConConexionSegura(function($pdoP) {
-            $sqlCliente = "UPDATE tbl_clientes SET 
-                            nombre = :nombre,
-                            telefono = :telefono,
-                            correo = :correo
-                            WHERE cedula = :cedula";
-            
-            $stmtCliente = $pdoP->prepare($sqlCliente);
-            $nombreCompleto = $this->nombre . ' ' . $this->apellido;
-            
-            return $stmtCliente->execute([
-                ':nombre'   => $nombreCompleto,
-                ':telefono' => $this->telefono,
-                ':correo'   => $this->correo,
-                ':cedula'   => $this->cedula
-            ]);
-        }, 'P');
-    }*/
 
     public function existeUsuario($username, $excluir_id = null) {
         return $this->e_existeUsuario($username, $excluir_id);
