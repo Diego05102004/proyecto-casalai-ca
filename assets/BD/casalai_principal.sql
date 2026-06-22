@@ -631,24 +631,7 @@ INSERT INTO `tbl_marcas` (`id_marca`, `nombre_marca`) VALUES
 (11, 'Forza'),
 (12, 'Tripp Lite'),
 (13, 'CDP'),
-(14, 'Koblenz'),
-(15, 'Epson'),
-(16, 'HP'),
-(17, 'Canon'),
-(18, 'Inktec'),
-(19, 'TexPrint'),
-(20, 'Sawgrass'),
-(21, 'Cosmos Ink'),
-(22, 'Azon'),
-(23, 'Sublimagic'),
-(24, 'Brother'),
-(25, 'Forza'),
-(26, 'Tripp Lite'),
-(27, 'CDP'),
-(28, 'Koblenz'),
-(29, 'Pokemon'),
-(30, 'Digimon'),
-(31, 'Nintendo');
+(14, 'Koblenz');
 
 -- --------------------------------------------------------
 
@@ -667,11 +650,11 @@ CREATE TABLE `tbl_modelos` (
 --
 
 INSERT INTO `tbl_modelos` (`id_modelo`, `nombre_modelo`, `id_marca`) VALUES
-(1, 'L32508', NULL),
-(2, 'L32106', NULL),
-(3, 'L8055', NULL),
-(4, 'L18001', NULL),
-(5, 'L13001', NULL),
+(1, 'L32508', 1),
+(2, 'L32106', 1),
+(3, 'L8055', 1),
+(4, 'L18001', 1),
+(5, 'L13001', 1),
 (6, 'F170911', 2),
 (7, 'F5709', 2),
 (8, 'Smart Tank 515', 2),
@@ -698,7 +681,7 @@ INSERT INTO `tbl_modelos` (`id_modelo`, `nombre_modelo`, `id_marca`) VALUES
 (29, 'Sublinova', 4),
 (30, 'SubliJet', 6),
 (31, 'Sublime', 8),
-(32, 'Durabrite', 15),
+(32, 'Durabrite', 1),
 (33, 'Innobella', 10),
 (34, 'ChromaLife 100+', 3),
 (35, 'T664 ', 1),
@@ -722,7 +705,7 @@ INSERT INTO `tbl_modelos` (`id_modelo`, `nombre_modelo`, `id_marca`) VALUES
 (53, 'AVR-1000', 14),
 (54, '520 Joules', 14),
 (55, 'Sublime', 8),
-(56, 'Durabrite', 15),
+(56, 'Durabrite', 1),
 (57, 'Innobella', 10),
 (58, 'ChromaLife 100+', 3),
 (59, 'T664 ', 1),
@@ -744,8 +727,7 @@ INSERT INTO `tbl_modelos` (`id_modelo`, `nombre_modelo`, `id_marca`) VALUES
 (75, 'UPS 600VA', 13),
 (76, '1000VA', 13),
 (77, 'AVR-1000', 14),
-(78, '520 Joulesj', 3),
-(79, 'Ejemplo', 3);
+(78, '520 Joulesj', 3);
 
 -- --------------------------------------------------------
 
@@ -2178,12 +2160,12 @@ CREATE PROCEDURE sp_consultar_marcas()
 BEGIN
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     START TRANSACTION;
-    
+
     SELECT `id_marca`, `nombre_marca` 
     FROM `tbl_marcas` 
-    ORDER BY `nombre_marca` DESC
+    ORDER BY `nombre_marca` ASC
     FOR UPDATE;
-    
+
     COMMIT;
 END $$
 
@@ -2210,6 +2192,203 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+DELIMITER $$
+
+/* =========================================================================
+   1. PROCEDIMIENTO PARA REGISTRAR UN MODELO
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_registrar_modelo $$
+
+CREATE PROCEDURE sp_registrar_modelo(
+    IN p_nombre_modelo VARCHAR(25),
+    IN p_id_marca INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_id_modelo INT;
+
+    -- Manejador de excepciones para asegurar la atomicidad ante fallas del motor
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno en el servidor de datos al registrar el modelo.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Inserción directa (la validación de datos viene resuelta desde PHP)
+    INSERT INTO `tbl_modelos` (`nombre_modelo`, `id_marca`) 
+    VALUES (p_nombre_modelo, p_id_marca);
+
+    SET v_id_modelo = LAST_INSERT_ID();
+
+    -- Registro síncrono en la bitácora con mapeo estructurado JSON
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Modelos',
+        'INCLUIR',
+        JSON_OBJECT('id_modelo', v_id_modelo, 'nombre_modelo', p_nombre_modelo, 'id_marca', p_id_marca),
+        NULL,
+        p_id_usuario_auditor,
+        'media',
+        CONCAT('El usuario incluyó un nuevo modelo en el sistema: "', p_nombre_modelo, '".')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   2. PROCEDIMIENTO PARA MODIFICAR UN MODELO
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_modificar_modelo $$
+
+CREATE PROCEDURE sp_modificar_modelo(
+    IN p_id_modelo INT,
+    IN p_nombre_modelo VARCHAR(25),
+    IN p_id_marca INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_modelo_viejo VARCHAR(25);
+    DECLARE v_id_marca_viejo INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno en el servidor de datos al modificar el modelo.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- CONCURRENCIA: Bloqueo de fila exclusivo para evitar lecturas sucias o sobreescritura asíncrona
+    SELECT `nombre_modelo`, `id_marca` INTO v_nombre_modelo_viejo, v_id_marca_viejo
+    FROM `tbl_modelos` 
+    WHERE `id_modelo` = p_id_modelo 
+    FOR UPDATE;
+
+    -- Actualización de los campos
+    UPDATE `tbl_modelos` 
+    SET `nombre_modelo` = p_nombre_modelo, 
+        `id_marca` = p_id_marca 
+    WHERE `id_modelo` = p_id_modelo;
+
+    -- Registro en la bitácora guardando estados anteriores y nuevos
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Modelos',
+        'MODIFICAR',
+        JSON_OBJECT('id_modelo', p_id_modelo, 'nombre_modelo', p_nombre_modelo, 'id_marca', p_id_marca),
+        JSON_OBJECT('id_modelo', p_id_modelo, 'nombre_modelo', v_nombre_modelo_viejo, 'id_marca', v_id_marca_viejo),
+        p_id_usuario_auditor,
+        'media',
+        CONCAT('Se modificó el modelo con ID ', p_id_modelo, '. Nombre anterior: "', v_nombre_modelo_viejo, '", Nombre nuevo: "', p_nombre_modelo, '".')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   3. PROCEDIMIENTO PARA ELIMINAR UN MODELO
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_eliminar_modelo $$
+
+CREATE PROCEDURE sp_eliminar_modelo (
+    IN p_id_modelo INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_modelo_eliminar VARCHAR(25);
+    DECLARE v_id_marca_eliminar INT;
+
+    -- Intercepta excepciones de integridad referencial si el modelo está en uso por otra tabla (FK)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el modelo. Es posible que esté asociado a productos u otras entidades del sistema.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo defensivo FOR UPDATE antes de la destrucción del registro
+    SELECT `nombre_modelo`, `id_marca` INTO v_nombre_modelo_eliminar, v_id_marca_eliminar
+    FROM `tbl_modelos` 
+    WHERE `id_modelo` = p_id_modelo 
+    FOR UPDATE;
+
+    -- Eliminación física
+    DELETE FROM `tbl_modelos` 
+    WHERE `id_modelo` = p_id_modelo;
+
+    -- Auditoría de destrucción física con prioridad Alta
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Modelos',
+        'ELIMINAR',
+        NULL,
+        JSON_OBJECT('id_modelo', p_id_modelo, 'nombre_modelo', v_nombre_modelo_eliminar, 'id_marca', v_id_marca_eliminar),
+        p_id_usuario_auditor,
+        'alta',
+        CONCAT('Se eliminó físicamente del sistema el modelo "', v_nombre_modelo_eliminar, '" (ID: ', p_id_modelo, ').')
+    );
+
+    COMMIT;
+END $$
+
+/* =========================================================================
+   4. PROCEDIMIENTO PARA CONSULTAR TODOS LOS MODELOS (Lógica PHP exacta)
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_consultar_modelos $$
+
+CREATE PROCEDURE sp_consultar_modelos()
+BEGIN
+    -- Selección estructurada con INNER JOIN y ordenamiento descendente por ID
+    SELECT 
+        mo.`id_modelo`,
+        mo.`id_marca`,
+        mo.`nombre_modelo`,
+        ma.`nombre_marca` 
+    FROM `tbl_modelos` AS mo
+    INNER JOIN `tbl_marcas` AS ma ON mo.`id_marca` = ma.`id_marca`
+    ORDER BY mo.`id_modelo` DESC
+    FOR UPDATE;
+END $$
+
+
+/* =========================================================================
+   5. PROCEDIMIENTO PARA CONSULTAR UN MODELO ESPECÍFICO POR ID
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_obtener_modelo_por_id $$
+
+CREATE PROCEDURE sp_obtener_modelo_por_id(
+    IN p_id_modelo INT
+)
+BEGIN
+    SELECT 
+        mo.`id_modelo`, 
+        mo.`nombre_modelo`, 
+        mo.`id_marca`,
+        ma.`nombre_marca`
+    FROM `tbl_modelos` mo
+    LEFT JOIN `tbl_marcas` ma ON mo.`id_marca` = ma.`id_marca`
+    WHERE mo.`id_modelo` = p_id_modelo
+    LIMIT 1
+    FOR UPDATE;
+END $$
 
 -- -----------------------------------------------------------------------------
 -- 1. PROCEDIMIENTO: REGISTRAR / INCLUIR PRODUCTO
