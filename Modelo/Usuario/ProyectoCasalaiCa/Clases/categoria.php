@@ -395,51 +395,28 @@ class Categoria extends BD
         return 'cat_' . strtolower(str_replace(' ', '_', $this->nombre_categoria));
     }
 
-    public function registrarCategoria($caracteristicas)
+    public function registrarCategoria($caracteristicas, $id_usuario_auditor)
     {
-        return $this->r_registrarCategoria($caracteristicas);
+        return $this->r_registrarCategoria($caracteristicas, $id_usuario_auditor);
     }
 
-    private function r_registrarCategoria($caracteristicas)
+    private function r_registrarCategoria($caracteristicas, $id_usuario_auditor)
     {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($caracteristicas) {
-            // Insertar categoría directamente
-            $sql = "INSERT INTO tbl_categoria (nombre_categoria) VALUES (:nombre_categoria)";
+        return $this->ejecutarConConexionSegura(function($pdo) use ($caracteristicas, $id_usuario_auditor) {
+            // Convertir array de características a JSON
+            $caracteristicas_json = json_encode($caracteristicas);
+            
+            // Llamar al procedimiento almacenado
+            $sql = "CALL sp_registrar_categoria(:nombre_categoria, :caracteristicas, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':nombre_categoria', $this->nombre_categoria);
+            $stmt->bindParam(':caracteristicas', $caracteristicas_json);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
             
-            if (!$stmt->execute()) {
-                return false;
-            }
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
             
-            // Crear tabla de categoría
-            $nombreTabla = $this->generarNombreTabla();
-            $sql = "CREATE TABLE IF NOT EXISTS `$nombreTabla` (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            id_producto INT NOT NULL,
-        ";
-
-            foreach ($caracteristicas as $carac) {
-                $campo = strtolower(str_replace(' ', '_', $carac['nombre']));
-                switch ($carac['tipo']) {
-                    case 'int':
-                        $sql .= "`$campo` INT,";
-                        break;
-                    case 'float':
-                        $sql .= "`$campo` FLOAT,";
-                        break;
-                    case 'string':
-                        $max = (int) ($carac['max'] ?? 255);
-                        $sql .= "`$campo` VARCHAR($max),";
-                        break;
-                }
-            }
-            // Elimina la última coma y cierra el paréntesis
-            $sql = rtrim($sql, ',') . ",
-            FOREIGN KEY (id_producto) REFERENCES tbl_productos(id_producto) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-            
-            return $pdo->exec($sql) !== false;
+            return $resultado;
         });
     }
 
@@ -485,116 +462,29 @@ class Categoria extends BD
         });
     }
 
-    public function modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas)
+    public function modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas, $id_usuario_auditor)
     {
-        return $this->m_modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas);
+        return $this->m_modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas, $id_usuario_auditor);
     }
 
-    private function m_modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas)
+    private function m_modificarCategoria($id_categoria, $nuevo_nombre, $caracteristicas, $id_usuario_auditor)
     {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria, $nuevo_nombre, $caracteristicas) {
-            // 1️⃣ Obtener el nombre actual de la categoría usando la conexión actual
-            $categoriaInfo = $this->o_categoriaPorId($id_categoria, $pdo);
-            if (!$categoriaInfo) {
-                throw new PDOException("Categoría no encontrada");
-            }
-
-            // Validar que el nombre de la categoría no esté vacío
-            if (empty($nuevo_nombre)) {
-                throw new PDOException("El nombre de la categoría no puede estar vacío");
-            }
-
-            $this->nombre_categoria = $categoriaInfo['nombre_categoria'];
-            $tablaAntigua = $this->generarNombreTabla();
-
-            // 2️⃣ Actualizar el nombre
-            $this->nombre_categoria = $nuevo_nombre;
-            $tablaNueva = $this->generarNombreTabla();
-
-            // 3️⃣ Actualizar registro en tbl_categoria
-            $sql = "UPDATE tbl_categoria SET nombre_categoria = :nombre WHERE id_categoria = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':nombre', $nuevo_nombre);
-            $stmt->bindValue(':id', $id_categoria, PDO::PARAM_INT);
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria, $nuevo_nombre, $caracteristicas, $id_usuario_auditor) {
+            // Convertir array de características a JSON
+            $caracteristicas_json = json_encode($caracteristicas);
             
-            if (!$stmt->execute()) {
-                throw new PDOException("Error al actualizar el nombre de la categoría");
-            }
-
-            // 4️⃣ Renombrar tabla si cambió el nombre
-            if ($tablaAntigua !== $tablaNueva) {
-                $pdo->exec("RENAME TABLE `$tablaAntigua` TO `$tablaNueva`");
-            }
-
-            // 5️⃣ Obtener columnas actuales
-            $stmt = $pdo->query("SHOW COLUMNS FROM `$tablaNueva`");
-            if ($stmt === false) {
-                throw new PDOException("Error al obtener las columnas de la tabla: " . implode(" ", $pdo->errorInfo()));
-            }
-            $colsActuales = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-            $baseCols = ['id', 'id_producto']; // columnas fijas
-            $colsActualesFiltradas = array_diff($colsActuales, $baseCols);
-
-            // 6️⃣ Preparar nombres nuevos de campos
-            $nuevosCampos = [];
-            if (is_array($caracteristicas)) {
-                foreach ($caracteristicas as $carac) {
-                    if (isset($carac['nombre']) && !empty(trim($carac['nombre']))) {
-                        $nuevosCampos[] = strtolower(str_replace(' ', '_', trim($carac['nombre'])));
-                    }
-                }
-            }
-
-            // 7️⃣ Eliminar campos que ya no existen
-            foreach ($colsActualesFiltradas as $colExistente) {
-                if (!in_array($colExistente, $nuevosCampos)) {
-                    $pdo->exec("ALTER TABLE `$tablaNueva` DROP COLUMN `$colExistente`");
-                }
-            }
-
-            // 8️⃣ Agregar nuevos campos o ajustar tipo si es diferente
-            if (is_array($caracteristicas)) {
-                foreach ($caracteristicas as $carac) {
-                    if (!isset($carac['nombre']) || empty(trim($carac['nombre']))) {
-                        continue;
-                    }
-                    
-                    $campo = strtolower(str_replace(' ', '_', trim($carac['nombre'])));
-                    $tipoSQL = '';
-                    
-                    switch (strtolower($carac['tipo'] ?? '')) {
-                        case 'int':
-                            $tipoSQL = 'INT';
-                            break;
-                        case 'float':
-                            $tipoSQL = 'FLOAT';
-                            break;
-                        case 'string':
-                        default:
-                            $max = isset($carac['max']) ? (int)$carac['max'] : 255;
-                            $tipoSQL = "VARCHAR(" . max(1, min(255, $max)) . ")";
-                            break;
-                    }
-
-                    // Verificar si el campo ya existe
-                    $existeCampo = in_array($campo, $colsActuales);
-                    if (!$existeCampo) {
-                        $pdo->exec("ALTER TABLE `$tablaNueva` ADD `$campo` $tipoSQL");
-                    } else {
-                        // Si existe, verificar tipo actual
-                        $stmt = $pdo->query("SHOW COLUMNS FROM `$tablaNueva` LIKE '$campo'");
-                        if ($stmt) {
-                            $tipoActual = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($tipoActual && stripos($tipoActual['Type'], strtolower($tipoSQL)) === false) {
-                                $pdo->exec("ALTER TABLE `$tablaNueva` MODIFY `$campo` $tipoSQL");
-                            }
-                        }
-                    }
-                }
-            }
-
-            return true;
+            // Llamar al procedimiento almacenado
+            $sql = "CALL sp_modificar_categoria(:id_categoria, :nuevo_nombre, :caracteristicas, :id_usuario_auditor)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_categoria', $id_categoria, \PDO::PARAM_INT);
+            $stmt->bindParam(':nuevo_nombre', $nuevo_nombre);
+            $stmt->bindParam(':caracteristicas', $caracteristicas_json);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+            
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            
+            return $resultado;
         });
     }
 
@@ -610,59 +500,47 @@ class Categoria extends BD
         });
     }
 
-    public function eliminarCategoria($id_categoria){
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria) {
+    public function eliminarCategoria($id_categoria, $id_usuario_auditor){
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_categoria, $id_usuario_auditor) {
             try {
+                // Obtener información de la categoría
                 $categoriaInfo = $this->o_categoriaPorId($id_categoria, $pdo);
                 if (!$categoriaInfo) {
                     return ['status' => 'error', 'mensaje' => 'Categoría no encontrada'];
                 }
 
                 $this->nombre_categoria = $categoriaInfo['nombre_categoria'];
-                $tabla = $this->generarNombreTabla();
-                
-                $tableExists = $pdo->query("SHOW TABLES LIKE '$tabla'")->rowCount() > 0;
-                
-                if ($tableExists) {
-                    $stmt = $pdo->query("SELECT COUNT(*) as total FROM `$tabla`");
-                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                    $productCount = (int)$result['total'];
-                    
-                    if ($productCount > 0) {
-                        $stmt = $pdo->query("
-                            SELECT p.id_producto, p.nombre_producto, p.codigo_producto 
-                            FROM `$tabla` c 
-                            JOIN tbl_productos p ON c.id_producto = p.id_producto 
-                            LIMIT 10
-                        ");
-                        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                        
-                        return [
-                            'status' => 'error', 
-                            'mensaje' => "No se puede eliminar porque tiene $productCount productos asociados.",
-                            'productos' => $productos,
-                            'total_productos' => $productCount
-                        ];
-                    }
+                $nombre_tabla = $this->generarNombreTabla();
 
-                    $pdo->exec("DROP TABLE IF EXISTS `$tabla`");
-                }
-
-                $sql = "DELETE FROM tbl_categoria WHERE id_categoria = :id_categoria";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([':id_categoria' => $id_categoria]);
+                // Llamar al procedimiento almacenado
+                $stmt = $pdo->prepare("CALL sp_eliminar_categoria(:id_categoria, :nombre_tabla, :id_usuario_auditor)");
+                $stmt->execute([
+                    ':id_categoria' => $id_categoria,
+                    ':nombre_tabla' => $nombre_tabla,
+                    ':id_usuario_auditor' => $id_usuario_auditor
+                ]);
 
                 return ['status' => 'success'];
 
             } catch (\PDOException $e) {
                 error_log('Error en eliminarCategoria: ' . $e->getMessage());
                 
-                if (strpos($e->getMessage(), '1451') !== false || strpos($e->getMessage(), 'foreign key constraint fails') !== false) {
+                // Manejar errores específicos del procedimiento almacenado
+                if (strpos($e->getMessage(), 'Categoría no encontrada') !== false) {
+                    return ['status' => 'error', 'mensaje' => 'Categoría no encontrada'];
+                }
+                
+                if (strpos($e->getMessage(), 'No se puede eliminar porque tiene') !== false) {
                     return [
                         'status' => 'error',
-                        'mensaje' => 'No se puede eliminar la categoría: existen dependencias activas en la base de datos.',
-                        'debug' => $e->getCode()
+                        'mensaje' => $e->getMessage()
                     ];
+                }
+                
+                if (strpos($e->getMessage(), '45000') !== false) {
+                    // Extraer el mensaje de error del procedimiento
+                    $mensaje = preg_replace('/SQLSTATE\[45000\]: /', '', $e->getMessage());
+                    return ['status' => 'error', 'mensaje' => $mensaje];
                 }
 
                 return [

@@ -425,6 +425,14 @@ $(document).ready(function () {
         if(validarEnvioCategoria() && validarCaracteristicas()) {
             var datos = new FormData(this);
             datos.append('accion', 'registrar');
+            
+            // Convertir valores de max a números antes de enviar
+            $('#caracteristicasContainer input[name*="[max]"]').each(function() {
+                const maxValor = $(this).val();
+                const maxNumero = parseInt(maxValor, 10) || 255;
+                datos.set($(this).attr('name'), maxNumero.toString());
+            });
+            
             enviarAjax(datos, function(respuesta){
                 if(respuesta.status === "success" || respuesta.resultado === "success"){
                     Swal.fire({
@@ -608,13 +616,14 @@ $(document).ready(function () {
                 
                 const nombre = nombreInput ? nombreInput.value.trim() : '';
                 const tipo = tipoSelect ? tipoSelect.value : 'string';
-                const max = maxInput ? maxInput.value : '255';
+                const maxValor = maxInput ? maxInput.value : '255';
+                const maxNumero = parseInt(maxValor, 10) || 255; // Convertir a número, usar 255 como fallback
                 
                 // Incluir la característica aunque el nombre esté vacío
                 caracteristicas.push({
                     nombre: nombre || 'caracteristica_' + Date.now(), // Nombre por defecto si está vacío
                     tipo: tipo,
-                    max: tipo === 'string' ? max : undefined
+                    max: tipo === 'string' ? maxNumero : null
                 });
             });
         }
@@ -626,9 +635,6 @@ $(document).ready(function () {
             nombre_categoria: datos.nombre_categoria,
             caracteristicas: caracteristicas
         };
-
-        // Mostrar datos que se enviarán
-        console.log('📤 Datos a enviar al servidor:', datosEnvio);
 
         // Crear FormData con todos los datos necesarios
         const formData = new FormData();
