@@ -35,8 +35,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
             
         case 'registrar':
-            $proveedor = new Proveedores();
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
             
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+            
+            $proveedor = new Proveedores();
             $errores = $proveedor->validarRegistrar($_POST);
             
             if (!empty($errores)) {
@@ -58,19 +67,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $proveedor->setTelefono2($_POST['telefono_2']);
             $proveedor->setObservacion($_POST['observacion']);
             
-            if ($proveedor->registrarProveedor()) {
+            if ($proveedor->registrarProveedor($id_usuario_sesion)) {
                 $proveedorRegistrado = $proveedor->obtenerUltimoProveedor();
-                
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacora = new Bitacora();
-                    $bitacora->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_PROVEEDORES,
-                        'INCLUIR',
-                        'El usuario incluyó un nuevo proveedor: ' . $_POST['nombre_proveedor'],
-                        'media'
-                    );
-                }
                 
                 echo json_encode([
                     'status' => 'success',
@@ -110,6 +108,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'modificar':
             ob_clean();
             header('Content-Type: application/json; charset=utf-8');
+
+            $id_proveedor = $_POST['id_proveedor'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
             
             $proveedor = new Proveedores();
             
@@ -124,7 +133,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $id_proveedor = $_POST['id_proveedor'];
             $proveedor->setIdProveedor($id_proveedor);
             $proveedor->setNombre($_POST['nombre_proveedor']);
             $proveedor->setRif1($_POST['rif_proveedor']);
@@ -138,20 +146,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $proveedorViejo = $proveedor->obtenerProveedorPorId($id_proveedor);
                 
-            if ($proveedor->modificarProveedor($id_proveedor)) {
+            if ($proveedor->modificarProveedor($id_proveedor, $id_usuario_sesion)) {
                 $proveedorActualizado = $proveedor->obtenerProveedorPorId($id_proveedor);
                 
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacora = new Bitacora();
-                    $bitacora->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_PROVEEDORES,
-                        'MODIFICAR',
-                        'El usuario modificó el proveedor: ' . $_POST['nombre_proveedor'].' que tenia los datos'.json_encode($proveedorViejo).' con los datos '. json_encode($proveedorActualizado),
-                        'media'
-                    );
-                }
-
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Proveedor modificado correctamente',
@@ -163,6 +160,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
 
         case 'eliminar':
+            $id_proveedor = $_POST['id_proveedor'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+                
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $proveedor = new Proveedores();
             
             $errores = $proveedor->validarEliminar($_POST['id_proveedor']);
@@ -176,22 +184,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $id_proveedor = $_POST['id_proveedor'];
-            
             $proveedorAEliminar = $proveedor->obtenerProveedorPorId($id_proveedor);
             
-            if ($proveedor->eliminarProveedor($id_proveedor)) {
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacora = new Bitacora();
-                    $bitacora->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_PROVEEDORES,
-                        'ELIMINAR',
-                        'El usuario eliminó el proveedor ' . $proveedorAEliminar['nombre_proveedor'] . '',
-                        'alta'
-                    );
-                }
-                
+            if ($proveedor->eliminarProveedor($id_proveedor, $id_usuario_sesion)) {
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Proveedor eliminado correctamente'
@@ -205,6 +200,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         
         case 'cambiar_estado':
+            $id_proveedor = $_POST['id_proveedor'];
+            $nuevoEstatus = $_POST['nuevo_estatus'];
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $proveedor = new Proveedores();
             
             $errores = $proveedor->validarCambiarEstatus($_POST['id_proveedor'], $_POST['nuevo_estatus']);
@@ -217,24 +224,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $id_proveedor = $_POST['id_proveedor'];
-            $nuevoEstatus = $_POST['nuevo_estatus'];
-            
+
             $proveedor->setIdProveedor($id_proveedor);
             
             if ($proveedor->cambiarEstatus($nuevoEstatus)) {
-                if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                    $bitacora = new Bitacora();
-                    $bitacora->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_PROVEEDORES,
-                        'CAMBIAR ESTATUS',
-                        'El usuario cambió el estatus del proveedor ID ' . $id_proveedor . ' a ' . $nuevoEstatus,
-                        'media'
-                    );
-                }
-                
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Estatus cambiado correctamente'
@@ -305,7 +298,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         default:
             echo json_encode(['status' => 'error', 'message' => 'Acción no válida']);
-            break;
+        break;
     }
 }
 

@@ -786,13 +786,13 @@ $(document).ready(function() {
     });
 
     $("#modificar_direccion_proveedor").on("keypress", function(e){
-        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]*$/, e);
+        validarKeyPress(/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,.-\s\b]*$/, e);
         let direccion = document.getElementById("modificar_direccion_proveedor");
         direccion.value = space(direccion.value);
     });
     $("#modificar_direccion_proveedor").on("keyup", function(){
         validarKeyUp(
-            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,-\s\b]{2,100}$/,
+            /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,.-\s\b]{2,100}$/,
             $(this),
             $("#smdireccion_proveedor"),
             "*El formato permite letras y números*"

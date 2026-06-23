@@ -491,7 +491,7 @@ $(document).ready(function () {
     function llenarSelectMarcasModal(idSeleccionada) {
         let select = $('#modificar_marca_modelo');
         select.empty();
-        select.append('<option value="">Seleccione una marca</option>');
+        select.append('<option value="" hidden>Seleccione una marca</option>');
         window.marcasDisponibles.forEach(function(marca) {
             let selected = marca.id_marca == idSeleccionada ? 'selected' : '';
             select.append(`<option value="${marca.id_marca}" ${selected}>${marca.nombre_marca}</option>`);

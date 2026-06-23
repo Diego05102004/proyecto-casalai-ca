@@ -129,7 +129,12 @@ class Proveedores extends BD {
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -138,14 +143,23 @@ class Proveedores extends BD {
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -672,11 +686,11 @@ class Proveedores extends BD {
         });
     }
 
-    public function registrarProveedor() {
-        return $this->r_proveedor();
+    public function registrarProveedor($id_usuario_auditor) {
+        return $this->r_proveedor($id_usuario_auditor);
     }
-    private function r_proveedor() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+    private function r_proveedor($id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_usuario_auditor){
             // Cifrar datos personales antes de insertar
             $nombre_cifrado = $this->encryption->encrypt($this->nombre);
             $representante_cifrado = $this->encryption->encrypt($this->representante);
@@ -685,8 +699,18 @@ class Proveedores extends BD {
             $direccion_cifrada = $this->encryption->encrypt($this->direccion);
             $correo_cifrado = $this->encryption->encrypt($this->correo);
             
-            $sql = "INSERT INTO tbl_proveedores (`nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`)
-                    VALUES (:nombre, :rif1, :representante, :rif2, :correo, :direccion, :telefono1, :telefono2, :observacion)";
+            $sql = "CALL sp_registrar_proveedor(
+            :nombre, 
+            :rif1, 
+            :representante, 
+            :rif2, 
+            :correo,
+            :direccion,
+            :telefono1,
+            :telefono2,
+            :observacion,
+            :id_usuario_auditor)";
+            
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':nombre', $nombre_cifrado);
             $stmt->bindParam(':rif1', $this->rif1);
@@ -697,8 +721,12 @@ class Proveedores extends BD {
             $stmt->bindParam(':telefono1', $telefono1_cifrado);
             $stmt->bindParam(':telefono2', $telefono2_cifrado);
             $stmt->bindParam(':observacion', $this->observacion);
-            return $stmt->execute();
-        });
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
 
     public function obtenerUltimoProveedor() {
@@ -749,11 +777,14 @@ class Proveedores extends BD {
     }
     private function obtProveedorPorId($id_proveedor) {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
-            $query = "SELECT * FROM tbl_proveedores WHERE id_proveedor = ?";
+            $query = "CALL sp_obtener_proveedor_por_id(:id_proveedor)";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([$id_proveedor]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        });
+            $stmt->execute([':id_proveedor' => $id_proveedor]);
+
+            $proveedor = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor(); 
+            return $proveedor;
+        }, false);
         
         // Descifrar datos personales
         if ($resultado) {
@@ -763,11 +794,11 @@ class Proveedores extends BD {
         return $resultado;
     }
 
-    public function modificarProveedor($id_proveedor) {
-        return $this->m_proveedor($id_proveedor);
+    public function modificarProveedor($id_proveedor, $id_usuario_auditor) {
+        return $this->m_proveedor($id_proveedor, $id_usuario_auditor);
     }
-    private function m_proveedor($id_proveedor) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
+    private function m_proveedor($id_proveedor, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor, $id_usuario_auditor) {
             // Cifrar datos personales antes de actualizar
             $nombre_cifrado = $this->encryption->encrypt($this->nombre);
             $representante_cifrado = $this->encryption->encrypt($this->representante);
@@ -776,9 +807,21 @@ class Proveedores extends BD {
             $direccion_cifrada = $this->encryption->encrypt($this->direccion);
             $correo_cifrado = $this->encryption->encrypt($this->correo);
             
-            $sql = "UPDATE tbl_proveedores SET nombre_proveedor = :nombre, rif_proveedor = :rif1, nombre_representante = :representante, rif_representante = :rif2, correo_proveedor = :correo, direccion_proveedor = :direccion, telefono_1 = :telefono1, telefono_2 = :telefono2, observacion = :observacion WHERE id_proveedor = :id_proveedor";
+            $sql = "CALL sp_modificar_proveedor(
+            :id_proveedor,
+            :nombre, 
+            :rif1, 
+            :representante, 
+            :rif2, 
+            :correo,
+            :direccion,
+            :telefono1,
+            :telefono2,
+            :observacion,
+            :id_usuario_auditor)";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_proveedor', $id_proveedor);
+            $stmt->bindParam(':id_proveedor', $id_proveedor, \PDO::PARAM_INT);
             $stmt->bindParam(':nombre', $nombre_cifrado);
             $stmt->bindParam(':rif1', $this->rif1);
             $stmt->bindParam(':representante', $representante_cifrado);
@@ -788,32 +831,48 @@ class Proveedores extends BD {
             $stmt->bindParam(':telefono1', $telefono1_cifrado);
             $stmt->bindParam(':telefono2', $telefono2_cifrado);
             $stmt->bindParam(':observacion', $this->observacion);
-            return $stmt->execute();
-        });
+            $stmt->bindValue(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
 
-    public function eliminarProveedor($id_proveedor) {
-        return $this->e_proveedor($id_proveedor);
+    public function eliminarProveedor($id_proveedor, $id_usuario_auditor) {
+        return $this->e_proveedor($id_proveedor, $id_usuario_auditor);
     }
-    private function e_proveedor($id_proveedor) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor) {
-            $sql = "DELETE FROM tbl_proveedores WHERE id_proveedor = :id_proveedor";
+    private function e_proveedor($id_proveedor, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_proveedor, $id_usuario_auditor) {
+            $sql = "CALL sp_eliminar_proveedor(:id_proveedor, :id_usuario_auditor)";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_proveedor', $id_proveedor);
-            return $stmt->execute();
-        });
+            $stmt->bindParam(':id_proveedor', $id_proveedor, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $result = $stmt->execute();
+            $stmt->closeCursor();
+            return $result;
+        }, false);
     }
 
     public function getproveedores() {
         return $this->g_proveedores();
     }
     private function g_proveedores() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $queryproveedores = 'SELECT * FROM ' . $this->tableproveedor;
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
+            $queryproveedores = "CALL sp_consultar_proveedores()";
             $stmtproveedores = $pdo->prepare($queryproveedores);
             $stmtproveedores->execute();
-            return $stmtproveedores->fetchAll(PDO::FETCH_ASSOC);
-        });
+
+            $preveedores = $stmtproveedores->fetchAll(PDO::FETCH_ASSOC);
+            $stmtproveedores->closeCursor();
+            return $preveedores;
+        }, false);
+
+        $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        
+        return $resultado;
     }
 
     public function getRankingProveedores() {
@@ -910,17 +969,21 @@ class Proveedores extends BD {
     }
 
 
-    public function cambiarEstatus($nuevoEstatus) {
-        return $this->cam_Estatus($nuevoEstatus); 
+    public function cambiarEstatus($nuevoEstatus, $id_usuario_auditor) {
+        return $this->cam_Estatus($nuevoEstatus, $id_usuario_auditor); 
     }
-    private function cam_Estatus($nuevoEstatus) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstatus) {
-            $sql = "UPDATE tbl_proveedores SET estado = :estatus WHERE id_proveedor = :id_proveedor";
+    private function cam_Estatus($nuevoEstatus, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nuevoEstatus, $id_usuario_auditor) {
+            $sql = "CALL sp_cambiar_estado_proveedor(:id_proveedor, :estatus, :id_usuario_auditor)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':estatus', $nuevoEstatus);
-            $stmt->bindParam(':id_proveedor', $this->id_proveedor);
-            return $stmt->execute();
-        });
+            $stmt->bindParam(':id_proveedor', $this->id_proveedor, \PDO::PARAM_INT);
+            $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
+
+            $resultado = $stmt->execute();
+            $stmt->closeCursor();
+            return $resultado;
+        }, false);
     }
 }
 ?>
