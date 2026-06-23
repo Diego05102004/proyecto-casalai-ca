@@ -3503,6 +3503,272 @@ BEGIN
 END$$
 DELIMITER ;
 
+DELIMITER $$
+
+/* =========================================================================
+   1. PROCEDIMIENTO PARA LLISTAR TODAS LAS ÓRDENES DE DESPACHO ACTIVAS
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_consultar_ordenes_despacho $$
+
+CREATE PROCEDURE sp_consultar_ordenes_despacho()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo cargar el listado de órdenes de despacho.'; 
+    END;
+
+    -- Consulta optimizada con indices nativos
+    SELECT 
+        od.id_orden_despachos,
+        od.id_factura,
+        c.cedula,
+        od.cliente,
+        od.fecha_despacho,
+        od.estado,
+        od.activo
+    FROM tbl_orden_despachos AS od
+    INNER JOIN tbl_facturas f ON f.id_factura = od.id_factura
+    INNER JOIN tbl_clientes c ON c.id_clientes = f.cliente
+    WHERE od.activo = 1
+    ORDER BY od.fecha_despacho DESC, od.id_orden_despachos DESC;
+END $$
+
+/* =========================================================================
+   2. PROCEDIMIENTO PARA OBTENER LOS PRODUCTOS ASOCIADOS A LA FACTURA DE LA ÓRDEN
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_obtener_productos_factura_despacho $$
+
+CREATE PROCEDURE sp_obtener_productos_factura_despacho(
+    IN p_id_factura INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudieron extraer los productos del despacho.'; 
+    END;
+
+    SELECT 
+        p.imagen,
+        p.id_producto AS codigo,
+        p.nombre_producto AS producto,
+        m.nombre_modelo AS modelo,
+        mar.nombre_marca AS marca,
+        p.serial,
+        d.cantidad,
+        d.id AS id_detalle,
+        p.precio AS precio_unitario,
+        (d.cantidad * p.precio) AS subtotal
+    FROM tbl_factura_detalle AS d
+    INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
+    INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo
+    INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
+    WHERE d.factura_id = p_id_factura;
+END $$
+
+/* =========================================================================
+   3. PROCEDIMIENTO PARA OBTENER UNA ÓRDEN DE DESPACHO POR SU ID
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_obtener_orden_despacho_por_id $$
+
+CREATE PROCEDURE sp_obtener_orden_despacho_por_id(
+    IN p_id_orden INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se encontró la orden de despacho solicitada.'; 
+    END;
+
+    SELECT * FROM tbl_orden_despachos 
+    WHERE id_orden_despachos = p_id_orden 
+    LIMIT 1
+    FOR UPDATE;
+END $$
+
+/* =========================================================================
+   3. PROCEDIMIENTO PARA CAMBIAR EL ESTATUS DE UNA ÓRDEN DE DESPACHO
+   ========================================================================= */
+
+DROP PROCEDURE IF EXISTS sp_cambiar_estado_orden_despacho $$
+
+CREATE PROCEDURE sp_cambiar_estado_orden_despacho(
+    IN p_id_orden INT,
+    IN p_nuevo_estado ENUM('Por Entregar','Entregada'),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    -- 1. Declaración de variables locales
+    DECLARE v_id_factura INT DEFAULT NULL;
+    DECLARE v_fecha_despacho DATE;
+    DECLARE v_id_cliente INT;
+    DECLARE v_id_despacho INT;
+    DECLARE v_id_producto INT;
+    DECLARE v_cantidad INT;
+    DECLARE v_estado_anterior VARCHAR(50);
+    DECLARE v_fin INT DEFAULT 0;
+
+    -- 2. Declaración del Cursor para procesar los detalles de la factura en lote
+    DECLARE cur_detalles CURSOR FOR 
+        SELECT id_producto, cantidad 
+        FROM tbl_factura_detalle 
+        WHERE factura_id = v_id_factura;
+
+    -- 3. Manejadores de condiciones y errores (Mantiene la integridad ante fallos)
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_fin = 1;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        -- Si algo falla, deshace absolutamente todos los cambios concurrentes
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error transaccional: No se pudo actualizar el estado ni procesar el despacho.'; 
+    END;
+
+    -- Configuración estricta de aislamiento de transacciones concurrentes
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- CONTROL DE CONCURRENCIA: Bloqueamos la fila de la orden con FOR UPDATE
+    SELECT id_factura, fecha_despacho, estado 
+    INTO v_id_factura, v_fecha_despacho, v_estado_anterior
+    FROM tbl_orden_despachos 
+    WHERE id_orden_despachos = p_id_orden 
+    FOR UPDATE;
+
+    -- CONTROL DE INTEGRIDAD: Verificar si la orden realmente existe
+    IF v_id_factura IS NULL THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: La orden de despacho solicitada no existe o fue eliminada.';
+    END IF;
+
+    -- Reiniciamos la bandera de control por si el SELECT anterior levantó un flag NOT FOUND
+    SET v_fin = 0;
+
+    -- Actualización directa del estado
+    UPDATE tbl_orden_despachos 
+    SET estado = p_nuevo_estado 
+    WHERE id_orden_despachos = p_id_orden;
+
+    -- Lógica interna optimizada si pasa a "Entregada"
+    IF p_nuevo_estado = 'Entregada' THEN
+        
+        -- Obtener el cliente de la factura asociada
+        SELECT cliente INTO v_id_cliente 
+        FROM tbl_facturas 
+        WHERE id_factura = v_id_factura;
+        
+        -- Insertar cabecera en la tabla de despachos finales
+        INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, estado, activo) 
+        VALUES (v_id_cliente, v_fecha_despacho, 'Online', 'Por Despachar', 1);
+        
+        -- Capturamos el ID generado de forma aislada
+        SET v_id_despacho = LAST_INSERT_ID();
+        
+        -- Reiniciamos la bandera de control antes de abrir el cursor de detalles
+        SET v_fin = 0;
+        
+        -- Procesamiento del bucle directamente en la Base de Datos mediante el Cursor
+        OPEN cur_detalles;
+        read_loop: LOOP
+            FETCH cur_detalles INTO v_id_producto, v_cantidad;
+            IF v_fin = 1 THEN 
+                LEAVE read_loop; 
+            END IF;
+            
+            -- Inserción del detalle del despacho
+            INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
+            VALUES (v_id_despacho, v_id_producto, v_cantidad);
+        END LOOP;
+        CLOSE cur_detalles;
+        
+    END IF;
+
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(), 
+        'Ordenes de despacho', 
+        'CAMBIAR ESTADO', 
+        JSON_OBJECT('id_orden_despachos', p_id_orden, 'estado', p_nuevo_estado), 
+        JSON_OBJECT('id_orden_despachos', p_id_orden, 'estado', v_estado_anterior), 
+        p_id_usuario_auditor, 
+        'media', 
+        CONCAT('Se cambió el estado de la orden de despacho ID: ', p_id_orden, ' a ', p_nuevo_estado, '.')
+    );
+
+    COMMIT;
+
+END $$
+
+/* =========================================================================
+   4. PROCEDIMIENTO PARA ANULAR LÓGICAMENTE UNA ÓRDEN DE DESPACHO
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_anular_orden_despacho $$
+
+CREATE PROCEDURE sp_anular_orden_despacho(
+    IN p_id_orden INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    -- 1. Declaración de variables locales para auditoría e integridad
+    DECLARE v_activo_anterior INT DEFAULT NULL;
+    DECLARE v_estado_anterior VARCHAR(50);
+
+    -- 2. Manejador de excepciones transaccionales
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        -- Si ocurre un fallo, se deshacen todos los cambios concurrentes
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error transaccional: No se pudo anular la orden de despacho.'; 
+    END;
+
+    -- Configuración estricta de aislamiento
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- CONTROL DE CONCURRENCIA: Bloqueamos la fila y extraemos el estado actual
+    SELECT activo, estado INTO v_activo_anterior, v_estado_anterior
+    FROM tbl_orden_despachos 
+    WHERE id_orden_despachos = p_id_orden 
+    FOR UPDATE;
+
+    -- CONTROL DE INTEGRIDAD 1: Verificar si la orden realmente existe
+    IF v_activo_anterior IS NULL THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: La orden de despacho solicitada no existe o ya fue eliminada.';
+    END IF;
+
+    -- CONTROL DE INTEGRIDAD 2: Verificar si ya se encuentra anulada para evitar redundancia
+    IF v_activo_anterior = 0 THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: La orden de despacho ya se encuentra anulada en el sistema.';
+    END IF;
+
+    -- 3. Ejecución de la eliminación lógica
+    UPDATE tbl_orden_despachos 
+    SET activo = 0 
+    WHERE id_orden_despachos = p_id_orden;
+
+    -- 4. Registro síncrono de auditoría en la base de datos de seguridad
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    )
+    VALUES (
+        NOW(), 
+        'Ordenes de despacho', 
+        'ANULAR', 
+        JSON_OBJECT('id_orden_despachos', p_id_orden, 'activo', 0), 
+        JSON_OBJECT('id_orden_despachos', p_id_orden, 'activo', v_activo_anterior, 'estado', v_estado_anterior), 
+        p_id_usuario_auditor, 
+        'alta', 
+        CONCAT('Se anuló lógicamente la orden de despacho ID: ', p_id_orden, '.')
+    );
+
+    COMMIT;
+
+END $$
+
+DELIMITER ;
 
 
 CREATE DATABASE IF NOT EXISTS `casalai_seguridad`;
