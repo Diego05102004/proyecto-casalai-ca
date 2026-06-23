@@ -840,14 +840,14 @@ INSERT INTO `tbl_productos` (`id_producto`, `serial`, `nombre_producto`, `descri
 
 CREATE TABLE `tbl_proveedores` (
   `id_proveedor` int(11) NOT NULL,
-  `nombre_proveedor` varchar(50) NOT NULL,
+  `nombre_proveedor` varchar(255) NOT NULL,
   `rif_proveedor` varchar(15) DEFAULT NULL,
-  `nombre_representante` varchar(50) DEFAULT NULL,
+  `nombre_representante` varchar(255) DEFAULT NULL,
   `rif_representante` varchar(15) DEFAULT NULL,
-  `correo_proveedor` varchar(50) DEFAULT NULL,
-  `direccion_proveedor` text DEFAULT NULL,
-  `telefono_1` varchar(15) DEFAULT NULL,
-  `telefono_2` varchar(15) DEFAULT NULL,
+  `correo_proveedor` varchar(255) DEFAULT NULL,
+  `direccion_proveedor` varchar(255) DEFAULT NULL,
+  `telefono_1` varchar(255) DEFAULT NULL,
+  `telefono_2` varchar(255) DEFAULT NULL,
   `observacion` text DEFAULT NULL,
   `estado` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -1472,6 +1472,331 @@ CREATE EVENT `evt_liberar_stock_borradores` ON SCHEDULE EVERY 5 MINUTE STARTS '2
 END $$
 
 DELIMITER ;
+
+DELIMITER $$
+
+/* =========================================================================
+   1. PROCEDIMIENTO PARA REGISTRAR / INCLUIR PROVEEDOR
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_registrar_proveedor $$
+
+CREATE PROCEDURE sp_registrar_proveedor(
+    IN p_nombre_proveedor VARCHAR(255),
+    IN p_rif_proveedor VARCHAR(15),
+    IN p_nombre_representante VARCHAR(255),
+    IN p_rif_representante VARCHAR(15),
+    IN p_correo_proveedor VARCHAR(255),
+    IN p_direccion_proveedor varchar(255),
+    IN p_telefono_1 VARCHAR(255),
+    IN p_telefono_2 VARCHAR(255),
+    IN p_observacion TEXT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nuevo_id INT;
+
+    -- Manejador de fallas generales con reversión completa
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        ROLLBACK; 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo registrar el proveedor de forma segura.'; 
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Inserción física en la tabla (Inicia habilitado por defecto)
+    INSERT INTO `tbl_proveedores` (
+        `nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, 
+        `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`
+    ) VALUES (
+        p_nombre_proveedor, p_rif_proveedor, p_nombre_representante, p_rif_representante, 
+        p_correo_proveedor, p_direccion_proveedor, p_telefono_1, p_telefono_2, p_observacion
+    );
+
+    -- Captura atómica del ID asignado
+    SET v_nuevo_id = LAST_INSERT_ID();
+
+    -- Auditoría síncrona en la base de datos de seguridad
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    ) VALUES (
+        NOW(), 
+        'Proveedores', 
+        'INCLUIR', 
+        JSON_OBJECT(
+            'id_proveedor', v_nuevo_id, 'nombre_proveedor', p_nombre_proveedor, 'rif_proveedor', p_rif_proveedor,
+            'nombre_representante', p_nombre_representante, 'rif_representante', p_rif_representante,
+            'correo_proveedor', p_correo_proveedor, 'direccion_proveedor', p_direccion_proveedor,
+            'telefono_1', p_telefono_1, 'telefono_2', p_telefono_2, 'observacion', p_observacion
+        ), 
+        NULL, 
+        p_id_usuario_auditor, 
+        'media', 
+        CONCAT('Se registró un nuevo proveedor en el sistema: "', p_nombre_proveedor, '" (RIF: ', IFNULL(p_rif_proveedor, 'N/A'), ').')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   2. PROCEDIMIENTO PARA MODIFICAR DATOS DEL PROVEEDOR
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_modificar_proveedor $$
+
+CREATE PROCEDURE sp_modificar_proveedor(
+    IN p_id_proveedor INT,
+    IN p_nombre_proveedor VARCHAR(255),
+    IN p_rif_proveedor VARCHAR(15),
+    IN p_nombre_representante VARCHAR(255),
+    IN p_rif_representante VARCHAR(15),
+    IN p_correo_proveedor VARCHAR(255),
+    IN p_direccion_proveedor varchar(255),
+    IN p_telefono_1 VARCHAR(255),
+    IN p_telefono_2 VARCHAR(255),
+    IN p_observacion TEXT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    -- Variables para la extracción forense de los datos anteriores
+    DECLARE v_nombre_proveedor_viejo VARCHAR(50);
+    DECLARE v_rif_proveedor_viejo VARCHAR(15);
+    DECLARE v_nombre_representante_viejo VARCHAR(50);
+    DECLARE v_rif_representante_viejo VARCHAR(15);
+    DECLARE v_correo_proveedor_viejo VARCHAR(50);
+    DECLARE v_direccion_proveedor_viejo TEXT;
+    DECLARE v_telefono_1_viejo VARCHAR(15);
+    DECLARE v_telefono_2_viejo VARCHAR(15);
+    DECLARE v_observacion_viejo TEXT;
+    DECLARE v_estado_viejo ENUM('habilitado','inhabilitado');
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        ROLLBACK; 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudieron guardar los cambios del proveedor.'; 
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo de la fila (X-Lock) para resguardar la consistencia y capturar datos viejos
+    SELECT 
+        `nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, 
+        `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`, `estado`
+    INTO 
+        v_nombre_proveedor_viejo, v_rif_proveedor_viejo, v_nombre_representante_viejo, v_rif_representante_viejo, 
+        v_correo_proveedor_viejo, v_direccion_proveedor_viejo, v_telefono_1_viejo, v_telefono_2_viejo, v_observacion_viejo, v_estado_viejo
+    FROM `tbl_proveedores` 
+    WHERE `id_proveedor` = p_id_proveedor 
+    LIMIT 1 
+    FOR UPDATE;
+
+    -- Ejecución de la actualización física
+    UPDATE `tbl_proveedores` SET 
+        `nombre_proveedor` = p_nombre_proveedor,
+        `rif_proveedor` = p_rif_proveedor,
+        `nombre_representante` = p_nombre_representante,
+        `rif_representante` = p_rif_representante,
+        `correo_proveedor` = p_correo_proveedor,
+        `direccion_proveedor` = p_direccion_proveedor,
+        `telefono_1` = p_telefono_1,
+        `telefono_2` = p_telefono_2,
+        `observacion` = p_observacion
+    WHERE `id_proveedor` = p_id_proveedor;
+
+    -- Inserción en bitácora mapeando los cambios en formato JSON
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    ) VALUES (
+        NOW(), 
+        'Proveedores', 
+        'MODIFICAR', 
+        JSON_OBJECT(
+            'id_proveedor', p_id_proveedor, 'nombre_proveedor', p_nombre_proveedor, 'rif_proveedor', p_rif_proveedor,
+            'nombre_representante', p_nombre_representante, 'rif_representante', p_rif_representante,
+            'correo_proveedor', p_correo_proveedor, 'direccion_proveedor', p_direccion_proveedor,
+            'telefono_1', p_telefono_1, 'telefono_2', p_telefono_2, 'observacion', p_observacion, 'estado', v_estado_viejo
+        ), 
+        JSON_OBJECT(
+            'id_proveedor', p_id_proveedor, 'nombre_proveedor', v_nombre_proveedor_viejo, 'rif_proveedor', v_rif_proveedor_viejo,
+            'nombre_representante', v_nombre_representante_viejo, 'rif_representante', v_rif_representante_viejo,
+            'correo_proveedor', v_correo_proveedor_viejo, 'direccion_proveedor', v_direccion_proveedor_viejo,
+            'telefono_1', v_telefono_1_viejo, 'telefono_2', v_telefono_2_viejo, 'observacion', v_observacion_viejo, 'estado', v_estado_viejo
+        ), 
+        p_id_usuario_auditor, 
+        'media', 
+        CONCAT('Se actualizaron los datos comerciales del proveedor: "', p_nombre_proveedor, '" (ID: ', p_id_proveedor, ').')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   3. PROCEDIMIENTO PARA CAMBIAR ESTATUS (HABILITAR / INHABILITAR)
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_cambiar_estado_proveedor $$
+
+CREATE PROCEDURE sp_cambiar_estado_proveedor(
+    IN p_id_proveedor INT,
+    IN p_nuevo_estado ENUM('habilitado', 'inhabilitado'),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_proveedor VARCHAR(50);
+    DECLARE v_rif_proveedor VARCHAR(15);
+    DECLARE v_estado_viejo ENUM('habilitado', 'inhabilitado');
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        ROLLBACK; 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo conmutar el estado del proveedor.'; 
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo exclusivo y obtención forense corta
+    SELECT `nombre_proveedor`, `rif_proveedor`, `estado`
+    INTO v_nombre_proveedor, v_rif_proveedor, v_estado_viejo
+    FROM `tbl_proveedores`
+    WHERE `id_proveedor` = p_id_proveedor
+    LIMIT 1
+    FOR UPDATE;
+
+    -- Modificación de estado energético
+    UPDATE `tbl_proveedores` SET `estado` = p_nuevo_estado WHERE `id_proveedor` = p_id_proveedor;
+
+    -- Reporte de auditoría síncrono
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    ) VALUES (
+        NOW(), 
+        'Proveedores', 
+        'MODIFICAR', 
+        JSON_OBJECT('id_proveedor', p_id_proveedor, 'estado', p_nuevo_estado), 
+        JSON_OBJECT('id_proveedor', p_id_proveedor, 'estado', v_estado_viejo), 
+        p_id_usuario_auditor, 
+        'media', 
+        CONCAT('Se cambió el estado del proveedor "', IFNULL(v_nombre_proveedor, 'Desconocido'), '" a: ', UPPER(p_nuevo_estado), '.')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   4. PROCEDIMIENTO PARA ELIMINACIÓN FÍSICA (PROTECCIÓN RELACIONAL ANIDADA)
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_eliminar_proveedor $$
+
+CREATE PROCEDURE sp_eliminar_proveedor(
+    IN p_id_proveedor INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_nombre_proveedor_eliminar VARCHAR(50);
+    DECLARE v_rif_proveedor_eliminar VARCHAR(15);
+
+    -- Manejo controlado de fallas de integridad referencial (Error MySQL 1451)
+    DECLARE EXIT HANDLER FOR 1451
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación denegada: El proveedor registra dependencias o movimientos históricos en el inventario. Considere inhabilitarlo.';
+    END;
+
+    -- Manejador general
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        ROLLBACK; 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo completar la eliminación del proveedor.'; 
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Bloqueo atómico pre-mortem para asegurar consistencia del registro a borrar
+    SELECT `nombre_proveedor`, `rif_proveedor` 
+    INTO v_nombre_proveedor_eliminar, v_rif_proveedor_eliminar
+    FROM `tbl_proveedores`
+    WHERE `id_proveedor` = p_id_proveedor
+    LIMIT 1
+    FOR UPDATE;
+
+    -- Remoción física
+    DELETE FROM `tbl_proveedores` WHERE `id_proveedor` = p_id_proveedor;
+
+    -- Registro forense completo en bitácora de seguridad
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`, `id_usuario`, `prioridad`, `descripcion`
+    ) VALUES (
+        NOW(), 
+        'Proveedores', 
+        'ELIMINAR', 
+        NULL, 
+        JSON_OBJECT('id_proveedor', p_id_proveedor, 'nombre_proveedor', v_nombre_proveedor_eliminar, 'rif_proveedor', v_rif_proveedor_eliminar), 
+        p_id_usuario_auditor, 
+        'alta', 
+        CONCAT('Se eliminó físicamente del sistema el proveedor "', IFNULL(v_nombre_proveedor_eliminar, 'Desconocido'), '" (RIF: ', IFNULL(v_rif_proveedor_eliminar, 'N/A'), ').')
+    );
+
+    COMMIT;
+END $$
+
+
+/* =========================================================================
+   5. PROCEDIMIENTO PARA CONSULTAR TODOS LOS PROVEEDORES (Lectura Optimizada limpia)
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_consultar_proveedores $$
+
+CREATE PROCEDURE sp_consultar_proveedores()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la lista de proveedores.'; 
+    END;
+
+    SELECT 
+        `id_proveedor`, 
+        `nombre_proveedor`, 
+        `rif_proveedor`, 
+        `nombre_representante`, 
+        `rif_representante`, 
+        `correo_proveedor`, 
+        `direccion_proveedor`, 
+        `telefono_1`, 
+        `telefono_2`, 
+        `observacion`, 
+        `estado`
+    FROM `tbl_proveedores`
+    ORDER BY `nombre_proveedor`
+    FOR UPDATE;
+END $$
+
+
+/* =========================================================================
+   6. PROCEDIMIENTO PARA OBTENER UN PROVEEDOR POR ID ESPECIALIZADO
+   ========================================================================= */
+DROP PROCEDURE IF EXISTS sp_obtener_proveedor_por_id $$
+
+CREATE PROCEDURE sp_obtener_proveedor_por_id(
+    IN p_id_proveedor INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo extraer la información del proveedor solicitado.'; 
+    END;
+
+    -- Consulta unitaria limpia
+    SELECT * FROM `tbl_proveedores`
+    WHERE `id_proveedor` = p_id_proveedor
+    LIMIT 1 FOR UPDATE;
+END $$
+
+DELIMITER ;
+
 -- -----------------------------------------------------------------------------
 -- 1. PROCEDIMIENTO: REGISTRAR/INCLUIR CLIENTE
 -- -----------------------------------------------------------------------------
