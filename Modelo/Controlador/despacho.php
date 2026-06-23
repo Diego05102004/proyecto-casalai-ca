@@ -61,7 +61,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         break;
 
         case 'cambiar_estado_despacho':
+            // Forzamos la cabecera JSON limpia para una interpretación perfecta en el Frontend
+            header('Content-Type: application/json; charset=utf-8');
+
             $k = new Despacho();
+            
             // Validar datos de entrada
             $datosValidacion = [
                 'id_despacho' => $_POST['id'] ?? null,
@@ -82,28 +86,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $estado_actual = isset($_POST['estado_actual']) ? trim($_POST['estado_actual']) : '';
 
             if ($id <= 0 || !in_array($estado_actual, ['Por Despachar', 'Despachado'], true)) {
-                echo json_encode(['status' => 'error', 'message' => 'Datos inválidos para cambiar el estado del despacho']);
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => 'Datos inválidos para cambiar el estado del despacho'
+                ]);
                 break;
             }
 
+            // Calculamos el nuevo estado lógico
             $nuevo_estado = ($estado_actual === 'Por Despachar') ? 'Despachado' : 'Por Despachar';
-            $despachoModel = new Despacho();
-            if ($despachoModel->cambiarEstadoDespacho($id, $nuevo_estado)) {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacora = new Bitacora();
-                    $bitacora->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_DESPACHO,
-                        'CAMBIAR ESTADO',
-                        'El usuario cambió el estado del despacho con ID: ' . $id . ' a ' . $nuevo_estado,
-                        'media'
-                    );
+            
+            // Capturamos el usuario en sesión para la auditoría síncrona
+            $idUsuarioSesion = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : 0;
 
+            // Ejecutamos el modelo pasando el tercer parámetro (Auditor)
+            $resultado = $k->cambiarEstadoDespacho($id, $nuevo_estado, $idUsuarioSesion);
+
+            // Evaluamos la respuesta del flujo transaccional
+            if ($resultado['status'] === 'success') {
+                
+                // Efectos secundarios (Notificaciones del Sistema)
+                if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bd_seguridad = new BD('S');
                     $pdo_seguridad = $bd_seguridad->getConexion();
                     $notificacionModel = new NotificacionModel($pdo_seguridad);
                     $notificacionModel->crear(
-                        $_SESSION['id_usuario'],
+                        $idUsuarioSesion,
                         'despacho',
                         'Estado de despacho actualizado',
                         "Se ha cambiado el estado del despacho con ID ".$id." a '".$nuevo_estado."' por el usuario ".($_SESSION['name'] ?? ''),
@@ -113,70 +121,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $id
                     );
                 }
-                echo json_encode(['status' => 'success', 'nuevo_estado' => $nuevo_estado]);
+                
+                // Respondemos éxito al Frontend incluyendo el nuevo estado para actualizar el Badge HTML
+                echo json_encode([
+                    'status' => 'success', 
+                    'message' => $resultado['message'],
+                    'nuevo_estado' => $nuevo_estado
+                ]);
+                
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se pudo cambiar el estado']);
+                // Si ocurre un error o un SIGNAL SQLSTATE del SP (Ej: "Despacho se encuentra anulado")
+                // enviamos el mensaje real y controlado al cliente.
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => $resultado['message']
+                ]);
             }
             break;
 
         case 'anular':
-            $k = new Despacho();
-            // Validar datos de entrada
-            $datosValidacion = [
-                'id_despacho' => $_POST['id_despachos'] ?? null
-            ];
-            
-            $errores = $k->validarAnularDespacho($datosValidacion);
-            if (!empty($errores)) {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Datos inválidos',
-                    'errors' => $errores
-                ]);
-                break;
-            }
+            header('Content-Type: application/json; charset=utf-8');
             
             $idDespacho = isset($_POST['id_despachos']) ? (int)$_POST['id_despachos'] : 0;
+            $id_usuario_auditor = isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : 0;
+
             if ($idDespacho <= 0) {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'ID de despacho no válido'
-                ]);
+                echo json_encode(['status' => 'error', 'message' => 'ID de despacho inválido.']);
                 break;
             }
 
-            $resultado = $k->anularDespacho($idDespacho);
+            $k = new Despacho();
+            $resultado = $k->anularDespacho($idDespacho, $id_usuario_auditor);
 
             if ($resultado['status'] === 'success') {
+                // Notificaciones colaterales del sistema (Módulo general)
                 if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_DESPACHO,
-                        'ANULAR',
-                        'El usuario anuló el despacho con ID: ' . $idDespacho,
-                        'media'
-                    );
-
                     $bd_seguridad = new BD('S');
                     $pdo_seguridad = $bd_seguridad->getConexion();
                     $notificacionModel = new NotificacionModel($pdo_seguridad);
                     $notificacionModel->crear(
-                        $_SESSION['id_usuario'],
+                        $id_usuario_auditor,
                         'despacho',
-                        'Despacho anulado',
-                        "Se ha anulado el despacho con ID ".$idDespacho." por parte del usuario ".($_SESSION['name'] ?? ''),
-                        'media',
+                        'Despacho Anulado',
+                        "El despacho ID ".$idDespacho." fue anulado por el usuario ".($_SESSION['name'] ?? ''),
+                        'alta',
                         MODULO_DESPACHO,
-                        'eliminar',
+                        'anular',
                         $idDespacho
                     );
                 }
             }
 
-            header('Content-Type: application/json');
             echo json_encode($resultado);
             break;
 

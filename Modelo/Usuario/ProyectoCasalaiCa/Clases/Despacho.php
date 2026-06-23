@@ -85,7 +85,12 @@ class Despacho extends BD{
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -94,14 +99,23 @@ class Despacho extends BD{
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -443,54 +457,51 @@ class Despacho extends BD{
 
     private function g_despacho() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $query = "
-                SELECT 
-                    r.id_despachos,
-                    r.fecha_despacho AS fecha,
-                    r.tipocompra,
-                    r.estado,
-                    c.nombre AS nombre_cliente,
-                    c.cedula AS cedula_cliente,
-                    SUM(d.cantidad) AS total_productos,
-                    SUM(d.cantidad * p.precio) AS valor_total
-                FROM tbl_despachos AS r
-                INNER JOIN tbl_despacho_detalle AS d ON d.id_despacho = r.id_despachos
-                INNER JOIN tbl_clientes AS c ON c.id_clientes = r.id_clientes
-                INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
-                WHERE r.activo = '1'
-                GROUP BY r.id_despachos, r.fecha_despacho, r.tipocompra, r.estado, c.nombre
-                ORDER BY r.fecha_despacho DESC
-            ";
-            $stmt = $pdo->prepare($query);
+            $sql = "CALL sp_consultar_despachos_activos()";
+            $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-            // ahora obtenemos los productos por cada despacho
             foreach ($despachos as &$despacho) {
-                $sqlProd = "
-                    SELECT 
-                        p.id_producto AS codigo,
-                        p.nombre_producto AS producto,
-                        m.nombre_modelo AS modelo,
-                        mar.nombre_marca AS marca,
-                        p.serial,
-                        d.cantidad,
-                        d.id_detalle AS id_detalle,
-                        p.precio AS precio_unitario,
-                        (d.cantidad * p.precio) AS subtotal
-                    FROM tbl_despacho_detalle AS d
-                    INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
-                    INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo
-                    INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
-                    WHERE d.id_despacho = ?
-                ";
+                $sqlProd = "CALL sp_obtener_detalle_despacho(:id_despacho)";
                 $stmtProd = $pdo->prepare($sqlProd);
-                $stmtProd->execute([$despacho['id_despachos']]);
+                $stmtProd->bindParam(':id_despacho', $despacho['id_despachos'], PDO::PARAM_INT);
+                $stmtProd->execute();
+                
                 $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+                $stmtProd->closeCursor();
             }
 
             return $despachos;
-        });
+        }, false);
+    }
+
+    public function obtenerDespachoPorId($idDespacho) {
+        return $this->obt_DespachoPorId($idDespacho); 
+    }
+
+    public function obt_DespachoPorId($idDespacho) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idDespacho) {
+            $sql = "CALL sp_obtener_depacho_por_id(:id_despacho)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_despacho', $idDespacho, PDO::PARAM_INT);
+            $stmt->execute();
+            $despacho = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+
+            if ($despacho) {
+                $sqlProd = "CALL sp_obtener_detalle_despacho(:id_despacho)";
+                $stmtProd = $pdo->prepare($sqlProd);
+                $stmtProd->bindParam(':id_despacho', $idDespacho, PDO::PARAM_INT);
+                $stmtProd->execute();
+                
+                $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+                $stmtProd->closeCursor();
+            }
+
+            return $despacho ? $despacho : null;
+        }, false);
     }
 
     public function obt_productos_despacho($id_despacho) {
@@ -588,34 +599,69 @@ class Despacho extends BD{
         });
     }
 
-    public function anularDespacho($idDespacho) {
-        return $this->an_despacho($idDespacho); 
+    public function cambiarEstadoDespacho($id, $nuevoEstado, $idUsuarioSesion) {
+        return $this->cam_estadoDespacho($id, $nuevoEstado, $idUsuarioSesion); 
     }
 
-    private function an_despacho($idDespacho) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($idDespacho){
-            $sql = "UPDATE tbl_despachos SET activo = 0 WHERE id_despachos = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id', $idDespacho, PDO::PARAM_INT);
-            $result = $stmt->execute();
+    private function cam_estadoDespacho($id, $nuevoEstado, $idUsuarioSesion) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $nuevoEstado, $idUsuarioSesion) {
+            try {
+                // Preparación de la llamada al SP transaccional
+                $sql = "CALL sp_cambiar_estado_despacho(:id_despachos, :nuevo_estado, :id_usuario)";
+                $stmt = $pdo->prepare($sql);
+                
+                $stmt->bindParam(':id_despachos', $id, PDO::PARAM_INT);
+                $stmt->bindParam(':nuevo_estado', $nuevoEstado, PDO::PARAM_STR);
+                $stmt->bindParam(':id_usuario', $idUsuarioSesion, PDO::PARAM_INT);
+                
+                $stmt->execute();
+                $stmt->closeCursor(); // Liberación inmediata de búfer
 
-            return $result 
-                ? ['status' => 'success'] 
-                : ['status' => 'error', 'message' => 'No se pudo anular el despacho'];
-        });
+                return [
+                    'status' => 'success',
+                    'message' => 'Estado del despacho actualizado correctamente.'
+                ];
+
+            } catch (PDOException $e) {
+                // Captura controlada de los SIGNAL SQLSTATE lanzados por el SP
+                return [
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ];
+            }
+        }, false);
     }
 
-    public function cambiarEstadoDespacho($id, $nuevoEstado) {
-        return $this->cam_estadoDespacho($id, $nuevoEstado); 
+    public function anularDespacho($idDespacho, $id_usuario_auditor) {
+        return $this->an_despacho($idDespacho, $id_usuario_auditor); 
     }
-    private function cam_estadoDespacho($id, $nuevoEstado) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $nuevoEstado){
-            $sql = "UPDATE tbl_despachos SET estado = :estado WHERE id_despachos = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':estado', $nuevoEstado);
-            $stmt->bindParam(':id', $id);
-            return $stmt->execute();
-        });
+
+    private function an_despacho($idDespacho, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idDespacho, $id_usuario_auditor){
+            try {
+                // Invocamos el procedimiento almacenado integrado con la bitácora
+                $sql = "CALL sp_anular_despacho(:id_despachos, :id_usuario_auditor)";
+                $stmt = $pdo->prepare($sql);
+                
+                $stmt->bindParam(':id_despachos', $idDespacho, PDO::PARAM_INT);
+                $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, PDO::PARAM_INT);
+                
+                $stmt->execute();
+                $stmt->closeCursor(); // Liberamos el búfer inmediatamente
+
+                return [
+                    'status' => 'success',
+                    'message' => 'El despacho ha sido anulado correctamente.'
+                ];
+
+            } catch (PDOException $e) {
+                // Captura los errores personalizados lanzados por SIGNAL SQLSTATE
+                return [
+                    'status' => 'error', 
+                    'message' => $e->getMessage()
+                ];
+            }
+        }, false);
     }
 
     public function getDespachosPorCliente($fechaInicio = null, $fechaFin = null) {

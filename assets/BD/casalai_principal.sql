@@ -3770,6 +3770,220 @@ END $$
 
 DELIMITER ;
 
+DELIMITER $$
+
+-- =========================================================================
+-- 1. PROCEDIMIENTO PARA CONSULTAR DESPACHOS ACTIVOS
+-- =========================================================================
+DROP PROCEDURE IF EXISTS sp_consultar_despachos_activos $$
+
+CREATE PROCEDURE sp_consultar_despachos_activos()
+BEGIN
+    SELECT 
+        r.id_despachos,
+        r.fecha_despacho AS fecha,
+        r.tipocompra,
+        r.estado,
+        c.nombre AS nombre_cliente,
+        c.cedula AS cedula_cliente,
+        SUM(d.cantidad) AS total_productos,
+        SUM(d.cantidad * p.precio) AS valor_total
+    FROM tbl_despachos AS r
+    INNER JOIN tbl_despacho_detalle AS d ON d.id_despacho = r.id_despachos
+    INNER JOIN tbl_clientes AS c ON c.id_clientes = r.id_clientes
+    INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
+    WHERE r.activo = 1
+    GROUP BY r.id_despachos, r.fecha_despacho, r.tipocompra, r.estado, c.nombre, c.cedula
+    ORDER BY r.fecha_despacho DESC;
+END $$
+
+-- =========================================================================
+-- 2. PROCEDIMIENTO PARA OBTENER UN DESPACHO ESPECÍFICO POR ID
+-- =========================================================================
+DROP PROCEDURE IF EXISTS sp_obtener_despacho_por_id $$
+
+CREATE PROCEDURE sp_obtener_despacho_por_id(
+    IN p_id_despacho INT
+)
+BEGIN
+    SELECT 
+        r.id_despachos,
+        r.fecha_despacho AS fecha,
+        r.tipocompra,
+        r.estado,
+        r.id_clientes,
+        c.nombre AS nombre_cliente,
+        c.cedula AS cedula_cliente,
+        SUM(d.cantidad) AS total_productos,
+        SUM(d.cantidad * p.precio) AS valor_total
+    FROM tbl_despachos AS r
+    INNER JOIN tbl_despacho_detalle AS d ON d.id_despacho = r.id_despachos
+    INNER JOIN tbl_clientes AS c ON c.id_clientes = r.id_clientes
+    INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
+    WHERE r.id_despachos = p_id_despacho AND r.activo = 1
+    GROUP BY r.id_despachos, r.fecha_despacho, r.tipocompra, r.estado, c.nombre, c.cedula;
+END $$
+
+-- =========================================================================
+-- 3. PROCEDIMIENTO PARA OBTENER LOS DETALLES (PRODUCTOS) DE UN DESPACHO
+-- =========================================================================
+DROP PROCEDURE IF EXISTS sp_obtener_detalle_despacho $$
+
+CREATE PROCEDURE sp_obtener_detalle_despacho(
+    IN p_id_despacho INT
+)
+BEGIN
+    SELECT 
+        p.id_producto AS codigo,
+        p.nombre_producto AS producto,
+        m.nombre_modelo AS modelo,
+        mar.nombre_marca AS marca,
+        p.serial,
+        d.cantidad,
+        d.id_detalle AS id_detalle,
+        p.precio AS precio_unitario,
+        (d.cantidad * p.precio) AS subtotal
+    FROM tbl_despacho_detalle AS d
+    INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
+    INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo
+    INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
+    WHERE d.id_despacho = p_id_despacho;
+END $$
+
+-- =========================================================================
+-- 4. PROCEDIMIENTO PARA CAMBIAR EL ESTADO DE UN DESPACHO
+-- =========================================================================
+
+DROP PROCEDURE IF EXISTS sp_cambiar_estado_despacho $$
+
+CREATE PROCEDURE sp_cambiar_estado_despacho(
+    IN p_id_despacho INT,
+    IN p_nuevo_estado VARCHAR(20),
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_estado_anterior VARCHAR(20);
+    DECLARE v_activo_anterior TINYINT;
+
+    -- Manejador de excepciones para garantizar el ROLLBACK ante errores imprevistos
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo modificar el estado del despacho.';
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    -- Concurrencia Avanzada: Bloqueo de fila exclusivo para evitar actualizaciones fantasmas
+    SELECT estado, activo INTO v_estado_anterior, v_activo_anterior
+    FROM tbl_despachos
+    WHERE id_despachos = p_id_despacho
+    FOR UPDATE;
+
+    -- Control de flujo de datos (Verificación de existencia y consistencia)
+    IF v_estado_anterior IS NULL THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El despacho especificado no existe en el sistema.';
+    END IF;
+
+    IF v_activo_anterior = 0 THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación inválida: El despacho se encuentra anulado.';
+    END IF;
+
+    -- Actualización de estado atómica
+    UPDATE tbl_despachos
+    SET estado = p_nuevo_estado
+    WHERE id_despachos = p_id_despacho;
+
+    -- Auditoría Síncrona: Inserción directa en la base de datos de seguridad
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, 
+        `nombre_modulo`, 
+        `accion`, 
+        `datos_nuevos`, 
+        `datos_viejos`, 
+        `id_usuario`, 
+        `prioridad`, 
+        `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Despacho',
+        'CAMBIAR ESTADO',
+        JSON_OBJECT('id_despachos', p_id_despacho, 'estado', p_nuevo_estado),
+        JSON_OBJECT('id_despachos', p_id_despacho, 'estado', v_estado_anterior),
+        p_id_usuario_auditor,
+        'media',
+        CONCAT('Se cambió el estado del despacho con ID: ', p_id_despacho, ' a ', p_nuevo_estado, '.')
+    );
+
+    COMMIT;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_anular_despacho $$
+
+CREATE PROCEDURE sp_anular_despacho(
+    IN p_id_despacho INT,
+    IN p_id_usuario_auditor INT
+)
+BEGIN
+    DECLARE v_estado_anterior VARCHAR(20);
+    DECLARE v_activo_anterior TINYINT;
+
+    -- Concurrencia Avanzada: Bloqueamos la fila en la tabla de despachos
+    SELECT estado, activo INTO v_estado_anterior, v_activo_anterior
+    FROM tbl_despachos
+    WHERE id_despachos = p_id_despacho
+    FOR UPDATE;
+
+    -- Verificación de Existencia
+    IF v_estado_anterior IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El despacho especificado no existe en el sistema.';
+    END IF;
+
+    -- Verificación de doble anulación
+    IF v_activo_anterior = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Operación denegada: El despacho ya se encuentra anulado.';
+    END IF;
+
+    -- Regla de Negocio Crítica: Si ya fue despachado, no debería poder anularse sin un proceso de devolución
+    IF v_estado_anterior = 'Despachado' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede anular un despacho que ya figura como "Despachado".';
+    END IF;
+
+    -- Actualización Atómica (Eliminación Lógica)
+    UPDATE tbl_despachos
+    SET activo = 0
+    WHERE id_despachos = p_id_despacho;
+
+    -- Auditoría Síncrona Estructurada en JSON (Prioridad ALTA por alteración de integridad)
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, 
+        `nombre_modulo`, 
+        `accion`, 
+        `datos_nuevos`, 
+        `datos_viejos`, 
+        `id_usuario`, 
+        `prioridad`, 
+        `descripcion`
+    )
+    VALUES (
+        NOW(),
+        'Despachos',
+        'ANULAR',
+        JSON_OBJECT('id_despachos', p_id_despacho, 'activo', 0),
+        JSON_OBJECT('id_despachos', p_id_despacho, 'activo', v_activo_anterior, 'estado', v_estado_anterior),
+        p_id_usuario_auditor,
+        'alta',
+        CONCAT('Se realizó la anulación lógica del despacho con ID: ', p_id_despacho, '.')
+    );
+
+END $$
+
+DELIMITER ;
+
 
 CREATE DATABASE IF NOT EXISTS `casalai_seguridad`;
 USE `casalai_seguridad`;
