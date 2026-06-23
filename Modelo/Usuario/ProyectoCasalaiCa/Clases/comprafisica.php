@@ -22,7 +22,7 @@ class Comprafisica extends BD{
     const MAX_CANTIDAD_PRODUCTO = 999999;
     const MAX_MONTO_PAGO = 99999999.99;
     const MIN_CANTIDAD_PRODUCTO = 0.01;
-    const TIPOS_PAGO_PERMITIDOS = ['Efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'Tarjeta', 'Cheque'];
+    const TIPOS_PAGO_PERMITIDOS = ['Efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'Efectivo $', 'Tarjeta', 'Cheque'];
     const TIPOS_PAGO_CON_REFERENCIA = ['Transferencia', 'Zelle', 'Pago Movil'];
     const ESTADOS_PERMITIDOS = ['activo', 'inactivo', 'pendiente'];
 
@@ -394,195 +394,64 @@ class Comprafisica extends BD{
     private function r_compraFisica($datos) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($datos){
             try{
-                error_log("[COMPRFISICA-MODELO] Iniciando r_compraFisica");
+                error_log("[COMPRFISICA-MODELO] Iniciando r_compraFisica con procedimiento almacenado");
                 error_log("[COMPRFISICA-MODELO] Datos recibidos: " . json_encode($datos));
                 
-                // Solo iniciar transacción si no hay una activa
-                $transaccionIniciada = false;
-                if (!$pdo->inTransaction()) {
-                    $pdo->beginTransaction();
-                    $transaccionIniciada = true;
-                    error_log("[COMPRFISICA-MODELO] Transacción iniciada");
-                } else {
-                    error_log("[COMPRFISICA-MODELO] Usando transacción existente");
-                }
-
-                // 1️⃣ Crear despacho
-                $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, activo) 
-                                VALUES (:id_cliente, :fecha, :tipocompra, 1)";
-                $stmt = $pdo->prepare($sqlDespacho);
+                // Preparar datos para el procedimiento almacenado
+                $productosJson = json_encode($datos['productos']);
+                $pagosJson = !empty($datos['pagos']) ? json_encode($datos['pagos']) : null;
+                $fecha = date('Y-m-d');
+                
+                error_log("[COMPRFISICA-MODELO] Productos JSON: " . $productosJson);
+                error_log("[COMPRFISICA-MODELO] Pagos JSON: " . $pagosJson);
+                
+                // Llamar al procedimiento almacenado
+                $stmt = $pdo->prepare("CALL sp_registrar_compra_presencial(:id_cliente, :productos, :pagos, :fecha, @resultado)");
                 $stmt->execute([
                     ':id_cliente' => $datos['cliente'],
-                    ':fecha' => date('Y-m-d'),
-                    ':tipocompra' => 'Presencial',
+                    ':productos' => $productosJson,
+                    ':pagos' => $pagosJson,
+                    ':fecha' => $fecha
                 ]);
-                $idDespacho = $pdo->lastInsertId();
-
-                $descripcion = "Venta: ";
-                $monto_total = 0;
-                $productosVenta = [];
-
-                // 2️⃣ Insertar productos en despacho + preparar para factura
-                foreach ($datos['productos'] as $p) {
-                    $cantidad = $this->parsearCantidadFormateada($p['cantidad']);
-
-                    // Insertar detalle de despacho
-                    $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
-                                VALUES (:id_despacho, :id_producto, :cantidad)";
-                    $stmtDet = $pdo->prepare($sqlDetalle);
-                    $stmtDet->execute([
-                        ':id_despacho' => $idDespacho,
-                        ':id_producto' => $p['id_producto'],
-                        ':cantidad' => $cantidad
-                    ]);
-
-                    // Consultar producto
-                    $stmtProd = $pdo->prepare("
-                        SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca,
-                            p.serial, p.precio
-                        FROM tbl_productos p
-                        INNER JOIN tbl_modelos m ON p.id_modelo = m.id_modelo
-                        INNER JOIN tbl_marcas mar ON m.id_marca = mar.id_marca
-                        WHERE p.id_producto = ?
-                    ");
-                    $stmtProd->execute([$p['id_producto']]);
-                    $prod = $stmtProd->fetch(PDO::FETCH_ASSOC);
-
-                    if ($prod) {
-                        $subtotal = floatval($prod['precio']) * $cantidad;
-                        $monto_total += $subtotal;
-
-                        // DESCRIPCIÓN → nombre (xCantidad)
-                        $descripcion .= "{$prod['nombre_producto']} ({$cantidad}), ";
-
-                        $productosVenta[] = [
-                            'id_producto' => $prod['id_producto'],
-                            'codigo' => $prod['id_producto'],
-                            'nombre' => $prod['nombre_producto'],
-                            'modelo' => $prod['nombre_modelo'],
-                            'marca' => $prod['nombre_marca'],
-                            'serial' => $prod['serial'],
-                            'precio' => $prod['precio'],
-                            'cantidad' => $cantidad,
-                            'subtotal' => $subtotal
-                        ];
-                    }
+                
+                // Obtener el resultado
+                $stmtResult = $pdo->query("SELECT @resultado AS resultado");
+                $resultRow = $stmtResult->fetch(PDO::FETCH_ASSOC);
+                $resultadoJson = json_decode($resultRow['resultado'], true);
+                
+                error_log("[COMPRFISICA-MODELO] Resultado del procedimiento: " . json_encode($resultadoJson));
+                
+                // Verificar si hubo error
+                if ($resultadoJson['status'] === 'error') {
+                    error_log("[COMPRFISICA-MODELO] Error en procedimiento: " . $resultadoJson['mensaje']);
+                    return [
+                        'status' => 'error',
+                        'mensaje' => $resultadoJson['mensaje'],
+                        'debug' => $resultadoJson['debug'] ?? ''
+                    ];
                 }
-
-                $descripcion = rtrim($descripcion, ', ');
-
-                // 3️⃣ Crear factura
-                $sqlFactura = "INSERT INTO tbl_facturas (cliente, fecha, descuento, estatus) 
-                            VALUES (:cliente, :fecha, 0, 'Pagada en Oficina')";
-                $stmtFactura = $pdo->prepare($sqlFactura);
-                $stmtFactura->execute([
-                    ':cliente' => $datos['cliente'],
-                    ':fecha' => date('Y-m-d')
-                ]);
-                $idFactura = $pdo->lastInsertId();
-
-                // 4️⃣ Factura detalle
-                foreach ($productosVenta as $prod) {
-                    $sqlFacturaDet = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad)
-                                    VALUES (:factura_id, :id_producto, :cantidad)";
-                    $stmtFacturaDet = $pdo->prepare($sqlFacturaDet);
-                    $stmtFacturaDet->execute([
-                        ':factura_id' => $idFactura,
-                        ':id_producto' => $prod['id_producto'],
-                        ':cantidad' => $prod['cantidad']
-                    ]);
-                }
-
-                // 5️⃣ Cliente
-                $stmtCliente = $pdo->prepare("
-                    SELECT id_clientes, nombre, cedula, telefono, correo 
-                    FROM tbl_clientes 
-                    WHERE id_clientes = ?
-                ");
-                $stmtCliente->execute([$datos['cliente']]);
-                $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
-
-                // 6️⃣ Registrar pagos
-                $pagosVenta = [];
-                if (!empty($datos['pagos'])) {
-                    foreach ($datos['pagos'] as $pago) {
-                        $sqlPago = "INSERT INTO tbl_detalles_pago 
-                                    (id_factura, tipo, id_cuenta, referencia, monto, comprobante, fecha) 
-                                    VALUES (:id_factura, :tipo, :id_cuenta, :referencia, :monto, :comprobante, NOW())";
-                        $stmtPago = $pdo->prepare($sqlPago);
-                        $stmtPago->execute([
-                            ':id_factura' => $idFactura,
-                            ':tipo' => $pago['tipo'],
-                            ':id_cuenta' => $pago['cuenta'] ?? null,
-                            ':referencia' => $pago['referencia'] ?? null,
-                            ':monto' => $pago['monto'],
-                            ':comprobante' => $pago['comprobante'] ?? null
-                        ]);
-
-                        $pagosVenta[] = [
-                            'tipo' => $pago['tipo'] ?? '',
-                            'monto' => $pago['monto'] ?? 0,
-                            'referencia' => $pago['referencia'] ?? '',
-                            'id_cuenta' => $pago['id_cuenta'] ?? '',
-                            'comprobante' => $pago['comprobante'] ?? '',
-                            'estatus' => 'Procesado'
-                        ];
-                    }
-                }
-
-                // 7️⃣ Ingresos → CORREGIDO COMPLETAMENTE
-                $sqlFinanzas = "INSERT INTO tbl_ingresos_egresos (
-                    id_despacho,
-                    tipo,
-                    monto,
-                    descripcion,
-                    fecha,
-                    estado
-                ) VALUES (
-                    :id_despacho,
-                    :tipo,
-                    :monto,
-                    :descripcion,
-                    NOW(),
-                    1
-                )";
-
-                $stmtFinanzas = $pdo->prepare($sqlFinanzas);
-                $stmtFinanzas->execute([
-                    ':id_despacho' => $idDespacho,
-                    ':tipo' => 'ingreso',
-                    ':monto' => $monto_total,
-                    ':descripcion' => 'Venta presencial #' . $idFactura . ' - ' . $descripcion
-                ]);
-
-                // 8️⃣ Respuesta para AJAX
-                $resultado = [
-                    'id_factura' => $idFactura,
-                    'fecha_factura' => date('Y-m-d'),
-                    'nombre_cliente' => $cliente['nombre'] ?? '',
-                    'cedula' => $cliente['cedula'] ?? '',
-                    'telefono' => $cliente['telefono'] ?? '',
-                    'correo' => $cliente['correo'] ?? '',
-                    'productos' => $productosVenta,
-                    'pagos' => $pagosVenta,
-                    'total' => $monto_total
+                
+                // Construir respuesta en el formato esperado por el frontend
+                // Los productos y pagos ya vienen como arrays JSON del procedimiento
+                $respuesta = [
+                    'id_factura' => $resultadoJson['id_factura'],
+                    'fecha_factura' => $resultadoJson['fecha_factura'],
+                    'nombre_cliente' => $resultadoJson['nombre_cliente'],
+                    'cedula' => $resultadoJson['cedula'],
+                    'telefono' => $resultadoJson['telefono'],
+                    'correo' => $resultadoJson['correo'],
+                    'productos' => $resultadoJson['productos'],
+                    'pagos' => $resultadoJson['pagos'],
+                    'total' => $resultadoJson['monto_total']
                 ];
-
-                error_log("[COMPRFISICA-MODELO] Operación exitosa, preparando respuesta");
-                // Solo hacer commit si iniciamos la transacción
-                if ($transaccionIniciada && $pdo->inTransaction()) {
-                    $pdo->commit();
-                    error_log("[COMPRFISICA-MODELO] Transacción confirmada");
-                }
-                return $resultado;
+                
+                error_log("[COMPRFISICA-MODELO] Respuesta final: " . json_encode($respuesta));
+                error_log("[COMPRFISICA-MODELO] Operación exitosa, respuesta preparada");
+                return $respuesta;
 
             } catch (Exception $e) {
                 error_log("[COMPRFISICA-MODELO] Error capturado: " . $e->getMessage());
                 error_log("[COMPRFISICA-MODELO] Stack trace: " . $e->getTraceAsString());
-                if ($transaccionIniciada && $pdo->inTransaction()) {
-                    $pdo->rollBack();
-                    error_log("[COMPRFISICA-MODELO] Transacción revertida");
-                }
                 return [
                     'status' => 'error',
                     'mensaje' => $e->getMessage()
