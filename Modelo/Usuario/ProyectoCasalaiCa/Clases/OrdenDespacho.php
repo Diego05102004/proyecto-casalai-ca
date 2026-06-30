@@ -74,7 +74,12 @@ class OrdenDespacho extends BD {
      * @return mixed
      */
 
-    protected function ejecutarConConexionSegura($operation) {
+    /**
+     * @param callable $operation
+     * @param bool $usarTransaccion
+     * @return mixed
+     */
+    protected function ejecutarConConexionSegura($operation, $usarTransaccion = true) {
         try {
             parent::__construct('P'); 
             $pdo = parent::getConexion(); 
@@ -83,14 +88,23 @@ class OrdenDespacho extends BD {
                 throw new \RuntimeException("La conexión PDO no es válida o es nula.");
             }
 
-            $pdo->beginTransaction();
+            // SOLO iniciamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->beginTransaction();
+            }
+
             $resultado = $operation($pdo);
-            $pdo->commit();
+
+            // SOLO confirmamos transacción si el flag es true
+            if ($usarTransaccion) {
+                $pdo->commit();
+            }
             
             return $resultado;
         } catch (\Exception $e) {
             $pdo = parent::getConexion();
-            if ($pdo instanceof \PDO && $pdo->inTransaction()) {
+            // SOLO hacemos rollback si correspondía usar transacción y sigue activa
+            if ($usarTransaccion && $pdo instanceof \PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
@@ -118,18 +132,46 @@ class OrdenDespacho extends BD {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
     }
+    
+    public function getordendespacho() {
+        return $this->g_ordenesDespacho();
+    }
+
+    private function g_ordenesDespacho() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            
+            $query = "CALL sp_consultar_ordenes_despacho()";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute();
+            $ordendespacho = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+
+            foreach ($ordendespacho as &$despacho) {
+                $sqlProd = "CALL sp_obtener_productos_factura_despacho(?)";
+                $stmtProd = $pdo->prepare($sqlProd);
+                $stmtProd->execute([$despacho['id_factura']]);
+                $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+                $stmtProd->closeCursor();
+            }
+
+            return $ordendespacho;
+        }, false);
+    }
 
     public function obtenerOrdenPorId($id) {
         return $this->obt_ordenPorId($id); 
     }
+
     private function obt_ordenPorId($id) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id){
-            $query = "SELECT * FROM tbl_orden_despachos WHERE id_orden_despachos = ?";
+            $query = "CALL sp_obtener_orden_despacho_por_id(?)";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$id]);
             $ordendespacho = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $ordendespacho;
-        });
+            $stmt->closeCursor();
+            
+            return $ordendespacho ? $ordendespacho : false;
+        }, false);
     }
 
     public function cambiarEstatus($nuevoEstatus) {
@@ -146,60 +188,6 @@ class OrdenDespacho extends BD {
             } catch (PDOException $e) {
                 return false;
             }
-        });
-    }
-
-    public function getordendespacho() {
-        return $this->g_ordenesDespacho();
-    }
-    private function g_ordenesDespacho() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $query = "
-                SELECT 
-                    od.id_orden_despachos,
-                    od.id_factura,
-                    c.cedula,
-                    od.cliente,
-                    od.fecha_despacho,
-                    od.estado,
-                    od.activo
-                FROM tbl_orden_despachos AS od
-                INNER JOIN tbl_facturas f ON f.id_factura = od.id_factura
-                INNER JOIN tbl_clientes c ON c.id_clientes = f.cliente
-                WHERE od.activo = 1
-                ORDER BY od.fecha_despacho DESC, od.id_orden_despachos DESC;
-            ";
-
-            $stmt = $pdo->prepare($query);
-            $stmt->execute();
-            $ordendespacho = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // obtener los productos por cada orden de despacho
-            foreach ($ordendespacho as &$despacho) {
-                $sqlProd = "
-                    SELECT 
-                    p.imagen,
-                        p.id_producto AS codigo,
-                        p.nombre_producto AS producto,
-                        m.nombre_modelo AS modelo,
-                        mar.nombre_marca AS marca,
-                        p.serial,
-                        d.cantidad,
-                        d.id AS id_detalle,
-                        p.precio AS precio_unitario,
-                        (d.cantidad * p.precio) AS subtotal
-                    FROM tbl_factura_detalle AS d
-                    INNER JOIN tbl_productos AS p ON p.id_producto = d.id_producto
-                    INNER JOIN tbl_modelos AS m ON p.id_modelo = m.id_modelo
-                    INNER JOIN tbl_marcas AS mar ON m.id_marca = mar.id_marca
-                    WHERE d.factura_id = ?
-                ";
-                $stmtProd = $pdo->prepare($sqlProd);
-                $stmtProd->execute([$despacho['id_factura']]); // corregido
-                $despacho['productos'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
-            }
-
-            return $ordendespacho;
         });
     }
 
@@ -273,89 +261,56 @@ class OrdenDespacho extends BD {
         });
     }
 
-    public function cambiarEstadoOrden($id, $nuevoEstado) {
-        return $this->cam_estadoOrden($id, $nuevoEstado); 
+    public function cambiarEstadoOrden($id, $nuevoEstado, $id_usuario_auditor) {
+        return $this->cam_estadoOrden($id, $nuevoEstado, $id_usuario_auditor); 
     }
-    private function cam_estadoOrden($id, $nuevoEstado) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $nuevoEstado){
+
+    private function cam_estadoOrden($id, $nuevoEstado, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $nuevoEstado, $id_usuario_auditor) {
             try {
-                $sqlOrden = "SELECT id_factura, cliente, fecha_despacho FROM tbl_orden_despachos WHERE id_orden_despachos = :id";
-                $stmtOrden = $pdo->prepare($sqlOrden);
-                $stmtOrden->bindParam(':id', $id, PDO::PARAM_INT);
-                $stmtOrden->execute();
-                $orden = $stmtOrden->fetch(PDO::FETCH_ASSOC);
+                $query = "CALL sp_cambiar_estado_orden_despacho(:id_orden_despachos, :estatus, :id_usuario_auditor)";
+                $stmt = $pdo->prepare($query);
+                
+                $stmt->bindParam(':estatus', $nuevoEstado);
+                $stmt->bindParam(':id_orden_despachos', $id, PDO::PARAM_INT);
+                $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, PDO::PARAM_INT);
 
-                if (!$orden) {
-                    return ['status' => 'error', 'message' => 'Orden no encontrada'];
-                }
-
-                $sql = "UPDATE tbl_orden_despachos SET estado = :estado WHERE id_orden_despachos = :id";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':estado', $nuevoEstado);
-                $stmt->bindParam(':id', $id, PDO::PARAM_INT);
                 $stmt->execute();
-
-                if ($nuevoEstado === 'Entregada') {
-                    $sqlCliente = "SELECT cliente FROM tbl_facturas WHERE id_factura = :id_factura";
-                    $stmtCliente = $pdo->prepare($sqlCliente);
-                    $stmtCliente->bindParam(':id_factura', $orden['id_factura'], PDO::PARAM_INT);
-                    $stmtCliente->execute();
-                    $factura = $stmtCliente->fetch(PDO::FETCH_ASSOC);
-
-                    if (!$factura) {
-                        return ['status' => 'error', 'message' => 'Factura asociada no encontrada'];
-                    }
-
-                    $sqlDespacho = "INSERT INTO tbl_despachos (id_clientes, fecha_despacho, tipocompra, estado, activo) 
-                                    VALUES (:id_cliente, :fecha, :tipocompra, :estado, 1)";
-                    $stmtDespacho = $pdo->prepare($sqlDespacho);
-                    $stmtDespacho->execute([
-                        ':id_cliente' => $factura['cliente'],
-                        ':fecha' => $orden['fecha_despacho'],
-                        ':tipocompra' => 'Online',
-                        ':estado' => 'Por Despachar'
-                    ]);
-                    $idDespacho = $pdo->lastInsertId();
-
-                    $sqlDetalles = "SELECT id_producto, cantidad FROM tbl_factura_detalle WHERE factura_id = :factura_id";
-                    $stmtDetalles = $pdo->prepare($sqlDetalles);
-                    $stmtDetalles->bindParam(':factura_id', $orden['id_factura'], PDO::PARAM_INT);
-                    $stmtDetalles->execute();
-                    $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
-
-                    foreach ($detalles as $detalle) {
-                        $sqlDetalle = "INSERT INTO tbl_despacho_detalle (id_despacho, id_producto, cantidad) 
-                                    VALUES (:id_despacho, :id_producto, :cantidad)";
-                        $stmtDetalle = $pdo->prepare($sqlDetalle);
-                        $stmtDetalle->execute([
-                            ':id_despacho' => $idDespacho,
-                            ':id_producto' => $detalle['id_producto'],
-                            ':cantidad' => $detalle['cantidad']
-                        ]);
-                    }
-                }
+                $stmt->closeCursor();
 
                 return ['status' => 'success', 'message' => 'Estado actualizado correctamente'];
+
             } catch (PDOException $e) {
                 return ['status' => 'error', 'message' => $e->getMessage()];
             }
-        });
+        }, false);
     }
 
-    public function anularOrdenDespacho($idOrden) {
-        return $this->an_orden_despacho($idOrden); 
+    public function anularOrdenDespacho($idOrden, $id_usuario_auditor) {
+        return $this->an_orden_despacho($idOrden, $id_usuario_auditor); 
     }
 
-    private function an_orden_despacho($idOrden) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($idOrden){
-            $sql = "UPDATE tbl_orden_despachos SET activo = 0 WHERE id_orden_despachos = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id', $idOrden, PDO::PARAM_INT);
-            $result = $stmt->execute();
-            return $result 
-                ? ['status' => 'success'] 
-                : ['status' => 'error', 'message' => 'No se pudo anular la orden de despacho'];
-        });
+    private function an_orden_despacho($idOrden, $id_usuario_auditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idOrden, $id_usuario_auditor){
+            try {
+                $sql = "CALL sp_anular_orden_despacho(:id_orden_despachos, :id_usuario_auditor)";
+                $stmt = $pdo->prepare($sql);
+
+                $stmt->bindParam(':id_orden_despachos', $idOrden, PDO::PARAM_INT);
+                $stmt->bindParam(':id_usuario_auditor', $id_usuario_auditor, PDO::PARAM_INT);
+
+                $stmt->execute();
+                $stmt->closeCursor();
+                
+                return ['status' => 'success'];
+
+            } catch (PDOException $e) {
+                return [
+                    'status' => 'error', 
+                    'message' => $e->getMessage()
+                ];
+            }
+        }, false);
     }
 
     public function crearPorFactura($idFactura) {

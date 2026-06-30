@@ -118,52 +118,116 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'Error al cambiar el estatus']);
             }
             break;
-        
+
         case 'cambiar_estado_orden':
-            $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            // 1. Verificación estricta de sesión activa
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
+            // 2. Extracción limpia y segura de parámetros POST (Evita sobreescritura de variables)
+            $id = isset($_POST['id_orden_despachos']) ? (int)$_POST['id_orden_despachos'] : (isset($_POST['id']) ? (int)$_POST['id'] : 0);
             $estado_actual = $_POST['estado_actual'] ?? '';
+            
+            // 3. Validación de consistencia elemental
             if ($id <= 0 || !in_array($estado_actual, ['Por Entregar', 'Entregada'], true)) {
-                echo json_encode(['status' => 'error', 'message' => 'Datos inválidos para cambiar el estado de la orden']);
+                echo json_encode(['status' => 'error', 'message' => 'Datos inválidos para cambiar el estado de la orden.']);
                 break;
             }
+            
+            // 4. Conmutación controlada de estados (Toggle)
             $nuevo_estado = ($estado_actual === 'Por Entregar') ? 'Entregada' : 'Por Entregar';
+            
+            // 5. Instanciación y ejecución atómica
             $ordenModel = new OrdenDespacho();
-            $resultado = $ordenModel->cambiarEstadoOrden($id, $nuevo_estado);
-            if ($resultado['status'] === 'success') {
+            $resultado = $ordenModel->cambiarEstadoOrden($id, $nuevo_estado, $id_usuario_sesion);
+            
+            // 6. Respuesta JSON unificada basada en el retorno del modelo
+            if (isset($resultado['status']) && $resultado['status'] === 'success') {
+
                 if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacora = new Bitacora();
-                    $bitacora->registrarBitacora($_SESSION['id_usuario'], MODULO_ORDEN_DESPACHO, 'CAMBIAR ESTADO', 'El usuario cambió el estado de la orden de despacho con ID: ' . $id . ' a ' . $nuevo_estado, 'media');
                     $bd_seguridad = new BD('S');
                     $pdo_seguridad = $bd_seguridad->getConexion();
                     $notificacionModel = new NotificacionModel($pdo_seguridad);
-                    $notificacionModel->crear($_SESSION['id_usuario'], 'orden_despacho', 'Estado de orden de despacho actualizado', "Se ha cambiado el estado de la orden de despacho con ID ".$id." a '".$nuevo_estado."' por el usuario ".($_SESSION['name'] ?? ''), 'media', MODULO_ORDEN_DESPACHO, 'actualizar', $id);
+                    
+                    $notificacionModel->crear(
+                        $_SESSION['id_usuario'], 
+                        'orden_despacho', 
+                        'Estado de orden de despacho actualizado', 
+                        "Se ha cambiado el estado de la orden de despacho con ID " . $id . " a '" . $nuevo_estado . "' por el usuario " . ($_SESSION['name'] ?? ''), 
+                        'media', 
+                        MODULO_ORDEN_DESPACHO, 
+                        'actualizar', 
+                        $id
+                    );
                 }
+
                 echo json_encode(['status' => 'success', 'nuevo_estado' => $nuevo_estado]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => $resultado['message'] ?? 'No se pudo cambiar el estado']);
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => $resultado['message'] ?? 'No se pudo cambiar el estado de la orden.'
+                ]);
             }
             break;
 
         case 'anularOrden':
-            $ordenModel = new OrdenDespacho();
+            header('Content-Type: application/json; charset=utf-8');
+            
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+
+            // 1. Verificación estricta de sesión activa
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
+            // 2. Captura segura y casteo a entero en un solo paso
             $idOrden = isset($_POST['id_orden_despachos']) ? (int)$_POST['id_orden_despachos'] : 0;
+            
+            // 3. Validación de consistencia elemental
             if ($idOrden <= 0) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['status' => 'error', 'message' => 'ID de orden de despacho no válido']);
+                echo json_encode([
+                    'status' => 'error', 
+                    'message' => 'ID de orden de despacho no válido.'
+                ]);
                 break;
             }
-            $resultado = $ordenModel->anularOrdenDespacho($idOrden);
-            if ($resultado['status'] === 'success') {
+
+            // 4. Instanciación y ejecución de la baja lógica
+            $ordenModel = new OrdenDespacho();
+            $resultado = $ordenModel->anularOrdenDespacho($idOrden, $id_usuario_sesion);
+
+            // 5. Gestión controlada de efectos secundarios (Notificaciones)
+            if (isset($resultado['status']) && $resultado['status'] === 'success') {
                 if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacora = new Bitacora();
-                    $bitacora->registrarBitacora($_SESSION['id_usuario'], MODULO_ORDEN_DESPACHO, 'ANULAR', 'El usuario anuló la orden de despacho con ID: ' . $idOrden, 'media');
                     $bd_seguridad = new BD('S');
                     $pdo_seguridad = $bd_seguridad->getConexion();
                     $notificacionModel = new NotificacionModel($pdo_seguridad);
-                    $notificacionModel->crear($_SESSION['id_usuario'], 'orden_despacho', 'Orden de despacho anulada', "Se ha anulado la orden de despacho con ID ".$idOrden." por parte del usuario ".($_SESSION['name'] ?? ''), 'media', MODULO_ORDEN_DESPACHO, 'eliminar', $idOrden);
+                    
+                    $notificacionModel->crear(
+                        $_SESSION['id_usuario'], 
+                        'orden_despacho', 
+                        'Orden de despacho anulada', 
+                        "Se ha anulado la orden de despacho con ID " . $idOrden . " por parte del usuario " . ($_SESSION['name'] ?? ''), 
+                        'media', 
+                        MODULO_ORDEN_DESPACHO, 
+                        'eliminar', 
+                        $idOrden
+                    );
                 }
             }
-            header('Content-Type: application/json; charset=utf-8');
+
+            // 6. Retorno final estructurado de la operación (Éxito o error del SP)
             echo json_encode($resultado);
             break;
     }
