@@ -5,3 +5,13 @@
 # PHPUnit cache
 .phpunit.result.cache
 cl-app/
+
+# Variables de entorno (contiene claves sensibles)
+.env
+.env.local
+.env.production
+
+# Claves RSA generadas
+*.pem
+private.pem
+public.pem

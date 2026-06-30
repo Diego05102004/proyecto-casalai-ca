@@ -9,6 +9,9 @@ error_reporting(E_ALL);
 require __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/Modelo/Config/paths.php';
 
+// Cargar variables de entorno desde archivo .env
+require_once __DIR__ . '/Modelo/Config/loadEnv.php';
+
 // DETECTAR ENTORNO: Solo arranca WebSockets si estás en Localhost
 $is_localhost = in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) 
                 || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false);
