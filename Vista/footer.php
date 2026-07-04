@@ -59,7 +59,6 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/sweetalert2.js"></script>
 <script src="assets/javascript/tabla.js"></script>
-<script src="assets/javascript/new_menu.js"></script>
 <script src="assets/public/js/chart.js"></script>
 <script src="assets/public/js/html2canvas.min.js"></script>
 <script src="assets/public/js/jspdf.umd.min.js"></script>

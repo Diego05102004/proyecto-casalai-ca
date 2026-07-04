@@ -1,7 +1,7 @@
 <link rel="icon" type="image/png" href="assets/img/LOGO.png">
 
 <!-- jQuery (solo una versión) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="assets/javascript/js/jquery-3.6.0.min.js"></script>
 
 <!-- Bootstrap 5 CSS -->
 <link href="assets/public/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="assets/styles/global.css">
 <link rel="stylesheet" href="assets/styles/catalogo.css">
 <?php if (empty($exclude_buttons_css)) { ?>
-<link rel="stylesheet" href="assets/styles/button.css">
+<link rel="stylesheet" href="assets/styles/buttons.css">
 <?php } ?>
 
 <!-- Bootstrap JS Bundle with Popper -->
@@ -31,27 +31,27 @@
 
 <!-- SweetAlert2 -->
 <script src="assets/public/js/sweetalert2.js"></script>
-<link rel="stylesheet" href="assets/public/css/sweetalert2.css">
+<link rel="stylesheet" href="assets/styles/sweetalert2.min.css">
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="assets/javascript/js/chart(v4.5.1).js"></script>
 
 <!-- DataTables JS -->
-<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script type="text/javascript" src="assets/javascript/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="assets/javascript/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/javascript/js/sweetalert2@11.js"></script>
 <!-- DataTables Buttons -->
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+<script type="text/javascript" src="assets/javascript/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="assets/javascript/js/buttons.bootstrap5.min.js"></script>
+<script type="text/javascript" src="assets/javascript/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="assets/javascript/js/buttons.print.min.js"></script>
 
 <!-- PDFMake (requerido para botón PDF) -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+<script type="text/javascript" src="assets/javascript/js/pdfmake.min.js"></script>
+<script type="text/javascript" src="assets/javascript/js/vfs_fonts.js"></script>
 
 <!-- JSZip (requerido para botón Excel) -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script type="text/javascript" src="assets/javascript/js/jszip.min.js"></script>
 
 <!-- Script de inicialización automática de WebSocket -->
 <script>
