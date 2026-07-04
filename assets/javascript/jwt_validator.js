@@ -8,22 +8,46 @@
 
 (function() {
     'use strict';
+
+    if (typeof window !== 'undefined') {
+        window.__jwt_validator_queue = window.__jwt_validator_queue || [];
+        window.openJwtExtensionModal = window.openJwtExtensionModal || function(secondsLeft) {
+            console.warn('[JWT] openJwtExtensionModal placeholder called before validator init:', secondsLeft);
+            window.__jwt_validator_queue.push(secondsLeft);
+        };
+    }
+
+    if (typeof window !== 'undefined') {
+        window.JWTValidator = window.JWTValidator || {};
+        window.JWTValidator.openModal = window.JWTValidator.openModal || function(secondsLeft) {
+            console.warn('[JWT] placeholder openModal called before validator initialization:', secondsLeft);
+        };
+        window.openJwtExtensionModal = window.openJwtExtensionModal || function(secondsLeft) {
+            console.warn('[JWT] placeholder openJwtExtensionModal called before validator initialization:', secondsLeft);
+            if (window.JWTValidator && typeof window.JWTValidator.openModal === 'function') {
+                window.JWTValidator.openModal(secondsLeft);
+            }
+        };
+    }
     
     // Configuración
     const CONFIG = {
-        verifyInterval: 5000, // Verificar cada 5 segundos
+        verifyInterval: 1000, // Verificar cada 5 segundos
         verifyEndpoint: 'api/verify_token.php',
         extendEndpoint: 'api/extend_token.php',
-        extensionThreshold: 20, // Mostrar modal 20 segundos antes de expirar
-        extensionTime: 300, // Extender sesión por 5 minutos (300 segundos)
+        invalidateEndpoint: 'api/invalidate_token.php',
+        extensionThreshold: 30, // Mostrar modal 30 segundos antes de expirar
+        extensionTime: 1830, // Extender sesión por 30 minutos (1830 segundos)
         maxExtensions: 3, // Máximo de extensiones permitidas
         extensionCookieName: 'session_extensions' // Nombre de la cookie para rastrear extensiones
     };
     
     let verifyTimer = null;
     let countdownTimer = null;
+    let modalShowTimer = null;
     let isRedirecting = false;
     let isModalShown = false;
+    let lastVerifyData = null;
     
     console.log('[JWT] Script jwt_validator.js cargado');
     console.log('[JWT] Configuración:', CONFIG);
@@ -60,6 +84,36 @@
     /**
      * Verifica el token JWT
      */
+    function scheduleExtensionModal(secondsLeft, remainingExtensions) {
+        if (modalShowTimer) {
+            clearTimeout(modalShowTimer);
+            modalShowTimer = null;
+        }
+
+        const seconds = Number(secondsLeft);
+        console.log('[JWT] scheduleExtensionModal:', { secondsLeft: secondsLeft, parsed: seconds, remainingExtensions });
+
+        if (!Number.isFinite(seconds) || seconds <= 0) {
+            console.log('[JWT] El tiempo restante no es válido para agendar modal:', secondsLeft);
+            return;
+        }
+
+        if (seconds <= CONFIG.extensionThreshold) {
+            if (!isModalShown) {
+                showExtensionModal(seconds, remainingExtensions);
+            }
+            return;
+        }
+
+        const delayMs = (seconds - CONFIG.extensionThreshold) * 1000;
+        console.log('[JWT] Agendando apertura de modal en:', delayMs, 'ms');
+        modalShowTimer = setTimeout(() => {
+            if (!isModalShown) {
+                showExtensionModal(CONFIG.extensionThreshold, remainingExtensions);
+            }
+        }, delayMs);
+    }
+
     function verifyToken() {
         if (isRedirecting || isModalShown) {
             console.log('[JWT] Verificación omitida: isRedirecting=', isRedirecting, ', isModalShown=', isModalShown);
@@ -76,32 +130,48 @@
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Token inválido o expirado');
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || 'Token inválido o expirado');
+                }).catch(() => {
+                    throw new Error('Token inválido o expirado');
+                });
             }
             return response.json();
         })
         .then(data => {
             console.log('[JWT] Respuesta de verificación:', data);
-            
-            if (!data.valid) {
-                // Token inválido o expirado
-                console.log('[JWT] Token inválido o expirado');
-                handleTokenExpired();
-            } else {
-                console.log('[JWT] Token válido. expires_in:', data.expires_in, 'threshold:', CONFIG.extensionThreshold);
-                
-                if (data.expires_in && data.expires_in <= CONFIG.extensionThreshold) {
-                    // Token está por expirar (20 segundos o menos)
-                    console.log('[JWT] Token por expirar, mostrando modal...');
-                    if (!isModalShown) {
-                        showExtensionModal(data.expires_in);
-                    }
-                }
+            lastVerifyData = data;
+
+            const state = data.state || (data.valid ? 'valid' : 'expired');
+            const remainingExtensions = data.extensions_remaining ?? CONFIG.maxExtensions;
+            const secondsLeft = Number(data.expires_in);
+            console.log('[JWT] token state:', state, 'expires_in parsed:', secondsLeft, 'type:', typeof secondsLeft);
+
+            if (!Number.isFinite(secondsLeft)) {
+                console.log('[JWT] expires_in no es numérico:', data.expires_in);
+                return;
             }
+
+            if (state === 'warning') {
+                if (remainingExtensions <= 0) {
+                    console.log('[JWT] No hay extensiones disponibles, invalidando sesión');
+                    invalidateSession();
+                    return;
+                }
+                scheduleExtensionModal(secondsLeft, remainingExtensions);
+                return;
+            }
+
+            if (state === 'valid') {
+                scheduleExtensionModal(secondsLeft, remainingExtensions);
+                return;
+            }
+
+            console.log('[JWT] Token expirado o inválido, invalidando sesión');
+            invalidateSession();
         })
         .catch(error => {
             console.error('[JWT] Error al verificar token:', error);
-            // Si hay error, asumimos que el token es inválido
             handleTokenExpired();
         });
     }
@@ -109,205 +179,110 @@
     /**
      * Muestra el modal de extensión de sesión
      */
-    function showExtensionModal(secondsLeft) {
-        console.log('[JWT] showExtensionModal llamado con secondsLeft:', secondsLeft);
+    function showExtensionModal(secondsLeft, remainingExtensions) {
+        console.log('[JWT] showExtensionModal llamado con secondsLeft:', secondsLeft, 'remainingExtensions:', remainingExtensions);
         isModalShown = true;
         
-        const extensionCount = getExtensionCount();
-        const remainingExtensions = CONFIG.maxExtensions - extensionCount;
-        
-        console.log('[JWT] Extension count:', extensionCount, 'Remaining:', remainingExtensions);
-        
-        // Si no hay extensiones disponibles, no mostrar modal
         if (remainingExtensions <= 0) {
-            console.log('[JWT] No hay extensiones disponibles, redirigiendo al login');
-            handleTokenExpired();
+            console.log('[JWT] No hay extensiones disponibles, invalidando sesión');
+            invalidateSession();
             return;
         }
         
         console.log('[JWT] Creando modal HTML...');
         
-        // Crear el modal
-        const modal = document.createElement('div');
-        modal.id = 'session-extension-modal';
-        modal.innerHTML = `
-            <div class="modal-overlay">
-                <div class="modal-content">
-                    <div class="modal-icon">
-                        <svg class="countdown-circle" viewBox="0 0 100 100">
-                            <circle class="countdown-bg" cx="50" cy="50" r="45" fill="none" stroke="#e0e0e0" stroke-width="8"/>
-                            <circle class="countdown-progress" cx="50" cy="50" r="45" fill="none" stroke="#ff6b6b" stroke-width="8" 
-                                    stroke-dasharray="283" stroke-dashoffset="0" stroke-linecap="round"
-                                    transform="rotate(-90 50 50)"/>
-                            <text class="countdown-text" x="50" y="55" text-anchor="middle" font-size="24" font-weight="bold" fill="#333">${secondsLeft}</text>
-                        </svg>
-                    </div>
-                    <h2 class="modal-title">Tu sesión está por expirar</h2>
-                    <p class="modal-message">¿Deseas extender tu sesión por 5 minutos adicionales?</p>
-                    <p class="modal-remaining">Extensiones disponibles: <strong>${remainingExtensions}</strong> de ${CONFIG.maxExtensions}</p>
-                    <div class="modal-buttons">
-                        <button class="btn-extend" id="btn-extend-session">Extender Sesión</button>
-                        <button class="btn-logout" id="btn-logout-session">Cerrar Sesión</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Agregar estilos CSS
-        const styles = document.createElement('style');
-        styles.textContent = `
-            #session-extension-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 10000;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        try {
+            const existingModal = document.getElementById('session-extension-modal');
+            if (existingModal) {
+                existingModal.remove();
             }
-            
-            .modal-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
+
+            const modal = document.createElement('div');
+            modal.id = 'session-extension-modal';
+            modal.style.cssText = `
+                position: fixed;
+                inset: 0;
+                z-index: 2147483647;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                animation: fadeIn 0.3s ease-in;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            
-            .modal-content {
-                background: white;
-                border-radius: 16px;
-                padding: 40px;
-                max-width: 450px;
-                width: 90%;
-                text-align: center;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-                animation: slideIn 0.3s ease-out;
-            }
-            
-            @keyframes slideIn {
-                from { 
-                    transform: translateY(-50px);
-                    opacity: 0;
+                background: rgba(0, 0, 0, 0.62);
+                padding: 20px;
+                box-sizing: border-box;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: #ffffff; border-radius: 16px; padding: 32px 28px; max-width: 450px; width: 100%; text-align: center; box-shadow: 0 16px 50px rgba(0,0,0,0.28); animation: jwtModalSlideIn 0.25s ease-out; box-sizing: border-box;">
+                    <div style="margin-bottom: 20px;">
+                        <svg width="120" height="120" viewBox="0 0 100 100" style="display:block; margin:0 auto;">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#e0e0e0" stroke-width="8" />
+                            <circle class="countdown-progress" cx="50" cy="50" r="45" fill="none" stroke="#ff6b6b" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 50 50)" />
+                            <text class="countdown-text" x="50" y="55" text-anchor="middle" font-size="24" font-weight="bold" fill="#333">${secondsLeft}</text>
+                        </svg>
+                    </div>
+                    <h2 style="margin: 0 0 12px; color: #333; font-size: 24px; font-weight: 600;">Tu sesión está por expirar</h2>
+                    <p style="margin: 0 0 12px; color: #666; font-size: 16px; line-height: 1.5;">¿Deseas extender tu sesión por 30 minutos adicionales?</p>
+                    <p style="margin: 0 0 24px; color: #888; font-size: 14px;">Extensiones disponibles: <strong>${remainingExtensions}</strong> de ${CONFIG.maxExtensions}</p>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button id="btn-extend-session" style="padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; background: #4CAF50; color: white;">Extender Sesión</button>
+                        <button id="btn-logout-session" style="padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; background: #f44336; color: white;">Cerrar Sesión</button>
+                    </div>
+                </div>
+            `;
+
+            const style = document.createElement('style');
+            style.setAttribute('data-modal-extension', 'true');
+            style.textContent = `
+                @keyframes jwtModalSlideIn {
+                    from { transform: translateY(-20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
                 }
-                to { 
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-            }
+            `;
+
+            document.head.appendChild(style);
+            document.body.appendChild(modal);
             
-            .modal-icon {
-                margin-bottom: 24px;
-            }
+            console.log('[JWT] Modal agregado al DOM');
             
-            .countdown-circle {
-                width: 120px;
-                height: 120px;
-            }
+            startCountdownAnimation(secondsLeft, modal);
             
-            .countdown-bg {
-                stroke: #e0e0e0;
+            const btnExtend = modal.querySelector('#btn-extend-session');
+            const btnLogout = modal.querySelector('#btn-logout-session');
+            console.log('[JWT] btnExtend encontrado:', !!btnExtend, 'btnLogout encontrado:', !!btnLogout);
+            if (btnExtend) {
+                btnExtend.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    extendSession();
+                });
             }
-            
-            .countdown-progress {
-                stroke: #ff6b6b;
-                transition: stroke-dashoffset 1s linear;
+            if (btnLogout) {
+                btnLogout.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    invalidateSession();
+                });
             }
-            
-            .countdown-text {
-                font-size: 28px;
-                font-weight: bold;
-                fill: #333;
-            }
-            
-            .modal-title {
-                margin: 0 0 16px 0;
-                color: #333;
-                font-size: 24px;
-                font-weight: 600;
-            }
-            
-            .modal-message {
-                margin: 0 0 12px 0;
-                color: #666;
-                font-size: 16px;
-                line-height: 1.5;
-            }
-            
-            .modal-remaining {
-                margin: 0 0 24px 0;
-                color: #888;
-                font-size: 14px;
-            }
-            
-            .modal-buttons {
-                display: flex;
-                gap: 12px;
-                justify-content: center;
-            }
-            
-            .btn-extend, .btn-logout {
-                padding: 12px 24px;
-                border: none;
-                border-radius: 8px;
-                font-size: 16px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-            
-            .btn-extend {
-                background: #4CAF50;
-                color: white;
-            }
-            
-            .btn-extend:hover {
-                background: #45a049;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-            }
-            
-            .btn-logout {
-                background: #f44336;
-                color: white;
-            }
-            
-            .btn-logout:hover {
-                background: #da190b;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
-            }
-        `;
-        
-        document.head.appendChild(styles);
-        document.body.appendChild(modal);
-        
-        console.log('[JWT] Modal agregado al DOM');
-        
-        // Iniciar animación de cuenta regresiva
-        startCountdownAnimation(secondsLeft);
-        
-        // Agregar event listeners
-        document.getElementById('btn-extend-session').addEventListener('click', extendSession);
-        document.getElementById('btn-logout-session').addEventListener('click', handleTokenExpired);
+        } catch (error) {
+            console.error('[JWT] Error creando modal de extensión:', error);
+            isModalShown = false;
+            invalidateSession();
+        }
     }
     
     /**
      * Inicia la animación de cuenta regresiva
      */
-    function startCountdownAnimation(secondsLeft) {
-        const progressCircle = document.querySelector('.countdown-progress');
-        const countdownText = document.querySelector('.countdown-text');
+    function startCountdownAnimation(secondsLeft, modalElement) {
+        const progressCircle = modalElement ? modalElement.querySelector('.countdown-progress') : null;
+        const countdownText = modalElement ? modalElement.querySelector('.countdown-text') : null;
+        console.log('[JWT] Iniciando animación de cuenta regresiva:', { progressCircle, countdownText, modalElement: !!modalElement });
+        if (!progressCircle || !countdownText) {
+            console.warn('[JWT] No se encontró el círculo o el texto del contador dentro del modal.');
+            return;
+        }
+
         const circumference = 2 * Math.PI * 45; // 283
         
         let remaining = secondsLeft;
@@ -318,7 +293,7 @@
             if (remaining <= 0) {
                 clearInterval(countdownTimer);
                 hideExtensionModal();
-                handleTokenExpired();
+                invalidateSession();
                 return;
             }
             
@@ -357,6 +332,11 @@
             countdownTimer = null;
         }
         
+        if (typeof modalShowTimer !== 'undefined' && modalShowTimer) {
+            clearTimeout(modalShowTimer);
+            modalShowTimer = null;
+        }
+        
         isModalShown = false;
     }
     
@@ -365,13 +345,6 @@
      */
     function extendSession() {
         const extensionCount = getExtensionCount();
-        
-        if (extensionCount >= CONFIG.maxExtensions) {
-            alert('Has alcanzado el máximo de extensiones de sesión permitidas.');
-            hideExtensionModal();
-            handleTokenExpired();
-            return;
-        }
         
         // Deshabilitar botón para evitar múltiples clics
         const btnExtend = document.getElementById('btn-extend-session');
@@ -403,7 +376,7 @@
                 hideExtensionModal();
                 
                 // Mostrar mensaje de éxito
-                showSuccessMessage('Sesión extendida exitosamente por 5 minutos');
+                showSuccessMessage('Sesión extendida exitosamente por 30 minutos');
                 
                 // Reiniciar verificación
                 console.log('Sesión extendida, continuando verificación');
@@ -413,12 +386,88 @@
         })
         .catch(error => {
             console.error('Error al extender sesión:', error);
-            alert('No se pudo extender la sesión. Por favor, inicia sesión nuevamente.');
             hideExtensionModal();
-            handleTokenExpired();
+            showSessionModal('No se pudo extender la sesión', 'La sesión no pudo extenderse. Serás redirigido al login.');
+            invalidateSession();
         });
     }
     
+    /**
+     * Invalida la sesión y cierra el token en el servidor
+     */
+    function invalidateSession() {
+        if (isRedirecting) {
+            return;
+        }
+        isRedirecting = true;
+        
+        if (verifyTimer) {
+            clearInterval(verifyTimer);
+            verifyTimer = null;
+        }
+        hideExtensionModal();
+        resetExtensionCount();
+        
+        fetch(CONFIG.invalidateEndpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('[JWT] Sesión invalidada:', data);
+            showSessionModal('Sesión expirada', 'Tu sesión ha expirado o fue cerrada. Serás redirigido al login.');
+        })
+        .catch(error => {
+            console.error('[JWT] Error al invalidar sesión:', error);
+            showSessionModal('Sesión cerrada', 'No se pudo completar la validación de sesión. Serás redirigido al login.');
+        });
+    }
+    
+    /**
+     * Muestra un modal de estado para expiración o error de sesión
+     */
+    function showSessionModal(title, message, redirectAfterMs = 1200) {
+        const modal = document.createElement('div');
+        modal.id = 'session-status-modal';
+        modal.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10002;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        `;
+        modal.innerHTML = `
+            <div style="background:white; border-radius:14px; padding:28px 24px; width:min(90%, 420px); box-shadow:0 12px 40px rgba(0,0,0,0.22); text-align:center;">
+                <h3 style="margin:0 0 12px; color:#333;">${title}</h3>
+                <p style="margin:0 0 20px; color:#666; line-height:1.5;">${message}</p>
+                <button id="session-status-confirm" style="border:none; background:#007bff; color:white; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:600;">Aceptar</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const confirmBtn = document.getElementById('session-status-confirm');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                modal.remove();
+                window.location.href = '?pagina=login';
+            });
+        }
+
+        if (redirectAfterMs > 0) {
+            setTimeout(() => {
+                modal.remove();
+                window.location.href = '?pagina=login';
+            }, redirectAfterMs);
+        }
+    }
+
     /**
      * Muestra un mensaje de éxito temporal
      */
@@ -471,24 +520,7 @@
             return;
         }
         
-        isRedirecting = true;
-        
-        // Detener verificaciones
-        if (verifyTimer) {
-            clearInterval(verifyTimer);
-        }
-        
-        // Ocultar modal si está visible
-        hideExtensionModal();
-        
-        // Reiniciar contador de extensiones
-        resetExtensionCount();
-        
-        // Mostrar mensaje al usuario
-        alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-        
-        // Redirigir al login
-        window.location.href = '?pagina=login';
+        invalidateSession();
     }
     
     /**
@@ -523,10 +555,38 @@
     }
     
     // Exponer funciones globalmente si es necesario
-    window.JWTValidator = {
-        start: startVerification,
-        stop: stopVerification,
-        verify: verifyToken
+    window.JWTValidator = window.JWTValidator || {};
+    window.JWTValidator.start = window.JWTValidator.start || startVerification;
+    window.JWTValidator.stop = window.JWTValidator.stop || stopVerification;
+    window.JWTValidator.verify = window.JWTValidator.verify || verifyToken;
+    window.JWTValidator.openModal = function(secondsLeft) {
+        console.log('[JWT] openModal invoked manually with secondsLeft:', secondsLeft);
+        if (!isModalShown) {
+            showExtensionModal(secondsLeft, CONFIG.maxExtensions);
+        } else {
+            console.log('[JWT] Modal ya está visible, no se abrirá de nuevo.');
+        }
     };
-    
+    console.log('[JWT] JWTValidator global expuesto:', window.JWTValidator);
+
+    window.openJwtExtensionModal = function(secondsLeft) {
+        console.log('[JWT] openJwtExtensionModal invoked manually with secondsLeft:', secondsLeft);
+        if (window.JWTValidator && typeof window.JWTValidator.openModal === 'function') {
+            window.JWTValidator.openModal(secondsLeft);
+        } else {
+            console.warn('[JWT] JWTValidator.openModal no está disponible todavía, encolando llamada:', secondsLeft);
+            window.__jwt_validator_queue = window.__jwt_validator_queue || [];
+            window.__jwt_validator_queue.push(secondsLeft);
+        }
+    };
+
+    if (window.__jwt_validator_queue && window.__jwt_validator_queue.length > 0) {
+        console.log('[JWT] Procesando cola de llamadas pendientes a openJwtExtensionModal:', window.__jwt_validator_queue);
+        window.__jwt_validator_queue.forEach(function(secondsLeft) {
+            if (window.JWTValidator && typeof window.JWTValidator.openModal === 'function') {
+                window.JWTValidator.openModal(secondsLeft);
+            }
+        });
+        window.__jwt_validator_queue = [];
+    }
 })();

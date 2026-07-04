@@ -33,12 +33,28 @@ try {
         ]);
         exit;
     }
+
+    // Límite de extensiones permitidas
+    $maxExtensions = 3;
+    $currentExtensions = isset($_SESSION['session_extensions']) ? (int) $_SESSION['session_extensions'] : 0;
+
+    if ($currentExtensions >= $maxExtensions) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Has alcanzado el máximo de extensiones de sesión permitidas.'
+        ]);
+        exit;
+    }
     
-    // Extender el token por 5 minutos (300 segundos)
-    $extensionTime = 300; // 5 minutos
+    // Extender el token por 30 minutos (1830 segundos)
+    $extensionTime = 1830; // 30 minutos
     $newToken = Auth::extendToken($extensionTime);
     
     if ($newToken) {
+        // Actualizar contador de extensiones en sesión
+        $_SESSION['session_extensions'] = $currentExtensions + 1;
+
         // Establecer el nuevo token en la cookie
         Auth::setTokenCookie($newToken, $extensionTime);
         
@@ -46,7 +62,9 @@ try {
             'success' => true,
             'message' => 'Sesión extendida exitosamente',
             'extended_by' => $extensionTime,
-            'expires_in' => $extensionTime
+            'expires_in' => $extensionTime,
+            'extensions_used' => $_SESSION['session_extensions'],
+            'extensions_remaining' => $maxExtensions - $_SESSION['session_extensions']
         ]);
     } else {
         http_response_code(500);

@@ -88,7 +88,7 @@ class Auth {
      * 
      * @var int
      */
-    private static $tokenExpiration = 90;
+    private static $tokenExpiration = 1800; // 30 minutos (1800 segundos)
     
     /**
      * Nombre de la cookie para almacenar el token JWT
@@ -105,10 +105,10 @@ class Auth {
      * @return string Token JWT generado
      * @throws Exception Si hay error al generar el token
      */
-    public static function generateToken($userId, $userRole) {
+    public static function generateToken($userId, $userRole, $customExpiration = null) {
         try {
             $issuedAt = time();
-            $expire = $issuedAt + self::$tokenExpiration;
+            $expire = $issuedAt + ($customExpiration !== null ? (int) $customExpiration : self::$tokenExpiration);
             
             $payload = [
                 'iat' => $issuedAt,           // Tiempo de emisión
@@ -204,6 +204,63 @@ class Auth {
     }
     
     /**
+     * Evalúa el estado del token JWT sin invalidar la sesión de inmediato.
+     *
+     * @param string|null $token Token JWT a validar
+     * @return array Estado del token: valid|warning|expired|invalid|missing
+     */
+    public static function inspectToken($token = null) {
+        try {
+            if ($token === null) {
+                $token = self::getToken();
+            }
+
+            if ($token === null) {
+                return [
+                    'status' => 'missing',
+                    'payload' => null,
+                    'expires_in' => null
+                ];
+            }
+
+            $decoded = JWT::decode($token, new Key(self::getSecretKey(), self::$algorithm));
+            $payload = (array) $decoded;
+
+            if (isset($payload['iss']) && $payload['iss'] !== self::getIssuer()) {
+                error_log("Token inválido: issuer no coincide");
+                return ['status' => 'invalid', 'payload' => null, 'expires_in' => 0];
+            }
+
+            if (isset($payload['aud']) && $payload['aud'] !== self::getAudience()) {
+                error_log("Token inválido: audience no coincide");
+                return ['status' => 'invalid', 'payload' => null, 'expires_in' => 0];
+            }
+
+            $expiresAt = isset($payload['exp']) ? (int) $payload['exp'] : 0;
+            $expiresIn = $expiresAt - time();
+
+            if ($expiresIn <= 0) {
+                return ['status' => 'expired', 'payload' => null, 'expires_in' => 0];
+            }
+
+            if ($expiresIn <= 30) {
+                return ['status' => 'warning', 'payload' => $payload, 'expires_in' => $expiresIn];
+            }
+
+            return ['status' => 'valid', 'payload' => $payload, 'expires_in' => $expiresIn];
+        } catch (ExpiredException $e) {
+            error_log("Token expirado: " . $e->getMessage());
+            return ['status' => 'expired', 'payload' => null, 'expires_in' => 0];
+        } catch (SignatureInvalidException $e) {
+            error_log("Firma de token inválida: " . $e->getMessage());
+            return ['status' => 'invalid', 'payload' => null, 'expires_in' => 0];
+        } catch (Exception $e) {
+            error_log("Error al validar token: " . $e->getMessage());
+            return ['status' => 'invalid', 'payload' => null, 'expires_in' => 0];
+        }
+    }
+
+    /**
      * Valida un token JWT y retorna el payload decodificado
      * Soporte híbrido: busca primero en cookie, luego en header Authorization
      * 
@@ -211,47 +268,8 @@ class Auth {
      * @return array|false Payload decodificado si es válido, false si no es válido
      */
     public static function validateToken($token = null) {
-        try {
-            // Si no se proporciona token, buscar en cookie o header
-            if ($token === null) {
-                $token = self::getToken();
-            }
-            
-            // Si no está en ninguna parte, retornar false
-            if ($token === null) {
-                return false;
-            }
-            
-            // Decodificar y validar el token
-            $decoded = JWT::decode($token, new Key(self::getSecretKey(), self::$algorithm));
-            
-            // Convertir a array
-            $payload = (array) $decoded;
-            
-            // Validar issuer (iss)
-            if (isset($payload['iss']) && $payload['iss'] !== self::getIssuer()) {
-                error_log("Token inválido: issuer no coincide");
-                return false;
-            }
-            
-            // Validar audience (aud)
-            if (isset($payload['aud']) && $payload['aud'] !== self::getAudience()) {
-                error_log("Token inválido: audience no coincide");
-                return false;
-            }
-            
-            return $payload;
-            
-        } catch (ExpiredException $e) {
-            error_log("Token expirado: " . $e->getMessage());
-            return false;
-        } catch (SignatureInvalidException $e) {
-            error_log("Firma de token inválida: " . $e->getMessage());
-            return false;
-        } catch (Exception $e) {
-            error_log("Error al validar token: " . $e->getMessage());
-            return false;
-        }
+        $tokenState = self::inspectToken($token);
+        return in_array($tokenState['status'], ['valid', 'warning'], true) ? $tokenState['payload'] : false;
     }
     
     /**

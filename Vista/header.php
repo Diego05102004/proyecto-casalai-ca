@@ -39,7 +39,7 @@
 <!-- DataTables JS -->
 <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- DataTables Buttons -->
 <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
@@ -131,4 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Validador de JWT en tiempo real con sistema de extensión de sesión -->
+ <?php if(!empty($_SESSION) && isset($_SESSION['id_usuario']) && $_SESSION['id_usuario'] !== 0) { ?>
 <script src="assets/javascript/jwt_validator.js"></script>
+<?php } ?>

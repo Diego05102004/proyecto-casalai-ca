@@ -31,30 +31,39 @@ try {
         'cookie_value_prefix' => isset($_COOKIE[Auth::getCookieName()]) ? substr($_COOKIE[Auth::getCookieName()], 0, 20) . '...' : 'N/A'
     ];
     
-    // Verificar el token JWT
-    $payload = Auth::validateToken();
+    // Verificar el estado del token JWT
+    $tokenState = Auth::inspectToken();
+    $extensionsUsed = isset($_SESSION['session_extensions']) ? (int) $_SESSION['session_extensions'] : 0;
+    $maxExtensions = 3;
+    $status = $tokenState['status'] ?? 'invalid';
+    $isActive = in_array($status, ['valid', 'warning'], true);
     
-    if ($payload) {
-        // Token válido
-        $timeUntilExpiry = $payload['exp'] - time();
+    if ($isActive) {
+        $payload = $tokenState['payload'];
+        $timeUntilExpiry = $tokenState['expires_in'];
         
         echo json_encode([
             'success' => true,
             'valid' => true,
+            'state' => $status,
             'expires_in' => $timeUntilExpiry,
             'user_id' => $payload['sub'] ?? null,
             'role' => $payload['role'] ?? null,
-            'message' => 'Token válido',
+            'extensions_used' => $extensionsUsed,
+            'extensions_remaining' => max(0, $maxExtensions - $extensionsUsed),
+            'message' => $status === 'warning' ? 'Token por expirar' : 'Token válido',
             'debug' => $debugInfo
         ]);
     } else {
-        // Token inválido o expirado
         http_response_code(401);
         echo json_encode([
             'success' => false,
             'valid' => false,
-            'message' => 'Token inválido o expirado',
+            'state' => $status,
+            'message' => $status === 'expired' ? 'Token expirado' : 'Token inválido o expirado',
             'redirect' => '?pagina=login',
+            'extensions_used' => $extensionsUsed,
+            'extensions_remaining' => max(0, $maxExtensions - $extensionsUsed),
             'debug' => $debugInfo
         ]);
     }
