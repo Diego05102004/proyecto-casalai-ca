@@ -233,11 +233,11 @@ INSERT INTO `tbl_categoria` (`id_categoria`, `nombre_categoria`) VALUES
 
 CREATE TABLE `tbl_clientes` (
   `id_clientes` int(11) NOT NULL,
-  `nombre` varchar(255) DEFAULT NULL,
+  `nombre` varchar(600) DEFAULT NULL,
   `cedula` varchar(10) DEFAULT NULL,
   `direccion` text DEFAULT NULL,
-  `telefono` varchar(255) DEFAULT NULL,
-  `correo` varchar(255) DEFAULT NULL,
+  `telefono` varchar(600) DEFAULT NULL,
+  `correo` varchar(600) DEFAULT NULL,
   `activo` tinyint(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -840,12 +840,12 @@ INSERT INTO `tbl_productos` (`id_producto`, `serial`, `nombre_producto`, `descri
 
 CREATE TABLE `tbl_proveedores` (
   `id_proveedor` int(11) NOT NULL,
-  `nombre_proveedor` varchar(255) NOT NULL,
+  `nombre_proveedor` varchar(600) NOT NULL,
   `rif_proveedor` varchar(15) DEFAULT NULL,
-  `nombre_representante` varchar(255) DEFAULT NULL,
+  `nombre_representante` varchar(600) DEFAULT NULL,
   `rif_representante` varchar(15) DEFAULT NULL,
-  `correo_proveedor` varchar(255) DEFAULT NULL,
-  `direccion_proveedor` varchar(255) DEFAULT NULL,
+  `correo_proveedor` varchar(600) DEFAULT NULL,
+  `direccion_proveedor` varchar(600) DEFAULT NULL,
   `telefono_1` varchar(255) DEFAULT NULL,
   `telefono_2` varchar(255) DEFAULT NULL,
   `observacion` text DEFAULT NULL,
@@ -1803,11 +1803,11 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE sp_registrar_cliente(
-    IN p_nombre VARCHAR(255),
+    IN p_nombre VARCHAR(400),
     IN p_cedula VARCHAR(10),
     IN p_direccion TEXT,
-    IN p_telefono VARCHAR(255),
-    IN p_correo VARCHAR(255),
+    IN p_telefono VARCHAR(400),
+    IN p_correo VARCHAR(550),
     IN p_activo TINYINT(1),
     IN p_id_usuario_auditor INT
 )
@@ -1914,11 +1914,11 @@ DELIMITER $$
 
 CREATE PROCEDURE sp_modificar_cliente(
     IN p_id_cliente INT,
-    IN p_nombre VARCHAR(255),
+    IN p_nombre VARCHAR(400),
     IN p_cedula VARCHAR(10),
     IN p_direccion TEXT,
-    IN p_telefono VARCHAR(255),
-    IN p_correo VARCHAR(255),
+    IN p_telefono VARCHAR(400),
+    IN p_correo VARCHAR(550),
     IN p_activo TINYINT,
     IN p_id_usuario_auditor INT
 )

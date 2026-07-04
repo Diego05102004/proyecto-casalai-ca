@@ -129,3 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30000);
 });
 </script>
+
+<!-- Validador de JWT en tiempo real con sistema de extensión de sesión -->
+<script src="assets/javascript/jwt_validator.js"></script>

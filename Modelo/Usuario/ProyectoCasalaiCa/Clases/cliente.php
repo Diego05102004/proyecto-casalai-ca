@@ -23,12 +23,12 @@ class cliente extends BD {
     const MAX_REGISTROS_PAGINA = 100;
     const CAMPOS_OBLIGATORIOS = ['nombre', 'cedula'];
     const FORMATOS_REPORTE = ['pdf', 'excel', 'csv'];
-    const MAX_NOMBRE_CLIENTE = 255;
+    const MAX_NOMBRE_CLIENTE = 550;
     const MIN_NOMBRE_CLIENTE = 2;
     const MAX_DIRECCION = 500;
-    const MAX_TELEFONO = 255;
+    const MAX_TELEFONO = 550;
     const MIN_TELEFONO = 7;
-    const MAX_CORREO = 255;
+    const MAX_CORREO = 550;
     const MAX_CEDULA = 12;
     const MIN_CEDULA = 8;
     const ESTADOS_PERMITIDOS = [1, 0]; // 1 = activo, 0 = inactivo
@@ -244,7 +244,7 @@ class cliente extends BD {
         if (isset($datos['correo']) && $datos['correo'] !== '') {
             $correo = trim($datos['correo']);
             if (mb_strlen($correo) > self::MAX_CORREO) {
-                $errores['correo'] = 'El correo no debe exceder los 255 caracteres';
+                $errores['correo'] = 'El correo no debe exceder los 550 caracteres';
             } elseif (!preg_match('/^[^@]+@[^@]+\.[^@]+$/', $correo)) {
                 $errores['correo'] = 'El correo debe tener formato usuario@dominio.extensión';
             } else {

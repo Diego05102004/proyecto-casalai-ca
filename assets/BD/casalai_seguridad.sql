@@ -1867,13 +1867,13 @@ CREATE TABLE `tbl_usuarios` (
   `password` varchar(255) DEFAULT NULL,
   `cedula` varchar(10) DEFAULT NULL,
   `id_rol` int(11) NOT NULL,
-  `correo` varchar(255) DEFAULT NULL,
-  `nombres` varchar(255) DEFAULT NULL,
-  `apellidos` varchar(255) DEFAULT NULL,
+  `correo` varchar(600) DEFAULT NULL,
+  `nombres` varchar(600) DEFAULT NULL,
+  `apellidos` varchar(600) DEFAULT NULL,
   `telefono` varchar(255) DEFAULT NULL,
   `intentos_fallidos` int(11) DEFAULT 0,
   `estatus` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado',
-  `foto_perfil` varchar(255) DEFAULT NULL
+  `foto_perfil` varchar(300) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

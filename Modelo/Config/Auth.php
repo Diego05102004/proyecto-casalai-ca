@@ -31,6 +31,9 @@ class Auth {
                 if (strpos(trim($line), '#') === 0) {
                     continue;
                 }
+                if (strpos($line, '=') === false) {
+                    continue;
+                }
                 list($name, $value) = explode('=', $line, 2);
                 $name = trim($name);
                 $value = trim($value);
@@ -85,7 +88,7 @@ class Auth {
      * 
      * @var int
      */
-    private static $tokenExpiration = 3600;
+    private static $tokenExpiration = 90;
     
     /**
      * Nombre de la cookie para almacenar el token JWT
@@ -130,9 +133,10 @@ class Auth {
      * Establece el token JWT en una cookie HttpOnly
      * 
      * @param string $token Token JWT a almacenar
+     * @param int|null $expirationTime Tiempo de expiración en segundos (opcional, usa el valor por defecto si es null)
      * @return void
      */
-    public static function setTokenCookie($token) {
+    public static function setTokenCookie($token, $expirationTime = null) {
         $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
         $isLocalhost = $_SERVER['SERVER_NAME'] === 'localhost' || 
                        $_SERVER['SERVER_NAME'] === '127.0.0.1';
@@ -140,8 +144,11 @@ class Auth {
         // En localhost, no usar Secure para permitir HTTP
         $secureFlag = $isSecure && !$isLocalhost;
         
+        // Usar el tiempo de expiración proporcionado o el valor por defecto
+        $expires = $expirationTime !== null ? time() + $expirationTime : time() + self::$tokenExpiration;
+        
         $cookieOptions = [
-            'expires' => time() + self::$tokenExpiration,
+            'expires' => $expires,
             'path' => '/',
             'domain' => '', // Dominio actual
             'secure' => $secureFlag,
@@ -481,6 +488,44 @@ class Auth {
      */
     public static function getTokenExpiration() {
         return self::$tokenExpiration;
+    }
+    
+    /**
+     * Extiende el token JWT actual por un tiempo adicional
+     * 
+     * @param int $extensionTime Tiempo de extensión en segundos
+     * @return string|false Nuevo token JWT o false si falla
+     */
+    public static function extendToken($extensionTime) {
+        try {
+            // Validar el token actual
+            $payload = self::validateToken();
+            
+            if (!$payload) {
+                return false;
+            }
+            
+            // Generar nuevo token con el tiempo extendido
+            $issuedAt = time();
+            $expire = $issuedAt + $extensionTime;
+            
+            $newPayload = [
+                'iat' => $issuedAt,           // Tiempo de emisión
+                'exp' => $expire,             // Nuevo tiempo de expiración
+                'sub' => $payload['sub'],     // ID del usuario (subject)
+                'role' => $payload['role'],   // Rol del usuario
+                'type' => 'access',           // Tipo de token
+                'iss' => self::getIssuer(),   // Issuer (quién emitió el token)
+                'aud' => self::getAudience()  // Audience (a quién está destinado)
+            ];
+            
+            $newToken = JWT::encode($newPayload, self::getSecretKey(), self::$algorithm);
+            
+            return $newToken;
+        } catch (Exception $e) {
+            error_log("Error al extender JWT: " . $e->getMessage());
+            return false;
+        }
     }
     
     /**
