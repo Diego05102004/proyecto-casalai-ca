@@ -7,7 +7,7 @@
 <link href="assets/public/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
 <!-- DataTables CSS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css"/>
+<link rel="stylesheet" type="text/css" href="assets/styles/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="assets/public/datatables-custom.css">
 
 <!-- Estilos personalizados -->
