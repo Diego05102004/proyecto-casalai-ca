@@ -22,9 +22,6 @@
 <link rel="stylesheet" href="assets/styles/reportes.css">
 <link rel="stylesheet" href="assets/styles/global.css">
 <link rel="stylesheet" href="assets/styles/catalogo.css">
-<?php if (empty($exclude_buttons_css)) { ?>
-<link rel="stylesheet" href="assets/styles/buttons.css">
-<?php } ?>
 
 <!-- Bootstrap JS Bundle with Popper -->
 <script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
