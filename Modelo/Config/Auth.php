@@ -19,11 +19,17 @@ use Exception;
 class Auth {
     
     /**
-     * Carga variables de entorno desde archivo .env
+     * Carga variables de entorno desde archivo .env (con cache)
      * 
      * @return void
      */
     private static function loadEnv() {
+        static $loaded = false;
+        
+        if ($loaded) {
+            return; // Ya cargado, no repetir
+        }
+        
         $envFile = __DIR__ . '/../../.env';
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -44,6 +50,8 @@ class Auth {
                 }
             }
         }
+        
+        $loaded = true;
     }
     
     /**

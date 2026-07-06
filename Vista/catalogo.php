@@ -160,14 +160,13 @@
                     <?php foreach ($combos as $combo):
                         if (!$esAdmin && !$combo['activo']) continue;
 
-                        $detalles = $productosModel->obtenerDetallesCombo($combo['id_combo']);
-                        $precioTotal = 0;
+                        // Usar detalles precargados del método optimizado
+                        $detalles = $combo['detalles'] ?? [];
+                        $precioTotal = $combo['precio_total'] ?? 0;
                         $todosDisponibles = true;
 
                         foreach ($detalles as $detalle) {
-                            $producto = $productosModel->obtenerProductoPorId($detalle['id_producto']);
-                            $precioTotal += ($producto['precio'] * $detalle['cantidad']);
-                            $todosDisponibles = $todosDisponibles && ($producto['stock'] >= $detalle['cantidad']);
+                            $todosDisponibles = $todosDisponibles && ($detalle['stock'] >= $detalle['cantidad']);
                         }
 
                         $ahorro = $precioTotal * 0.1;
@@ -190,13 +189,12 @@
                                 $imagenesMostradas = 0;
                                 foreach ($detalles as $detalle):
                                     if ($imagenesMostradas >= 4) break;
-                                    $producto = $productosModel->obtenerProductoPorId($detalle['id_producto']);
-                                    if (!empty($producto['imagen'])):
+                                    if (!empty($detalle['imagen'])):
                                         $imagenesMostradas++;
                                 ?>
-                                        <IMG src="<?= htmlspecialchars($producto['imagen']) ?>" 
+                                        <IMG src="<?= htmlspecialchars($detalle['imagen']) ?>" 
                                              class="combo-imagen <?= $imagenesMostradas == 1 ? 'principal' : '' ?>"
-                                             alt="<?= htmlspecialchars($producto['imagen']) ?>"
+                                             alt="<?= htmlspecialchars($detalle['imagen']) ?>"
                                              onerror="this.src='assets/img/placeholder-product.png'">
                                 <?php
                                     endif;
@@ -218,12 +216,11 @@
                                 <!-- Lista de productos -->
                                 <div class="combo-productos-list">
                                     <?php foreach ($detalles as $detalle):
-                                        $producto = $productosModel->obtenerProductoPorId($detalle['id_producto']);
-                                        $disponible = $producto['stock'] >= $detalle['cantidad'];
+                                        $disponible = $detalle['stock'] >= $detalle['cantidad'];
                                     ?>
                                         <div class="combo-producto-item">
                                             <div>
-                                                <?= htmlspecialchars($producto['nombre_producto']) ?>
+                                                <?= htmlspecialchars($detalle['nombre_producto']) ?>
                                                 <?php if (!$disponible): ?>
                                                     <i class="bi bi-exclamation-triangle-fill text-danger ms-1" 
                                                        title="Stock insuficiente"></i>
@@ -231,7 +228,7 @@
                                             </div>
                                             <div>
                                                 <span class="text-muted small">
-                                                    <?= number_format($producto['precio'] * $data['monitors']['bcv']['price'], 2) ?> BS
+                                                    <?= number_format($detalle['precio'] * $data['monitors']['bcv']['price'], 2) ?> BS
                                                 </span> ×
                                                 <span class="badge bg-<?= $disponible ? 'primary' : 'danger' ?> rounded-pill">
                                                     <?= $detalle['cantidad'] ?>

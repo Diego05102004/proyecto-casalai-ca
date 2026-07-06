@@ -1,5 +1,4 @@
 <?php
-ob_start();
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -22,29 +21,14 @@ $dolarService->guardarPrecioCache($precioDolar);
 $productosModel = new Productos();
 $catalogoModel = new Catalogo();
 $bitacoraModel = new Bitacora();
-// Manejar generación de reportes PDF
-try {
-    $dolarService = new DolarService();
-    $precioDolar = $dolarService->obtenerPrecioDolar();
-    $dolarService->guardarPrecioCache($precioDolar);
-    
-    // Asignar a $data
-    $data['monitors'] = [
-        'bcv' => [
-            'price' => $precioDolar,
-            'updated' => date('Y-m-d H:i:s')
-        ]
-    ];
-} catch (Exception $e) {
-    // En caso de error, usar valores por defecto
-    $data['monitors'] = [
-        'bcv' => [
-            'price' => 35.50,
-            'updated' => date('Y-m-d H:i:s') . ' (valor por defecto)'
-        ]
-    ];
-    error_log('Error obteniendo precio dólar: ' . $e->getMessage());
-}
+
+// Asignar precio dólar a $data
+$data['monitors'] = [
+    'bcv' => [
+        'price' => $precioDolar,
+        'updated' => date('Y-m-d H:i:s')
+    ]
+];
 
 // Manejar generación de reportes PDF
 if (isset($_GET['reporte']) && $esAdmin) {
@@ -615,7 +599,8 @@ try {
     $esAdmin = isset($_SESSION['nombre_rol']) && 
            ($_SESSION['nombre_rol'] == 'Administrador' || 
             $_SESSION['nombre_rol'] == 'SuperUsuario');
-    $combos = $productosModel->obtenerCombosDisponibles($esAdmin);
+    // Usar método optimizado que carga combos con detalles en 2 queries en lugar de N+1
+    $combos = $productosModel->obtenerCombosConDetalles($esAdmin);
     
 } catch (PDOException $e) {
     $productos = [];
@@ -627,19 +612,24 @@ try {
 // Asignar la página y cargar la vista
 $pagina = "catalogo";
 if (is_file("Vista/" . $pagina . ".php")) {
+    // Registrar bitácora en background para no bloquear la carga
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-        $bitacoraModel->registrarBitacora(
-            $_SESSION['id_usuario'],
-            MODULO_CATALOGO,
-            'ACCESAR',
-            'El usuario accedió al módulo de Catálogo',
-            'media'
-        );
+        register_shutdown_function(function() use ($bitacoraModel) {
+            try {
+                $bitacoraModel->registrarBitacora(
+                    $_SESSION['id_usuario'],
+                    MODULO_CATALOGO,
+                    'ACCESAR',
+                    'El usuario accedió al módulo de Catálogo',
+                    'media'
+                );
+            } catch (Exception $e) {
+                error_log("Error registrando bitácora en background: " . $e->getMessage());
+            }
+        });
     }
     require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
 }
-
-ob_end_flush();
 ?>

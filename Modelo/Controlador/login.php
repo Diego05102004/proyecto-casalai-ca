@@ -58,7 +58,7 @@ if ($h == 'acceder') {
                 curl_setopt($ch, CURLOPT_URL, $url);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3);
                 $response = curl_exec($ch);
                 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $curlError = curl_error($ch);
@@ -125,13 +125,14 @@ if ($h == 'acceder') {
                         // Continuar con el flujo normal incluso si falla la generación del token
                     }
                     
-                    ob_start();
-                    require_once __DIR__ . '/../../verificar_websocket.php';
-                    
-                    verificarEIniciarWebSocket();
-                    ob_end_clean();
-                    
-                    $_SESSION['websocket_init_message'] = 'Servidor WebSocket iniciado automáticamente';
+                    // Verificación de WebSocket movida a background para no bloquear el login
+                    // Solo verificar si estamos en localhost
+                    if ($is_localhost) {
+                        register_shutdown_function(function() {
+                            @require_once __DIR__ . '/../../verificar_websocket.php';
+                            verificarEIniciarWebSocket();
+                        });
+                    }
                     
                     header('Location: ?pagina=' . ($_SESSION['nombre_rol'] === 'Cliente' ? 'catalogo' : 'dashboard'));
                     exit;
