@@ -21,6 +21,105 @@ class RateLimiter {
     const MAX_ATTEMPTS = 5;           // Máximo de intentos fallidos permitidos
     const BLOCK_DURATION = 900;       // Duración del bloqueo en segundos (15 minutos)
     const ATTEMPT_WINDOW = 300;       // Ventana de tiempo para contar intentos (5 minutos)
+    
+    /**
+     * Fallback en sesión para cuando la BD de seguridad no está disponible
+     * Protege tanto por username como por IP para mayor seguridad
+     */
+    private static function getSessionFallback($username) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        $ip = self::getClientIP();
+        // Usar hash más fuerte y combinar username + IP
+        $key = 'rate_limiter_' . hash('sha256', $username . '|' . $ip);
+        
+        $data = $_SESSION[$key] ?? [
+            'attempts' => 0,
+            'first_attempt' => null,
+            'blocked_until' => null,
+            'ip' => $ip,
+            'username' => $username
+        ];
+        
+        // Verificar que la IP no haya cambiado (previene session hijacking)
+        if ($data['ip'] !== $ip) {
+            // IP cambió, reiniciar contador
+            $data = [
+                'attempts' => 0,
+                'first_attempt' => null,
+                'blocked_until' => null,
+                'ip' => $ip,
+                'username' => $username
+            ];
+        }
+        
+        // Limpiar bloqueo si expiró
+        if ($data['blocked_until'] && time() > $data['blocked_until']) {
+            $data['blocked_until'] = null;
+            $data['attempts'] = 0;
+            $data['first_attempt'] = null;
+        }
+        
+        // Limpiar intentos si pasó la ventana de tiempo
+        if ($data['first_attempt'] && (time() - $data['first_attempt']) > self::ATTEMPT_WINDOW) {
+            $data['attempts'] = 0;
+            $data['first_attempt'] = null;
+        }
+        
+        $_SESSION[$key] = $data;
+        return $data;
+    }
+    
+    private static function incrementSessionFallback($username) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        $ip = self::getClientIP();
+        $key = 'rate_limiter_' . hash('sha256', $username . '|' . $ip);
+        
+        $data = $_SESSION[$key] ?? [
+            'attempts' => 0,
+            'first_attempt' => null,
+            'blocked_until' => null,
+            'ip' => $ip,
+            'username' => $username
+        ];
+        
+        // Verificar que la IP no haya cambiado
+        if ($data['ip'] !== $ip) {
+            $data['attempts'] = 0;
+            $data['first_attempt'] = null;
+            $data['blocked_until'] = null;
+            $data['ip'] = $ip;
+        }
+        
+        $data['attempts']++;
+        if ($data['first_attempt'] === null) {
+            $data['first_attempt'] = time();
+        }
+        
+        // Bloquear si excede máximo de intentos
+        if ($data['attempts'] >= self::MAX_ATTEMPTS) {
+            $data['blocked_until'] = time() + self::BLOCK_DURATION;
+            error_log("RateLimiter Fallback: Bloqueado username=$username, ip=$ip tras {$data['attempts']} intentos");
+        }
+        
+        $_SESSION[$key] = $data;
+        return $data;
+    }
+    
+    private static function resetSessionFallback($username) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        $ip = self::getClientIP();
+        $key = 'rate_limiter_' . hash('sha256', $username . '|' . $ip);
+        unset($_SESSION[$key]);
+    }
     /**
      * Obtiene la dirección IP del cliente
      * 
@@ -52,11 +151,17 @@ class RateLimiter {
     }
     
     /**
-     * Obtiene conexión a la base de datos de seguridad
+     * Obtiene conexión a la base de datos de seguridad (con cache)
      * 
      * @return PDO|null Conexión PDO o null si falla
      */
     private static function getSecurityConnection() {
+        static $pdo = null;
+        
+        if ($pdo !== null) {
+            return $pdo;
+        }
+        
         try {
             // Configuración de la base de datos de seguridad
             $host = '127.0.0.1';
@@ -64,15 +169,16 @@ class RateLimiter {
             $username = 'root';
             $password = '';
             
-            $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            // Agregar timeout para evitar bloqueos largos
+            $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_TIMEOUT => 2  // Timeout de 2 segundos
+            ]);
             
-            error_log("Conexión exitosa a base de datos de seguridad: $dbname");
             return $pdo;
         } catch (PDOException $e) {
             error_log("Error al conectar a base de datos de seguridad: " . $e->getMessage());
-            error_log("Host: $host, DB: $dbname, User: $username");
             return null;
         }
     }
@@ -147,11 +253,8 @@ class RateLimiter {
      * @return void
      */
     private static function recordAttempt($ip, $username = null, $success = false) {
-        error_log("RateLimiter::recordAttempt llamado - IP: $ip, Username: $username, Success: " . ($success ? 'true' : 'false'));
-        
         $pdo = self::getSecurityConnection();
         if (!$pdo) {
-            error_log("RateLimiter: No se pudo conectar a la base de datos de seguridad");
             return;
         }
         
@@ -165,8 +268,6 @@ class RateLimiter {
             ");
             $stmt->execute([':ip' => $ip]);
             $existing = $stmt->fetch();
-            
-            error_log("RateLimiter: Registro existente: " . ($existing ? 'Sí' : 'No'));
             
             $userAgent = self::getUserAgent();
             $now = date('Y-m-d H:i:s');
@@ -198,8 +299,6 @@ class RateLimiter {
                     ':nivel_riesgo' => $nivelRiesgo,
                     ':id' => $existing['id_seguridad_ip']
                 ]);
-                
-                error_log("RateLimiter: Registro actualizado - ID: {$existing['id_seguridad_ip']}, Peticiones: $peticionesTotales, Sospechosas: $peticionesSospechosas");
             } else {
                 // Crear nuevo registro
                 $peticionesSospechosas = $success ? 0 : 1;
@@ -222,8 +321,6 @@ class RateLimiter {
                     ':nivel_riesgo' => $nivelRiesgo,
                     ':agente_usuario' => $userAgent
                 ]);
-                
-                error_log("RateLimiter: Nuevo registro creado - IP: $ip, Username: $username");
             }
         } catch (PDOException $e) {
             error_log("Error al registrar intento: " . $e->getMessage());
@@ -353,54 +450,67 @@ class RateLimiter {
      * @return array Resultado con 'allowed' (bool) y 'message' (string)
      */
     public static function checkLoginAttempt($username = null) {
-        error_log("RateLimiter::checkLoginAttempt llamado - Username: $username");
+        // Verificar si la BD de seguridad está disponible
+        $useFallback = self::getSecurityConnection() === null;
         
-        $ip = self::getClientIP();
-        error_log("RateLimiter: IP del cliente: $ip");
-        
-        // Verificar si la IP está bloqueada
-        $ipBlock = self::isIPBlocked($ip);
-        if ($ipBlock) {
-            $remainingTime = strtotime($ipBlock['fecha_desbloqueo']) - time();
-            $minutes = ceil($remainingTime / 60);
-            error_log("RateLimiter: IP bloqueada - Tiempo restante: $minutes minutos");
-            return [
-                'allowed' => false,
-                'message' => "Su IP ha sido bloqueada temporalmente por seguridad. Intente nuevamente en {$minutes} minutos.",
-                'block_info' => $ipBlock
-            ];
-        }
-        
-        // Verificar si el usuario está bloqueado (si se proporciona username)
-        if ($username) {
-            $userBlock = self::isUserBlocked($username);
-            if ($userBlock) {
-                $remainingTime = strtotime($userBlock['fecha_desbloqueo']) - time();
-                $minutes = ceil($remainingTime / 60);
-                error_log("RateLimiter: Usuario bloqueado - Tiempo restante: $minutes minutos");
+        if ($useFallback && $username) {
+            // Usar fallback en sesión cuando BD no está disponible
+            $sessionData = self::getSessionFallback($username);
+            
+            if ($sessionData['blocked_until'] && time() < $sessionData['blocked_until']) {
+                $remainingTime = ceil(($sessionData['blocked_until'] - time()) / 60);
                 return [
                     'allowed' => false,
-                    'message' => "El usuario ha sido bloqueado temporalmente por seguridad. Intente nuevamente en {$minutes} minutos.",
-                    'block_info' => $userBlock
+                    'message' => "Demasiados intentos fallidos. Intente nuevamente en {$remainingTime} minutos."
+                ];
+            }
+            
+            return ['allowed' => true];
+        }
+        
+        if (!$useFallback) {
+            // Usar BD de seguridad cuando está disponible
+            $ip = self::getClientIP();
+            
+            // Verificar si la IP está bloqueada
+            $ipBlock = self::isIPBlocked($ip);
+            if ($ipBlock) {
+                $remainingTime = strtotime($ipBlock['fecha_desbloqueo']) - time();
+                $minutes = ceil($remainingTime / 60);
+                return [
+                    'allowed' => false,
+                    'message' => "Su IP ha sido bloqueada temporalmente por seguridad. Intente nuevamente en {$minutes} minutos.",
+                    'block_info' => $ipBlock
+                ];
+            }
+            
+            // Verificar si el usuario está bloqueado (si se proporciona username)
+            if ($username) {
+                $userBlock = self::isUserBlocked($username);
+                if ($userBlock) {
+                    $remainingTime = strtotime($userBlock['fecha_desbloqueo']) - time();
+                    $minutes = ceil($remainingTime / 60);
+                    return [
+                        'allowed' => false,
+                        'message' => "El usuario ha sido bloqueado temporalmente por seguridad. Intente nuevamente en {$minutes} minutos.",
+                        'block_info' => $userBlock
+                    ];
+                }
+            }
+            
+            // Verificar límite de intentos
+            $failedAttempts = self::countRecentFailedAttempts($ip);
+            
+            if ($failedAttempts >= self::MAX_ATTEMPTS) {
+                // Bloquear IP
+                self::block($ip, $username, 'Too many failed login attempts', 'ip');
+                return [
+                    'allowed' => false,
+                    'message' => "Demasiados intentos fallidos. Su IP ha sido bloqueada temporalmente por " . (self::BLOCK_DURATION / 60) . " minutos."
                 ];
             }
         }
         
-        // Verificar límite de intentos
-        $failedAttempts = self::countRecentFailedAttempts($ip);
-        error_log("RateLimiter: Intentos fallidos recientes: $failedAttempts");
-        
-        if ($failedAttempts >= self::MAX_ATTEMPTS) {
-            // Bloquear IP
-            self::block($ip, $username, 'Too many failed login attempts', 'ip');
-            error_log("RateLimiter: Bloqueo por exceso de intentos");
-            return [
-                'allowed' => false,
-                'message' => "Demasiados intentos fallidos. Su IP ha sido bloqueada temporalmente por " . (self::BLOCK_DURATION / 60) . " minutos."
-            ];
-        }
-        
-        error_log("RateLimiter: Intento permitido");
         return ['allowed' => true];
     }
     
@@ -411,9 +521,20 @@ class RateLimiter {
      * @return void
      */
     public static function recordSuccessfulLogin($username) {
-        error_log("RateLimiter::recordSuccessfulLogin llamado - Username: $username");
-        $ip = self::getClientIP();
-        self::recordAttempt($ip, $username, true);
+        // Verificar si la BD de seguridad está disponible
+        $useFallback = self::getSecurityConnection() === null;
+        
+        if ($useFallback && $username) {
+            // Usar fallback en sesión - reiniciar contador
+            self::resetSessionFallback($username);
+            return;
+        }
+        
+        if (!$useFallback) {
+            // Usar BD de seguridad cuando está disponible
+            $ip = self::getClientIP();
+            self::recordAttempt($ip, $username, true);
+        }
     }
     
     /**
@@ -423,14 +544,25 @@ class RateLimiter {
      * @return void
      */
     public static function recordFailedLogin($username) {
-        error_log("RateLimiter::recordFailedLogin llamado - Username: $username");
-        $ip = self::getClientIP();
-        self::recordAttempt($ip, $username, false);
+        // Verificar si la BD de seguridad está disponible
+        $useFallback = self::getSecurityConnection() === null;
         
-        // Verificar si se debe bloquear
-        $failedAttempts = self::countRecentFailedAttempts($ip);
-        if ($failedAttempts >= self::MAX_ATTEMPTS) {
-            self::block($ip, $username, 'Too many failed login attempts', 'ip');
+        if ($useFallback && $username) {
+            // Usar fallback en sesión - incrementar contador
+            self::incrementSessionFallback($username);
+            return;
+        }
+        
+        if (!$useFallback) {
+            // Usar BD de seguridad cuando está disponible
+            $ip = self::getClientIP();
+            self::recordAttempt($ip, $username, false);
+            
+            // Verificar si se debe bloquear
+            $failedAttempts = self::countRecentFailedAttempts($ip);
+            if ($failedAttempts >= self::MAX_ATTEMPTS) {
+                self::block($ip, $username, 'Too many failed login attempts', 'ip');
+            }
         }
     }
 }
