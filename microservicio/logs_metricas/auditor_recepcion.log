@@ -28,3 +28,10 @@
 2026-05-01 12:09:45,985 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501120945_07f70752_factura_ebay_corregida_page_0.jpg
 2026-05-01 12:09:49,419 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
 2026-05-06 20:37:33,993 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-07-04 23:50:29,535 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-07-04 23:50:29,535 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-07-04 23:51:59,466 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260704235159_9fa77997_Gemini_Generated_Image_xzhtacxzhtacxzht.png
+2026-07-04 23:52:02,819 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-07-04 23:52:27,096 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida.pdf
+2026-07-04 23:52:28,036 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida_page_0.jpg
+2026-07-04 23:52:31,468 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
