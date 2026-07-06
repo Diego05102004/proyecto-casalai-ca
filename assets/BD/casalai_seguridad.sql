@@ -65,7 +65,7 @@ INSERT INTO `seguridad_ip` (`id_seguridad_ip`, `direccion_ip`, `username`, `tipo
 
 CREATE TABLE IF NOT EXISTS `tbl_bitacora` (
   `id_bitacora` int(11) NOT NULL,
-  `fecha_hora` text NOT NULL,
+  `fecha_hora` DATETIME NOT NULL,
   `nombre_modulo` varchar(50) NOT NULL,
   `accion` varchar(50) NOT NULL,
   `datos_nuevos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`datos_nuevos`)),
@@ -2075,7 +2075,13 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
+ALTER TABLE `seguridad_ip` ADD INDEX `idx_seguridad_direccion_ip` (`direccion_ip`);
+ALTER TABLE `seguridad_ip` ADD INDEX `idx_seguridad_username` (`username`);
+ALTER TABLE `seguridad_ip` ADD INDEX `idx_seguridad_estatus_bloqueo` (`esta_bloqueado`, `fecha_desbloqueo`);
 
+ALTER TABLE `tbl_bitacora` ADD INDEX `idx_bitacora_id_usuario` (`id_usuario`);
+ALTER TABLE `tbl_bitacora` ADD INDEX `idx_bitacora_modulo_accion` (`nombre_modulo`, `accion`);
+ALTER TABLE `tbl_bitacora` ADD INDEX `idx_bitacora_fecha` (`fecha_hora`);
 
 -- ---------------------------------------------------------------------
 -- 1. PROCEDIMIENTO PARA REGISTRAR ROL
