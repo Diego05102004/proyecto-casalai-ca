@@ -49,13 +49,138 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'descargar_pdf':
-            $idOrden = $_POST['id'] ?? null;
-            if (!$idOrden) {
+            // 1. Validar la llegada del ID (por POST o GET para mayor flexibilidad)
+            $id = $_POST['id'] ?? $_GET['id'] ?? null;
+            if (!$id) {
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'error', 'message' => 'ID de orden no proporcionado']);
+                exit;
+            }
+            
+            // 2. Consultar los datos principales de la orden
+            $ordenData = $ordenModel->obtenerDatosParaPDF($id);
+            if (empty($ordenData)) {
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'error', 'message' => 'No se encontraron datos para la orden especificada']);
+                exit;
+            }
+
+            // 3. Consultar el detalle de los artículos vinculados a la orden
+            // (Ajusta el método según cómo extraigas las filas de productos de la base de datos)
+            $detalles = method_exists($ordenModel, 'obtenerDetallesParaPDF') 
+                        ? $ordenModel->obtenerDetallesParaPDF($id) 
+                        : [];
+
+            // =================================================================
+            // CRUCIAL: Limpiar cualquier buffer previo (espacios, saltos de línea, etc.)
+            // Si algo se coló antes de esto, ob_end_clean() lo borrará para no corromper el PDF.
+            // =================================================================
+            if (ob_get_length()) {
+                ob_end_clean();
+            }
+
+            // 4. Inicializar FPDF (Asegúrate de que la clase ya esté cargada al inicio del controlador)
+            $pdf = new FPDF('P', 'mm', 'A4');
+            $pdf->AddPage();
+            $pdf->SetMargins(15, 15, 15);
+            $pdf->SetAutoPageBreak(true, 20);
+
+            // --- ENCABEZADO DEL DOCUMENTO ---
+            $pdf->SetFont('Arial', 'B', 16);
+            $pdf->Cell(100, 10, utf8_decode('CASA LAI, C.A.'), 0, 0, 'L');
+            
+            $pdf->SetFont('Arial', 'B', 14);
+            // Color rojo sutil para el identificador de control
+            $pdf->SetTextColor(180, 0, 0); 
+            $pdf->Cell(80, 10, utf8_decode('ORDEN DE DESPACHO N° ' . $ordenData['id_orden_despachos']), 0, 1, 'R');
+            $pdf->SetTextColor(0, 0, 0); // Resetear a color negro
+
+            $pdf->SetFont('Arial', 'I', 9);
+            $pdf->Cell(100, 5, utf8_decode('Sistema de Gestión de Inventario y Ventas'), 0, 0, 'L');
+            $pdf->SetFont('Arial', '', 10);
+            $pdf->Cell(80, 5, 'Fecha de Emision: ' . ($ordenData['fecha'] ?? date('Y-m-d')), 0, 1, 'R');
+            
+            $pdf->Ln(5);
+            $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY()); // Línea divisoria horizontal
+            $pdf->Ln(5);
+
+            // --- INFORMACIÓN DE LA TRANSACCIÓN ---
+            $pdf->SetFont('Arial', 'B', 11);
+            $pdf->Cell(180, 6, utf8_decode('Detalles del Movimiento:'), 0, 1, 'L');
+            $pdf->SetFont('Arial', '', 10);
+
+            // Ajusta los índices del array ($ordenData) según las columnas reales de tus consultas SQL
+            $pdf->Cell(40, 6, utf8_decode('Cliente / Destino:'), 0, 0, 'L');
+            $pdf->Cell(140, 6, utf8_decode($ordenData['cliente'] ?? $ordenData['nombre_cliente'] ?? 'N/A'), 0, 1, 'L');
+
+            $pdf->Cell(40, 6, utf8_decode('Usuario Responsable:'), 0, 0, 'L');
+            $pdf->Cell(140, 6, utf8_decode($ordenData['usuario'] ?? $ordenData['nombre_usuario'] ?? 'N/A'), 0, 1, 'L');
+
+            $pdf->Cell(40, 6, utf8_decode('Estado del Despacho:'), 0, 0, 'L');
+            $pdf->Cell(140, 6, utf8_decode($ordenData['estado'] ?? 'Procesado'), 0, 1, 'L');
+            
+            $pdf->Ln(8);
+
+            // --- TABLA DE ARTÍCULOS ---
+            $pdf->SetFont('Arial', 'B', 10);
+            // Colores de fondo para el encabezado de la tabla (Gris claro)
+            $pdf->SetFillColor(230, 230, 230);
+            
+            // Estructura de columnas: Código (30mm), Descripción (90mm), Cantidades (30mm c/u) = 180mm total
+            $pdf->Cell(30, 7, utf8_decode('Código'), 1, 0, 'C', true);
+            $pdf->Cell(90, 7, utf8_decode('Descripción del Artículo'), 1, 0, 'L', true);
+            $pdf->Cell(30, 7, utf8_decode('Cant. Pedida'), 1, 0, 'C', true);
+            $pdf->Cell(30, 7, utf8_decode('Cant. Enviada'), 1, 1, 'C', true);
+
+            $pdf->SetFont('Arial', '', 10);
+
+            // Renderizar las filas dinámicamente si existen artículos
+            if (!empty($detalles) && is_array($detalles)) {
+                foreach ($detalles as $item) {
+                    $pdf->Cell(30, 6, utf8_decode($item['codigo'] ?? $item['id_articulo'] ?? '-'), 1, 0, 'C');
+                    $pdf->Cell(90, 6, utf8_decode($item['descripcion'] ?? $item['nombre_articulo'] ?? 'N/A'), 1, 0, 'L');
+                    $pdf->Cell(30, 6, $item['cantidad_solicitada'] ?? '0', 1, 0, 'C');
+                    $pdf->Cell(30, 6, $item['cantidad_despachada'] ?? $item['cantidad'] ?? '0', 1, 1, 'C');
+                }
+            } else {
+                // Fallback por si los datos del artículo vinieron unificados en la consulta principal
+                if (isset($ordenData['descripcion']) || isset($ordenData['articulo'])) {
+                    $pdf->Cell(30, 6, utf8_decode($ordenData['codigo'] ?? '-'), 1, 0, 'C');
+                    $pdf->Cell(90, 6, utf8_decode($ordenData['descripcion'] ?? 'N/A'), 1, 0, 'L');
+                    $pdf->Cell(30, 6, $ordenData['cantidad_solicitada'] ?? '0', 1, 0, 'C');
+                    $pdf->Cell(30, 6, $ordenData['cantidad'] ?? '0', 1, 1, 'C');
+                } else {
+                    $pdf->Cell(180, 7, utf8_decode('No se encontraron renglones registrados para este despacho.'), 1, 1, 'C');
+                }
+            }
+
+            $pdf->Ln(20);
+
+            // --- BLOQUE DE FIRMAS (Control de recepción seguro) ---
+            // Evitar que las firmas queden huérfanas en el borde inferior de la página
+            if ($pdf->GetY() > 250) {
+                $pdf->AddPage();
+            }
+            
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->Cell(90, 5, '___________________________', 0, 0, 'C');
+            $pdf->Cell(90, 5, '___________________________', 0, 1, 'C');
+            $pdf->Cell(90, 5, utf8_decode('Despachado Por (Firma/C.I.)'), 0, 0, 'C');
+            $pdf->Cell(90, 5, utf8_decode('Recibido Conforme (Firma/C.I.)'), 0, 1, 'C');
+
+            // 5. Forzar la descarga del documento en el navegador con un nombre dinámico limpio
+            $filename = 'Orden_Despacho_' . $ordenData['id_orden_despachos'] . '.pdf';
+            $pdf->Output('D', $filename);
+            exit;
+        
+        /*case 'descargar_pdf':
+            $id = $_POST['id'] ?? null;
+            if (!$id) {
                 echo json_encode(['status' => 'error', 'message' => 'ID de orden no proporcionado']);
                 exit;
             }
             $ordenModel = new OrdenDespacho();
-            $ordenData = $ordenModel->obtenerDatosParaPDF($idOrden);
+            $ordenData = $ordenModel->obtenerDatosParaPDF($id);
             if (empty($ordenData)) {
                 echo json_encode(['status' => 'error', 'message' => 'No se encontró la orden']);
                 exit;
@@ -97,7 +222,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $pdf->Cell(30,10,number_format($ordenData['total'], 2, ',', '.'),1,1,'R');
             $filename = 'Orden_Despacho_'.$ordenData['id_orden_despachos'].'.pdf';
             $pdf->Output('D', $filename);
-            exit;
+            exit;*/
 
         case 'cambiar_estatus':
             $id = $_POST['id_despachos'];

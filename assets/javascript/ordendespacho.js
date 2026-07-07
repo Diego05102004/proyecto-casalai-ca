@@ -51,11 +51,35 @@ function descargarOrdenDespacho(idOrden, event) {
         a.href = url;
         a.download = `orden_despacho_${idOrden}.pdf`;
         document.body.appendChild(a);
+        
+        console.log('Iniciando descarga...');
+        a.click();
+        
+        // CORRECCIÓN: Retrasar la revocación del objeto URL para evitar el error de Chromium
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            console.log('Recurso temporal de URL liberado.');
+        }, 250); // 250 milisegundos son más que suficientes
+    })
+    /*.then(blob => {
+        if (!blob || blob.size === 0) {
+            throw new Error('El archivo PDF recibido está vacío');
+        }
+        console.log('Tamaño del archivo recibido:', blob.size, 'bytes');
+        console.log('Tipo MIME del archivo:', blob.type);
+        
+        // Crear enlace de descarga
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orden_despacho_${idOrden}.pdf`;
+        document.body.appendChild(a);
         console.log('Iniciando descarga...');
         a.click();
         window.URL.revokeObjectURL(url);
         a.remove();
-    })
+    })*/
     .catch(error => {
         console.error('Error en la descarga:', error);
         console.error('Stack:', error.stack);
@@ -302,50 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '#registrarOrdenModal .close', function() {
         $('#registrarOrdenModal').modal('hide');
     });
-
-    /*$(document).on('click', '.btn-anular', function (e) {
-        e.preventDefault();
-        const id = $(this).data('id');
-        eliminarOrdenDespacho(id);
-    });
-    
-    function eliminarOrdenDespacho(id) {
-        Swal.fire({
-            title: '¿Está seguro?',
-            text: "¡No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminarlo!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                console.log("ID del despacho a eliminar: ", id); 
-                var datos = new FormData();
-                datos.append('accion', 'eliminar');
-                datos.append('id', id);
-                mostrarDatosFormData(datos);
-                enviarAjax(datos, function (respuesta) {
-                    if (respuesta.status === 'success') {
-                        Swal.fire(
-                            'Eliminado!',
-                            'La orden de despacho ha sido Anulada correctamente.',
-                            'success'
-                        ).then(function() {
-                            eliminarFilaOrden(id);
-                        });
-                    } else {
-                        muestraMensaje(respuesta.message);
-                    }
-                });
-            }
-        });
-    }
-
-    function eliminarFilaOrden(id) {
-        const tabla = $('#tablaConsultas').DataTable();
-        tabla.row($(`tr[data-id="${id}"]`)).remove().draw(false);
-    }*/
 
     $(document).on('click', '.btn-marcar', function () {
         const $boton = $(this);
