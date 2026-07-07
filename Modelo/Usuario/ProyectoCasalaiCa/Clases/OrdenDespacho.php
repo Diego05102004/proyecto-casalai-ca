@@ -208,12 +208,12 @@ class OrdenDespacho extends BD {
                     return null;
                 }
 
-                $queryProductos = "SELECT p.codigo, p.nombre as producto, p.marca, 
-                                df.cantidad, df.precio_unitario as precio,
-                                (df.cantidad * df.precio_unitario) as subtotal
-                                FROM tbl_detalle_factura df
-                                JOIN tbl_productos p ON df.id_producto = p.id_productos
-                                WHERE df.id_factura = ?";
+                $queryProductos = "SELECT p.serial as codigo, p.nombre_producto as producto, 
+                                df.cantidad, p.precio as precio,
+                                (df.cantidad * p.precio) as subtotal
+                                FROM tbl_factura_detalle df
+                                JOIN tbl_productos p ON df.id_producto = p.id_producto
+                                WHERE df.factura_id = ?";
                 
                 $stmtProductos = $pdo->prepare($queryProductos);
                 $stmtProductos->execute([$orden['id_factura']]);

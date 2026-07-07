@@ -15,15 +15,16 @@ function descargarOrdenDespacho(idOrden, event) {
 
     // Crear formulario para enviar la solicitud
     const formData = new FormData();
-    formData.append('accion', 'descargar_pdf');
-    formData.append('id', idOrden);
+    formData.append('accion', 'descargarOrden');
+    formData.append('descargarOrden', idOrden);
 
     console.log('Enviando solicitud al servidor...');
     
     // Enviar solicitud
     fetch('Modelo/Controlador/ordendespacho.php', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'include'
     })
     .then(response => {
         console.log('Respuesta recibida. Estado:', response.status, response.statusText);
@@ -33,6 +34,15 @@ function descargarOrdenDespacho(idOrden, event) {
             console.error('Error en la respuesta del servidor:', response.status, response.statusText);
             return response.text().then(text => {
                 console.error('Contenido de la respuesta de error:', text);
+                // Check if it's a session error
+                try {
+                    const jsonError = JSON.parse(text);
+                    if (jsonError.message === 'Sesión no iniciada') {
+                        throw new Error('Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
+                    }
+                } catch (e) {
+                    // Not JSON, use original text
+                }
                 throw new Error(`Error del servidor: ${response.status} - ${response.statusText}\n${text}`);
             });
         }

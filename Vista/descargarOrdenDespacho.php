@@ -10,7 +10,7 @@ ob_start();
 error_log("Iniciando generación de PDF");
 
 // Verificar si FPDF está disponible
-$fpdfPath = __DIR__ . '/assets/public/fpdf/fpdf.php';
+$fpdfPath = __DIR__ . '/../assets/public/fpdf/fpdf.php';
 if (!file_exists($fpdfPath)) {
     die("Error: No se encontró la biblioteca FPDF en: " . $fpdfPath);
 }
@@ -24,6 +24,10 @@ if (!isset($orden) || !is_array($orden)) {
 }
 
 error_log("Datos recibidos en descargarOrdenDespacho.php: " . print_r($orden, true));
+
+// La variable $orden ahora viene directamente del método obtenerDatosParaPDF
+// No necesitamos hacer reset() ya que es un array simple, no un array de arrays
+$datosOrden = $orden;
 
 class PDF extends FPDF {
     function Header() {
@@ -53,9 +57,8 @@ $pdf->SetFont('Arial', '', 10);
 
 // Verificar que $orden sea un array y tenga datos
 if (!empty($orden) && is_array($orden)) {
-    // Tomar el primer elemento del array
-    $datosOrden = reset($orden);
-    $cliente = $datosOrden; // Los datos del cliente están en el primer elemento
+    // Los datos ya vienen en el formato correcto desde obtenerDatosParaPDF
+    $cliente = $datosOrden; // Los datos del cliente están en el array
     
     // Verificar que los datos necesarios existen
     if (!isset($datosOrden['id_orden_despachos']) || !isset($datosOrden['id_factura'])) {
@@ -101,30 +104,25 @@ if (!empty($orden) && is_array($orden)) {
     
     // Encabezado de la tabla de productos
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->Cell(15, 7, 'Código', 1, 0, 'C');
-    $pdf->Cell(70, 7, 'Descripción', 1, 0, 'C');
-    $pdf->Cell(25, 7, 'Marca', 1, 0, 'C');
-    $pdf->Cell(20, 7, 'Modelo', 1, 0, 'C');
-    $pdf->Cell(20, 7, 'Cantidad', 1, 0, 'C');
-    $pdf->Cell(20, 7, 'Precio', 1, 0, 'C');
-    $pdf->Cell(20, 7, 'Total', 1, 1, 'C');
+    $pdf->Cell(25, 7, 'Código', 1, 0, 'C');
+    $pdf->Cell(80, 7, 'Descripción', 1, 0, 'C');
+    $pdf->Cell(25, 7, 'Cantidad', 1, 0, 'C');
+    $pdf->Cell(30, 7, 'Precio', 1, 0, 'C');
+    $pdf->Cell(30, 7, 'Total', 1, 1, 'C');
     
     $pdf->SetFont('Arial', '', 9);
-    $total = 0;
+    $total = isset($datosOrden['total']) ? $datosOrden['total'] : 0;
     
     // Verificar si hay productos en la orden
     if (isset($datosOrden['productos']) && is_array($datosOrden['productos'])) {
         foreach ($datosOrden['productos'] as $producto) {
-            $subtotal = $producto['cantidad'] * $producto['precio_unitario'];
-            $total += $subtotal;
+            $subtotal = $producto['cantidad'] * $producto['precio'];
             
-            $pdf->Cell(15, 7, $producto['codigo'], 1, 0, 'C');
-            $pdf->Cell(70, 7, utf8_decode($producto['producto']), 1, 0);
-            $pdf->Cell(25, 7, utf8_decode($producto['marca']), 1, 0);
-            $pdf->Cell(20, 7, utf8_decode($producto['modelo']), 1, 0, 'C');
-            $pdf->Cell(20, 7, $producto['cantidad'], 1, 0, 'C');
-            $pdf->Cell(20, 7, number_format($producto['precio_unitario'], 2, ',', '.') . ' BS', 1, 0, 'R');
-            $pdf->Cell(20, 7, number_format($subtotal, 2, ',', '.') . ' BS', 1, 1, 'R');
+            $pdf->Cell(25, 7, $producto['codigo'], 1, 0, 'C');
+            $pdf->Cell(80, 7, utf8_decode($producto['producto']), 1, 0);
+            $pdf->Cell(25, 7, $producto['cantidad'], 1, 0, 'C');
+            $pdf->Cell(30, 7, number_format($producto['precio'], 2, ',', '.') . ' BS', 1, 0, 'R');
+            $pdf->Cell(30, 7, number_format($subtotal, 2, ',', '.') . ' BS', 1, 1, 'R');
         }
     } else {
         $pdf->Cell(190, 10, 'No hay productos en esta orden', 1, 1, 'C');
@@ -133,7 +131,7 @@ if (!empty($orden) && is_array($orden)) {
     // Total
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->Cell(170, 7, 'TOTAL:', 1, 0, 'R');
-    $pdf->Cell(20, 7, number_format($total, 2, ',', '.') . ' BS', 1, 1, 'R');
+    $pdf->Cell(30, 7, number_format($total, 2, ',', '.') . ' BS', 1, 1, 'R');
     
     // Observaciones
     $pdf->Ln(10);

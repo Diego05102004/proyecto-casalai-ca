@@ -205,7 +205,6 @@ aria-labelledby="registrarOrdenModalLabel" aria-hidden="true">
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
 <script src="assets/public/js/datatable.js"></script>
 <script src="assets/javascript/sweetalert2.all.min.js"></script>
-<script src="assets/javascript/usuario.js"></script>
 <script src="assets/javascript/validaciones.js"></script>
 <script>
 window.facturasDisponibles = <?php
