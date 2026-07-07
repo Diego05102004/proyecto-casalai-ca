@@ -28,3 +28,13 @@
 2026-05-01 12:09:45,985 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501120945_07f70752_factura_ebay_corregida_page_0.jpg
 2026-05-01 12:09:49,419 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
 2026-05-06 20:37:33,993 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-07-05 12:07:51,659 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-07-05 12:07:51,661 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-07-05 12:10:28,979 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121028_8d82d73f_1003103990.jpg
+2026-07-05 12:10:34,704 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-07-05 12:11:02,874 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121102_07f70752_factura_ebay_corregida.pdf
+2026-07-05 12:11:04,279 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121102_07f70752_factura_ebay_corregida_page_0.jpg
+2026-07-05 12:11:12,785 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-07-05 12:15:37,954 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121537_07f70752_factura_ebay_corregida.pdf
+2026-07-05 12:15:38,208 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121537_07f70752_factura_ebay_corregida_page_0.jpg
+2026-07-05 12:15:46,471 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
