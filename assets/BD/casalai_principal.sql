@@ -1371,6 +1371,33 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
+-- 1. Optimización para el evento recurrente de liberación de stock (Cada 5 min)
+ALTER TABLE `tbl_facturas` 
+  ADD INDEX `idx_facturas_estatus_fecha` (`estatus`, `fecha`);
+
+-- 2. Optimización para búsquedas exactas de productos (Lectores / Código de barras)
+ALTER TABLE `tbl_productos` 
+  ADD UNIQUE KEY `uq_productos_serial` (`serial`);
+
+-- 3. Optimización para el buscador del catálogo / autocompletado de productos
+ALTER TABLE `tbl_productos` 
+  ADD INDEX `idx_productos_nombre` (`nombre_producto`);
+
+-- 4. Optimización para evitar Filesort en el listado de proveedores (sp_consultar_proveedores)
+ALTER TABLE `tbl_proveedores` 
+  ADD INDEX `idx_proveedores_nombre` (`nombre_proveedor`);
+
+-- 5. Optimización para reportes financieros y balances por fechas
+ALTER TABLE `tbl_ingresos_egresos` 
+  ADD INDEX `idx_finanzas_fecha` (`fecha`);
+
+-- 6. Optimización para la gestión y cronología de despachos pendientes
+ALTER TABLE `tbl_despachos` 
+  ADD INDEX `idx_despachos_estado_fecha` (`estado`, `fecha_despacho`);
+
+-- 7. Optimización para validación rápida de referencias bancarias (Conciliación)
+ALTER TABLE `tbl_detalles_pago` 
+  ADD INDEX `idx_pagos_referencia` (`referencia`);
 
 -- -----------------------------------------------------------------------------
 -- DISPARADORES: `tbl_factura_detalle`

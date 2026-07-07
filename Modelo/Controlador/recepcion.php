@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $k = new Recepcion();
 
-            /* VALIDACIÓN MEJORADA: Verificar datos requeridos
+            // VALIDACIÓN MEJORADA: Verificar datos requeridos
             if (!isset($_POST['proveedor']) || empty($_POST['proveedor'])) {
                 echo json_encode([
                     'status' => 'error',
@@ -132,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'field' => 'ia_verificacion'
                 ]);
                 exit;
-            }*/
+            }
 
             // Validación adicional usando las validaciones existentes
             $datos_validacion = [

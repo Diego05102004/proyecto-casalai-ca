@@ -1169,6 +1169,60 @@ class Productos extends BD{
     public function obtenerCombosDisponibles($esAdmin = false) {
         return $this->o_combosDisponibles($esAdmin);
     }
+
+    /**
+     * Obtiene combos con todos sus detalles en una sola query (optimizado para evitar N+1)
+     */
+    public function obtenerCombosConDetalles($esAdmin = false) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($esAdmin) {
+            // Obtener combos
+            $whereClause = $esAdmin ? "" : "AND c.activo = 1";
+            $sql = "SELECT c.id_combo, c.nombre_combo, c.descripcion, c.activo 
+                    FROM tbl_combo c 
+                    WHERE 1=1 $whereClause 
+                    ORDER BY c.nombre_combo";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $combos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($combos)) {
+                return [];
+            }
+            
+            // Obtener todos los detalles de combos en una sola query
+            $comboIds = array_column($combos, 'id_combo');
+            $placeholders = str_repeat('?,', count($comboIds) - 1) . '?';
+            
+            $sqlDetalles = "SELECT cd.id_combo, cd.id_producto, cd.cantidad, 
+                                   p.nombre_producto, p.precio, p.stock, p.imagen,
+                                   m.nombre_marca as marca, p.descripcion_producto as descripcion
+                            FROM tbl_combo_detalle cd
+                            INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
+                            INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                            INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                            WHERE cd.id_combo IN ($placeholders) AND p.estado = 'habilitado'";
+            $stmtDetalles = $pdo->prepare($sqlDetalles);
+            $stmtDetalles->execute($comboIds);
+            $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Agrupar detalles por combo
+            $detallesPorCombo = [];
+            foreach ($detalles as $detalle) {
+                $detallesPorCombo[$detalle['id_combo']][] = $detalle;
+            }
+            
+            // Combinar combos con sus detalles
+            foreach ($combos as &$combo) {
+                $combo['detalles'] = $detallesPorCombo[$combo['id_combo']] ?? [];
+                $combo['precio_total'] = 0;
+                foreach ($combo['detalles'] as $detalle) {
+                    $combo['precio_total'] += ($detalle['precio'] * $detalle['cantidad']);
+                }
+            }
+            
+            return $combos;
+        }, 'S');
+    }
     private function o_combosDisponibles($esAdmin = false) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($esAdmin) {
             $sql = "SELECT * FROM tbl_combo";

@@ -1,40 +1,37 @@
-2026-05-01 11:07:14,582 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
-2026-05-01 11:08:26,995 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501110826_07f70752_factura_ebay_corregida.pdf
-2026-05-01 11:10:25,068 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
-2026-05-01 11:11:00,394 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501111100_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:07:14,582 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-05-01 11:08:26,995 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501110826_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:10:25,068 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-05-01 11:11:00,394 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501111100_07f70752_factura_ebay_corregida.pdf
 2026-05-01 11:11:00,403 - modelo.auditor_recepcion - ERROR - Error convirtiendo PDF temp_uploads\fact_20260501111100_07f70752_factura_ebay_corregida.pdf: Unable to get page count. Is poppler installed and in PATH?
-2026-05-01 11:21:47,038 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
-2026-05-01 11:22:41,050 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501112241_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:21:47,038 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-05-01 11:22:41,050 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501112241_07f70752_factura_ebay_corregida.pdf
 2026-05-01 11:22:41,824 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501112241_07f70752_factura_ebay_corregida_page_0.jpg
 2026-05-01 11:33:08,216 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-05-01 11:33:08,216 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
-2026-05-01 11:33:50,953 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501113350_9fa77997_Gemini_Generated_Image_xzhtacxzhtacxzht.png
-2026-05-01 11:33:53,759 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
-2026-05-01 11:34:52,395 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501113452_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:33:08,216 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-05-01 11:33:50,953 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501113350_9fa77997_Gemini_Generated_Image_xzhtacxzhtacxzht.png
+2026-05-01 11:33:53,759 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 50.00%
+2026-05-01 11:34:52,395 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501113452_07f70752_factura_ebay_corregida.pdf
 2026-05-01 11:34:52,746 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501113452_07f70752_factura_ebay_corregida_page_0.jpg
-2026-05-01 11:34:56,332 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
-2026-05-01 11:40:40,436 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501114040_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:34:56,332 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
+2026-05-01 11:40:40,436 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501114040_07f70752_factura_ebay_corregida.pdf
 2026-05-01 11:40:40,612 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501114040_07f70752_factura_ebay_corregida_page_0.jpg
-2026-05-01 11:40:44,125 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
-2026-05-01 11:53:17,847 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501115317_07f70752_factura_ebay_corregida.pdf
+2026-05-01 11:40:44,125 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
+2026-05-01 11:53:17,847 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501115317_07f70752_factura_ebay_corregida.pdf
 2026-05-01 11:53:18,006 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501115317_07f70752_factura_ebay_corregida_page_0.jpg
-2026-05-01 11:53:21,383 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-05-01 11:53:21,383 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
 2026-05-01 12:08:10,116 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-05-01 12:08:10,116 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
-2026-05-01 12:09:09,225 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501120909_07f70752_factura_ebay_corregida.pdf
+2026-05-01 12:08:10,116 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-05-01 12:09:09,225 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501120909_07f70752_factura_ebay_corregida.pdf
 2026-05-01 12:09:09,533 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501120909_07f70752_factura_ebay_corregida_page_0.jpg
-2026-05-01 12:09:13,333 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
-2026-05-01 12:09:45,725 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20260501120945_07f70752_factura_ebay_corregida.pdf
+2026-05-01 12:09:13,333 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
+2026-05-01 12:09:45,725 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260501120945_07f70752_factura_ebay_corregida.pdf
 2026-05-01 12:09:45,985 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260501120945_07f70752_factura_ebay_corregida_page_0.jpg
-2026-05-01 12:09:49,419 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
-2026-05-06 20:37:33,993 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
-2026-07-05 12:07:51,659 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-07-05 12:07:51,661 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
-2026-07-05 12:10:28,979 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121028_8d82d73f_1003103990.jpg
-2026-07-05 12:10:34,704 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
-2026-07-05 12:11:02,874 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121102_07f70752_factura_ebay_corregida.pdf
-2026-07-05 12:11:04,279 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121102_07f70752_factura_ebay_corregida_page_0.jpg
-2026-07-05 12:11:12,785 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
-2026-07-05 12:15:37,954 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121537_07f70752_factura_ebay_corregida.pdf
-2026-07-05 12:15:38,208 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: C:\xampp\htdocs\Repositorio de GITHUB\proyecto-casalai-main\proyecto-casalai-ca\microservicio\temp_uploads\fact_20260705121537_07f70752_factura_ebay_corregida_page_0.jpg
-2026-07-05 12:15:46,471 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-05-01 12:09:49,419 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
+2026-05-06 20:37:33,993 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-07-04 23:50:29,535 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-07-04 23:50:29,535 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-07-04 23:51:59,466 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260704235159_9fa77997_Gemini_Generated_Image_xzhtacxzhtacxzht.png
+2026-07-04 23:52:02,819 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 50.00%
+2026-07-04 23:52:27,096 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida.pdf
+2026-07-04 23:52:28,036 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida_page_0.jpg
+2026-07-04 23:52:31,468 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
