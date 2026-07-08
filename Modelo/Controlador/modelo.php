@@ -41,6 +41,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $modelo = new modelo();
             
+            $modelo->setnombre_modelo($_POST['nombre_modelo']);
+            $modelo->setid_marca($_POST['id_marca']);
+
             $errores = $modelo->validarRegistrar($_POST);
             
             if (!empty($errores)) {
@@ -51,9 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $modelo->setnombre_modelo($_POST['nombre_modelo']);
-            $modelo->setid_marca($_POST['id_marca']);
 
             if ($modelo->registrarModelo($id_usuario_sesion)) {
                 $modeloRegistrado = $modelo->obtenerUltimoModelo();
@@ -98,6 +98,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             $modelo = new modelo();
+            
+            $modelo->setIdModelo($id_modelo);
+            $modelo->setnombre_modelo($_POST['nombre_modelo']);
+            $modelo->setid_marca($_POST['id_marca']);
+
             $errores = $modelo->validarModificar($_POST);
             
             if (!empty($errores)) {
@@ -108,10 +113,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $modelo->setIdModelo($id_modelo);
-            $modelo->setnombre_modelo($_POST['nombre_modelo']);
-            $modelo->setid_marca($_POST['id_marca']);
 
             if ($modelo->modificarModelo($id_modelo, $id_usuario_sesion)) {
                 $modeloActualizado = $modelo->obtenerModeloConMarcaPorId($id_modelo);
