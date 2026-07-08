@@ -322,6 +322,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ];
             
             $usuario = new Usuarios();
+            
+            $usuario->setId($id_usuario);
+
             $errores = $usuario->validarCambiarEstatus($datos_validacion);
             
             if (!empty($errores)) {
@@ -332,8 +335,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $usuario->setId($id_usuario);
             
             if ($usuario->cambiarEstatus($nuevoEstatus, $id_usuario_sesion)) {
                 echo json_encode(['status' => 'success']);
