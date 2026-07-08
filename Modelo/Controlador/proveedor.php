@@ -46,16 +46,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             $proveedor = new Proveedores();
-            $errores = $proveedor->validarRegistrar($_POST);
-            
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en la validación de datos',
-                    'field_errors' => $errores
-                ]);
-                exit;
-            }
             
             $proveedor->setNombre($_POST['nombre_proveedor']);
             $proveedor->setRif1($_POST['rif_proveedor']);
@@ -66,6 +56,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $proveedor->setTelefono1($_POST['telefono_1']);
             $proveedor->setTelefono2($_POST['telefono_2']);
             $proveedor->setObservacion($_POST['observacion']);
+
+            $errores = $proveedor->validarRegistrar($_POST);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
+                ]);
+                exit;
+            }
             
             if ($proveedor->registrarProveedor($id_usuario_sesion)) {
                 $proveedorRegistrado = $proveedor->obtenerUltimoProveedor();
@@ -122,17 +123,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $proveedor = new Proveedores();
             
-            $errores = $proveedor->validarModificar($_POST);
-            
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en la validación de datos',
-                    'field_errors' => $errores
-                ]);
-                exit;
-            }
-            
             $proveedor->setIdProveedor($id_proveedor);
             $proveedor->setNombre($_POST['nombre_proveedor']);
             $proveedor->setRif1($_POST['rif_proveedor']);
@@ -143,6 +133,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $proveedor->setTelefono1($_POST['telefono_1']);
             $proveedor->setTelefono2($_POST['telefono_2']);
             $proveedor->setObservacion($_POST['observacion']);
+
+            $errores = $proveedor->validarModificar($_POST);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en la validación de datos',
+                    'field_errors' => $errores
+                ]);
+                exit;
+            }
             
             $proveedorViejo = $proveedor->obtenerProveedorPorId($id_proveedor);
                 
@@ -213,7 +214,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             $proveedor = new Proveedores();
-            
+
+            $proveedor->setIdProveedor($id_proveedor);
+
             $errores = $proveedor->validarCambiarEstatus($_POST['id_proveedor'], $_POST['nuevo_estatus']);
             
             if (!empty($errores)) {
@@ -224,8 +227,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-
-            $proveedor->setIdProveedor($id_proveedor);
             
             if ($proveedor->cambiarEstatus($nuevoEstatus)) {
                 echo json_encode([
