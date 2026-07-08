@@ -101,6 +101,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             $marca = new marca();
+
+            $marca->setIdMarca($id_marca);
+            $marca->setnombre_marca($_POST['nombre_marca']);
+
             $errores = $marca->validarModificar($_POST);
             
             if (!empty($errores)) {
@@ -111,9 +115,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-
-            $marca->setIdMarca($id_marca);
-            $marca->setnombre_marca($_POST['nombre_marca']);
 
             $marcaVieja = $marca->obtenermarcasPorId($id_marca);
             if ($marca->modificarmarcas($id_marca, $id_usuario_sesion)) {
