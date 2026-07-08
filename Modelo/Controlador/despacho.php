@@ -149,8 +149,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'ID de despacho inválido.']);
                 break;
             }
-
+            
             $k = new Despacho();
+            $datos_validacion = ['id_despacho' => $idDespacho];
+            $errores = $k->validarAnularDespacho($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para anular el despacho',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             $resultado = $k->anularDespacho($idDespacho, $id_usuario_auditor);
 
             if ($resultado['status'] === 'success') {
