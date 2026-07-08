@@ -68,6 +68,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Validar datos de entrada
             $cliente = new cliente();
             
+            $cliente->setnombre($_POST['nombre']);
+            $cliente->setcedula($_POST['cedula']);
+            $cliente->settelefono($_POST['telefono']);
+            $cliente->setdireccion($_POST['direccion']);
+            $cliente->setcorreo($_POST['correo']);
+            $cliente->setactivo(1);
+
             $errores = $cliente->validarRegistrar($_POST);
 
             if (!empty($errores)) {
@@ -78,13 +85,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $cliente->setnombre($_POST['nombre']);
-            $cliente->setcedula($_POST['cedula']);
-            $cliente->settelefono($_POST['telefono']);
-            $cliente->setdireccion($_POST['direccion']);
-            $cliente->setcorreo($_POST['correo']);
-            $cliente->setactivo(1);
             
             if ($cliente->ingresarclientes($id_usuario_sesion)) {
                 $clienteRegistrado = $cliente->obtenerUltimoCliente();
@@ -156,6 +156,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Validar datos de entrada
             $cliente = new cliente();
             
+            $id = $_POST['id_clientes'];
+            $cliente->setId($id);
+            $cliente->setnombre($_POST['nombre']);
+            $cliente->setcedula($_POST['cedula']);
+            $cliente->settelefono($_POST['telefono']);
+            $cliente->setdireccion($_POST['direccion']);
+            $cliente->setcorreo($_POST['correo']);
+            $cliente->setactivo(1); // Establecer cliente como activo
+
             // Depuración: registrar lo que se recibe
             error_log("Datos recibidos para modificar: " . print_r($_POST, true));
             
@@ -170,15 +179,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $id = $_POST['id_clientes'];
-            $cliente->setId($id);
-            $cliente->setnombre($_POST['nombre']);
-            $cliente->setcedula($_POST['cedula']);
-            $cliente->settelefono($_POST['telefono']);
-            $cliente->setdireccion($_POST['direccion']);
-            $cliente->setcorreo($_POST['correo']);
-            $cliente->setactivo(1); // Establecer cliente como activo
             
             // Verificar que el cliente exista antes de modificar
             $clienteExistente = $cliente->obtenerclientesPorId($id);
