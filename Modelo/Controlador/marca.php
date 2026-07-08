@@ -36,6 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $marca = new marca();
             
+            $marca->setnombre_marca($_POST['nombre_marca']);
+
             $errores = $marca->validarRegistrar($_POST);
             
             if (!empty($errores)) {
@@ -46,8 +48,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
-            $marca->setnombre_marca($_POST['nombre_marca']);
 
             if ($marca->registrarMarca($id_usuario_sesion)) {
                 $marcaRegistrada = $marca->obtenerUltimaMarca();
