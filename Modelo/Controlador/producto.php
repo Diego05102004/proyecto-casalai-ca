@@ -386,6 +386,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             $id_usuario = $_SESSION['id_usuario'];
+
+            $datos_validacion = ['id_producto' => $id_producto];
+            $errores = $producto->validarEliminarProducto($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para eliminar el producto',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             $response = $producto->eliminarProducto($id_producto, $id_usuario);
             if (is_array($response) && ($response['success'] ?? false)) {
 
