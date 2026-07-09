@@ -58,48 +58,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'descargarOrden':
-    // Captura el ID de la orden enviado por POST
-    $id_orden_raw = $_POST['descargarOrden'] ?? null;
-    $id_orden = is_numeric($id_orden_raw) ? (int)$id_orden_raw : 0;
+            // Captura el ID de la orden enviado por POST
+            $id_orden_raw = $_POST['descargarOrden'] ?? null;
+            $id_orden = is_numeric($id_orden_raw) ? (int)$id_orden_raw : 0;
 
-    error_log("[DEBUG] descargarOrden - ID recibido: " . $id_orden);
+            error_log("[DEBUG] descargarOrden - ID recibido: " . $id_orden);
 
-    if ($id_orden <= 0) {
-        error_log("[DEBUG] descargarOrden - ID no válido");
-        die("Error: ID de orden de compra no válido.");
-    }
+            if ($id_orden <= 0) {
+                error_log("[DEBUG] descargarOrden - ID no válido");
+                die("Error: ID de orden de compra no válido.");
+            }
 
-    // Instanciar el modelo y obtener datos de la orden
-    try {
-        $ordenModel = new OrdenDespacho();
-        error_log("[DEBUG] descargarOrden - Modelo instanciado");
-        
-        // Obtener datos completos de la orden para el PDF
-        $orden = $ordenModel->obtenerDatosParaPDF($id_orden);
-        error_log("[DEBUG] descargarOrden - Datos obtenidos: " . print_r($orden, true));
-        
-        if (empty($orden) || !is_array($orden)) {
-            error_log("[DEBUG] descargarOrden - No se encontraron datos");
-            die("Error: No se encontraron datos para la orden de despacho ID: $id_orden");
-        }
-        
-        // Verificar datos requeridos
-        if (!isset($orden['id_orden_despachos']) || !isset($orden['id_factura'])) {
-            error_log("[DEBUG] descargarOrden - Datos incompletos");
-            die("Error: Datos de la orden de despacho incompletos.");
-        }
-        
-        error_log("[DEBUG] descargarOrden - Datos válidos, cargando vista PDF");
-        
-    } catch (Exception $e) {
-        error_log("[DEBUG] descargarOrden - Error: " . $e->getMessage());
-        die("Error al obtener datos de la orden: " . $e->getMessage());
-    }
-    
-    // Carga el archivo encargado de estructurar y descargar el PDF
-    require_once(__DIR__ . "/../../Vista/descargarOrdenDespacho.php");
-    exit; // Detiene el flujo por completo para evitar que se pinte la vista HTML estándar
-    break;
+            // Instanciar el modelo y obtener datos de la orden
+            try {
+                $ordenModel = new OrdenDespacho();
+
+                $datos_validacion = ['id_orden_despachos' => $id_orden_raw];
+                $errores = $ordenModel->validarDescargarOrden($datos_validacion);
+                
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error en los datos para descargar la orden de despacho',
+                        'errors' => $errores
+                    ]);
+                    exit;
+                }
+
+                error_log("[DEBUG] descargarOrden - Modelo instanciado");
+                
+                // Obtener datos completos de la orden para el PDF
+                $orden = $ordenModel->obtenerDatosParaPDF($id_orden);
+                error_log("[DEBUG] descargarOrden - Datos obtenidos: " . print_r($orden, true));
+                
+                if (empty($orden) || !is_array($orden)) {
+                    error_log("[DEBUG] descargarOrden - No se encontraron datos");
+                    die("Error: No se encontraron datos para la orden de despacho ID: $id_orden");
+                }
+                
+                // Verificar datos requeridos
+                if (!isset($orden['id_orden_despachos']) || !isset($orden['id_factura'])) {
+                    error_log("[DEBUG] descargarOrden - Datos incompletos");
+                    die("Error: Datos de la orden de despacho incompletos.");
+                }
+                
+                error_log("[DEBUG] descargarOrden - Datos válidos, cargando vista PDF");
+                
+            } catch (Exception $e) {
+                error_log("[DEBUG] descargarOrden - Error: " . $e->getMessage());
+                die("Error al obtener datos de la orden: " . $e->getMessage());
+            }
+            
+            // Carga el archivo encargado de estructurar y descargar el PDF
+            require_once(__DIR__ . "/../../Vista/descargarOrdenDespacho.php");
+            exit; // Detiene el flujo por completo para evitar que se pinte la vista HTML estándar
+            break;
         
 
         case 'cambiar_estatus':
@@ -138,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
-            // 2. Extracción limpia y segura de parámetros POST (Evita sobreescritura de variables)
+            // 2. Extracción limpia y segura de parámetros POST
             $id = isset($_POST['id_orden_despachos']) ? (int)$_POST['id_orden_despachos'] : (isset($_POST['id']) ? (int)$_POST['id'] : 0);
             $estado_actual = $_POST['estado_actual'] ?? '';
             
@@ -151,11 +164,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // 4. Conmutación controlada de estados (Toggle)
             $nuevo_estado = ($estado_actual === 'Por Entregar') ? 'Entregada' : 'Por Entregar';
             
-            // 5. Instanciación y ejecución atómica
+            // 5. Instanciación y Validación con el método correcto
             $ordenModel = new OrdenDespacho();
+
+            // Pasamos tanto el ID como el nuevo estado calculado
+            $datosValidacion = [
+                'id_orden_despachos' => $id,
+                'nuevo_estado' => $nuevo_estado
+            ];
+
+            $errores = $ordenModel->validarCambiarEstatus($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                break;
+            }
+
+            // 6. Ejecución en la Base de Datos
             $resultado = $ordenModel->cambiarEstadoOrden($id, $nuevo_estado, $id_usuario_sesion);
             
-            // 6. Respuesta JSON unificada basada en el retorno del modelo
+            // Respuesta JSON unificada basada en el retorno del modelo
             if (isset($resultado['status']) && $resultado['status'] === 'success') {
 
                 if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -210,6 +241,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // 4. Instanciación y ejecución de la baja lógica
             $ordenModel = new OrdenDespacho();
+
+            $datos_validacion = ['id_orden_despachos' => $idOrden];
+            $errores = $ordenModel->validarAnularOrden($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para anular la orden de despacho',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+
             $resultado = $ordenModel->anularOrdenDespacho($idOrden, $id_usuario_sesion);
 
             // 5. Gestión controlada de efectos secundarios (Notificaciones)

@@ -483,7 +483,7 @@ class OrdenDespacho extends BD {
     /**
      * Valida los datos para cambiar estatus (método público)
      */
-    public function validarCambiarEstatus($datos) {
+    private function validarEstatus($datos) {
         $errores = [];
         
         // Validar ID de la orden
@@ -493,11 +493,11 @@ class OrdenDespacho extends BD {
             $errores['id_orden_despachos'] = 'El ID de la orden debe ser un número entre ' . self::MIN_ID_ORDEN . ' y ' . self::MAX_ID_ORDEN;
         }
         
-        // Validar nuevo estatus
-        if (!isset($datos['nuevo_estatus'])) {
-            $errores['nuevo_estatus'] = 'El nuevo estatus es obligatorio';
-        } elseif (!in_array($datos['nuevo_estatus'], self::ESTADOS_VALIDOS_CAMBIO)) {
-            $errores['nuevo_estatus'] = 'El estatus no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS_CAMBIO);
+        // Validar el nuevo estado de la orden
+        if (!isset($datos['nuevo_estado'])) {
+            $errores['nuevo_estado'] = 'El nuevo estado es obligatorio';
+        } elseif (!in_array($datos['nuevo_estado'], self::ESTADOS_VALIDOS)) {
+            $errores['nuevo_estado'] = 'El estado no es válido. Estados permitidos: ' . implode(', ', self::ESTADOS_VALIDOS);
         }
         
         return $errores;
@@ -506,7 +506,7 @@ class OrdenDespacho extends BD {
     /**
      * Valida los datos para descargar orden (método público)
      */
-    public function validarDescargarOrden($datos) {
+    private function validarDescargar($datos) {
         $errores = [];
         
         // Validar ID de la orden
@@ -518,12 +518,32 @@ class OrdenDespacho extends BD {
         
         return $errores;
     }
+
+    private function validarAnular($datos) {
+        $errores = [];
+        
+        if (!isset($datos['id_orden_despachos'])) {
+            $errores['id_orden_despachos'] = 'El ID del despacho es obligatorio';
+        } elseif (!is_numeric($datos['id_orden_despachos']) || $datos['id_orden_despachos'] <= 0) {
+            $errores['id_orden_despachos'] = 'El ID del despacho debe ser un número positivo';
+        }
+        
+        return $errores;
+    }
+
+    public function validarCambiarEstatus($datos) {
+        return $this->validarEstatus($datos);
+    }
+
+    public function validarDescargarOrden($datos) {
+        return $this->validarDescargar($datos);
+    }
     
     /**
      * Valida los datos para anular orden (método público)
      */
     public function validarAnularOrden($datos) {
-        return $this->validarDescargarOrden($datos);
+        return $this->validarAnular($datos);
     }
     
     /**
