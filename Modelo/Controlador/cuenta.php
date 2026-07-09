@@ -30,78 +30,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $permisosActualizados = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('Cuentas bancarias'));
             echo json_encode($permisosActualizados);
             exit;
-/*
-        case 'registrar':
-            header('Content-Type: application/json; charset=utf-8');
-            error_log("[CUENTA-CONTROLADOR] Iniciando caso 'registrar'");
-            error_log("[CUENTA-CONTROLADOR] POST recibido: " . json_encode($_POST));
-            
-            $cuentabanco = new Cuentabanco();
-            $cuentabanco->setNombreBanco($_POST['nombre_banco']);
-            $cuentabanco->setNumeroCuenta($_POST['numero_cuenta']);
-            $cuentabanco->setRifCuenta($_POST['rif_cuenta']);
-            $cuentabanco->setTelefonoCuenta($_POST['telefono_cuenta']);
-            $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
-            $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
-            
-            // Validar datos de entrada
-            $datosValidacion = [
-                'nombre_banco' => $_POST['nombre_banco'] ?? '',
-                'numero_cuenta' => $_POST['numero_cuenta'] ?? '',
-                'rif_cuenta' => $_POST['rif_cuenta'] ?? '',
-                'telefono_cuenta' => $_POST['telefono_cuenta'] ?? '',
-                'correo_cuenta' => $_POST['correo_cuenta'] ?? '',
-                'metodos_pago' => $_POST['metodos_pago'] ?? []
-            ];
-            
-            error_log("[CUENTA-CONTROLADOR] Datos a validar: " . json_encode($datosValidacion));
-            
-            $errores = $cuentabanco->validarRegistrarCuenta($datosValidacion);
-            error_log("[CUENTA-CONTROLADOR] Errores de validación: " . json_encode($errores));
-            
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Errores de validación',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
-            if ($_POST['numero_cuenta'] != ''){
-                if ($cuentabanco->existeNumeroCuenta($_POST['numero_cuenta'])) {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'El número de cuenta ya existe'
-                    ]);
-                    exit;
-                }
-            }
-            if ($cuentabanco->registrarCuentabanco()) {
-                $cuentaRegistrada = $cuentabanco->obtenerUltimaCuenta();
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CUENTA_BANCARIA,
-                        'INCLUIR',
-                        'El usuario incluyó una nueva cuenta bancaria: ' . ($_POST['nombre_banco'] ?? ''),
-                        'media'
-                    );
-                }
-
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Cuenta registrada correctamente',
-                    'cuenta' => $cuentaRegistrada
-                ]);
-            } else {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error al registrar la cuenta'
-                ]);
-            }
-            exit;
-            */
         
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
@@ -181,25 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
             }
             exit;
-/*
-        case 'obtener_cuenta':
-            $id_cuenta = $_POST['id_cuenta'] ?? null;
 
-            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
-                echo json_encode(['status' => 'error', 'message' => 'ID de cuenta no válido']);
-                exit;
-            }
-
-            $cuentabanco = new Cuentabanco();
-            $cuenta_obt = $cuentabanco->obtenerCuentaPorId($id_cuenta);
-
-            if ($cuenta_obt !== null) {
-                echo json_encode($cuenta_obt);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Cuenta no encontrado']);
-            }
-            exit;
-            */
         case 'obtener_cuenta':
             $id_cuenta = $_POST['id_cuenta'] ?? null;
 
@@ -225,75 +135,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             echo json_encode($cuentas_obt);
             exit;
-/*
-        case 'modificar':
-            ob_clean();
-            header('Content-Type: application/json; charset=utf-8');
-            $id_cuenta = $_POST['id_cuenta'];
-            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'ID de cuenta no válido'
-                ]);
-                exit;
-            }
-            $cuentabanco = new Cuentabanco();
-            $cuentabanco->setIdCuenta($id_cuenta);
-            $cuentabanco->setNombreBanco($_POST['nombre_banco']);
-            $cuentabanco->setNumeroCuenta($_POST['numero_cuenta']);
-            $cuentabanco->setRifCuenta($_POST['rif_cuenta']);
-            $cuentabanco->setTelefonoCuenta($_POST['telefono_cuenta']);
-            $cuentabanco->setCorreoCuenta($_POST['correo_cuenta']);
-            $cuentabanco->setMetodosPago($_POST['metodos_pago'] ?? []);
-            // Validar datos de entrada
-            $datosValidacion = [
-                'nombre_banco' => $_POST['nombre_banco'] ?? '',
-                'numero_cuenta' => $_POST['numero_cuenta'] ?? '',
-                'rif_cuenta' => $_POST['rif_cuenta'] ?? '',
-                'telefono_cuenta' => $_POST['telefono_cuenta'] ?? '',
-                'correo_cuenta' => $_POST['correo_cuenta'] ?? '',
-                'metodos_pago' => $_POST['metodos_pago'] ?? []
-            ];
-            
-            $errores = $cuentabanco->validarRegistrarCuenta($datosValidacion);
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Errores de validación',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
-            if ($cuentabanco->existeNumeroCuenta($_POST['numero_cuenta'], $id_cuenta)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'El número de cuenta ya existe'
-                ]);
-                exit;
-            }
-
-            if ($cuentabanco->modificarCuentabanco($id_cuenta)) {
-                $cuentabancoActualizada = $cuentabanco->obtenerCuentaPorId($id_cuenta);
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CUENTA_BANCARIA,
-                        'MODIFICAR',
-                        'El usuario modificó la cuenta bancaria: ' . ($_POST['nombre_banco'] ?? '') . ' (ID: ' . $id_cuenta . ')',
-                        'media'
-                    );
-                }
-
-                echo json_encode([
-                    'status' => 'success',
-                    'cuenta' => $cuentabancoActualizada
-                ]);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al modificar la cuenta']);
-            }
-            exit;
-            */
         
         case 'modificar':
             ob_clean();
@@ -361,59 +202,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'Error al modificar la cuenta']);
             }
             exit;
-/*
-        case 'eliminar':
-            $id_cuenta = $_POST['id_cuenta'];
-            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'ID de cuenta no válido'
-                ]);
-                exit;
-            }
-            $cuentabanco = new Cuentabanco();
 
-            $resultado = $cuentabanco->eliminarCuentabanco($id_cuenta);
-
-            if (is_array($resultado) && $resultado['status'] === 'error') {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CUENTA_BANCARIA,
-                        'ELIMINAR_FALLIDO',
-                        'Intento de eliminación fallido de cuenta (ID: ' . $id_cuenta . '): ' . ($resultado['message'] ?? ''),
-                        'media'
-                    );
-                }
-                echo json_encode([
-                    'status' => 'error', 
-                    'message' => $resultado['message'],
-                    'pagos' => $resultado['pagos'] ?? [],
-                    'total_pagos' => $resultado['total_pagos'] ?? 0
-                ]);
-            } else if ($resultado['status'] === 'success') {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CUENTA_BANCARIA,
-                        'ELIMINAR',
-                        'El usuario eliminó la cuenta bancaria ID: ' . $id_cuenta,
-                        'media'
-                    );
-                }
-                echo json_encode(['status' => 'success']);
-            } else {
-                echo json_encode([
-                    'status' => 'error', 
-                    'message' => 'Error al eliminar la cuenta',
-                    'pagos' => [],
-                    'total_pagos' => 0
-                ]);
-            }
-            exit;
-            */
         case 'eliminar':
             $id_cuenta = $_POST['id_cuenta'];
             $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
@@ -452,46 +241,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['status' => 'error', 'message' => 'Error inesperado al procesar la solicitud']);
             }
             exit;
-/*
-        case 'cambiar_estado':
-            $id_cuenta = $_POST['id_cuenta'];
-            $nuevoEstado = $_POST['estado'];
-            
-            if ($id_cuenta === null || !ctype_digit((string)$id_cuenta)) {
-                echo json_encode(['status' => 'error', 'message' => 'ID de cuenta no válido']);
-                exit;
-            }
-            
-            if (!in_array($nuevoEstado, ['habilitado', 'inhabilitado'])) {
-                echo json_encode(['status' => 'error', 'message' => 'Estado no válido']);
-                exit;
-            }
-            
-            $cuentabanco = new Cuentabanco();
-            $cuentabanco->setIdCuenta($id_cuenta);
-            
-            if ($cuentabanco->cambiarEstado($nuevoEstado)) {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_CUENTA_BANCARIA,
-                        'CAMBIAR ESTADO',
-                        'El usuario cambió el estado de la cuenta bancaria ID ' . $id_cuenta . ' a ' . $nuevoEstado,
-                        'media'
-                    );
-                }
 
-                echo json_encode(['status' => 'success']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al cambiar el estado']);
-            }
-            exit;
-
-        default:
-            echo json_encode(['status' => 'error', 'message' => 'Acción no válida']);
-        exit;
-        */
         case 'cambiar_estado':
             $id_cuenta = $_POST['id_cuenta'];
             $nuevoEstado = $_POST['estado'];
