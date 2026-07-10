@@ -105,8 +105,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $pasarela->setEstatus($nuevoEstatus);
             $pasarela->setFactura($factura);
             if ($pasarela->pasarelaTransaccion('Procesar')) {
-                $ordenDespacho = new OrdenDespacho();
-                $ordenDespacho->crearPorFactura($factura);
                 $pagoActualizado = $pasarela->obtenerPagoPorId($id);
                 $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], MODULO_PASARELA_PAGOS, 'MODIFICAR', 'El usuario cambió el estatus del pago de la referencia bancaria: ' . $pagoActualizado['referencia'] . ' a ' . $nuevoEstatus, 'media');
                 echo json_encode(['status' => 'success', 'pago' => $pagoActualizado]);
