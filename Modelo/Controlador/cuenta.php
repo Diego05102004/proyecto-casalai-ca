@@ -163,6 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cuentabanco->setMetodosPago($metodos_procesados);
             
             $datosValidacion = [
+                'id_cuenta'  => $id_cuenta,
                 'nombre_banco' => $_POST['nombre_banco'] ?? '',
                 'numero_cuenta' => $_POST['numero_cuenta'] ?? '',
                 'rif_cuenta' => $_POST['rif_cuenta'] ?? '',
@@ -171,7 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'metodos_pago' => $_POST['metodos_pago'] ?? []
             ];
             
-            $errores = $cuentabanco->validarRegistrarCuenta($datosValidacion);
+            $errores = $cuentabanco->validarModificarCuenta($datosValidacion);
             if (!empty($errores)) {
                 echo json_encode([
                     'status' => 'error',
@@ -213,7 +214,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             $cuentabanco = new Cuentabanco();
-            // MODIFICACIÓN: Pasamos el auditor
+
+            $datos_validacion = ['id_cuenta' => $id_cuenta];
+            $errores = $cuentabanco->validarEliminarCuenta($datos_validacion);
+            
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en los datos para eliminar la cuenta bancaria',
+                    'errors' => $errores
+                ]);
+                exit;
+            }
+            
             $resultado = $cuentabanco->eliminarCuentabanco($id_cuenta, $id_usuario_sesion);
 
             if (is_array($resultado) && $resultado['status'] === 'error') {
@@ -259,6 +272,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $cuentabanco = new Cuentabanco();
             $cuentabanco->setIdCuenta($id_cuenta);
+
+            $datosValidacion = [
+                'id_cuenta' => $id_cuenta,
+                'estado' => $nuevoEstado
+            ];
+
+            $errores = $cuentabanco->validarCambiarEstado($datosValidacion);
+            if (!empty($errores)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos',
+                    'errors' => $errores
+                ]);
+                break;
+            }
             
             // MODIFICACIÓN: Enviamos el ID del usuario al método
             if ($cuentabanco->cambiarEstado($nuevoEstado, $id_usuario_sesion)) {

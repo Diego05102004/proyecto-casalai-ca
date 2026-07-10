@@ -71,10 +71,10 @@ if (!empty($orden) && is_array($orden)) {
     $pdf->Ln(5);
     
     $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(40, 5, 'Número de Orden:', 0, 0);
+    $pdf->Cell(40, 5, utf8_decode('Número de Orden:'), 0, 0);
     $pdf->Cell(0, 5, $datosOrden['id_orden_despachos'], 0, 1);
     
-    $pdf->Cell(40, 5, 'Número de Factura:', 0, 0);
+    $pdf->Cell(40, 5, utf8_decode('Número de Factura:'), 0, 0);
     $pdf->Cell(0, 5, $datosOrden['id_factura'], 0, 1);
     
     $pdf->Cell(40, 5, 'Fecha de Despacho:', 0, 0);
@@ -93,7 +93,7 @@ if (!empty($orden) && is_array($orden)) {
     $pdf->Cell(40, 5, 'Nombre:', 0, 0);
     $pdf->Cell(0, 5, $cliente['cliente'], 0, 1);
     
-    $pdf->Cell(40, 5, 'Cédula/RIF:', 0, 0);
+    $pdf->Cell(40, 5, utf8_decode('Cédula/RIF:'), 0, 0);
     $pdf->Cell(0, 5, $cliente['cedula'], 0, 1);
     
     $pdf->Ln(5);
@@ -104,8 +104,8 @@ if (!empty($orden) && is_array($orden)) {
     
     // Encabezado de la tabla de productos
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->Cell(25, 7, 'Código', 1, 0, 'C');
-    $pdf->Cell(80, 7, 'Descripción', 1, 0, 'C');
+    $pdf->Cell(25, 7, utf8_decode('Código'), 1, 0, 'C');
+    $pdf->Cell(80, 7, utf8_decode('Descripción'), 1, 0, 'C');
     $pdf->Cell(25, 7, 'Cantidad', 1, 0, 'C');
     $pdf->Cell(30, 7, 'Precio', 1, 0, 'C');
     $pdf->Cell(30, 7, 'Total', 1, 1, 'C');
@@ -130,7 +130,7 @@ if (!empty($orden) && is_array($orden)) {
     
     // Total
     $pdf->SetFont('Arial', 'B', 10);
-    $pdf->Cell(170, 7, 'TOTAL:', 1, 0, 'R');
+    $pdf->Cell(160, 7, 'TOTAL:', 1, 0, 'R');
     $pdf->Cell(30, 7, number_format($total, 2, ',', '.') . ' BS', 1, 1, 'R');
     
     // Observaciones

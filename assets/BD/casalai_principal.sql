@@ -303,11 +303,11 @@ INSERT INTO `tbl_combo_detalle` (`id_detalle`, `id_combo`, `id_producto`, `canti
 
 CREATE TABLE `tbl_cuentas` (
   `id_cuenta` int(11) NOT NULL,
-  `nombre_banco` varchar(255) NOT NULL,
+  `nombre_banco` varchar(500) NOT NULL,
   `numero_cuenta` varchar(25) DEFAULT NULL,
   `rif_cuenta` varchar(15) NOT NULL,
-  `telefono_cuenta` varchar(255) DEFAULT NULL,
-  `correo_cuenta` varchar(255) DEFAULT NULL,
+  `telefono_cuenta` varchar(500) DEFAULT NULL,
+  `correo_cuenta` varchar(500) DEFAULT NULL,
   `metodos` set('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $') NOT NULL,
   `estado` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -2072,11 +2072,11 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE sp_registrar_cuenta(
-    IN p_nombre_banco VARCHAR(255),
+    IN p_nombre_banco VARCHAR(500),
     IN p_numero_cuenta VARCHAR(25),
     IN p_rif_cuenta VARCHAR(15),
-    IN p_telefono_cuenta VARCHAR(255),
-    IN p_correo_cuenta VARCHAR(255),
+    IN p_telefono_cuenta VARCHAR(500),
+    IN p_correo_cuenta VARCHAR(500),
     IN p_metodos SET('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $'),
     IN p_id_usuario_auditor INT
 )
@@ -2175,21 +2175,21 @@ DELIMITER $$
 
 CREATE PROCEDURE sp_modificar_cuenta(
     IN p_id_cuenta INT,
-    IN p_nombre_banco VARCHAR(255),
+    IN p_nombre_banco VARCHAR(500),
     IN p_numero_cuenta VARCHAR(25),
     IN p_rif_cuenta VARCHAR(15),
-    IN p_telefono_cuenta VARCHAR(255),
-    IN p_correo_cuenta VARCHAR(255),
+    IN p_telefono_cuenta VARCHAR(500),
+    IN p_correo_cuenta VARCHAR(500),
     IN p_metodos SET('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $'),
     IN p_id_usuario_auditor INT
 )
 BEGIN
     -- Agrupación estricta de declaraciones de variables al inicio del bloque
-    DECLARE v_nombre_banco_viejo VARCHAR(255);
+    DECLARE v_nombre_banco_viejo VARCHAR(500);
     DECLARE v_numero_cuenta_viejo VARCHAR(25);
     DECLARE v_rif_cuenta_viejo VARCHAR(15);
-    DECLARE v_telefono_cuenta_viejo VARCHAR(255);
-    DECLARE v_correo_cuenta_viejo VARCHAR(255);
+    DECLARE v_telefono_cuenta_viejo VARCHAR(500);
+    DECLARE v_correo_cuenta_viejo VARCHAR(500);
     DECLARE v_metodos_viejo SET('Pago Movil','Transferencia','Zelle','Efectivo','Efectivo $');
     DECLARE v_estado_viejo ENUM('habilitado','inhabilitado');
 
