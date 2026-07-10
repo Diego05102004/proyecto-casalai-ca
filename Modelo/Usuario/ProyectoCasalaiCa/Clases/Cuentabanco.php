@@ -20,13 +20,13 @@ class Cuentabanco extends BD {
     // Campos que deben ser cifrados (NOTA: numero_cuenta y rif NO se cifran porque se usan para búsquedas/identificación)
     const CAMPOS_CIFRADOS = ['nombre_banco', 'telefono_cuenta', 'correo_cuenta'];
     
-    const MAX_NOMBRE_BANCO = 100;
+    const MAX_NOMBRE_BANCO = 500;
     const MIN_NOMBRE_BANCO = 3;
     const MAX_NUMERO_CUENTA = 25;
     const MIN_NUMERO_CUENTA = 10;
-    const MAX_TELEFONO_CUENTA = 15;
+    const MAX_TELEFONO_CUENTA = 500;
     const MIN_TELEFONO_CUENTA = 7;
-    const MAX_CORREO_CUENTA = 150;
+    const MAX_CORREO_CUENTA = 500;
     const MAX_RIF_CUENTA = 12;
     const MIN_RIF_CUENTA = 9;
     const ESTADOS_PERMITIDOS = ['habilitado', 'inhabilitado'];
@@ -633,7 +633,7 @@ class Cuentabanco extends BD {
     }
 
     private function c_cuentabanco() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
+        $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "CALL sp_consultar_cuenta()";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
