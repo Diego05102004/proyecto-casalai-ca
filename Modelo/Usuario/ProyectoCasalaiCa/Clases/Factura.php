@@ -210,6 +210,99 @@ class Factura extends BD
         });
     }
 
+    public function facturaIngresarMovil($data = []) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($data) {
+            // Extraer datos del parámetro $data
+            $cedula = $data['cedula'] ?? null;
+            $fecha = $data['fecha'] ?? date('Y-m-d');
+            $descuento = $data['descuento'] ?? 0;
+            $estatus = $data['estatus'] ?? 'Borrador';
+            $id_productos = $data['id_producto'] ?? [];
+            $cantidades = $data['cantidad'] ?? [];
+
+            // Validaciones básicas
+            if (empty($cedula)) {
+                throw new PDOException("La cédula del cliente es requerida.");
+            }
+
+            if (empty($id_productos) || !is_array($id_productos)) {
+                throw new PDOException("Debe proporcionar al menos un producto.");
+            }
+
+            if (empty($cantidades) || !is_array($cantidades)) {
+                throw new PDOException("Debe proporcionar las cantidades de los productos.");
+            }
+
+            if (count($id_productos) !== count($cantidades)) {
+                throw new PDOException("La cantidad de productos no coincide con las cantidades.");
+            }
+
+            // Buscar ID del cliente por su cédula
+            $stmtCliente = $pdo->prepare("SELECT id_clientes FROM tbl_clientes WHERE cedula = ?");
+            $stmtCliente->execute([$cedula]);
+            $clienteData = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+
+            if (!$clienteData) {
+                throw new PDOException("No se encontró un cliente con la cédula indicada.");
+            }
+
+            $id_cliente = $clienteData['id_clientes'];
+
+            // Insertar en tabla factura
+            $stmt = $pdo->prepare("INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$fecha, $id_cliente, $descuento, $estatus]);
+
+            $factura_id = $pdo->lastInsertId();
+            if (!$factura_id) {
+                throw new PDOException("No se pudo insertar la factura.");
+            }
+
+            // Preparar la consulta para obtener el precio del producto
+            $stmtPrecio = $pdo->prepare("SELECT precio FROM tbl_productos WHERE id_producto = ?");
+
+            // Modificar la inserción para incluir precio_unitario
+            $stmt2 = $pdo->prepare("INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)");
+
+            $detalle_insertados = 0;
+
+            foreach ($id_productos as $index => $id_producto) {
+                $cantidad = $cantidades[$index];
+
+                if (empty($id_producto) || empty($cantidad)) {
+                    throw new PDOException("Producto o cantidad vacío en el índice $index.");
+                }
+
+                // 1. Buscar el precio actual del producto en la base de datos
+                $stmtPrecio->execute([$id_producto]);
+                $productoData = $stmtPrecio->fetch(PDO::FETCH_ASSOC);
+
+                if (!$productoData) {
+                    throw new PDOException("El producto con ID $id_producto no existe.");
+                }
+
+                $precio_actual = $productoData['precio'];
+
+                // 2. Insertar el detalle incluyendo el precio copiado
+                $stmt2->execute([$factura_id, $id_producto, $cantidad, $precio_actual]);
+                $detalle_insertados += $stmt2->rowCount();
+            }
+
+            if ($detalle_insertados !== count($id_productos)) {
+                throw new PDOException("No se insertaron todos los detalles de la factura.");
+            }
+
+            return [
+                'factura_id' => $factura_id,
+                'numero_factura' => 'FAC-' . $factura_id,
+                'cliente_id' => $id_cliente,
+                'cedula' => $cedula,
+                'fecha' => $fecha,
+                'descuento' => $descuento,
+                'estatus' => $estatus,
+                'items_insertados' => $detalle_insertados
+            ];
+        });
+    }
 
     public function obtenerUltimaFactura() {
         return $this->o_ultimaFactura();
@@ -678,6 +771,137 @@ class Factura extends BD
         return $resulListado;
         });
     }
+    
+
+public function facturaConsultarMovil()
+{
+    return $this->ejecutarConConexionSegura(function ($pdo) {
+        if (empty($this->cedula)) {
+            $pdo->cerrar();
+            $pdo = null;
+
+            return [
+                'resultado' => 'error',
+                'mensaje' => 'No se ha proporcionado la cédula para consultar facturas.',
+                'data' => [
+                    'facturas' => []
+                ]
+            ];
+        }
+
+        try {
+            $sql = "
+                SELECT 
+                    f.id_factura,
+                    f.fecha,
+                    c.nombre,
+                    c.cedula,
+                    c.telefono,
+                    c.direccion,
+                    p.nombre_producto AS producto,
+                    m.nombre_modelo,
+                    mar.nombre_marca,
+                    p.precio,
+                    df.cantidad,
+                    f.descuento,
+                    f.estatus
+                FROM tbl_factura_detalle df
+                JOIN tbl_facturas f ON f.id_factura = df.factura_id
+                JOIN tbl_clientes c ON c.id_clientes = f.cliente
+                JOIN tbl_productos p ON df.id_producto = p.id_producto
+                JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
+                JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
+                WHERE c.cedula = :cedula
+                ORDER BY f.id_factura DESC
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':cedula', $this->cedula, PDO::PARAM_STR);
+            $stmt->execute();
+
+            $facturasMap = [];
+
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $idFactura = (int)($row['id_factura'] ?? 0);
+
+                if (!isset($facturasMap[$idFactura])) {
+                    $facturasMap[$idFactura] = [
+                        'id_factura' => $idFactura,
+                        'numero_factura' => 'FAC-' . $idFactura,
+                        'fecha' => $row['fecha'] ?? date('Y-m-d'),
+                        'estado' => trim((string)($row['estatus'] ?? 'Borrador')),
+                        'descuento' => (float)($row['descuento'] ?? 0),
+                        'cliente' => [
+                            'nombre' => trim((string)($row['nombre'] ?? 'Cliente')),
+                            'cedula' => trim((string)($row['cedula'] ?? '')),
+                            'telefono' => trim((string)($row['telefono'] ?? '')),
+                            'direccion' => trim((string)($row['direccion'] ?? ''))
+                        ],
+                        'items' => [],
+                        'total_suma' => 0
+                    ];
+                }
+
+                $precio = (float)($row['precio'] ?? 0);
+                $cantidad = (int)($row['cantidad'] ?? 0);
+                $subtotal = $precio * $cantidad;
+
+                $facturasMap[$idFactura]['total_suma'] += $subtotal;
+
+                $facturasMap[$idFactura]['items'][] = [
+                    'producto' => trim((string)($row['producto'] ?? 'Producto')),
+                    'modelo' => trim((string)($row['nombre_modelo'] ?? '')),
+                    'marca' => trim((string)($row['nombre_marca'] ?? '')),
+                    'precio' => $precio,
+                    'cantidad' => $cantidad,
+                    'subtotal' => $subtotal
+                ];
+            }
+
+            $facturas = [];
+
+            foreach ($facturasMap as $factura) {
+                $subtotal = (float)$factura['total_suma'];
+                $descuento = (float)$factura['descuento'];
+
+                $totalFinal = $subtotal;
+                if ($descuento > 0) {
+                    $totalFinal = $subtotal - (($subtotal * $descuento) / 100);
+                }
+
+                $facturas[] = [
+                    'id_factura' => $factura['id_factura'],
+                    'numero_factura' => $factura['numero_factura'],
+                    'fecha' => $factura['fecha'],
+                    'total' => round($totalFinal, 2),
+                    'estado' => ucfirst(strtolower(trim($factura['estado']))),
+                    'descuento' => $descuento,
+                    'metodo_pago' => 'Sin método',
+                    'cliente' => $factura['cliente']['nombre'],
+                    'cliente_detalle' => $factura['cliente'],
+                    'items' => $factura['items']
+                ];
+            }
+
+            return [
+                'status' => 'success',
+                'message' => 'Listado de facturas obtenido correctamente.',
+                'data' => [
+                    'facturas' => $facturas
+                ]
+            ];
+        } catch (Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Error al consultar facturas.',
+                'data' => [
+                    'facturas' => []
+                ],
+                'debug' => $e->getMessage()
+            ];
+        }
+    });
+}
     
     public function facturaCancelar($id) {
         return $this->c_facturaCancelar($id);
