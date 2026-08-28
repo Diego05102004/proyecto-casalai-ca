@@ -1836,4 +1836,213 @@ class Productos extends BD{
             return $productos;
         });
     }
+
+    // ==================== MÉTODOS PARA API MÓVIL ====================
+    
+    /**
+     * Obtiene todos los productos habilitados para la API móvil
+     * @param array $data Datos de la petición (puede contener filtros)
+     * @return array Productos formateados para la app móvil
+     */
+    public function obtenerTodosProductos($data) {
+        return $this->api_obtenerTodosProductos($data);
+    }
+    
+    private function api_obtenerTodosProductos($data) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($data) {
+            $sql = "SELECT p.*, c.nombre_categoria 
+                    FROM tbl_productos p 
+                    LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria 
+                    WHERE p.estado = 'habilitado'
+                    ORDER BY p.nombre_producto ASC";
+            
+            $stmt = $pdo->query($sql);
+            $productos = [];
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $imagen = $row['imagen'];
+                if ($imagen) {
+                    $imagen = str_replace('\\', '/', $imagen);
+                    $imagen = str_replace('assets/img/productos/', '', $imagen);
+                }
+                
+                $productos[] = [
+                    'id' => $row['id_producto'],
+                    'serial' => $row['serial'],
+                    'nombre' => $row['nombre_producto'],
+                    'descripcion' => $row['descripcion_producto'],
+                    'categoria_id' => $row['id_categoria'],
+                    'categoria_nombre' => $row['nombre_categoria'],
+                    'precio' => floatval($row['precio']),
+                    'stock' => intval($row['stock']),
+                    'stock_minimo' => intval($row['stock_minimo']),
+                    'stock_maximo' => intval($row['stock_maximo']),
+                    'garantia' => $row['clausula_garantia'],
+                    'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
+                ];
+            }
+            
+            return [
+                'productos' => $productos,
+                'total' => count($productos)
+            ];
+        });
+    }
+    
+    /**
+     * Obtiene un producto por ID para la API móvil
+     * @param array $data Debe contener 'id' del producto
+     * @return array Producto formateado para la app móvil
+     */
+    public function apiObtenerProductoPorId($data) {
+        return $this->api_obtenerProductoPorId($data);
+    }
+    
+    private function api_obtenerProductoPorId($data) {
+        $id = isset($data['id']) ? intval($data['id']) : 0;
+        
+        if ($id <= 0) {
+            throw new Exception('ID de producto inválido');
+        }
+        
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
+            $sql = "SELECT p.*, c.nombre_categoria 
+                    FROM tbl_productos p 
+                    LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria 
+                    WHERE p.id_producto = :id AND p.estado = 'habilitado'";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$row) {
+                throw new Exception('Producto no encontrado');
+            }
+            
+            $imagen = $row['imagen'];
+            if ($imagen) {
+                $imagen = str_replace('\\', '/', $imagen);
+                $imagen = str_replace('assets/img/productos/', '', $imagen);
+            }
+            
+            return [
+                'id' => $row['id_producto'],
+                'serial' => $row['serial'],
+                'nombre' => $row['nombre_producto'],
+                'descripcion' => $row['descripcion_producto'],
+                'categoria_id' => $row['id_categoria'],
+                'categoria_nombre' => $row['nombre_categoria'],
+                'precio' => floatval($row['precio']),
+                'stock' => intval($row['stock']),
+                'stock_minimo' => intval($row['stock_minimo']),
+                'stock_maximo' => intval($row['stock_maximo']),
+                'garantia' => $row['clausula_garantia'],
+                'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
+            ];
+        });
+    }
+    
+    /**
+     * Obtiene productos por categoría para la API móvil
+     * @param array $data Debe contener 'categoria' ID
+     * @return array Productos de la categoría formateados
+     */
+    public function apiObtenerProductosPorCategoria($data) {
+        return $this->api_obtenerProductosPorCategoria($data);
+    }
+    
+    private function api_obtenerProductosPorCategoria($data) {
+        $categoria = isset($data['categoria']) ? intval($data['categoria']) : 0;
+        
+        if ($categoria <= 0) {
+            throw new Exception('ID de categoría inválido');
+        }
+        
+        return $this->ejecutarConConexionSegura(function($pdo) use ($categoria) {
+            $sql = "SELECT p.*, c.nombre_categoria 
+                    FROM tbl_productos p 
+                    LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria 
+                    WHERE p.id_categoria = :categoria AND p.estado = 'habilitado'
+                    ORDER BY p.nombre_producto ASC";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':categoria', $categoria, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $productos = [];
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $imagen = $row['imagen'];
+                if ($imagen) {
+                    $imagen = str_replace('\\', '/', $imagen);
+                    $imagen = str_replace('assets/img/productos/', '', $imagen);
+                }
+                
+                $productos[] = [
+                    'id' => $row['id_producto'],
+                    'serial' => $row['serial'],
+                    'nombre' => $row['nombre_producto'],
+                    'descripcion' => $row['descripcion_producto'],
+                    'categoria_id' => $row['id_categoria'],
+                    'categoria_nombre' => $row['nombre_categoria'],
+                    'precio' => floatval($row['precio']),
+                    'stock' => intval($row['stock']),
+                    'stock_minimo' => intval($row['stock_minimo']),
+                    'stock_maximo' => intval($row['stock_maximo']),
+                    'garantia' => $row['clausula_garantia'],
+                    'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
+                ];
+            }
+            
+            return [
+                'productos' => $productos,
+                'total' => count($productos),
+                'categoria_id' => $categoria
+            ];
+        });
+    }
+    
+    /**
+     * Obtiene producto detallado con características dinámicas para la API móvil
+     * @param array $data Debe contener 'id' del producto
+     * @return array Producto con características
+     */
+    public function obtenerProductoDetalladoApi($data) {
+        return $this->api_obtenerProductoDetallado($data);
+    }
+    
+    private function api_obtenerProductoDetallado($data) {
+        $id = isset($data['id']) ? intval($data['id']) : 0;
+        
+        if ($id <= 0) {
+            throw new Exception('ID de producto inválido');
+        }
+        
+        $productoBase = $this->apiObtenerProductoPorId(['id' => $id]);
+        $caracteristicas = $this->obtenerCaracteristicasDinamicasPorProducto($id);
+        
+        return [
+            'producto' => $productoBase,
+            'caracteristicas' => $caracteristicas
+        ];
+    }
+    
+    /**
+     * Obtiene la URL base configurada para la API
+     * @return string URL base
+     */
+    private function getBaseUrl() {
+        // Intentar incluir la configuración centralizada
+        $configFile = __DIR__ . '/../../../../api/api_config.php';
+        if (file_exists($configFile)) {
+            require_once $configFile;
+            if (function_exists('getBaseUrl')) {
+                return getBaseUrl();
+            }
+        }
+        // Valor por defecto para desarrollo
+        return 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca';
+    }
 }
