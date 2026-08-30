@@ -16,8 +16,10 @@
  */
 function RecibirPeticion($instance, $operations) {
     try {
-        // Obtener el nombre de la función solicitada
-        $funcion = $_GET['funcion'] ?? $_POST['funcion'] ?? null;
+        $requestData = getRequestData();
+
+        // Obtener el nombre de la función solicitada, soportando JSON, POST y GET
+        $funcion = $requestData['funcion'] ?? $_GET['funcion'] ?? $_POST['funcion'] ?? null;
         
         if (!$funcion) {
             // Si no se especifica función, usar la operación por defecto (GET)
@@ -40,10 +42,15 @@ function RecibirPeticion($instance, $operations) {
         
         // Obtener datos de la petición según el método
         $data = getRequestData();
-        
+
         // Para GET, también incluir parámetros de URL
         if ($method === 'GET') {
             $data = array_merge($data, $_GET);
+        }
+
+        // Asegurar que la función también quede en $data para métodos con JSON
+        if (!isset($data['funcion']) && isset($funcion)) {
+            $data['funcion'] = $funcion;
         }
         
         // Verificar si el método existe en la instancia

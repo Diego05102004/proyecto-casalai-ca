@@ -493,6 +493,101 @@ class PasareladePago extends Factura {
         });
     }
 
+    public function pagoIngresarMovil($data = []) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($data) {
+            // Extraer datos del parámetro $data
+            $factura = $data['factura'] ?? null;
+            $cuenta = $data['cuenta'] ?? null;
+            $observaciones = $data['observaciones'] ?? '';
+            $tipo = $data['tipo'] ?? '';
+            $referencia = $data['referencia'] ?? '';
+            $fecha = $data['fecha'] ?? date('Y-m-d');
+            $comprobante = $data['comprobante'] ?? '';
+            $monto = $data['monto'] ?? 0;
+
+            // Validaciones básicas
+            if (empty($factura)) {
+                throw new PDOException("El ID de factura es requerido.");
+            }
+
+            if (empty($cuenta)) {
+                throw new PDOException("El ID de cuenta es requerido.");
+            }
+
+            if (empty($monto) || $monto <= 0) {
+                throw new PDOException("El monto debe ser mayor a 0.");
+            }
+
+            if (empty($tipo)) {
+                throw new PDOException("El tipo de pago es requerido.");
+            }
+
+            // Verificar que la factura existe
+            $stmtFactura = $pdo->prepare("SELECT id_factura FROM tbl_facturas WHERE id_factura = ?");
+            $stmtFactura->execute([$factura]);
+            if (!$stmtFactura->fetch(PDO::FETCH_ASSOC)) {
+                throw new PDOException("La factura con ID $factura no existe.");
+            }
+
+            // Verificar que la cuenta existe en la tabla real del proyecto
+            $stmtCuenta = $pdo->prepare("SELECT id_cuenta FROM tbl_cuentas WHERE id_cuenta = ?");
+            $stmtCuenta->execute([$cuenta]);
+            if (!$stmtCuenta->fetch(PDO::FETCH_ASSOC)) {
+                throw new PDOException("La cuenta con ID $cuenta no existe.");
+            }
+
+            try {
+                // Insertar el pago
+                $stmt = $pdo->prepare("
+                    INSERT INTO `tbl_detalles_pago`
+                    (`id_factura`, `id_cuenta`, `observaciones`, `tipo`, `referencia`, `fecha`, `comprobante`, `monto`)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $resultado = $stmt->execute([
+                    $factura,
+                    $cuenta,
+                    $observaciones,
+                    $tipo,
+                    $referencia,
+                    $fecha,
+                    $comprobante,
+                    $monto
+                ]);
+
+                if (!$resultado) {
+                    throw new PDOException("Error al insertar el pago: " . json_encode($stmt->errorInfo()));
+                }
+
+                $pago_id = $pdo->lastInsertId();
+
+                // Actualizar estatus de la factura
+                $updateStmt = $pdo->prepare("
+                    UPDATE `tbl_facturas` 
+                    SET `estatus` = 'En Proceso' 
+                    WHERE `id_factura` = ?
+                ");
+                $updateResultado = $updateStmt->execute([$factura]);
+
+                if (!$updateResultado) {
+                    throw new PDOException("Error al actualizar la factura: " . json_encode($updateStmt->errorInfo()));
+                }
+
+                return [
+                    'pago_id' => $pago_id,
+                    'factura_id' => $factura,
+                    'cuenta_id' => $cuenta,
+                    'monto' => $monto,
+                    'tipo' => $tipo,
+                    'fecha' => $fecha,
+                    'referencia' => $referencia,
+                    'estatus_factura' => 'En Proceso'
+                ];
+
+            } catch (PDOException $e) {
+                throw new PDOException("Error en pagoIngresar: " . $e->getMessage());
+            }
+        });
+    }
     private function pagoConsultar() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT 

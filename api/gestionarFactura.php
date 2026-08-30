@@ -44,6 +44,8 @@ $operations = [
     'default' => ['method' => 'GET', 'handler' => 'facturaConsultarMovil'],
     'facturaingresarmovil' => ['method' => 'POST', 'handler' => 'facturaIngresarMovil'],
     'facturaingresar' => ['method' => 'POST', 'handler' => 'facturaIngresarMovil'],
+    'facturadescargar' => ['method' => 'GET', 'handler' => 'facturaDescargarMovil'],
+    'descargar' => ['method' => 'GET', 'handler' => 'facturaDescargarMovil'],
 ];
 
 if (!isset($operations[$funcion])) {

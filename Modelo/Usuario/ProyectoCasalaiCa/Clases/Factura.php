@@ -900,9 +900,11 @@ public function facturaConsultarMovil()
                 'debug' => $e->getMessage()
             ];
         }
-    });
-}
+        });
+    }
     
+
+
     public function facturaCancelar($id) {
         return $this->c_facturaCancelar($id);
     }
@@ -975,6 +977,121 @@ public function facturaConsultarMovil()
     
     public function facturaDescargar($id_factura) {
         return $this->f_descargar($id_factura);
+    }
+
+    public function facturaDescargarMovil($data = []) {
+        return $this->f_descargarMovil($data);
+    }
+
+    private function f_descargarMovil($data) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($data) {
+            $id_factura = $data['id'] ?? $data['id_factura'] ?? null;
+
+            if (empty($id_factura)) {
+                throw new PDOException("El ID de factura es requerido.");
+            }
+
+            try {
+                $stmt = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
+                $stmt->execute();
+                
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // Validar si la tasa está vigente (menos de 24 horas) o asignar una por defecto (1)
+                $tasa = 1;
+                if ($result && (time() - strtotime($result['fecha'])) < 86400) {
+                    $tasa = floatval($result['precio']);
+                }
+            } catch (PDOException $e) {
+                error_log('Error al obtener cache del dólar: ' . $e->getMessage());
+                $tasa = 1;
+            }
+
+            // Verificar si la factura existe
+            $stmt_check = $pdo->prepare("SELECT COUNT(*) as count FROM tbl_facturas WHERE id_factura = ?");
+            $stmt_check->execute([$id_factura]);
+            $count_factura = $stmt_check->fetch(PDO::FETCH_ASSOC);
+            
+            if ($count_factura['count'] == 0) {
+                throw new PDOException("La factura ID $id_factura no existe.");
+            }
+
+            // Consulta de la factura
+            $sql = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
+                        p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
+                        p.precio, df.cantidad, f.descuento, f.estatus
+                    FROM tbl_factura_detalle df
+                    JOIN tbl_facturas f ON f.id_factura = df.factura_id
+                    JOIN tbl_clientes c ON c.id_clientes = f.cliente
+                    JOIN tbl_productos p ON df.id_producto = p.id_producto
+                    JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
+                    JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
+                    WHERE f.id_factura = :id_factura";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':id_factura', $id_factura, PDO::PARAM_INT);
+            $stmt->execute();
+            $facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($facturas)) {
+                throw new PDOException("No se encontraron detalles para la factura ID $id_factura");
+            }
+            
+            // Agregar precio_convertido
+            foreach ($facturas as &$factura) {
+                $factura['precio_convertido'] = $factura['precio'] * $tasa;
+            }
+            
+            // Agrupar por factura para estructura de respuesta
+            $facturaMap = [];
+            foreach ($facturas as $row) {
+                $id = $row['id_factura'];
+                if (!isset($facturaMap[$id])) {
+                    $facturaMap[$id] = [
+                        'id_factura' => $row['id_factura'],
+                        'numero_factura' => 'FAC-' . $row['id_factura'],
+                        'fecha' => $row['fecha'],
+                        'estatus' => ucfirst(strtolower(trim($row['estatus']))),
+                        'descuento' => (float)$row['descuento'],
+                        'tasa_cambio' => $tasa,
+                        'cliente' => [
+                            'nombre' => trim($row['nombre']),
+                            'cedula' => trim($row['cedula']),
+                            'telefono' => trim($row['telefono']),
+                            'direccion' => trim($row['direccion'])
+                        ],
+                        'items' => []
+                    ];
+                }
+                
+                $facturaMap[$id]['items'][] = [
+                    'producto' => trim($row['producto']),
+                    'modelo' => trim($row['nombre_modelo']),
+                    'marca' => trim($row['nombre_marca']),
+                    'precio' => (float)$row['precio'],
+                    'precio_convertido' => (float)$row['precio_convertido'],
+                    'cantidad' => (int)$row['cantidad'],
+                    'subtotal' => (float)$row['precio'] * (int)$row['cantidad']
+                ];
+            }
+
+            // Calcular totales
+            foreach ($facturaMap as &$factura) {
+                $subtotal = 0;
+                foreach ($factura['items'] as $item) {
+                    $subtotal += $item['subtotal'];
+                }
+                $factura['subtotal'] = $subtotal;
+                $factura['total'] = $factura['descuento'] > 0 
+                    ? $subtotal - (($subtotal * $factura['descuento']) / 100)
+                    : $subtotal;
+            }
+
+            return [
+                'factura' => array_values($facturaMap)[0],
+                'tasa_cambio' => $tasa
+            ];
+        });
     }
     private function f_descargar($id_factura) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_factura) {
