@@ -14,6 +14,12 @@ const OPERATIONS = {
   productos_por_id: { method: 'GET', useFunctionParam: true },
   productos_por_categoria: { method: 'GET', useFunctionParam: true },
   productos_detallado: { method: 'GET', useFunctionParam: true },
+  facturas: { method: 'GET', useFunctionParam: true },
+  factura_ingresar: { method: 'POST', useFunctionParam: true },
+  factura_descargar: { method: 'GET', useFunctionParam: true },
+  cuentas: { method: 'GET', useFunctionParam: true },
+  pagos: { method: 'GET', useFunctionParam: true },
+  pago_ingresar: { method: 'POST', useFunctionParam: true },
 };
 
 const normalizeApiFile = (apiFile) => {
