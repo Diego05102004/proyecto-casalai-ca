@@ -248,7 +248,7 @@ function actualizarContadorCarrito() {
     } else {
         // Fallback: actualizar manualmente
         $.ajax({
-            url: '/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/Modelo/Controlador/obtener_carrito_count.php',
+            url: '/proyecto-casalai-ca/Modelo/Controlador/obtener_carrito_count.php',
             method: 'GET',
             dataType: 'json',
             success: function (data) {

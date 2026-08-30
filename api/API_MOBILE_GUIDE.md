@@ -302,7 +302,7 @@ private function getBaseUrl() {
             return getBaseUrl();
         }
     }
-    return 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca';
+    return 'http://localhost/proyecto-casalai-ca';
 }
 ```
 

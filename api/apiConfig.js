@@ -12,24 +12,24 @@ const ENV = process.env.NODE_ENV || 'development';
 const config = {
   development: {
     // Para navegador en el mismo PC
-    BASE_URL: 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca',
-    API_BASE_URL: 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/api',
-    ASSETS_URL: 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets',
-    IMAGES_URL: 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets/img',
+    BASE_URL: 'http://localhost/proyecto-casalai-ca',
+    API_BASE_URL: 'http://localhost/proyecto-casalai-ca/api',
+    ASSETS_URL: 'http://localhost/proyecto-casalai-ca/assets',
+    IMAGES_URL: 'http://localhost/proyecto-casalai-ca/assets/img',
   },
   emulator: {
     // Para emulador Android (10.0.2.2 apunta al host)
-    BASE_URL: 'http://10.0.2.2/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca',
-    API_BASE_URL: 'http://10.0.2.2/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/api',
-    ASSETS_URL: 'http://10.0.2.2/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets',
-    IMAGES_URL: 'http://10.0.2.2/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets/img',
+    BASE_URL: 'http://10.0.2.2/proyecto-casalai-ca',
+    API_BASE_URL: 'http://10.0.2.2/proyecto-casalai-ca/api',
+    ASSETS_URL: 'http://10.0.2.2/proyecto-casalai-ca/assets',
+    IMAGES_URL: 'http://10.0.2.2/proyecto-casalai-ca/assets/img',
   },
   device: {
     // Para dispositivo físico - REEMPLAZAR con tu IP local
-    BASE_URL: 'http://192.168.1.20/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca',
-    API_BASE_URL: 'http://192.168.1.20/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/api',
-    ASSETS_URL: 'http://192.168.1.20/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets',
-    IMAGES_URL: 'http://192.168.1.20/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets/img',
+    BASE_URL: 'http://192.168.1.20/proyecto-casalai-ca',
+    API_BASE_URL: 'http://192.168.1.20/proyecto-casalai-ca/api',
+    ASSETS_URL: 'http://192.168.1.20/proyecto-casalai-ca/assets',
+    IMAGES_URL: 'http://192.168.1.20/proyecto-casalai-ca/assets/img',
   },
   production: {
     // Para producción - REEMPLAZAR con tu dominio
