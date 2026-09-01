@@ -10,10 +10,10 @@ $env = getenv('APP_ENV') ?: 'development';
 // Configuración de URLs según entorno
 $config = [
     'development' => [
-        'base_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca',
-        'api_base_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/api',
-        'assets_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets',
-        'images_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets/img',
+        'base_url' => 'http://localhost/proyecto-casalai-ca',
+        'api_base_url' => 'http://localhost/proyecto-casalai-ca/api',
+        'assets_url' => 'http://localhost/proyecto-casalai-ca/assets',
+        'images_url' => 'http://localhost/proyecto-casalai-ca/assets/img',
     ],
     'production' => [
         'base_url' => 'https://tu-dominio.com',
@@ -62,10 +62,10 @@ function getCurrentConfig() {
     $env = getenv('APP_ENV') ?: 'development';
     $configs = [
         'development' => [
-            'base_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca',
-            'api_base_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/api',
-            'assets_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets',
-            'images_url' => 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/assets/img',
+            'base_url' => 'http://localhost/proyecto-casalai-ca',
+            'api_base_url' => 'http://localhost/proyecto-casalai-ca/api',
+            'assets_url' => 'http://localhost/proyecto-casalai-ca/assets',
+            'images_url' => 'http://localhost/proyecto-casalai-ca/assets/img',
         ],
         'production' => [
             'base_url' => 'https://tu-dominio.com',
