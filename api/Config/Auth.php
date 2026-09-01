@@ -71,7 +71,7 @@ class Auth {
      */
     private static function getIssuer() {
         self::loadEnv();
-        return $_ENV['JWT_ISSUER'] ?? 'http://localhost/Repositorio%20de%20GITHUB/proyecto-casalai-main/proyecto-casalai-ca/';
+        return $_ENV['JWT_ISSUER'] ?? 'http://localhost/proyecto-casalai-ca/';
     }
     
     /**
