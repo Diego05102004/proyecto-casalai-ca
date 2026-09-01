@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/api_helper.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/Clases/Factura.php';
 
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Factura;
 
 $factura = new Factura();
 

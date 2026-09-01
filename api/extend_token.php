@@ -7,7 +7,8 @@
  */
 
 // Cargar autoload de Composer para Firebase JWT
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/Config/Auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -15,9 +16,6 @@ header('Content-Type: application/json; charset=utf-8');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-// Importar clase de autenticación JWT
-require_once __DIR__ . '/../Modelo/Config/Auth.php';
 
 use Usuario\ProyectoCasalaiCa\Config\Auth;
 

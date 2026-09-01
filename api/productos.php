@@ -17,9 +17,9 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/api_helper.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/Clases/Productos.php';
 
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
+use Usuario\ProyectoCasalaiCa\Productos;
 
 // Crear instancia de la clase
 $producto = new Productos();
@@ -32,15 +32,19 @@ $operations = [
     ],
     'por_id' => [
         'method' => 'GET',
-        'handler' => 'apiObtenerProductoPorId'
+        'handler' => 'obtenerProductoPorId'
     ],
     'por_categoria' => [
         'method' => 'GET',
-        'handler' => 'apiObtenerProductosPorCategoria'
+        'handler' => 'obtenerProductosPorCategoria'
     ],
     'detallado' => [
         'method' => 'GET',
         'handler' => 'obtenerProductoDetalladoApi'
+    ],
+    'combos' => [
+        'method' => 'GET',
+        'handler' => 'obtenerCombosDisponiblesMovil'
     ]
 ];
 

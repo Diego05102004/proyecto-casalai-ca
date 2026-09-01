@@ -5,9 +5,9 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/api_helper.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
+use Usuario\ProyectoCasalaiCa\Productos;
 
 echo "<h1>Prueba de Endpoints de Productos</h1>";
 

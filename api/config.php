@@ -24,8 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Incluir autoload de Composer
-require_once __DIR__ . '/../vendor/autoload.php';
+// Incluir configuración de base de datos local
+require_once __DIR__ . '/Config/database.php';
+
+// Incluir clase BD directamente para asegurar disponibilidad
+require_once __DIR__ . '/Config/BD.php';
+
+// Incluir autoload de Composer local
+require_once __DIR__ . '/vendor/autoload.php';
 
 // Configuración de zona horaria
 date_default_timezone_set('America/Caracas');

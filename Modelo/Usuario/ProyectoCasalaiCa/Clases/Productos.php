@@ -1088,22 +1088,6 @@ class Productos extends BD{
         });
     }
 
-    public function obtenerProductosPorCategoria($nombreCategoria) {
-        return $this->o_productosPorCategoria($nombreCategoria);
-    }
-    private function o_productosPorCategoria($nombreCategoria) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($nombreCategoria){
-            $sql = "SELECT p.nombre_producto, p.stock
-                    FROM tbl_productos p
-                    INNER JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
-                    WHERE c.nombre_categoria = :nombre_categoria";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':nombre_categoria', $nombreCategoria);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        });
-    }
-
     public function obtenerProductosConPrecios() {
         return $this->o_productosConPrecios();
     }
@@ -1237,22 +1221,62 @@ class Productos extends BD{
         });
     }
 
+    public function obtenerCombosDisponiblesMovil() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $sql = "SELECT * FROM tbl_combo WHERE activo = 1 ORDER BY nombre_combo ASC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $combos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($combos as &$combo) {
+                $idCombo = (int)($combo['id_combo'] ?? $combo['id'] ?? 0);
+                $combo['id'] = $idCombo;
+                $combo['name'] = $combo['nombre_combo'] ?? $combo['name'] ?? 'Combo';
+                $combo['nombre'] = $combo['nombre_combo'] ?? $combo['nombre'] ?? 'Combo';
+                $combo['description'] = $combo['descripcion'] ?? $combo['description'] ?? '';
+                $combo['descripcion'] = $combo['descripcion'] ?? $combo['description'] ?? '';
+                $combo['type'] = 'combo';
+                $combo['isCombo'] = true;
+                $combo['productos'] = $this->obtenerDetallesCombo($idCombo);
+                $combo['precio_total'] = 0;
+                foreach ($combo['productos'] as $producto) {
+                    $combo['precio_total'] += ((float)($producto['precio'] ?? 0) * (int)($producto['cantidad'] ?? 1));
+                }
+                $combo['precio_final'] = (float)($combo['precio_total'] ?? 0);
+                $combo['precio'] = $combo['precio_final'];
+            }
+
+            return $combos;
+        });
+    }
+
     public function obtenerDetallesCombo($id_combo) {
         return $this->o_detallesCombo($id_combo);
     }
     private function o_detallesCombo($id_combo) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $query = "SELECT cd.id_producto, cd.cantidad, p.nombre_producto, p.precio, p.stock, 
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo) {
+            $query = "SELECT cd.id_producto, cd.cantidad, p.nombre_producto, p.precio, p.stock, p.imagen,
                             m.nombre_marca as marca, p.descripcion_producto as descripcion
                     FROM tbl_combo_detalle cd
                     INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
-                    INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
-                    INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+                    LEFT JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                    LEFT JOIN tbl_marcas m ON mo.id_marca = m.id_marca
                     WHERE cd.id_combo = :id_combo AND p.estado = 'habilitado'";
             $stmt = $pdo->prepare($query);
-            $stmt->bindParam(':id_combo', $id_combo);
+            $stmt->bindValue(':id_combo', (int)$id_combo, PDO::PARAM_INT);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($productos as &$producto) {
+                $imagen = $producto['imagen'] ?? null;
+                if ($imagen) {
+                    $imagen = str_replace('\\', '/', $imagen);
+                    $imagen = str_replace('assets/img/productos/', '', $imagen);
+                    $producto['imagen'] = $this->getBaseUrl() . "/assets/img/productos/$imagen";
+                }
+            }
+
+            return $productos;
         });
     }
 
@@ -1844,7 +1868,11 @@ class Productos extends BD{
      * @param array $data Datos de la petición (puede contener filtros)
      * @return array Productos formateados para la app móvil
      */
-    public function obtenerTodosProductos($data) {
+    public function obtenerCatalogoMovil($data = []) {
+        return $this->obtenerTodosProductos($data);
+    }
+
+    public function obtenerTodosProductos($data = []) {
         return $this->api_obtenerTodosProductos($data);
     }
     
@@ -1882,9 +1910,12 @@ class Productos extends BD{
                 ];
             }
             
+            $combos = $this->obtenerCombosDisponiblesMovil();
+            
             return [
                 'productos' => $productos,
-                'total' => count($productos)
+                'combos' => $combos,
+                'total' => count($productos) + count($combos)
             ];
         });
     }

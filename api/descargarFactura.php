@@ -17,9 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/Clases/Factura.php';
 
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
+use Usuario\ProyectoCasalaiCa\Factura;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);

@@ -1,0 +1,15 @@
+{
+    "name": "proyecto-casalai-ca/api",
+    "description": "API autónoma para proyecto Casalai CA",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Usuario\\ProyectoCasalaiCa\\Config\\": "Config/",
+            "Usuario\\ProyectoCasalaiCa\\": "Clases/"
+        },
+        "classmap": ["Config/"]
+    },
+    "require": {
+        "firebase/php-jwt": "^6.0"
+    }
+}

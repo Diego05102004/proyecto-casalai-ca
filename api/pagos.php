@@ -21,9 +21,9 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/api_helper.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/Clases/PasareladePago.php';
 
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\PasareladePago;
+use Usuario\ProyectoCasalaiCa\PasareladePago;
 
 // Crear instancia de la clase
 $pasarela = new PasareladePago();

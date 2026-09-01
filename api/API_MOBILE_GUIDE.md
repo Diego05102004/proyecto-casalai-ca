@@ -16,9 +16,9 @@ La función `RecibirPeticion()` es el núcleo del sistema. Detecta la función s
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/api_helper.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
+use Usuario\ProyectoCasalaiCa\Productos;
 
 // Crear instancia de la clase
 $producto = new Productos();
@@ -254,9 +254,9 @@ Ejemplo:
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/api_helper.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-use Usuario\ProyectoCasalaiCa\Modelo\Clases\Categoria;
+use Usuario\ProyectoCasalaiCa\Categoria;
 
 $categoria = new Categoria();
 
