@@ -1475,20 +1475,25 @@ class Productos extends BD{
     }
     private function a_agregarProductoACombo($id_combo, $id_producto, $cantidad) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo, $id_producto, $cantidad){
-            // Verificar que el producto existe
-            $producto = $this->obtenerProductoPorId($id_producto);
-            if (!$producto) {
-                throw new PDOException("El producto con ID $id_producto no existe");
-            }
-            
-            $sql = "INSERT INTO tbl_combo_detalle (id_combo, id_producto, cantidad) 
-                    VALUES (:id_combo, :id_producto, :cantidad)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_combo', $id_combo);
-            $stmt->bindParam(':id_producto', $id_producto);
-            $stmt->bindParam(':cantidad', $cantidad);
-            return $stmt->execute();
+            return $this->insertarProductoEnComboConConexion($pdo, $id_combo, $id_producto, $cantidad);
         });
+    }
+
+    private function insertarProductoEnComboConConexion(PDO $pdo, $id_combo, $id_producto, $cantidad) {
+        $stmt = $pdo->prepare("SELECT id_producto FROM tbl_productos WHERE id_producto = :id_producto");
+        $stmt->bindValue(':id_producto', $id_producto, PDO::PARAM_INT);
+        $stmt->execute();
+
+        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            throw new PDOException("El producto con ID $id_producto no existe");
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO tbl_combo_detalle (id_combo, id_producto, cantidad)
+                               VALUES (:id_combo, :id_producto, :cantidad)");
+        $stmt->bindValue(':id_combo', $id_combo, PDO::PARAM_INT);
+        $stmt->bindValue(':id_producto', $id_producto, PDO::PARAM_INT);
+        $stmt->bindValue(':cantidad', $cantidad, PDO::PARAM_INT);
+        return $stmt->execute();
     }
 
     public function crearCombo($nombre, $descripcion, $productos) {
@@ -1509,7 +1514,7 @@ class Productos extends BD{
                 $id_combo = $pdo->lastInsertId();
 
                 foreach ($productos as $producto) {
-                    $this->agregarProductoACombo($id_combo, $producto['id'], $producto['cantidad']);
+                    $this->insertarProductoEnComboConConexion($pdo, $id_combo, $producto['id'], $producto['cantidad']);
                 }
 
                 $pdo->commit();
@@ -1527,7 +1532,7 @@ class Productos extends BD{
         return $this->a_actualizarCombo($id_combo, $nombre, $descripcion, $productos);
     }
     private function a_actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo, $nombre, $descripcion, $producto) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo, $nombre, $descripcion, $productos) {
             try {
                 $pdo->beginTransaction();
 
@@ -1547,7 +1552,7 @@ class Productos extends BD{
                 $stmt->execute();
 
                 foreach ($productos as $producto) {
-                    $this->agregarProductoACombo($id_combo, $producto['id'], $producto['cantidad']);
+                    $this->insertarProductoEnComboConConexion($pdo, $id_combo, $producto['id'], $producto['cantidad']);
                 }
 
                 $pdo->commit();

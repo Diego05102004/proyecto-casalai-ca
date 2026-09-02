@@ -67,8 +67,8 @@
                         <select id="filtroMarca">
                             <option value="">Todas las marcas</option>
                             <?php foreach ($marcas as $marca): ?>
-                                <option value="<?= htmlspecialchars($marca['id_marca']) ?>">
-                                    <?= htmlspecialchars($marca['nombre_marca']) ?>
+                                <option value="<?= htmlspecialchars($marca) ?>">
+                                    <?= htmlspecialchars($marca) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

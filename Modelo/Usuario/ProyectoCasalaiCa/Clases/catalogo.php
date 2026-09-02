@@ -56,9 +56,6 @@ class Catalogo extends BD {
         }
     }
 
-    /**
-     * Consulta general del catálogo utilizando la vista `vw_catalogo`.
-     */
     public function consultarCatalogo($busqueda = '', $categoria = '', $marca = '', $tipo_item = '') {
         return $this->ejecutarConConexionSegura(function($pdo) use ($busqueda, $categoria, $marca, $tipo_item) {
             try {
@@ -189,7 +186,12 @@ class Catalogo extends BD {
     public function obtenerMarcasCatalogo() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             try {
-                $sql = "SELECT DISTINCT marca FROM vw_catalogo WHERE estado = 'habilitado' AND marca IS NOT NULL ORDER BY marca ASC";
+                $sql = "SELECT DISTINCT marca FROM vw_catalogo
+                    WHERE CAST(estado AS UNSIGNED) = 1
+                    AND CAST(tipo_item AS BINARY) = CAST('producto' AS BINARY)
+                    AND marca IS NOT NULL
+                        AND CHAR_LENGTH(marca) > 0
+                    ORDER BY marca ASC";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute();
 
@@ -215,39 +217,6 @@ class Catalogo extends BD {
         });
     }
 
-    public function obtenerProductos() {
-        return $this->o_obtenerProductos();
-    }
-    private function o_obtenerProductos() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, c.nombre_caracteristicas AS categoria, p.stock, p.precio
-                    FROM tbl_productos p
-                    INNER JOIN modelo m ON p.id_modelo = m.id_modelo
-                    INNER JOIN categoria c ON p.id_categoria = c.id_categoria
-                    WHERE p.estado = 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        });
-    }
-
-    public function obtenerCombos() {
-        return $this->o_obtenerCombos();
-    }
-    private function o_obtenerCombos() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT c.id_combo, GROUP_CONCAT(p.nombre_producto SEPARATOR ', ') AS productos,
-                    SUM(p.precio * c.cantidad) AS precio_total
-                    FROM tbl_combo c
-                    INNER JOIN productos p ON c.id_producto = p.id_producto
-                    GROUP BY c.id_combo
-                    ORDER BY c.id_combo DESC";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        });
-    }
-
     public function eliminarCombo($id_combo){
         return $this->d_eliminarCombo($id_combo);
     }
@@ -257,19 +226,6 @@ class Catalogo extends BD {
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':id_combo', $id_combo);
             return $stmt->execute();
-        });
-    }
-
-    public function obtenerUltimoIdCombo(){
-        return $this->o_ultimoIdCombo();
-    }
-    private function o_ultimoIdCombo(){
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT MAX(id_combo) AS ultimo_id FROM {$this->tablaCombo}";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $resultado['ultimo_id'];
         });
     }
 
