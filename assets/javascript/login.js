@@ -260,7 +260,7 @@ $(document).ready(function(){
       
       $("#password").on("keyup",function(){
         validarKeyUp(/^[A-Za-z0-9\u00f1\u00d1\u00E0-\u00FC!@#$%^&*()_+\-=\{}\[\]|:;"'<>.,?\/\\\b]{6,15}$/,
-        $(this),$("#spassword"),"*Ingrese su contraseña de seguridad*");
+        $(this),$("#spassword"),"*Ingrese su contraseña*");
       });
     
       $("#acceder").on("click",function(){

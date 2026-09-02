@@ -380,8 +380,8 @@ table tfoot tr td span a i{
 /* Botón flotante de ayuda */
 .btn-ayuda {
     position: fixed;
-    top: 150px;
-    right: 83px;
+    top: 170px;
+    right: 25px;
     width: 50px;
     height: 50px;
     border: none;
@@ -453,28 +453,44 @@ table tfoot tr td span a i{
 
 /* En pantallas pequeñas, ajustamos tamaño */
 @media (max-width: 768px) {
-    .btn-grafica {
-        width: 50px;
-        height: 50px;
-        bottom: 20px;
-        left: 20px;
-    }
-
-    .btn-grafica img {
-        width: 26px;
-        height: 26px;
-    }
-
     .btn-ayuda {
-        width: 50px;
-        height: 50px;
-        bottom: 20px;
-        left: 20px;
+        width: 45px;
+        height: 45px;
+        top: 90px;
+        right: 20px;
     }
 
     .btn-ayuda img {
-        width: 26px;
-        height: 26px;
+        width: 22px;
+        height: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-ayuda {
+        top: 80px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .btn-ayuda img {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 360px) {
+    .btn-ayuda {
+        top: 75px;
+        right: 15px;
+        width: 35px;
+        height: 35px;
+    }
+
+    .btn-ayuda img {
+        width: 18px;
+        height: 18px;
     }
 }
 
@@ -779,13 +795,6 @@ table tfoot tr td span a i{
     .dataTables_wrapper {
         padding: 24px 20px 16px 20px;
     }
-
-    .btn-grafica {
-        top: 90px;
-        right: 30px;
-        width: 56px;
-        height: 56px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -846,33 +855,5 @@ table tfoot tr td span a i{
     .btn-generar-s {
         width: 100%;
         max-width: 100%;
-    }
-
-    .btn-grafica {
-        top: auto;
-        right: auto;
-        bottom: 16px;
-        left: 16px;
-        width: 45px;
-        height: 45px;
-    }
-
-    .btn-grafica img {
-        width: 22px;
-        height: 22px;
-    }
-
-    .btn-ayuda {
-        top: auto;
-        right: auto;
-        bottom: 16px;
-        left: 16px;
-        width: 45px;
-        height: 45px;
-    }
-
-    .btn-ayuda img {
-        width: 22px;
-        height: 22px;
     }
 }
