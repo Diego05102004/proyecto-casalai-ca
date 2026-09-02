@@ -77,7 +77,7 @@ $payload = Auth::requireAuth();
                     </div>
                     
                     <div class="info-display">
-                        <div class="info-label">Rango</div>
+                        <div class="info-label">Rol</div>
                         <div class="info-value"><?php echo htmlspecialchars($usuario['nombre_rol']); ?></div>
                     </div>
                 </div>
