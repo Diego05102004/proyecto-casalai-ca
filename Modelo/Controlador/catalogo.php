@@ -11,7 +11,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Catalogo;
 // Definir constantes para IDs de módulo
 define('MODULO_CATALOGO', "Catalogo");
 
-$esAdmin = isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] == 'Administrador';
+$esAdmin = isset($_SESSION['nombre_rol']) && ($_SESSION['nombre_rol'] == 'Administrador' || $_SESSION['nombre_rol'] == 'SuperUsuario');
 
 $data = [];
 $dolarService = new DolarService();
@@ -57,43 +57,12 @@ function generarReporteAccesosSemanales($bitacoraModel) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
     try {
-    $productos = $productosModel->obtenerProductosConMarca();
-    $marcas = $productosModel->obtenerMarcas();
-    $esAdmin = isset($_SESSION['nombre_rol']) && 
-           ($_SESSION['nombre_rol'] == 'Administrador' || 
-            $_SESSION['nombre_rol'] == 'SuperUsuario');
-    $combos = $productosModel->obtenerCombosDisponibles($esAdmin);
-    
-    // Pasar el precio del dólar a la vista
-    $data['monitors'] = [
-        'bcv' => [
-            'price' => $precioDolar,
-            'updated' => date('Y-m-d H:i:s')
-        ]
-    ];
-    
-} catch (PDOException $e) {
-    $productos = [];
-    $marcas = [];
-    $combos = [];
-    $data['monitors'] = [
-        'bcv' => [
-            'price' => $precioDolar,
-            'updated' => date('Y-m-d H:i:s')
-        ]
-    ];
-}
-
-    try {
         header('Content-Type: application/json; charset=utf-8');
         $accion = $_POST['accion'];
 
         if ($accion == 'obtener_datos_reportes') {
             try {
-                // Obtener estadísticas de accesos
                 $estadisticas = $bitacoraModel->obtenerEstadisticasAccesos();
-                
-                // Obtener usuarios más activos
                 $usuariosActivos = $bitacoraModel->obtenerUsuariosMasActivos(10);
                 
                 echo json_encode([
@@ -101,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     'estadisticas' => $estadisticas,
                     'usuarios' => $usuariosActivos
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -110,56 +79,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
             exit;
         }
 
-        if ($accion == 'filtrar_por_marca') {
+        if ($accion == 'filtrar_por_marca' || $accion == 'consultar_catalogo') {
+            $busqueda = $_POST['busqueda'] ?? '';
+            $categoria = $_POST['categoria'] ?? '';
+            $marca = $_POST['marca'] ?? '';
+            $tipo_item = $_POST['tipo_item'] ?? '';
             $id_marca_raw = $_POST['id_marca'] ?? '';
-            $id_marca = is_numeric($id_marca_raw) ? (int)$id_marca_raw : 0;
-            
-            // Validar datos usando las nuevas validaciones centralizadas
-            $datos_validacion = ['id_marca' => $id_marca];
-            $errores = $catalogoModel->validarFiltrar($datos_validacion);
-            
-            if (!empty($errores)) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Error en los datos para filtrar',
-                    'errors' => $errores
-                ]);
-                exit;
-            }
-            
-            if ($id_marca > 0) {
-                $productos = $productosModel->obtenerProductosPorMarca($id_marca);
-            } else {
-                $productos = $productosModel->obtenerProductosConMarca();
+
+            if (!empty($id_marca_raw) && is_numeric($id_marca_raw) && (int)$id_marca_raw > 0) {
+                $datos_validacion = ['id_marca' => (int)$id_marca_raw];
+                $errores = $catalogoModel->validarFiltrar($datos_validacion);
+                
+                if (!empty($errores)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error en los datos para filtrar',
+                        'errors' => $errores
+                    ]);
+                    exit;
+                }
             }
 
-            // Registrar filtrado
+            $itemsRaw = $catalogoModel->consultarCatalogo($busqueda, $categoria, $marca, $tipo_item);
+
             if (!defined('SKIP_SIDE_EFFECTS')) {
-                $marcaFiltro = $id_marca ? " (Marca ID: $id_marca)" : "";
+                $detalleFiltro = !empty($marca) ? " (Marca: $marca)" : (!empty($id_marca_raw) ? " (Marca ID: $id_marca_raw)" : "");
                 $bitacoraModel->registrarBitacora(
                     $_SESSION['id_usuario'],
                     MODULO_CATALOGO,
                     'CONSULTAR',
-                    "Filtrado de productos por marca" . $marcaFiltro,
+                    "Consulta/Filtrado en catálogo mediante vista vw_catalogo" . $detalleFiltro,
                     'baja'
                 );
             }
 
-            if (!empty($productos)) {
+            if (!empty($itemsRaw)) {
                 $html = '';
-                foreach ($productos as $producto) {
-                    $html .= '<tr class="product-row" data-id="' . htmlspecialchars($producto['id_producto']) . '">
+                foreach ($itemsRaw as $item) {
+                    $idItem = htmlspecialchars($item['id']);
+                    $nombreItem = htmlspecialchars($item['nombre']);
+                    $tipoItem = htmlspecialchars($item['tipo_item']);
+                    
+                    $html .= '<tr class="product-row" data-id="' . $idItem . '" data-tipo="' . $tipoItem . '">
                                 <td>
                                     <button type="button" class="btn btn-primary btn-sm btn-agregar-carrito" 
-                                            data-id-producto="' . htmlspecialchars($producto['id_producto']) . '">
+                                            data-id="' . $idItem . '" data-tipo="' . $tipoItem . '">
                                         <i class="bi bi-cart-plus"></i> <span class="btn-text">Agregar</span>
                                     </button>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">';
-                    if (!empty($producto['imagen'])) {
-                        $html .= '<img src="' . htmlspecialchars($producto['imagen']) . '" class="product-image"
-                                    alt="' . htmlspecialchars($producto['nombre_producto']) . '"
+                    if (!empty($item['imagen'])) {
+                        $html .= '<img src="' . htmlspecialchars($item['imagen']) . '" class="product-image"
+                                    alt="' . $nombreItem . '"
                                     onerror="this.src=\'assets/img/placeholder-product.png\'">';
                     } else {
                         $html .= '<div class="product-image img-placeholder">
@@ -167,27 +139,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                                   </div>';
                     }
                     $html .= '<div>
-                                <strong>' . htmlspecialchars($producto['nombre_producto']) . '</strong>
-                                <div class="text-muted small">' . htmlspecialchars($producto['serial']) . '</div>
+                                <strong>' . $nombreItem . '</strong>
+                                <div class="text-muted small">' . ucfirst($tipoItem) . '</div>
                               </div>
                             </div>
                         </td>
                         <td>
-                            <span class="badge ' . ($producto['stock'] > 0 ? 'bg-success' : 'bg-danger') . ' stock-badge">
-                                ' . htmlspecialchars($producto['stock']) . '
+                            <span class="badge ' . ($item['stock'] > 0 ? 'bg-success' : 'bg-danger') . ' stock-badge">
+                                ' . htmlspecialchars($item['stock']) . '
                             </span>
                         </td>
-                        <td>' . htmlspecialchars($producto['descripcion_producto']) . '</td>
-                        <td>' . htmlspecialchars($producto['marca']) . '</td>
-                        <td class="fw-bold">$' . number_format($producto['precio'], 2) . '</td>
+                        <td>' . htmlspecialchars($item['descripcion'] ?? '') . '</td>
+                        <td>' . htmlspecialchars($item['marca'] ?? 'CasaLai') . '</td>
+                        <td class="fw-bold">$' . number_format($item['precio'], 2) . '</td>
                     </tr>';
                 }
-                echo json_encode(['status' => 'success', 'html' => $html]);
+                echo json_encode(['status' => 'success', 'html' => $html, 'data' => $itemsRaw]);
             } else {
                 echo json_encode([
                     'status' => 'info',
-                    'message' => 'No hay productos disponibles',
-                    'html' => '<tr><td colspan="6" class="text-center py-4"><i class="bi bi-exclamation-circle"></i> No hay productos disponibles para esta selección</td></tr>'
+                    'message' => 'No hay ítems disponibles',
+                    'html' => '<tr><td colspan="6" class="text-center py-4"><i class="bi bi-exclamation-circle"></i> No hay ítems disponibles para esta selección</td></tr>'
                 ]);
             }
             exit;
@@ -195,27 +167,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
         if ($accion == 'validar_stock') {
             try {
-                header('Content-Type: application/json; charset=utf-8');
                 $id_producto = isset($_POST['id_producto']) ? (int)$_POST['id_producto'] : 0;
                 $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
+                $tipo_item = $_POST['tipo_item'] ?? 'producto';
+
                 if ($id_producto <= 0) {
-                    throw new Exception('Producto no especificado o inválido');
+                    throw new Exception('Ítem no especificado o inválido');
                 }
                 if ($cantidad <= 0) {
                     throw new Exception('La cantidad debe ser mayor a cero');
                 }
-                $producto = $productosModel->obtenerProductoPorId($id_producto);
-                if (!$producto) {
-                    throw new Exception('Producto no encontrado');
+
+                $item = $catalogoModel->obtenerItemPorIdYTipo($id_producto, $tipo_item);
+                if (!$item) {
+                    throw new Exception('Ítem no encontrado en el catálogo');
                 }
 
-                $stock = (int)($producto['stock'] ?? 0);
+                $stock = (int)($item['stock'] ?? 0);
                 echo json_encode([
                     'status' => 'success',
                     'stock_disponible' => $stock,
                     'suficiente' => $stock >= $cantidad
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -234,13 +208,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
                 $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
 
-                // Validar datos usando las nuevas validaciones centralizadas
                 $datos_validacion = [
                     'id_producto' => $id_producto,
                     'cantidad' => $cantidad
                 ];
                 
-                // Solo incluir id_combo si es mayor que 0
                 if ($id_combo > 0) {
                     $datos_validacion['id_combo'] = $id_combo;
                 }
@@ -283,7 +255,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     $mensaje = is_string($result) ? $result : 'Error al agregar producto al carrito';
                     throw new Exception($mensaje);
                 }
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode([
                     'status' => 'error', 
                     'message' => $e->getMessage()
@@ -349,7 +321,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     'message' => 'Combo creado exitosamente',
                     'id_combo' => $id_combo
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
             }
             exit;
@@ -357,8 +329,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
 
         if ($accion == 'cambiar_estado_combo') {
             try {
-                header('Content-Type: application/json; charset=utf-8');
-                
                 $id_combo = isset($_POST['id_combo']) ? (int)$_POST['id_combo'] : 0;
                 
                 if ($id_combo <= 0) {
@@ -392,7 +362,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     'nuevo_estado' => $productosModel->obtenerComboPorId($id_combo)['activo']
                 ]);
                 
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -469,7 +439,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     'status' => 'success',
                     'message' => 'Combo actualizado exitosamente'
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
             }
             exit;
@@ -506,7 +476,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     'status' => 'success',
                     'message' => 'Combo eliminado exitosamente'
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
             }
             exit;
@@ -525,14 +495,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     throw new Exception('Combo no encontrado');
                 }
 
-                $detalles = $productosModel->obtenerDetallesCombo($id_combo);
+                $detalles = $catalogoModel->obtenerDetalleCombo($id_combo);
 
                 echo json_encode([
                     'status' => 'success',
                     'combo' => $combo,
                     'detalles' => $detalles
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
             }
             exit;
@@ -560,7 +530,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     throw new Exception($mensaje);
                 }
 
-                $detalles = $productosModel->obtenerDetallesCombo($id_combo);
+                $detalles = $catalogoModel->obtenerDetalleCombo($id_combo);
 
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel->registrarBitacora(
@@ -577,7 +547,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                     'message' => 'Combo agregado correctamente al carrito',
                     'productos_agregados' => count($detalles)
                 ]);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                echo json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage()
@@ -586,33 +556,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
             exit;
         }
 
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     exit;
 }
 
-// Obtener datos para la vista
+// Obtener datos unificados desde la vista vw_catalogo para la carga inicial
 try {
-    $productos = $productosModel->obtenerProductosConMarca();
-    $marcas = $productosModel->obtenerMarcas();
-    $esAdmin = isset($_SESSION['nombre_rol']) && 
-           ($_SESSION['nombre_rol'] == 'Administrador' || 
-            $_SESSION['nombre_rol'] == 'SuperUsuario');
-    // Usar método optimizado que carga combos con detalles en 2 queries en lugar de N+1
+    $catalogoUnificado = $catalogoModel->consultarCatalogo();
+    
+    // Mapeo para preservar compatibilidad con las variables que espera la plantilla PHP original
+    $productos = [];
+    foreach ($catalogoUnificado as $item) {
+        if (strtolower(trim($item['tipo_item'] ?? '')) === 'producto') {
+            $item['id_producto'] = $item['id'];
+            $item['nombre_producto'] = $item['nombre'];
+            $item['descripcion_producto'] = $item['descripcion'];
+            $item['serial'] = $item['serial'] ?? '';
+            $productos[] = $item;
+        }
+    }
+
+    $marcas = $catalogoModel->obtenerMarcasCatalogo();
+    $categorias = $catalogoModel->obtenerCategoriasCatalogo();
     $combos = $productosModel->obtenerCombosConDetalles($esAdmin);
     
-} catch (PDOException $e) {
+} catch (\Throwable $e) {
     $productos = [];
     $marcas = [];
+    $categorias = [];
     $combos = [];
-    // Mantener los datos del dólar incluso si hay error en la BD
 }
 
 // Asignar la página y cargar la vista
 $pagina = "catalogo";
 if (is_file("Vista/" . $pagina . ".php")) {
-    // Registrar bitácora en background para no bloquear la carga
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
         register_shutdown_function(function() use ($bitacoraModel) {
             try {
@@ -623,7 +602,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     'El usuario accedió al módulo de Catálogo',
                     'media'
                 );
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 error_log("Error registrando bitácora en background: " . $e->getMessage());
             }
         });

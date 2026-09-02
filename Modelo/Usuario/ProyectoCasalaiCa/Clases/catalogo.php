@@ -9,7 +9,6 @@ class Catalogo extends BD {
     private $cantidad;
     private $id_producto;
     
-    // Constantes para validaciones
     const MAX_NOMBRE_COMBO = 100;
     const MAX_DESCRIPCION = 500;
     const MAX_CANTIDAD_PRODUCTO = 999;
@@ -28,17 +27,9 @@ class Catalogo extends BD {
     public function __construct($tipo = 'P') {
     }
     
-    /**
-     * @return PDO
-     */
     public function getConexion() {
         return $this->pdo;
     }
-    
-    /**
-     * @param callable
-     * @return mixed
-     */
 
     protected function ejecutarConConexionSegura($operation) {
         try {
@@ -65,6 +56,151 @@ class Catalogo extends BD {
         }
     }
 
+    /**
+     * Consulta general del catálogo utilizando la vista `vw_catalogo`.
+     */
+    public function consultarCatalogo($busqueda = '', $categoria = '', $marca = '', $tipo_item = '') {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($busqueda, $categoria, $marca, $tipo_item) {
+            try {
+                $sql = "SELECT 
+                        tipo_item,
+                        id,
+                        nombre,
+                        descripcion,
+                        categoria,
+                        marca,
+                        precio,
+                        stock,
+                        estado,
+                        imagen
+                    FROM vw_catalogo
+                    WHERE CAST(estado AS UNSIGNED) = 1";
+
+                $params = [];
+
+                if (!empty($busqueda)) {
+                    $sql .= " AND (nombre LIKE :busqueda OR descripcion LIKE :busqueda OR marca LIKE :busqueda)";
+                    $params[':busqueda'] = '%' . trim($busqueda) . '%';
+                }
+
+                if (!empty($categoria)) {
+                    $sql .= " AND categoria = :categoria";
+                    $params[':categoria'] = trim($categoria);
+                }
+
+                if (!empty($marca)) {
+                    $sql .= " AND marca = :marca";
+                    $params[':marca'] = trim($marca);
+                }
+
+                if (!empty($tipo_item)) {
+                    $sql .= " AND CAST(tipo_item AS BINARY) = CAST(:tipo_item AS BINARY)";
+                    $params[':tipo_item'] = trim($tipo_item);
+                }
+
+                $sql .= " ORDER BY tipo_item DESC, nombre ASC";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (\Throwable $e) {
+                error_log("Error en Catalogo::consultarCatalogo: " . $e->getMessage());
+                return [];
+            }
+        });
+    }
+
+    public function obtenerItemPorIdYTipo($id, $tipo_item) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id, $tipo_item) {
+            try {
+                $sql = "SELECT 
+                        tipo_item,
+                        id,
+                        nombre,
+                        descripcion,
+                        categoria,
+                        marca,
+                        precio,
+                        stock,
+                        estado,
+                        imagen
+                    FROM vw_catalogo
+                    WHERE id = :id 
+                    AND CAST(tipo_item AS BINARY) = CAST(:tipo_item AS BINARY)
+                    AND CAST(estado AS UNSIGNED) = 1";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':id' => $id,
+                    ':tipo_item' => $tipo_item
+                ]);
+
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (\Throwable $e) {
+                error_log("Error en Catalogo::obtenerItemPorIdYTipo: " . $e->getMessage());
+                return false;
+            }
+        });
+    }
+
+    public function obtenerDetalleCombo($id_combo) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo) {
+            try {
+                $sql = "SELECT 
+                            cd.id_combo,
+                            p.id_producto,
+                            p.nombre_producto,
+                            cd.cantidad,
+                            p.precio AS precio_unitario,
+                            (p.precio * cd.cantidad) AS subtotal,
+                            p.stock AS stock_disponible,
+                            p.imagen
+                        FROM tbl_combo_detalle cd
+                        INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
+                        WHERE cd.id_combo = :id_combo";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([':id_combo' => $id_combo]);
+
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (\Throwable $e) {
+                error_log("Error en Catalogo::obtenerDetalleCombo: " . $e->getMessage());
+                return [];
+            }
+        });
+    }
+
+    public function obtenerCategoriasCatalogo() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $sql = "SELECT DISTINCT categoria FROM vw_catalogo WHERE estado = 'habilitado' ORDER BY categoria ASC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+
+                return $stmt->fetchAll(PDO::FETCH_COLUMN);
+            } catch (\Throwable $e) {
+                error_log("Error en Catalogo::obtenerCategoriasCatalogo: " . $e->getMessage());
+                return [];
+            }
+        });
+    }
+
+    public function obtenerMarcasCatalogo() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            try {
+                $sql = "SELECT DISTINCT marca FROM vw_catalogo WHERE estado = 'habilitado' AND marca IS NOT NULL ORDER BY marca ASC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+
+                return $stmt->fetchAll(PDO::FETCH_COLUMN);
+            } catch (\Throwable $e) {
+                error_log("Error en Catalogo::obtenerMarcasCatalogo: " . $e->getMessage());
+                return [];
+            }
+        });
+    }
+
     public function insertarCombo(){
         return $this->i_insertarCombo();
     }
@@ -85,7 +221,7 @@ class Catalogo extends BD {
     private function o_obtenerProductos() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, c.nombre_caracteristicas AS categoria, p.stock, p.precio
-                    FROM productos p
+                    FROM tbl_productos p
                     INNER JOIN modelo m ON p.id_modelo = m.id_modelo
                     INNER JOIN categoria c ON p.id_categoria = c.id_categoria
                     WHERE p.estado = 1";
@@ -325,7 +461,7 @@ class Catalogo extends BD {
      */
     private function verificarProductoExistente($idProducto) {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT id_producto, nombre_producto, stock, estado FROM productos WHERE id_producto = :id_producto";
+            $sql = "SELECT id_producto, nombre_producto, stock, estado FROM tbl_productos WHERE id_producto = :id_producto";
             $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_producto', $idProducto, PDO::PARAM_INT);
             $stmt->execute();
@@ -352,7 +488,7 @@ class Catalogo extends BD {
      */
     private function verificarComboExistente($idCombo) {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT id_combo, nombre_combo, activo FROM combos WHERE id_combo = :id_combo";
+            $sql = "SELECT id_combo, nombre_combo, activo FROM tbl_combo WHERE id_combo = :id_combo";
             $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':id_combo', $idCombo, PDO::PARAM_INT);
             $stmt->execute();

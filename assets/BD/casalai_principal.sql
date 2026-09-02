@@ -1400,6 +1400,53 @@ ALTER TABLE `tbl_detalles_pago`
   ADD INDEX `idx_pagos_referencia` (`referencia`);
 
 -- -----------------------------------------------------------------------------
+-- VISTA DE CATÁLOGO (vw_catalogo)
+-- Integración unificada de Productos Habilitados y Combos Activos
+-- -----------------------------------------------------------------------------
+DROP VIEW IF EXISTS `vw_catalogo`;
+
+CREATE OR REPLACE VIEW vw_catalogo AS
+SELECT 
+    'producto' AS tipo_item,
+    p.id_producto AS id,
+    p.nombre_producto AS nombre,
+    p.descripcion_producto AS descripcion,
+    COALESCE(c.nombre_categoria, 'General') AS categoria,
+    COALESCE(m.nombre_marca, 'Sin Marca') AS marca,
+    p.precio,
+    COALESCE(p.stock, 0) AS stock,
+    CASE 
+        WHEN p.estado IN ('1', 1, 'habilitado', 'activo') THEN '1'
+        ELSE '0'
+    END AS estado,
+    p.imagen
+FROM tbl_productos p
+LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria
+LEFT JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+LEFT JOIN tbl_marcas m ON mo.id_marca = m.id_marca
+
+UNION ALL
+
+SELECT 
+    'combo' AS tipo_item,
+    cb.id_combo AS id,
+    cb.nombre_combo AS nombre,
+    cb.descripcion,
+    'Combos' AS categoria,
+    'CasaLai' AS marca,
+    COALESCE(SUM(p.precio * cd.cantidad), 0) AS precio,
+    1 AS stock,
+    CASE 
+        WHEN cb.activo = 1 THEN '1'
+        ELSE '0'
+    END AS estado,
+    NULL AS imagen
+FROM tbl_combo cb
+LEFT JOIN tbl_combo_detalle cd ON cb.id_combo = cd.id_combo
+LEFT JOIN tbl_productos p ON cd.id_producto = p.id_producto
+GROUP BY cb.id_combo, cb.nombre_combo, cb.descripcion, cb.activo;
+
+-- -----------------------------------------------------------------------------
 -- DISPARADORES: `tbl_factura_detalle`
 -- -----------------------------------------------------------------------------
 DELIMITER $$
