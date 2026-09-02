@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../Modelo/Config/Auth.php';
 
+$id_rol = $_SESSION['id_rol'] ?? 0;
+$nombre_rol = $_SESSION['nombre_rol'] ?? '';
+
 // Validar token JWT antes de cualquier otra operación
 use Usuario\ProyectoCasalaiCa\Config\Auth;
 $payload = Auth::requireAuth();
@@ -76,10 +79,13 @@ $payload = Auth::requireAuth();
                         <div class="info-value"><?php echo htmlspecialchars($usuario['cedula']); ?></div>
                     </div>
                     
-                    <div class="info-display">
-                        <div class="info-label">Rol</div>
-                        <div class="info-value"><?php echo htmlspecialchars($usuario['nombre_rol']); ?></div>
-                    </div>
+                    <?php if ($nombre_rol !== 'Cliente' || (int)$id_rol !== 3): ?>
+                        <div class="info-display">
+                            <div class="info-label">Rol</div>
+                            <div class="info-value"><?php echo htmlspecialchars($usuario['nombre_rol']); ?></div>
+                        </div>
+                    <?php endif; ?>
+                    
                 </div>
                 
                 <div id="personal-edit-form" class="hidden-section">
