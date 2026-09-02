@@ -416,7 +416,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
               <div class="form-group">
                 <label for="modificarNombreProducto">Nombre del producto*</label>
-                <input type="text" class="form-control" id="modificarNombreProducto" name="nombre_producto" required>
+                <input type="text" class="form-control" id="modificarNombreProducto" name="nombre_producto" maxlength="20" required>
                 <span class="span-value" id="smodificarNombreProducto"></span>
               </div>
 
@@ -434,7 +434,7 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
 
               <div class="form-group">
                 <label for="modificarDescripcionProducto">Descripción del producto*</label>
-                <textarea class="form-control" id="modificarDescripcionProducto" name="descripcion_producto" rows="2" required></textarea>
+                <textarea class="form-control" id="modificarDescripcionProducto" name="descripcion_producto" rows="2" maxlength="50" required></textarea>
                 <span class="span-value" id="smodificarDescripcionProducto"></span>
               </div>
 
@@ -453,23 +453,23 @@ if (isset($permisosUsuarioEntrar[$idRol][$idModulo]['consultar']) && $permisosUs
                 <div class="form-group col-md-4" style="flex: 1;">
                   <label for="modificarStockActual">Stock Actual</label>
                   <input type="number" min="0" class="form-control" id="modificarStockActual" name="Stock_Actual"
-                    required>
+                    maxlength="3" required>
                 </div>
                 <div class="form-group col-md-4" style="flex: 1;">
                   <label for="modificarStockMaximo">Stock Máximo</label>
                   <input type="number" min="0" class="form-control" id="modificarStockMaximo" name="Stock_Maximo"
-                    required>
+                    maxlength="3" required>
                 </div>
                 <div class="form-group col-md-4" style="flex: 1;">
                   <label for="modificarStockMinimo">Stock Mínimo</label>
                   <input type="number" min="0" class="form-control" id="modificarStockMinimo" name="Stock_Minimo"
-                    required>
+                    maxlength="3" required>
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="modificarClausulaGarantia">Cláusula de Garantía*</label>
-                <textarea class="form-control" id="modificarClausulaGarantia" name="Clausula_garantia" rows="2" required></textarea>
+                <textarea class="form-control" id="modificarClausulaGarantia" name="Clausula_garantia" rows="2" maxlength="50" required></textarea>
                 <span class="span-value" id="smodificarClausulaGarantia"></span>
               </div>
 
