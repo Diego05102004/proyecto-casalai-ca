@@ -1,0 +1,2 @@
+# Configuracion local de reCAPTCHA para Apache/XAMPP.
+SetEnv RECAPTCHA_SECRET_KEY "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl"
