@@ -16,7 +16,7 @@ body {
 /* ===== Sidebar ===== */
 .sidebar {
     width: 260px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
     color: white;
     display: flex;
     flex-direction: column;
@@ -160,7 +160,7 @@ body {
 }
 
 .date-input:focus {
-    border-color: #667eea;
+    border-color: #2196F3;
 }
 
 .user-profile {
@@ -182,7 +182,7 @@ body {
     width: 45px;
     height: 45px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -256,7 +256,7 @@ body {
 }
 
 .summary-card.sales .card-icon {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
     color: white;
 }
 
@@ -315,7 +315,7 @@ body {
 }
 
 .summary-card.sales .circle {
-    stroke: #667eea;
+    stroke: #2196F3;
 }
 
 .summary-card.expenses .circle {
@@ -421,7 +421,7 @@ body {
 
 .btn-view {
     padding: 8px 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
     color: white;
     border: none;
     border-radius: 8px;
@@ -588,7 +588,7 @@ body {
 .btn-add-product {
     width: 100%;
     padding: 18px 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
     color: white;
     border: none;
     border-radius: 12px;

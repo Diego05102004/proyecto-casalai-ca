@@ -335,7 +335,7 @@ ob_start();
                 }
 
                 .btn-add-user, .btn-import, .btn-export {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 12px 24px;
@@ -419,7 +419,7 @@ ob_start();
                 }
 
                 .users-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 15px;
                     text-align: left;
@@ -453,7 +453,7 @@ ob_start();
                     width: 35px;
                     height: 35px;
                     border-radius: 50%;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -475,7 +475,7 @@ ob_start();
                 }
 
                 .role-badge.admin {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                 }
 
@@ -532,7 +532,7 @@ ob_start();
                 }
 
                 .btn-view {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                 }
 
                 .btn-edit {

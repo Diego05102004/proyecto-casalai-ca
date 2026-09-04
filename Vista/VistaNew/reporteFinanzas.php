@@ -378,7 +378,7 @@ ob_start();
                 }
 
                 .account-header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 20px;
                     display: flex;
@@ -416,7 +416,7 @@ ob_start();
                 .balance-value {
                     font-size: 1.8rem;
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .account-actions {
@@ -441,7 +441,7 @@ ob_start();
                 }
 
                 .transactions-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 15px;
                     text-align: left;
@@ -534,7 +534,7 @@ ob_start();
                 }
 
                 .analysis-icon i {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .analysis-content h3 {
@@ -546,7 +546,7 @@ ob_start();
                 .analysis-value {
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                     margin: 0 0 5px 0;
                 }
 

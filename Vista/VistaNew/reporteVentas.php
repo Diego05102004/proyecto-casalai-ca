@@ -171,11 +171,11 @@ ob_start();
                             <h3>Ventas por Categoría</h3>
                             <div class="chart-legend">
                                 <span class="legend-item">
-                                    <span class="legend-color" style="background: #667eea;"></span>
+                                    <span class="legend-color" style="background: #2196F3;"></span>
                                     Smartphones
                                 </span>
                                 <span class="legend-item">
-                                    <span class="legend-color" style="background: #764ba2;"></span>
+                                    <span class="legend-color" style="background: #1976D2;"></span>
                                     Laptops
                                 </span>
                                 <span class="legend-item">
@@ -376,7 +376,7 @@ ob_start();
                 }
 
                 .btn-apply-filter, .btn-reset-filter, .btn-download-report, .btn-export-excel {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 10px 20px;
@@ -499,7 +499,7 @@ ob_start();
 
                 .stat-value {
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .chart-container {
@@ -521,7 +521,7 @@ ob_start();
                 }
 
                 .sales-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 15px;
                     text-align: left;
@@ -600,7 +600,7 @@ ob_start();
                 .summary-value {
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                     margin: 0 0 5px 0;
                 }
 

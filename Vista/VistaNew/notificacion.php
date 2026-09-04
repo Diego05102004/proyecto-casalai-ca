@@ -319,12 +319,12 @@ ob_start();
                 }
 
                 .filter-tab:hover {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                 }
 
                 .filter-tab.active {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                 }
 
@@ -350,7 +350,7 @@ ob_start();
                 }
 
                 .notification-item.unread {
-                    border-left: 4px solid #667eea;
+                    border-left: 4px solid #2196F3;
                 }
 
                 .notification-item.important {
@@ -378,7 +378,7 @@ ob_start();
                 }
 
                 .icon-container i {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .unread-dot {
@@ -426,7 +426,7 @@ ob_start();
                 }
 
                 .btn-notification-action {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 8px 16px;
@@ -518,7 +518,7 @@ ob_start();
                 }
 
                 .toggle-switch input:checked + .toggle-slider {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                 }
 
                 .toggle-switch input:checked + .toggle-slider:before {

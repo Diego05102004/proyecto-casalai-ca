@@ -41,7 +41,7 @@ ob_start();
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="78, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="78, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
                             <span class="percentage">78%</span>
                         </div>
@@ -56,7 +56,7 @@ ob_start();
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="23, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="23, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
                             <span class="percentage">23%</span>
                         </div>
@@ -71,7 +71,7 @@ ob_start();
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="90, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="90, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
                             <span class="percentage">90%</span>
                         </div>
@@ -299,20 +299,20 @@ ob_start();
                     flex-direction: column;
                     height: 100%;
                     min-height: 380px;
-                    border: 1px solid rgba(102, 126, 234, 0.1);
+                    border: 1px solid rgba(33, 150, 243, 0.1);
                 }
 
                 .product-card:hover {
                     transform: translateY(-8px);
-                    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.2);
-                    border-color: rgba(102, 126, 234, 0.3);
+                    box-shadow: 0 12px 30px rgba(33, 150, 243, 0.2);
+                    border-color: rgba(33, 150, 243, 0.3);
                 }
 
                 .product-image {
                     position: relative;
                     width: 100%;
                     height: 200px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -332,7 +332,7 @@ ob_start();
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                 }
 
                 .image-placeholder i {
@@ -355,7 +355,7 @@ ob_start();
                 }
 
                 .product-badge.bestseller {
-                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                    background: linear-gradient(135deg, #00B4DB 0%, #0083B0 100%);
                 }
 
                 .product-badge.new {
@@ -397,7 +397,7 @@ ob_start();
 
                 .product-category {
                     font-size: 0.85rem;
-                    color: #667eea;
+                    color: #2196F3;
                     font-weight: 600;
                     margin: 0 0 4px 0;
                     text-transform: uppercase;
@@ -415,7 +415,7 @@ ob_start();
                     font-weight: 800;
                     color: #2d3748;
                     margin: 0 0 12px 0;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
                     background-clip: text;
@@ -427,7 +427,7 @@ ob_start();
                     gap: 8px;
                     margin-bottom: 15px;
                     padding: 8px 12px;
-                    background: rgba(102, 126, 234, 0.05);
+                    background: rgba(33, 150, 243, 0.05);
                     border-radius: 8px;
                 }
 
@@ -483,7 +483,7 @@ ob_start();
                 }
 
                 .btn-action.btn-edit {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                 }
 
@@ -526,19 +526,19 @@ ob_start();
                     text-align: center;
                     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
                     transition: all 0.3s ease;
-                    border: 1px solid rgba(102, 126, 234, 0.1);
+                    border: 1px solid rgba(33, 150, 243, 0.1);
                 }
 
                 .category-card:hover {
                     transform: translateY(-5px);
-                    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+                    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.2);
                 }
 
                 .category-icon {
                     width: 60px;
                     height: 60px;
                     margin: 0 auto 15px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
@@ -574,7 +574,7 @@ ob_start();
 
                 .no-products i, .no-categories i {
                     font-size: 4rem;
-                    color: #667eea;
+                    color: #2196F3;
                     margin-bottom: 20px;
                 }
 
@@ -619,7 +619,7 @@ ob_start();
                 }
 
                 .btn-add-product {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                 }
 
@@ -630,7 +630,7 @@ ob_start();
 
                 .btn-add-product:hover, .btn-filter:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+                    box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
                 }
 
                 .btn-icon {

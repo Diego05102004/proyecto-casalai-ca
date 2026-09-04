@@ -324,7 +324,7 @@ ob_start();
                 }
 
                 .btn-add-dispatch, .btn-process-pending, .btn-export {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 12px 24px;
@@ -409,7 +409,7 @@ ob_start();
                 }
 
                 .dispatches-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 15px;
                     text-align: left;
@@ -435,7 +435,7 @@ ob_start();
 
                 .dispatch-id {
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .status {
@@ -481,7 +481,7 @@ ob_start();
                 }
 
                 .btn-view {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                 }
 
                 .btn-edit {
@@ -547,7 +547,7 @@ ob_start();
                 .stat-value {
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                     margin: 0 0 5px 0;
                 }
 

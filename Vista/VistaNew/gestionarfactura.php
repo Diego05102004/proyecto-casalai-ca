@@ -417,7 +417,7 @@ ob_start();
                 }
 
                 .orders-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 15px;
                     text-align: left;
@@ -451,7 +451,7 @@ ob_start();
                     width: 35px;
                     height: 35px;
                     border-radius: 50%;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     display: flex;
                     align-items: center;
@@ -531,7 +531,7 @@ ob_start();
                 }
 
                 .stat-icon i {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .stat-info h3 {
@@ -543,7 +543,7 @@ ob_start();
                 .stat-value {
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                     margin: 0 0 5px 0;
                 }
 
@@ -596,8 +596,8 @@ ob_start();
                 .summary-row.total {
                     font-weight: 700;
                     font-size: 1.1rem;
-                    color: #667eea;
-                    border-top: 2px solid #667eea;
+                    color: #2196F3;
+                    border-top: 2px solid #2196F3;
                     padding-top: 12px;
                     margin-top: 8px;
                 }

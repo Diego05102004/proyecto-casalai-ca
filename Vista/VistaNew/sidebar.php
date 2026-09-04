@@ -2,7 +2,7 @@
 // Archivo: sidebar.php - Menú lateral reutilizable
 ?>
 <!-- Sidebar Navigation -->
-<aside class="sidebar">
+<aside class="sidebar" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
     <div class="sidebar-header">
         <div class="logo">
             <img src="assets/img/LOGO.png" alt="CasaLai Logo">

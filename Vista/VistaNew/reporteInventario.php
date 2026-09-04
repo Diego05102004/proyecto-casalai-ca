@@ -155,11 +155,11 @@ ob_start();
                             <h3>Stock por Categoría</h3>
                             <div class="chart-legend">
                                 <span class="legend-item">
-                                    <span class="legend-color" style="background: #667eea;"></span>
+                                    <span class="legend-color" style="background: #2196F3;"></span>
                                     Smartphones
                                 </span>
                                 <span class="legend-item">
-                                    <span class="legend-color" style="background: #764ba2;"></span>
+                                    <span class="legend-color" style="background: #1976D2;"></span>
                                     Laptops
                                 </span>
                             </div>
@@ -421,7 +421,7 @@ ob_start();
                 }
 
                 .alert-icon i {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .alert-content {
@@ -441,7 +441,7 @@ ob_start();
                 }
 
                 .btn-alert-action {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 8px 16px;
@@ -468,7 +468,7 @@ ob_start();
                 }
 
                 .inventory-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 15px;
                     text-align: left;

@@ -401,7 +401,7 @@ ob_start();
                 }
 
                 .btn-add-client, .btn-export {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 10px 20px;
@@ -429,7 +429,7 @@ ob_start();
                 }
 
                 .clients-table th {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 15px;
                     text-align: left;
@@ -463,7 +463,7 @@ ob_start();
                     width: 40px;
                     height: 40px;
                     border-radius: 50%;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     display: flex;
                     align-items: center;
@@ -519,7 +519,7 @@ ob_start();
                 }
 
                 .btn-edit:hover {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .btn-delete:hover {
@@ -585,7 +585,7 @@ ob_start();
                 }
 
                 .total-spent {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 4px 10px;
                     border-radius: 12px;
@@ -615,7 +615,7 @@ ob_start();
 
                 .form-group input:focus, .form-group textarea:focus {
                     outline: none;
-                    border-color: #667eea;
+                    border-color: #2196F3;
                 }
 
                 .btn-cancel, .btn-close {
@@ -630,7 +630,7 @@ ob_start();
                 }
 
                 .btn-save {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 10px 25px;

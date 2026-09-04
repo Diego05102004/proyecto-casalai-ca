@@ -271,7 +271,7 @@ ob_start();
             <style>
                 /* Estilos específicos de Perfil */
                 .profile-header-section {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     border-radius: 12px;
                     padding: 30px;
                     display: flex;
@@ -306,7 +306,7 @@ ob_start();
                 .avatar-initial {
                     font-size: 3rem;
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .btn-change-avatar {
@@ -335,7 +335,7 @@ ob_start();
                 }
 
                 .camera-icon i {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .profile-info {
@@ -391,7 +391,7 @@ ob_start();
                 }
 
                 .btn-edit-section, .btn-view-all {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 8px 16px;
@@ -453,7 +453,7 @@ ob_start();
                 }
 
                 .security-icon i {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .security-info {
@@ -473,7 +473,7 @@ ob_start();
                 }
 
                 .btn-change-password, .btn-activate-2fa, .btn-view-sessions {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 8px 16px;
@@ -559,7 +559,7 @@ ob_start();
                 }
 
                 .toggle-switch input:checked + .toggle-slider {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                 }
 
                 .toggle-switch input:checked + .toggle-slider:before {
@@ -586,7 +586,7 @@ ob_start();
                 }
 
                 .activity-icon i {
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .activity-info h4 {

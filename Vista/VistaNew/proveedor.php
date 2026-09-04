@@ -391,7 +391,7 @@ ob_start();
                 }
 
                 .btn-add-provider, .btn-import, .btn-export {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 12px 24px;
@@ -482,7 +482,7 @@ ob_start();
                 }
 
                 .provider-header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     padding: 20px;
                     display: flex;
                     justify-content: space-between;
@@ -499,7 +499,7 @@ ob_start();
                     justify-content: center;
                     font-size: 1.5rem;
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .provider-status {
@@ -581,7 +581,7 @@ ob_start();
 
                 .stat-value {
                     font-weight: 700;
-                    color: #667eea;
+                    color: #2196F3;
                 }
 
                 .provider-actions {
@@ -607,7 +607,7 @@ ob_start();
                 }
 
                 .btn-view {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                 }
 
                 .btn-edit {

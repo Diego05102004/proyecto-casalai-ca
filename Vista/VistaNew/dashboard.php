@@ -293,7 +293,7 @@ ob_start();
                 }
 
                 .modal-header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     padding: 20px;
                     border-radius: 10px 10px 0 0;
@@ -336,7 +336,7 @@ ob_start();
                     padding: 12px;
                     background-color: #f8f9fa;
                     border-radius: 8px;
-                    border-left: 4px solid #667eea;
+                    border-left: 4px solid #2196F3;
                 }
 
                 .detail-label {
@@ -358,7 +358,7 @@ ob_start();
                 }
 
                 .btn-close-modal {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
                     border: none;
                     padding: 10px 25px;
