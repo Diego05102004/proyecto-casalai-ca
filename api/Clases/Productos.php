@@ -2082,6 +2082,6 @@ class Productos extends BD{
             }
         }
         // Valor por defecto para desarrollo
-        return 'http://localhost/proyecto-casalai-ca';
+        return 'http://localhost/Repositorio de GITHUB/proyecto-casalai-main/proyecto-casalai-ca';
     }
 }

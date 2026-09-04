@@ -1162,13 +1162,13 @@ class Usuarios extends BD {
 
     public function obtenerPerfil($data) {
         $id_usuario = $data['id_usuario'] ?? null;
-        
+
         if (empty($id_usuario)) {
             throw new RuntimeException('El ID de usuario es obligatorio');
         }
 
         $usuario = $this->obtenerUsuarioPorId($id_usuario);
-        
+
         if (!$usuario) {
             throw new RuntimeException('Usuario no encontrado');
         }
@@ -1176,12 +1176,29 @@ class Usuarios extends BD {
         // Remover campos sensibles (puede venir como password o clave)
         unset($usuario['password']);
         unset($usuario['clave']);
-        
+
         return [
             'status' => 'success',
             'message' => 'Perfil obtenido correctamente',
             'usuario' => $usuario
         ];
+    }
+
+    /**
+     * Obtiene la URL base configurada para la API
+     * @return string URL base
+     */
+    private function getBaseUrl() {
+        // Intentar incluir la configuración centralizada
+        $configFile = __DIR__ . '/../api_config.php';
+        if (file_exists($configFile)) {
+            require_once $configFile;
+            if (function_exists('getBaseUrl')) {
+                return getBaseUrl();
+            }
+        }
+        // Valor por defecto para desarrollo
+        return 'http://localhost/Repositorio de GITHUB/proyecto-casalai-main/proyecto-casalai-ca';
     }
 
     public function editarPersonal($data) {
