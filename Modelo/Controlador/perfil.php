@@ -364,7 +364,21 @@ function handlePasswordUpdate($usuarioModel, $bitacoraModel, $usuario) {
 
 // Cargar vista
 $pagina = "perfil";
-if (is_file("Vista/" . $pagina . ".php")) {
+
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+    if (!defined('SKIP_SIDE_EFFECTS')) {
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
+            $_SESSION['id_usuario'],
+            MODULO_PERFIL,
+            'ACCESAR',
+            'El usuario accedió al módulo de perfil',
+            'baja'
+        );
+    }
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(

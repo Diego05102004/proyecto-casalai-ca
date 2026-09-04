@@ -311,7 +311,22 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
     $reporteComprasClientes = $cliente->obtenerReporteComprasClientes();
     $totalComprasClientes = array_sum(array_column($reporteComprasClientes, 'cantidad'));
     $pagina = "cliente";
-    if (is_file("Vista/" . $pagina . ".php")) {
+    
+    // Buscar primero en Vista/VistaNew/ y luego en Vista/
+    if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+        if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                '9',
+                'ACCESAR',
+                'El usuario accedió al módulo de Clientes',
+                'media'
+            );
+        }
+        $clientes = getclientes();
+        require_once("Vista/VistaNew/" . $pagina . ".php");
+    } elseif (is_file("Vista/" . $pagina . ".php")) {
         if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
             $bitacoraModel = new Bitacora();
             $bitacoraModel->registrarBitacora(
