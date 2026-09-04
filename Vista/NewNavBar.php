@@ -126,7 +126,7 @@ if (isset($_SESSION['id_usuario'])) {
             </div>
             
             <!-- Logo y nombre de la empresa (clickeable para ir al dashboard) -->
-            <div class="logo-container" onclick="window.location.href='?pagina=dashboard'">
+            <div class="logo-container" onclick="window.location.href='?pagina=<?= $nombre_rol === 'Cliente' ? 'catalogo' : 'dashboard' ?>'">
                 <div class="logo">
                     <IMG src="assets/img/LOGO.png" alt="Logo Casa Lai" height="40">
                 </div>

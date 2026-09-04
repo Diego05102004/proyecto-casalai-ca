@@ -244,7 +244,7 @@ class Productos extends BD{
         if ($pdo instanceof \PDO && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        throw new \RuntimeException($e->getMessage());
     } finally {
         $this->cerrar();
     }
@@ -1875,12 +1875,71 @@ class Productos extends BD{
     public function obtenerTodosProductos($data = []) {
         return $this->api_obtenerTodosProductos($data);
     }
+
+    private function formatearProductoMovil(PDO $pdo, array $row, $incluirCaracteristicas = false) {
+        $imagen = $row['imagen'] ?? null;
+        if ($imagen) {
+            $imagen = str_replace('\\', '/', $imagen);
+            $imagen = str_replace('assets/img/productos/', '', $imagen);
+        }
+
+        $producto = [
+            'id' => $row['id_producto'],
+            'serial' => $row['serial'] ?? '',
+            'nombre' => $row['nombre_producto'],
+            'descripcion' => $row['descripcion_producto'],
+            'categoria_id' => $row['id_categoria'],
+            'categoria_nombre' => $row['nombre_categoria'],
+            'modelo_id' => $row['id_modelo'],
+            'modelo_nombre' => $row['nombre_modelo'],
+            'modelo' => $row['nombre_modelo'],
+            'marca_id' => $row['id_marca'],
+            'marca_nombre' => $row['nombre_marca'],
+            'marca' => $row['nombre_marca'],
+            'precio' => floatval($row['precio']),
+            'stock' => intval($row['stock']),
+            'stock_minimo' => intval($row['stock_minimo']),
+            'stock_maximo' => intval($row['stock_maximo']),
+            'garantia' => $row['clausula_garantia'],
+            'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
+        ];
+
+        if ($incluirCaracteristicas) {
+            $nombreCategoria = $row['nombre_categoria'] ?? '';
+            $tablaCategoria = 'cat_' . strtolower(str_replace(' ', '_', $nombreCategoria));
+            if (preg_match('/^cat_[a-z0-9_]+$/', $tablaCategoria)) {
+                $stmt = $pdo->prepare(
+                    "SELECT * FROM information_schema.tables
+                     WHERE table_schema = DATABASE() AND table_name = :tabla"
+                );
+                $stmt->execute([':tabla' => $tablaCategoria]);
+
+                if ($stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $stmt = $pdo->prepare("SELECT * FROM `$tablaCategoria` WHERE id_producto = :id LIMIT 1");
+                    $stmt->bindValue(':id', $row['id_producto'], PDO::PARAM_INT);
+                    $stmt->execute();
+                    $caracteristicas = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+                    unset($caracteristicas['id'], $caracteristicas['id_producto']);
+                    $producto['caracteristicas'] = $caracteristicas;
+                } else {
+                    $producto['caracteristicas'] = [];
+                }
+            } else {
+                $producto['caracteristicas'] = [];
+            }
+        }
+
+        return $producto;
+    }
     
     private function api_obtenerTodosProductos($data) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($data) {
-            $sql = "SELECT p.*, c.nombre_categoria 
+            $sql = "SELECT p.*, c.nombre_categoria, mo.nombre_modelo,
+                           mo.id_marca, m.nombre_marca
                     FROM tbl_productos p 
                     LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria 
+                    LEFT JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                    LEFT JOIN tbl_marcas m ON mo.id_marca = m.id_marca
                     WHERE p.estado = 'habilitado'
                     ORDER BY p.nombre_producto ASC";
             
@@ -1888,26 +1947,7 @@ class Productos extends BD{
             $productos = [];
             
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $imagen = $row['imagen'];
-                if ($imagen) {
-                    $imagen = str_replace('\\', '/', $imagen);
-                    $imagen = str_replace('assets/img/productos/', '', $imagen);
-                }
-                
-                $productos[] = [
-                    'id' => $row['id_producto'],
-                    'serial' => $row['serial'],
-                    'nombre' => $row['nombre_producto'],
-                    'descripcion' => $row['descripcion_producto'],
-                    'categoria_id' => $row['id_categoria'],
-                    'categoria_nombre' => $row['nombre_categoria'],
-                    'precio' => floatval($row['precio']),
-                    'stock' => intval($row['stock']),
-                    'stock_minimo' => intval($row['stock_minimo']),
-                    'stock_maximo' => intval($row['stock_maximo']),
-                    'garantia' => $row['clausula_garantia'],
-                    'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
-                ];
+                $productos[] = $this->formatearProductoMovil($pdo, $row);
             }
             
             $combos = $this->obtenerCombosDisponiblesMovil();
@@ -1937,9 +1977,12 @@ class Productos extends BD{
         }
         
         return $this->ejecutarConConexionSegura(function($pdo) use ($id) {
-            $sql = "SELECT p.*, c.nombre_categoria 
+            $sql = "SELECT p.*, c.nombre_categoria, mo.nombre_modelo,
+                           mo.id_marca, m.nombre_marca
                     FROM tbl_productos p 
                     LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria 
+                    LEFT JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                    LEFT JOIN tbl_marcas m ON mo.id_marca = m.id_marca
                     WHERE p.id_producto = :id AND p.estado = 'habilitado'";
             
             $stmt = $pdo->prepare($sql);
@@ -1952,26 +1995,7 @@ class Productos extends BD{
                 throw new Exception('Producto no encontrado');
             }
             
-            $imagen = $row['imagen'];
-            if ($imagen) {
-                $imagen = str_replace('\\', '/', $imagen);
-                $imagen = str_replace('assets/img/productos/', '', $imagen);
-            }
-            
-            return [
-                'id' => $row['id_producto'],
-                'serial' => $row['serial'],
-                'nombre' => $row['nombre_producto'],
-                'descripcion' => $row['descripcion_producto'],
-                'categoria_id' => $row['id_categoria'],
-                'categoria_nombre' => $row['nombre_categoria'],
-                'precio' => floatval($row['precio']),
-                'stock' => intval($row['stock']),
-                'stock_minimo' => intval($row['stock_minimo']),
-                'stock_maximo' => intval($row['stock_maximo']),
-                'garantia' => $row['clausula_garantia'],
-                'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
-            ];
+            return $this->formatearProductoMovil($pdo, $row, true);
         });
     }
     
@@ -1992,9 +2016,12 @@ class Productos extends BD{
         }
         
         return $this->ejecutarConConexionSegura(function($pdo) use ($categoria) {
-            $sql = "SELECT p.*, c.nombre_categoria 
+            $sql = "SELECT p.*, c.nombre_categoria, mo.nombre_modelo,
+                           mo.id_marca, m.nombre_marca
                     FROM tbl_productos p 
                     LEFT JOIN tbl_categoria c ON p.id_categoria = c.id_categoria 
+                    LEFT JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
+                    LEFT JOIN tbl_marcas m ON mo.id_marca = m.id_marca
                     WHERE p.id_categoria = :categoria AND p.estado = 'habilitado'
                     ORDER BY p.nombre_producto ASC";
             
@@ -2005,26 +2032,7 @@ class Productos extends BD{
             $productos = [];
             
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $imagen = $row['imagen'];
-                if ($imagen) {
-                    $imagen = str_replace('\\', '/', $imagen);
-                    $imagen = str_replace('assets/img/productos/', '', $imagen);
-                }
-                
-                $productos[] = [
-                    'id' => $row['id_producto'],
-                    'serial' => $row['serial'],
-                    'nombre' => $row['nombre_producto'],
-                    'descripcion' => $row['descripcion_producto'],
-                    'categoria_id' => $row['id_categoria'],
-                    'categoria_nombre' => $row['nombre_categoria'],
-                    'precio' => floatval($row['precio']),
-                    'stock' => intval($row['stock']),
-                    'stock_minimo' => intval($row['stock_minimo']),
-                    'stock_maximo' => intval($row['stock_maximo']),
-                    'garantia' => $row['clausula_garantia'],
-                    'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
-                ];
+                $productos[] = $this->formatearProductoMovil($pdo, $row);
             }
             
             return [
@@ -2052,7 +2060,7 @@ class Productos extends BD{
         }
         
         $productoBase = $this->apiObtenerProductoPorId(['id' => $id]);
-        $caracteristicas = $this->obtenerCaracteristicasDinamicasPorProducto($id);
+        $caracteristicas = $productoBase['caracteristicas'] ?? [];
         
         return [
             'producto' => $productoBase,

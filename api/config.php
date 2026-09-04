@@ -11,12 +11,15 @@ ini_set('display_errors', 1);
 // Headers para API
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Cache-Control');
+header('Access-Control-Max-Age: 86400');
+header('Access-Control-Allow-Private-Network: true');
+header('Vary: Origin');
 header('Content-Type: application/json; charset=UTF-8');
 
-// Log para debugging
+// Log para debugging sin consumir php://input.
+// El cuerpo JSON solo puede leerse una vez y getRequestData() es quien debe procesarlo.
 error_log('API Request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']);
-error_log('Request data: ' . file_get_contents('php://input'));
 
 // Manejar preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -70,11 +73,20 @@ function successResponse($data, $message = 'Operación exitosa') {
 
 // Obtener datos de la petición
 function getRequestData() {
-    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-    
-    if (strpos($contentType, 'application/json') !== false) {
-        $data = json_decode(file_get_contents('php://input'), true);
-        return $data ?? [];
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? ($_SERVER['HTTP_CONTENT_TYPE'] ?? '');
+
+    $rawBody = file_get_contents('php://input');
+    if ($rawBody !== false && trim($rawBody) !== '') {
+        $data = json_decode($rawBody, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+            return $data;
+        }
+
+        if (stripos($contentType, 'application/json') !== false) {
+            error_log('JSON inválido recibido por la API: ' . json_last_error_msg());
+            return [];
+        }
     }
     
     return $_POST;
