@@ -244,7 +244,7 @@ class Productos extends BD{
         if ($pdo instanceof \PDO && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        throw new \RuntimeException("Error en operación de base de datos: " . $e->getMessage());
+        throw new \RuntimeException($e->getMessage());
     } finally {
         $this->cerrar();
     }
