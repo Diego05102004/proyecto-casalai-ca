@@ -92,11 +92,11 @@ class Auth {
     private static $algorithm = 'HS256';
     
     /**
-     * Tiempo de expiración del token en segundos (1 hora)
+     * Tiempo de expiración del token en segundos (8 horas)
      * 
      * @var int
      */
-    private static $tokenExpiration = 1800; // 30 minutos (1800 segundos)
+    private static $tokenExpiration = 28800; // 8 horas (28800 segundos)
     
     /**
      * Nombre de la cookie para almacenar el token JWT
@@ -155,13 +155,14 @@ class Auth {
         // Usar el tiempo de expiración proporcionado o el valor por defecto
         $expires = $expirationTime !== null ? time() + $expirationTime : time() + self::$tokenExpiration;
         
+        // Cambiar SameSite a Lax para mejor compatibilidad
         $cookieOptions = [
             'expires' => $expires,
             'path' => '/',
             'domain' => '', // Dominio actual
             'secure' => $secureFlag,
             'httponly' => true,
-            'samesite' => 'Strict'
+            'samesite' => 'Lax' // Cambiado de Strict a Lax para evitar problemas
         ];
         
         setcookie(self::$cookieName, $token, $cookieOptions);

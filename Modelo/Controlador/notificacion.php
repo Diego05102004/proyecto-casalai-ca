@@ -259,7 +259,9 @@ if (isset($_GET['accion']) && !empty($_GET['accion'])) {
 
 // Cargar la vista de notificaciones
 $pagina = "notificacion";
-if (is_file("vista/" . $pagina . ".php")) {
+
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     if (!isset($_SESSION['id_usuario'])) {
         header("Location: ?pagina=login");
         exit;
@@ -285,7 +287,43 @@ if (is_file("vista/" . $pagina . ".php")) {
         }
         
         // Cargar la vista
-        require_once("vista/" . $pagina . ".php");
+        require_once("Vista/VistaNew/" . $pagina . ".php");
+        
+    } catch (Exception $e) {
+        error_log('Error en el controlador de notificaciones: ' . $e->getMessage());
+        // Mostrar un mensaje de error amigable
+        if (!headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+        }
+        echo "<div class='alert alert-danger'>Ocurrió un error al cargar las notificaciones. Por favor, intente más tarde.</div>";
+    }
+} elseif (is_file("Vista/" . $pagina . ".php")) {
+    if (!isset($_SESSION['id_usuario'])) {
+        header("Location: ?pagina=login");
+        exit;
+    }
+    
+    try {
+        // Registrar en bitácora
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
+            $_SESSION['id_usuario'],
+            'Notificaciones', // ID del módulo de notificaciones
+            'CONSULTAR',
+            'El usuario accedió al módulo de Notificaciones',
+            'baja'
+        );
+        
+        // Obtener notificaciones para la vista
+        $notificaciones = getNotificacionesUsuario($_SESSION['id_usuario']);
+        
+        // Verificar si hay un error al obtener las notificaciones
+        if ($notificaciones === false) {
+            throw new Exception('Error al cargar las notificaciones');
+        }
+        
+        // Cargar la vista
+        require_once("Vista/" . $pagina . ".php");
         
     } catch (Exception $e) {
         error_log('Error en el controlador de notificaciones: ' . $e->getMessage());

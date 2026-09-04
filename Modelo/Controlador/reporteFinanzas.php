@@ -86,7 +86,13 @@ $totalEgresos = array_sum(array_column($finanzas['egresos'], 'monto'));
 
 
 $pagina = "reporteFinanzas";
-if (is_file("Vista/" . $pagina . ".php")) {
+
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+    $cuentabancos = consultarCuentabanco();
+    $cuentasReportes = cuentasReportes();
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
     $cuentabancos = consultarCuentabanco();
     $cuentasReportes = cuentasReportes();
     require_once("Vista/" . $pagina . ".php");

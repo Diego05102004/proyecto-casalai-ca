@@ -164,7 +164,14 @@ if (is_file("Vista/gestionarfactura.php")) {
 
     
 
+    // Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/gestionarfactura.php")) {
+    require_once("Vista/VistaNew/gestionarfactura.php");
+} elseif (is_file("Vista/gestionarfactura.php")) {
     require_once("Vista/gestionarfactura.php");
+} else {
+    echo "Página en construcción";
+}
         if (isset($_SESSION['id_usuario'])) {
 $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(
