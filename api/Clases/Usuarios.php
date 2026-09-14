@@ -1198,7 +1198,7 @@ class Usuarios extends BD {
             }
         }
         // Valor por defecto para desarrollo
-        return 'http://localhost/Repositorio de GITHUB/proyecto-casalai-main/proyecto-casalai-ca';
+        return 'http://localhost/proyecto-casalai-ca';
     }
 
     public function editarPersonal($data) {
