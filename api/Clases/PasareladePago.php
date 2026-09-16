@@ -494,7 +494,25 @@ class PasareladePago extends Factura {
     }
 
     public function pagoIngresarMovil($data = []) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($data) {
+        // Procesar el comprobante antes de la transacción de base de datos
+        $nombreArchivo = null;
+
+        // 1. Subida tradicional con multipart/form-data
+        if (isset($_FILES['comprobante'])) {
+            $archivo = $_FILES['comprobante'];
+            $nombreArchivo = $this->procesarArchivoComprobante($archivo, $data);
+        }
+        // 2. Subida como base64 en el cuerpo JSON
+        elseif (isset($data['comprobante']) && !empty($data['comprobante'])) {
+            $nombreArchivo = $this->procesarBase64Comprobante($data['comprobante'], $data);
+        }
+
+        // Agregar prefijo de ruta al nombre del archivo para guardar en BD
+        if ($nombreArchivo) {
+            $nombreArchivo = 'assets/img/comprobantes/' . $nombreArchivo;
+        }
+
+        return $this->ejecutarConConexionSegura(function($pdo) use ($data, $nombreArchivo) {
             // Extraer datos del parámetro $data
             $factura = $data['factura'] ?? null;
             $cuenta = $data['cuenta'] ?? null;
@@ -502,7 +520,6 @@ class PasareladePago extends Factura {
             $tipo = $data['tipo'] ?? '';
             $referencia = $data['referencia'] ?? '';
             $fecha = $data['fecha'] ?? date('Y-m-d');
-            $comprobante = $data['comprobante'] ?? '';
             $monto = $data['monto'] ?? 0;
 
             // Validaciones básicas
@@ -550,7 +567,7 @@ class PasareladePago extends Factura {
                     $tipo,
                     $referencia,
                     $fecha,
-                    $comprobante,
+                    $nombreArchivo,
                     $monto
                 ]);
 
@@ -562,8 +579,8 @@ class PasareladePago extends Factura {
 
                 // Actualizar estatus de la factura
                 $updateStmt = $pdo->prepare("
-                    UPDATE `tbl_facturas` 
-                    SET `estatus` = 'En Proceso' 
+                    UPDATE `tbl_facturas`
+                    SET `estatus` = 'En Proceso'
                     WHERE `id_factura` = ?
                 ");
                 $updateResultado = $updateStmt->execute([$factura]);
@@ -580,6 +597,7 @@ class PasareladePago extends Factura {
                     'tipo' => $tipo,
                     'fecha' => $fecha,
                     'referencia' => $referencia,
+                    'comprobante' => $nombreArchivo,
                     'estatus_factura' => 'En Proceso'
                 ];
 
@@ -587,6 +605,160 @@ class PasareladePago extends Factura {
                 throw new PDOException("Error en pagoIngresar: " . $e->getMessage());
             }
         });
+    }
+
+    /**
+     * Procesa un archivo de comprobante subido via multipart/form-data
+     */
+    private function procesarArchivoComprobante($archivo, $data) {
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            throw new RuntimeException('La carga del comprobante falló. Código: ' . $archivo['error']);
+        }
+
+        if (!is_uploaded_file($archivo['tmp_name'])) {
+            throw new RuntimeException('El archivo recibido no es una carga válida');
+        }
+
+        // Validar tamaño (max 5MB)
+        $maxSize = 5 * 1024 * 1024;
+        if ($archivo['size'] > $maxSize) {
+            throw new RuntimeException('El comprobante no debe exceder los 5MB');
+        }
+
+        // Detectar tipo MIME real
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($archivo['tmp_name']);
+        $tiposPermitidos = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/bmp' => 'bmp',
+            'image/x-ms-bmp' => 'bmp',
+            'application/pdf' => 'pdf',
+        ];
+
+        if (!isset($tiposPermitidos[$mimeType])) {
+            throw new RuntimeException('El formato del comprobante no es compatible. Formatos permitidos: JPG, PNG, GIF, WEBP, BMP, PDF');
+        }
+
+        // Validar que la imagen no esté dañada (solo para imágenes)
+        if (strpos($mimeType, 'image/') === 0 && @getimagesize($archivo['tmp_name']) === false) {
+            throw new RuntimeException('El archivo de imagen está dañado o incompleto');
+        }
+
+        // Obtener ruta de destino
+        $uploadDir = $this->obtenerRutaComprobante($data);
+        
+        if (!file_exists($uploadDir)) {
+            if (!mkdir($uploadDir, 0777, true)) {
+                throw new RuntimeException('No se pudo crear el directorio de comprobantes');
+            }
+        }
+
+        if (!is_writable($uploadDir)) {
+            throw new RuntimeException('El directorio de comprobantes no tiene permisos de escritura');
+        }
+
+        // Generar nombre de archivo seguro
+        $extension = $tiposPermitidos[$mimeType];
+        $nombreArchivo = uniqid('comprobante_') . '_' . time() . '.' . $extension;
+        $rutaDestino = $uploadDir . $nombreArchivo;
+
+        if (!move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
+            throw new RuntimeException('Error al subir el comprobante');
+        }
+
+        return $nombreArchivo;
+    }
+
+    /**
+     * Procesa un comprobante enviado como base64
+     */
+    private function procesarBase64Comprobante($imageData, $data) {
+        // Si es un objeto/array, intentar extraer la imagen
+        if (is_array($imageData) || is_object($imageData)) {
+            $imageObj = (array)$imageData;
+            $possibleKeys = ['base64', 'data', 'uri', 'url', 'path', 'content', 'imageData'];
+            foreach ($possibleKeys as $key) {
+                if (isset($imageObj[$key]) && !empty($imageObj[$key])) {
+                    $imageData = $imageObj[$key];
+                    break;
+                }
+            }
+        }
+
+        if (is_array($imageData) || is_object($imageData)) {
+            throw new RuntimeException('El formato del comprobante no es válido');
+        }
+
+        // Detectar si es base64 válido
+        $isBase64 = preg_match('/^[a-zA-Z0-9\/\+=]+$/', $imageData) && (strlen($imageData) % 4 === 0);
+
+        if ($isBase64) {
+            $imageData = urldecode($imageData);
+            $imageData = preg_replace('/\s+/', '', $imageData);
+            
+            // Eliminar prefijo data:image/...;base64, si existe
+            if (strpos($imageData, 'data:') === 0) {
+                $imageData = substr($imageData, strpos($imageData, ',') + 1);
+            }
+
+            $imageData = base64_decode($imageData);
+        }
+
+        if (empty($imageData)) {
+            throw new RuntimeException('No se pudo decodificar el comprobante');
+        }
+
+        // Detectar tipo MIME desde los datos binarios
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->buffer($imageData);
+        $tiposPermitidos = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/bmp' => 'bmp',
+            'image/x-ms-bmp' => 'bmp',
+            'application/pdf' => 'pdf',
+        ];
+
+        if (!isset($tiposPermitidos[$mimeType])) {
+            throw new RuntimeException('El formato del comprobante no es compatible');
+        }
+
+        // Obtener ruta de destino
+        $uploadDir = $this->obtenerRutaComprobante($data);
+        
+        if (!file_exists($uploadDir)) {
+            if (!mkdir($uploadDir, 0777, true)) {
+                throw new RuntimeException('No se pudo crear el directorio de comprobantes');
+            }
+        }
+
+        if (!is_writable($uploadDir)) {
+            throw new RuntimeException('El directorio de comprobantes no tiene permisos de escritura');
+        }
+
+        // Generar nombre de archivo seguro
+        $extension = $tiposPermitidos[$mimeType];
+        $nombreArchivo = uniqid('comprobante_') . '_' . time() . '.' . $extension;
+        $rutaDestino = $uploadDir . $nombreArchivo;
+
+        if (!file_put_contents($rutaDestino, $imageData)) {
+            throw new RuntimeException('Error al guardar el comprobante');
+        }
+
+        return $nombreArchivo;
+    }
+
+    /**
+     * Obtiene la ruta donde guardar el comprobante
+     */
+    private function obtenerRutaComprobante($data) {
+        // Siempre usar ruta por defecto
+        return __DIR__ . '/../../assets/img/comprobantes/';
     }
     private function pagoConsultar() {
         return $this->ejecutarConConexionSegura(function($pdo) {
