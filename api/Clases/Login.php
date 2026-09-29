@@ -92,6 +92,9 @@ class Login extends BD
         return $this->ejecutarConConexionSegura(function($pdo) {
             $r = array();
             
+            // Cargar instancia de Encryption para desencriptar username de la BD
+            $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+            
             $sql = "SELECT 
                         u.id_usuario, 
                         u.id_rol,
@@ -104,36 +107,55 @@ class Login extends BD
                     FROM 
                         tbl_usuarios u 
                     INNER JOIN 
-                        tbl_rol r ON r.id_rol = u.id_rol
-                    WHERE u.username = :username";
+                        tbl_rol r ON r.id_rol = u.id_rol";
 
             $p = $pdo->prepare($sql);
-            $p->bindParam(':username', $this->username);
             $p->execute();
 
-            $fila = $p->fetch(PDO::FETCH_ASSOC);
+            // Obtener todos los usuarios para comparar desencriptando
+            $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+            $filaEncontrada = null;
 
-            if ($fila) {
+            foreach ($filas as $fila) {
+                try {
+                    // Intentar desencriptar el username de la BD
+                    $usernameBD = $encryption->decrypt($fila['username']);
+                    
+                    // Comparar username desencriptado con el username recibido (ya desencriptado en login.php)
+                    if ($usernameBD === $this->username) {
+                        $filaEncontrada = $fila;
+                        break;
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla el desencriptado, comparar directamente (para compatibilidad con datos no cifrados)
+                    if ($fila['username'] === $this->username) {
+                        $filaEncontrada = $fila;
+                        break;
+                    }
+                }
+            }
+
+            if ($filaEncontrada) {
                 // Verificar si el usuario está bloqueado por intentos fallidos
-                if ($fila['intentos_fallidos'] >= 3) {
+                if ($filaEncontrada['intentos_fallidos'] >= 3) {
                     $r['resultado'] = 'bloqueado';
                     $r['mensaje']   = "Usuario bloqueado por exceder el número de intentos fallidos. Contacte al administrador.";
                 } else {
-                    if (password_verify($this->password, $fila['password'])) {
+                    if (password_verify($this->password, $filaEncontrada['password'])) {
                         // Contraseña correcta: reiniciar intentos fallidos y permitir acceso
                         $this->reiniciarIntentosFallidos($this->username);
                         
                         $r['resultado']   = 'existe';
-                        $r['mensaje']     = $fila['username'];
-                        $r['nombre_rol']  = $fila['nombre_rol'];
-                        $r['id_usuario']  = $fila['id_usuario']; 
-                        $r['id_rol']      = $fila['id_rol']; 
-                        $r['cedula']      = $fila['cedula'];
-                        $r['foto_perfil'] = $fila['foto_perfil'];
+                        $r['mensaje']     = $this->username; // Retornar username desencriptado
+                        $r['nombre_rol']  = $filaEncontrada['nombre_rol'];
+                        $r['id_usuario']  = $filaEncontrada['id_usuario']; 
+                        $r['id_rol']      = $filaEncontrada['id_rol']; 
+                        $r['cedula']      = $filaEncontrada['cedula'];
+                        $r['foto_perfil'] = $filaEncontrada['foto_perfil'];
                     } else {
                         // Contraseña incorrecta: incrementar intentos fallidos
                         $this->incrementarIntentosFallidos($this->username);
-                        $nuevosIntentos = $fila['intentos_fallidos'] + 1;
+                        $nuevosIntentos = $filaEncontrada['intentos_fallidos'] + 1;
                         $intentosRestantes = 3 - $nuevosIntentos;
                         
                         if ($intentosRestantes > 0) {
@@ -221,10 +243,28 @@ class Login extends BD
     public function registrarUsuarioYCliente($datos) {
         return $this->ejecutarConConexionSegura(function($pdoS) use ($datos) {
             
-            $p = $pdoS->prepare("SELECT COUNT(*) FROM tbl_usuarios WHERE username = ?");
-            $p->execute([$datos['nombre_usuario']]);
-            if ($p->fetchColumn() > 0) {
-                return ['status' => 'error', 'mensaje' => 'El nombre de usuario ya está en uso.'];
+            // Cargar instancia de Encryption para desencriptar username de la BD
+            $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+            
+            $p = $pdoS->prepare("SELECT id_usuario, username FROM tbl_usuarios");
+            $p->execute();
+            $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($filas as $fila) {
+                try {
+                    // Intentar desencriptar el username de la BD
+                    $usernameBD = $encryption->decrypt($fila['username']);
+                    
+                    // Comparar username desencriptado con el username recibido
+                    if ($usernameBD === $datos['nombre_usuario']) {
+                        return ['status' => 'error', 'mensaje' => 'El nombre de usuario ya está en uso.'];
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla el desencriptado, comparar directamente
+                    if ($fila['username'] === $datos['nombre_usuario']) {
+                        return ['status' => 'error', 'mensaje' => 'El nombre de usuario ya está en uso.'];
+                    }
+                }
             }
 
             $hash = password_hash($datos['clave'], PASSWORD_DEFAULT);
@@ -285,32 +325,16 @@ class Login extends BD
     private function validarInicioSesion($datos) {
         $errores = [];
         
-        // Validar username
-        if (!isset($datos['username'])) {
+        // Validación básica - solo verificar que los campos existan y no estén vacíos
+        // NOTA: Las validaciones de formato y longitud se hacen en login.php DESPUÉS de desencriptar
+        // Este método se mantiene por compatibilidad pero no hace validaciones estrictas
+        
+        if (!isset($datos['username']) || trim($datos['username']) === '') {
             $errores['username'] = 'El nombre de usuario es obligatorio';
-        } else {
-            $username = trim($datos['username']);
-            if (empty($username)) {
-                $errores['username'] = 'El nombre de usuario es obligatorio';
-            } elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
-                $errores['username'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
-                $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
-            }
         }
         
-        // Validar password
-        if (!isset($datos['password'])) {
+        if (!isset($datos['password']) || trim($datos['password']) === '') {
             $errores['password'] = 'La contraseña es obligatoria';
-        } else {
-            $password = $datos['password'];
-            if (empty($password)) {
-                $errores['password'] = 'La contraseña es obligatoria';
-            } elseif (mb_strlen($password) < 6 || mb_strlen($password) > 15) {
-                $errores['password'] = 'La contraseña debe tener entre 6 y 15 caracteres';
-            } /* elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\{}\[\]|:;"\'<>,.?\/\\]).+$/', $password)) {
-                $errores['password'] = 'La contraseña debe tener al menos una mayúscula, un número y un carácter especial';
-            }*/
         }
         
         return $errores;
@@ -329,9 +353,9 @@ class Login extends BD
             $nombreUsuario = trim($datos['nombre_usuario']);
             if (empty($nombreUsuario)) {
                 $errores['nombre_usuario'] = 'El nombre de usuario es obligatorio';
-            } elseif (mb_strlen($nombreUsuario) < self::MIN_USERNAME || mb_strlen($nombreUsuario) > self::MAX_USERNAME) {
+            } /* elseif (mb_strlen($nombreUsuario) < self::MIN_USERNAME || mb_strlen($nombreUsuario) > self::MAX_USERNAME) {
                 $errores['nombre_usuario'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $nombreUsuario)) {
+            }*/ elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $nombreUsuario)) {
                 $errores['nombre_usuario'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
             }
         }
@@ -451,14 +475,38 @@ class Login extends BD
      * Verifica si un nombre de usuario ya existe
      */
     private function verificarUsernameExistente($username) {
-        try {
-            $p = $this->co->prepare("SELECT COUNT(*) FROM tbl_usuarios WHERE username = ?");
-            $p->execute([$username]);
-            return $p->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            error_log('Error en verificarUsernameExistente: ' . $e->getMessage());
-            return false;
-        }
+        return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
+            try {
+                // Cargar instancia de Encryption para desencriptar username de la BD
+                $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+                
+                $p = $pdo->prepare("SELECT id_usuario, username FROM tbl_usuarios");
+                $p->execute();
+                $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($filas as $fila) {
+                    try {
+                        // Intentar desencriptar el username de la BD
+                        $usernameBD = $encryption->decrypt($fila['username']);
+                        
+                        // Comparar username desencriptado con el username recibido
+                        if ($usernameBD === $username) {
+                            return true;
+                        }
+                    } catch (\Throwable $e) {
+                        // Si falla el desencriptado, comparar directamente
+                        if ($fila['username'] === $username) {
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            } catch (PDOException $e) {
+                error_log('Error en verificarUsernameExistente: ' . $e->getMessage());
+                return false;
+            }
+        }, 'S');
     }
     
     /**
@@ -494,13 +542,33 @@ class Login extends BD
      */
     public function obtenerIntentosFallidos($username) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
-            $sql = "SELECT intentos_fallidos FROM tbl_usuarios WHERE username = :username";
+            // Cargar instancia de Encryption para desencriptar username de la BD
+            $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+            
+            $sql = "SELECT id_usuario, username, intentos_fallidos FROM tbl_usuarios";
             $p = $pdo->prepare($sql);
-            $p->bindParam(':username', $username);
             $p->execute();
             
-            $resultado = $p->fetch(PDO::FETCH_ASSOC);
-            return $resultado ? (int)$resultado['intentos_fallidos'] : 0;
+            $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($filas as $fila) {
+                try {
+                    // Intentar desencriptar el username de la BD
+                    $usernameBD = $encryption->decrypt($fila['username']);
+                    
+                    // Comparar username desencriptado con el username recibido
+                    if ($usernameBD === $username) {
+                        return (int)$fila['intentos_fallidos'];
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla el desencriptado, comparar directamente
+                    if ($fila['username'] === $username) {
+                        return (int)$fila['intentos_fallidos'];
+                    }
+                }
+            }
+            
+            return 0;
         }, 'S');
     }
     
@@ -509,12 +577,45 @@ class Login extends BD
      */
     public function incrementarIntentosFallidos($username) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
-            $sql = "UPDATE tbl_usuarios SET intentos_fallidos = intentos_fallidos + 1 WHERE username = :username";
+            // Cargar instancia de Encryption para desencriptar username de la BD
+            $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+            
+            $sql = "SELECT id_usuario, username FROM tbl_usuarios";
             $p = $pdo->prepare($sql);
-            $p->bindParam(':username', $username);
             $p->execute();
             
-            return $p->rowCount() > 0;
+            $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+            $idUsuarioEncontrado = null;
+            
+            foreach ($filas as $fila) {
+                try {
+                    // Intentar desencriptar el username de la BD
+                    $usernameBD = $encryption->decrypt($fila['username']);
+                    
+                    // Comparar username desencriptado con el username recibido
+                    if ($usernameBD === $username) {
+                        $idUsuarioEncontrado = $fila['id_usuario'];
+                        break;
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla el desencriptado, comparar directamente
+                    if ($fila['username'] === $username) {
+                        $idUsuarioEncontrado = $fila['id_usuario'];
+                        break;
+                    }
+                }
+            }
+            
+            if ($idUsuarioEncontrado) {
+                $sql = "UPDATE tbl_usuarios SET intentos_fallidos = intentos_fallidos + 1 WHERE id_usuario = :id_usuario";
+                $p = $pdo->prepare($sql);
+                $p->bindParam(':id_usuario', $idUsuarioEncontrado);
+                $p->execute();
+                
+                return $p->rowCount() > 0;
+            }
+            
+            return false;
         }, 'S');
     }
     
@@ -523,12 +624,45 @@ class Login extends BD
      */
     public function reiniciarIntentosFallidos($username) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
-            $sql = "UPDATE tbl_usuarios SET intentos_fallidos = 0 WHERE username = :username";
+            // Cargar instancia de Encryption para desencriptar username de la BD
+            $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+            
+            $sql = "SELECT id_usuario, username FROM tbl_usuarios";
             $p = $pdo->prepare($sql);
-            $p->bindParam(':username', $username);
             $p->execute();
             
-            return $p->rowCount() > 0;
+            $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+            $idUsuarioEncontrado = null;
+            
+            foreach ($filas as $fila) {
+                try {
+                    // Intentar desencriptar el username de la BD
+                    $usernameBD = $encryption->decrypt($fila['username']);
+                    
+                    // Comparar username desencriptado con el username recibido
+                    if ($usernameBD === $username) {
+                        $idUsuarioEncontrado = $fila['id_usuario'];
+                        break;
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla el desencriptado, comparar directamente
+                    if ($fila['username'] === $username) {
+                        $idUsuarioEncontrado = $fila['id_usuario'];
+                        break;
+                    }
+                }
+            }
+            
+            if ($idUsuarioEncontrado) {
+                $sql = "UPDATE tbl_usuarios SET intentos_fallidos = 0 WHERE id_usuario = :id_usuario";
+                $p = $pdo->prepare($sql);
+                $p->bindParam(':id_usuario', $idUsuarioEncontrado);
+                $p->execute();
+                
+                return $p->rowCount() > 0;
+            }
+            
+            return false;
         }, 'S');
     }
     
@@ -537,10 +671,33 @@ class Login extends BD
      */
     public function estaUsuarioBloqueado($username) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($username) {
-            $sql = "SELECT intentos_fallidos FROM tbl_usuarios WHERE username = :username";
+            // Cargar instancia de Encryption para desencriptar username de la BD
+            $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+            
+            $sql = "SELECT id_usuario, username, intentos_fallidos FROM tbl_usuarios";
             $p = $pdo->prepare($sql);
-            $p->bindParam(':username', $username);
             $p->execute();
+            
+            $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($filas as $fila) {
+                try {
+                    // Intentar desencriptar el username de la BD
+                    $usernameBD = $encryption->decrypt($fila['username']);
+                    
+                    // Comparar username desencriptado con el username recibido
+                    if ($usernameBD === $username) {
+                        return $fila['intentos_fallidos'] >= 3;
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla el desencriptado, comparar directamente
+                    if ($fila['username'] === $username) {
+                        return $fila['intentos_fallidos'] >= 3;
+                    }
+                }
+            }
+            
+            return false;
             
             $resultado = $p->fetch(PDO::FETCH_ASSOC);
             return $resultado ? (int)$resultado['intentos_fallidos'] >= 3 : false;

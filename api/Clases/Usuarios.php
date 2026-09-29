@@ -237,9 +237,9 @@ class Usuarios extends BD {
             $username = trim((string)$datos['username']);
             if ($username === '') {
                 $errores['username'] = 'El nombre de usuario es obligatorio';
-            } elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
+            }/* elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
                 $errores['username'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+            }*/ elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
                 $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
             }
         }
@@ -375,9 +375,9 @@ class Usuarios extends BD {
             $username = trim((string)$datos['username']);
             if ($username === '') {
                 $errores['username'] = 'El nombre de usuario es obligatorio';
-            } elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
+            } /* elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
                 $errores['username'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+            }*/ elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
                 $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
             }
         }
@@ -789,18 +789,37 @@ class Usuarios extends BD {
     private function e_existeUsuario($username, $excluir_id = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($username, $excluir_id) {
             
-            $sql = "SELECT COUNT(*) FROM tbl_usuarios WHERE username = ?";
-            $params = [$username];
+            $sql = "SELECT id_usuario, username FROM tbl_usuarios";
+            $params = [];
 
             if ($excluir_id !== null) {
-                $sql .= " AND id_usuario != ?";
+                $sql .= " WHERE id_usuario != ?";
                 $params[] = $excluir_id;
             }
 
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
-            return $stmt->fetchColumn() > 0;
+            $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($filas as $fila) {
+                try {
+                    // Intentar desencriptar el username de la BD
+                    $usernameBD = $this->encryption->decrypt($fila['username']);
+                    
+                    // Comparar username desencriptado con el username recibido
+                    if ($usernameBD === $username) {
+                        return true;
+                    }
+                } catch (\Throwable $e) {
+                    // Si falla el desencriptado, comparar directamente
+                    if ($fila['username'] === $username) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
 
         });
     }
@@ -1058,16 +1077,37 @@ class Usuarios extends BD {
                 error_log("Iniciando registro de cliente - Username: $username");
                 
                 // 1. Verificar que el username no exista en tbl_usuarios (base S)
-                $p = $pdoS->prepare("SELECT COUNT(*) FROM tbl_usuarios WHERE username = ?");
-                $p->execute([$username]);
-                if ($p->fetchColumn() > 0) {
-                    throw new RuntimeException('El nombre de usuario ya está en uso');
+                $p = $pdoS->prepare("SELECT id_usuario, username FROM tbl_usuarios");
+                $p->execute();
+                $filas = $p->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($filas as $fila) {
+                    try {
+                        // Intentar desencriptar el username de la BD
+                        $usernameBD = $this->encryption->decrypt($fila['username']);
+                        
+                        // Comparar username desencriptado con el username recibido
+                        if ($usernameBD === $username) {
+                            throw new RuntimeException('El nombre de usuario ya está en uso');
+                        }
+                    } catch (\Throwable $e) {
+                        // Si falla el desencriptado, comparar directamente
+                        if ($fila['username'] === $username) {
+                            throw new RuntimeException('El nombre de usuario ya está en uso');
+                        }
+                    }
                 }
                 
                 // 2. Insertar usuario en tbl_usuarios (base S) - incluyendo cédula como en Login.php
                 error_log("Registrando usuario en tbl_usuarios");
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
                 $id_rol_cliente = 3;
+                
+                // Cifrar campos sensibles según CAMPOS_CIFRADOS
+                $nombres_cifrado = $this->encryption->encrypt($nombres);
+                $apellidos_cifrado = $this->encryption->encrypt($apellidos);
+                $correo_cifrado = $this->encryption->encrypt($correo);
+                $telefono_cifrado = $this->encryption->encrypt($telefono);
                 
                 $sqlU = "INSERT INTO tbl_usuarios 
                         (username, password, cedula, nombres, apellidos, correo, telefono, id_rol, estatus)
@@ -1077,10 +1117,10 @@ class Usuarios extends BD {
                     $username,
                     $password_hash,
                     $cedula,
-                    $nombres,
-                    $apellidos,
-                    $correo,
-                    $telefono,
+                    $nombres_cifrado,
+                    $apellidos_cifrado,
+                    $correo_cifrado,
+                    $telefono_cifrado,
                     $id_rol_cliente
                 ]);
                 

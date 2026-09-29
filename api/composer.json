@@ -10,6 +10,13 @@
         "classmap": ["Config/"]
     },
     "require": {
-        "firebase/php-jwt": "^6.0"
+        "firebase/php-jwt": "^6.0",
+        "phpseclib/phpseclib": "^3.0",
+        "cboden/ratchet": "^0.4.4",
+        "ratchet/pawl": "^0.4.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "php-webdriver/webdriver": "^1.1"
     }
 }

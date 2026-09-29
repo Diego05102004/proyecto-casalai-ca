@@ -292,9 +292,9 @@ class Login extends BD
             $username = trim($datos['username']);
             if (empty($username)) {
                 $errores['username'] = 'El nombre de usuario es obligatorio';
-            } elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
+            } /* elseif (mb_strlen($username) < self::MIN_USERNAME || mb_strlen($username) > self::MAX_USERNAME) {
                 $errores['username'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+            }*/ elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
                 $errores['username'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
             }
         }
@@ -329,9 +329,9 @@ class Login extends BD
             $nombreUsuario = trim($datos['nombre_usuario']);
             if (empty($nombreUsuario)) {
                 $errores['nombre_usuario'] = 'El nombre de usuario es obligatorio';
-            } elseif (mb_strlen($nombreUsuario) < self::MIN_USERNAME || mb_strlen($nombreUsuario) > self::MAX_USERNAME) {
+            }/* elseif (mb_strlen($nombreUsuario) < self::MIN_USERNAME || mb_strlen($nombreUsuario) > self::MAX_USERNAME) {
                 $errores['nombre_usuario'] = 'El nombre de usuario debe tener entre ' . self::MIN_USERNAME . ' y ' . self::MAX_USERNAME . ' caracteres';
-            } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $nombreUsuario)) {
+            }*/ elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $nombreUsuario)) {
                 $errores['nombre_usuario'] = 'El nombre de usuario solo puede contener letras, números y guiones bajos';
             }
         }

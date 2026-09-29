@@ -4,6 +4,10 @@
  * Proporciona la función RecibirPeticion() para manejar solicitudes de la app móvil
  */
 
+require_once __DIR__ . '/Config/Encryption.php';
+
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
+
 /**
  * Función principal para recibir y procesar peticiones de la app móvil
  * Detecta la función solicitada e invoca el método correspondiente de la clase
@@ -47,6 +51,28 @@ function RecibirPeticion($instance, $operations) {
         if ($method === 'GET') {
             $data = array_merge($data, $_GET);
         }
+
+        // Desencriptar datos sensibles si están cifrados (solo para POST/PUT)
+        if ($method === 'POST' || $method === 'PUT') {
+            $encryption = new Encryption();
+            $sensitiveFields = ['username', 'password', 'nombres', 'apellidos', 'cedula', 'correo', 'telefono', 'direccion', 'nombre', 'apellido', 'clave'];
+            foreach ($sensitiveFields as $field) {
+                if (isset($data[$field]) && $data[$field] !== '') {
+                    try {
+                        // Restaurar espacios en blanco a '+' para Base64
+                        if (is_string($data[$field])) {
+                            $data[$field] = str_replace(' ', '+', $data[$field]);
+                        }
+                        $data[$field] = $encryption->decrypt($data[$field]);
+                    } catch (\Throwable $decryptError) {
+                        error_log("[API_HELPER] Error descifrando campo '$field': " . $decryptError->getMessage());
+                        // Continuar con el valor original si falla el desencriptado
+                    }
+                }
+            }
+        }
+        
+        // Importante: NO desencriptar el campo 'funcion' ya que se usa para enrutamiento
 
         // Asegurar que la función también quede en $data para métodos con JSON
         if (!isset($data['funcion']) && isset($funcion)) {
