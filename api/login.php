@@ -132,12 +132,12 @@ error_log("[LOGIN] Iniciando procesamiento de login");
     }
     
     // Validar datos desencriptados manualmente (después de desencriptar)
-    if (mb_strlen($usernameOrEmail) < 3 || mb_strlen($usernameOrEmail) > 50) {
-        errorResponse('El nombre de usuario debe tener entre 3 y 50 caracteres', 400);
+    if (mb_strlen($usernameOrEmail) < 4 || mb_strlen($usernameOrEmail) > 20) {
+        errorResponse('El nombre de usuario debe tener entre 4 y 20 caracteres', 400);
     }
     
-    if (mb_strlen($data['password']) < 8) {
-        errorResponse('La contraseña debe tener al menos 8 caracteres', 400);
+    if (mb_strlen($data['password']) < 6) {
+        errorResponse('La contraseña debe tener al menos 6 caracteres', 400);
     }
 
     // Detectar si estamos en localhost para permitir omitir reCAPTCHA en desarrollo
