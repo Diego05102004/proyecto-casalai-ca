@@ -1,7 +1,4 @@
 <?php
-  
-
-
 
 //lo primero que se debe hacer es verificar al igual que en la vista es que exista el archivo
 if (!is_file("Modelo/".$pagina.".php")){
@@ -16,28 +13,49 @@ else{
 //generar el reporte haciando uso de la libreria DOMPDF
 require_once('Modelo/pdfrecepcion.php');
 }
-  
-  if(is_file("Vista/".$pagina.".php")){
-	  
-	  //bien si estamos aca es porque existe la vista y la clase
-	  //por lo que lo primero que debemos hace es realizar una instancia de la clase
-	  //instanciar es crear una variable local, que contiene los metodos de la clase
-	  //para poderlos usar
-	  
-	  $o = new rusuarios(); //ahora nuestro objeto se llama $o y es una copia en memoria de la
-	  //clase rusuarios
-	  
-	  if(isset($_POST['generar'])){
-		  $o = new rusuarios();
-		  $o->set_fecha_recepcion($_POST['fecha_recepcion']);
-		  $o->set_correlativo($_POST['correlativo']);
-		  $o->set_id_proveedor($_POST['id_proveedor']);
-		  $o->generarPDF();
-	  }
-	  
-	  require_once("Vista/".$pagina.".php"); 
-  }
-  else{
-	  echo "pagina en construccion";
-  }
+
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if(is_file("Vista/VistaNew/".$pagina.".php")){
+
+	//bien si estamos aca es porque existe la vista y la clase
+	//por lo que lo primero que debemos hace es realizar una instancia de la clase
+	//instanciar es crear una variable local, que contiene los metodos de la clase
+	//para poderlos usar
+
+	$o = new rusuarios(); //ahora nuestro objeto se llama $o y es una copia en memoria de la
+	//clase rusuarios
+
+	if(isset($_POST['generar'])){
+		$o = new rusuarios();
+		$o->set_fecha_recepcion($_POST['fecha_recepcion']);
+		$o->set_correlativo($_POST['correlativo']);
+		$o->set_id_proveedor($_POST['id_proveedor']);
+		$o->generarPDF();
+	}
+
+	require_once("Vista/VistaNew/".$pagina.".php");
+}
+elseif(is_file("Vista/".$pagina.".php")){
+
+	//bien si estamos aca es porque existe la vista y la clase
+	//por lo que lo primero que debemos hace es realizar una instancia de la clase
+	//instanciar es crear una variable local, que contiene los metodos de la clase
+	//para poderlos usar
+
+	$o = new rusuarios(); //ahora nuestro objeto se llama $o y es una copia en memoria de la
+	//clase rusuarios
+
+	if(isset($_POST['generar'])){
+		$o = new rusuarios();
+		$o->set_fecha_recepcion($_POST['fecha_recepcion']);
+		$o->set_correlativo($_POST['correlativo']);
+		$o->set_id_proveedor($_POST['id_proveedor']);
+		$o->generarPDF();
+	}
+
+	require_once("Vista/".$pagina.".php");
+}
+else{
+	echo "pagina en construccion";
+}
 ?>

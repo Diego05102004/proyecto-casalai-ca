@@ -1,0 +1,1540 @@
+<?php
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Verificar si el usuario ha iniciado sesión (sistema tradicional)
+if (!isset($_SESSION['name'])) {
+    header('Location: ../..');
+    exit();
+}
+
+// Verificar y/o generar token JWT (sistema JWT)
+require_once __DIR__ . '/../../Modelo/Config/Auth.php';
+use Usuario\ProyectoCasalaiCa\Config\Auth;
+
+if (!Auth::validateToken() && isset($_SESSION['id_usuario']) && isset($_SESSION['nombre_rol'])) {
+    try {
+        $token = Auth::generateToken($_SESSION['id_usuario'], $_SESSION['nombre_rol']);
+        Auth::setTokenCookie($token);
+    } catch (Exception $e) {
+        error_log("Error al generar JWT en recepcion: " . $e->getMessage());
+    }
+}
+
+// Variables para los componentes reutilizables
+$pagina_actual = 'recepcion';
+$titulo_pagina = 'Gestión de Recepciones';
+
+// Iniciar el buffer de contenido
+ob_start();
+?>
+
+            <!-- Summary Cards para Recepciones -->
+            <div class="summary-cards">
+                <div class="summary-card sales">
+                    <div class="card-icon"><i class="fas fa-inbox"></i></div>
+                    <div class="card-content">
+                        <h3>Recepciones Hoy</h3>
+                        <p class="card-value"><?php echo count($recepciones ?? []); ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="85, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage">85%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card expenses">
+                    <div class="card-icon"><i class="fas fa-truck"></i></div>
+                    <div class="card-content">
+                        <h3>Pendientes</h3>
+                        <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'pendiente'; })); ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="35, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage">35%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card income">
+                    <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="card-content">
+                        <h3>Completadas</h3>
+                        <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'completada'; })); ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="92, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage">92%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recepciones Section -->
+            <div class="recepciones-section">
+                <div class="section-header">
+                    <h2>Gestión de Recepciones</h2>
+                    <div class="section-actions">
+                        <button class="btn-add-recepcion" onclick="openModal('registrar')">
+                            <span class="btn-icon"><i class="fas fa-plus"></i></span>
+                            Nueva Recepción
+                        </button>
+                        <button class="btn-report" onclick="window.location.href='?pagina=reporteRecepcion'">
+                            <span class="btn-icon"><i class="fas fa-chart-bar"></i></span>
+                            Reportes
+                        </button>
+                        <button class="btn-filter" onclick="openFilterModal()">
+                            <span class="btn-icon"><i class="fas fa-search"></i></span>
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Recepciones -->
+                <div class="table-container">
+                    <table class="recepciones-table">
+                        <thead>
+                            <tr>
+                                <th>Correlativo</th>
+                                <th>Proveedor</th>
+                                <th>Fecha</th>
+                                <th>Productos</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($recepciones)): ?>
+                                <?php foreach ($recepciones as $recepcion): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($recepcion['correlativo'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($recepcion['nombre_proveedor'] ?? 'N/A'); ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($recepcion['fecha'] ?? 'now')); ?></td>
+                                        <td><?php echo htmlspecialchars($recepcion['tamaño'] ?? 0); ?></td>
+                                        <td>$<?php echo number_format($recepcion['costo_inversion'] ?? 0, 2, ',', '.'); ?></td>
+                                        <td>
+                                            <?php 
+                                            $estatus = 'completada';
+                                            $estatusClass = 'completed';
+                                            ?>
+                                            <span class="status-badge <?php echo $estatusClass; ?>">
+                                                <?php echo ucfirst($estatus); ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn-action btn-view" onclick="viewRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn-action btn-delete" onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 40px;">
+                                        <i class="fas fa-inbox" style="font-size: 3rem; color: #2196F3; margin-bottom: 15px;"></i>
+                                        <p style="color: #718096; margin: 0;">No hay recepciones registradas</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal para Registrar Recepción -->
+            <div id="recepcionModal" class="modal">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <div class="modal-header-content">
+                            <div class="modal-icon">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+                            <div class="modal-title-content">
+                                <h2 id="modalTitle">Nueva Recepción</h2>
+                                <p>Complete los datos para registrar una nueva recepción de productos</p>
+                            </div>
+                        </div>
+                        <span class="close-modal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="recepcionForm">
+                            <!-- Información General -->
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <i class="fas fa-info-circle"></i>
+                                    <h3>Información General</h3>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="proveedor">
+                                            <i class="fas fa-building"></i>
+                                            Proveedor*
+                                        </label>
+                                        <select id="proveedor" name="proveedor" required>
+                                            <option value="">Seleccione un proveedor</option>
+                                            <?php if (!empty($proveedores)): ?>
+                                                <?php foreach ($proveedores as $proveedor): ?>
+                                                    <option value="<?php echo $proveedor['id_proveedor'] ?? ''; ?>">
+                                                        <?php echo htmlspecialchars($proveedor['nombre_proveedor'] ?? 'Sin nombre'); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <option value="">No hay proveedores disponibles</option>
+                                            <?php endif; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="correlativo">
+                                            <i class="fas fa-file-invoice"></i>
+                                            Número de Factura*
+                                        </label>
+                                        <input type="text" id="correlativo" name="correlativo" required 
+                                               placeholder="Ej: FAC-001" class="input-with-icon">
+                                        <i class="fas fa-hashtag input-icon"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="fecha">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        Fecha de Recepción*
+                                    </label>
+                                    <input type="date" id="fecha" name="fecha" required class="input-with-icon">
+                                    <i class="fas fa-calendar input-icon"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Productos de la Recepción -->
+                            <div class="form-section productos-section">
+                                <div class="section-title">
+                                    <i class="fas fa-boxes"></i>
+                                    <h3>Productos de la Recepción</h3>
+                                    <span class="product-count">0 productos</span>
+                                </div>
+                                <div id="productosList">
+                                    <div class="producto-row">
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-box"></i>
+                                                Producto*
+                                            </label>
+                                            <select name="producto[]" class="producto-select" required onchange="calcularSubtotal(this)">
+                                                <option value="">Seleccione un producto</option>
+                                                <?php if (!empty($productos)): ?>
+                                                    <?php foreach ($productos as $producto): ?>
+                                                        <option value="<?php echo $producto['id_producto'] ?? ''; ?>">
+                                                            <?php echo htmlspecialchars($producto['nombre_producto'] ?? 'Sin nombre'); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <option value="">No hay productos disponibles</option>
+                                                <?php endif; ?>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-cubes"></i>
+                                                Cantidad*
+                                            </label>
+                                            <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon">
+                                            <i class="fas fa-hashtag input-icon"></i>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-dollar-sign"></i>
+                                                Costo Unitario*
+                                            </label>
+                                            <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon">
+                                            <i class="fas fa-dollar-sign input-icon"></i>
+                                        </div>
+                                        <div class="form-group subtotal-group">
+                                            <label>
+                                                <i class="fas fa-calculator"></i>
+                                                Subtotal
+                                            </label>
+                                            <input type="text" class="subtotal-display" readonly value="$0.00">
+                                        </div>
+                                        <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Eliminar producto">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="productos-footer">
+                                    <button type="button" class="btn-add-row" onclick="addProductoRow()">
+                                        <i class="fas fa-plus"></i> Agregar Producto
+                                    </button>
+                                    <div class="total-section">
+                                        <span class="total-label">Total Estimado:</span>
+                                        <span class="total-value" id="totalValue">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Observaciones -->
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <i class="fas fa-sticky-note"></i>
+                                    <h3>Observaciones</h3>
+                                </div>
+                                <div class="form-group">
+                                    <label for="observaciones">
+                                        <i class="fas fa-comment-alt"></i>
+                                        Observaciones adicionales
+                                    </label>
+                                    <textarea id="observaciones" name="observaciones" rows="3"
+                                              placeholder="Escriba cualquier observación relevante sobre esta recepción..."></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" onclick="closeModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="btn-save" onclick="saveRecepcion()">
+                            <i class="fas fa-check"></i> Guardar Recepción
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Ver Detalles de Recepción -->
+            <div id="viewModal" class="modal">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <div class="modal-header-content">
+                            <div class="modal-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="modal-title-content">
+                                <h2>Detalles de Recepción</h2>
+                                <p>Información completa de la recepción seleccionada</p>
+                            </div>
+                        </div>
+                        <span class="close-modal" onclick="closeViewModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="recepcion-detalles">
+                            <!-- Información General -->
+                            <div class="detalle-section">
+                                <div class="section-title">
+                                    <i class="fas fa-info-circle"></i>
+                                    <h3>Información General</h3>
+                                </div>
+                                <div class="detalle-grid">
+                                    <div class="detalle-item">
+                                        <label>Correlativo:</label>
+                                        <span id="viewCorrelativo">REC-001</span>
+                                    </div>
+                                    <div class="detalle-item">
+                                        <label>Proveedor:</label>
+                                        <span id="viewProveedor">TechCorp S.A.</span>
+                                    </div>
+                                    <div class="detalle-item">
+                                        <label>Fecha:</label>
+                                        <span id="viewFecha">2026-09-29</span>
+                                    </div>
+                                    <div class="detalle-item">
+                                        <label>Estado:</label>
+                                        <span class="status-badge completed" id="viewEstado">Completada</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Productos -->
+                            <div class="detalle-section">
+                                <div class="section-title">
+                                    <i class="fas fa-boxes"></i>
+                                    <h3>Productos Recibidos</h3>
+                                </div>
+                                <div class="productos-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th>Cantidad</th>
+                                                <th>Costo Unitario</th>
+                                                <th>Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="viewProductos">
+                                            <tr>
+                                                <td>iPhone 15 Pro Max</td>
+                                                <td>10</td>
+                                                <td>$1,199.00</td>
+                                                <td>$11,990.00</td>
+                                            </tr>
+                                            <tr>
+                                                <td>MacBook Air M3</td>
+                                                <td>5</td>
+                                                <td>$1,099.00</td>
+                                                <td>$5,495.00</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3"><strong>Total:</strong></td>
+                                                <td><strong id="viewTotal">$17,485.00</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Observaciones -->
+                            <div class="detalle-section">
+                                <div class="section-title">
+                                    <i class="fas fa-sticky-note"></i>
+                                    <h3>Observaciones</h3>
+                                </div>
+                                <div class="observaciones-text">
+                                    <p id="viewObservaciones">Recepción completada sin incidencias. Todos los productos fueron verificados y estan en condiciones óptimas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" onclick="closeViewModal()">
+                            <i class="fas fa-times"></i> Cerrar
+                        </button>
+                        <button class="btn-save" onclick="imprimirRecepcion()">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Anular Recepción -->
+            <div id="anularModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header warning">
+                        <div class="modal-header-content">
+                            <div class="modal-icon warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="modal-title-content">
+                                <h2>Anular Recepción</h2>
+                                <p>Confirmación de anulación de recepción</p>
+                            </div>
+                        </div>
+                        <span class="close-modal" onclick="closeAnularModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="anular-content">
+                            <div class="anular-icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <h3>¿Está seguro de anular esta recepción?</h3>
+                            <p>Esta acción no se puede deshacer y afectará el inventario del sistema.</p>
+                            
+                            <div class="anular-info">
+                                <div class="info-row">
+                                    <label>Correlativo:</label>
+                                    <span id="anularCorrelativo">REC-001</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Proveedor:</label>
+                                    <span id="anularProveedor">TechCorp S.A.</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Total:</label>
+                                    <span id="anularTotal">$17,485.00</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="motivoAnulacion">
+                                    <i class="fas fa-comment-alt"></i>
+                                    Motivo de Anulación*
+                                </label>
+                                <textarea id="motivoAnulacion" rows="3"
+                                          placeholder="Describa el motivo por el cual desea anular esta recepción..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" onclick="closeAnularModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="btn-save danger" onclick="confirmarAnulacion()">
+                            <i class="fas fa-check"></i> Confirmar Anulación
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="searchModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Buscar Recepción</h2>
+                        <span class="close-modal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="searchForm">
+                            <div class="form-group">
+                                <label for="searchCorrelativo">Número de Factura</label>
+                                <input type="text" id="searchCorrelativo" name="correlativo" 
+                                       placeholder="Ej: REC-001">
+                            </div>
+                            <div class="form-group">
+                                <label for="searchProveedor">Proveedor</label>
+                                <select id="searchProveedor" name="proveedor">
+                                    <option value="">Todos los proveedores</option>
+                                    <option value="1">TechCorp S.A.</option>
+                                    <option value="2">ElectroWorld Ltd.</option>
+                                    <option value="3">Global Supplies</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fechaInicio">Fecha Desde</label>
+                                    <input type="date" id="fechaInicio" name="fechaInicio">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fechaFin">Fecha Hasta</label>
+                                    <input type="date" id="fechaFin" name="fechaFin">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" onclick="closeSearchModal()">Cancelar</button>
+                        <button class="btn-save" onclick="searchRecepcion()">Buscar</button>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                /* Estilos específicos de Recepciones */
+                .recepciones-section {
+                    margin-top: 30px;
+                }
+
+                /* Override modal size for recepcion */
+                #recepcionModal .modal-content.modal-large {
+                    max-width: 95%;
+                    width: 1300px;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+
+                #recepcionModal .modal-body {
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+
+                .table-container {
+                    background: white;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+                    margin-top: 20px;
+                }
+
+                .recepciones-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+
+                .recepciones-table thead {
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                }
+
+                .recepciones-table th {
+                    padding: 15px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .recepciones-table tbody tr {
+                    border-bottom: 1px solid #e9ecef;
+                    transition: all 0.3s ease;
+                }
+
+                .recepciones-table tbody tr:hover {
+                    background: rgba(33, 150, 243, 0.05);
+                }
+
+                .recepciones-table td {
+                    padding: 15px;
+                    font-size: 0.9rem;
+                    color: #2d3748;
+                }
+
+                .status-badge {
+                    padding: 6px 14px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .status-badge.completed {
+                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+                    color: white;
+                }
+
+                .status-badge.pending {
+                    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+                    color: white;
+                }
+
+                .status-badge.cancelled {
+                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+                    color: white;
+                }
+
+                .btn-action {
+                    padding: 8px 12px;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    margin-right: 5px;
+                }
+
+                .btn-action:hover {
+                    transform: scale(1.05);
+                }
+
+                .btn-action.btn-view {
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                }
+
+                .btn-action.btn-delete {
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+                    color: white;
+                }
+
+                /* Productos de Recepción */
+                .form-section {
+                    background: rgba(33, 150, 243, 0.03);
+                    border-radius: 12px;
+                    padding: 25px;
+                    margin-bottom: 20px;
+                    border: 1px solid rgba(33, 150, 243, 0.1);
+                }
+
+                .section-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid rgba(33, 150, 243, 0.1);
+                }
+
+                .section-title i {
+                    font-size: 1.3rem;
+                    color: #2196F3;
+                }
+
+                .section-title h3 {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: #2d3748;
+                    margin: 0;
+                }
+
+                .section-title .product-count {
+                    margin-left: auto;
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                }
+
+                .productos-section {
+                    background: linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(25, 118, 210, 0.05) 100%);
+                }
+
+                .productos-recepcion h3 {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: #2d3748;
+                    margin-bottom: 15px;
+                }
+
+                .producto-row {
+                    display: grid;
+                    grid-template-columns: 2fr 1fr 1.2fr 1fr auto;
+                    gap: 12px;
+                    margin-bottom: 15px;
+                    align-items: start;
+                    background: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                    border: 1px solid rgba(33, 150, 243, 0.1);
+                }
+
+                .subtotal-group {
+                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+                    border-radius: 8px;
+                    padding: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .subtotal-group label {
+                    color: white;
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                    margin-bottom: 5px;
+                }
+
+                .subtotal-display {
+                    background: white;
+                    border: none;
+                    color: #2d3748;
+                    font-weight: 700;
+                    text-align: right;
+                    font-size: 0.9rem;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    width: 100%;
+                }
+
+                .productos-footer {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 20px;
+                    padding-top: 20px;
+                    border-top: 2px solid rgba(33, 150, 243, 0.1);
+                }
+
+                .total-section {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    padding: 12px 20px;
+                    border-radius: 10px;
+                    color: white;
+                }
+
+                .total-label {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                }
+
+                .total-value {
+                    font-size: 1.3rem;
+                    font-weight: 800;
+                }
+
+                .input-with-icon {
+                    position: relative;
+                }
+
+                .input-icon {
+                    position: absolute;
+                    right: 15px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #2196F3;
+                    pointer-events: none;
+                }
+
+                .input-with-icon input,
+                .input-with-icon select {
+                    padding-right: 40px;
+                }
+
+                /* Mejoras en labels */
+                .form-group label {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: 600;
+                    color: #2d3748;
+                    margin-bottom: 8px;
+                }
+
+                .form-group label i {
+                    color: #2196F3;
+                    font-size: 0.9rem;
+                }
+
+                /* Modal Header Mejorado */
+                .modal-header-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
+                .modal-icon {
+                    width: 50px;
+                    height: 50px;
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .modal-icon i {
+                    font-size: 1.5rem;
+                    color: white;
+                }
+
+                .modal-title-content h2 {
+                    font-size: 1.4rem;
+                    font-weight: 700;
+                    color: white;
+                    margin: 0 0 5px 0;
+                }
+
+                .modal-title-content p {
+                    font-size: 0.85rem;
+                    color: rgba(255, 255, 255, 0.8);
+                    margin: 0;
+                }
+
+                /* Botones mejorados */
+                .btn-cancel, .btn-save {
+                    padding: 12px 25px;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.3s ease;
+                }
+
+                .btn-cancel {
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                    color: white;
+                }
+
+                .btn-cancel:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+                }
+
+                .btn-save {
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                }
+
+                .btn-save:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+                }
+
+                .btn-save.danger {
+                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+                }
+
+                .btn-save.danger:hover {
+                    box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+                }
+
+                /* Modal de Anulación */
+                .modal-header.warning {
+                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+                }
+
+                .modal-icon.warning {
+                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+                }
+
+                .anular-content {
+                    text-align: center;
+                    padding: 20px;
+                }
+
+                .anular-icon {
+                    width: 80px;
+                    height: 80px;
+                    margin: 0 auto 20px;
+                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .anular-icon i {
+                    font-size: 2.5rem;
+                    color: white;
+                }
+
+                .anular-content h3 {
+                    font-size: 1.3rem;
+                    font-weight: 700;
+                    color: #2d3748;
+                    margin: 0 0 10px 0;
+                }
+
+                .anular-content p {
+                    font-size: 0.95rem;
+                    color: #718096;
+                    margin: 0 0 25px 0;
+                }
+
+                .anular-info {
+                    background: rgba(245, 101, 101, 0.05);
+                    border: 1px solid rgba(245, 101, 101, 0.2);
+                    border-radius: 10px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+
+                .info-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 10px 0;
+                    border-bottom: 1px solid rgba(245, 101, 101, 0.1);
+                }
+
+                .info-row:last-child {
+                    border-bottom: none;
+                }
+
+                .info-row label {
+                    font-weight: 600;
+                    color: #718096;
+                }
+
+                .info-row span {
+                    font-weight: 700;
+                    color: #2d3748;
+                }
+
+                /* Modal de Detalles */
+                .recepcion-detalles {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 25px;
+                }
+
+                .detalle-section {
+                    background: rgba(33, 150, 243, 0.03);
+                    border-radius: 12px;
+                    padding: 20px;
+                    border: 1px solid rgba(33, 150, 243, 0.1);
+                }
+
+                .detalle-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 15px;
+                }
+
+                .detalle-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+
+                .detalle-item label {
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: #718096;
+                }
+
+                .detalle-item span {
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: #2d3748;
+                }
+
+                .productos-table {
+                    overflow-x: auto;
+                }
+
+                .productos-table table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+
+                .productos-table thead {
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                }
+
+                .productos-table th {
+                    padding: 12px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 0.85rem;
+                }
+
+                .productos-table td {
+                    padding: 12px;
+                    border-bottom: 1px solid #e9ecef;
+                }
+
+                .productos-table tfoot {
+                    background: rgba(33, 150, 243, 0.05);
+                }
+
+                .productos-table tfoot td {
+                    font-weight: 700;
+                    color: #2196F3;
+                }
+
+                .observaciones-text {
+                    background: white;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(33, 150, 243, 0.1);
+                }
+
+                .observaciones-text p {
+                    margin: 0;
+                    color: #2d3748;
+                    line-height: 1.6;
+                }
+
+                /* Botones de sección */
+                .btn-add-recepcion, .btn-filter {
+                    padding: 12px 20px;
+                    border: none;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.3s ease;
+                }
+
+                .btn-add-recepcion {
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                }
+
+                .btn-filter {
+                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                    color: white;
+                }
+
+                .btn-report {
+                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+                    color: white;
+                }
+
+                .btn-add-recepcion:hover, .btn-filter:hover, .btn-report:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
+                }
+
+                /* Responsive */
+                @media (max-width: 768px) {
+                    .producto-row {
+                        grid-template-columns: 1fr;
+                        gap: 10px;
+                    }
+
+                    .subtotal-group {
+                        grid-column: 1 / -1;
+                    }
+
+                    .btn-remove-row {
+                        grid-column: 1 / -1;
+                        width: 100%;
+                        margin-top: 10px;
+                    }
+
+                    .recepciones-table {
+                        font-size: 0.8rem;
+                    }
+
+                    .recepciones-table th,
+                    .recepciones-table td {
+                        padding: 10px;
+                    }
+                }
+
+                @media (max-width: 1200px) {
+                    .producto-row {
+                        grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+                        gap: 10px;
+                    }
+                }
+            </style>
+
+            <script>
+                // Función para abrir modal de recepción
+                function openModal(type) {
+                    const modal = document.getElementById('recepcionModal');
+                    const modalTitle = document.getElementById('modalTitle');
+                    const form = document.getElementById('recepcionForm');
+                    
+                    if (type === 'registrar') {
+                        modalTitle.textContent = 'Nueva Recepción';
+                        form.reset();
+                        // Set today's date
+                        const fechaInput = document.getElementById('fecha');
+                        if (fechaInput) {
+                            const today = new Date().toISOString().split('T')[0];
+                            fechaInput.value = today;
+                        }
+                    }
+                    
+                    modal.style.display = 'block';
+                    modal.style.animation = 'fadeIn 0.3s ease';
+                }
+
+                // Función para cerrar modal de recepción
+                function closeModal() {
+                    const modal = document.getElementById('recepcionModal');
+                    modal.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
+                }
+
+                // Función para abrir modal de búsqueda
+                function openFilterModal() {
+                    const modal = document.getElementById('searchModal');
+                    modal.style.display = 'block';
+                    modal.style.animation = 'fadeIn 0.3s ease';
+                }
+
+                // Función para cerrar modal de búsqueda
+                function closeSearchModal() {
+                    const modal = document.getElementById('searchModal');
+                    modal.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
+                }
+
+                // Función para agregar fila de producto
+                function addProductoRow() {
+                    const productosList = document.getElementById('productosList');
+                    const newRow = document.createElement('div');
+                    newRow.className = 'producto-row';
+                    newRow.style.animation = 'slideDown 0.3s ease';
+                    newRow.innerHTML = `
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-box"></i>
+                                Producto*
+                            </label>
+                            <select name="producto[]" class="producto-select" required onchange="calcularSubtotal(this)">
+                                <option value="">Seleccione un producto</option>
+                                <option value="1">iPhone 15 Pro Max</option>
+                                <option value="2">MacBook Air M3</option>
+                                <option value="3">AirPods Pro 2</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-cubes"></i>
+                                Cantidad*
+                            </label>
+                            <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon" onchange="calcularSubtotal(this)">
+                            <i class="fas fa-hashtag input-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-dollar-sign"></i>
+                                Costo Unitario*
+                            </label>
+                            <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon" onchange="calcularSubtotal(this)">
+                            <i class="fas fa-dollar-sign input-icon"></i>
+                        </div>
+                        <div class="form-group subtotal-group">
+                            <label>
+                                <i class="fas fa-calculator"></i>
+                                Subtotal
+                            </label>
+                            <input type="text" class="subtotal-display" readonly value="$0.00">
+                        </div>
+                        <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Eliminar producto">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    productosList.appendChild(newRow);
+                    actualizarContadorProductos();
+                }
+
+                // Función para calcular subtotal de una fila
+                function calcularSubtotal(input) {
+                    const row = input.closest('.producto-row');
+                    const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
+                    const costo = parseFloat(row.querySelector('input[name="costo[]"]').value) || 0;
+                    const subtotal = cantidad * costo;
+                    row.querySelector('.subtotal-display').value = '$' + subtotal.toFixed(2);
+                    calcularTotal();
+                }
+
+                // Función para calcular total general
+                function calcularTotal() {
+                    const subtotales = document.querySelectorAll('.subtotal-display');
+                    let total = 0;
+                    subtotales.forEach(subtotal => {
+                        const valor = parseFloat(subtotal.value.replace('$', '')) || 0;
+                        total += valor;
+                    });
+                    document.getElementById('totalValue').textContent = '$' + total.toFixed(2);
+                }
+
+                // Función para actualizar contador de productos
+                function actualizarContadorProductos() {
+                    const count = document.querySelectorAll('.producto-row').length;
+                    document.querySelector('.product-count').textContent = count + ' producto' + (count !== 1 ? 's' : '');
+                }
+
+                // Función para eliminar fila de producto
+                function removeProductoRow(button) {
+                    const row = button.closest('.producto-row');
+                    if (document.querySelectorAll('.producto-row').length > 1) {
+                        row.style.animation = 'slideUp 0.3s ease';
+                        setTimeout(() => {
+                            row.remove();
+                            actualizarContadorProductos();
+                            calcularTotal();
+                        }, 300);
+                    } else {
+                        alert('Debe haber al menos un producto');
+                    }
+                }
+
+                // Función para guardar recepción
+                function saveRecepcion() {
+                    const form = document.getElementById('recepcionForm');
+                    const formData = new FormData(form);
+                    formData.append('accion', 'registrar');
+                    
+                    // Validación básica
+                    const productos = document.querySelectorAll('.producto-select');
+                    let productosValidos = true;
+                    productos.forEach(select => {
+                        if (!select.value) productosValidos = false;
+                    });
+                    
+                    if (!productosValidos) {
+                        alert('Por favor, seleccione todos los productos');
+                        return;
+                    }
+                    
+                    // Enviar datos al backend
+                    fetch('?pagina=recepcion', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.status === 'success') {
+                            alert('Recepción registrada correctamente');
+                            closeModal();
+                            // Recargar la página para mostrar la nueva recepción
+                            location.reload();
+                        } else {
+                            alert('Error al registrar recepción: ' + (data.message || 'Error desconocido'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al guardar recepción:', error);
+                        alert('Error al guardar recepción. Por favor, intente nuevamente.');
+                    });
+                }
+
+                // Función para ver detalles de recepción
+                function viewRecepcion(correlativo) {
+                    // Cargar datos reales desde el backend
+                    fetch('?pagina=recepcion', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'accion=obtener_recepcion&correlativo=' + encodeURIComponent(correlativo)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.status === 'success') {
+                            const recepcion = data.recepcion;
+                            document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || 'N/A';
+                            document.getElementById('viewProveedor').textContent = recepcion.proveedor || 'N/A';
+                            document.getElementById('viewFecha').textContent = recepcion.fecha || 'N/A';
+                            document.getElementById('viewEstado').textContent = recepcion.estatus || 'N/A';
+                            document.getElementById('viewTotal').textContent = '$' + (recepcion.total || 0).toFixed(2);
+                            
+                            // Cargar productos
+                            const productosTable = document.getElementById('viewProductos');
+                            productosTable.innerHTML = '';
+                            if (recepcion.productos && recepcion.productos.length > 0) {
+                                let total = 0;
+                                recepcion.productos.forEach(prod => {
+                                    const subtotal = (prod.cantidad || 0) * (prod.costo || 0);
+                                    total += subtotal;
+                                    productosTable.innerHTML += `
+                                        <tr>
+                                            <td>${prod.nombre_producto || 'N/A'}</td>
+                                            <td>${prod.cantidad || 0}</td>
+                                            <td>$${(prod.costo || 0).toFixed(2)}</td>
+                                            <td>$${subtotal.toFixed(2)}</td>
+                                        </tr>
+                                    `;
+                                });
+                                document.getElementById('viewTotal').textContent = '$' + total.toFixed(2);
+                            }
+                            
+                            // Observaciones
+                            document.getElementById('viewObservaciones').textContent = recepcion.observaciones || 'Sin observaciones';
+                            
+                            const modal = document.getElementById('viewModal');
+                            modal.style.display = 'block';
+                            modal.style.animation = 'fadeIn 0.3s ease';
+                        } else {
+                            // Fallback a datos simulados si no hay respuesta del backend
+                            document.getElementById('viewCorrelativo').textContent = correlativo;
+                            document.getElementById('viewProveedor').textContent = 'Cargando...';
+                            document.getElementById('viewFecha').textContent = 'Cargando...';
+                            document.getElementById('viewEstado').textContent = 'Cargando...';
+                            
+                            const modal = document.getElementById('viewModal');
+                            modal.style.display = 'block';
+                            modal.style.animation = 'fadeIn 0.3s ease';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar recepción:', error);
+                        // Fallback a datos simulados en caso de error
+                        document.getElementById('viewCorrelativo').textContent = correlativo;
+                        document.getElementById('viewProveedor').textContent = 'No disponible';
+                        document.getElementById('viewFecha').textContent = 'No disponible';
+                        document.getElementById('viewEstado').textContent = 'No disponible';
+                        
+                        const modal = document.getElementById('viewModal');
+                        modal.style.display = 'block';
+                        modal.style.animation = 'fadeIn 0.3s ease';
+                    });
+                }
+
+                // Función para cerrar modal de detalles
+                function closeViewModal() {
+                    const modal = document.getElementById('viewModal');
+                    modal.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
+                }
+
+                // Función para abrir modal de anulación
+                function anularRecepcion(correlativo) {
+                    // Cargar datos reales desde el backend
+                    fetch('?pagina=recepcion', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'accion=obtener_recepcion&correlativo=' + encodeURIComponent(correlativo)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.status === 'success') {
+                            const recepcion = data.recepcion;
+                            document.getElementById('anularCorrelativo').textContent = recepcion.correlativo || 'N/A';
+                            document.getElementById('anularProveedor').textContent = recepcion.proveedor || 'N/A';
+                            document.getElementById('anularTotal').textContent = '$' + (recepcion.total || 0).toFixed(2);
+                            document.getElementById('motivoAnulacion').value = '';
+                            
+                            const modal = document.getElementById('anularModal');
+                            modal.style.display = 'block';
+                            modal.style.animation = 'fadeIn 0.3s ease';
+                        } else {
+                            // Fallback a datos simulados
+                            document.getElementById('anularCorrelativo').textContent = correlativo;
+                            document.getElementById('anularProveedor').textContent = 'No disponible';
+                            document.getElementById('anularTotal').textContent = '$0.00';
+                            
+                            const modal = document.getElementById('anularModal');
+                            modal.style.display = 'block';
+                            modal.style.animation = 'fadeIn 0.3s ease';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar recepción:', error);
+                        // Fallback a datos simulados
+                        document.getElementById('anularCorrelativo').textContent = correlativo;
+                        document.getElementById('anularProveedor').textContent = 'No disponible';
+                        document.getElementById('anularTotal').textContent = '$0.00';
+                        
+                        const modal = document.getElementById('anularModal');
+                        modal.style.display = 'block';
+                        modal.style.animation = 'fadeIn 0.3s ease';
+                    });
+                }
+
+                // Función para cerrar modal de anulación
+                function closeAnularModal() {
+                    const modal = document.getElementById('anularModal');
+                    modal.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
+                }
+
+                // Función para confirmar anulación
+                function confirmarAnulacion() {
+                    const motivo = document.getElementById('motivoAnulacion').value;
+                    const correlativo = document.getElementById('anularCorrelativo').textContent;
+                    
+                    if (!motivo.trim()) {
+                        alert('Por favor, ingrese el motivo de la anulación');
+                        return;
+                    }
+                    
+                    // Enviar anulación al backend
+                    const formData = new FormData();
+                    formData.append('accion', 'anular');
+                    formData.append('correlativo', correlativo);
+                    formData.append('motivo', motivo);
+                    
+                    fetch('?pagina=recepcion', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.status === 'success') {
+                            alert('Recepción anulada correctamente');
+                            closeAnularModal();
+                            // Recargar la página para mostrar los cambios
+                            location.reload();
+                        } else {
+                            alert('Error al anular recepción: ' + (data.message || 'Error desconocido'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al anular recepción:', error);
+                        alert('Error al anular recepción. Por favor, intente nuevamente.');
+                    });
+                }
+
+                // Función para imprimir recepción
+                function imprimirRecepcion() {
+                    alert('Función para imprimir recepción (conectar con backend)');
+                }
+
+                // Función para buscar recepciones
+                function searchRecepcion() {
+                    const form = document.getElementById('searchForm');
+                    const formData = new FormData(form);
+                    
+                    alert('Búsqueda de recepciones\n(conectar con backend para mostrar resultados)');
+                    closeSearchModal();
+                }
+
+                // Event listeners para cerrar modales
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Cerrar modal de recepción
+                    const closeRecepcionModal = document.querySelector('#recepcionModal .close-modal');
+                    if (closeRecepcionModal) {
+                        closeRecepcionModal.addEventListener('click', closeModal);
+                    }
+
+                    // Cerrar modal de búsqueda
+                    const closeSearchModalBtn = document.querySelector('#searchModal .close-modal');
+                    if (closeSearchModalBtn) {
+                        closeSearchModalBtn.addEventListener('click', closeSearchModal);
+                    }
+
+                    // Cerrar modales al hacer clic fuera
+                    window.addEventListener('click', function(event) {
+                        const recepcionModal = document.getElementById('recepcionModal');
+                        const searchModal = document.getElementById('searchModal');
+                        const viewModal = document.getElementById('viewModal');
+                        const anularModal = document.getElementById('anularModal');
+                        
+                        if (event.target === recepcionModal) {
+                            closeModal();
+                        }
+                        if (event.target === searchModal) {
+                            closeSearchModal();
+                        }
+                        if (event.target === viewModal) {
+                            closeViewModal();
+                        }
+                        if (event.target === anularModal) {
+                            closeAnularModal();
+                        }
+                    });
+
+                    // Animaciones para filas de productos
+                    const productoRows = document.querySelectorAll('.producto-row');
+                    productoRows.forEach((row, index) => {
+                        row.style.animation = `slideDown 0.3s ease ${index * 0.1}s`;
+                    });
+
+                    // Inicializar contador de productos
+                    actualizarContadorProductos();
+                });
+
+                // Animaciones CSS
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                    
+                    @keyframes slideDown {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-20px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                    
+                    @keyframes slideUp {
+                        from {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                        to {
+                            opacity: 0;
+                            transform: translateY(-20px);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            </script>
+
+<?php
+$contenido_pagina = ob_get_clean();
+
+// Incluir la estructura base del dashboard
+require_once __DIR__ . '/dashboard_base.php';
+?>

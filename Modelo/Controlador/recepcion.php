@@ -212,6 +212,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             break;
 
+        case 'obtener_recepcion':
+            header('Content-Type: application/json; charset=utf-8');
+            $correlativo = $_POST['correlativo'] ?? null;
+            $k = new Recepcion();
+            $k->setcorrelativo($correlativo);
+            $respuesta = $k->buscar();
+            
+            if (!$respuesta) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'No se encontró el correlativo: ' . $correlativo
+                ], JSON_UNESCAPED_UNICODE);
+            } else {
+                // Obtener productos de la recepción
+                $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
+                $productos = $k->obtenerProductosPorRecepcion($id_recepcion);
+                
+                echo json_encode([
+                    'status' => 'success',
+                    'recepcion' => $respuesta,
+                    'productos' => $productos
+                ], JSON_UNESCAPED_UNICODE);
+            }
+        break;
+
         case 'buscar':
             $k = new Recepcion();
             $correlativo = $_POST['correlativo'] ?? null;
@@ -341,23 +366,55 @@ function getrecepcion() {
     $recepcion = new Recepcion();
     return $recepcion->getrecepcion(); // Consulta resumen: fecha, correlativo, proveedor, tamaño, costo inversión
 }
+
+function getproductos() {
+    $recepcion = new Recepcion();
+    return $recepcion->listadoproductos();
+}
+
 $r = new Recepcion();
 $RecepcionesProveedor = $r->getRecepcionesPorProveedor();
-$ProductorRecibidos = $r->getProductosMasRecibidos();
+$ProductosRecibidos = $r->getProductosMasRecibidos();
 $RecepcionMensual = $r->getRecepcionesMensuales();
 
 $proveedores = (new Recepcion())->obtenerproveedor();
+$productos = getproductos();
 $pagina = "recepcion";
-if (is_file("Vista/" . $pagina . ".php")) {
+
+// Verificar si se solicita la vista de reporte
+if (isset($_GET['pagina']) && $_GET['pagina'] === 'reporteRecepcion') {
+    $pagina = "reporteRecepcion";
+}
+
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
-        $bitacoraModel = new Bitacora();
-        $bitacoraModel->registrarBitacora(
-        $_SESSION['id_usuario'],
-        'Recepcion',
-        'ACCESAR',
-        'El usuario accedió al módulo de Recepcion',
-        'media'
-    );}
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                'Recepcion',
+                'ACCESAR',
+                'El usuario accedió al módulo de Recepcion',
+                'media'
+            );
+        }
+    }
+    $recepciones = getrecepcion();
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
+    if (isset($_SESSION['id_usuario'])) {
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                'Recepcion',
+                'ACCESAR',
+                'El usuario accedió al módulo de Recepcion',
+                'media'
+            );
+        }
+    }
     $recepciones = getrecepcion();
     require_once("Vista/" . $pagina . ".php");
 } else {

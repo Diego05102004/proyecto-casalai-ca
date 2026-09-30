@@ -37,11 +37,11 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-building"></i></div>
                     <div class="card-content">
                         <h3>Total Proveedores</h3>
-                        <p class="card-value">56</p>
+                        <p class="card-value"><?php echo count($proveedores ?? []); ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="78, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="78, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
                             <span class="percentage">78%</span>
                         </div>
@@ -52,11 +52,11 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-star"></i></div>
                     <div class="card-content">
                         <h3>Activos</h3>
-                        <p class="card-value">48</p>
+                        <p class="card-value"><?php echo count(array_filter($proveedores ?? [], function($p) { return ($p['estatus'] ?? '') === 'activo'; })); ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="86, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="86, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
                             <span class="percentage">86%</span>
                         </div>
@@ -64,16 +64,16 @@ ob_start();
                 </div>
 
                 <div class="summary-card income">
-                    <div class="card-icon"><i class="fas fa-box"></i></div>
+                    <div class="card-icon"><i class="fas fa-inbox"></i></div>
                     <div class="card-content">
-                        <h3>Pedidos Pendientes</h3>
-                        <p class="card-value">12</p>
+                        <h3>Recepciones</h3>
+                        <p class="card-value"><?php echo count($recepcionesPorProveedor ?? []); ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="21, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="65, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">21%</span>
+                            <span class="percentage">65%</span>
                         </div>
                     </div>
                 </div>

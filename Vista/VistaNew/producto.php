@@ -77,6 +77,21 @@ ob_start();
                         </div>
                     </div>
                 </div>
+
+                <div class="summary-card recepcion">
+                    <div class="card-icon"><i class="fas fa-inbox"></i></div>
+                    <div class="card-content">
+                        <h3>En Recepción</h3>
+                        <p class="card-value"><?php echo count($productosMasRecibidos ?? []); ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="45, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage">45%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Productos Grid Section -->

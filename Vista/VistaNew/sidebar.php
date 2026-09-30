@@ -55,6 +55,10 @@
             <span class="nav-icon"><i class="fas fa-warehouse"></i></span>
             <span class="nav-text">Inventario</span>
         </a>
+        <a href="?pagina=recepcion" class="nav-link <?php echo ($pagina_actual ?? '') === 'recepcion' ? 'active' : ''; ?>">
+            <span class="nav-icon"><i class="fas fa-inbox"></i></span>
+            <span class="nav-text">Recepciones</span>
+        </a>
         <a href="?pagina=perfil" class="nav-link <?php echo ($pagina_actual ?? '') === 'perfil' ? 'active' : ''; ?>">
             <span class="nav-icon"><i class="fas fa-cog"></i></span>
             <span class="nav-text">Configuración</span>
