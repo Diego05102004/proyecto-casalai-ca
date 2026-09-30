@@ -2446,17 +2446,18 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error interno: No se pudo obtener la información del usuario.';
     END;
 
-    SELECT 
-        u.`id_usuario`, 
-        u.`username`, 
-        u.`cedula`, 
-        u.`id_rol`, 
+    SELECT
+        u.`id_usuario`,
+        u.`username`,
+        u.`cedula`,
+        u.`id_rol`,
         r.`nombre_rol`,
-        u.`correo`, 
-        u.`nombres`, 
-        u.`apellidos`, 
-        u.`telefono`, 
-        u.`estatus`
+        u.`correo`,
+        u.`nombres`,
+        u.`apellidos`,
+        u.`telefono`,
+        u.`estatus`,
+        u.`foto_perfil`
     FROM `tbl_usuarios` AS u
     INNER JOIN `tbl_rol` AS r ON u.`id_rol` = r.`id_rol`
     WHERE u.`id_usuario` = p_id_usuario

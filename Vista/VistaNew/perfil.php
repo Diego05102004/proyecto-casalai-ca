@@ -644,8 +644,8 @@ ob_start();
                         return;
                     }
 
-                    if (newPassword.length < 8) {
-                        alert('La contraseña debe tener al menos 8 caracteres');
+                    if (newPassword.length < 6) {
+                        alert('La contraseña debe tener al menos 6 caracteres');
                         return;
                     }
 

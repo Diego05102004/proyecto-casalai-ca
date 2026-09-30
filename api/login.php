@@ -4,11 +4,17 @@
  * POST /api/login.php
  */
 
+error_log("[LOGIN] Archivo login.php cargado - DEBUG INICIO");
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/Clases/Login.php';
+require_once __DIR__ . '/Config/Encryption.php';
 
 use Usuario\ProyectoCasalaiCa\Login;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
+
+error_log("[LOGIN] Archivos requeridos cargados exitosamente");
 
 // Configure RECAPTCHA_SECRET_KEY in the Apache/PHP environment.
 const RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
@@ -80,18 +86,58 @@ function validarReCaptcha($token) {
 
 // Solo permitir método POST
 validateMethod(['POST']);
-
-try {
+try{
+error_log("[LOGIN] Iniciando procesamiento de login");
     $data = getRequestData();
+    error_log("[LOGIN] Datos recibidos (crudos): " . json_encode($data));
     if (!is_array($data)) {
         errorResponse('El cuerpo de la solicitud no es válido', 400);
     }
     
+    // Desencriptar datos sensibles si están cifrados
+    $encryption = new Encryption();
+    $sensitiveFields = ['email', 'username', 'password', 'recaptcha_token', 'recaptchaToken'];
+    foreach ($sensitiveFields as $field) {
+        if (isset($data[$field]) && $data[$field] !== '') {
+            try {
+                error_log("[LOGIN] Intentando descifrar campo '$field' antes: " . substr($data[$field], 0, 50) . "...");
+                
+                // ====== 💡 SOLUCIÓN AQUÍ ======
+                // Si los datos vienen de un formulario clásico HTTP, los '+' se convierten en espacios.
+                // Restauramos los espacios en blanco a '+' para que Base64 no se corrompa.
+                if (is_string($data[$field])) {
+                    $data[$field] = str_replace(' ', '+', $data[$field]);
+                }
+                // ==============================
+
+                error_log("[LOGIN] Campo '$field' después de reemplazo: " . substr($data[$field], 0, 50) . "...");
+                
+                $decryptedValue = $encryption->decrypt($data[$field]);
+                error_log("[LOGIN] Campo '$field' descifrado exitosamente: " . substr($decryptedValue, 0, 20) . "...");
+                $data[$field] = $decryptedValue;
+            } catch (\Throwable $decryptError) {
+                error_log("[LOGIN] Error descifrando campo '$field': " . $decryptError->getMessage());
+                error_log("[LOGIN] Stack trace: " . $decryptError->getTraceAsString());
+                errorResponse('No se pudieron descifrar los datos de inicio de sesión: ' . $decryptError->getMessage(), 400);
+            }
+        }
+    }
+
+
     $usernameOrEmail = $data['email'] ?? $data['username'] ?? '';
     $recaptchaToken  = $data['recaptcha_token'] ?? $data['recaptchaToken'] ?? '';
-    
+
     if (empty($usernameOrEmail) || empty($data['password'])) {
         errorResponse('El correo/usuario y contraseña son obligatorios', 400);
+    }
+    
+    // Validar datos desencriptados manualmente (después de desencriptar)
+    if (mb_strlen($usernameOrEmail) < 4 || mb_strlen($usernameOrEmail) > 20) {
+        errorResponse('El nombre de usuario debe tener entre 4 y 20 caracteres', 400);
+    }
+    
+    if (mb_strlen($data['password']) < 6) {
+        errorResponse('La contraseña debe tener al menos 6 caracteres', 400);
     }
 
     // Detectar si estamos en localhost para permitir omitir reCAPTCHA en desarrollo
@@ -150,6 +196,7 @@ try {
     // Crear instancia de Login
     $login = new Login();
     
+    // Validación básica (solo verifica que campos no estén vacíos)
     $datosValidacion = [
         'username' => $usernameOrEmail,
         'password' => $data['password']

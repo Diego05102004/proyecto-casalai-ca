@@ -1,4 +1,5 @@
 <?php
+// Updated: 2025-09-28 - Using native OpenSSL for compatibility
 namespace Usuario\ProyectoCasalaiCa\Config;
 
 /**
@@ -15,6 +16,7 @@ namespace Usuario\ProyectoCasalaiCa\Config;
  * - IV (Initialization Vector): 128 bits (16 bytes), generado aleatoriamente para cada cifrado
  * - Codificación: Base64 para almacenamiento en base de datos
  * - Variables de entorno: Claves RSA cargadas desde entorno para máxima seguridad
+ * - OpenSSL nativo: Usa funciones nativas de PHP para máxima compatibilidad
  */
 class Encryption {
     private $rsaPublicKey;
@@ -57,28 +59,16 @@ class Encryption {
                 if ($publicMatch && $privateMatch) {
                     $publicKey = $publicMatch[1];
                     $privateKey = $privateMatch[1];
-                    
-                    // Convertir \n a saltos de línea reales
-                    $publicKey = str_replace('\\n', "\n", $publicKey);
-                    $privateKey = str_replace('\\n', "\n", $privateKey);
-                    
+
                     error_log("[ENCRYPTION] Claves cargadas desde archivo .env exitosamente");
+                    error_log("[ENCRYPTION] Longitud clave pública: " . strlen($publicKey));
+                    error_log("[ENCRYPTION] Longitud clave privada: " . strlen($privateKey));
                 } else {
                     error_log("[ENCRYPTION] No se encontraron claves RSA en archivo .env");
                 }
             } else {
                 error_log("[ENCRYPTION] Archivo .env no encontrado en: $envPath");
             }
-        }
-        
-        if ($publicKey !== false) {
-            error_log("[ENCRYPTION] Longitud clave pública: " . strlen($publicKey));
-            error_log("[ENCRYPTION] Primeros 100 chars clave pública: " . substr($publicKey, 0, 100));
-        }
-        
-        if ($privateKey !== false) {
-            error_log("[ENCRYPTION] Longitud clave privada: " . strlen($privateKey));
-            error_log("[ENCRYPTION] Primeros 100 chars clave privada: " . substr($privateKey, 0, 100));
         }
         
         if ($publicKey === false || $privateKey === false) {
@@ -108,7 +98,7 @@ class Encryption {
      * Proceso:
      * 1. Generar clave AES aleatoria (32 bytes)
      * 2. Cifrar datos con AES-256-CBC
-     * 3. Cifrar clave AES con RSA-2048
+     * 3. Cifrar clave AES con RSA-2048 usando OAEP con SHA256
      * 4. Combinar: clave AES cifrada + IV + datos cifrados
      * 
      * @param string $data Datos a cifrar
@@ -127,11 +117,16 @@ class Encryption {
         // Asegurar que sea string
         $data = (string)$data;
         
+        error_log("[ENCRYPTION] Iniciando cifrado...");
+        error_log("[ENCRYPTION] Longitud dato original: " . strlen($data));
+        
         // 1. Generar clave AES aleatoria de 32 bytes (256 bits)
-        $aesKey = openssl_random_pseudo_bytes(32);
+        $aesKey = random_bytes(32);
+        error_log("[ENCRYPTION] Clave AES generada: " . strlen($aesKey) . " bytes");
         
         // 2. Generar IV aleatorio de 16 bytes (128 bits)
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($this->aesMethod));
+        $iv = random_bytes(openssl_cipher_iv_length($this->aesMethod));
+        error_log("[ENCRYPTION] IV generado: " . strlen($iv) . " bytes");
         
         // 3. Cifrar datos con AES-256-CBC
         $encryptedData = openssl_encrypt($data, $this->aesMethod, $aesKey, OPENSSL_RAW_DATA, $iv);
@@ -140,17 +135,31 @@ class Encryption {
             throw new \RuntimeException('Error al cifrar datos con AES: ' . openssl_error_string());
         }
         
-        // 4. Cifrar clave AES con RSA (clave pública)
-        $encryptedAesKey = '';
-        if (!openssl_public_encrypt($aesKey, $encryptedAesKey, $this->rsaPublicKey)) {
-            throw new \RuntimeException('Error al cifrar clave AES con RSA: ' . openssl_error_string());
+        error_log("[ENCRYPTION] Datos cifrados con AES: " . strlen($encryptedData) . " bytes");
+        
+        // 4. Cifrar la clave AES con RSA usando PKCS1 v1.5 (máxima compatibilidad)
+        $encryptedAesKey = null;
+        $opensslError = '';
+        
+        // Usar PKCS1 v1.5 padding para máxima compatibilidad con node-forge
+        if (openssl_public_encrypt($aesKey, $encryptedAesKey, $this->rsaPublicKey, OPENSSL_PKCS1_PADDING)) {
+            error_log("[ENCRYPTION] Clave AES cifrada con RSA PKCS1: " . strlen($encryptedAesKey) . " bytes");
+        } else {
+            $opensslError = openssl_error_string();
+            error_log("[ENCRYPTION] PKCS1 falló: " . $opensslError);
+            throw new \RuntimeException('Error al cifrar clave AES con RSA: ' . $opensslError);
         }
         
         // 5. Combinar: longitud clave AES cifrada (4 bytes) + clave AES cifrada + IV + datos cifrados
         $result = pack('N', strlen($encryptedAesKey)) . $encryptedAesKey . $iv . $encryptedData;
+        error_log("[ENCRYPTION] Longitud resultado combinado: " . strlen($result) . " bytes");
         
         // 6. Codificar en Base64
-        return base64_encode($result);
+        $base64Result = base64_encode($result);
+        error_log("[ENCRYPTION] Resultado Base64: " . strlen($base64Result) . " caracteres");
+        error_log("[ENCRYPTION] Cifrado completado exitosamente");
+        
+        return $base64Result;
     }
     
     /**
@@ -179,67 +188,123 @@ class Encryption {
         // Asegurar que sea string
         $encryptedData = (string)$encryptedData;
         
-        // 1. Decodificar de Base64
-        $data = base64_decode($encryptedData);
+        error_log("[ENCRYPTION] Iniciando descifrado...");
+        error_log("[ENCRYPTION] Longitud dato cifrado: " . strlen($encryptedData));
         
-        if ($data === false) {
-            // Si no es Base64 válido, podría ser un dato no cifrado (compatibilidad)
+        $data = base64_decode($encryptedData, true);
+        if ($data === false || strlen($data) < 4) {
+            error_log("[ENCRYPTION] Base64 inválido o demasiado corto, retornando original");
             return $encryptedData;
         }
+
+        error_log("[ENCRYPTION] Base64 decodificado: " . strlen($data) . " bytes");
+
+        // Calcular longitud esperada del bloque RSA (2048 bits = 256 bytes)
+        $rsaBlockLength = 256;
+        error_log("[ENCRYPTION] Longitud esperada bloque RSA: " . $rsaBlockLength);
+
+        // Verificar si es cifrado RSA puro (sin AES híbrido)
+        if (strlen($data) === $rsaBlockLength) {
+            error_log("[ENCRYPTION] Detectado cifrado RSA puro");
+            $decrypted = $this->decryptRsaPure($data);
+            return $decrypted === null ? $encryptedData : $decrypted;
+        }
+
+        // Extraer longitud de clave AES cifrada (primeros 4 bytes)
+        $keyLength = unpack('N', substr($data, 0, 4))[1];
+        error_log("[ENCRYPTION] Longitud clave AES cifrada: " . $keyLength);
         
-        // Verificar longitud mínima (4 bytes longitud + clave AES + IV + datos)
-        if (strlen($data) < 4 + 16) {
-            // Datos demasiado cortos = probablemente dato no cifrado antiguo
+        if ($keyLength !== $rsaBlockLength) {
+            error_log("[ENCRYPTION] Longitud de clave AES no coincide con bloque RSA: " . $keyLength . " vs " . $rsaBlockLength);
             return $encryptedData;
         }
-        
-        try {
-            // 2. Extraer longitud de clave AES cifrada (primeros 4 bytes)
-            $keyLength = unpack('N', substr($data, 0, 4))[1];
-            
-            error_log("[ENCRYPTION] decrypt: keyLength=$keyLength, dataLength=" . strlen($data));
-            
-            // Verificar que hay suficientes datos
-            if (strlen($data) < 4 + $keyLength + 16) {
-                error_log("[ENCRYPTION] decrypt: datos demasiado cortos, retornando original");
-                return $encryptedData;
-            }
-            
-            // 3. Extraer clave AES cifrada
-            $encryptedAesKey = substr($data, 4, $keyLength);
-            
-            // 4. Descifrar clave AES con RSA (clave privada)
-            $aesKey = '';
-            if (!openssl_private_decrypt($encryptedAesKey, $aesKey, $this->rsaPrivateKey)) {
-                $error = openssl_error_string();
-                error_log("[ENCRYPTION] decrypt: error RSA - $error");
-                throw new \RuntimeException('Error al descifrar clave AES con RSA: ' . $error);
-            }
-            
-            error_log("[ENCRYPTION] decrypt: clave AES descifrada exitosamente");
-            
-            // 5. Extraer IV (16 bytes) y datos cifrados
-            $iv = substr($data, 4 + $keyLength, 16);
-            $encryptedDataPart = substr($data, 4 + $keyLength + 16);
-            
-            // 6. Descifrar datos con AES-256-CBC
-            $decrypted = openssl_decrypt($encryptedDataPart, $this->aesMethod, $aesKey, OPENSSL_RAW_DATA, $iv);
-            
-            if ($decrypted === false) {
-                $error = openssl_error_string();
-                error_log("[ENCRYPTION] decrypt: error AES - $error");
-                throw new \RuntimeException('Error al descifrar datos con AES: ' . $error);
-            }
-            
-            error_log("[ENCRYPTION] decrypt: datos descifrados exitosamente");
-            
-            return $decrypted;
-            
-        } catch (\Exception $e) {
-            // Si falla el descifrado, retornar valor original (compatibilidad)
-            error_log('Error al descifrar datos: ' . $e->getMessage());
-            return $encryptedData;
+
+        $ivLength = openssl_cipher_iv_length($this->aesMethod);
+        $ciphertextOffset = 4 + $keyLength + $ivLength;
+        if (strlen($data) < $ciphertextOffset + 16) {
+            throw new \RuntimeException('Sobre cifrado incompleto');
         }
+
+        $encryptedAesKey = substr($data, 4, $keyLength);
+        $iv = substr($data, 4 + $keyLength, $ivLength);
+        $encryptedDataPart = substr($data, $ciphertextOffset);
+        
+        error_log("[ENCRYPTION] IV: " . strlen($iv) . " bytes");
+        error_log("[ENCRYPTION] Datos cifrados: " . strlen($encryptedDataPart) . " bytes");
+        
+        if (strlen($encryptedDataPart) % 16 !== 0) {
+            throw new \RuntimeException('Longitud de datos AES no válida');
+        }
+
+        $aesKey = $this->decryptRsaPayload($encryptedAesKey, true);
+        if ($aesKey === null) {
+            throw new \RuntimeException('No se pudo descifrar la clave AES');
+        }
+
+        error_log("[ENCRYPTION] Clave AES descifrada: " . strlen($aesKey) . " bytes");
+
+        $decrypted = openssl_decrypt($encryptedDataPart, $this->aesMethod, $aesKey, OPENSSL_RAW_DATA, $iv);
+        if ($decrypted === false) {
+            error_log("[ENCRYPTION] Error descifrando datos AES: " . openssl_error_string());
+            throw new \RuntimeException('No se pudieron descifrar los datos AES');
+        }
+
+        error_log("[ENCRYPTION] Descifrado completado exitosamente");
+        return $decrypted;
+    }
+
+    /**
+     * Descifra datos usando RSA puro (sin AES híbrido)
+     * Compatibilidad con node-forge que a veces usa RSA directo
+     *
+     * @param string $encryptedData Datos cifrados
+     * @return string Datos descifrados
+     */
+    private function decryptRsaPure($encryptedData) {
+        return $this->decryptRsaPayload($encryptedData, false);
+    }
+
+    /**
+     * Descifra payload RSA con múltiples métodos de padding para compatibilidad
+     * 
+     * @param string $encryptedAesKey Datos cifrados con RSA
+     * @param bool $requireAesKey Si es true, requiere que el resultado sea 32 bytes (clave AES)
+     * @return string|null Datos descifrados o null si falla
+     */
+    private function decryptRsaPayload($encryptedAesKey, $requireAesKey) {
+        // Intentar PKCS1 primero (más compatible)
+        $paddingMethods = [
+            OPENSSL_PKCS1_PADDING,        // PKCS1 v1.5 (más compatible)
+            OPENSSL_PKCS1_OAEP_PADDING,   // OAEP (node-forge default)
+        ];
+
+        foreach ($paddingMethods as $padding) {
+            try {
+                $decrypted = '';
+                $key = openssl_pkey_get_private($this->rsaPrivateKey);
+                
+                if ($key) {
+                    if (openssl_private_decrypt($encryptedAesKey, $decrypted, $key, $padding)) {
+                        error_log("[ENCRYPTION] Descifrado RSA exitoso con padding: " . $padding);
+                        
+                        if (!$requireAesKey || strlen($decrypted) === 32) {
+                            return $decrypted;
+                        } else {
+                            error_log("[ENCRYPTION] Longitud incorrecta: " . strlen($decrypted) . " (esperado 32)");
+                        }
+                    } else {
+                        error_log("[ENCRYPTION] Descifrado RSA falló con padding " . $padding . ": " . openssl_error_string());
+                    }
+                    // openssl_free_key ya no es necesario en PHP 8+
+                }
+            } catch (\Throwable $e) {
+                error_log("[ENCRYPTION] Excepción con padding " . $padding . ": " . $e->getMessage());
+                // Try the next padding method
+            }
+        }
+
+        error_log("[ENCRYPTION] No se pudo descifrar con ningún método de padding");
+        return null;
     }
     
     /**
@@ -273,255 +338,18 @@ public function decryptArray($data, $fields, $debugMode = false) {
     if (!is_array($data)) {
         return $data;
     }
-    
-    // Log de inicio con detalles del array
-    error_log("[ENCRYPTION-DEBUG] Iniciando decryptArray para " . count($fields) . " campos");
-    error_log("[ENCRYPTION-DEBUG] Estructura del array: " . json_encode(array_keys($data)));
-    
+
     foreach ($fields as $field) {
-        if (!isset($data[$field])) {
-            error_log("[ENCRYPTION-DEBUG] Campo '$field' NO EXISTE en el array");
-            continue;
-        }
-        
-        $valorOriginal = $data[$field];
-        
-        // 1. DIAGNÓSTICO DEL VALOR ORIGINAL
-        $this->diagnosticarValor($field, $valorOriginal);
-        
-        try {
-            // 2. INTENTAR DESCIFRAR
-            $valorDescifrado = $this->decryptWithDiagnostico($valorOriginal, $field);
-            
-            // 3. VERIFICAR RESULTADO
-            if ($valorDescifrado !== $valorOriginal) {
-                $data[$field] = $valorDescifrado;
-                error_log("[ENCRYPTION-DEBUG] ✅ CAMPO '$field' DESCIFRADO EXITOSAMENTE");
-                error_log("[ENCRYPTION-DEBUG]   Longitud original: " . strlen($valorOriginal) . 
-                         " | Longitud descifrada: " . strlen($valorDescifrado));
-                
-                // Mostrar primeros caracteres para verificar
-                error_log("[ENCRYPTION-DEBUG]   Original (primeros 50): " . substr($valorOriginal, 0, 50));
-                error_log("[ENCRYPTION-DEBUG]   Descifrado (primeros 50): " . substr($valorDescifrado, 0, 50));
-            } else {
-                error_log("[ENCRYPTION-DEBUG] ⚠️ CAMPO '$field' NO SE MODIFICÓ (puede no estar cifrado)");
-            }
-            
-        } catch (\Exception $e) {
-            error_log("[ENCRYPTION-DEBUG] ❌ ERROR DESCIFRANDO CAMPO '$field': " . $e->getMessage());
-            error_log("[ENCRYPTION-DEBUG]   Tipo de error: " . get_class($e));
-            error_log("[ENCRYPTION-DEBUG]   Valor original (primeros 100): " . substr($valorOriginal, 0, 100));
-            error_log("[ENCRYPTION-DEBUG]   Stack trace: " . $e->getTraceAsString());
-            
-            // Mantener valor original
-            $data[$field] = $valorOriginal;
+        if (isset($data[$field])) {
+            error_log("[ENCRYPTION] Descifrando campo: $field");
+            $data[$field] = $this->decrypt($data[$field]);
         }
     }
-    
-    error_log("[ENCRYPTION-DEBUG] Finalizado decryptArray");
+
     return $data;
 }
 
-/**
- * Diagnóstico detallado de un valor
- */
-private function diagnosticarValor($field, $value) {
-    error_log("[ENCRYPTION-DEBUG] 📊 DIAGNÓSTICO CAMPO '$field':");
-    error_log("[ENCRYPTION-DEBUG]   - Tipo: " . gettype($value));
-    error_log("[ENCRYPTION-DEBUG]   - Longitud: " . (is_string($value) ? strlen($value) : 'N/A'));
-    error_log("[ENCRYPTION-DEBUG]   - Es null? " . ($value === null ? 'SI' : 'NO'));
-    error_log("[ENCRYPTION-DEBUG]   - Es vacío? " . ($value === '' ? 'SI' : 'NO'));
-    
-    if (is_string($value) && strlen($value) > 0) {
-        // Verificar si parece Base64
-        $esBase64 = (bool) preg_match('/^[A-Za-z0-9\+\/=]+$/', $value);
-        error_log("[ENCRYPTION-DEBUG]   - Parece Base64? " . ($esBase64 ? 'SI' : 'NO'));
-        
-        // Verificar si parece cifrado (base64 largo)
-        if ($esBase64 && strlen($value) > 24) {
-            error_log("[ENCRYPTION-DEBUG]   - Posible dato cifrado: SI (longitud > 24)");
-            
-            // Intentar decodificar para ver estructura
-            $decoded = base64_decode($value, true);
-            if ($decoded !== false) {
-                error_log("[ENCRYPTION-DEBUG]   - Decodificación Base64: OK (" . strlen($decoded) . " bytes)");
-                error_log("[ENCRYPTION-DEBUG]   - Estructura bytes: " . $this->analizarEstructura($decoded));
-            } else {
-                error_log("[ENCRYPTION-DEBUG]   - ❌ Decodificación Base64: FALLÓ");
-            }
-        } else {
-            error_log("[ENCRYPTION-DEBUG]   - Posible dato plano: SI (no parece cifrado)");
-        }
-        
-        // Verificar caracteres especiales
-        if (strlen($value) > 0) {
-            $bytes = unpack('C*', $value);
-            $hasNonPrintable = false;
-            foreach ($bytes as $byte) {
-                if ($byte < 32 || $byte > 126) {
-                    $hasNonPrintable = true;
-                    break;
-                }
-            }
-            error_log("[ENCRYPTION-DEBUG]   - Tiene caracteres no imprimibles? " . ($hasNonPrintable ? 'SI' : 'NO'));
-        }
-    }
-}
 
-/**
- * Analiza la estructura de bytes de un dato cifrado
- */
-private function analizarEstructura($data) {
-    if (strlen($data) < 4) {
-        return "DATOS DEMASIADO CORTOS";
-    }
-    
-    $info = [];
-    
-    // Leer longitud de clave AES
-    $keyLengthBytes = substr($data, 0, 4);
-    if (strlen($keyLengthBytes) === 4) {
-        $keyLength = unpack('N', $keyLengthBytes)[1];
-        $info[] = "longitud_clave_AES_cifrada=$keyLength";
-        
-        if (strlen($data) >= 4 + $keyLength + 16) {
-            $info[] = "Estructura: OK";
-            $info[] = "IV presente: SI";
-            $info[] = "Datos cifrados: " . (strlen($data) - 4 - $keyLength - 16) . " bytes";
-        } else {
-            $info[] = "❌ Estructura: INCOMPLETA";
-            $info[] = "Faltan bytes: " . (4 + $keyLength + 16 - strlen($data));
-        }
-    }
-    
-    return implode(" | ", $info);
-}
-
-/**
- * Versión de decrypt con diagnóstico detallado
- */
-public function decryptWithDiagnostico($encryptedData, $fieldName) {
-    // Manejar valores nulos o vacíos
-    if ($encryptedData === null) {
-        error_log("[ENCRYPTION-DEBUG] Campo '$fieldName' es null, retornando null");
-        return null;
-    }
-    
-    if ($encryptedData === '') {
-        error_log("[ENCRYPTION-DEBUG] Campo '$fieldName' es vacío, retornando ''");
-        return '';
-    }
-    
-    // Asegurar que sea string
-    $encryptedData = (string)$encryptedData;
-    
-    error_log("[ENCRYPTION-DEBUG] 🔓 Intentando descifrar campo '$fieldName'...");
-    error_log("[ENCRYPTION-DEBUG]   Longitud dato: " . strlen($encryptedData));
-    
-    // 1. Decodificar de Base64
-    $data = base64_decode($encryptedData, true);
-    
-    if ($data === false) {
-        error_log("[ENCRYPTION-DEBUG]   ❌ No es Base64 válido, asumiendo dato sin cifrar");
-        return $encryptedData;
-    }
-    
-    error_log("[ENCRYPTION-DEBUG]   ✅ Decodificación Base64 OK: " . strlen($data) . " bytes");
-    
-    // 2. Verificar longitud mínima
-    $minLength = 4 + 16; // 4 bytes longitud + IV mínimo
-    if (strlen($data) < $minLength) {
-        error_log("[ENCRYPTION-DEBUG]   ⚠️ Datos muy cortos (mínimo $minLength bytes), asumiendo dato sin cifrar");
-        return $encryptedData;
-    }
-    
-    try {
-        // 3. Extraer longitud de clave AES cifrada
-        $keyLength = unpack('N', substr($data, 0, 4))[1];
-        error_log("[ENCRYPTION-DEBUG]   Longitud clave AES cifrada: $keyLength bytes");
-        
-        // 4. Verificar estructura completa
-        if (strlen($data) < 4 + $keyLength + 16) {
-            error_log("[ENCRYPTION-DEBUG]   ❌ Estructura incompleta");
-            error_log("[ENCRYPTION-DEBUG]     Necesario: " . (4 + $keyLength + 16) . " bytes");
-            error_log("[ENCRYPTION-DEBUG]     Actual: " . strlen($data) . " bytes");
-            return $encryptedData;
-        }
-        
-        // 5. Extraer componentes
-        $encryptedAesKey = substr($data, 4, $keyLength);
-        $iv = substr($data, 4 + $keyLength, 16);
-        $encryptedDataPart = substr($data, 4 + $keyLength + 16);
-        
-        error_log("[ENCRYPTION-DEBUG]   IV extraído: " . bin2hex($iv));
-        error_log("[ENCRYPTION-DEBUG]   Datos cifrados: " . strlen($encryptedDataPart) . " bytes");
-        
-        // 6. Descifrar clave AES con RSA
-        $aesKey = '';
-        if (!openssl_private_decrypt($encryptedAesKey, $aesKey, $this->rsaPrivateKey)) {
-            $error = openssl_error_string();
-            error_log("[ENCRYPTION-DEBUG]   ❌ Error RSA: $error");
-            throw new \RuntimeException('Error al descifrar clave AES: ' . $error);
-        }
-        
-        error_log("[ENCRYPTION-DEBUG]   ✅ Clave AES descifrada: " . strlen($aesKey) . " bytes");
-        
-        // 7. Descifrar datos con AES
-        $decrypted = openssl_decrypt($encryptedDataPart, $this->aesMethod, $aesKey, OPENSSL_RAW_DATA, $iv);
-        
-        if ($decrypted === false) {
-            $error = openssl_error_string();
-            error_log("[ENCRYPTION-DEBUG]   ❌ Error AES: $error");
-            throw new \RuntimeException('Error al descifrar datos: ' . $error);
-        }
-        
-        error_log("[ENCRYPTION-DEBUG]   ✅ Datos descifrados: " . strlen($decrypted) . " bytes");
-        
-        return $decrypted;
-        
-    } catch (\Exception $e) {
-        error_log("[ENCRYPTION-DEBUG]   ❌ Excepción: " . $e->getMessage());
-        throw $e;
-    }
-}
-
-/**
- * Método de prueba para verificar el cifrado/descifrado de un campo específico
- */
-public function testEncryption($plainText, $fieldName = 'test') {
-    error_log("[ENCRYPTION-TEST] =======================");
-    error_log("[ENCRYPTION-TEST] Probando campo '$fieldName'");
-    error_log("[ENCRYPTION-TEST] Texto original: '$plainText'");
-    error_log("[ENCRYPTION-TEST] Longitud: " . strlen($plainText));
-    
-    // 1. Cifrar
-    $encrypted = $this->encrypt($plainText);
-    error_log("[ENCRYPTION-TEST] Cifrado: '$encrypted'");
-    error_log("[ENCRYPTION-TEST] Longitud cifrado: " . strlen($encrypted));
-    
-    // 2. Descifrar
-    $decrypted = $this->decryptWithDiagnostico($encrypted, $fieldName);
-    error_log("[ENCRYPTION-TEST] Descifrado: '$decrypted'");
-    error_log("[ENCRYPTION-TEST] Longitud descifrado: " . strlen($decrypted));
-    
-    // 3. Verificar
-    if ($plainText === $decrypted) {
-        error_log("[ENCRYPTION-TEST] ✅ TEST PASADO: cifrado y descifrado correcto");
-    } else {
-        error_log("[ENCRYPTION-TEST] ❌ TEST FALLIDO: los datos no coinciden");
-        error_log("[ENCRYPTION-TEST]   Original: '$plainText'");
-        error_log("[ENCRYPTION-TEST]   Descifrado: '$decrypted'");
-    }
-    
-    error_log("[ENCRYPTION-TEST] =======================");
-    
-    return [
-        'original' => $plainText,
-        'encrypted' => $encrypted,
-        'decrypted' => $decrypted,
-        'success' => $plainText === $decrypted
-    ];
-}
     
     /**
      * Cifra un array de resultados de base de datos

@@ -2,11 +2,11 @@
 /**
  * Endpoint para gestión de pagos desde la app móvil
  * GET/POST /api/pagos.php
- * 
+ *
  * Funciones disponibles:
  * - default: Consultar pagos (GET)
  * - pago_ingresar: Registrar un pago (POST)
- * 
+ *
  * Parámetros:
  * - funcion: Nombre de la función a ejecutar
  * - factura: ID de la factura (para pago_ingresar)
@@ -15,7 +15,7 @@
  * - tipo: Tipo de pago (para pago_ingresar)
  * - referencia: Referencia del pago (opcional)
  * - observaciones: Observaciones (opcional)
- * - comprobante: Comprobante del pago (opcional)
+ * - comprobante: Comprobante del pago (archivo multipart/form-data o base64)
  * - fecha: Fecha del pago (opcional, usa fecha actual por defecto)
  */
 
