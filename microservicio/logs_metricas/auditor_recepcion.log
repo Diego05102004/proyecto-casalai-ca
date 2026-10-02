@@ -35,3 +35,54 @@
 2026-07-04 23:52:27,096 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida.pdf
 2026-07-04 23:52:28,036 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida_page_0.jpg
 2026-07-04 23:52:31,468 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
+2026-10-01 10:10:05,128 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-01 10:10:05,135 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-01 10:19:04,264 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001101904_b72f1c63.pdf
+2026-10-01 10:19:05,328 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:19:08,912 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:20:26,151 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102026_bc2b0a88.png
+2026-10-01 10:20:28,078 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-01 10:25:13,030 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102513_598fa794.jpeg
+2026-10-01 10:25:14,462 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-01 10:25:24,448 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102524_7a3e3f0f.pdf
+2026-10-01 10:25:24,624 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:25:27,781 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:25:45,744 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102545_8b771b6c.pdf
+2026-10-01 10:25:45,957 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:25:48,847 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:33:03,603 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103303_0c35c080.pdf
+2026-10-01 10:33:03,770 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:33:06,788 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:33:21,957 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103321_6655b708.pdf
+2026-10-01 10:33:22,161 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:33:25,262 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:33:59,389 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103359_72b56e58.pdf
+2026-10-01 10:33:59,586 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:34:02,512 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:34:42,744 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103442_50ccd74a.pdf
+2026-10-01 10:34:42,927 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:34:46,128 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 12:09:42,184 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001120942_cd3a1fa8.pdf
+2026-10-01 12:09:42,891 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 12:09:46,465 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 12:37:32,944 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001123732_67c80ae0.pdf
+2026-10-01 12:37:33,093 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 12:37:36,294 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 12:38:40,487 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001123840_e1544c37.pdf
+2026-10-01 12:38:40,679 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 12:38:43,783 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 19:10:05,486 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 19:10:05,488 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 19:12:24,819 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20261002191224_a5eb57af.pdf
+2026-10-02 19:12:25,852 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 19:12:29,534 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 19:13:51,018 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 19:13:51,018 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 19:18:15,979 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20261002191815_b832295d.pdf
+2026-10-02 19:18:16,222 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 19:18:19,154 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 19:42:56,206 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 19:42:56,206 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 19:47:01,504 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261002194701_e22df4e4.pdf
+2026-10-02 19:47:02,145 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 19:47:05,079 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%

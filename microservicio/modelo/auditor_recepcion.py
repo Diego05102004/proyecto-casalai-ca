@@ -12,12 +12,6 @@ import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
-try:
-    from pdf2image import convert_from_path
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
-    logger.warning("pdf2image no disponible. Los PDFs no podrán procesarse.")
 
 # Asegurar que el directorio de logs exista
 BASE_DIR = Path(__file__).parent.parent
@@ -27,6 +21,14 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler(str(LOGS_DIR / 'auditor_recepcion.log')), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
+
+try:
+    from pdf2image import convert_from_path
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+    convert_from_path = None
+    logger.warning("pdf2image no disponible. Los PDFs no podrán procesarse.")
 
 @dataclass
 class ProductoExtraido:
@@ -115,8 +117,11 @@ class AuditorRecepcion:
         logger.info(f"Iniciando extracción OCR: {ruta_imagen}")
         if not Path(ruta_imagen).exists():
             raise FileNotFoundError(f"Imagen no encontrada: {ruta_imagen}")
-        imagen_procesada = self._preprocesar_imagen(ruta_imagen)
-        texto_extraido = self._ejecutar_ocr(imagen_procesada)
+        imagenes_procesadas = self._preprocesar_imagen(ruta_imagen)
+        if isinstance(imagenes_procesadas, list):
+            texto_extraido = "\n".join(self._ejecutar_ocr(imagen) for imagen in imagenes_procesadas)
+        else:
+            texto_extraido = self._ejecutar_ocr(imagenes_procesadas)
         factura = self._extraer_campos_factura(texto_extraido)
         factura.metadatos_extraccion = {'timestamp': datetime.now().isoformat(), 'longitud_texto': len(texto_extraido),
             'confianza_promedio': self._calcular_confianza_promedio(factura), 'lineas_detectadas': len(texto_extraido.split('\n')),
@@ -157,14 +162,17 @@ class AuditorRecepcion:
         factura = self.extraer_desde_imagen(ruta_imagen, id_temp)
         return self.verificar_coherencia(id_temp, datos_formulario)
 
-    def _preprocesar_imagen(self, ruta_imagen: str) -> np.ndarray:
-        # Verificar si es un PDF y convertir a imagen
-        if ruta_imagen.lower().endswith('.pdf'):
-            ruta_imagen = self._convertir_pdf_a_imagen(ruta_imagen)
-        
+    def _preprocesar_imagen(self, ruta_imagen: str) -> Any:
+        if Path(ruta_imagen).suffix.lower() == '.pdf':
+            paginas = self._convertir_pdf_a_imagen(ruta_imagen)
+            return [self._preprocesar_array(np.array(pagina)) for pagina in paginas]
+
         imagen = cv2.imread(ruta_imagen)
         if imagen is None:
             raise ValueError(f"No se pudo cargar: {ruta_imagen}")
+        return self._preprocesar_array(imagen)
+
+    def _preprocesar_array(self, imagen: np.ndarray) -> np.ndarray:
         if not self.config['preprocesamiento']: return imagen
         gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
         denoised = cv2.fastNlMeansDenoising(gris, None, 10, 7, 21)
@@ -427,9 +435,26 @@ class AuditorRecepcion:
 
     def _parsear_monto(self, texto: str) -> float:
         if not texto: return 0.0
-        texto = texto.replace(',', '.')
-        numeros = re.findall(r'\d+\.?\d*', texto)
-        return float(numeros[0]) if numeros else 0.0
+        numero = re.sub(r'[^\d,.+-]', '', str(texto)).strip()
+        if not numero:
+            return 0.0
+
+        if ',' in numero and '.' in numero:
+            separador_decimal = ',' if numero.rfind(',') > numero.rfind('.') else '.'
+            separador_miles = '.' if separador_decimal == ',' else ','
+            numero = numero.replace(separador_miles, '')
+            numero = numero.replace(separador_decimal, '.')
+        elif ',' in numero:
+            decimales = len(numero.rsplit(',', 1)[-1])
+            numero = numero.replace(',', '.' if decimales in (1, 2) else '')
+        elif numero.count('.') > 1:
+            ultimo_punto = numero.rfind('.')
+            numero = numero[:ultimo_punto].replace('.', '') + numero[ultimo_punto:]
+
+        try:
+            return float(numero)
+        except ValueError:
+            return 0.0
 
     def obtener_estadisticas(self) -> Dict:
         if not self.historial_verificaciones: return {"total_verificaciones": 0, "tasa_exito": 0.0}
@@ -453,8 +478,8 @@ class AuditorRecepcion:
                 except: pass
         return eliminados
 
-    def _convertir_pdf_a_imagen(self, ruta_pdf: str) -> str:
-        """Convierte PDF a imagen para procesamiento OCR"""
+    def _convertir_pdf_a_imagen(self, ruta_pdf: str) -> List[Image.Image]:
+        """Convierte todas las páginas del PDF para procesamiento OCR."""
         if not PDF_AVAILABLE:
             raise ValueError("Procesamiento de PDF no disponible. Instale pdf2image: pip install pdf2image")
         
@@ -472,13 +497,9 @@ class AuditorRecepcion:
             
             if not imagenes:
                 raise ValueError("No se pudo extraer ninguna imagen del PDF")
-            
-            # Guardar la primera página como imagen temporal
-            ruta_imagen_temp = ruta_pdf.replace('.pdf', '_page_0.jpg')
-            imagenes[0].save(ruta_imagen_temp, 'JPEG', quality=95)
-            
-            logger.info(f"PDF convertido a imagen: {ruta_imagen_temp}")
-            return ruta_imagen_temp
+
+            logger.info(f"PDF convertido a {len(imagenes)} páginas para OCR")
+            return imagenes
             
         except Exception as e:
             logger.error(f"Error convirtiendo PDF {ruta_pdf}: {e}")

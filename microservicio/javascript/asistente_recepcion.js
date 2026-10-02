@@ -11,9 +11,14 @@
 class AsistenteRecepcionIA {
     constructor(config = {}) {
         this.apiUrl = config.apiUrl || 'http://localhost:8000';
+        this.proxyUrl = config.proxyUrl || null;
         this.facturaIdActual = null;
         this.datosExtraidos = null;
         this.modoDebug = config.debug || false;
+        this.timeoutMs = config.timeoutMs || 8000;
+        this.maxFallosCircuito = config.circuitBreaker?.maxFallos || 3;
+        this.enfriamientoCircuitoMs = config.circuitBreaker?.enfriamientoMs || 120000;
+        this.claveCircuito = `asistente-recepcion-circuito:${this.apiUrl}`;
         
         this.selectores = {
             inputImagen: config.selectores?.inputImagen || '#input-foto-factura',
@@ -47,9 +52,86 @@ class AsistenteRecepcionIA {
         }
     }
 
+    _escaparHtml(valor) {
+        return String(valor ?? '').replace(/[&<>"']/g, caracter => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[caracter]);
+    }
+
+    _leerEstadoCircuito() {
+        try {
+            return JSON.parse(localStorage.getItem(this.claveCircuito) || '{"fallos":0,"abiertoHasta":0}');
+        } catch (error) {
+            return { fallos: 0, abiertoHasta: 0 };
+        }
+    }
+
+    _guardarEstadoCircuito(estado) {
+        try {
+            localStorage.setItem(this.claveCircuito, JSON.stringify(estado));
+        } catch (error) {
+            this._log('No se pudo persistir el estado del circuit breaker.', 'warn');
+        }
+    }
+
+    _registrarFalloCircuito() {
+        const estado = this._leerEstadoCircuito();
+        estado.fallos = (Number(estado.fallos) || 0) + 1;
+        if (estado.fallos >= this.maxFallosCircuito) {
+            estado.abiertoHasta = Date.now() + this.enfriamientoCircuitoMs;
+        }
+        this._guardarEstadoCircuito(estado);
+    }
+
+    _registrarExitoCircuito() {
+        this._guardarEstadoCircuito({ fallos: 0, abiertoHasta: 0 });
+    }
+
+    async _solicitarApi(url, opciones = {}) {
+        const estado = this._leerEstadoCircuito();
+        if (estado.abiertoHasta > Date.now()) {
+            const error = new Error('Circuit breaker abierto; servicio en período de enfriamiento.');
+            error.contingencia = true;
+            error.circuitoAbierto = true;
+            throw error;
+        }
+        if (estado.abiertoHasta) this._registrarExitoCircuito();
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+        try {
+            const response = await fetch(url, { ...opciones, signal: controller.signal });
+            if (response.status === 408 || response.status === 429 || response.status >= 500) {
+                this._registrarFalloCircuito();
+                const error = new Error(`El microservicio respondió HTTP ${response.status}.`);
+                error.contingencia = true;
+                throw error;
+            }
+            this._registrarExitoCircuito();
+            return response;
+        } catch (error) {
+            if (!error.contingencia) {
+                this._registrarFalloCircuito();
+                error.contingencia = true;
+                if (error.name === 'AbortError') error.message = 'Tiempo de espera agotado al consultar el microservicio.';
+            }
+            throw error;
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+
     async _verificarConexionAPI() {
         try {
-            const response = await fetch(`${this.apiUrl}/health`, { method: 'GET', headers: { 'Accept': 'application/json' } });
+            let url = `${this.apiUrl}/health`;
+            let opciones = { method: 'GET', headers: { 'Accept': 'application/json' } };
+            if (this.proxyUrl) {
+                const formulario = new FormData();
+                formulario.append('accion', 'ia_health');
+                url = this.proxyUrl;
+                opciones = { method: 'POST', body: formulario };
+            }
+            const response = await this._solicitarApi(url, opciones);
             if (response.ok) {
                 const data = await response.json();
                 this._log(`API conectada: ${data.fase || 'OK'}`);
@@ -70,16 +152,23 @@ class AsistenteRecepcionIA {
         
         const formData = new FormData();
         formData.append('imagen', archivoImagen);
+        let url = `${this.apiUrl}/fase1/extraer`;
+        if (this.proxyUrl) {
+            formData.append('accion', 'ia_extraer');
+            url = this.proxyUrl;
+        }
         
         try {
-            const response = await fetch(`${this.apiUrl}/fase1/extraer`, {
+            const response = await this._solicitarApi(url, {
                 method: 'POST',
                 body: formData
             });
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Error en extracción');
+                const error = await response.json().catch(() => ({}));
+                const fallo = new Error(error.detail || 'Error en extracción');
+                fallo.contingencia = response.status >= 500;
+                throw fallo;
             }
             
             const resultado = await response.json();
@@ -101,7 +190,7 @@ class AsistenteRecepcionIA {
             this._log(`Error extracción: ${error.message}`, 'error');
             this._mostrarError(`Error al procesar factura: ${error.message}`);
             this.callbacks.onError(error);
-            return { exito: false, error: error.message };
+            return { exito: false, error: error.message, contingencia: Boolean(error.contingencia) };
         }
     }
 
@@ -135,17 +224,28 @@ class AsistenteRecepcionIA {
             factura_id: facturaIdFinal,
             datos_formulario: datos
         };
+        let url = `${this.apiUrl}/fase1/verificar`;
+        let opciones = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        };
+        if (this.proxyUrl) {
+            const formulario = new FormData();
+            formulario.append('accion', 'ia_verificar');
+            formulario.append('solicitud', JSON.stringify(payload));
+            url = this.proxyUrl;
+            opciones = { method: 'POST', body: formulario };
+        }
         
         try {
-            const response = await fetch(`${this.apiUrl}/fase1/verificar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const response = await this._solicitarApi(url, opciones);
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Error en verificación');
+                const error = await response.json().catch(() => ({}));
+                const fallo = new Error(error.detail || 'Error en verificación');
+                fallo.contingencia = response.status >= 500;
+                throw fallo;
             }
             
             const resultado = await response.json();
@@ -163,7 +263,7 @@ class AsistenteRecepcionIA {
         } catch (error) {
             this._log(`Error verificación: ${error.message}`, 'error');
             this._mostrarError(`Error al verificar: ${error.message}`);
-            return { exito: false, error: error.message };
+            return { exito: false, error: error.message, contingencia: Boolean(error.contingencia) };
         }
     }
 
@@ -176,16 +276,23 @@ class AsistenteRecepcionIA {
         const formData = new FormData();
         formData.append('imagen', archivoImagen);
         formData.append('datos_json', JSON.stringify(datosFormulario));
+        let url = `${this.apiUrl}/fase1/comparar-directo`;
+        if (this.proxyUrl) {
+            formData.append('accion', 'ia_comparar');
+            url = this.proxyUrl;
+        }
         
         try {
-            const response = await fetch(`${this.apiUrl}/fase1/comparar-directo`, {
+            const response = await this._solicitarApi(url, {
                 method: 'POST',
                 body: formData
             });
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Error en comparación');
+                const error = await response.json().catch(() => ({}));
+                const fallo = new Error(error.detail || 'Error en comparación');
+                fallo.contingencia = response.status >= 500;
+                throw fallo;
             }
             
             const resultado = await response.json();
@@ -203,7 +310,7 @@ class AsistenteRecepcionIA {
         } catch (error) {
             this._log(`Error comparación: ${error.message}`, 'error');
             this._mostrarError(`Error: ${error.message}`);
-            return { exito: false, error: error.message };
+            return { exito: false, error: error.message, contingencia: Boolean(error.contingencia) };
         }
     }
 
@@ -223,10 +330,10 @@ class AsistenteRecepcionIA {
             htmlProductos = datos.productos.map((p, i) => `
                 <tr>
                     <td>${i + 1}</td>
-                    <td>${p.nombre || 'N/A'}</td>
-                    <td>${p.modelo || '-'}</td>
-                    <td>${p.marca || '-'}</td>
-                    <td>${p.serial || '-'}</td>
+                    <td>${this._escaparHtml(p.nombre || 'N/A')}</td>
+                    <td>${this._escaparHtml(p.modelo || '-')}</td>
+                    <td>${this._escaparHtml(p.marca || '-')}</td>
+                    <td>${this._escaparHtml(p.serial || '-')}</td>
                     <td>${p.cantidad}</td>
                     <td>${p.costo_unitario ? '$' + p.costo_unitario.toFixed(2) : '-'}</td>
                     <td>
@@ -241,13 +348,13 @@ class AsistenteRecepcionIA {
         panel.innerHTML = `
             <div class="alert alert-${colorConfianza} alert-dismissible fade show" role="alert">
                 <h5><i class="fas fa-file-invoice"></i> Factura Extraída</h5>
-                <p class="mb-1"><strong>N° Factura:</strong> ${datos.numero_factura || 'No detectado'}</p>
-                <p class="mb-1"><strong>Proveedor:</strong> ${datos.nombre_proveedor || 'No detectado'}</p>
+                <p class="mb-1"><strong>N° Factura:</strong> ${this._escaparHtml(datos.numero_factura || 'No detectado')}</p>
+                <p class="mb-1"><strong>Proveedor:</strong> ${this._escaparHtml(datos.nombre_proveedor || 'No detectado')}</p>
                 <p class="mb-1"><strong>Confianza:</strong> 
                     <span class="badge bg-${colorConfianza}">${(datos.confianza_promedio * 100).toFixed(1)}%</span>
                 </p>
                 <hr>
-                <p class="mb-0"><strong>ID Cache:</strong> <code>${datos.factura_id}</code></p>
+                <p class="mb-0"><strong>ID Cache:</strong> <code>${this._escaparHtml(datos.factura_id)}</code></p>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             ${datos.productos.length > 0 ? `
@@ -268,8 +375,8 @@ class AsistenteRecepcionIA {
         panel.innerHTML = `
             <div class="alert alert-success" role="alert">
                 <h5><i class="fas fa-check-circle"></i> Verificación Exitosa</h5>
-                <p>${resultado.mensaje}</p>
-                <p class="mb-0"><small>Hash: <code>${resultado.hash_verificacion}</code></small></p>
+                <p>${this._escaparHtml(resultado.mensaje)}</p>
+                <p class="mb-0"><small>Hash: <code>${this._escaparHtml(resultado.hash_verificacion)}</code></small></p>
             </div>
         `;
         
@@ -289,10 +396,10 @@ class AsistenteRecepcionIA {
             return `
                 <tr class="table-${colorSeveridad}">
                     <td><span class="badge bg-${colorSeveridad}">${d.severidad}</span></td>
-                    <td><strong>${d.campo}</strong></td>
-                    <td class="text-decoration-line-through text-muted">${d.valor_formulario}</td>
-                    <td class="fw-bold">${d.valor_factura}</td>
-                    <td><small>${d.mensaje}</small></td>
+                    <td><strong>${this._escaparHtml(d.campo)}</strong></td>
+                    <td class="text-decoration-line-through text-muted">${this._escaparHtml(d.valor_formulario)}</td>
+                    <td class="fw-bold">${this._escaparHtml(d.valor_factura)}</td>
+                    <td><small>${this._escaparHtml(d.mensaje)}</small></td>
                 </tr>
             `;
         }).join('');
@@ -300,7 +407,7 @@ class AsistenteRecepcionIA {
         panel.innerHTML = `
             <div class="alert alert-${colorAlerta}" role="alert">
                 <h5><i class="fas ${icono}"></i> Discrepancias Detectadas</h5>
-                <p>${resultado.mensaje}</p>
+                <p>${this._escaparHtml(resultado.mensaje)}</p>
                 <p class="mb-0"><strong>Acción:</strong> ${hayCriticas ? 'Registro BLOQUEADO. Corrija los datos antes de continuar.' : 'Revise las diferencias antes de proceder.'}</p>
             </div>
             <div class="table-responsive">
@@ -309,7 +416,7 @@ class AsistenteRecepcionIA {
                     <tbody>${filasDiscrepancias}</tbody>
                 </table>
             </div>
-            <pre class="bg-light p-2 small" style="max-height: 200px; overflow-y: auto;">${resultado.reporte_detallado}</pre>
+            <pre class="bg-light p-2 small" style="max-height: 200px; overflow-y: auto;">${this._escaparHtml(resultado.reporte_detallado)}</pre>
         `;
         
         this._mostrarAlerta(colorAlerta, hayCriticas ? 
@@ -332,7 +439,7 @@ class AsistenteRecepcionIA {
         const alertId = 'alert-ia-' + Date.now();
         const alertHtml = `
             <div id="${alertId}" class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-                ${mensaje}
+                ${this._escaparHtml(mensaje)}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;

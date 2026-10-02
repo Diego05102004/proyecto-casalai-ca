@@ -10,6 +10,7 @@ uvicorn[standard]>=0.24.0
 pillow>=10.0.0
 pytesseract>=0.3.10
 opencv-python>=4.8.0
+pdf2image>=1.16.3  # Conversión de facturas PDF a imágenes para OCR
 
 # Utilidades
 python-multipart>=0.0.6
@@ -18,7 +19,6 @@ numpy>=1.24.0
 
 # Opcional: Mejoras de OCR
 # easyocr>=1.7.0  # Alternativa a Tesseract
-pdf2image>=1.16.3  # Para procesar PDFs
 
 # Opcional: Logging avanzado
 # structlog>=23.0.0

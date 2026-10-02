@@ -170,7 +170,7 @@ ob_start();
                         <span class="close-modal">&times;</span>
                     </div>
                     <div class="modal-body">
-                        <form id="recepcionForm">
+                        <form id="recepcionForm" enctype="multipart/form-data">
                             <!-- Información General -->
                             <div class="form-section">
                                 <div class="section-title">
@@ -209,13 +209,19 @@ ob_start();
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="fecha">
-                                        <i class="fas fa-calendar-alt"></i>
-                                        Fecha de Recepción*
+                                    <label for="fotoFacturaRecepcion">
+                                        <i class="fas fa-robot"></i>
+                                        Factura para análisis asistido
                                     </label>
-                                    <input type="date" id="fecha" name="fecha" required class="input-with-icon">
-                                    <i class="fas fa-calendar input-icon"></i>
+                                    <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
+                                    <small>Adjunte una imagen o PDF (máximo 5 MB). El análisis rellenará los datos detectados.</small>
                                 </div>
+                                <div id="previewFacturaRecepcion" class="recepcion-ia-preview" hidden>
+                                    <img id="previewImagenRecepcion" alt="Vista previa de la factura" hidden>
+                                    <iframe id="previewPdfRecepcion" title="Vista previa de la factura PDF" hidden></iframe>
+                                </div>
+                                <div id="estadoIARecepcion" class="recepcion-ia-status" role="status" aria-live="polite" hidden></div>
+                                <div id="resultadoIARecepcion" class="recepcion-ia-result" hidden></div>
                             </div>
                             
                             <!-- Productos de la Recepción -->
@@ -228,16 +234,24 @@ ob_start();
                                 <div id="productosList">
                                     <div class="producto-row">
                                         <div class="form-group">
+                                            <label>Código</label>
+                                            <input type="text" class="producto-codigo" readonly>
+                                        </div>
+                                        <div class="form-group">
                                             <label>
                                                 <i class="fas fa-box"></i>
-                                                Producto*
+                                                Nombre del producto*
                                             </label>
-                                            <select name="producto[]" class="producto-select" required onchange="calcularSubtotal(this)">
+                                            <select name="producto[]" class="producto-select" required onchange="seleccionarProducto(this)">
                                                 <option value="">Seleccione un producto</option>
                                                 <?php if (!empty($productos)): ?>
                                                     <?php foreach ($productos as $producto): ?>
-                                                        <option value="<?php echo $producto['id_producto'] ?? ''; ?>">
-                                                            <?php echo htmlspecialchars($producto['nombre_producto'] ?? 'Sin nombre'); ?>
+                                                        <option value="<?php echo htmlspecialchars((string)($producto['id_producto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                                                data-codigo="<?php echo htmlspecialchars((string)($producto['id_producto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                                                data-marca="<?php echo htmlspecialchars($producto['nombre_marca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                                data-modelo="<?php echo htmlspecialchars($producto['nombre_modelo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                                data-serial="<?php echo htmlspecialchars($producto['serial'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                                            <?php echo htmlspecialchars($producto['nombre_producto'] ?? 'Sin nombre', ENT_QUOTES, 'UTF-8'); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 <?php else: ?>
@@ -246,20 +260,32 @@ ob_start();
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <label>
-                                                <i class="fas fa-cubes"></i>
-                                                Cantidad*
-                                            </label>
-                                            <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon">
-                                            <i class="fas fa-hashtag input-icon"></i>
+                                            <label>Marca</label>
+                                            <input type="text" class="producto-marca" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Modelo</label>
+                                            <input type="text" class="producto-modelo" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Serial</label>
+                                            <input type="text" class="producto-serial" readonly>
                                         </div>
                                         <div class="form-group">
                                             <label>
                                                 <i class="fas fa-dollar-sign"></i>
                                                 Costo Unitario*
                                             </label>
-                                            <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon">
+                                            <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon" oninput="calcularSubtotal(this)">
                                             <i class="fas fa-dollar-sign input-icon"></i>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-cubes"></i>
+                                                Cantidad*
+                                            </label>
+                                            <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon" oninput="calcularSubtotal(this)">
+                                            <i class="fas fa-hashtag input-icon"></i>
                                         </div>
                                         <div class="form-group subtotal-group">
                                             <label>
@@ -284,21 +310,6 @@ ob_start();
                                 </div>
                             </div>
                             
-                            <!-- Observaciones -->
-                            <div class="form-section">
-                                <div class="section-title">
-                                    <i class="fas fa-sticky-note"></i>
-                                    <h3>Observaciones</h3>
-                                </div>
-                                <div class="form-group">
-                                    <label for="observaciones">
-                                        <i class="fas fa-comment-alt"></i>
-                                        Observaciones adicionales
-                                    </label>
-                                    <textarea id="observaciones" name="observaciones" rows="3"
-                                              placeholder="Escriba cualquier observación relevante sobre esta recepción..."></textarea>
-                                </div>
-                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -536,6 +547,50 @@ ob_start();
                     overflow-y: auto;
                 }
 
+                #recepcionModal .recepcion-ia-preview {
+                    margin: 12px 0 18px;
+                }
+
+                #recepcionModal [hidden] {
+                    display: none !important;
+                }
+
+                #recepcionModal .recepcion-ia-preview img,
+                #recepcionModal .recepcion-ia-preview iframe {
+                    display: block;
+                    width: 100%;
+                    max-height: 360px;
+                    border: 1px solid rgba(33, 150, 243, 0.2);
+                    border-radius: 8px;
+                    background: white;
+                }
+
+                #recepcionModal .recepcion-ia-preview img {
+                    width: auto;
+                    max-width: 100%;
+                    height: auto;
+                }
+
+                #recepcionModal .recepcion-ia-preview iframe {
+                    height: 360px;
+                }
+
+                #recepcionModal .recepcion-ia-status,
+                #recepcionModal .recepcion-ia-result {
+                    margin-top: 12px;
+                    padding: 12px 16px;
+                    border: 1px solid rgba(33, 150, 243, 0.2);
+                    border-radius: 8px;
+                    background: rgba(33, 150, 243, 0.05);
+                    color: #2d3748;
+                    white-space: pre-line;
+                }
+
+                #recepcionModal .recepcion-ia-status[data-state="error"] {
+                    border-color: rgba(220, 53, 69, 0.3);
+                    background: rgba(220, 53, 69, 0.08);
+                }
+
                 .table-container {
                     background: white;
                     border-radius: 12px;
@@ -669,6 +724,11 @@ ob_start();
                     background: linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(25, 118, 210, 0.05) 100%);
                 }
 
+                #productosList {
+                    overflow-x: auto;
+                    padding-bottom: 8px;
+                }
+
                 .productos-recepcion h3 {
                     font-size: 1.1rem;
                     font-weight: 700;
@@ -678,7 +738,8 @@ ob_start();
 
                 .producto-row {
                     display: grid;
-                    grid-template-columns: 2fr 1fr 1.2fr 1fr auto;
+                    grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
+                    min-width: 1080px;
                     gap: 12px;
                     margin-bottom: 15px;
                     align-items: start;
@@ -1051,18 +1112,7 @@ ob_start();
                 /* Responsive */
                 @media (max-width: 768px) {
                     .producto-row {
-                        grid-template-columns: 1fr;
-                        gap: 10px;
-                    }
-
-                    .subtotal-group {
-                        grid-column: 1 / -1;
-                    }
-
-                    .btn-remove-row {
-                        grid-column: 1 / -1;
-                        width: 100%;
-                        margin-top: 10px;
+                        grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
                     }
 
                     .recepciones-table {
@@ -1077,13 +1127,136 @@ ob_start();
 
                 @media (max-width: 1200px) {
                     .producto-row {
-                        grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+                        grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
                         gap: 10px;
                     }
                 }
             </style>
 
+            <script src="microservicio/javascript/asistente_recepcion.js"></script>
             <script>
+                const asistenteRecepcionIA = typeof AsistenteRecepcionIA !== 'undefined'
+                    ? new AsistenteRecepcionIA({
+                        apiUrl: 'http://127.0.0.1:8000',
+                        proxyUrl: '?pagina=recepcion',
+                        selectores: { alertas: '#estadoIARecepcion' }
+                    })
+                    : null;
+                let urlPreviewFacturaRecepcion = null;
+
+                function establecerEstadoIARecepcion(mensaje, estado = 'info') {
+                    const estadoEl = document.getElementById('estadoIARecepcion');
+                    estadoEl.textContent = mensaje;
+                    estadoEl.dataset.state = estado;
+                    estadoEl.hidden = !mensaje;
+                }
+
+                function activarContingenciaIARecepcion(detalle = '') {
+                    establecerEstadoIARecepcion(
+                        `El servicio de lectura automática por IA no está disponible temporalmente. Se ha habilitado el formulario manual. La factura se conservará al registrar.${detalle ? ` Detalle: ${detalle}` : ''}`,
+                        'error'
+                    );
+                }
+
+                function normalizarTextoRecepcion(valor) {
+                    return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .toLowerCase().replace(/[^a-z0-9]/g, '');
+                }
+
+                function buscarOpcionCatalogo(select, texto) {
+                    const buscado = normalizarTextoRecepcion(texto);
+                    if (!buscado) return null;
+                    const opciones = Array.from(select.options).filter(opcion => opcion.value);
+                    const exactas = opciones.filter(opcion => normalizarTextoRecepcion(opcion.textContent) === buscado);
+                    if (exactas.length === 1) return exactas[0];
+                    const parciales = opciones.filter(opcion => {
+                        const nombre = normalizarTextoRecepcion(opcion.textContent);
+                        return nombre.includes(buscado) || buscado.includes(nombre);
+                    });
+                    return parciales.length === 1 ? parciales[0] : null;
+                }
+
+                function rellenarRecepcionDesdeFactura(factura) {
+                    const correlativo = document.getElementById('correlativo');
+                    if (factura.numero_factura) correlativo.value = factura.numero_factura;
+
+                    const proveedor = document.getElementById('proveedor');
+                    const proveedorEncontrado = buscarOpcionCatalogo(proveedor, factura.nombre_proveedor);
+                    if (proveedorEncontrado) proveedor.value = proveedorEncontrado.value;
+
+                    const productosDetectados = Array.isArray(factura.productos) ? factura.productos : [];
+                    if (productosDetectados.length) {
+                        const productosList = document.getElementById('productosList');
+                        while (productosList.querySelectorAll('.producto-row').length > 1) {
+                            productosList.lastElementChild.remove();
+                        }
+                        productosList.querySelector('.producto-row').querySelectorAll('select, input').forEach(campo => {
+                            if (campo.classList.contains('subtotal-display')) campo.value = '$0.00';
+                            else campo.value = '';
+                        });
+
+                        productosDetectados.forEach((producto, indice) => {
+                            const fila = indice === 0
+                                ? productosList.querySelector('.producto-row')
+                                : addProductoRow();
+                            const selector = fila.querySelector('.producto-select');
+                            const opcion = buscarOpcionCatalogo(selector, producto.nombre);
+                            if (opcion) {
+                                selector.value = opcion.value;
+                                seleccionarProducto(selector);
+                            }
+                            fila.querySelector('input[name="cantidad[]"]').value = producto.cantidad > 0 ? producto.cantidad : 1;
+                            fila.querySelector('input[name="costo[]"]').value = Number(producto.costo_unitario || 0).toFixed(2);
+                            calcularSubtotal(fila.querySelector('input[name="costo[]"]'));
+                        });
+                    }
+
+                    actualizarContadorProductos();
+                    const camposPendientes = [];
+                    if (factura.nombre_proveedor && !proveedorEncontrado) camposPendientes.push('proveedor');
+                    if (productosDetectados.some(producto => !buscarOpcionCatalogo(document.querySelector('.producto-select'), producto.nombre))) {
+                        camposPendientes.push('selección de productos del catálogo');
+                    }
+                    const nota = camposPendientes.length
+                        ? ` Revisa manualmente: ${camposPendientes.join(' y ')}.`
+                        : ' Revisa los datos antes de guardar.';
+                    establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.${nota}`);
+                    document.getElementById('resultadoIARecepcion').textContent =
+                        `Proveedor detectado: ${factura.nombre_proveedor || 'no detectado'}\n` +
+                        `Productos detectados: ${productosDetectados.length}\n` +
+                        `Confianza OCR: ${(Number(factura.confianza_promedio || 0) * 100).toFixed(1)}%`;
+                    document.getElementById('resultadoIARecepcion').hidden = false;
+                }
+
+                function limpiarFacturaIARecepcion() {
+                    if (asistenteRecepcionIA) asistenteRecepcionIA.limpiarCache();
+                    if (urlPreviewFacturaRecepcion) URL.revokeObjectURL(urlPreviewFacturaRecepcion);
+                    urlPreviewFacturaRecepcion = null;
+                    document.getElementById('previewFacturaRecepcion').hidden = true;
+                    document.getElementById('previewImagenRecepcion').hidden = true;
+                    document.getElementById('previewPdfRecepcion').hidden = true;
+                    document.getElementById('previewImagenRecepcion').removeAttribute('src');
+                    document.getElementById('previewPdfRecepcion').removeAttribute('src');
+                    document.getElementById('resultadoIARecepcion').textContent = '';
+                    document.getElementById('resultadoIARecepcion').hidden = true;
+                    establecerEstadoIARecepcion('');
+                }
+
+                async function analizarFacturaRecepcion(archivo) {
+                    if (!asistenteRecepcionIA) {
+                        establecerEstadoIARecepcion('No se pudo cargar el cliente del microservicio.', 'error');
+                        return;
+                    }
+                    establecerEstadoIARecepcion('Analizando factura con OCR...');
+                    const resultado = await asistenteRecepcionIA.extraerDesdeImagen(archivo);
+                    if (!resultado.exito) {
+                        if (resultado.contingencia) activarContingenciaIARecepcion(resultado.error);
+                        else establecerEstadoIARecepcion(`No se pudo analizar la factura: ${resultado.error || 'error del servicio'}`, 'error');
+                        return;
+                    }
+                    rellenarRecepcionDesdeFactura(resultado.data);
+                }
+
                 // Función para abrir modal de recepción
                 function openModal(type) {
                     const modal = document.getElementById('recepcionModal');
@@ -1093,12 +1266,11 @@ ob_start();
                     if (type === 'registrar') {
                         modalTitle.textContent = 'Nueva Recepción';
                         form.reset();
-                        // Set today's date
-                        const fechaInput = document.getElementById('fecha');
-                        if (fechaInput) {
-                            const today = new Date().toISOString().split('T')[0];
-                            fechaInput.value = today;
-                        }
+                        limpiarFacturaIARecepcion();
+                        const filas = document.querySelectorAll('#productosList .producto-row');
+                        filas.forEach((fila, indice) => { if (indice > 0) fila.remove(); });
+                        actualizarContadorProductos();
+                        calcularTotal();
                     }
                     
                     modal.style.display = 'block';
@@ -1133,51 +1305,29 @@ ob_start();
                 // Función para agregar fila de producto
                 function addProductoRow() {
                     const productosList = document.getElementById('productosList');
-                    const newRow = document.createElement('div');
-                    newRow.className = 'producto-row';
+                    const newRow = productosList.querySelector('.producto-row').cloneNode(true);
                     newRow.style.animation = 'slideDown 0.3s ease';
-                    newRow.innerHTML = `
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-box"></i>
-                                Producto*
-                            </label>
-                            <select name="producto[]" class="producto-select" required onchange="calcularSubtotal(this)">
-                                <option value="">Seleccione un producto</option>
-                                <option value="1">iPhone 15 Pro Max</option>
-                                <option value="2">MacBook Air M3</option>
-                                <option value="3">AirPods Pro 2</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-cubes"></i>
-                                Cantidad*
-                            </label>
-                            <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon" onchange="calcularSubtotal(this)">
-                            <i class="fas fa-hashtag input-icon"></i>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-dollar-sign"></i>
-                                Costo Unitario*
-                            </label>
-                            <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon" onchange="calcularSubtotal(this)">
-                            <i class="fas fa-dollar-sign input-icon"></i>
-                        </div>
-                        <div class="form-group subtotal-group">
-                            <label>
-                                <i class="fas fa-calculator"></i>
-                                Subtotal
-                            </label>
-                            <input type="text" class="subtotal-display" readonly value="$0.00">
-                        </div>
-                        <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Eliminar producto">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `;
+                    newRow.querySelector('.producto-select').value = '';
+                    newRow.querySelector('.producto-codigo').value = '';
+                    newRow.querySelector('.producto-marca').value = '';
+                    newRow.querySelector('.producto-modelo').value = '';
+                    newRow.querySelector('.producto-serial').value = '';
+                    newRow.querySelector('input[name="cantidad[]"]').value = '';
+                    newRow.querySelector('input[name="costo[]"]').value = '';
+                    newRow.querySelector('.subtotal-display').value = '$0.00';
                     productosList.appendChild(newRow);
                     actualizarContadorProductos();
+                    return newRow;
+                }
+
+                function seleccionarProducto(select) {
+                    const opcion = select.selectedOptions[0];
+                    const fila = select.closest('.producto-row');
+                    fila.querySelector('.producto-codigo').value = opcion?.dataset.codigo || '';
+                    fila.querySelector('.producto-marca').value = opcion?.dataset.marca || '';
+                    fila.querySelector('.producto-modelo').value = opcion?.dataset.modelo || '';
+                    fila.querySelector('.producto-serial').value = opcion?.dataset.serial || '';
+                    calcularSubtotal(select);
                 }
 
                 // Función para calcular subtotal de una fila
@@ -1223,43 +1373,96 @@ ob_start();
                 }
 
                 // Función para guardar recepción
-                function saveRecepcion() {
+                async function saveRecepcion() {
                     const form = document.getElementById('recepcionForm');
-                    const formData = new FormData(form);
-                    formData.append('accion', 'registrar');
+                    if (!form.reportValidity()) return;
+                    const botonGuardar = document.querySelector('#recepcionModal .modal-footer .btn-save');
+                    botonGuardar.disabled = true;
                     
-                    // Validación básica
-                    const productos = document.querySelectorAll('.producto-select');
-                    let productosValidos = true;
-                    productos.forEach(select => {
-                        if (!select.value) productosValidos = false;
-                    });
-                    
-                    if (!productosValidos) {
-                        alert('Por favor, seleccione todos los productos');
-                        return;
-                    }
-                    
-                    // Enviar datos al backend
-                    fetch('?pagina=recepcion', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
+                    try {
+                        const archivo = document.getElementById('fotoFacturaRecepcion').files[0];
+                        let modoContingencia = false;
+                        let iaVerificada = false;
+                        if (archivo) {
+                            if (!asistenteRecepcionIA) {
+                                modoContingencia = true;
+                            } else if (!asistenteRecepcionIA.getFacturaId()) {
+                                const extraccion = await asistenteRecepcionIA.extraerDesdeImagen(archivo);
+                                if (!extraccion.exito) {
+                                    if (!extraccion.contingencia) throw new Error(extraccion.error || 'No se pudo analizar la factura.');
+                                    modoContingencia = true;
+                                } else {
+                                    rellenarRecepcionDesdeFactura(extraccion.data);
+                                }
+                            }
+
+                            if (!modoContingencia) {
+                                establecerEstadoIARecepcion('Verificando los datos antes del registro...');
+                                const datosFormulario = {
+                                    numero_factura: document.getElementById('correlativo').value,
+                                    nombre_proveedor: document.querySelector('#proveedor option:checked').textContent,
+                                    productos: Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
+                                        nombre: fila.querySelector('.producto-select option:checked').textContent,
+                                        cantidad: Number(fila.querySelector('input[name="cantidad[]"]').value),
+                                        costo: Number(fila.querySelector('input[name="costo[]"]').value)
+                                    }))
+                                };
+                                const verificacion = await asistenteRecepcionIA.verificarCoherencia(
+                                    asistenteRecepcionIA.getFacturaId(), datosFormulario
+                                );
+                                if (verificacion.error) {
+                                    if (!verificacion.contingencia) throw new Error(verificacion.error);
+                                    modoContingencia = true;
+                                } else if (!verificacion.exito) {
+                                    const discrepancias = verificacion.discrepancias || [];
+                                    const detalle = discrepancias.map(item =>
+                                        `${item.campo}: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"`
+                                    ).join('\n');
+                                    if (discrepancias.some(item => item.severidad === 'CRITICA')) {
+                                        establecerEstadoIARecepcion('Registro bloqueado: corrige las discrepancias críticas con la factura.', 'error');
+                                        alert(`La verificación encontró diferencias críticas. Corrige los datos antes de guardar.\n\n${detalle}`);
+                                        return;
+                                    }
+                                    if (!confirm(`Se encontraron diferencias con la factura:\n\n${detalle}\n\n¿Deseas guardar de todos modos?`)) return;
+                                    iaVerificada = true;
+                                } else {
+                                    iaVerificada = true;
+                                }
+                            }
+
+                            if (modoContingencia) {
+                                activarContingenciaIARecepcion();
+                                if (!confirm('El servicio de lectura automática por IA no está disponible temporalmente. Se ha habilitado el formulario manual. La factura se conservará al registrar. ¿Deseas continuar con el registro manual?')) return;
+                            }
+                        }
+
+                        const formData = new FormData(form);
+                        formData.delete('foto_factura');
+                        formData.append('accion', 'registrar');
+                        if (archivo) formData.append('factura_contingencia', archivo, archivo.name);
+                        if (modoContingencia) formData.append('modo_contingencia', 'true');
+                        if (iaVerificada) formData.append('ia_verificada', 'true');
+                        const response = await fetch('?pagina=recepcion', { method: 'POST', body: formData });
+                        const data = await response.json();
                         if (data && data.status === 'success') {
-                            alert('Recepción registrada correctamente');
+                            const mensaje = data.procesamiento_pendiente
+                                ? 'Recepción registrada. La factura quedó resguardada y marcada para procesamiento posterior.'
+                                : data.factura_resguardada
+                                    ? 'Recepción registrada. La factura quedó resguardada de forma privada.'
+                                    : 'Recepción registrada correctamente.';
+                            alert(mensaje);
                             closeModal();
-                            // Recargar la página para mostrar la nueva recepción
                             location.reload();
                         } else {
                             alert('Error al registrar recepción: ' + (data.message || 'Error desconocido'));
                         }
-                    })
-                    .catch(error => {
+                    } catch (error) {
                         console.error('Error al guardar recepción:', error);
-                        alert('Error al guardar recepción. Por favor, intente nuevamente.');
-                    });
+                        establecerEstadoIARecepcion(error.message || 'Error al guardar recepción.', 'error');
+                        alert(error.message || 'Error al guardar recepción. Por favor, intente nuevamente.');
+                    } finally {
+                        botonGuardar.disabled = false;
+                    }
                 }
 
                 // Función para ver detalles de recepción
@@ -1492,6 +1695,37 @@ ob_start();
 
                     // Inicializar contador de productos
                     actualizarContadorProductos();
+
+                    const archivoFactura = document.getElementById('fotoFacturaRecepcion');
+                    archivoFactura.addEventListener('change', async function() {
+                        limpiarFacturaIARecepcion();
+                        const archivo = this.files[0];
+                        if (!archivo) return;
+                        if (archivo.size > 5 * 1024 * 1024) {
+                            this.value = '';
+                            establecerEstadoIARecepcion('El archivo debe ser menor a 5 MB.', 'error');
+                            return;
+                        }
+
+                        urlPreviewFacturaRecepcion = URL.createObjectURL(archivo);
+                        const contenedorPreview = document.getElementById('previewFacturaRecepcion');
+                        const previewImagen = document.getElementById('previewImagenRecepcion');
+                        const previewPdf = document.getElementById('previewPdfRecepcion');
+                        contenedorPreview.hidden = false;
+                        if (archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf')) {
+                            previewPdf.src = urlPreviewFacturaRecepcion;
+                            previewPdf.hidden = false;
+                        } else if (archivo.type.startsWith('image/')) {
+                            previewImagen.src = urlPreviewFacturaRecepcion;
+                            previewImagen.hidden = false;
+                        } else {
+                            this.value = '';
+                            limpiarFacturaIARecepcion();
+                            establecerEstadoIARecepcion('Selecciona una imagen o un archivo PDF.', 'error');
+                            return;
+                        }
+                        await analizarFacturaRecepcion(archivo);
+                    });
                 });
 
                 // Animaciones CSS

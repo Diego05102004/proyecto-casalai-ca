@@ -5,6 +5,9 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Modelo\Servicio\RecepcionIAProxy;
+
+require_once dirname(__DIR__) . '/Servicio/RecepcionIAProxy.php';
 
 define('MODULO_RECEPCION', "Recepcion"); // Define el ID del módulo de cuentas bancarias
 
@@ -24,6 +27,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     switch ($accion) {
+        case 'ia_health':
+            header('Content-Type: application/json; charset=utf-8');
+            $respuestaIA = (new RecepcionIAProxy())->health();
+            http_response_code($respuestaIA['http_status']);
+            echo json_encode($respuestaIA['data'], JSON_UNESCAPED_UNICODE);
+            exit;
+
+        case 'ia_extraer':
+            header('Content-Type: application/json; charset=utf-8');
+            $respuestaIA = (new RecepcionIAProxy())->extraer($_FILES['imagen'] ?? []);
+            http_response_code($respuestaIA['http_status']);
+            echo json_encode($respuestaIA['data'], JSON_UNESCAPED_UNICODE);
+            exit;
+
+        case 'ia_verificar':
+            header('Content-Type: application/json; charset=utf-8');
+            $solicitudIA = json_decode($_POST['solicitud'] ?? '', true);
+            if (!is_array($solicitudIA)) {
+                http_response_code(400);
+                echo json_encode(['detail' => 'La solicitud de verificación no es válida.']);
+                exit;
+            }
+            $respuestaIA = (new RecepcionIAProxy())->verificar($solicitudIA);
+            http_response_code($respuestaIA['http_status']);
+            echo json_encode($respuestaIA['data'], JSON_UNESCAPED_UNICODE);
+            exit;
+
+        case 'ia_comparar':
+            header('Content-Type: application/json; charset=utf-8');
+            $respuestaIA = (new RecepcionIAProxy())->comparar($_FILES['imagen'] ?? [], $_POST['datos_json'] ?? '');
+            http_response_code($respuestaIA['http_status']);
+            echo json_encode($respuestaIA['data'], JSON_UNESCAPED_UNICODE);
+            exit;
+
         case 'listado':
             $k = new Recepcion();
             $respuesta = $k->listadoproductos();
@@ -151,6 +188,83 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
+            $rutaFacturaResguardada = null;
+            $rutaManifiestoFactura = null;
+            $manifiestoFactura = null;
+            if (isset($_FILES['factura_contingencia']) && $_FILES['factura_contingencia']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $archivoFactura = $_FILES['factura_contingencia'];
+                if ($archivoFactura['error'] !== UPLOAD_ERR_OK) {
+                    http_response_code(400);
+                    echo json_encode(['status' => 'error', 'message' => 'No se pudo recibir la factura adjunta. Verifique el límite de carga del servidor.']);
+                    exit;
+                }
+                if ($archivoFactura['size'] > 5 * 1024 * 1024) {
+                    http_response_code(413);
+                    echo json_encode(['status' => 'error', 'message' => 'La factura adjunta debe ser menor a 5 MB.']);
+                    exit;
+                }
+
+                $mimeFactura = (new finfo(FILEINFO_MIME_TYPE))->file($archivoFactura['tmp_name']);
+                $extensionesFactura = [
+                    'application/pdf' => 'pdf',
+                    'image/png' => 'png',
+                    'image/jpeg' => 'jpg',
+                    'image/webp' => 'webp',
+                    'image/bmp' => 'bmp',
+                    'image/tiff' => 'tif'
+                ];
+                if (!isset($extensionesFactura[$mimeFactura])) {
+                    http_response_code(400);
+                    echo json_encode(['status' => 'error', 'message' => 'La factura debe ser un PDF o una imagen compatible.']);
+                    exit;
+                }
+
+                $directorioFacturas = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'comprobantes' . DIRECTORY_SEPARATOR . 'recepcion';
+                if (!is_dir($directorioFacturas) && !mkdir($directorioFacturas, 0750, true) && !is_dir($directorioFacturas)) {
+                    http_response_code(500);
+                    echo json_encode(['status' => 'error', 'message' => 'No se pudo preparar el resguardo privado de facturas.']);
+                    exit;
+                }
+
+                $correlativoArchivo = preg_replace('/[^A-Za-z0-9_-]/', '_', $_POST['correlativo']);
+                $nombreArchivoFactura = sprintf(
+                    '%d_%s_%s_%s.%s',
+                    (int)$_POST['proveedor'],
+                    $correlativoArchivo,
+                    date('YmdHis'),
+                    bin2hex(random_bytes(6)),
+                    $extensionesFactura[$mimeFactura]
+                );
+                $rutaFacturaResguardada = $directorioFacturas . DIRECTORY_SEPARATOR . $nombreArchivoFactura;
+                $rutaManifiestoFactura = $rutaFacturaResguardada . '.json';
+
+                if (!move_uploaded_file($archivoFactura['tmp_name'], $rutaFacturaResguardada)) {
+                    http_response_code(500);
+                    echo json_encode(['status' => 'error', 'message' => 'No se pudo guardar la copia privada de la factura.']);
+                    exit;
+                }
+                if (DIRECTORY_SEPARATOR !== '\\') {
+                    chmod($rutaFacturaResguardada, 0640);
+                }
+
+                $manifiestoFactura = [
+                    'correlativo' => trim($_POST['correlativo']),
+                    'proveedor_id' => (int)$_POST['proveedor'],
+                    'usuario_id' => (int)($_SESSION['id_usuario'] ?? 0),
+                    'archivo' => $nombreArchivoFactura,
+                    'estado' => ($_POST['modo_contingencia'] ?? '') === 'true' ? 'pendiente_ocr' : 'resguardada',
+                    'subido_en' => date(DATE_ATOM),
+                    'sha256' => hash_file('sha256', $rutaFacturaResguardada)
+                ];
+                $jsonManifiesto = json_encode($manifiestoFactura, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                if ($jsonManifiesto === false || file_put_contents($rutaManifiestoFactura, $jsonManifiesto, LOCK_EX) === false) {
+                    unlink($rutaFacturaResguardada);
+                    http_response_code(500);
+                    echo json_encode(['status' => 'error', 'message' => 'No se pudo registrar el manifiesto de la factura.']);
+                    exit;
+                }
+            }
+
             $productos_data = [
                 'idproducto' => $_POST['producto'],
                 'cantidad' => $_POST['cantidad'],
@@ -170,6 +284,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $recepcionRegistrada = $k->obtenerUltimaRecepcion();
 
             if ($resultado && $recepcionRegistrada) {
+                if ($manifiestoFactura !== null) {
+                    $manifiestoFactura['estado'] = ($_POST['modo_contingencia'] ?? '') === 'true' ? 'pendiente_ocr' : 'recepcion_registrada';
+                    $manifiestoFactura['id_recepcion'] = (int)$recepcionRegistrada['id_recepcion'];
+                    file_put_contents(
+                        $rutaManifiestoFactura,
+                        json_encode($manifiestoFactura, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                        LOCK_EX
+                    );
+                }
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $bitacoraModel = new Bitacora();
                     $bitacoraModel->registrarBitacora(
@@ -202,9 +325,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Recepción registrada correctamente',
+                    'factura_resguardada' => $rutaFacturaResguardada !== null,
+                    'procesamiento_pendiente' => ($_POST['modo_contingencia'] ?? '') === 'true',
                     'recepcion' => $recepcionRegistrada
                 ]);
             } else {
+                if ($rutaFacturaResguardada !== null && is_file($rutaFacturaResguardada)) unlink($rutaFacturaResguardada);
+                if ($rutaManifiestoFactura !== null && is_file($rutaManifiestoFactura)) unlink($rutaManifiestoFactura);
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Error al registrar la recepción'
@@ -378,7 +505,7 @@ $ProductosRecibidos = $r->getProductosMasRecibidos();
 $RecepcionMensual = $r->getRecepcionesMensuales();
 
 $proveedores = (new Recepcion())->obtenerproveedor();
-$productos = getproductos();
+$productos = (new Recepcion())->consultarproductos();
 $pagina = "recepcion";
 
 // Verificar si se solicita la vista de reporte

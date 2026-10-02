@@ -2,7 +2,8 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import json, shutil, hashlib
+import json
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -19,6 +20,21 @@ BASE_DIR = Path(__file__).parent.parent
 UPLOAD_DIR = BASE_DIR / "temp_uploads"
 for dir_path in [UPLOAD_DIR, BASE_DIR / "factura_cache", BASE_DIR / "logs_metricas"]:
     dir_path.mkdir(parents=True, exist_ok=True)
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024
+ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}
+
+async def guardar_archivo_temporal(imagen: UploadFile, factura_id: str) -> Path:
+    extension = Path(imagen.filename or "").suffix.lower()
+    if extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Formato no permitido. Use PDF o una imagen.")
+
+    contenido = await imagen.read(MAX_UPLOAD_SIZE + 1)
+    if len(contenido) > MAX_UPLOAD_SIZE:
+        raise HTTPException(status_code=413, detail="El archivo debe ser menor a 5 MB.")
+
+    file_path = UPLOAD_DIR / f"{factura_id}{extension}"
+    file_path.write_bytes(contenido)
+    return file_path
 
 auditor: Optional[AuditorRecepcion] = None
 
@@ -86,16 +102,17 @@ async def health_check():
 @app.post("/fase1/extraer", response_model=ExtraccionResponse)
 async def extraer_factura(imagen: UploadFile = File(...)):
     if not auditor: raise HTTPException(status_code=503, detail="Servicio no disponible")
-    factura_id = f"fact_{datetime.now().strftime('%Y%m%d%H%M%S')}_{hashlib.md5(imagen.filename.encode()).hexdigest()[:8]}"
-    file_path = UPLOAD_DIR / f"{factura_id}_{imagen.filename}"
+    factura_id = f"fact_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    file_path = await guardar_archivo_temporal(imagen, factura_id)
     try:
-        with open(file_path, "wb") as buffer: shutil.copyfileobj(imagen.file, buffer)
         factura = auditor.extraer_desde_imagen(str(file_path), factura_id)
         productos_list = [{"nombre": p.nombre, "modelo": p.modelo, "marca": p.marca, "serial": p.serial, "cantidad": p.cantidad, "costo_unitario": p.costo_unitario, "confianza": p.confianza} for p in factura.productos]
         confianza = factura.metadatos_extraccion.get('confianza_promedio', 0.0)
         return ExtraccionResponse(exito=True, factura_id=factura_id, numero_factura=factura.numero_factura, nombre_proveedor=factura.nombre_proveedor, fecha_factura=factura.fecha_factura, total_factura=factura.total_factura, productos=productos_list, confianza_promedio=confianza, mensaje=f"Extracción completada. ID: {factura_id}")
     except Exception as e: raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
-    finally: imagen.file.close()
+    finally:
+        await imagen.close()
+        file_path.unlink(missing_ok=True)
 
 @app.post("/fase1/verificar", response_model=VerificacionResponse)
 async def verificar_datos(request: VerificacionRequest):
@@ -112,16 +129,15 @@ async def comparar_directo(imagen: UploadFile = File(...), datos_json: str = For
     if not auditor: raise HTTPException(status_code=503, detail="Servicio no disponible")
     try: datos_formulario = json.loads(datos_json)
     except: raise HTTPException(status_code=400, detail="JSON inválido")
-    temp_id = f"direct_{datetime.now().strftime('%Y%m%d%H%M%S')}_{hashlib.md5(imagen.filename.encode()).hexdigest()[:8]}"
-    file_path = UPLOAD_DIR / f"{temp_id}_{imagen.filename}"
+    temp_id = f"direct_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    file_path = await guardar_archivo_temporal(imagen, temp_id)
     try:
-        with open(file_path, "wb") as buffer: shutil.copyfileobj(imagen.file, buffer)
         resultado = auditor.comparar_directo(str(file_path), datos_formulario)
         discrepancias_resp = [DiscrepanciaResponse(campo=d.campo, valor_factura=d.valor_factura, valor_formulario=d.valor_formulario, severidad=d.severidad, mensaje=d.mensaje) for d in resultado.discrepancias]
         return {"exito": resultado.exito, "discrepancias": [d.dict() for d in discrepancias_resp], "reporte": resultado.reporte_detallado, "mensaje": "OK" if resultado.exito else "Discrepancias encontradas"}
     finally:
-        imagen.file.close()
-        if file_path.exists(): file_path.unlink()
+        await imagen.close()
+        file_path.unlink(missing_ok=True)
 
 @app.get("/fase1/cache/{factura_id}")
 async def obtener_cache(factura_id: str):
@@ -136,4 +152,4 @@ async def obtener_estadisticas():
     return {"total_verificaciones": stats.get("total_verificaciones", 0), "tasa_exito": stats.get("tasa_exito", 0.0)}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
