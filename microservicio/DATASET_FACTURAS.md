@@ -47,7 +47,7 @@ Propuesta de estructura, ampliable según los campos que efectivamente aparezcan
 }
 ```
 
-El esquema actual del modelo Python (`FacturaExtraida` y `ProductoExtraido`) no contiene todavía RIF, subtotal ni desglose de impuestos; agregarlos requiere ampliar extracción, validación y pruebas antes de considerarlos campos soportados.
+El esquema actual del modelo Python (`FacturaExtraida`) soporta subtotal, una tasa y un monto de IVA y total de factura; `ProductoExtraido` representa importe unitario por línea. Todavía no soporta RIF ni impuestos múltiples/exentos por línea, por lo que esos campos del ejemplo son una propuesta de etiquetado, no capacidades disponibles.
 
 ## Pipeline y rol de CNN
 

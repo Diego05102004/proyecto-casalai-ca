@@ -86,6 +86,9 @@ class ExtraccionResponse(BaseModel):
     numero_factura: str
     nombre_proveedor: str
     fecha_factura: str
+    subtotal_factura: float
+    porcentaje_iva: float
+    monto_iva: float
     total_factura: float
     productos: List[Dict]
     confianza_promedio: float
@@ -108,7 +111,7 @@ async def extraer_factura(imagen: UploadFile = File(...)):
         factura = auditor.extraer_desde_imagen(str(file_path), factura_id)
         productos_list = [{"nombre": p.nombre, "modelo": p.modelo, "marca": p.marca, "serial": p.serial, "cantidad": p.cantidad, "costo_unitario": p.costo_unitario, "confianza": p.confianza} for p in factura.productos]
         confianza = factura.metadatos_extraccion.get('confianza_promedio', 0.0)
-        return ExtraccionResponse(exito=True, factura_id=factura_id, numero_factura=factura.numero_factura, nombre_proveedor=factura.nombre_proveedor, fecha_factura=factura.fecha_factura, total_factura=factura.total_factura, productos=productos_list, confianza_promedio=confianza, mensaje=f"Extracción completada. ID: {factura_id}")
+        return ExtraccionResponse(exito=True, factura_id=factura_id, numero_factura=factura.numero_factura, nombre_proveedor=factura.nombre_proveedor, fecha_factura=factura.fecha_factura, subtotal_factura=factura.subtotal_factura, porcentaje_iva=factura.porcentaje_iva, monto_iva=factura.monto_iva, total_factura=factura.total_factura, productos=productos_list, confianza_promedio=confianza, mensaje=f"Extracción completada. ID: {factura_id}")
     except Exception as e: raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
     finally:
         await imagen.close()

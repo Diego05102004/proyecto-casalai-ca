@@ -162,6 +162,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
+            $porcentajeIva = $_POST['porcentaje_iva'] ?? '0';
+            if (!is_numeric($porcentajeIva) || (float)$porcentajeIva < 0 || (float)$porcentajeIva > 100) {
+                http_response_code(400);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El porcentaje de IVA debe estar entre 0 y 100.',
+                    'field' => 'porcentaje_iva'
+                ]);
+                exit;
+            }
+            $porcentajeIva = (float)$porcentajeIva;
+
             if (isset($_POST['ia_verificada']) && $_POST['ia_verificada'] !== 'true') {
                 echo json_encode([
                     'status' => 'error',
@@ -278,7 +290,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $resultado = $k->registrarRecepcion(
                 $_POST['producto'],
                 $_POST['cantidad'],
-                $_POST['costo']
+                $_POST['costo'],
+                $porcentajeIva
             );
 
             $recepcionRegistrada = $k->obtenerUltimaRecepcion();
@@ -346,7 +359,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $k->setcorrelativo($correlativo);
             $respuesta = $k->buscar();
             
-            if (!$respuesta) {
+            if (!$respuesta || ($respuesta['resultado'] ?? '') !== 'encontró') {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'No se encontró el correlativo: ' . $correlativo
@@ -355,6 +368,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Obtener productos de la recepción
                 $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
                 $productos = $k->obtenerProductosPorRecepcion($id_recepcion);
+                $respuesta['productos'] = $productos;
                 
                 echo json_encode([
                     'status' => 'success',

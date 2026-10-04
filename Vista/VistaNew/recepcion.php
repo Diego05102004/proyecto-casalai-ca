@@ -108,7 +108,7 @@ ob_start();
                                 <th>Proveedor</th>
                                 <th>Fecha</th>
                                 <th>Productos</th>
-                                <th>Total</th>
+                                <th>Total factura</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
@@ -121,7 +121,12 @@ ob_start();
                                         <td><?php echo htmlspecialchars($recepcion['nombre_proveedor'] ?? 'N/A'); ?></td>
                                         <td><?php echo date('d/m/Y', strtotime($recepcion['fecha'] ?? 'now')); ?></td>
                                         <td><?php echo htmlspecialchars($recepcion['tamaño'] ?? 0); ?></td>
-                                        <td>$<?php echo number_format($recepcion['costo_inversion'] ?? 0, 2, ',', '.'); ?></td>
+                                        <td>
+                                            $<?php echo number_format($recepcion['total_factura'] ?? $recepcion['costo_inversion'] ?? 0, 2, ',', '.'); ?>
+                                            <?php if (($recepcion['total_factura'] ?? null) === null): ?>
+                                                <small title="El IVA de esta recepción histórica no está registrado">IVA no registrado</small>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <?php 
                                             $estatus = 'completada';
@@ -303,9 +308,23 @@ ob_start();
                                     <button type="button" class="btn-add-row" onclick="addProductoRow()">
                                         <i class="fas fa-plus"></i> Agregar Producto
                                     </button>
-                                    <div class="total-section">
-                                        <span class="total-label">Total Estimado:</span>
-                                        <span class="total-value" id="totalValue">$0.00</span>
+                                    <div class="total-section recepcion-resumen-factura">
+                                        <div class="resumen-factura-item">
+                                            <span class="total-label">Subtotal:</span>
+                                            <strong class="total-value" id="subtotalRecepcion">$0.00</strong>
+                                        </div>
+                                        <div class="resumen-factura-item resumen-iva-tasa">
+                                            <label for="porcentajeIvaRecepcion">IVA (%)</label>
+                                            <input type="number" id="porcentajeIvaRecepcion" name="porcentaje_iva" value="0" min="0" max="100" step="0.01" oninput="calcularTotal()">
+                                        </div>
+                                        <div class="resumen-factura-item">
+                                            <span class="total-label">Monto IVA:</span>
+                                            <strong class="total-value" id="montoIvaRecepcion">$0.00</strong>
+                                        </div>
+                                        <div class="resumen-factura-item resumen-factura-total">
+                                            <span class="total-label">Total factura:</span>
+                                            <strong class="total-value" id="totalValue">$0.00</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -398,7 +417,15 @@ ob_start();
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td colspan="3"><strong>Total:</strong></td>
+                                                <td colspan="3"><strong>Subtotal:</strong></td>
+                                                <td><strong id="viewSubtotal">$17,485.00</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
+                                                <td><strong id="viewMontoIva">No registrado</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3"><strong>Total factura:</strong></td>
                                                 <td><strong id="viewTotal">$17,485.00</strong></td>
                                             </tr>
                                         </tfoot>
@@ -807,6 +834,44 @@ ob_start();
                     font-weight: 800;
                 }
 
+                .recepcion-resumen-factura {
+                    display: grid;
+                    grid-template-columns: repeat(4, minmax(130px, 1fr));
+                    align-items: center;
+                    flex: 1;
+                }
+
+                .resumen-factura-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                    min-width: 0;
+                }
+
+                .resumen-factura-item .total-label,
+                .resumen-factura-item label {
+                    color: white;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                }
+
+                .resumen-factura-item .total-value {
+                    font-size: 1rem;
+                }
+
+                .resumen-iva-tasa input {
+                    width: 100%;
+                    min-width: 0;
+                    padding: 5px 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.7);
+                    border-radius: 5px;
+                }
+
+                .resumen-factura-total {
+                    border-left: 1px solid rgba(255, 255, 255, 0.35);
+                    padding-left: 14px;
+                }
+
                 .input-with-icon {
                     position: relative;
                 }
@@ -1111,6 +1176,21 @@ ob_start();
 
                 /* Responsive */
                 @media (max-width: 768px) {
+                    .productos-footer {
+                        align-items: stretch;
+                        flex-direction: column;
+                        gap: 12px;
+                    }
+
+                    .recepcion-resumen-factura {
+                        grid-template-columns: repeat(2, minmax(120px, 1fr));
+                    }
+
+                    .resumen-factura-total {
+                        border-left: 0;
+                        padding-left: 0;
+                    }
+
                     .producto-row {
                         grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
                     }
@@ -1211,6 +1291,10 @@ ob_start();
                         });
                     }
 
+                    document.getElementById('porcentajeIvaRecepcion').value =
+                        Number(factura.porcentaje_iva || 0).toFixed(2);
+                    calcularTotal();
+
                     actualizarContadorProductos();
                     const camposPendientes = [];
                     if (factura.nombre_proveedor && !proveedorEncontrado) camposPendientes.push('proveedor');
@@ -1224,6 +1308,9 @@ ob_start();
                     document.getElementById('resultadoIARecepcion').textContent =
                         `Proveedor detectado: ${factura.nombre_proveedor || 'no detectado'}\n` +
                         `Productos detectados: ${productosDetectados.length}\n` +
+                        `Subtotal: $${Number(factura.subtotal_factura || 0).toFixed(2)}\n` +
+                        `IVA: ${Number(factura.porcentaje_iva || 0).toFixed(2)}% ($${Number(factura.monto_iva || 0).toFixed(2)})\n` +
+                        `Total factura: $${Number(factura.total_factura || 0).toFixed(2)}\n` +
                         `Confianza OCR: ${(Number(factura.confianza_promedio || 0) * 100).toFixed(1)}%`;
                     document.getElementById('resultadoIARecepcion').hidden = false;
                 }
@@ -1342,13 +1429,17 @@ ob_start();
 
                 // Función para calcular total general
                 function calcularTotal() {
-                    const subtotales = document.querySelectorAll('.subtotal-display');
-                    let total = 0;
-                    subtotales.forEach(subtotal => {
-                        const valor = parseFloat(subtotal.value.replace('$', '')) || 0;
-                        total += valor;
-                    });
-                    document.getElementById('totalValue').textContent = '$' + total.toFixed(2);
+                    const subtotal = Array.from(document.querySelectorAll('#productosList .producto-row'))
+                        .reduce((suma, fila) => {
+                            const cantidad = Number(fila.querySelector('input[name="cantidad[]"]').value) || 0;
+                            const costo = Number(fila.querySelector('input[name="costo[]"]').value) || 0;
+                            return suma + cantidad * costo;
+                        }, 0);
+                    const porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
+                    const montoIva = Math.round((subtotal * porcentajeIva + Number.EPSILON) * 100) / 100;
+                    document.getElementById('subtotalRecepcion').textContent = '$' + subtotal.toFixed(2);
+                    document.getElementById('montoIvaRecepcion').textContent = '$' + montoIva.toFixed(2);
+                    document.getElementById('totalValue').textContent = '$' + (subtotal + montoIva).toFixed(2);
                 }
 
                 // Función para actualizar contador de productos
@@ -1480,30 +1571,45 @@ ob_start();
                         if (data && data.status === 'success') {
                             const recepcion = data.recepcion;
                             document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || 'N/A';
-                            document.getElementById('viewProveedor').textContent = recepcion.proveedor || 'N/A';
+                            document.getElementById('viewProveedor').textContent = recepcion.nombre_proveedor || 'N/A';
                             document.getElementById('viewFecha').textContent = recepcion.fecha || 'N/A';
-                            document.getElementById('viewEstado').textContent = recepcion.estatus || 'N/A';
-                            document.getElementById('viewTotal').textContent = '$' + (recepcion.total || 0).toFixed(2);
+                            document.getElementById('viewEstado').textContent = recepcion.estado || 'N/A';
                             
                             // Cargar productos
                             const productosTable = document.getElementById('viewProductos');
                             productosTable.innerHTML = '';
-                            if (recepcion.productos && recepcion.productos.length > 0) {
-                                let total = 0;
-                                recepcion.productos.forEach(prod => {
-                                    const subtotal = (prod.cantidad || 0) * (prod.costo || 0);
-                                    total += subtotal;
+                            const productosRecepcion = recepcion.productos || data.productos || [];
+                            const subtotalProductos = productosRecepcion.reduce((suma, prod) =>
+                                suma + (Number(prod.cantidad) || 0) * (Number(prod.costo) || 0), 0);
+                            productosRecepcion.forEach(prod => {
+                                    const cantidad = Number(prod.cantidad) || 0;
+                                    const costo = Number(prod.costo) || 0;
+                                    const subtotal = cantidad * costo;
                                     productosTable.innerHTML += `
                                         <tr>
-                                            <td>${prod.nombre_producto || 'N/A'}</td>
-                                            <td>${prod.cantidad || 0}</td>
-                                            <td>$${(prod.costo || 0).toFixed(2)}</td>
+                                            <td>${prod.producto || prod.nombre_producto || 'N/A'}</td>
+                                            <td>${cantidad}</td>
+                                            <td>$${costo.toFixed(2)}</td>
                                             <td>$${subtotal.toFixed(2)}</td>
                                         </tr>
                                     `;
-                                });
-                                document.getElementById('viewTotal').textContent = '$' + total.toFixed(2);
-                            }
+                            });
+
+                            const subtotalFactura = recepcion.subtotal_factura === null || recepcion.subtotal_factura === undefined
+                                ? subtotalProductos
+                                : Number(recepcion.subtotal_factura);
+                            const ivaRegistrado = recepcion.porcentaje_iva !== null && recepcion.porcentaje_iva !== undefined &&
+                                recepcion.monto_iva !== null && recepcion.monto_iva !== undefined;
+                            document.getElementById('viewSubtotal').textContent = '$' + subtotalFactura.toFixed(2);
+                            document.getElementById('viewIvaPorcentaje').textContent = ivaRegistrado
+                                ? `${Number(recepcion.porcentaje_iva).toFixed(2)}%`
+                                : 'No registrado';
+                            document.getElementById('viewMontoIva').textContent = ivaRegistrado
+                                ? '$' + Number(recepcion.monto_iva).toFixed(2)
+                                : 'No registrado';
+                            document.getElementById('viewTotal').textContent = recepcion.total_factura !== null && recepcion.total_factura !== undefined
+                                ? '$' + Number(recepcion.total_factura).toFixed(2)
+                                : 'No registrado';
                             
                             // Observaciones
                             document.getElementById('viewObservaciones').textContent = recepcion.observaciones || 'Sin observaciones';

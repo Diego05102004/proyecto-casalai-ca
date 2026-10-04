@@ -70,6 +70,8 @@ El módulo PHP invoca estos endpoints a través de `Modelo/Servicio/RecepcionIAP
 
 La factura adjunta se conserva en `comprobantes/recepcion/`, con acceso HTTP denegado. Los manifiestos `.json` indican el correlativo, la recepción y si quedó `pendiente_ocr`; todavía no existe un trabajador batch que procese automáticamente esos pendientes.
 
+Para actualizar una base existente con los campos fiscales, ejecutar una vez `agregar_iva_recepcion.sql` sobre la base principal. Los registros anteriores quedan con IVA no registrado; solo se completan al revisar su factura original.
+
 ## 📖 Flujo de Uso (Fase 1)
 
 La carga acepta PDF e imágenes de hasta 5 MB. En los PDFs se analiza cada página; Tesseract y Poppler deben estar instalados en el equipo que ejecuta la API.

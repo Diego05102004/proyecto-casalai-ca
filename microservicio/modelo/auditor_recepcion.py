@@ -46,6 +46,9 @@ class FacturaExtraida:
     nombre_proveedor: str = ""
     fecha_factura: str = ""
     productos: List[ProductoExtraido] = field(default_factory=list)
+    subtotal_factura: float = 0.0
+    porcentaje_iva: float = 0.0
+    monto_iva: float = 0.0
     total_factura: float = 0.0
     metadatos_extraccion: Dict = field(default_factory=dict)
 
@@ -195,9 +198,42 @@ class AuditorRecepcion:
         factura.numero_factura = self._extraer_con_patrones(texto_limpio, self.PATRONES['numero_factura'])
         factura.nombre_proveedor = self._extraer_con_patrones(texto_limpio, self.PATRONES['proveedor'])
         factura.fecha_factura = self._extraer_con_patrones(texto_limpio, self.PATRONES['fecha'])
-        total_str = self._extraer_con_patrones(texto_limpio, self.PATRONES['total'])
-        factura.total_factura = self._parsear_monto(total_str)
         factura.productos = self._extraer_productos(texto_limpio)
+
+        subtotal_match = re.search(
+            r'^\s*sub\s*total\s*[:\-]?\s*\$?\s*([\d.,]*\d)',
+            texto_limpio,
+            re.IGNORECASE | re.MULTILINE
+        )
+        if subtotal_match:
+            factura.subtotal_factura = self._parsear_monto(subtotal_match.group(1))
+        else:
+            factura.subtotal_factura = round(
+                sum(producto.cantidad * producto.costo_unitario for producto in factura.productos), 2
+            )
+
+        iva_match = re.search(
+            r'^\s*(?:iva|igv|vat)\b\s*'
+            r'(?:\(?\s*([\d.,]+)\s*%\s*\)?\s*)?'
+            r'[:\-]?\s*\$?\s*([\d.,]+)',
+            texto_limpio,
+            re.IGNORECASE | re.MULTILINE
+        )
+        if iva_match:
+            factura.porcentaje_iva = self._parsear_monto(iva_match.group(1) or '')
+            factura.monto_iva = self._parsear_monto(iva_match.group(2))
+            if factura.monto_iva > 0 and factura.porcentaje_iva == 0 and factura.subtotal_factura > 0:
+                factura.porcentaje_iva = round(factura.monto_iva / factura.subtotal_factura * 100, 2)
+
+        total_match = re.search(
+            r'^\s*(?:(?:gran\s+)?total(?:\s+a\s+pagar)?|importe\s+total)\b\s*[:\-]?\s*\$?\s*([\d.,]+)',
+            texto_limpio,
+            re.IGNORECASE | re.MULTILINE
+        )
+        if total_match:
+            factura.total_factura = self._parsear_monto(total_match.group(1))
+        else:
+            factura.total_factura = round(factura.subtotal_factura + factura.monto_iva, 2)
         return factura
 
     def _extraer_con_patrones(self, texto: str, patrones: List[str]) -> str:

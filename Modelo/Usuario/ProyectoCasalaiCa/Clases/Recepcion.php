@@ -601,6 +601,10 @@ class Recepcion extends BD{
                     r.correlativo, 
                     pr.nombre_proveedor, 
                     SUM(d.cantidad * d.costo) AS costo_inversion,
+                    r.subtotal_factura,
+                    r.porcentaje_iva,
+                    r.monto_iva,
+                    r.total_factura,
                     r.estado
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
@@ -705,20 +709,34 @@ class Recepcion extends BD{
         });
     }
 
-    public function registrarRecepcion($idproducto, $cantidad, $costo) {
-        return $this->r_recepcion($idproducto, $cantidad, $costo); 
+    public function registrarRecepcion($idproducto, $cantidad, $costo, $porcentajeIva = 0) {
+        return $this->r_recepcion($idproducto, $cantidad, $costo, $porcentajeIva);
     }
     
-    private function r_recepcion($idproducto, $cantidad, $costo) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($idproducto, $cantidad, $costo){
+    private function r_recepcion($idproducto, $cantidad, $costo, $porcentajeIva = 0) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idproducto, $cantidad, $costo, $porcentajeIva){
             $tiempo = date('Y-m-d');
-            $sql = "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, estado) 
-                VALUES (:idproveedor, :fecha_recepcion, :correlativo, :estado)";
+            $subtotal = 0;
+            foreach ($idproducto as $indice => $id) {
+                $subtotal += (float)($cantidad[$indice] ?? 0) * (float)($costo[$indice] ?? 0);
+            }
+            $subtotal = round($subtotal, 2);
+            $porcentajeIva = (float)$porcentajeIva;
+            $montoIva = round($subtotal * $porcentajeIva / 100, 2);
+            $totalFactura = round($subtotal + $montoIva, 2);
+
+            $sql = "INSERT INTO tbl_recepcion_productos
+                    (id_proveedor, fecha, correlativo, estado, subtotal_factura, porcentaje_iva, monto_iva, total_factura)
+                VALUES (:idproveedor, :fecha_recepcion, :correlativo, :estado, :subtotal, :porcentaje_iva, :monto_iva, :total_factura)";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':idproveedor', $this->idproveedor, PDO::PARAM_INT);
             $stmt->bindParam(':fecha_recepcion', $tiempo, PDO::PARAM_STR);
             $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
             $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
+            $stmt->bindValue(':subtotal', number_format($subtotal, 2, '.', ''), PDO::PARAM_STR);
+            $stmt->bindValue(':porcentaje_iva', number_format($porcentajeIva, 4, '.', ''), PDO::PARAM_STR);
+            $stmt->bindValue(':monto_iva', number_format($montoIva, 2, '.', ''), PDO::PARAM_STR);
+            $stmt->bindValue(':total_factura', number_format($totalFactura, 2, '.', ''), PDO::PARAM_STR);
             $stmt->execute();
 
             $idRecepcion = $pdo->lastInsertId();
@@ -733,7 +751,7 @@ class Recepcion extends BD{
                 $stmtDetalle->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':idProducto', $idproducto[$i], PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':cantidad', $cantidad[$i], PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':costo', $costo[$i], PDO::PARAM_INT);
+                $stmtDetalle->bindValue(':costo', number_format((float)$costo[$i], 2, '.', ''), PDO::PARAM_STR);
                 $stmtDetalle->execute();
                 $idDetalle = $pdo->lastInsertId();
 
@@ -765,12 +783,16 @@ class Recepcion extends BD{
                     r.correlativo, 
                     pr.nombre_proveedor, 
                     SUM(d.cantidad * d.costo) AS costo_inversion,
+                    r.subtotal_factura,
+                    r.porcentaje_iva,
+                    r.monto_iva,
+                    r.total_factura,
                     r.estado
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
                 INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
                 WHERE r.id_recepcion = :idRecepcion
-                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado
+                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura, r.estado
             ";
             $stmtRecepcion = $pdo->prepare($sqlRecepcion);
             $stmtRecepcion->bindParam(':idRecepcion', $idRecepcion, PDO::PARAM_INT);
@@ -813,11 +835,15 @@ class Recepcion extends BD{
                     r.correlativo, 
                     pr.nombre_proveedor, 
                     SUM(d.cantidad * d.costo) AS costo_inversion,
+                    r.subtotal_factura,
+                    r.porcentaje_iva,
+                    r.monto_iva,
+                    r.total_factura,
                     r.estado
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
                 INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
-                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado
+                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura, r.estado
                 ORDER BY r.id_recepcion DESC 
                 LIMIT 1";
                 
@@ -853,12 +879,16 @@ class Recepcion extends BD{
                     r.correlativo, 
                     pr.nombre_proveedor, 
                     SUM(d.cantidad * d.costo) AS costo_inversion,
+                    r.subtotal_factura,
+                    r.porcentaje_iva,
+                    r.monto_iva,
+                    r.total_factura,
                     r.estado
                 FROM tbl_recepcion_productos AS r
                 INNER JOIN tbl_detalle_recepcion_productos AS d ON d.id_recepcion = r.id_recepcion
                 INNER JOIN tbl_proveedores AS pr ON pr.id_proveedor = r.id_proveedor
                 WHERE r.estado = 'habilitado'
-                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.estado
+                GROUP BY r.id_recepcion, r.fecha, r.correlativo, pr.nombre_proveedor, r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura, r.estado
                 ORDER BY r.fecha DESC, r.correlativo DESC
             ";
             $stmtrecepciones = $pdo->prepare($queryrecepciones);
@@ -1023,14 +1053,22 @@ class Recepcion extends BD{
             $r = array();
             try {
                 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                $sql = "SELECT * FROM tbl_recepcion_productos WHERE correlativo = :correlativo";
+                $sql = "SELECT r.*, p.nombre_proveedor
+                    FROM tbl_recepcion_productos r
+                    INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+                    WHERE r.correlativo = :correlativo
+                    LIMIT 1";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute(['correlativo' => $this->correlativo]);
-                $fila = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($fila) {
+                    $r = $this->encryption->decryptArray($fila, self::CAMPOS_CIFRADOS_PROVEEDORES);
                     $r['resultado'] = 'encontró';
                     $r['mensaje'] = 'El número de correlativo ya existe!';
+                } else {
+                    $r['resultado'] = 'no_encontro';
+                    $r['mensaje'] = 'No se encontró la recepción.';
                 }
             } catch (Exception $e) {
                 $r['resultado'] = 'error';
