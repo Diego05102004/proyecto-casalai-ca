@@ -857,7 +857,7 @@ CREATE TABLE `tbl_proveedores` (
 --
 
 INSERT INTO `tbl_proveedores` (`id_proveedor`, `nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`, `estado`) VALUES
-(1, 'Aliexpres', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos, envio gratis', 'habilitado');
+(1, 'eBay', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos, envio gratis', 'habilitado');
 
 -- --------------------------------------------------------
 
