@@ -320,10 +320,6 @@ class AuditorRecepcion:
             if not continuacion:
                 continue
 
-            nombre_normalizado = self._normalizar_texto(producto_actual.nombre)
-            continuacion_normalizada = self._normalizar_texto(continuacion)
-            if continuacion_normalizada not in nombre_normalizado:
-                producto_actual.nombre = f"{producto_actual.nombre} {continuacion}".strip()
             producto_actual.modelo = continuacion
 
         return productos

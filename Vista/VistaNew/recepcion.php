@@ -1494,6 +1494,9 @@ ob_start();
                                     nombre_proveedor: document.querySelector('#proveedor option:checked').textContent,
                                     productos: Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
                                         nombre: fila.querySelector('.producto-select option:checked').textContent,
+                                        modelo: fila.querySelector('.producto-modelo').value,
+                                        marca: fila.querySelector('.producto-marca').value,
+                                        serial: fila.querySelector('.producto-serial').value,
                                         cantidad: Number(fila.querySelector('input[name="cantidad[]"]').value),
                                         costo: Number(fila.querySelector('input[name="costo[]"]').value)
                                     }))
