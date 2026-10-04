@@ -872,7 +872,7 @@ CREATE TABLE `tbl_recepcion_productos` (
   `correlativo` varchar(255) NOT NULL,
     `estado` enum('habilitado','anulado') NOT NULL DEFAULT 'habilitado',
     `subtotal_factura` decimal(12,2) DEFAULT NULL,
-    `porcentaje_iva` decimal(7,4) DEFAULT NULL,
+    `porcentaje_iva` decimal(7,2) DEFAULT NULL,
     `monto_iva` decimal(12,2) DEFAULT NULL,
     `total_factura` decimal(12,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

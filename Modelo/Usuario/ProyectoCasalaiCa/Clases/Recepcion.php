@@ -734,7 +734,7 @@ class Recepcion extends BD{
             $stmt->bindParam(':correlativo', $this->correlativo, PDO::PARAM_STR);
             $stmt->bindParam(':estado', $this->estado, PDO::PARAM_STR);
             $stmt->bindValue(':subtotal', number_format($subtotal, 2, '.', ''), PDO::PARAM_STR);
-            $stmt->bindValue(':porcentaje_iva', number_format($porcentajeIva, 4, '.', ''), PDO::PARAM_STR);
+            $stmt->bindValue(':porcentaje_iva', number_format($porcentajeIva, 2, '.', ''), PDO::PARAM_STR);
             $stmt->bindValue(':monto_iva', number_format($montoIva, 2, '.', ''), PDO::PARAM_STR);
             $stmt->bindValue(':total_factura', number_format($totalFactura, 2, '.', ''), PDO::PARAM_STR);
             $stmt->execute();
