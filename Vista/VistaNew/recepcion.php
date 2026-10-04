@@ -1436,7 +1436,7 @@ ob_start();
                             return suma + cantidad * costo;
                         }, 0);
                     const porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
-                    const montoIva = Math.round((subtotal * porcentajeIva + Number.EPSILON) * 100) / 100;
+                    const montoIva = Math.round((subtotal * (porcentajeIva / 100) + Number.EPSILON) * 100) / 100;
                     document.getElementById('subtotalRecepcion').textContent = '$' + subtotal.toFixed(2);
                     document.getElementById('montoIvaRecepcion').textContent = '$' + montoIva.toFixed(2);
                     document.getElementById('totalValue').textContent = '$' + (subtotal + montoIva).toFixed(2);
