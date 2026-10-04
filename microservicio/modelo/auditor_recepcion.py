@@ -208,6 +208,10 @@ class AuditorRecepcion:
         return ""
 
     def _extraer_productos(self, texto: str) -> List[ProductoExtraido]:
+        productos_tabulares = self._extraer_productos_tabulares(texto)
+        if productos_tabulares:
+            return productos_tabulares
+
         productos = []
         lineas = texto.split('\n')
         
@@ -227,6 +231,71 @@ class AuditorRecepcion:
             if prod: productos.append(prod)
             
         return productos
+
+    def _extraer_productos_tabulares(self, texto: str) -> List[ProductoExtraido]:
+        patron_fila = re.compile(
+            r"^\s*(?P<descripcion>.+?)\s+"
+            r"(?P<marca>-?[A-Za-z][A-Za-z0-9&.-]*)\s+"
+            r"(?P<serial>[A-Za-z0-9][A-Za-z0-9-]{2,})\s+"
+            r"\$\s*(?P<unitario>[\d.,]+)\s+(?P<cantidad>\d+)\s+"
+            r"\$\s*(?P<total>[\d.,]+)\s*$",
+            re.IGNORECASE
+        )
+        productos = []
+        producto_actual = None
+
+        for linea in texto.splitlines():
+            coincidencia = patron_fila.match(linea.strip())
+            if coincidencia:
+                datos = coincidencia.groupdict()
+                descripcion = self._normalizar_descripcion_producto(datos['descripcion'])
+                cantidad = int(datos['cantidad'])
+                costo_unitario = self._parsear_monto(datos['unitario'])
+                total_linea = self._parsear_monto(datos['total'])
+
+                if cantidad > 0 and total_linea > 0 and costo_unitario > 0:
+                    total_calculado = costo_unitario * cantidad
+                    if abs(total_calculado - total_linea) > max(0.01, total_linea * 0.02):
+                        costo_unitario = round(total_linea / cantidad, 2)
+                        logger.warning(
+                            "Precio unitario OCR inconsistente para %s; se recalculó como total/cantidad.",
+                            descripcion
+                        )
+
+                producto_actual = ProductoExtraido(
+                    nombre=descripcion,
+                    marca=datos['marca'].strip(' .:-'),
+                    serial=datos['serial'].strip(' .:-'),
+                    cantidad=cantidad,
+                    costo_unitario=costo_unitario,
+                    confianza=0.9
+                )
+                productos.append(producto_actual)
+                continue
+
+            linea_limpia = linea.strip()
+            if not producto_actual or not linea_limpia:
+                continue
+            if re.match(r'^(?:subtotal|iva|impuesto|total|gracias|eBay International)\b', linea_limpia, re.IGNORECASE):
+                producto_actual = None
+                continue
+
+            continuacion = self._normalizar_descripcion_producto(linea_limpia)
+            if not continuacion:
+                continue
+
+            nombre_normalizado = self._normalizar_texto(producto_actual.nombre)
+            continuacion_normalizada = self._normalizar_texto(continuacion)
+            if continuacion_normalizada not in nombre_normalizado:
+                producto_actual.nombre = f"{producto_actual.nombre} {continuacion}".strip()
+            producto_actual.modelo = continuacion
+
+        return productos
+
+    def _normalizar_descripcion_producto(self, descripcion: str) -> str:
+        descripcion = re.sub(r"[._'’]+", " ", descripcion)
+        descripcion = re.sub(r"[^\w\s&+-]", " ", descripcion, flags=re.UNICODE)
+        return re.sub(r"\s+", " ", descripcion).strip()
 
     def _extraer_productos_ebay_style(self, texto: str) -> List[ProductoExtraido]:
         """Extrae productos de facturas con formato eBay/e-commerce"""
