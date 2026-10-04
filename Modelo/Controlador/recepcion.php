@@ -287,14 +287,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $k->setcorrelativo($_POST['correlativo']);
             $k->setestado('habilitado');
 
-            $resultado = $k->registrarRecepcion(
-                $_POST['producto'],
-                $_POST['cantidad'],
-                $_POST['costo'],
-                $porcentajeIva
-            );
-
-            $recepcionRegistrada = $k->obtenerUltimaRecepcion();
+            try {
+                $registro = $k->registrarRecepcion(
+                    $_POST['producto'],
+                    $_POST['cantidad'],
+                    $_POST['costo'],
+                    $porcentajeIva,
+                    (int)($_SESSION['id_usuario'] ?? 1)
+                );
+                $recepcionRegistrada = $registro['recepcion'] ?? null;
+                $resultado = $recepcionRegistrada !== null;
+            } catch (Throwable $e) {
+                error_log('Error al registrar recepción mediante SP: ' . $e->getMessage());
+                $recepcionRegistrada = null;
+                $resultado = false;
+            }
 
             if ($resultado && $recepcionRegistrada) {
                 if ($manifiestoFactura !== null) {
@@ -306,17 +313,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         LOCK_EX
                     );
                 }
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_RECEPCION,
-                        'INCLUIR',
-                        'El usuario incluyó una nueva recepción: ' . $_POST['correlativo'],
-                        'media'
-                    );
-                }
-
                 $id_recepcion = $recepcionRegistrada['id_recepcion'];
 
                     if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -421,21 +417,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $resultado = $k->anularRecepcion($correlativo);
+            $resultado = $k->anularRecepcion($correlativo, (int)($_SESSION['id_usuario'] ?? 1));
 
-            // Registrar en bitácora
             if ($resultado['status'] === 'success') {
-                if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $bitacoraModel = new Bitacora();
-                    $bitacoraModel->registrarBitacora(
-                        $_SESSION['id_usuario'],
-                        MODULO_RECEPCION,
-                        'ANULAR',
-                        'El usuario anuló la recepción: ' . $correlativo,
-                        'media'
-                    );
-                }
-
                 // Obtener id_recepcion para referenciar en notificación
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
