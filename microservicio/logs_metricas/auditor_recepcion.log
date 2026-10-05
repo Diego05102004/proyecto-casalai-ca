@@ -218,3 +218,17 @@
 2026-10-04 12:48:00,624 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004124800_b3ab91b4.pdf
 2026-10-04 12:48:00,980 - modelo.auditor_recepcion - INFO - PDF convertido a 2 páginas para OCR
 2026-10-04 12:48:05,720 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 12:55:25,987 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 12:55:25,987 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 12:55:29,488 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 12:55:29,488 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 13:12:11,885 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004131211_aa8fe9de.pdf
+2026-10-04 13:12:12,270 - modelo.auditor_recepcion - INFO - PDF convertido a 2 páginas para OCR
+2026-10-04 13:12:16,888 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 14:07:23,722 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004140723_7c46f1f4.pdf
+2026-10-04 14:07:24,587 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 14:07:27,788 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-04 14:08:10,028 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004140809_d58846c3.pdf
+2026-10-04 14:08:10,146 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 14:08:12,701 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 14:08:12,733 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%

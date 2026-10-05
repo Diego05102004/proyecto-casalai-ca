@@ -31,133 +31,127 @@ $titulo_pagina = 'Gestión de Recepciones';
 ob_start();
 ?>
 
-            <!-- Summary Cards para Recepciones -->
-            <div class="summary-cards">
-                <div class="summary-card sales">
-                    <div class="card-icon"><i class="fas fa-inbox"></i></div>
-                    <div class="card-content">
-                        <h3>Recepciones Hoy</h3>
-                        <p class="card-value"><?php echo count($recepciones ?? []); ?></p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="85, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage">85%</span>
-                        </div>
-                    </div>
-                </div>
+<link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
 
-                <div class="summary-card expenses">
-                    <div class="card-icon"><i class="fas fa-truck"></i></div>
-                    <div class="card-content">
-                        <h3>Pendientes</h3>
-                        <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'pendiente'; })); ?></p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="35, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage">35%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="summary-card income">
-                    <div class="card-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="card-content">
-                        <h3>Completadas</h3>
-                        <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'completada'; })); ?></p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="92, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage">92%</span>
-                        </div>
-                    </div>
-                </div>
+<!-- Summary Cards para Recepciones -->
+<div class="summary-cards">
+    <div class="summary-card sales">
+        <div class="card-icon"><i class="fas fa-inbox"></i></div>
+        <div class="card-content">
+            <h3>Recepciones Hoy</h3>
+            <p class="card-value"><?php echo count($recepciones ?? []); ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="85, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage">85%</span>
             </div>
+        </div>
+    </div>
 
-            <!-- Recepciones Section -->
-            <div class="recepciones-section">
-                <div class="section-header">
-                    <h2>Gestión de Recepciones</h2>
-                    <div class="section-actions">
-                        <button class="btn-add-recepcion" onclick="openModal('registrar')">
-                            <span class="btn-icon"><i class="fas fa-plus"></i></span>
-                            Nueva Recepción
-                        </button>
-                        <button class="btn-report" onclick="window.location.href='?pagina=reporteRecepcion'">
-                            <span class="btn-icon"><i class="fas fa-chart-bar"></i></span>
-                            Reportes
-                        </button>
-                        <button class="btn-filter" onclick="openFilterModal()">
-                            <span class="btn-icon"><i class="fas fa-search"></i></span>
-                            Buscar
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Tabla de Recepciones -->
-                <div class="table-container">
-                    <table class="recepciones-table">
-                        <thead>
-                            <tr>
-                                <th>Correlativo</th>
-                                <th>Proveedor</th>
-                                <th>Fecha</th>
-                                <th>Productos</th>
-                                <th>Total factura</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($recepciones)): ?>
-                                <?php foreach ($recepciones as $recepcion): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($recepcion['correlativo'] ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($recepcion['nombre_proveedor'] ?? 'N/A'); ?></td>
-                                        <td><?php echo date('d/m/Y', strtotime($recepcion['fecha'] ?? 'now')); ?></td>
-                                        <td><?php echo htmlspecialchars($recepcion['tamaño'] ?? 0); ?></td>
-                                        <td>
-                                            $<?php echo number_format($recepcion['total_factura'] ?? $recepcion['costo_inversion'] ?? 0, 2, ',', '.'); ?>
-                                            <?php if (($recepcion['total_factura'] ?? null) === null): ?>
-                                                <small title="El IVA de esta recepción histórica no está registrado">IVA no registrado</small>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            $estatus = 'completada';
-                                            $estatusClass = 'completed';
-                                            ?>
-                                            <span class="status-badge <?php echo $estatusClass; ?>">
-                                                <?php echo ucfirst($estatus); ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn-action btn-view" onclick="viewRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn-action btn-delete" onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="7" style="text-align: center; padding: 40px;">
-                                        <i class="fas fa-inbox" style="font-size: 3rem; color: #2196F3; margin-bottom: 15px;"></i>
-                                        <p style="color: #718096; margin: 0;">No hay recepciones registradas</p>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+    <div class="summary-card expenses">
+        <div class="card-icon"><i class="fas fa-truck"></i></div>
+        <div class="card-content">
+            <h3>Pendientes</h3>
+            <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'pendiente'; })); ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="35, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage">35%</span>
             </div>
+        </div>
+    </div>
+
+    <div class="summary-card income">
+        <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="card-content">
+            <h3>Completadas</h3>
+            <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'completada'; })); ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="92, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage">92%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recepciones Section -->
+<div class="table-section">
+    <div class="section-header">
+        <h2>Lista de Recepciones</h2>
+        <div class="section-actions">
+            <button class="btn-table-superior btn-incluir" onclick="openModal('registrar')">
+                <span class="btn-icon"><i class="fas fa-plus"></i></span>
+                Incluir Recepción
+            </button>
+            <!--<button class="btn-report" onclick="window.location.href='?pagina=reporteRecepcion'">
+                <span class="btn-icon"><i class="fas fa-chart-bar"></i></span>
+                Reportes
+            </button>
+            <button class="btn-filter" onclick="openFilterModal()">
+                <span class="btn-icon"><i class="fas fa-search"></i></span>
+                Buscar
+            </button>-->
+        </div>
+    </div>
+
+    <!-- Tabla de Recepciones -->
+    <div class="table-container">
+        <table class="table-info">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Correlativo</th>
+                    <th>Proveedor</th>
+                    <th>Monto Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($recepciones)): ?>
+                    <?php foreach ($recepciones as $recepcion): ?>
+                        <tr>
+                            <td><?php echo date('d/m/Y', strtotime($recepcion['fecha'] ?? 'now')); ?></td>
+                            <td><?php echo htmlspecialchars($recepcion['correlativo'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($recepcion['nombre_proveedor'] ?? 'N/A'); ?></td>
+                            <td>
+                                $<?php echo number_format($recepcion['total_factura'] ?? $recepcion['costo_inversion'] ?? 0, 2, ',', '.'); ?>
+                                <?php if (($recepcion['total_factura'] ?? null) === null): ?>
+                                    <small title="El IVA de esta recepción no fué registrada">IVA no registrado</small>
+                                <?php endif; ?>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn-action btn-detallar" 
+                                    title="Ver Detalles"
+                                    onclick="viewRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                    <img src="assets/img/eye.svg">
+                                </button>
+                                <button class="btn-action btn-anular" 
+                                    title="Anular Recepción"
+                                    onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                    <img src="assets/img/circle-x.svg">
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 3rem; color: #2196F3; margin-bottom: 15px;"></i>
+                            <p style="color: #718096; margin: 0;">No hay recepciones registradas</p>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
             <!-- Modal para Registrar Recepción -->
             <div id="recepcionModal" class="modal">
@@ -618,48 +612,6 @@ ob_start();
                     background: rgba(220, 53, 69, 0.08);
                 }
 
-                .table-container {
-                    background: white;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-                    margin-top: 20px;
-                }
-
-                .recepciones-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-
-                .recepciones-table thead {
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    color: white;
-                }
-
-                .recepciones-table th {
-                    padding: 15px;
-                    text-align: left;
-                    font-weight: 600;
-                    font-size: 0.9rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-
-                .recepciones-table tbody tr {
-                    border-bottom: 1px solid #e9ecef;
-                    transition: all 0.3s ease;
-                }
-
-                .recepciones-table tbody tr:hover {
-                    background: rgba(33, 150, 243, 0.05);
-                }
-
-                .recepciones-table td {
-                    padding: 15px;
-                    font-size: 0.9rem;
-                    color: #2d3748;
-                }
-
                 .status-badge {
                     padding: 6px 14px;
                     border-radius: 20px;
@@ -681,29 +633,6 @@ ob_start();
 
                 .status-badge.cancelled {
                     background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                    color: white;
-                }
-
-                .btn-action {
-                    padding: 8px 12px;
-                    border: none;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    margin-right: 5px;
-                }
-
-                .btn-action:hover {
-                    transform: scale(1.05);
-                }
-
-                .btn-action.btn-view {
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    color: white;
-                }
-
-                .btn-action.btn-delete {
-                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
                     color: white;
                 }
 
@@ -1193,15 +1122,6 @@ ob_start();
 
                     .producto-row {
                         grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
-                    }
-
-                    .recepciones-table {
-                        font-size: 0.8rem;
-                    }
-
-                    .recepciones-table th,
-                    .recepciones-table td {
-                        padding: 10px;
                     }
                 }
 
