@@ -52,7 +52,7 @@ $operations = [
     ],
     'editar_personal' => [
         'method' => 'POST',
-        'handler' => 'editarPersonal'
+        'handler' => 'cambiarPersonal'
     ],
     'cambiar_password' => [
         'method' => 'POST',

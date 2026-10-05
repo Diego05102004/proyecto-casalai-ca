@@ -1241,7 +1241,7 @@ class Usuarios extends BD {
         return 'http://localhost/proyecto-casalai-ca';
     }
 
-    public function editarPersonal($data) {
+    public function cambiarPersonal($data) {
         $id_usuario = $data['id_usuario'] ?? null;
         $clave_actual = $data['clave_actual'] ?? null;
         

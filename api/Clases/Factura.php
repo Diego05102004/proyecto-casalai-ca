@@ -539,6 +539,13 @@ class Factura extends BD
         });
     }
 
+        private function facturaAnular($id) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id){
+            $stmt = $pdo->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
+            return $stmt->execute([$id]);
+        });
+    }
+
     private function facturaConsultar() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             if (empty($this->cedula)) {

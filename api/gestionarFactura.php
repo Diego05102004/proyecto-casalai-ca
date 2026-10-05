@@ -44,6 +44,7 @@ $operations = [
     'default' => ['method' => 'GET', 'handler' => 'facturaConsultarMovil'],
     'facturaingresarmovil' => ['method' => 'POST', 'handler' => 'facturaIngresarMovil'],
     'facturaingresar' => ['method' => 'POST', 'handler' => 'facturaIngresarMovil'],
+    'facturaanular' => ['method' => 'POST', 'handler' => 'facturaAnular'],
     'facturadescargar' => ['method' => 'GET', 'handler' => 'facturaDescargarMovil'],
     'descargar' => ['method' => 'GET', 'handler' => 'facturaDescargarMovil'],
 ];
