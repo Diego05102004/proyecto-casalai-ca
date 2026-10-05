@@ -499,6 +499,11 @@ function obtenerProductos() {
     return $Producto->obtenerProductos();
 }
 
+function obtenerProductosMasRecibidos() {
+    $recepcion = new \Usuario\ProyectoCasalaiCa\Modelo\Clases\Recepcion();
+    return $recepcion->getProductosMasRecibidos();
+}
+
 $productoModel = new Productos();
 $masVendidos   = $productoModel->getProductosMasVendidos();
 $stockProductos = $productoModel->getStockProductos();
@@ -506,6 +511,7 @@ $rotacion      = $productoModel->getRotacionProductos();
 $categorias = $productoModel->CategoriasReporte();
 $categoriasDinamicas = $productoModel->obtenerCategoriasDinamicas();
 $reporteCategorias = $productoModel->obtenerReporteCategorias();
+$productosMasRecibidos = obtenerProductosMasRecibidos();
 
 if (!$reporteCategorias || !is_array($reporteCategorias)) {
     $reporteCategorias = [];
@@ -537,6 +543,7 @@ if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
 
     $modelos = obtenerModelos();
     $productos = obtenerProductos();
+    $productosMasRecibidos = obtenerProductosMasRecibidos();
     require_once("Vista/VistaNew/" . $pagina . ".php");
 } elseif (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {

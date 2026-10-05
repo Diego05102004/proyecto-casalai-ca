@@ -1053,8 +1053,8 @@ class Usuarios extends BD {
         }
         
         // Validar longitud de contraseña
-        if (strlen($password) < 8) {
-            throw new RuntimeException('La contraseña debe tener al menos 8 caracteres');
+        if (strlen($password) < 6) {
+            throw new RuntimeException('La contraseña debe tener al menos 6 caracteres');
         }
         
         // Limpiar cédula: quitar puntos, guiones y espacios
@@ -1312,8 +1312,8 @@ class Usuarios extends BD {
             throw new RuntimeException('Las contraseñas nuevas no coinciden');
         }
 
-        if (strlen($clave_nueva) < 8) {
-            throw new RuntimeException('La nueva contraseña debe tener al menos 8 caracteres');
+        if (strlen($clave_nueva) < 6) {
+            throw new RuntimeException('La nueva contraseña debe tener al menos 6 caracteres');
         }
 
         // Obtener hash de contraseña directamente sin descifrar

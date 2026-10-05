@@ -465,7 +465,7 @@ CREATE TABLE `tbl_detalle_recepcion_productos` (
   `id_detalle_recepcion_productos` int(11) NOT NULL,
   `id_recepcion` int(11) NOT NULL,
   `id_producto` int(11) NOT NULL,
-  `costo` int(11) NOT NULL,
+    `costo` decimal(12,2) NOT NULL,
   `cantidad` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -857,7 +857,8 @@ CREATE TABLE `tbl_proveedores` (
 --
 
 INSERT INTO `tbl_proveedores` (`id_proveedor`, `nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`, `estado`) VALUES
-(1, 'Aliexpres', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos, envio gratis', 'habilitado');
+(1, 'ebay', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos, envio gratis', 'habilitado'),
+(2, 'Amazon', 'V-12878897-7', 'Paula Rivero', 'J-97781346-2', 'paula@gmail.com', 'AV. Lara, Calle Los Mangos', '0412-554-0466', '0424-181-4733', 'Buena calidad de productos, envio gratis', 'habilitado');
 
 -- --------------------------------------------------------
 
@@ -870,7 +871,11 @@ CREATE TABLE `tbl_recepcion_productos` (
   `id_proveedor` int(11) NOT NULL,
   `fecha` date NOT NULL,
   `correlativo` varchar(255) NOT NULL,
-  `estado` enum('habilitado','anulado') NOT NULL DEFAULT 'habilitado'
+    `estado` enum('habilitado','anulado') NOT NULL DEFAULT 'habilitado',
+    `subtotal_factura` decimal(12,2) DEFAULT NULL,
+    `porcentaje_iva` decimal(7,2) DEFAULT NULL,
+    `monto_iva` decimal(12,2) DEFAULT NULL,
+    `total_factura` decimal(12,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -4054,6 +4059,331 @@ BEGIN
         CONCAT('Se realizó la anulación lógica del despacho con ID: ', p_id_despacho, '.')
     );
 
+END $$
+
+-- -----------------------------------------------------------------------------
+-- PROCEDIMIENTOS ALMACENADOS: RECEPCIONES
+-- -----------------------------------------------------------------------------
+
+DROP PROCEDURE IF EXISTS sp_consultar_productos_recepcion $$
+CREATE PROCEDURE sp_consultar_productos_recepcion()
+BEGIN
+    SELECT p.id_producto, p.nombre_producto, m.nombre_modelo, mar.nombre_marca, p.serial
+    FROM tbl_productos p
+    INNER JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
+    INNER JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
+    ORDER BY p.nombre_producto, p.id_producto;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_consultar_proveedores_recepcion $$
+CREATE PROCEDURE sp_consultar_proveedores_recepcion()
+BEGIN
+    SELECT id_proveedor, nombre_proveedor
+    FROM tbl_proveedores
+    ORDER BY nombre_proveedor, id_proveedor;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_registrar_recepcion $$
+CREATE PROCEDURE sp_registrar_recepcion(
+    IN p_id_proveedor INT,
+    IN p_correlativo VARCHAR(255),
+    IN p_estado VARCHAR(20),
+    IN p_porcentaje_iva DECIMAL(7,2),
+    IN p_productos JSON,
+    IN p_id_usuario_auditor INT,
+    OUT p_id_recepcion INT
+)
+BEGIN
+    DECLARE v_fecha DATE;
+    DECLARE v_indice INT DEFAULT 0;
+    DECLARE v_cantidad_items INT DEFAULT 0;
+    DECLARE v_id_producto INT;
+    DECLARE v_cantidad INT;
+    DECLARE v_costo DECIMAL(12,2);
+    DECLARE v_nombre_producto VARCHAR(255);
+    DECLARE v_producto_existe INT DEFAULT 0;
+    DECLARE v_subtotal DECIMAL(12,2) DEFAULT 0;
+    DECLARE v_monto_iva DECIMAL(12,2) DEFAULT 0;
+    DECLARE v_total_factura DECIMAL(12,2) DEFAULT 0;
+    DECLARE v_id_detalle INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_id_recepcion = NULL;
+        RESIGNAL;
+    END;
+
+    SET p_id_recepcion = NULL;
+    SET v_fecha = CURDATE();
+    SET v_cantidad_items = JSON_LENGTH(p_productos);
+
+    IF p_id_proveedor IS NULL OR NOT EXISTS (
+        SELECT 1 FROM tbl_proveedores WHERE id_proveedor = p_id_proveedor
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor de la recepción no existe.';
+    END IF;
+    IF p_correlativo IS NULL OR TRIM(p_correlativo) = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El número de factura es obligatorio.';
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM tbl_recepcion_productos
+        WHERE correlativo = p_correlativo AND estado = 'habilitado'
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe una recepción activa con ese número de factura.';
+    END IF;
+    IF p_porcentaje_iva IS NULL OR p_porcentaje_iva < 0 OR p_porcentaje_iva > 100 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El porcentaje de IVA debe estar entre 0 y 100.';
+    END IF;
+    IF p_estado NOT IN ('habilitado', 'anulado') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado de la recepción no es válido.';
+    END IF;
+    IF p_productos IS NULL OR JSON_VALID(p_productos) = 0 OR v_cantidad_items = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La recepción debe incluir al menos un producto.';
+    END IF;
+
+    START TRANSACTION;
+
+    WHILE v_indice < v_cantidad_items DO
+        SET v_id_producto = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_productos, CONCAT('$[', v_indice, '].id_producto'))) AS UNSIGNED);
+        SET v_cantidad = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_productos, CONCAT('$[', v_indice, '].cantidad'))) AS UNSIGNED);
+        SET v_costo = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_productos, CONCAT('$[', v_indice, '].costo'))) AS DECIMAL(12,2));
+
+        SELECT COUNT(*), MAX(nombre_producto)
+        INTO v_producto_existe, v_nombre_producto
+        FROM tbl_productos
+        WHERE id_producto = v_id_producto;
+
+        IF v_producto_existe = 0 OR v_cantidad IS NULL OR v_cantidad < 1 OR v_costo IS NULL OR v_costo <= 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Uno de los productos, cantidades o costos de la recepción no es válido.';
+        END IF;
+
+        SET v_subtotal = v_subtotal + (v_cantidad * v_costo);
+        SET v_indice = v_indice + 1;
+    END WHILE;
+
+    SET v_subtotal = ROUND(v_subtotal, 2);
+    SET v_monto_iva = ROUND(v_subtotal * p_porcentaje_iva / 100, 2);
+    SET v_total_factura = ROUND(v_subtotal + v_monto_iva, 2);
+
+    INSERT INTO tbl_recepcion_productos
+        (id_proveedor, fecha, correlativo, estado, subtotal_factura, porcentaje_iva, monto_iva, total_factura)
+    VALUES
+        (p_id_proveedor, v_fecha, TRIM(p_correlativo), p_estado, v_subtotal, p_porcentaje_iva, v_monto_iva, v_total_factura);
+    SET p_id_recepcion = LAST_INSERT_ID();
+
+    SET v_indice = 0;
+    WHILE v_indice < v_cantidad_items DO
+        SET v_id_producto = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_productos, CONCAT('$[', v_indice, '].id_producto'))) AS UNSIGNED);
+        SET v_cantidad = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_productos, CONCAT('$[', v_indice, '].cantidad'))) AS UNSIGNED);
+        SET v_costo = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_productos, CONCAT('$[', v_indice, '].costo'))) AS DECIMAL(12,2));
+
+        INSERT INTO tbl_detalle_recepcion_productos (id_recepcion, id_producto, cantidad, costo)
+        VALUES (p_id_recepcion, v_id_producto, v_cantidad, v_costo);
+        SET v_id_detalle = LAST_INSERT_ID();
+
+        SELECT nombre_producto INTO v_nombre_producto
+        FROM tbl_productos
+        WHERE id_producto = v_id_producto;
+
+        INSERT INTO tbl_ingresos_egresos
+            (tipo, monto, descripcion, fecha, estado, id_detalle_recepcion_productos)
+        VALUES
+            ('egreso', v_costo * v_cantidad, CONCAT('Compra: ', v_nombre_producto, ' (x', v_cantidad, ')'), v_fecha, 1, v_id_detalle);
+
+        SET v_indice = v_indice + 1;
+    END WHILE;
+
+    INSERT INTO casalai_seguridad.tbl_bitacora
+        (fecha_hora, nombre_modulo, accion, datos_nuevos, datos_viejos, id_usuario, prioridad, descripcion)
+    VALUES
+        (NOW(), 'Recepcion', 'INCLUIR',
+         JSON_OBJECT('id_recepcion', p_id_recepcion, 'correlativo', p_correlativo, 'subtotal', v_subtotal,
+                     'porcentaje_iva', p_porcentaje_iva, 'monto_iva', v_monto_iva, 'total_factura', v_total_factura),
+         NULL, p_id_usuario_auditor, 'media', CONCAT('Se registró la recepción ', p_correlativo, '.'));
+
+    COMMIT;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_consultar_recepciones $$
+CREATE PROCEDURE sp_consultar_recepciones(
+    IN p_id_recepcion INT,
+    IN p_correlativo VARCHAR(255),
+    IN p_id_proveedor INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE,
+    IN p_estado VARCHAR(20),
+    IN p_pagina INT,
+    IN p_limite INT,
+    OUT p_total INT
+)
+BEGIN
+    DECLARE v_offset INT DEFAULT 0;
+    SET p_pagina = IFNULL(NULLIF(p_pagina, 0), 1);
+    SET p_limite = IFNULL(NULLIF(p_limite, 0), 100);
+    SET v_offset = (p_pagina - 1) * p_limite;
+
+    SELECT COUNT(*) INTO p_total
+    FROM tbl_recepcion_productos r
+    INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+    WHERE (p_id_recepcion IS NULL OR r.id_recepcion = p_id_recepcion)
+      AND (p_correlativo IS NULL OR r.correlativo LIKE CONCAT('%', p_correlativo, '%'))
+      AND (p_id_proveedor IS NULL OR r.id_proveedor = p_id_proveedor)
+      AND (p_fecha_inicio IS NULL OR r.fecha >= p_fecha_inicio)
+      AND (p_fecha_fin IS NULL OR r.fecha <= p_fecha_fin)
+      AND (p_estado IS NULL OR r.estado = p_estado);
+
+    SELECT r.id_recepcion, r.fecha, r.correlativo, p.nombre_proveedor,
+           COALESCE(SUM(d.cantidad * d.costo), 0) AS costo_inversion,
+           r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura, r.estado
+    FROM tbl_recepcion_productos r
+    INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+    LEFT JOIN tbl_detalle_recepcion_productos d ON d.id_recepcion = r.id_recepcion
+    WHERE (p_id_recepcion IS NULL OR r.id_recepcion = p_id_recepcion)
+      AND (p_correlativo IS NULL OR r.correlativo LIKE CONCAT('%', p_correlativo, '%'))
+      AND (p_id_proveedor IS NULL OR r.id_proveedor = p_id_proveedor)
+      AND (p_fecha_inicio IS NULL OR r.fecha >= p_fecha_inicio)
+      AND (p_fecha_fin IS NULL OR r.fecha <= p_fecha_fin)
+      AND (p_estado IS NULL OR r.estado = p_estado)
+    GROUP BY r.id_recepcion, r.fecha, r.correlativo, p.nombre_proveedor,
+             r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura, r.estado
+    ORDER BY r.fecha DESC, r.correlativo DESC
+    LIMIT v_offset, p_limite;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_recepcion_por_correlativo $$
+CREATE PROCEDURE sp_obtener_recepcion_por_correlativo(IN p_correlativo VARCHAR(255))
+BEGIN
+    SELECT r.id_recepcion, r.id_proveedor, p.nombre_proveedor, r.fecha, r.correlativo, r.estado,
+           (SELECT COALESCE(SUM(d.cantidad * d.costo), 0)
+            FROM tbl_detalle_recepcion_productos d WHERE d.id_recepcion = r.id_recepcion) AS costo_inversion,
+           r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura
+    FROM tbl_recepcion_productos r
+    INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+    WHERE r.correlativo = p_correlativo
+    ORDER BY r.id_recepcion DESC
+    LIMIT 1;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_ultima_recepcion $$
+CREATE PROCEDURE sp_obtener_ultima_recepcion()
+BEGIN
+    SELECT r.id_recepcion, r.id_proveedor, p.nombre_proveedor, r.fecha, r.correlativo, r.estado,
+           (SELECT COALESCE(SUM(d.cantidad * d.costo), 0)
+            FROM tbl_detalle_recepcion_productos d WHERE d.id_recepcion = r.id_recepcion) AS costo_inversion,
+           r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura
+    FROM tbl_recepcion_productos r
+    INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+    ORDER BY r.id_recepcion DESC
+    LIMIT 1;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_obtener_productos_recepcion $$
+CREATE PROCEDURE sp_obtener_productos_recepcion(IN p_id_recepcion INT)
+BEGIN
+    SELECT p.id_producto AS codigo, p.nombre_producto AS producto,
+           m.nombre_modelo AS modelo, mar.nombre_marca AS marca, p.serial,
+           d.cantidad, d.costo
+    FROM tbl_detalle_recepcion_productos d
+    INNER JOIN tbl_productos p ON p.id_producto = d.id_producto
+    INNER JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
+    INNER JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
+    WHERE d.id_recepcion = p_id_recepcion
+    ORDER BY d.id_detalle_recepcion_productos;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_anular_recepcion $$
+CREATE PROCEDURE sp_anular_recepcion(
+    IN p_correlativo VARCHAR(255),
+    IN p_id_usuario_auditor INT,
+    OUT p_resultado INT
+)
+BEGIN
+    DECLARE v_id_recepcion INT DEFAULT NULL;
+    DECLARE v_estado VARCHAR(20) DEFAULT NULL;
+    DECLARE v_existe INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultado = 0;
+        RESIGNAL;
+    END;
+
+    SET p_resultado = 0;
+    START TRANSACTION;
+
+    SELECT COUNT(*) INTO v_existe
+    FROM tbl_recepcion_productos
+    WHERE correlativo = p_correlativo;
+    IF v_existe = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La recepción no existe.';
+    END IF;
+
+    SELECT id_recepcion, estado INTO v_id_recepcion, v_estado
+    FROM tbl_recepcion_productos
+    WHERE correlativo = p_correlativo
+    ORDER BY id_recepcion DESC
+    LIMIT 1
+    FOR UPDATE;
+
+    IF v_estado = 'anulado' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La recepción ya está anulada.';
+    END IF;
+
+    UPDATE tbl_recepcion_productos
+    SET estado = 'anulado'
+    WHERE id_recepcion = v_id_recepcion;
+
+    INSERT INTO casalai_seguridad.tbl_bitacora
+        (fecha_hora, nombre_modulo, accion, datos_nuevos, datos_viejos, id_usuario, prioridad, descripcion)
+    VALUES
+        (NOW(), 'Recepcion', 'ANULAR',
+         JSON_OBJECT('id_recepcion', v_id_recepcion, 'correlativo', p_correlativo, 'estado', 'anulado'),
+         JSON_OBJECT('id_recepcion', v_id_recepcion, 'correlativo', p_correlativo, 'estado', v_estado),
+         p_id_usuario_auditor, 'media', CONCAT('Se anuló la recepción ', p_correlativo, '.'));
+
+    SET p_resultado = 1;
+    COMMIT;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_reporte_recepciones_proveedor $$
+CREATE PROCEDURE sp_reporte_recepciones_proveedor(IN p_fecha_inicio DATE, IN p_fecha_fin DATE)
+BEGIN
+    SELECT p.nombre_proveedor AS label, r.fecha, r.id_recepcion, 1 AS value
+    FROM tbl_recepcion_productos r
+    INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+    WHERE (p_fecha_inicio IS NULL OR r.fecha >= p_fecha_inicio)
+      AND (p_fecha_fin IS NULL OR r.fecha <= p_fecha_fin)
+    ORDER BY r.fecha DESC;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_reporte_productos_recepcion $$
+CREATE PROCEDURE sp_reporte_productos_recepcion(
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE,
+    IN p_id_proveedor INT
+)
+BEGIN
+    SELECT pr.nombre_producto AS label, r.fecha, d.cantidad AS value, p.nombre_proveedor AS proveedor
+    FROM tbl_detalle_recepcion_productos d
+    INNER JOIN tbl_productos pr ON pr.id_producto = d.id_producto
+    INNER JOIN tbl_recepcion_productos r ON r.id_recepcion = d.id_recepcion
+    INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+    WHERE (p_fecha_inicio IS NULL OR r.fecha >= p_fecha_inicio)
+      AND (p_fecha_fin IS NULL OR r.fecha <= p_fecha_fin)
+      AND (p_id_proveedor IS NULL OR p_id_proveedor = r.id_proveedor)
+    ORDER BY r.fecha DESC;
+END $$
+
+DROP PROCEDURE IF EXISTS sp_reporte_recepciones_mensuales $$
+CREATE PROCEDURE sp_reporte_recepciones_mensuales(IN p_anio INT)
+BEGIN
+    SELECT MONTH(r.fecha) AS mes_num, YEAR(r.fecha) AS anio, COUNT(*) AS value
+    FROM tbl_recepcion_productos r
+    WHERE (p_anio IS NULL OR YEAR(r.fecha) = p_anio)
+    GROUP BY YEAR(r.fecha), MONTH(r.fecha)
+    ORDER BY anio, mes_num;
 END $$
 
 DELIMITER ;

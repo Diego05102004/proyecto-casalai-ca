@@ -37,6 +37,8 @@ microservicio/
 sudo apt install tesseract-ocr tesseract-ocr-spa
 ```
 
+Para procesar PDFs también se requiere Poppler, disponible en `PATH` para que `pdf2image` pueda convertir cada página.
+
 ### 2. Instalar dependencias Python
 
 ```bash
@@ -58,24 +60,38 @@ uvicorn controlador.api_recepcion:app --host 0.0.0.0 --port 8000 --reload
 |--------|----------|-------------|
 | GET | `/` | Estado del servicio |
 | GET | `/health` | Health check |
-| POST | `/fase1/extraer` | Extraer datos de factura (imagen) |
+| POST | `/fase1/extraer` | Extraer datos de factura (PDF o imagen) |
 | POST | `/fase1/verificar` | Verificar coherencia con formulario |
 | POST | `/fase1/comparar-directo` | Extraer + verificar en un paso |
 | GET | `/fase1/cache/{id}` | Ver factura en cache |
 | GET | `/fase1/estadisticas` | Estadísticas de uso |
 
+El módulo PHP invoca estos endpoints a través de `Modelo/Servicio/RecepcionIAProxy.php`; PHP debe tener habilitada la extensión cURL. La URL base se configura con `RECEPCION_IA_URL` y por defecto es `http://127.0.0.1:8000`. El proxy aplica timeout total de 7,5 segundos, un reintento limitado para fallos de conexión/HTTP transitorios y un circuit breaker compartido en el host PHP: tres fallos consecutivos abren el circuito por dos minutos. El frontend aplica además un timeout de 8 segundos y activa el registro manual cuando detecta indisponibilidad.
+
+La factura adjunta se conserva en `comprobantes/recepcion/`, con acceso HTTP denegado. Los manifiestos `.json` indican el correlativo, la recepción y si quedó `pendiente_ocr`; todavía no existe un trabajador batch que procese automáticamente esos pendientes.
+
+Para actualizar una base existente con los campos fiscales, ejecutar una vez `agregar_iva_recepcion.sql` sobre la base principal. Los registros anteriores quedan con IVA no registrado; solo se completan al revisar su factura original.
+
 ## 📖 Flujo de Uso (Fase 1)
+
+La carga acepta PDF e imágenes de hasta 5 MB. En los PDFs se analiza cada página; Tesseract y Poppler deben estar instalados en el equipo que ejecuta la API.
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   PHP Frontend  │────▶│  Microservicio   │────▶│   Respuesta     │
-│   (JavaScript)  │     │   FastAPI          │     │   Verificación  │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-         │                       │                         │
-         ▼                       ▼                         ▼
-   1. Subir imagen         2. OCR + PLN            3. Bloquear/Aprobar
-      factura               Extraer datos              registro
+│ PHP / Cliente JS │────▶│ Proxy PHP +      │────▶│ FastAPI / OCR  │
+│                  │     │ circuit breaker  │     │ y verificación │
+└──────────────────┘     └──────────────────┘     └────────────────┘
+       │                         │                         │
+       ▼                         ▼                         ▼
+   1. Adjuntar PDF/imagen  2. Timeout/reintento    3. Autocompletar o
+    conservar archivo      o modo manual           verificar
 ```
+
+## Documentación de metodología
+
+- [Texto para memoria técnica: arquitectura, seguridad e IA/OCR](ARQUITECTURA_Y_SEGURIDAD.md): degradación grácil, parámetros del breaker, política de adjuntos y pipeline implementado.
+- [Ficha de caracterización del dataset de facturas](DATASET_FACTURAS.md): variabilidad, etiquetado, particiones, evaluación y rol actual/futuro de CNN.
+- [Contrato propuesto para Analítica Predictiva](ANALITICA_PREDICTIVA.md): fuente de datos, endpoint, métricas de negocio y especificación del dashboard. No hay aún API predictiva implementada.
 
 ## 📝 Ejemplo de Uso en PHP/JavaScript
 

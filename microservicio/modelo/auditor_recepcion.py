@@ -12,12 +12,6 @@ import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
-try:
-    from pdf2image import convert_from_path
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
-    logger.warning("pdf2image no disponible. Los PDFs no podrán procesarse.")
 
 # Asegurar que el directorio de logs exista
 BASE_DIR = Path(__file__).parent.parent
@@ -27,6 +21,14 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler(str(LOGS_DIR / 'auditor_recepcion.log')), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
+
+try:
+    from pdf2image import convert_from_path
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+    convert_from_path = None
+    logger.warning("pdf2image no disponible. Los PDFs no podrán procesarse.")
 
 @dataclass
 class ProductoExtraido:
@@ -44,6 +46,9 @@ class FacturaExtraida:
     nombre_proveedor: str = ""
     fecha_factura: str = ""
     productos: List[ProductoExtraido] = field(default_factory=list)
+    subtotal_factura: float = 0.0
+    porcentaje_iva: float = 0.0
+    monto_iva: float = 0.0
     total_factura: float = 0.0
     metadatos_extraccion: Dict = field(default_factory=dict)
 
@@ -115,8 +120,11 @@ class AuditorRecepcion:
         logger.info(f"Iniciando extracción OCR: {ruta_imagen}")
         if not Path(ruta_imagen).exists():
             raise FileNotFoundError(f"Imagen no encontrada: {ruta_imagen}")
-        imagen_procesada = self._preprocesar_imagen(ruta_imagen)
-        texto_extraido = self._ejecutar_ocr(imagen_procesada)
+        imagenes_procesadas = self._preprocesar_imagen(ruta_imagen)
+        if isinstance(imagenes_procesadas, list):
+            texto_extraido = "\n".join(self._ejecutar_ocr(imagen) for imagen in imagenes_procesadas)
+        else:
+            texto_extraido = self._ejecutar_ocr(imagenes_procesadas)
         factura = self._extraer_campos_factura(texto_extraido)
         factura.metadatos_extraccion = {'timestamp': datetime.now().isoformat(), 'longitud_texto': len(texto_extraido),
             'confianza_promedio': self._calcular_confianza_promedio(factura), 'lineas_detectadas': len(texto_extraido.split('\n')),
@@ -157,14 +165,17 @@ class AuditorRecepcion:
         factura = self.extraer_desde_imagen(ruta_imagen, id_temp)
         return self.verificar_coherencia(id_temp, datos_formulario)
 
-    def _preprocesar_imagen(self, ruta_imagen: str) -> np.ndarray:
-        # Verificar si es un PDF y convertir a imagen
-        if ruta_imagen.lower().endswith('.pdf'):
-            ruta_imagen = self._convertir_pdf_a_imagen(ruta_imagen)
-        
+    def _preprocesar_imagen(self, ruta_imagen: str) -> Any:
+        if Path(ruta_imagen).suffix.lower() == '.pdf':
+            paginas = self._convertir_pdf_a_imagen(ruta_imagen)
+            return [self._preprocesar_array(np.array(pagina)) for pagina in paginas]
+
         imagen = cv2.imread(ruta_imagen)
         if imagen is None:
             raise ValueError(f"No se pudo cargar: {ruta_imagen}")
+        return self._preprocesar_array(imagen)
+
+    def _preprocesar_array(self, imagen: np.ndarray) -> np.ndarray:
         if not self.config['preprocesamiento']: return imagen
         gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
         denoised = cv2.fastNlMeansDenoising(gris, None, 10, 7, 21)
@@ -187,9 +198,42 @@ class AuditorRecepcion:
         factura.numero_factura = self._extraer_con_patrones(texto_limpio, self.PATRONES['numero_factura'])
         factura.nombre_proveedor = self._extraer_con_patrones(texto_limpio, self.PATRONES['proveedor'])
         factura.fecha_factura = self._extraer_con_patrones(texto_limpio, self.PATRONES['fecha'])
-        total_str = self._extraer_con_patrones(texto_limpio, self.PATRONES['total'])
-        factura.total_factura = self._parsear_monto(total_str)
         factura.productos = self._extraer_productos(texto_limpio)
+
+        subtotal_match = re.search(
+            r'^\s*sub\s*total\s*[:\-]?\s*\$?\s*([\d.,]*\d)',
+            texto_limpio,
+            re.IGNORECASE | re.MULTILINE
+        )
+        if subtotal_match:
+            factura.subtotal_factura = self._parsear_monto(subtotal_match.group(1))
+        else:
+            factura.subtotal_factura = round(
+                sum(producto.cantidad * producto.costo_unitario for producto in factura.productos), 2
+            )
+
+        iva_match = re.search(
+            r'^\s*(?:iva|igv|vat)\b\s*'
+            r'(?:\(?\s*([\d.,]+)\s*%\s*\)?\s*)?'
+            r'[:\-]?\s*\$?\s*([\d.,]+)',
+            texto_limpio,
+            re.IGNORECASE | re.MULTILINE
+        )
+        if iva_match:
+            factura.porcentaje_iva = self._parsear_monto(iva_match.group(1) or '')
+            factura.monto_iva = self._parsear_monto(iva_match.group(2))
+            if factura.monto_iva > 0 and factura.porcentaje_iva == 0 and factura.subtotal_factura > 0:
+                factura.porcentaje_iva = round(factura.monto_iva / factura.subtotal_factura * 100, 2)
+
+        total_match = re.search(
+            r'^\s*(?:(?:gran\s+)?total(?:\s+a\s+pagar)?|importe\s+total)\b\s*[:\-]?\s*\$?\s*([\d.,]+)',
+            texto_limpio,
+            re.IGNORECASE | re.MULTILINE
+        )
+        if total_match:
+            factura.total_factura = self._parsear_monto(total_match.group(1))
+        else:
+            factura.total_factura = round(factura.subtotal_factura + factura.monto_iva, 2)
         return factura
 
     def _extraer_con_patrones(self, texto: str, patrones: List[str]) -> str:
@@ -200,6 +244,10 @@ class AuditorRecepcion:
         return ""
 
     def _extraer_productos(self, texto: str) -> List[ProductoExtraido]:
+        productos_tabulares = self._extraer_productos_tabulares(texto)
+        if productos_tabulares:
+            return productos_tabulares
+
         productos = []
         lineas = texto.split('\n')
         
@@ -219,6 +267,67 @@ class AuditorRecepcion:
             if prod: productos.append(prod)
             
         return productos
+
+    def _extraer_productos_tabulares(self, texto: str) -> List[ProductoExtraido]:
+        patron_fila = re.compile(
+            r"^\s*(?P<descripcion>.+?)\s+"
+            r"(?P<marca>-?[A-Za-z][A-Za-z0-9&.-]*)\s+"
+            r"(?P<serial>[A-Za-z0-9][A-Za-z0-9-]{2,})\s+"
+            r"\$\s*(?P<unitario>[\d.,]+)\s+(?P<cantidad>\d+)\s+"
+            r"\$\s*(?P<total>[\d.,]+)\s*$",
+            re.IGNORECASE
+        )
+        productos = []
+        producto_actual = None
+
+        for linea in texto.splitlines():
+            coincidencia = patron_fila.match(linea.strip())
+            if coincidencia:
+                datos = coincidencia.groupdict()
+                descripcion = self._normalizar_descripcion_producto(datos['descripcion'])
+                cantidad = int(datos['cantidad'])
+                costo_unitario = self._parsear_monto(datos['unitario'])
+                total_linea = self._parsear_monto(datos['total'])
+
+                if cantidad > 0 and total_linea > 0 and costo_unitario > 0:
+                    total_calculado = costo_unitario * cantidad
+                    if abs(total_calculado - total_linea) > max(0.01, total_linea * 0.02):
+                        costo_unitario = round(total_linea / cantidad, 2)
+                        logger.warning(
+                            "Precio unitario OCR inconsistente para %s; se recalculó como total/cantidad.",
+                            descripcion
+                        )
+
+                producto_actual = ProductoExtraido(
+                    nombre=descripcion,
+                    marca=datos['marca'].strip(' .:-'),
+                    serial=datos['serial'].strip(' .:-'),
+                    cantidad=cantidad,
+                    costo_unitario=costo_unitario,
+                    confianza=0.9
+                )
+                productos.append(producto_actual)
+                continue
+
+            linea_limpia = linea.strip()
+            if not producto_actual or not linea_limpia:
+                continue
+            if re.match(r'^(?:subtotal|iva|impuesto|total|gracias|eBay International)\b', linea_limpia, re.IGNORECASE):
+                producto_actual = None
+                continue
+
+            continuacion = self._normalizar_descripcion_producto(linea_limpia)
+            if not continuacion:
+                continue
+
+            producto_actual.modelo = continuacion
+
+        return productos
+
+    def _normalizar_descripcion_producto(self, descripcion: str) -> str:
+        descripcion = re.sub(r"[._'’]+", " ", descripcion)
+        descripcion = re.sub(r"[^\w\s&+-]", " ", descripcion, flags=re.UNICODE)
+        return re.sub(r"\s+", " ", descripcion).strip()
 
     def _extraer_productos_ebay_style(self, texto: str) -> List[ProductoExtraido]:
         """Extrae productos de facturas con formato eBay/e-commerce"""
@@ -427,9 +536,26 @@ class AuditorRecepcion:
 
     def _parsear_monto(self, texto: str) -> float:
         if not texto: return 0.0
-        texto = texto.replace(',', '.')
-        numeros = re.findall(r'\d+\.?\d*', texto)
-        return float(numeros[0]) if numeros else 0.0
+        numero = re.sub(r'[^\d,.+-]', '', str(texto)).strip()
+        if not numero:
+            return 0.0
+
+        if ',' in numero and '.' in numero:
+            separador_decimal = ',' if numero.rfind(',') > numero.rfind('.') else '.'
+            separador_miles = '.' if separador_decimal == ',' else ','
+            numero = numero.replace(separador_miles, '')
+            numero = numero.replace(separador_decimal, '.')
+        elif ',' in numero:
+            decimales = len(numero.rsplit(',', 1)[-1])
+            numero = numero.replace(',', '.' if decimales in (1, 2) else '')
+        elif numero.count('.') > 1:
+            ultimo_punto = numero.rfind('.')
+            numero = numero[:ultimo_punto].replace('.', '') + numero[ultimo_punto:]
+
+        try:
+            return float(numero)
+        except ValueError:
+            return 0.0
 
     def obtener_estadisticas(self) -> Dict:
         if not self.historial_verificaciones: return {"total_verificaciones": 0, "tasa_exito": 0.0}
@@ -453,8 +579,8 @@ class AuditorRecepcion:
                 except: pass
         return eliminados
 
-    def _convertir_pdf_a_imagen(self, ruta_pdf: str) -> str:
-        """Convierte PDF a imagen para procesamiento OCR"""
+    def _convertir_pdf_a_imagen(self, ruta_pdf: str) -> List[Image.Image]:
+        """Convierte todas las páginas del PDF para procesamiento OCR."""
         if not PDF_AVAILABLE:
             raise ValueError("Procesamiento de PDF no disponible. Instale pdf2image: pip install pdf2image")
         
@@ -472,13 +598,9 @@ class AuditorRecepcion:
             
             if not imagenes:
                 raise ValueError("No se pudo extraer ninguna imagen del PDF")
-            
-            # Guardar la primera página como imagen temporal
-            ruta_imagen_temp = ruta_pdf.replace('.pdf', '_page_0.jpg')
-            imagenes[0].save(ruta_imagen_temp, 'JPEG', quality=95)
-            
-            logger.info(f"PDF convertido a imagen: {ruta_imagen_temp}")
-            return ruta_imagen_temp
+
+            logger.info(f"PDF convertido a {len(imagenes)} páginas para OCR")
+            return imagenes
             
         except Exception as e:
             logger.error(f"Error convirtiendo PDF {ruta_pdf}: {e}")

@@ -35,3 +35,200 @@
 2026-07-04 23:52:27,096 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida.pdf
 2026-07-04 23:52:28,036 - modelo.auditor_recepcion - INFO - PDF convertido a imagen: temp_uploads\fact_20260704235227_07f70752_factura_ebay_corregida_page_0.jpg
 2026-07-04 23:52:31,468 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 100.00%
+2026-10-01 10:10:05,128 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-01 10:10:05,135 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-01 10:19:04,264 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001101904_b72f1c63.pdf
+2026-10-01 10:19:05,328 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:19:08,912 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:20:26,151 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102026_bc2b0a88.png
+2026-10-01 10:20:28,078 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-01 10:25:13,030 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102513_598fa794.jpeg
+2026-10-01 10:25:14,462 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-01 10:25:24,448 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102524_7a3e3f0f.pdf
+2026-10-01 10:25:24,624 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:25:27,781 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:25:45,744 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001102545_8b771b6c.pdf
+2026-10-01 10:25:45,957 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:25:48,847 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:33:03,603 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103303_0c35c080.pdf
+2026-10-01 10:33:03,770 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:33:06,788 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:33:21,957 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103321_6655b708.pdf
+2026-10-01 10:33:22,161 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:33:25,262 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:33:59,389 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103359_72b56e58.pdf
+2026-10-01 10:33:59,586 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:34:02,512 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 10:34:42,744 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001103442_50ccd74a.pdf
+2026-10-01 10:34:42,927 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 10:34:46,128 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 12:09:42,184 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001120942_cd3a1fa8.pdf
+2026-10-01 12:09:42,891 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 12:09:46,465 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 12:37:32,944 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001123732_67c80ae0.pdf
+2026-10-01 12:37:33,093 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 12:37:36,294 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-01 12:38:40,487 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: microservicio\temp_uploads\fact_20261001123840_e1544c37.pdf
+2026-10-01 12:38:40,679 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-01 12:38:43,783 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 19:10:05,486 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 19:10:05,488 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 19:12:24,819 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20261002191224_a5eb57af.pdf
+2026-10-02 19:12:25,852 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 19:12:29,534 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 19:13:51,018 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 19:13:51,018 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 19:18:15,979 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: temp_uploads\fact_20261002191815_b832295d.pdf
+2026-10-02 19:18:16,222 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 19:18:19,154 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 19:42:56,206 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 19:42:56,206 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 19:47:01,504 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261002194701_e22df4e4.pdf
+2026-10-02 19:47:02,145 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 19:47:05,079 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 19:52:24,451 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 19:52:24,451 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 20:09:54,478 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 20:09:54,479 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 20:11:57,271 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 20:11:57,286 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 20:18:44,118 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 20:18:44,119 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 20:19:58,358 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-02 20:19:58,358 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-02 20:22:32,955 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261002202232_c5accdb3.pdf
+2026-10-02 20:22:34,314 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 20:22:38,253 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-02 20:23:50,081 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261002202350_ba3938f9.pdf
+2026-10-02 20:23:50,212 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-02 20:23:52,669 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-04 09:03:20,459 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004090320_46fcd9fc.pdf
+2026-10-04 09:03:22,131 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 09:03:26,738 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-04 09:12:28,858 - microservicio.modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 09:12:28,858 - microservicio.modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 09:12:28,858 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 09:12:46,470 - microservicio.modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 09:12:46,470 - microservicio.modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 09:12:46,470 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 09:18:01,955 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 09:21:41,409 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004092141_ca3d4b6a.pdf
+2026-10-04 09:21:41,646 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 09:21:44,079 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-04 09:25:19,688 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 09:25:19,688 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 09:26:56,997 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004092656_e4a33549.pdf
+2026-10-04 09:26:57,141 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 09:26:59,864 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-04 09:30:48,116 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004093048_5548f1c5.pdf
+2026-10-04 09:30:48,235 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 09:30:51,088 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-04 09:33:06,488 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 09:33:06,488 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 09:33:15,604 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 09:33:15,604 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 09:33:39,309 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004093339_9ad81b1f.pdf
+2026-10-04 09:33:39,492 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 09:33:42,027 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 09:33:42,027 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 10:07:10,138 - microservicio.modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 10:07:10,138 - microservicio.modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 10:07:10,154 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:08:35,597 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:20:01,820 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:20:01,830 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:22:47,888 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:22:47,888 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:23:09,564 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004102309_50dadbf8.pdf
+2026-10-04 10:23:09,688 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 10:23:12,588 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:23:12,597 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 10:24:38,059 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:24:38,060 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:25:23,588 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:25:23,588 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:37:40,245 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004103740_b6f7896d.pdf
+2026-10-04 10:37:40,413 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 10:37:43,138 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:37:43,138 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 10:38:07,788 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 10:38:07,788 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 10:38:12,496 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 10:38:12,496 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 10:39:52,494 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004103952_8db9b547.pdf
+2026-10-04 10:39:52,644 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 10:39:55,353 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:39:55,354 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 10:55:08,838 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 10:55:08,838 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 10:55:12,547 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 10:55:12,547 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 10:55:50,024 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004105550_57e4f8af.pdf
+2026-10-04 10:55:50,227 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 10:55:52,891 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:55:52,893 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 10:57:19,227 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004105719_0a13c7f4.pdf
+2026-10-04 10:57:19,388 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 10:57:22,004 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 10:57:22,004 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 11:03:30,089 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004110330_4903ba7b.pdf
+2026-10-04 11:03:30,271 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 11:03:32,787 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 11:03:32,787 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 11:03:59,103 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261004110330_4903ba7b
+2026-10-04 11:03:59,103 - modelo.auditor_recepcion - INFO - Verificación: 10 discrepancias
+2026-10-04 11:52:56,611 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004115256_ca32764a.pdf
+2026-10-04 11:52:56,785 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 11:52:59,354 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 11:52:59,354 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 11:53:08,274 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261004115256_ca32764a
+2026-10-04 11:53:08,277 - modelo.auditor_recepcion - INFO - Verificación: 10 discrepancias
+2026-10-04 12:12:49,762 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004121249_813d6675.pdf
+2026-10-04 12:12:50,206 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 12:12:53,316 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:12:53,318 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 12:21:41,796 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261004121249_813d6675
+2026-10-04 12:21:41,796 - modelo.auditor_recepcion - INFO - Verificación: 10 discrepancias
+2026-10-04 12:25:39,332 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261004121249_813d6675
+2026-10-04 12:25:39,338 - modelo.auditor_recepcion - INFO - Verificación: 10 discrepancias
+2026-10-04 12:27:12,253 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:27:12,255 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:27:12,259 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:27:50,106 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004122750_b05dbf1d.pdf
+2026-10-04 12:27:50,219 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 12:27:53,127 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:27:53,129 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 12:28:34,778 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:28:34,790 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:28:34,794 - microservicio.modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:29:57,704 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 12:29:57,704 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 12:30:00,870 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 12:30:00,870 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 12:30:23,299 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004123023_37ba95c4.pdf
+2026-10-04 12:30:23,477 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 12:30:26,152 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 12:30:26,152 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 12:31:01,865 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261004123023_37ba95c4
+2026-10-04 12:31:01,865 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-04 12:31:53,512 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004123153_94143e3a.jpeg
+2026-10-04 12:31:54,788 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-04 12:32:26,553 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004123226_910d111d.png
+2026-10-04 12:32:28,367 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-04 12:48:00,624 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004124800_b3ab91b4.pdf
+2026-10-04 12:48:00,980 - modelo.auditor_recepcion - INFO - PDF convertido a 2 páginas para OCR
+2026-10-04 12:48:05,720 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 12:55:25,987 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 12:55:25,987 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 12:55:29,488 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-04 12:55:29,488 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-04 13:12:11,885 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004131211_aa8fe9de.pdf
+2026-10-04 13:12:12,270 - modelo.auditor_recepcion - INFO - PDF convertido a 2 páginas para OCR
+2026-10-04 13:12:16,888 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-04 14:07:23,722 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004140723_7c46f1f4.pdf
+2026-10-04 14:07:24,587 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 14:07:27,788 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 100.00%
+2026-10-04 14:08:10,028 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261004140809_d58846c3.pdf
+2026-10-04 14:08:10,146 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-04 14:08:12,701 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-04 14:08:12,733 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%

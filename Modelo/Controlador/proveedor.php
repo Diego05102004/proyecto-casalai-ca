@@ -315,9 +315,15 @@ function getproveedores($filtros = []) {
     return $resultado['proveedores'] ?? [];
 }
 
+function getRecepcionesPorProveedor() {
+    $recepcion = new \Usuario\ProyectoCasalaiCa\Modelo\Clases\Recepcion();
+    return $recepcion->getRecepcionesPorProveedor();
+}
+
 $proveedorModel = new Proveedores();
 $reporteSuministroProveedores = $proveedorModel->obtenerReporteSuministroProveedores();
 $totalSuministrado = array_sum(array_column($reporteSuministroProveedores, 'cantidad'));
+$recepcionesPorProveedor = getRecepcionesPorProveedor();
 
 function obtenerProductosConBajoStock() {
     $producto = new Productos();
@@ -340,6 +346,7 @@ if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     }
     $proveedores = getproveedores();
     $productos = obtenerProductosConBajoStock();
+    $recepcionesPorProveedor = getRecepcionesPorProveedor();
     require_once("Vista/VistaNew/" . $pagina . ".php");
 } elseif (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
@@ -354,6 +361,7 @@ if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     }
     $proveedores = getproveedores();
     $productos = obtenerProductosConBajoStock();
+    $recepcionesPorProveedor = getRecepcionesPorProveedor();
     require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";

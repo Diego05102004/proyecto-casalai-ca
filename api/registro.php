@@ -58,12 +58,12 @@ try {
     }
     
     // Validaciones básicas de longitud (después de desencriptar)
-    if (mb_strlen($data['nombre_usuario']) < 3 || mb_strlen($data['nombre_usuario']) > 50) {
-        errorResponse('El nombre de usuario debe tener entre 3 y 50 caracteres', 400);
+    if (mb_strlen($data['nombre_usuario']) < 4 || mb_strlen($data['nombre_usuario']) > 20) {
+        errorResponse('El nombre de usuario debe tener entre 4 y 20 caracteres', 400);
     }
     
-    if (mb_strlen($data['clave']) < 8) {
-        errorResponse('La contraseña debe tener al menos 8 caracteres', 400);
+    if (mb_strlen($data['clave']) < 6) {
+        errorResponse('La contraseña debe tener al menos 6 caracteres', 400);
     }
     
     if (!filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
