@@ -50,7 +50,7 @@ $operations = [
         'method' => 'GET',
         'handler' => 'obtenerPerfil'
     ],
-    'editar_personal' => [
+    'cambiar_personal' => [
         'method' => 'POST',
         'handler' => 'cambiarPersonal'
     ],

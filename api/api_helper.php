@@ -52,38 +52,49 @@ function RecibirPeticion($instance, $operations) {
             $data = array_merge($data, $_GET);
         }
 
-        // Desencriptar datos sensibles si están cifrados (solo para POST/PUT)
-        if ($method === 'POST' || $method === 'PUT') {
-            $encryption = new Encryption();
-            $sensitiveFields = ['username', 'password', 'nombres', 'apellidos', 'cedula', 'correo', 'telefono', 'direccion', 'nombre', 'apellido', 'clave'];
-            foreach ($sensitiveFields as $field) {
-                if (isset($data[$field]) && $data[$field] !== '') {
-                    try {
+        // Desencriptar datos sensibles si están cifrados (para todos los métodos)
+        $encryption = new Encryption();
+        $sensitiveFields = ['username', 'password', 'nombres', 'apellidos', 'cedula', 'correo', 'telefono', 'direccion', 'nombre', 'apellido', 'clave'];
+        foreach ($sensitiveFields as $field) {
+            if (isset($data[$field]) && $data[$field] !== '') {
+                try {
+                    // Solo desencriptar si parece estar encriptado (es largo y tiene caracteres de Base64)
+                    $value = $data[$field];
+                    if (is_string($value) && strlen($value) > 50 && !preg_match('/^\d+$/', $value)) {
                         // Restaurar espacios en blanco a '+' para Base64
-                        if (is_string($data[$field])) {
-                            $data[$field] = str_replace(' ', '+', $data[$field]);
+                        $value = str_replace(' ', '+', $value);
+                        $decrypted = $encryption->decrypt($value);
+                        // Solo usar el valor desencriptado si no falló
+                        if ($decrypted !== $value) {
+                            $data[$field] = $decrypted;
+                            error_log("[API_HELPER] Campo '$field' desencriptado exitosamente");
                         }
-                        $data[$field] = $encryption->decrypt($data[$field]);
-                    } catch (\Throwable $decryptError) {
-                        error_log("[API_HELPER] Error descifrando campo '$field': " . $decryptError->getMessage());
-                        // Continuar con el valor original si falla el desencriptado
                     }
+                } catch (\Throwable $decryptError) {
+                    error_log("[API_HELPER] Error descifrando campo '$field': " . $decryptError->getMessage());
+                    // Continuar con el valor original si falla el desencriptado
                 }
             }
         }
-        
+
         // Importante: NO desencriptar el campo 'funcion' ya que se usa para enrutamiento
 
         // Asegurar que la función también quede en $data para métodos con JSON
         if (!isset($data['funcion']) && isset($funcion)) {
             $data['funcion'] = $funcion;
         }
-        
+
+        // Establecer cédula en la instancia si está presente (para Factura)
+        if (isset($data['cedula']) && method_exists($instance, 'setCedula')) {
+            $instance->setCedula($data['cedula']);
+            error_log("[API_HELPER] Cédula establecida en instancia: " . $data['cedula']);
+        }
+
         // Verificar si el método existe en la instancia
         if (!method_exists($instance, $handler)) {
             errorResponse('Método no implementado: ' . $handler, 501);
         }
-        
+
         // Invocar el método de la clase
         $resultado = call_user_func([$instance, $handler], $data);
         

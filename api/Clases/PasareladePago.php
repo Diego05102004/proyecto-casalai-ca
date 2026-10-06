@@ -597,7 +597,7 @@ class PasareladePago extends Factura {
                     'tipo' => $tipo,
                     'fecha' => $fecha,
                     'referencia' => $referencia,
-                    'comprobante' => $nombreArchivo,
+                    // 'comprobante' => $nombreArchivo,
                     'estatus_factura' => 'En Proceso'
                 ];
 

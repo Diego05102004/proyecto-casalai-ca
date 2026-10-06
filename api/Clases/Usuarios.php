@@ -1216,6 +1216,25 @@ class Usuarios extends BD {
         // Remover campos sensibles (puede venir como password o clave)
         unset($usuario['password']);
         unset($usuario['clave']);
+        unset($usuario['id_rol']);
+        unset($usuario['nombre_rol']);
+        unset($usuario['estatus']);
+        unset($usuario['id_usuario']);
+
+        // Encriptar datos sensibles del usuario
+        $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
+
+        $camposEncriptar = ['username','cedula', 'correo', 'nombres', 'apellidos', 'telefono'];
+        foreach ($camposEncriptar as $campo) {
+            if (isset($usuario[$campo]) && $usuario[$campo] !== null) {
+                try {
+                    $usuario[$campo] = $encryption->encrypt($usuario[$campo]);
+                } catch (\Throwable $e) {
+                    error_log("[USUARIOS] Error encriptando campo '$campo': " . $e->getMessage());
+                    // Mantener el valor original si falla la encriptación
+                }
+            }
+        }
 
         return [
             'status' => 'success',
@@ -1243,8 +1262,13 @@ class Usuarios extends BD {
 
     public function cambiarPersonal($data) {
         $id_usuario = $data['id_usuario'] ?? null;
-        $clave_actual = $data['clave_actual'] ?? null;
-        
+        $encryption = new Encryption();
+        $apellidos = $encryption->decrypt($data['apellidos'] ?? null);
+        $nombres = $encryption->decrypt($data['nombres'] ?? null);
+        $telefono = $encryption->decrypt($data['telefono'] ?? null);
+        $username = $encryption->decrypt($data['username'] ?? null);
+        $clave_actual = $encryption->decrypt($data['clave_actual'] ?? null);
+
         if (empty($id_usuario)) {
             throw new RuntimeException('El ID de usuario es obligatorio');
         }
@@ -1299,6 +1323,11 @@ class Usuarios extends BD {
         $clave_actual = $data['clave_actual'] ?? null;
         $clave_nueva = $data['clave_nueva'] ?? null;
         $clave_confirmar = $data['clave_confirmar'] ?? null;
+        $encryption = new Encryption;
+
+        $clave_actual = $encryption->decrypt($clave_actual);
+        $clave_nueva = $encryption->decrypt($clave_nueva);
+        $clave_confirmar = $encryption->decrypt($clave_confirmar);
         
         if (empty($id_usuario)) {
             throw new RuntimeException('El ID de usuario es obligatorio');
@@ -1341,7 +1370,11 @@ class Usuarios extends BD {
         $id_usuario = $data['id_usuario'] ?? null;
         $clave_actual = $data['clave_actual'] ?? null;
         $correo_nuevo = $data['correo_nuevo'] ?? $data['correo'] ?? $data['email'] ?? $data['email_nuevo'] ?? $data['nuevo_correo'] ?? null;
+        $encryption = new Encryption();
+        $correo_nuevo = $encryption->decrypt($correo_nuevo);
+        $clave_actual = $encryption->decrypt($clave_actual);
         
+
         if (empty($id_usuario)) {
             throw new RuntimeException('El ID de usuario es obligatorio');
         }
@@ -1388,6 +1421,8 @@ class Usuarios extends BD {
     public function cambiarAvatar($data) {
         $id_usuario = $data['id_usuario'] ?? null;
         $clave_actual = $data['clave_actual'] ?? null;
+        $encryption = new Encryption;
+        $clave_actual = $encryption->decrypt($clave_actual);
         
         if (empty($id_usuario)) {
             throw new RuntimeException('El ID de usuario es obligatorio');
