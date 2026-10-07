@@ -763,30 +763,6 @@ ob_start();
                     margin: 0;
                 }
 
-                /* Botones mejorados
-                .btn-cancel, .btn-save {
-                    padding: 12px 25px;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-size: 0.95rem;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: all 0.3s ease;
-                }
-
-                .btn-cancel {
-                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                    color: white;
-                }
-
-                .btn-cancel:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
-                }*/
-
                 .btn-save {
                     background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
@@ -796,14 +772,6 @@ ob_start();
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
                 }
-/*
-                .btn-save.danger {
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                }
-
-                .btn-save.danger:hover {
-                    box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
-                }*/
 
                 /* Modal de Detalles */
                 .recepcion-detalles {
