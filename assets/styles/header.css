@@ -1,0 +1,35 @@
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.btn-icon {
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: linear-gradient(135deg, #e7c8fc 0%, #9803ee 100%);
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(147, 78, 236, 0.479);
+}
+
+.btn-icon img {
+    margin-top: 2px;
+    width:1.2em;
+    height:1.2em;
+    filter:brightness(0) invert(1);
+}
+
+@media (max-width: 768px) {
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

@@ -138,12 +138,6 @@ body {
     color: #2d3748;
 }
 
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
 .date-picker {
     display: flex;
     align-items: center;
@@ -677,11 +671,6 @@ body {
         flex-direction: column;
         gap: 15px;
         padding: 20px;
-    }
-    
-    .header-right {
-        width: 100%;
-        justify-content: space-between;
     }
     
     .summary-cards {

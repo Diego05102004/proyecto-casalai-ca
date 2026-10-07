@@ -25,7 +25,7 @@ if (!Auth::validateToken() && isset($_SESSION['id_usuario']) && isset($_SESSION[
 
 // Variables para los componentes reutilizables
 $pagina_actual = 'recepcion';
-$titulo_pagina = 'Gestión de Recepciones';
+$titulo_pagina = 'Gestionar de Recepción';
 
 // Iniciar el buffer de contenido
 ob_start();
@@ -33,83 +33,17 @@ ob_start();
 
 <link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
 
-<?php
-// Cálculos previos para summary cards
-$total_recepciones = count($recepciones ?? []);
-$recepciones_pendientes = count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'pendiente'; }));
-$recepciones_completadas = count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'completada'; }));
-
-// Calcular porcentajes
-$porcentaje_total = 100;
-$porcentaje_pendientes = $total_recepciones > 0 ? round(($recepciones_pendientes / $total_recepciones) * 100) : 0;
-$porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completadas / $total_recepciones) * 100) : 0;
-?>
-
-<!-- Summary Cards para Recepciones -->
-<div class="summary-cards">
-    <div class="summary-card sales">
-        <div class="card-icon"><i class="fas fa-inbox"></i></div>
-        <div class="card-content">
-            <h3>Recepciones Hoy</h3>
-            <p class="card-value"><?php echo $total_recepciones; ?></p>
-            <div class="progress-circle">
-                <svg viewBox="0 0 36 36" class="circular-chart">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="summary-card expenses">
-        <div class="card-icon"><i class="fas fa-truck"></i></div>
-        <div class="card-content">
-            <h3>Pendientes</h3>
-            <p class="card-value"><?php echo $recepciones_pendientes; ?></p>
-            <div class="progress-circle">
-                <svg viewBox="0 0 36 36" class="circular-chart">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_pendientes; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <span class="percentage"><?php echo $porcentaje_pendientes; ?>%</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="summary-card income">
-        <div class="card-icon"><i class="fas fa-check-circle"></i></div>
-        <div class="card-content">
-            <h3>Completadas</h3>
-            <p class="card-value"><?php echo $recepciones_completadas; ?></p>
-            <div class="progress-circle">
-                <svg viewBox="0 0 36 36" class="circular-chart">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_completadas; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <span class="percentage"><?php echo $porcentaje_completadas; ?>%</span>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Recepciones Section -->
 <div class="table-section">
     <div class="section-header">
         <h2>Lista de Recepciones</h2>
         <div class="section-actions">
+            <button class="btn-table-superior btn-ayuda" title="Visualizar Ayuda">
+                <img src="assets/img/info-ayuda.svg">
+            </button>
             <button class="btn-table-superior btn-incluir" onclick="openModal('registrar')">
-                <span class="btn-icon"><i class="fas fa-plus"></i></span>
-                Incluir Recepción
+                <img src="assets/img/plus.svg">
             </button>
-            <!--<button class="btn-report" onclick="window.location.href='?pagina=reporteRecepcion'">
-                <span class="btn-icon"><i class="fas fa-chart-bar"></i></span>
-                Reportes
-            </button>
-            <button class="btn-filter" onclick="openFilterModal()">
-                <span class="btn-icon"><i class="fas fa-search"></i></span>
-                Buscar
-            </button>-->
         </div>
     </div>
 
@@ -517,46 +451,6 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                         <button class="btn-save danger" onclick="confirmarAnulacion()">
                             <i class="fas fa-check"></i> Confirmar Anulación
                         </button>
-                    </div>
-                </div>
-            </div>
-            <div id="searchModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Buscar Recepción</h2>
-                        <span class="close-modal">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="searchForm">
-                            <div class="form-group">
-                                <label for="searchCorrelativo">Número de Factura</label>
-                                <input type="text" id="searchCorrelativo" name="correlativo" 
-                                       placeholder="Ej: REC-001">
-                            </div>
-                            <div class="form-group">
-                                <label for="searchProveedor">Proveedor</label>
-                                <select id="searchProveedor" name="proveedor">
-                                    <option value="">Todos los proveedores</option>
-                                    <option value="1">TechCorp S.A.</option>
-                                    <option value="2">ElectroWorld Ltd.</option>
-                                    <option value="3">Global Supplies</option>
-                                </select>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="fechaInicio">Fecha Desde</label>
-                                    <input type="date" id="fechaInicio" name="fechaInicio">
-                                </div>
-                                <div class="form-group">
-                                    <label for="fechaFin">Fecha Hasta</label>
-                                    <input type="date" id="fechaFin" name="fechaFin">
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeSearchModal()">Cancelar</button>
-                        <button class="btn-save" onclick="searchRecepcion()">Buscar</button>
                     </div>
                 </div>
             </div>
