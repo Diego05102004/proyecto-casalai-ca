@@ -8,6 +8,16 @@ $permisosObj = new Permisos();
 $permisosUsuario = $permisosObj->getPermisosPorRolModulo();
 if (is_file("Vista/gestionarfactura.php")) {
     $factura = new Factura();
+
+    try {
+        $resumenFacturas = $factura->obtenerFacturasListado();
+        $facturas = $resumenFacturas['facturas'] ?? [];
+        $detalleFacturas = $resumenFacturas['detalleFacturas'] ?? [];
+    } catch (Throwable $e) {
+        error_log('Error al cargar facturas en controlador: ' . $e->getMessage());
+        $facturas = [];
+        $detalleFacturas = [];
+    }
     
     if (isset($_POST['descargarFactura'])) {
     $id_factura = $_POST['descargarFactura'];

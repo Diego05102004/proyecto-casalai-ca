@@ -93,6 +93,40 @@ class cliente extends BD {
     public function __construct($tipo = 'P') {
         $this->encryption = new Encryption();
     }
+
+    private function normalizarCamposCliente(array $cliente): array {
+        foreach (['nombre', 'direccion', 'telefono', 'correo'] as $campo) {
+            if (!isset($cliente[$campo]) || !is_string($cliente[$campo])) {
+                continue;
+            }
+
+            $valor = $cliente[$campo];
+            if ($valor === '' || strlen($valor) <= 24 || !preg_match('/^[A-Za-z0-9+\/=]+$/', $valor)) {
+                continue;
+            }
+
+            try {
+                $descifrado = $this->encryption->decrypt($valor);
+                if (is_string($descifrado) && $descifrado !== '' && $descifrado !== $valor) {
+                    $cliente[$campo] = $descifrado;
+                }
+            } catch (\Throwable $e) {
+                error_log('[CLIENTE_NORMALIZAR] Error desencriptando campo ' . $campo . ': ' . $e->getMessage());
+            }
+        }
+
+        return $cliente;
+    }
+
+    private function normalizarListaClientes(array $clientes): array {
+        foreach ($clientes as $indice => $cliente) {
+            if (is_array($cliente)) {
+                $clientes[$indice] = $this->normalizarCamposCliente($cliente);
+            }
+        }
+
+        return $clientes;
+    }
     
     /**
      * @return PDO
@@ -552,6 +586,7 @@ class cliente extends BD {
         // Descifrar datos personales de los clientes
         if (isset($resultado['clientes'])) {
             $resultado['clientes'] = $this->encryption->decryptResults($resultado['clientes'], self::CAMPOS_CIFRADOS);
+            $resultado['clientes'] = $this->normalizarListaClientes($resultado['clientes']);
         }
         
         return $resultado;
@@ -606,6 +641,7 @@ class cliente extends BD {
         
         // Descifrar datos personales
         $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        $resultado = $this->normalizarListaClientes($resultado);
         
         return $resultado;
     }
@@ -643,6 +679,7 @@ class cliente extends BD {
         
         // Descifrar datos personales
         $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        $resultado = $this->normalizarListaClientes($resultado);
         
         return $resultado;
     }
@@ -717,6 +754,7 @@ class cliente extends BD {
         
         // Descifrar datos personales
         $resultado = $this->encryption->decryptResults($resultado, self::CAMPOS_CIFRADOS);
+        $resultado = $this->normalizarListaClientes($resultado);
         
         return $resultado;
     }

@@ -358,6 +358,47 @@ function carga_productos() {
     enviaAjax(datos);
 }
 
+function actualizarResumenPedidos(htmlListado) {
+    const contenedorTemporal = document.createElement('div');
+    contenedorTemporal.innerHTML = htmlListado || '';
+
+    const pedidos = contenedorTemporal.querySelectorAll('.accordion-item[data-summary-status]');
+    const resumen = { total: pedidos.length, pending: 0, completed: 0, cancelled: 0 };
+
+    pedidos.forEach((pedido) => {
+        const estado = (pedido.dataset.summaryStatus || '').trim().toLowerCase();
+        if (estado.includes('anul') || estado.includes('cancel')) {
+            resumen.cancelled++;
+        } else if (!estado || estado.includes('borrador') || estado.includes('proceso') || estado.includes('incompleto') || estado.includes('no encontrado')) {
+            resumen.pending++;
+        } else {
+            resumen.completed++;
+        }
+    });
+
+    Object.entries(resumen).forEach(([tipo, cantidad]) => {
+        const tarjeta = document.querySelector(`[data-summary-card="${tipo}"]`);
+        if (!tarjeta) {
+            return;
+        }
+
+        const porcentaje = resumen.total > 0 ? Math.round((cantidad / resumen.total) * 100) : 0;
+        const valor = tarjeta.querySelector('.card-value');
+        const etiquetaPorcentaje = tarjeta.querySelector('.percentage');
+        const circulo = tarjeta.querySelector('.circle');
+
+        if (valor) {
+            valor.textContent = String(cantidad);
+        }
+        if (etiquetaPorcentaje) {
+            etiquetaPorcentaje.textContent = `${porcentaje}%`;
+        }
+        if (circulo) {
+            circulo.setAttribute('stroke-dasharray', `${porcentaje}, 100`);
+        }
+    });
+}
+
 // Función para manejar la respuesta AJAX
 function enviaAjax(datos) {
     $.ajax({
@@ -375,10 +416,13 @@ function enviaAjax(datos) {
             try {
                 var lee = respuesta; // Ya es un objeto JSON parseado
                 if (lee.resultado === 'listado') {
-
+                    actualizarResumenPedidos(lee.mensaje);
                     $('#listado').html(lee.mensaje);
                     // Luego filtramos los productos con stock > 0
                     filtrarProductosPorStock();
+                } else if (lee.resultado === 'error') {
+                    actualizarResumenPedidos('');
+                    $('#listado').text(lee.mensaje || 'No hay pedidos registrados.');
                 } else if (lee.resultado === 'registrar') {
                     Swal.fire({
                         title: 'Factura registrada',

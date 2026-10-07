@@ -840,14 +840,14 @@ INSERT INTO `tbl_productos` (`id_producto`, `serial`, `nombre_producto`, `descri
 
 CREATE TABLE `tbl_proveedores` (
   `id_proveedor` int(11) NOT NULL,
-  `nombre_proveedor` varchar(600) NOT NULL,
+    `nombre_proveedor` varchar(2048) NOT NULL,
   `rif_proveedor` varchar(15) DEFAULT NULL,
-  `nombre_representante` varchar(600) DEFAULT NULL,
+    `nombre_representante` varchar(2048) DEFAULT NULL,
   `rif_representante` varchar(15) DEFAULT NULL,
-  `correo_proveedor` varchar(600) DEFAULT NULL,
-  `direccion_proveedor` varchar(600) DEFAULT NULL,
-  `telefono_1` varchar(255) DEFAULT NULL,
-  `telefono_2` varchar(255) DEFAULT NULL,
+    `correo_proveedor` varchar(2048) DEFAULT NULL,
+    `direccion_proveedor` varchar(2048) DEFAULT NULL,
+    `telefono_1` varchar(2048) DEFAULT NULL,
+    `telefono_2` varchar(2048) DEFAULT NULL,
   `observacion` text DEFAULT NULL,
   `estado` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -1560,14 +1560,14 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_registrar_proveedor $$
 
 CREATE PROCEDURE sp_registrar_proveedor(
-    IN p_nombre_proveedor VARCHAR(255),
+    IN p_nombre_proveedor VARCHAR(2048),
     IN p_rif_proveedor VARCHAR(15),
-    IN p_nombre_representante VARCHAR(255),
+    IN p_nombre_representante VARCHAR(2048),
     IN p_rif_representante VARCHAR(15),
-    IN p_correo_proveedor VARCHAR(255),
-    IN p_direccion_proveedor varchar(255),
-    IN p_telefono_1 VARCHAR(255),
-    IN p_telefono_2 VARCHAR(255),
+    IN p_correo_proveedor VARCHAR(2048),
+    IN p_direccion_proveedor VARCHAR(2048),
+    IN p_telefono_1 VARCHAR(2048),
+    IN p_telefono_2 VARCHAR(2048),
     IN p_observacion TEXT,
     IN p_id_usuario_auditor INT
 )
@@ -1626,27 +1626,27 @@ DROP PROCEDURE IF EXISTS sp_modificar_proveedor $$
 
 CREATE PROCEDURE sp_modificar_proveedor(
     IN p_id_proveedor INT,
-    IN p_nombre_proveedor VARCHAR(255),
+    IN p_nombre_proveedor VARCHAR(2048),
     IN p_rif_proveedor VARCHAR(15),
-    IN p_nombre_representante VARCHAR(255),
+    IN p_nombre_representante VARCHAR(2048),
     IN p_rif_representante VARCHAR(15),
-    IN p_correo_proveedor VARCHAR(255),
-    IN p_direccion_proveedor varchar(255),
-    IN p_telefono_1 VARCHAR(255),
-    IN p_telefono_2 VARCHAR(255),
+    IN p_correo_proveedor VARCHAR(2048),
+    IN p_direccion_proveedor VARCHAR(2048),
+    IN p_telefono_1 VARCHAR(2048),
+    IN p_telefono_2 VARCHAR(2048),
     IN p_observacion TEXT,
     IN p_id_usuario_auditor INT
 )
 BEGIN
     -- Variables para la extracción forense de los datos anteriores
-    DECLARE v_nombre_proveedor_viejo VARCHAR(50);
+    DECLARE v_nombre_proveedor_viejo VARCHAR(2048);
     DECLARE v_rif_proveedor_viejo VARCHAR(15);
-    DECLARE v_nombre_representante_viejo VARCHAR(50);
+    DECLARE v_nombre_representante_viejo VARCHAR(2048);
     DECLARE v_rif_representante_viejo VARCHAR(15);
-    DECLARE v_correo_proveedor_viejo VARCHAR(50);
-    DECLARE v_direccion_proveedor_viejo TEXT;
-    DECLARE v_telefono_1_viejo VARCHAR(15);
-    DECLARE v_telefono_2_viejo VARCHAR(15);
+    DECLARE v_correo_proveedor_viejo VARCHAR(2048);
+    DECLARE v_direccion_proveedor_viejo VARCHAR(2048);
+    DECLARE v_telefono_1_viejo VARCHAR(2048);
+    DECLARE v_telefono_2_viejo VARCHAR(2048);
     DECLARE v_observacion_viejo TEXT;
     DECLARE v_estado_viejo ENUM('habilitado','inhabilitado');
 
@@ -1723,7 +1723,7 @@ CREATE PROCEDURE sp_cambiar_estado_proveedor(
     IN p_id_usuario_auditor INT
 )
 BEGIN
-    DECLARE v_nombre_proveedor VARCHAR(50);
+    DECLARE v_nombre_proveedor VARCHAR(2048);
     DECLARE v_rif_proveedor VARCHAR(15);
     DECLARE v_estado_viejo ENUM('habilitado', 'inhabilitado');
 

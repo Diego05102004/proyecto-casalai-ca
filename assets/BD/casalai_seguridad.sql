@@ -1867,10 +1867,10 @@ CREATE TABLE `tbl_usuarios` (
   `password` varchar(255) DEFAULT NULL,
   `cedula` varchar(10) DEFAULT NULL,
   `id_rol` int(11) NOT NULL,
-  `correo` varchar(600) DEFAULT NULL,
-  `nombres` varchar(600) DEFAULT NULL,
-  `apellidos` varchar(600) DEFAULT NULL,
-  `telefono` varchar(255) DEFAULT NULL,
+  `correo` varchar(2048) DEFAULT NULL,
+  `nombres` varchar(2048) DEFAULT NULL,
+  `apellidos` varchar(2048) DEFAULT NULL,
+  `telefono` varchar(2048) DEFAULT NULL,
   `intentos_fallidos` int(11) DEFAULT 0,
   `estatus` enum('habilitado','inhabilitado') NOT NULL DEFAULT 'habilitado',
   `foto_perfil` varchar(300) DEFAULT NULL
@@ -2338,10 +2338,10 @@ CREATE PROCEDURE `sp_incluir_usuario`(
     IN p_password VARCHAR(255),
     IN p_cedula VARCHAR(10),
     IN p_id_rol INT,
-    IN p_correo VARCHAR(255),
-    IN p_nombres VARCHAR(255),
-    IN p_apellidos VARCHAR(255),
-    IN p_telefono VARCHAR(255),
+    IN p_correo VARCHAR(2048),
+    IN p_nombres VARCHAR(2048),
+    IN p_apellidos VARCHAR(2048),
+    IN p_telefono VARCHAR(2048),
     IN p_usuario_auditor INT
 )
 BEGIN
@@ -2478,10 +2478,10 @@ CREATE PROCEDURE `sp_modificar_usuario`(
     IN p_username VARCHAR(255),
     IN p_cedula VARCHAR(10),
     IN p_id_rol INT,
-    IN p_correo VARCHAR(255),
-    IN p_nombres VARCHAR(255),
-    IN p_apellidos VARCHAR(255),
-    IN p_telefono VARCHAR(255),
+    IN p_correo VARCHAR(2048),
+    IN p_nombres VARCHAR(2048),
+    IN p_apellidos VARCHAR(2048),
+    IN p_telefono VARCHAR(2048),
     IN p_id_usuario_auditor INT
 )
 BEGIN
@@ -2489,10 +2489,10 @@ BEGIN
     DECLARE v_username VARCHAR(255);
     DECLARE v_cedula VARCHAR(10);
     DECLARE v_id_rol INT;
-    DECLARE v_correo VARCHAR(255);
-    DECLARE v_nombres VARCHAR(255);
-    DECLARE v_apellidos VARCHAR(255);
-    DECLARE v_telefono VARCHAR(255);
+    DECLARE v_correo VARCHAR(2048);
+    DECLARE v_nombres VARCHAR(2048);
+    DECLARE v_apellidos VARCHAR(2048);
+    DECLARE v_telefono VARCHAR(2048);
 
     -- Manejador de excepciones
     DECLARE EXIT HANDLER FOR SQLEXCEPTION

@@ -22,6 +22,11 @@ $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('usua
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id_usuario_accion = $_SESSION['id_usuario'] ?? null; // Usuario que realiza la acción
+    error_log('DEBUG_USUARIO_POST: ' . json_encode([
+        'accion' => $_POST['accion'] ?? null,
+        'id_usuario_sesion' => $_SESSION['id_usuario'] ?? null,
+        'payload' => $_POST
+    ]));
     
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
