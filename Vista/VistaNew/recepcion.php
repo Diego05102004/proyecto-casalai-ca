@@ -32,7 +32,7 @@ ob_start();
 ?>
 
 <link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
-<link rel="stylesheet" href="assets/styles/modal-anular.css">
+<link rel="stylesheet" href="assets/styles/modal-eliminar-anular.css">
 
 <!-- Recepciones Section -->
 <div class="table-section">
@@ -398,7 +398,7 @@ ob_start();
             </div>
             <span class="close-modal" onclick="closeAnularModal()">&times;</span>
         </div>
-        <div class="modal-body-anular">
+        <div class="modal-body-content">
             <div class="anular-content">
                 <div class="anular-icon">
                     <i class="fas fa-exclamation-circle"></i>
@@ -412,7 +412,7 @@ ob_start();
                         <span id="anularCorrelativo"></span>
                     </div>
                 </div>
-                <div class="modal-footer-anular">
+                <div class="modal-footer-content">
                     <button class="btm-confirmar btn-cancel" onclick="closeAnularModal()">
                         Cancelar
                     </button>

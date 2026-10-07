@@ -25,7 +25,7 @@
 }
 
 /* Modal Body */
-.modal-body-anular {
+.modal-body-content {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -96,7 +96,7 @@
 }
 
 /* Botones de confirmación */
-.modal-footer-anular {
+.modal-footer-content {
     display: flex;
     justify-content: center;
     gap: 10px;
@@ -127,7 +127,7 @@
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #ec8080 0%, #e53e3e 100%);
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
 }
 .btn-danger:hover {
     box-shadow: 0 4px 12px rgba(245, 101, 101, 0.479);
