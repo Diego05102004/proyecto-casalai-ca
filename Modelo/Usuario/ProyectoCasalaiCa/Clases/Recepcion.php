@@ -831,14 +831,20 @@ class Recepcion extends BD{
     }
 
     public function buscar() {
-        return $this->bus(); 
+        return $this->bus(true);
     }
-    private function bus() {
+
+    public function obtenerDetalle() {
+        return $this->bus(false);
+    }
+
+    private function bus($incluirEstado) {
         try {
-            return $this->ejecutarConConexionSegura(function($pdo) {
+            return $this->ejecutarConConexionSegura(function($pdo) use ($incluirEstado) {
+                $columnaEstado = $incluirEstado ? 'r.estado, ' : '';
                 $stmt = $pdo->prepare(
                     'SELECT r.id_recepcion, r.id_proveedor, p.nombre_proveedor, r.fecha,
-                            r.correlativo, r.estado,
+                            r.correlativo, ' . $columnaEstado . '
                             (SELECT COALESCE(SUM(d.cantidad * d.costo), 0)
                              FROM tbl_detalle_recepcion_productos d
                              WHERE d.id_recepcion = r.id_recepcion) AS costo_inversion,

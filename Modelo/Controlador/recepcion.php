@@ -349,11 +349,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
 
         case 'obtener_recepcion':
+        case 'obtener_detalle_recepcion':
             header('Content-Type: application/json; charset=utf-8');
             $correlativo = $_POST['correlativo'] ?? null;
             $k = new Recepcion();
             $k->setcorrelativo($correlativo);
-            $respuesta = $k->buscar();
+            $respuesta = $accion === 'obtener_detalle_recepcion'
+                ? $k->obtenerDetalle()
+                : $k->buscar();
             
             if (!$respuesta || ($respuesta['resultado'] ?? '') !== 'encontró') {
                 echo json_encode([
@@ -362,7 +365,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ], JSON_UNESCAPED_UNICODE);
             } else {
                 // Obtener productos de la recepción
-                $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
+                $id_recepcion = $accion === 'obtener_detalle_recepcion'
+                    ? (int)($respuesta['id_recepcion'] ?? 0)
+                    : $k->obtenerIdRecepcionPorCorrelativo($correlativo);
                 $productos = $k->obtenerProductosPorRecepcion($id_recepcion);
                 $respuesta['productos'] = $productos;
                 

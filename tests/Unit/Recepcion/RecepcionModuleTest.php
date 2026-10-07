@@ -114,6 +114,11 @@ final class RecepcionModuleTest extends TestCase
         $this->assertSame('Proveedor Test', $detalle['nombre_proveedor'] ?? null);
         $this->assertSame('2026-10-07', $detalle['fecha'] ?? null);
         $this->assertSame('habilitado', $detalle['estado'] ?? null);
+
+        $detalleModal = $recepcion->obtenerDetalle();
+        $this->assertSame('Proveedor Test', $detalleModal['nombre_proveedor'] ?? null);
+        $this->assertSame('2026-10-07', $detalleModal['fecha'] ?? null);
+        $this->assertArrayNotHasKey('estado', $detalleModal);
     }
 
     public function testObtenerProductosPorRecepcion(): void

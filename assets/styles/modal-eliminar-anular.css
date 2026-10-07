@@ -25,7 +25,7 @@
 }
 
 /* Modal Body */
-.modal-body-content {
+.modal-body-warning {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
