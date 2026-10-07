@@ -10,6 +10,8 @@
     <title><?php echo $titulo_pagina ?? 'Dashboard'; ?> - CasaLai</title>
     <link rel="icon" type="image/png" href="assets/img/LOGO.png">
     <link rel="stylesheet" href="Vista/VistaNew/VistaNew.css">
+    <link rel="stylesheet" href="assets/styles/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="assets/public/datatables-custom.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -26,6 +28,7 @@
         </div>
     </main>
 
+    <script src="assets/public/js/data-table.js"></script>
     <script src="assets/public/js/sweetalert2.js"></script>
     <script>
         function confirmarCerrarSesion() {

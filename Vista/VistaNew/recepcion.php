@@ -50,60 +50,53 @@ ob_start();
     </div>
 
     <!-- Tabla de Recepciones -->
-    <div class="table-container">
-        <table class="table-info">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Correlativo</th>
-                    <th>Proveedor</th>
-                    <th>Monto Total</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($recepciones)): ?>
-                    <?php foreach ($recepciones as $recepcion): ?>
-                        <tr>
-                            <td><?php echo date('d/m/Y', strtotime($recepcion['fecha'] ?? 'now')); ?></td>
-                            <td><?php echo htmlspecialchars($recepcion['correlativo'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($recepcion['nombre_proveedor'] ?? 'N/A'); ?></td>
-                            <td>
-                                $<?php echo number_format($recepcion['total_factura'] ?? $recepcion['costo_inversion'] ?? 0, 2, ',', '.'); ?>
-                                <?php if (($recepcion['total_factura'] ?? null) === null): ?>
-                                    <small title="El IVA de esta recepción no fué registrada">IVA no registrado</small>
-                                <?php endif; ?>
-                            </td>
-                            <td class="action-buttons">
-                                <button class="btn-action btn-detallar" 
-                                    title="Ver Detalles"
-                                    data-correlativo="<?php echo htmlspecialchars((string)($recepcion['correlativo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                                    data-proveedor="<?php echo htmlspecialchars((string)($recepcion['nombre_proveedor'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                                    data-fecha="<?php echo htmlspecialchars((string)($recepcion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                                    onclick="viewRecepcion(this)">
-                                    <img src="assets/img/eye.svg">
-                                </button>
-                                <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'SuperUsuario'): ?>
-                                    <button class="btn-action btn-anular" 
-                                        title="Anular Recepción"
-                                        onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
-                                        <img src="assets/img/circle-x.svg">
-                                    </button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
+    <table class="table-info" data-datatable data-page-length="10" data-datatable-order='[[0, "desc"]]' data-datatable-no-order="4" data-datatable-no-search="4">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Correlativo</th>
+                <th>Proveedor</th>
+                <th>Monto Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($recepciones)): ?>
+                <?php foreach ($recepciones as $recepcion): ?>
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px;">
-                            <i class="fas fa-inbox" style="font-size: 3rem; color: #2196F3; margin-bottom: 15px;"></i>
-                            <p style="color: #718096; margin: 0;">No hay recepciones registradas</p>
+                        <td data-order="<?php echo htmlspecialchars((string)($recepcion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo date('d/m/Y', strtotime($recepcion['fecha'] ?? 'now')); ?>
+                        </td>
+                        <td><?php echo htmlspecialchars($recepcion['correlativo'] ?? 'N/A'); ?></td>
+                        <td><?php echo htmlspecialchars($recepcion['nombre_proveedor'] ?? 'N/A'); ?></td>
+                        <td>
+                            $<?php echo number_format($recepcion['total_factura'] ?? $recepcion['costo_inversion'] ?? 0, 2, ',', '.'); ?>
+                            <?php if (($recepcion['total_factura'] ?? null) === null): ?>
+                                <small title="El IVA de esta recepción no fué registrada">IVA no registrado</small>
+                            <?php endif; ?>
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn-action btn-detallar" 
+                                title="Ver Detalles"
+                                data-correlativo="<?php echo htmlspecialchars((string)($recepcion['correlativo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                data-proveedor="<?php echo htmlspecialchars((string)($recepcion['nombre_proveedor'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                data-fecha="<?php echo htmlspecialchars((string)($recepcion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                onclick="viewRecepcion(this)">
+                                <img src="assets/img/eye.svg">
+                            </button>
+                            <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'SuperUsuario'): ?>
+                                <button class="btn-action btn-anular" 
+                                    title="Anular Recepción"
+                                    onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                    <img src="assets/img/circle-x.svg">
+                                </button>
+                            <?php endif; ?>
                         </td>
                     </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
 
             <!-- Modal para Registrar Recepción -->
