@@ -329,13 +329,13 @@ class Productos extends BD{
             
             if ($stock_min > $stock_max) {
                 $errores['stock_minimo'] = 'El stock mínimo no puede ser mayor al stock máximo';
-            }
+            }/*
             if ($stock_actual > $stock_max) {
                 $errores['stock_actual'] = 'El stock actual no puede ser mayor al stock máximo';
             }
             if ($stock_actual < $stock_min) {
                 $errores['stock_actual'] = 'El stock actual no puede ser menor al stock mínimo';
-            }
+            }*/
         }
         
         // Validar cláusula de garantía
@@ -1054,7 +1054,7 @@ class Productos extends BD{
     private function o_modelos() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $query = "SELECT 
-                mo.id_modelo AS tbl_modelos,
+                mo.id_modelo, mar.nombre_marca, mo.nombre_modelo AS tbl_modelos,
                 mo.nombre_modelo,
                 mar.nombre_marca AS tbl_marcas
             FROM 

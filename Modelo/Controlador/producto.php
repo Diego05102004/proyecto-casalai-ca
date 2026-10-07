@@ -11,10 +11,40 @@ $id_rol = $_SESSION['id_rol'] ?? 0;
 $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('productos'));
+$accionPermiso = [
+    'ingresar' => 'incluir',
+    'modificar' => 'modificar',
+    'eliminar' => 'eliminar',
+    'cambiar_estatus' => 'modificar',
+    'reporte_parametrizado' => 'generar reporte',
+    'obtener_producto' => 'consultar'
+];
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && empty($permisosUsuario['consultar'])) {
+    header('Location: ?pagina=acceso-denegado');
+    exit;
+}
 
 // Manejo de solicitudes POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $accion = $_POST['accion'] ?? '';
+
+    if (isset($accionPermiso[$accion])) {
+        $permisoRequerido = $accionPermiso[$accion];
+        $autorizado = !empty($permisosUsuario[$permisoRequerido]);
+        if ($accion === 'ingresar') {
+            $autorizado = $autorizado || !empty($permisosUsuario['ingresar']);
+        }
+        if (!$autorizado) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(403);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'No tiene permiso para realizar esta acción.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    }
 
     switch ($accion) {
 
