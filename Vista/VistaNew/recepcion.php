@@ -32,6 +32,7 @@ ob_start();
 ?>
 
 <link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
+<link rel="stylesheet" href="assets/styles/modal-anular.css">
 
 <!-- Recepciones Section -->
 <div class="table-section">
@@ -82,7 +83,7 @@ ob_start();
                                     onclick="viewRecepcion(this)">
                                     <img src="assets/img/eye.svg">
                                 </button>
-                                <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'Administrador'): ?>
+                                <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'SuperUsuario'): ?>
                                     <button class="btn-action btn-anular" 
                                         title="Anular Recepción"
                                         onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
@@ -382,64 +383,47 @@ ob_start();
     </div>
 </div>
 
-            <!-- Modal para Anular Recepción -->
-            <div id="anularModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header warning">
-                        <div class="modal-header-content">
-                            <div class="modal-icon warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="modal-title-content">
-                                <h2>Anular Recepción</h2>
-                                <p>Confirmación de anulación de recepción</p>
-                            </div>
-                        </div>
-                        <span class="close-modal" onclick="closeAnularModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div class="anular-content">
-                            <div class="anular-icon">
-                                <i class="fas fa-exclamation-circle"></i>
-                            </div>
-                            <h3>¿Está seguro de anular esta recepción?</h3>
-                            <p>Esta acción no se puede deshacer y afectará el inventario del sistema.</p>
-                            
-                            <div class="anular-info">
-                                <div class="info-row">
-                                    <label>Correlativo:</label>
-                                    <span id="anularCorrelativo">REC-001</span>
-                                </div>
-                                <div class="info-row">
-                                    <label>Proveedor:</label>
-                                    <span id="anularProveedor">TechCorp S.A.</span>
-                                </div>
-                                <div class="info-row">
-                                    <label>Total:</label>
-                                    <span id="anularTotal">$17,485.00</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="motivoAnulacion">
-                                    <i class="fas fa-comment-alt"></i>
-                                    Motivo de Anulación*
-                                </label>
-                                <textarea id="motivoAnulacion" rows="3"
-                                          placeholder="Describa el motivo por el cual desea anular esta recepción..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeAnularModal()">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button class="btn-save danger" onclick="confirmarAnulacion()">
-                            <i class="fas fa-check"></i> Confirmar Anulación
-                        </button>
-                    </div>
+<!-- Modal para Anular Recepción -->
+<div id="anularModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header warning">
+            <div class="modal-header-content">
+                <div class="modal-icon warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="modal-title-content">
+                    <h2>Anular Recepción</h2>
+                    <p>Confirmación de anulación de recepción</p>
                 </div>
             </div>
+            <span class="close-modal" onclick="closeAnularModal()">&times;</span>
+        </div>
+        <div class="modal-body-anular">
+            <div class="anular-content">
+                <div class="anular-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h3>¿Está seguro de anular esta recepción?</h3>
+                <p>Esta acción no se puede deshacer y afectará el inventario del sistema.</p>
+                
+                <div class="anular-info">
+                    <div class="info-row">
+                        <label>Correlativo:</label>
+                        <span id="anularCorrelativo"></span>
+                    </div>
+                </div>
+                <div class="modal-footer-anular">
+                    <button class="btm-confirmar btn-cancel" onclick="closeAnularModal()">
+                        Cancelar
+                    </button>
+                    <button class="btm-confirmar btn-danger" onclick="confirmarAnulacion()">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <style>
                 /* Estilos específicos de Recepciones */
@@ -779,7 +763,7 @@ ob_start();
                     margin: 0;
                 }
 
-                /* Botones mejorados */
+                /* Botones mejorados
                 .btn-cancel, .btn-save {
                     padding: 12px 25px;
                     border: none;
@@ -801,7 +785,7 @@ ob_start();
                 .btn-cancel:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
-                }
+                }*/
 
                 .btn-save {
                     background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
@@ -812,86 +796,14 @@ ob_start();
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
                 }
-
+/*
                 .btn-save.danger {
                     background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
                 }
 
                 .btn-save.danger:hover {
                     box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
-                }
-
-                /* Modal de Anulación */
-                .modal-header.warning {
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                }
-
-                .modal-icon.warning {
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                }
-
-                .anular-content {
-                    text-align: center;
-                    padding: 20px;
-                }
-
-                .anular-icon {
-                    width: 80px;
-                    height: 80px;
-                    margin: 0 auto 20px;
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .anular-icon i {
-                    font-size: 2.5rem;
-                    color: white;
-                }
-
-                .anular-content h3 {
-                    font-size: 1.3rem;
-                    font-weight: 700;
-                    color: #2d3748;
-                    margin: 0 0 10px 0;
-                }
-
-                .anular-content p {
-                    font-size: 0.95rem;
-                    color: #718096;
-                    margin: 0 0 25px 0;
-                }
-
-                .anular-info {
-                    background: rgba(245, 101, 101, 0.05);
-                    border: 1px solid rgba(245, 101, 101, 0.2);
-                    border-radius: 10px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                }
-
-                .info-row {
-                    display: flex;
-                    justify-content: space-between;
-                    padding: 10px 0;
-                    border-bottom: 1px solid rgba(245, 101, 101, 0.1);
-                }
-
-                .info-row:last-child {
-                    border-bottom: none;
-                }
-
-                .info-row label {
-                    font-weight: 600;
-                    color: #718096;
-                }
-
-                .info-row span {
-                    font-weight: 700;
-                    color: #2d3748;
-                }
+                }*/
 
                 /* Modal de Detalles */
                 .recepcion-detalles {
@@ -1514,9 +1426,6 @@ ob_start();
                         if (data && data.status === 'success') {
                             const recepcion = data.recepcion;
                             document.getElementById('anularCorrelativo').textContent = recepcion.correlativo || 'N/A';
-                            document.getElementById('anularProveedor').textContent = recepcion.proveedor || 'N/A';
-                            document.getElementById('anularTotal').textContent = '$' + (recepcion.total || 0).toFixed(2);
-                            document.getElementById('motivoAnulacion').value = '';
                             
                             const modal = document.getElementById('anularModal');
                             modal.style.display = 'block';
@@ -1524,8 +1433,6 @@ ob_start();
                         } else {
                             // Fallback a datos simulados
                             document.getElementById('anularCorrelativo').textContent = correlativo;
-                            document.getElementById('anularProveedor').textContent = 'No disponible';
-                            document.getElementById('anularTotal').textContent = '$0.00';
                             
                             const modal = document.getElementById('anularModal');
                             modal.style.display = 'block';
@@ -1536,8 +1443,6 @@ ob_start();
                         console.error('Error al cargar recepción:', error);
                         // Fallback a datos simulados
                         document.getElementById('anularCorrelativo').textContent = correlativo;
-                        document.getElementById('anularProveedor').textContent = 'No disponible';
-                        document.getElementById('anularTotal').textContent = '$0.00';
                         
                         const modal = document.getElementById('anularModal');
                         modal.style.display = 'block';
