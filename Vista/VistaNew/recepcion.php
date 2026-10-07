@@ -25,91 +25,26 @@ if (!Auth::validateToken() && isset($_SESSION['id_usuario']) && isset($_SESSION[
 
 // Variables para los componentes reutilizables
 $pagina_actual = 'recepcion';
-$titulo_pagina = 'Gestión de Recepciones';
+$titulo_pagina = 'Gestionar de Recepción';
 
 // Iniciar el buffer de contenido
 ob_start();
 ?>
 
 <link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
-
-<?php
-// Cálculos previos para summary cards
-$total_recepciones = count($recepciones ?? []);
-$recepciones_pendientes = count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'pendiente'; }));
-$recepciones_completadas = count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'completada'; }));
-
-// Calcular porcentajes
-$porcentaje_total = 100;
-$porcentaje_pendientes = $total_recepciones > 0 ? round(($recepciones_pendientes / $total_recepciones) * 100) : 0;
-$porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completadas / $total_recepciones) * 100) : 0;
-?>
-
-<!-- Summary Cards para Recepciones -->
-<div class="summary-cards">
-    <div class="summary-card sales">
-        <div class="card-icon"><i class="fas fa-inbox"></i></div>
-        <div class="card-content">
-            <h3>Recepciones Hoy</h3>
-            <p class="card-value"><?php echo $total_recepciones; ?></p>
-            <div class="progress-circle">
-                <svg viewBox="0 0 36 36" class="circular-chart">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="summary-card expenses">
-        <div class="card-icon"><i class="fas fa-truck"></i></div>
-        <div class="card-content">
-            <h3>Pendientes</h3>
-            <p class="card-value"><?php echo $recepciones_pendientes; ?></p>
-            <div class="progress-circle">
-                <svg viewBox="0 0 36 36" class="circular-chart">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_pendientes; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <span class="percentage"><?php echo $porcentaje_pendientes; ?>%</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="summary-card income">
-        <div class="card-icon"><i class="fas fa-check-circle"></i></div>
-        <div class="card-content">
-            <h3>Completadas</h3>
-            <p class="card-value"><?php echo $recepciones_completadas; ?></p>
-            <div class="progress-circle">
-                <svg viewBox="0 0 36 36" class="circular-chart">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_completadas; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <span class="percentage"><?php echo $porcentaje_completadas; ?>%</span>
-            </div>
-        </div>
-    </div>
-</div>
+<link rel="stylesheet" href="assets/styles/modal-eliminar-anular.css">
 
 <!-- Recepciones Section -->
 <div class="table-section">
     <div class="section-header">
         <h2>Lista de Recepciones</h2>
         <div class="section-actions">
-            <button class="btn-table-superior btn-incluir" onclick="openModal('registrar')">
-                <span class="btn-icon"><i class="fas fa-plus"></i></span>
-                Incluir Recepción
+            <button class="btn-table-superior btn-ayuda" title="Visualizar Ayuda">
+                <img src="assets/img/info-ayuda.svg">
             </button>
-            <!--<button class="btn-report" onclick="window.location.href='?pagina=reporteRecepcion'">
-                <span class="btn-icon"><i class="fas fa-chart-bar"></i></span>
-                Reportes
+            <button class="btn-table-superior btn-incluir" title="Incluir Recepción" onclick="openModal('registrar')">
+                <img src="assets/img/plus.svg">
             </button>
-            <button class="btn-filter" onclick="openFilterModal()">
-                <span class="btn-icon"><i class="fas fa-search"></i></span>
-                Buscar
-            </button>-->
         </div>
     </div>
 
@@ -141,14 +76,20 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                             <td class="action-buttons">
                                 <button class="btn-action btn-detallar" 
                                     title="Ver Detalles"
-                                    onclick="viewRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                    data-correlativo="<?php echo htmlspecialchars((string)($recepcion['correlativo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-proveedor="<?php echo htmlspecialchars((string)($recepcion['nombre_proveedor'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-fecha="<?php echo htmlspecialchars((string)($recepcion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-estado="<?php echo htmlspecialchars((string)($recepcion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    onclick="viewRecepcion(this)">
                                     <img src="assets/img/eye.svg">
                                 </button>
-                                <button class="btn-action btn-anular" 
-                                    title="Anular Recepción"
-                                    onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
-                                    <img src="assets/img/circle-x.svg">
-                                </button>
+                                <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'SuperUsuario'): ?>
+                                    <button class="btn-action btn-anular" 
+                                        title="Anular Recepción"
+                                        onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                        <img src="assets/img/circle-x.svg">
+                                    </button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -334,232 +275,155 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                                     </div>
                                 </div>
                             </div>
-                            
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeModal()">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button class="btn-save" onclick="saveRecepcion()">
-                            <i class="fas fa-check"></i> Guardar Recepción
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal para Ver Detalles de Recepción -->
-            <div id="viewModal" class="modal">
-                <div class="modal-content modal-large">
-                    <div class="modal-header">
-                        <div class="modal-header-content">
-                            <div class="modal-icon">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            <div class="modal-title-content">
-                                <h2>Detalles de Recepción</h2>
-                                <p>Información completa de la recepción seleccionada</p>
-                            </div>
-                        </div>
-                        <span class="close-modal" onclick="closeViewModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div class="recepcion-detalles">
-                            <!-- Información General -->
-                            <div class="detalle-section">
-                                <div class="section-title">
-                                    <i class="fas fa-info-circle"></i>
-                                    <h3>Información General</h3>
-                                </div>
-                                <div class="detalle-grid">
-                                    <div class="detalle-item">
-                                        <label>Correlativo:</label>
-                                        <span id="viewCorrelativo">REC-001</span>
-                                    </div>
-                                    <div class="detalle-item">
-                                        <label>Proveedor:</label>
-                                        <span id="viewProveedor">TechCorp S.A.</span>
-                                    </div>
-                                    <div class="detalle-item">
-                                        <label>Fecha:</label>
-                                        <span id="viewFecha">2026-09-29</span>
-                                    </div>
-                                    <div class="detalle-item">
-                                        <label>Estado:</label>
-                                        <span class="status-badge completed" id="viewEstado">Completada</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Productos -->
-                            <div class="detalle-section">
-                                <div class="section-title">
-                                    <i class="fas fa-boxes"></i>
-                                    <h3>Productos Recibidos</h3>
-                                </div>
-                                <div class="productos-table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Producto</th>
-                                                <th>Cantidad</th>
-                                                <th>Costo Unitario</th>
-                                                <th>Subtotal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="viewProductos">
-                                            <tr>
-                                                <td>iPhone 15 Pro Max</td>
-                                                <td>10</td>
-                                                <td>$1,199.00</td>
-                                                <td>$11,990.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td>MacBook Air M3</td>
-                                                <td>5</td>
-                                                <td>$1,099.00</td>
-                                                <td>$5,495.00</td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="3"><strong>Subtotal:</strong></td>
-                                                <td><strong id="viewSubtotal">$17,485.00</strong></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="3"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
-                                                <td><strong id="viewMontoIva">No registrado</strong></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="3"><strong>Total factura:</strong></td>
-                                                <td><strong id="viewTotal">$17,485.00</strong></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- Observaciones -->
-                            <div class="detalle-section">
-                                <div class="section-title">
-                                    <i class="fas fa-sticky-note"></i>
-                                    <h3>Observaciones</h3>
-                                </div>
-                                <div class="observaciones-text">
-                                    <p id="viewObservaciones">Recepción completada sin incidencias. Todos los productos fueron verificados y estan en condiciones óptimas.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeViewModal()">
-                            <i class="fas fa-times"></i> Cerrar
-                        </button>
-                        <button class="btn-save" onclick="imprimirRecepcion()">
-                            <i class="fas fa-print"></i> Imprimir
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal para Anular Recepción -->
-            <div id="anularModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header warning">
-                        <div class="modal-header-content">
-                            <div class="modal-icon warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="modal-title-content">
-                                <h2>Anular Recepción</h2>
-                                <p>Confirmación de anulación de recepción</p>
-                            </div>
-                        </div>
-                        <span class="close-modal" onclick="closeAnularModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div class="anular-content">
-                            <div class="anular-icon">
-                                <i class="fas fa-exclamation-circle"></i>
-                            </div>
-                            <h3>¿Está seguro de anular esta recepción?</h3>
-                            <p>Esta acción no se puede deshacer y afectará el inventario del sistema.</p>
-                            
-                            <div class="anular-info">
-                                <div class="info-row">
-                                    <label>Correlativo:</label>
-                                    <span id="anularCorrelativo">REC-001</span>
-                                </div>
-                                <div class="info-row">
-                                    <label>Proveedor:</label>
-                                    <span id="anularProveedor">TechCorp S.A.</span>
-                                </div>
-                                <div class="info-row">
-                                    <label>Total:</label>
-                                    <span id="anularTotal">$17,485.00</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="motivoAnulacion">
-                                    <i class="fas fa-comment-alt"></i>
-                                    Motivo de Anulación*
-                                </label>
-                                <textarea id="motivoAnulacion" rows="3"
-                                          placeholder="Describa el motivo por el cual desea anular esta recepción..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeAnularModal()">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button class="btn-save danger" onclick="confirmarAnulacion()">
-                            <i class="fas fa-check"></i> Confirmar Anulación
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="searchModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Buscar Recepción</h2>
-                        <span class="close-modal">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="searchForm">
-                            <div class="form-group">
-                                <label for="searchCorrelativo">Número de Factura</label>
-                                <input type="text" id="searchCorrelativo" name="correlativo" 
-                                       placeholder="Ej: REC-001">
-                            </div>
-                            <div class="form-group">
-                                <label for="searchProveedor">Proveedor</label>
-                                <select id="searchProveedor" name="proveedor">
-                                    <option value="">Todos los proveedores</option>
-                                    <option value="1">TechCorp S.A.</option>
-                                    <option value="2">ElectroWorld Ltd.</option>
-                                    <option value="3">Global Supplies</option>
-                                </select>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="fechaInicio">Fecha Desde</label>
-                                    <input type="date" id="fechaInicio" name="fechaInicio">
-                                </div>
-                                <div class="form-group">
-                                    <label for="fechaFin">Fecha Hasta</label>
-                                    <input type="date" id="fechaFin" name="fechaFin">
-                                </div>
+                            <div class="modal-footer">
+                                <button class="btn-cancel" onclick="closeModal()">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                <button class="btn-save" onclick="saveRecepcion()">
+                                    <i class="fas fa-check"></i> Guardar Recepción
+                                </button>
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeSearchModal()">Cancelar</button>
-                        <button class="btn-save" onclick="searchRecepcion()">Buscar</button>
+                </div>
+            </div>
+
+<!-- Modal para Ver Detalles de Recepción -->
+<div id="viewModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <div class="modal-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="modal-title-content">
+                    <h2>Detalles de Recepción</h2>
+                    <p>Información completa de la recepción seleccionada</p>
+                </div>
+            </div>
+            <span class="close-modal" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="recepcion-detalles">
+                <!-- Información General -->
+                <div class="detalle-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Información General</h3>
+                    </div>
+                    <div class="detalle-grid">
+                        <div class="detalle-item">
+                            <label>Correlativo:</label>
+                            <span id="viewCorrelativo">REC-001</span>
+                        </div>
+                        <div class="detalle-item">
+                            <label>Proveedor:</label>
+                            <span id="viewProveedor">TechCorp S.A.</span>
+                        </div>
+                        <div class="detalle-item">
+                            <label>Fecha:</label>
+                            <span id="viewFecha">2026-09-29</span>
+                        </div>
+                        <div class="detalle-item">
+                            <label>Estado:</label>
+                            <span class="status-badge completed" id="viewEstado">Completada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos -->
+                <div class="detalle-section">
+                    <div class="section-title">
+                        <i class="fas fa-boxes"></i>
+                        <h3>Productos Recibidos</h3>
+                    </div>
+                    <div class="productos-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Costo Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="viewProductos">
+                                <tr>
+                                    <td>iPhone 15 Pro Max</td>
+                                    <td>10</td>
+                                    <td>$1,199.00</td>
+                                    <td>$11,990.00</td>
+                                </tr>
+                                <tr>
+                                    <td>MacBook Air M3</td>
+                                    <td>5</td>
+                                    <td>$1,099.00</td>
+                                    <td>$5,495.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3"><strong>Subtotal:</strong></td>
+                                    <td><strong id="viewSubtotal">$17,485.00</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
+                                    <td><strong id="viewMontoIva">No registrado</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><strong>Total factura:</strong></td>
+                                    <td><strong id="viewTotal">$17,485.00</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Anular Recepción -->
+<div id="anularModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header warning">
+            <div class="modal-header-content">
+                <div class="modal-icon warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="modal-title-content">
+                    <h2>Anular Recepción</h2>
+                    <p>Confirmación de anulación de recepción</p>
+                </div>
+            </div>
+            <span class="close-modal" onclick="closeAnularModal()">&times;</span>
+        </div>
+        <div class="modal-body-content">
+            <div class="anular-content">
+                <div class="anular-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h3>¿Está seguro de anular esta recepción?</h3>
+                <p>Esta acción no se puede deshacer y afectará el inventario del sistema.</p>
+                
+                <div class="anular-info">
+                    <div class="info-row">
+                        <label>Correlativo:</label>
+                        <span id="anularCorrelativo"></span>
+                    </div>
+                </div>
+                <div class="modal-footer-content">
+                    <button class="btm-confirmar btn-cancel" onclick="closeAnularModal()">
+                        Cancelar
+                    </button>
+                    <button class="btm-confirmar btn-danger" onclick="confirmarAnulacion()">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <style>
                 /* Estilos específicos de Recepciones */
@@ -578,6 +442,24 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                 #recepcionModal .modal-body {
                     max-height: 70vh;
                     overflow-y: auto;
+                }
+
+                #viewModal .modal-content.modal-large {
+                    max-height: 90vh;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+
+                #viewModal .modal-header,
+                #viewModal .modal-footer {
+                    flex-shrink: 0;
+                }
+
+                #viewModal .modal-body {
+                    min-height: 0;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
                 }
 
                 #recepcionModal .recepcion-ia-preview {
@@ -881,30 +763,6 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                     margin: 0;
                 }
 
-                /* Botones mejorados */
-                .btn-cancel, .btn-save {
-                    padding: 12px 25px;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-size: 0.95rem;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: all 0.3s ease;
-                }
-
-                .btn-cancel {
-                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                    color: white;
-                }
-
-                .btn-cancel:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
-                }
-
                 .btn-save {
                     background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
                     color: white;
@@ -913,86 +771,6 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                 .btn-save:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-                }
-
-                .btn-save.danger {
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                }
-
-                .btn-save.danger:hover {
-                    box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
-                }
-
-                /* Modal de Anulación */
-                .modal-header.warning {
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                }
-
-                .modal-icon.warning {
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                }
-
-                .anular-content {
-                    text-align: center;
-                    padding: 20px;
-                }
-
-                .anular-icon {
-                    width: 80px;
-                    height: 80px;
-                    margin: 0 auto 20px;
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .anular-icon i {
-                    font-size: 2.5rem;
-                    color: white;
-                }
-
-                .anular-content h3 {
-                    font-size: 1.3rem;
-                    font-weight: 700;
-                    color: #2d3748;
-                    margin: 0 0 10px 0;
-                }
-
-                .anular-content p {
-                    font-size: 0.95rem;
-                    color: #718096;
-                    margin: 0 0 25px 0;
-                }
-
-                .anular-info {
-                    background: rgba(245, 101, 101, 0.05);
-                    border: 1px solid rgba(245, 101, 101, 0.2);
-                    border-radius: 10px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                }
-
-                .info-row {
-                    display: flex;
-                    justify-content: space-between;
-                    padding: 10px 0;
-                    border-bottom: 1px solid rgba(245, 101, 101, 0.1);
-                }
-
-                .info-row:last-child {
-                    border-bottom: none;
-                }
-
-                .info-row label {
-                    font-weight: 600;
-                    color: #718096;
-                }
-
-                .info-row span {
-                    font-weight: 700;
-                    color: #2d3748;
                 }
 
                 /* Modal de Detalles */
@@ -1492,7 +1270,33 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                 }
 
                 // Función para ver detalles de recepción
-                function viewRecepcion(correlativo) {
+                function viewRecepcion(boton) {
+                    const datosFila = boton instanceof HTMLElement ? boton.dataset : {};
+                    const correlativo = datosFila.correlativo || boton;
+                    const proveedorFila = datosFila.proveedor || '';
+                    const fechaFila = datosFila.fecha || '';
+                    const estadoFila = datosFila.estado || '';
+
+                    function actualizarInformacionGeneral(recepcion = {}) {
+                        const proveedor = proveedorFila || recepcion.nombre_proveedor || recepcion.proveedor;
+                        const fecha = fechaFila || recepcion.fecha || recepcion.fecha_recepcion;
+                        const estado = estadoFila || recepcion.estado || recepcion.estatus;
+
+                        document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || correlativo || 'N/A';
+                        document.getElementById('viewProveedor').textContent = proveedor || 'No disponible';
+                        document.getElementById('viewFecha').textContent = fecha || 'No disponible';
+
+                        const estadoElemento = document.getElementById('viewEstado');
+                        const estadoNormalizado = String(estado || '').toLowerCase();
+                        estadoElemento.textContent = estado ? estadoNormalizado.toUpperCase() : 'No disponible';
+                        estadoElemento.className = 'status-badge ' + (
+                            estadoNormalizado === 'habilitado' ? 'completed' :
+                            estadoNormalizado === 'anulado' ? 'cancelled' : 'pending'
+                        );
+                    }
+
+                    actualizarInformacionGeneral();
+
                     // Cargar datos reales desde el backend
                     fetch('?pagina=recepcion', {
                         method: 'POST',
@@ -1505,10 +1309,7 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                     .then(data => {
                         if (data && data.status === 'success') {
                             const recepcion = data.recepcion;
-                            document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || 'N/A';
-                            document.getElementById('viewProveedor').textContent = recepcion.nombre_proveedor || 'N/A';
-                            document.getElementById('viewFecha').textContent = recepcion.fecha || 'N/A';
-                            document.getElementById('viewEstado').textContent = recepcion.estado || 'N/A';
+                            actualizarInformacionGeneral(recepcion);
                             
                             // Cargar productos
                             const productosTable = document.getElementById('viewProductos');
@@ -1553,12 +1354,7 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                             modal.style.display = 'block';
                             modal.style.animation = 'fadeIn 0.3s ease';
                         } else {
-                            // Fallback a datos simulados si no hay respuesta del backend
-                            document.getElementById('viewCorrelativo').textContent = correlativo;
-                            document.getElementById('viewProveedor').textContent = 'Cargando...';
-                            document.getElementById('viewFecha').textContent = 'Cargando...';
-                            document.getElementById('viewEstado').textContent = 'Cargando...';
-                            
+                            actualizarInformacionGeneral();
                             const modal = document.getElementById('viewModal');
                             modal.style.display = 'block';
                             modal.style.animation = 'fadeIn 0.3s ease';
@@ -1566,11 +1362,7 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                     })
                     .catch(error => {
                         console.error('Error al cargar recepción:', error);
-                        // Fallback a datos simulados en caso de error
-                        document.getElementById('viewCorrelativo').textContent = correlativo;
-                        document.getElementById('viewProveedor').textContent = 'No disponible';
-                        document.getElementById('viewFecha').textContent = 'No disponible';
-                        document.getElementById('viewEstado').textContent = 'No disponible';
+                        actualizarInformacionGeneral();
                         
                         const modal = document.getElementById('viewModal');
                         modal.style.display = 'block';
@@ -1602,9 +1394,6 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                         if (data && data.status === 'success') {
                             const recepcion = data.recepcion;
                             document.getElementById('anularCorrelativo').textContent = recepcion.correlativo || 'N/A';
-                            document.getElementById('anularProveedor').textContent = recepcion.proveedor || 'N/A';
-                            document.getElementById('anularTotal').textContent = '$' + (recepcion.total || 0).toFixed(2);
-                            document.getElementById('motivoAnulacion').value = '';
                             
                             const modal = document.getElementById('anularModal');
                             modal.style.display = 'block';
@@ -1612,8 +1401,6 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                         } else {
                             // Fallback a datos simulados
                             document.getElementById('anularCorrelativo').textContent = correlativo;
-                            document.getElementById('anularProveedor').textContent = 'No disponible';
-                            document.getElementById('anularTotal').textContent = '$0.00';
                             
                             const modal = document.getElementById('anularModal');
                             modal.style.display = 'block';
@@ -1624,8 +1411,6 @@ $porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completad
                         console.error('Error al cargar recepción:', error);
                         // Fallback a datos simulados
                         document.getElementById('anularCorrelativo').textContent = correlativo;
-                        document.getElementById('anularProveedor').textContent = 'No disponible';
-                        document.getElementById('anularTotal').textContent = '$0.00';
                         
                         const modal = document.getElementById('anularModal');
                         modal.style.display = 'block';

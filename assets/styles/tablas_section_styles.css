@@ -21,6 +21,7 @@
 }
 
 .section-actions{
+    margin-right: 5px;
     display: flex;
     gap: 10px;
 }
@@ -29,21 +30,27 @@
 .btn-table-superior {
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 8px 14px;
+    border-radius: 16px;
     cursor: pointer;
     font-size: 0.9rem;
     align-items: center;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.btn-incluir{
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+.btn-table-superior img {
+    width:1.5em;
+    height:1.5em;
+    filter:brightness(0) invert(1);
 }
 
-.btn-incluir:hover {
+.btn-ayuda, .btn-incluir{
+    background: linear-gradient(135deg, #a8e7f7 0%, #059cf3 100%);
+}
+
+.btn-ayuda:hover, .btn-incluir:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(44, 75, 250, 0.479);
 }
 
 /*Estructura de la Tabla*/
@@ -109,20 +116,28 @@
 
 .btn-action:hover {
     transform: scale(1.05);
+    transform: translateY(-2px);
 }
 
 .btn-action img {
+    margin-top: 1px;
     width:1.5em;
     height:1.5em;
     filter:brightness(0) invert(1);
 }
 
 .btn-detallar {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    background: linear-gradient(135deg, #a8e7f7 0%, #059cf3 100%);
+}
+.btn-anular {
+    background: linear-gradient(135deg, #fd8c8c 0%, #f14404 100%);
 }
 
-.btn-anular {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+.btn-detallar:hover {
+    box-shadow: 0 4px 12px rgba(44, 75, 250, 0.479);
+}
+.btn-anular:hover {
+    box-shadow: 0 4px 12px rgba(236, 78, 78, 0.479);
 }
 
 /*Adaptación para Dispositivos Móviles*/
