@@ -32,6 +32,7 @@ ob_start();
 ?>
 
 <link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
+<link rel="stylesheet" href="assets/styles/modal-detallar.css">
 <link rel="stylesheet" href="assets/styles/modal-eliminar-anular.css">
 
 <!-- Recepciones Section -->
@@ -79,7 +80,6 @@ ob_start();
                                     data-correlativo="<?php echo htmlspecialchars((string)($recepcion['correlativo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-proveedor="<?php echo htmlspecialchars((string)($recepcion['nombre_proveedor'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-fecha="<?php echo htmlspecialchars((string)($recepcion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                                    data-estado="<?php echo htmlspecialchars((string)($recepcion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                     onclick="viewRecepcion(this)">
                                     <img src="assets/img/eye.svg">
                                 </button>
@@ -303,8 +303,8 @@ ob_start();
             </div>
             <span class="close-modal" onclick="closeViewModal()">&times;</span>
         </div>
-        <div class="modal-body">
-            <div class="recepcion-detalles">
+        <div class="modal-body-detallar">
+            <div class="recepcion-detallar">
                 <!-- Información General -->
                 <div class="detalle-section">
                     <div class="section-title">
@@ -314,19 +314,15 @@ ob_start();
                     <div class="detalle-grid">
                         <div class="detalle-item">
                             <label>Correlativo:</label>
-                            <span id="viewCorrelativo">REC-001</span>
+                            <span id="viewCorrelativo"></span>
                         </div>
                         <div class="detalle-item">
                             <label>Proveedor:</label>
-                            <span id="viewProveedor">TechCorp S.A.</span>
+                            <span id="viewProveedor"></span>
                         </div>
                         <div class="detalle-item">
                             <label>Fecha:</label>
-                            <span id="viewFecha">2026-09-29</span>
-                        </div>
-                        <div class="detalle-item">
-                            <label>Estado:</label>
-                            <span class="status-badge completed" id="viewEstado">Completada</span>
+                            <span id="viewFecha"></span>
                         </div>
                     </div>
                 </div>
@@ -337,7 +333,7 @@ ob_start();
                         <i class="fas fa-boxes"></i>
                         <h3>Productos Recibidos</h3>
                     </div>
-                    <div class="productos-table">
+                    <div class="detalle-table">
                         <table>
                             <thead>
                                 <tr>
@@ -363,16 +359,16 @@ ob_start();
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3"><strong>Subtotal:</strong></td>
-                                    <td><strong id="viewSubtotal">$17,485.00</strong></td>
+                                    <td colspan="3" class="monto"><strong>Subtotal:</strong></td>
+                                    <td><span id="viewSubtotal">$17,485.00</span></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
-                                    <td><strong id="viewMontoIva">No registrado</strong></td>
+                                    <td colspan="3" class="monto"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
+                                    <td><span id="viewMontoIva">No registrado</span></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3"><strong>Total factura:</strong></td>
-                                    <td><strong id="viewTotal">$17,485.00</strong></td>
+                                    <td colspan="3" class="monto"><strong>Total factura:</strong></td>
+                                    <td><span id="viewTotal">$17,485.00</span></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -398,7 +394,7 @@ ob_start();
             </div>
             <span class="close-modal" onclick="closeAnularModal()">&times;</span>
         </div>
-        <div class="modal-body-content">
+        <div class="modal-body-warning">
             <div class="anular-content">
                 <div class="anular-icon">
                     <i class="fas fa-exclamation-circle"></i>
@@ -442,24 +438,6 @@ ob_start();
                 #recepcionModal .modal-body {
                     max-height: 70vh;
                     overflow-y: auto;
-                }
-
-                #viewModal .modal-content.modal-large {
-                    max-height: 90vh;
-                    display: flex;
-                    flex-direction: column;
-                    overflow: hidden;
-                }
-
-                #viewModal .modal-header,
-                #viewModal .modal-footer {
-                    flex-shrink: 0;
-                }
-
-                #viewModal .modal-body {
-                    min-height: 0;
-                    overflow-y: auto;
-                    overscroll-behavior: contain;
                 }
 
                 #recepcionModal .recepcion-ia-preview {
@@ -771,79 +749,6 @@ ob_start();
                 .btn-save:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-                }
-
-                /* Modal de Detalles */
-                .recepcion-detalles {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 25px;
-                }
-
-                .detalle-section {
-                    background: rgba(33, 150, 243, 0.03);
-                    border-radius: 12px;
-                    padding: 20px;
-                    border: 1px solid rgba(33, 150, 243, 0.1);
-                }
-
-                .detalle-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 15px;
-                }
-
-                .detalle-item {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                }
-
-                .detalle-item label {
-                    font-size: 0.85rem;
-                    font-weight: 600;
-                    color: #718096;
-                }
-
-                .detalle-item span {
-                    font-size: 1rem;
-                    font-weight: 700;
-                    color: #2d3748;
-                }
-
-                .productos-table {
-                    overflow-x: auto;
-                }
-
-                .productos-table table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-
-                .productos-table thead {
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    color: white;
-                }
-
-                .productos-table th {
-                    padding: 12px;
-                    text-align: left;
-                    font-weight: 600;
-                    font-size: 0.85rem;
-                }
-
-                .productos-table td {
-                    padding: 12px;
-                    border-bottom: 1px solid #e9ecef;
-                }
-
-                .productos-table tfoot {
-                    background: rgba(33, 150, 243, 0.05);
-                }
-
-                .productos-table tfoot td {
-                    font-weight: 700;
-                    color: #2196F3;
                 }
 
                 .observaciones-text {
@@ -1275,24 +1180,14 @@ ob_start();
                     const correlativo = datosFila.correlativo || boton;
                     const proveedorFila = datosFila.proveedor || '';
                     const fechaFila = datosFila.fecha || '';
-                    const estadoFila = datosFila.estado || '';
 
                     function actualizarInformacionGeneral(recepcion = {}) {
                         const proveedor = proveedorFila || recepcion.nombre_proveedor || recepcion.proveedor;
                         const fecha = fechaFila || recepcion.fecha || recepcion.fecha_recepcion;
-                        const estado = estadoFila || recepcion.estado || recepcion.estatus;
 
                         document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || correlativo || 'N/A';
                         document.getElementById('viewProveedor').textContent = proveedor || 'No disponible';
                         document.getElementById('viewFecha').textContent = fecha || 'No disponible';
-
-                        const estadoElemento = document.getElementById('viewEstado');
-                        const estadoNormalizado = String(estado || '').toLowerCase();
-                        estadoElemento.textContent = estado ? estadoNormalizado.toUpperCase() : 'No disponible';
-                        estadoElemento.className = 'status-badge ' + (
-                            estadoNormalizado === 'habilitado' ? 'completed' :
-                            estadoNormalizado === 'anulado' ? 'cancelled' : 'pending'
-                        );
                     }
 
                     actualizarInformacionGeneral();
@@ -1303,7 +1198,7 @@ ob_start();
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                         },
-                        body: 'accion=obtener_recepcion&correlativo=' + encodeURIComponent(correlativo)
+                        body: 'accion=obtener_detalle_recepcion&correlativo=' + encodeURIComponent(correlativo)
                     })
                     .then(response => response.json())
                     .then(data => {
