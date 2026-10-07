@@ -94,6 +94,28 @@ final class RecepcionModuleTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $cnt, 'Debe crear egreso asociado a la recepción');
     }
 
+    public function testBuscarRecepcionDevuelveProveedorFechaYEstado(): void
+    {
+        $correlativo = 'DETAIL-001';
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO tbl_recepcion_productos (id_proveedor, fecha, correlativo, estado)
+             VALUES (:proveedor, '2026-10-07', :correlativo, 'habilitado')"
+        );
+        $stmt->execute([
+            ':proveedor' => $this->getPrimerProveedorId(),
+            ':correlativo' => $correlativo,
+        ]);
+
+        $recepcion = new Recepcion();
+        $recepcion->setcorrelativo($correlativo);
+        $detalle = $recepcion->buscar();
+
+        $this->assertSame('encontró', $detalle['resultado'] ?? null);
+        $this->assertSame('Proveedor Test', $detalle['nombre_proveedor'] ?? null);
+        $this->assertSame('2026-10-07', $detalle['fecha'] ?? null);
+        $this->assertSame('habilitado', $detalle['estado'] ?? null);
+    }
+
     public function testObtenerProductosPorRecepcion(): void
     {
         // Prepara recepción

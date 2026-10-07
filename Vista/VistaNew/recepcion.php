@@ -41,7 +41,7 @@ ob_start();
             <button class="btn-table-superior btn-ayuda" title="Visualizar Ayuda">
                 <img src="assets/img/info-ayuda.svg">
             </button>
-            <button class="btn-table-superior btn-incluir" onclick="openModal('registrar')">
+            <button class="btn-table-superior btn-incluir" title="Incluir Recepción" onclick="openModal('registrar')">
                 <img src="assets/img/plus.svg">
             </button>
         </div>
@@ -75,7 +75,11 @@ ob_start();
                             <td class="action-buttons">
                                 <button class="btn-action btn-detallar" 
                                     title="Ver Detalles"
-                                    onclick="viewRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
+                                    data-correlativo="<?php echo htmlspecialchars((string)($recepcion['correlativo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-proveedor="<?php echo htmlspecialchars((string)($recepcion['nombre_proveedor'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-fecha="<?php echo htmlspecialchars((string)($recepcion['fecha'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-estado="<?php echo htmlspecialchars((string)($recepcion['estado'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    onclick="viewRecepcion(this)">
                                     <img src="assets/img/eye.svg">
                                 </button>
                                 <button class="btn-action btn-anular" 
@@ -268,133 +272,113 @@ ob_start();
                                     </div>
                                 </div>
                             </div>
-                            
+                            <div class="modal-footer">
+                                <button class="btn-cancel" onclick="closeModal()">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                <button class="btn-save" onclick="saveRecepcion()">
+                                    <i class="fas fa-check"></i> Guardar Recepción
+                                </button>
+                            </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeModal()">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button class="btn-save" onclick="saveRecepcion()">
-                            <i class="fas fa-check"></i> Guardar Recepción
-                        </button>
-                    </div>
                 </div>
             </div>
 
-            <!-- Modal para Ver Detalles de Recepción -->
-            <div id="viewModal" class="modal">
-                <div class="modal-content modal-large">
-                    <div class="modal-header">
-                        <div class="modal-header-content">
-                            <div class="modal-icon">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            <div class="modal-title-content">
-                                <h2>Detalles de Recepción</h2>
-                                <p>Información completa de la recepción seleccionada</p>
-                            </div>
-                        </div>
-                        <span class="close-modal" onclick="closeViewModal()">&times;</span>
+<!-- Modal para Ver Detalles de Recepción -->
+<div id="viewModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <div class="modal-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="modal-title-content">
+                    <h2>Detalles de Recepción</h2>
+                    <p>Información completa de la recepción seleccionada</p>
+                </div>
+            </div>
+            <span class="close-modal" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="recepcion-detalles">
+                <!-- Información General -->
+                <div class="detalle-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Información General</h3>
                     </div>
-                    <div class="modal-body">
-                        <div class="recepcion-detalles">
-                            <!-- Información General -->
-                            <div class="detalle-section">
-                                <div class="section-title">
-                                    <i class="fas fa-info-circle"></i>
-                                    <h3>Información General</h3>
-                                </div>
-                                <div class="detalle-grid">
-                                    <div class="detalle-item">
-                                        <label>Correlativo:</label>
-                                        <span id="viewCorrelativo">REC-001</span>
-                                    </div>
-                                    <div class="detalle-item">
-                                        <label>Proveedor:</label>
-                                        <span id="viewProveedor">TechCorp S.A.</span>
-                                    </div>
-                                    <div class="detalle-item">
-                                        <label>Fecha:</label>
-                                        <span id="viewFecha">2026-09-29</span>
-                                    </div>
-                                    <div class="detalle-item">
-                                        <label>Estado:</label>
-                                        <span class="status-badge completed" id="viewEstado">Completada</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Productos -->
-                            <div class="detalle-section">
-                                <div class="section-title">
-                                    <i class="fas fa-boxes"></i>
-                                    <h3>Productos Recibidos</h3>
-                                </div>
-                                <div class="productos-table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Producto</th>
-                                                <th>Cantidad</th>
-                                                <th>Costo Unitario</th>
-                                                <th>Subtotal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="viewProductos">
-                                            <tr>
-                                                <td>iPhone 15 Pro Max</td>
-                                                <td>10</td>
-                                                <td>$1,199.00</td>
-                                                <td>$11,990.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td>MacBook Air M3</td>
-                                                <td>5</td>
-                                                <td>$1,099.00</td>
-                                                <td>$5,495.00</td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="3"><strong>Subtotal:</strong></td>
-                                                <td><strong id="viewSubtotal">$17,485.00</strong></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="3"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
-                                                <td><strong id="viewMontoIva">No registrado</strong></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="3"><strong>Total factura:</strong></td>
-                                                <td><strong id="viewTotal">$17,485.00</strong></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- Observaciones -->
-                            <div class="detalle-section">
-                                <div class="section-title">
-                                    <i class="fas fa-sticky-note"></i>
-                                    <h3>Observaciones</h3>
-                                </div>
-                                <div class="observaciones-text">
-                                    <p id="viewObservaciones">Recepción completada sin incidencias. Todos los productos fueron verificados y estan en condiciones óptimas.</p>
-                                </div>
-                            </div>
+                    <div class="detalle-grid">
+                        <div class="detalle-item">
+                            <label>Correlativo:</label>
+                            <span id="viewCorrelativo">REC-001</span>
+                        </div>
+                        <div class="detalle-item">
+                            <label>Proveedor:</label>
+                            <span id="viewProveedor">TechCorp S.A.</span>
+                        </div>
+                        <div class="detalle-item">
+                            <label>Fecha:</label>
+                            <span id="viewFecha">2026-09-29</span>
+                        </div>
+                        <div class="detalle-item">
+                            <label>Estado:</label>
+                            <span class="status-badge completed" id="viewEstado">Completada</span>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeViewModal()">
-                            <i class="fas fa-times"></i> Cerrar
-                        </button>
-                        <button class="btn-save" onclick="imprimirRecepcion()">
-                            <i class="fas fa-print"></i> Imprimir
-                        </button>
+                </div>
+
+                <!-- Productos -->
+                <div class="detalle-section">
+                    <div class="section-title">
+                        <i class="fas fa-boxes"></i>
+                        <h3>Productos Recibidos</h3>
+                    </div>
+                    <div class="productos-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Costo Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="viewProductos">
+                                <tr>
+                                    <td>iPhone 15 Pro Max</td>
+                                    <td>10</td>
+                                    <td>$1,199.00</td>
+                                    <td>$11,990.00</td>
+                                </tr>
+                                <tr>
+                                    <td>MacBook Air M3</td>
+                                    <td>5</td>
+                                    <td>$1,099.00</td>
+                                    <td>$5,495.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3"><strong>Subtotal:</strong></td>
+                                    <td><strong id="viewSubtotal">$17,485.00</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
+                                    <td><strong id="viewMontoIva">No registrado</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><strong>Total factura:</strong></td>
+                                    <td><strong id="viewTotal">$17,485.00</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
             <!-- Modal para Anular Recepción -->
             <div id="anularModal" class="modal">
@@ -472,6 +456,24 @@ ob_start();
                 #recepcionModal .modal-body {
                     max-height: 70vh;
                     overflow-y: auto;
+                }
+
+                #viewModal .modal-content.modal-large {
+                    max-height: 90vh;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+
+                #viewModal .modal-header,
+                #viewModal .modal-footer {
+                    flex-shrink: 0;
+                }
+
+                #viewModal .modal-body {
+                    min-height: 0;
+                    overflow-y: auto;
+                    overscroll-behavior: contain;
                 }
 
                 #recepcionModal .recepcion-ia-preview {
@@ -1386,7 +1388,33 @@ ob_start();
                 }
 
                 // Función para ver detalles de recepción
-                function viewRecepcion(correlativo) {
+                function viewRecepcion(boton) {
+                    const datosFila = boton instanceof HTMLElement ? boton.dataset : {};
+                    const correlativo = datosFila.correlativo || boton;
+                    const proveedorFila = datosFila.proveedor || '';
+                    const fechaFila = datosFila.fecha || '';
+                    const estadoFila = datosFila.estado || '';
+
+                    function actualizarInformacionGeneral(recepcion = {}) {
+                        const proveedor = proveedorFila || recepcion.nombre_proveedor || recepcion.proveedor;
+                        const fecha = fechaFila || recepcion.fecha || recepcion.fecha_recepcion;
+                        const estado = estadoFila || recepcion.estado || recepcion.estatus;
+
+                        document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || correlativo || 'N/A';
+                        document.getElementById('viewProveedor').textContent = proveedor || 'No disponible';
+                        document.getElementById('viewFecha').textContent = fecha || 'No disponible';
+
+                        const estadoElemento = document.getElementById('viewEstado');
+                        const estadoNormalizado = String(estado || '').toLowerCase();
+                        estadoElemento.textContent = estado ? estadoNormalizado.toUpperCase() : 'No disponible';
+                        estadoElemento.className = 'status-badge ' + (
+                            estadoNormalizado === 'habilitado' ? 'completed' :
+                            estadoNormalizado === 'anulado' ? 'cancelled' : 'pending'
+                        );
+                    }
+
+                    actualizarInformacionGeneral();
+
                     // Cargar datos reales desde el backend
                     fetch('?pagina=recepcion', {
                         method: 'POST',
@@ -1399,10 +1427,7 @@ ob_start();
                     .then(data => {
                         if (data && data.status === 'success') {
                             const recepcion = data.recepcion;
-                            document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || 'N/A';
-                            document.getElementById('viewProveedor').textContent = recepcion.nombre_proveedor || 'N/A';
-                            document.getElementById('viewFecha').textContent = recepcion.fecha || 'N/A';
-                            document.getElementById('viewEstado').textContent = recepcion.estado || 'N/A';
+                            actualizarInformacionGeneral(recepcion);
                             
                             // Cargar productos
                             const productosTable = document.getElementById('viewProductos');
@@ -1447,12 +1472,7 @@ ob_start();
                             modal.style.display = 'block';
                             modal.style.animation = 'fadeIn 0.3s ease';
                         } else {
-                            // Fallback a datos simulados si no hay respuesta del backend
-                            document.getElementById('viewCorrelativo').textContent = correlativo;
-                            document.getElementById('viewProveedor').textContent = 'Cargando...';
-                            document.getElementById('viewFecha').textContent = 'Cargando...';
-                            document.getElementById('viewEstado').textContent = 'Cargando...';
-                            
+                            actualizarInformacionGeneral();
                             const modal = document.getElementById('viewModal');
                             modal.style.display = 'block';
                             modal.style.animation = 'fadeIn 0.3s ease';
@@ -1460,11 +1480,7 @@ ob_start();
                     })
                     .catch(error => {
                         console.error('Error al cargar recepción:', error);
-                        // Fallback a datos simulados en caso de error
-                        document.getElementById('viewCorrelativo').textContent = correlativo;
-                        document.getElementById('viewProveedor').textContent = 'No disponible';
-                        document.getElementById('viewFecha').textContent = 'No disponible';
-                        document.getElementById('viewEstado').textContent = 'No disponible';
+                        actualizarInformacionGeneral();
                         
                         const modal = document.getElementById('viewModal');
                         modal.style.display = 'block';

@@ -836,11 +836,26 @@ class Recepcion extends BD{
     private function bus() {
         try {
             return $this->ejecutarConConexionSegura(function($pdo) {
-                $filas = $this->ejecutarProcedimiento($pdo, 'CALL sp_obtener_recepcion_por_correlativo(?)', [$this->correlativo]);
-                if (!$filas) {
+                $stmt = $pdo->prepare(
+                    'SELECT r.id_recepcion, r.id_proveedor, p.nombre_proveedor, r.fecha,
+                            r.correlativo, r.estado,
+                            (SELECT COALESCE(SUM(d.cantidad * d.costo), 0)
+                             FROM tbl_detalle_recepcion_productos d
+                             WHERE d.id_recepcion = r.id_recepcion) AS costo_inversion,
+                            r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura
+                     FROM tbl_recepcion_productos r
+                     INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
+                     WHERE r.correlativo = :correlativo
+                     ORDER BY r.id_recepcion DESC
+                     LIMIT 1'
+                );
+                $stmt->bindValue(':correlativo', $this->correlativo, PDO::PARAM_STR);
+                $stmt->execute();
+                $recepcion = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$recepcion) {
                     return ['resultado' => 'no_encontro', 'mensaje' => 'No se encontró la recepción.'];
                 }
-                $recepcion = $this->encryption->decryptArray($filas[0], self::CAMPOS_CIFRADOS_PROVEEDORES);
+                $recepcion = $this->encryption->decryptArray($recepcion, self::CAMPOS_CIFRADOS_PROVEEDORES);
                 $recepcion['resultado'] = 'encontró';
                 $recepcion['mensaje'] = 'Recepción encontrada.';
                 return $recepcion;
