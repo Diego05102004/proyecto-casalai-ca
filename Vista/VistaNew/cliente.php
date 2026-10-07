@@ -31,53 +31,69 @@ $titulo_pagina = 'Gestión de Clientes';
 ob_start();
 ?>
 
-            <!-- Summary Cards para Clientes -->
-            <div class="summary-cards">
-                <div class="summary-card sales">
-                    <div class="card-icon"><i class="fas fa-users"></i></div>
-                    <div class="card-content">
-                        <h3>Total Clientes</h3>
-                        <p class="card-value">1,234</p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage">85%</span>
-                        </div>
-                    </div>
-                </div>
+<?php
+// 1. Cálculos previos de totales y porcentajes
+$total_clientes = count($clientes);
 
-                <div class="summary-card expenses">
-                    <div class="card-icon"><i class="fas fa-chart-line"></i></div>
-                    <div class="card-content">
-                        <h3>Clientes Activos</h3>
-                        <p class="card-value">1,089</p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage">92%</span>
-                        </div>
-                    </div>
-                </div>
+$clientes_habilitados = count(array_filter($clientes, function($c) {
+    return isset($c['activo']) && (int)$c['activo'] === 1;
+}));
 
-                <div class="summary-card income">
-                    <div class="card-icon"><i class="fas fa-user-plus"></i></div>
-                    <div class="card-content">
-                        <h3>Nuevos este Mes</h3>
-                        <p class="card-value">45</p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="67, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage">67%</span>
-                        </div>
-                    </div>
-                </div>
+$clientes_deshabilitados = count(array_filter($clientes, function($c) {
+    return isset($c['activo']) && (int)$c['activo'] === 0;
+}));
+
+// Evitar división por cero si no hay clientes registrados
+$porcentaje_habilitados = $total_clientes > 0 ? round(($clientes_habilitados / $total_clientes) * 100) : 0;
+$porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitados / $total_clientes) * 100) : 0;
+?>
+
+<!-- Summary Cards para Clientes -->
+<div class="summary-cards">
+    <!-- Total Clientes -->
+    <div class="summary-card sales">
+        <div class="card-icon"><i class="fas fa-users"></i></div>
+        <div class="card-content">
+            <h3>Total Clientes</h3>
+            <p class="card-value"><?php echo $total_clientes; ?></p>
+        </div>
+    </div>
+
+    <!-- Clientes Habilitados -->
+    <div class="summary-card income">
+        <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="card-content">
+            <h3>Clientes Habilitados</h3>
+            <p class="card-value"><?php echo $clientes_habilitados; ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <!-- stroke-dasharray ahora es dinámico -->
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_habilitados; ?>, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage"><?php echo $porcentaje_habilitados; ?>%</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Clientes Deshabilitados -->
+    <div class="summary-card expenses">
+        <div class="card-icon"><i class="fas fa-chart-line fa-flip-vertical"></i></div>
+        <div class="card-content">
+            <h3>Clientes Deshabilitados</h3>
+            <p class="card-value"><?php echo $clientes_deshabilitados; ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <!-- stroke-dasharray ahora es dinámico -->
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_deshabilitados; ?>, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage"><?php echo $porcentaje_deshabilitados; ?>%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 
             <!-- Clientes Table Section -->
             <div class="clients-section">
@@ -108,136 +124,34 @@ ob_start();
                             </tr>
                         </thead>
                         <tbody>
+                            <?php foreach ($clientes as $cliente) { ?>
                             <tr>
                                 <td>
                                     <div class="client-info">
-                                        <div class="client-avatar">J</div>
+                                        <div class="client-avatar"><?php echo htmlspecialchars(mb_substr($cliente['nombre'] ?? '', 0, 1, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?></div>
                                         <div class="client-details">
-                                            <span class="client-name">Juan Pérez</span>
-                                            <span class="client-email">juan@email.com</span>
+                                            <span class="client-name"><?php echo htmlspecialchars($cliente['nombre'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <span class="client-email"><?php echo htmlspecialchars($cliente['correo'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
                                         </div>
                                     </div>
                                 </td>
-                                <td>12.345.678</td>
-                                <td>0414-123-4567</td>
-                                <td>juan@email.com</td>
-                                <td><span class="status active">Activo</span></td>
+                                <td><?php echo htmlspecialchars($cliente['cedula'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($cliente['telefono'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><?php echo htmlspecialchars($cliente['correo'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                <td><span class="status <?php echo (int)($cliente['activo'] ?? 0) === 1 ? 'active' : 'inactive'; ?>"><?php echo (int)($cliente['activo'] ?? 0) === 1 ? 'Habilitado' : 'Deshabilitado'; ?></span></td>
                                 <td>
-                                    <button class="btn-action btn-edit" title="Editar" onclick="openModal('editar', 1)">
+                                    <button class="btn-action btn-edit" title="Editar" onclick="openModal('editar', <?php echo (int)$cliente['id_clientes']; ?>)">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-action btn-delete" title="Eliminar" onclick="deleteClient(1)">
+                                    <button class="btn-action btn-delete" title="Eliminar" onclick="deleteClient(<?php echo (int)$cliente['id_clientes']; ?>)">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                    <button class="btn-action btn-view" title="Ver detalles" onclick="viewClient(1)">
+                                    <button class="btn-action btn-view" title="Ver detalles" onclick="viewClient(<?php echo (int)$cliente['id_clientes']; ?>)">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>
-                                    <div class="client-info">
-                                        <div class="client-avatar">M</div>
-                                        <div class="client-details">
-                                            <span class="client-name">María González</span>
-                                            <span class="client-email">maria@email.com</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>15.678.901</td>
-                                <td>0424-234-5678</td>
-                                <td>maria@email.com</td>
-                                <td><span class="status active">Activo</span></td>
-                                <td>
-                                    <button class="btn-action btn-edit" title="Editar" onclick="openModal('editar', 2)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn-action btn-delete" title="Eliminar" onclick="deleteClient(2)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button class="btn-action btn-view" title="Ver detalles" onclick="viewClient(2)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="client-info">
-                                        <div class="client-avatar">C</div>
-                                        <div class="client-details">
-                                            <span class="client-name">Carlos Rodríguez</span>
-                                            <span class="client-email">carlos@email.com</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>18.901.234</td>
-                                <td>0412-345-6789</td>
-                                <td>carlos@email.com</td>
-                                <td><span class="status inactive">Inactivo</span></td>
-                                <td>
-                                    <button class="btn-action btn-edit" title="Editar" onclick="openModal('editar', 3)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn-action btn-delete" title="Eliminar" onclick="deleteClient(3)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button class="btn-action btn-view" title="Ver detalles" onclick="viewClient(3)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="client-info">
-                                        <div class="client-avatar">A</div>
-                                        <div class="client-details">
-                                            <span class="client-name">Ana Martínez</span>
-                                            <span class="client-email">ana@email.com</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>21.234.567</td>
-                                <td>0416-456-7890</td>
-                                <td>ana@email.com</td>
-                                <td><span class="status active">Activo</span></td>
-                                <td>
-                                    <button class="btn-action btn-edit" title="Editar" onclick="openModal('editar', 4)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn-action btn-delete" title="Eliminar" onclick="deleteClient(4)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button class="btn-action btn-view" title="Ver detalles" onclick="viewClient(4)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="client-info">
-                                        <div class="client-avatar">P</div>
-                                        <div class="client-details">
-                                            <span class="client-name">Pedro Sánchez</span>
-                                            <span class="client-email">pedro@email.com</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>24.567.890</td>
-                                <td>0426-567-8901</td>
-                                <td>pedro@email.com</td>
-                                <td><span class="status active">Activo</span></td>
-                                <td>
-                                    <button class="btn-action btn-edit" title="Editar" onclick="openModal('editar', 5)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn-action btn-delete" title="Eliminar" onclick="deleteClient(5)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button class="btn-action btn-view" title="Ver detalles" onclick="viewClient(5)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                            <?php } ?>
                         </tbody>
                     </table>
                 </div>
@@ -247,30 +161,19 @@ ob_start();
             <div class="top-clients-section">
                 <h2>Top Clientes por Compras</h2>
                 <div class="top-clients-grid">
+                    <?php if (!empty($reporteComprasClientes)) { ?>
+                    <?php foreach (array_slice($reporteComprasClientes, 0, 3) as $indice => $clienteTop) { ?>
                     <div class="top-client-card">
                         <div class="client-rank"><i class="fas fa-trophy"></i></div>
                         <div class="client-info-top">
-                            <h3>Juan Pérez</h3>
-                            <p>156 productos comprados</p>
-                            <span class="total-spent">$12,450 gastados</span>
+                            <h3><?php echo htmlspecialchars($clienteTop['nombre'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h3>
+                            <p><?php echo (int)($clienteTop['cantidad'] ?? 0); ?> productos comprados</p>
                         </div>
                     </div>
-                    <div class="top-client-card">
-                        <div class="client-rank"><i class="fas fa-medal"></i></div>
-                        <div class="client-info-top">
-                            <h3>María González</h3>
-                            <p>134 productos comprados</p>
-                            <span class="total-spent">$10,890 gastados</span>
-                        </div>
-                    </div>
-                    <div class="top-client-card">
-                        <div class="client-rank"><i class="fas fa-medal"></i></div>
-                        <div class="client-info-top">
-                            <h3>Carlos Rodríguez</h3>
-                            <p>98 productos comprados</p>
-                            <span class="total-spent">$8,760 gastados</span>
-                        </div>
-                    </div>
+                    <?php } ?>
+                    <?php } else { ?>
+                    <p>No hay compras de clientes para mostrar.</p>
+                    <?php } ?>
                 </div>
             </div>
 
@@ -283,36 +186,41 @@ ob_start();
                     </div>
                     <div class="modal-body">
                         <form id="clientForm">
-                            <input type="hidden" id="clientId" name="id">
+                            <input type="hidden" id="clientId" name="id_clientes">
                             
                             <div class="form-group">
                                 <label for="clientName">Nombre Completo*</label>
                                 <input type="text" id="clientName" name="nombre" required 
                                        placeholder="Nombres y apellidos" maxlength="100">
+                                <small class="field-error" data-error-for="nombre" aria-live="polite"></small>
                             </div>
                             
                             <div class="form-group">
                                 <label for="clientCedula">Cédula*</label>
                                 <input type="text" id="clientCedula" name="cedula" required 
                                        placeholder="12.345.678" maxlength="10">
+                                    <small class="field-error" data-error-for="cedula" aria-live="polite"></small>
                             </div>
                             
                             <div class="form-group">
                                 <label for="clientPhone">Teléfono*</label>
                                 <input type="text" id="clientPhone" name="telefono" required 
                                        placeholder="0414-123-4567" maxlength="13">
+                                    <small class="field-error" data-error-for="telefono" aria-live="polite"></small>
                             </div>
                             
                             <div class="form-group">
                                 <label for="clientEmail">Correo Electrónico*</label>
                                 <input type="email" id="clientEmail" name="correo" required 
                                        placeholder="ejemplo@email.com" maxlength="50">
+                                    <small class="field-error" data-error-for="correo" aria-live="polite"></small>
                             </div>
                             
                             <div class="form-group">
                                 <label for="clientAddress">Dirección*</label>
                                 <textarea id="clientAddress" name="direccion" required 
                                           placeholder="Estado/Ciudad/Calle o Avenida..." rows="3" maxlength="100"></textarea>
+                                <small class="field-error" data-error-for="direccion" aria-live="polite"></small>
                             </div>
                         </form>
                     </div>
@@ -355,14 +263,6 @@ ob_start();
                             <div class="detail-row">
                                 <span class="detail-label">Estado:</span>
                                 <span class="detail-value" id="detailStatus">-</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Total Compras:</span>
-                                <span class="detail-value" id="detailPurchases">-</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Total Gastado:</span>
-                                <span class="detail-value" id="detailSpent">-</span>
                             </div>
                         </div>
                     </div>
@@ -618,6 +518,41 @@ ob_start();
                     border-color: #2196F3;
                 }
 
+                #clientModal.modal, #clientDetailsModal.modal {
+                    overflow-y: auto;
+                    padding: 16px 0;
+                }
+
+                #clientModal .modal-content, #clientDetailsModal .modal-content {
+                    display: flex;
+                    flex-direction: column;
+                    max-height: calc(100vh - 32px);
+                    margin: 0 auto;
+                }
+
+                #clientModal .modal-body, #clientDetailsModal .modal-body {
+                    min-height: 0;
+                    overflow-y: auto;
+                    flex: 1 1 auto;
+                }
+
+                #clientModal .modal-header, #clientModal .modal-footer,
+                #clientDetailsModal .modal-header, #clientDetailsModal .modal-footer {
+                    flex: 0 0 auto;
+                }
+
+                .field-error {
+                    display: block;
+                    min-height: 0;
+                    color: #b42318;
+                    font-size: 0.85rem;
+                    margin-top: 5px;
+                }
+
+                .field-error:empty {
+                    display: none;
+                }
+
                 .btn-cancel, .btn-close {
                     background: #6c757d;
                     color: white;
@@ -646,6 +581,7 @@ ob_start();
                 }
             </style>
 
+            <script src="assets/javascript/sweetalert2.all.min.js"></script>
             <script>
                 // Funciones para modales
                 const clientModal = document.getElementById('clientModal');
@@ -653,42 +589,125 @@ ob_start();
                 const modalTitle = document.getElementById('modalTitle');
                 const closeModalBtn = document.querySelector('#clientModal .close-modal');
                 const closeDetailsBtn = document.querySelector('#clientDetailsModal .close-modal');
+                const clientForm = document.getElementById('clientForm');
+                const clientFields = Array.from(clientForm.querySelectorAll('[name]'));
 
-                function openModal(type, clientId = null) {
+                function clearClientValidation() {
+                    document.querySelectorAll('#clientForm .field-error').forEach((field) => {
+                        field.textContent = '';
+                    });
+                }
+
+                function validateClientForm() {
+                    const values = Object.fromEntries(new FormData(clientForm).entries());
+                    values.nombre = (values.nombre || '').replace(/\s{2,}/g, ' ').trim();
+                    values.direccion = (values.direccion || '').replace(/\s{2,}/g, ' ').trim();
+                    values.cedula = (values.cedula || '').trim();
+                    values.telefono = (values.telefono || '').trim();
+                    values.correo = (values.correo || '').trim();
+                    clientForm.elements.nombre.value = values.nombre;
+                    clientForm.elements.direccion.value = values.direccion;
+                    clientForm.elements.cedula.value = values.cedula;
+                    clientForm.elements.telefono.value = values.telefono;
+                    clientForm.elements.correo.value = values.correo;
+
+                    const rules = [
+                        { field: 'nombre', pattern: /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,100}$/, message: 'Ingrese un nombre de 2 a 100 caracteres, solo con letras y espacios.' },
+                        { field: 'cedula', pattern: /^(?:\d{1,2}\.\d{3}\.\d{3})$/, message: 'Use el formato de cédula 1.234.567 o 12.345.678.' },
+                        { field: 'telefono', pattern: /^\d{4}-\d{3}-\d{4}$/, message: 'Use el formato telefónico 0400-000-0000.' },
+                        { field: 'direccion', pattern: /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,\-\s]{4,100}$/, message: 'La dirección debe tener de 4 a 100 caracteres y solo admite letras, números, comas y guiones.' },
+                        { field: 'correo', pattern: /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/, message: 'Use un correo de Gmail, Outlook, Yahoo o iCloud.' }
+                    ];
+                    const errors = {};
+                    clearClientValidation();
+
+                    rules.forEach(({ field, pattern, message }) => {
+                        if (!pattern.test(values[field])) {
+                            errors[field] = message;
+                            document.querySelector(`[data-error-for="${field}"]`).textContent = message;
+                        }
+                    });
+
+                    return { values, errors };
+                }
+
+                async function showClientError(title, message) {
+                    return Swal.fire({ icon: 'error', title, text: message, confirmButtonText: 'Entendido' });
+                }
+
+                clientForm.elements.cedula.addEventListener('input', function() {
+                    const digits = this.value.replace(/\D/g, '').slice(0, 8);
+                    if (digits.length === 7) this.value = `${digits.slice(0, 1)}.${digits.slice(1, 4)}.${digits.slice(4)}`;
+                    else if (digits.length === 8) this.value = `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+                    else this.value = digits;
+                });
+
+                clientForm.elements.telefono.addEventListener('input', function() {
+                    const digits = this.value.replace(/\D/g, '').slice(0, 11);
+                    if (digits.length > 7) this.value = `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}`;
+                    else if (digits.length > 4) this.value = `${digits.slice(0, 4)}-${digits.slice(4)}`;
+                    else this.value = digits;
+                });
+
+                clientFields.forEach((field) => field.addEventListener('input', () => {
+                    const error = document.querySelector(`[data-error-for="${field.name}"]`);
+                    if (error) error.textContent = '';
+                }));
+
+                async function openModal(type, clientId = null) {
                     if (type === 'registrar') {
                         modalTitle.textContent = 'Agregar Cliente';
-                        document.getElementById('clientForm').reset();
+                        clientForm.reset();
                         document.getElementById('clientId').value = '';
+                        clearClientValidation();
                     } else if (type === 'editar') {
                         modalTitle.textContent = 'Editar Cliente';
-                        // Aquí cargarías los datos del cliente desde la base de datos
-                        document.getElementById('clientId').value = clientId;
-                        // Simulación de datos
-                        document.getElementById('clientName').value = 'Cliente Ejemplo';
-                        document.getElementById('clientCedula').value = '12.345.678';
-                        document.getElementById('clientPhone').value = '0414-123-4567';
-                        document.getElementById('clientEmail').value = 'cliente@email.com';
-                        document.getElementById('clientAddress').value = 'Dirección de ejemplo';
+                        const cliente = await fetchClient(clientId);
+                        if (!cliente) return;
+                        clientForm.reset();
+                        clearClientValidation();
+                        document.getElementById('clientId').value = cliente.id_clientes;
+                        document.getElementById('clientName').value = cliente.nombre || '';
+                        document.getElementById('clientCedula').value = cliente.cedula || '';
+                        document.getElementById('clientPhone').value = cliente.telefono || '';
+                        document.getElementById('clientEmail').value = cliente.correo || '';
+                        document.getElementById('clientAddress').value = cliente.direccion || '';
                     }
                     clientModal.style.display = 'block';
+                }
+
+                async function postClientAction(action, values = {}) {
+                    const formData = new FormData();
+                    formData.append('accion', action);
+                    Object.entries(values).forEach(([key, value]) => formData.append(key, value));
+                    const response = await fetch(window.location.href, { method: 'POST', body: formData });
+                    return response.json();
+                }
+
+                async function fetchClient(clientId) {
+                    try {
+                        const result = await postClientAction('obtener_clientes', { id_clientes: clientId });
+                        if (result.status === 'error') throw new Error(result.message || 'No se pudo obtener el cliente.');
+                        return result;
+                    } catch (error) {
+                        await showClientError('No se pudo consultar el cliente', error.message || 'Intente nuevamente.');
+                        return null;
+                    }
                 }
 
                 function closeModal() {
                     clientModal.style.display = 'none';
                 }
 
-                function viewClient(clientId) {
-                    // Aquí cargarías los datos del cliente desde la base de datos
-                    // Simulación de datos
-                    document.getElementById('detailName').textContent = 'Juan Pérez';
-                    document.getElementById('detailCedula').textContent = '12.345.678';
-                    document.getElementById('detailPhone').textContent = '0414-123-4567';
-                    document.getElementById('detailEmail').textContent = 'juan@email.com';
-                    document.getElementById('detailAddress').textContent = 'Av. Principal #123, Caracas';
-                    document.getElementById('detailStatus').textContent = 'Activo';
-                    document.getElementById('detailPurchases').textContent = '156 productos';
-                    document.getElementById('detailSpent').textContent = '$12,450';
-                    
+                async function viewClient(clientId) {
+                    const cliente = await fetchClient(clientId);
+                    if (!cliente) return;
+                    document.getElementById('detailName').textContent = cliente.nombre || '-';
+                    document.getElementById('detailCedula').textContent = cliente.cedula || '-';
+                    document.getElementById('detailPhone').textContent = cliente.telefono || '-';
+                    document.getElementById('detailEmail').textContent = cliente.correo || '-';
+                    document.getElementById('detailAddress').textContent = cliente.direccion || '-';
+                    document.getElementById('detailStatus').textContent = Number(cliente.activo) === 1 ? 'Habilitado' : 'Deshabilitado';
                     detailsModal.style.display = 'block';
                 }
 
@@ -696,22 +715,77 @@ ob_start();
                     detailsModal.style.display = 'none';
                 }
 
-                function saveClient() {
-                    // Aquí implementarías la lógica para guardar el cliente
-                    alert('Función de guardar cliente (conectar con backend)');
-                    closeModal();
+                async function saveClient() {
+                    const { values, errors } = validateClientForm();
+                    if (Object.keys(errors).length) {
+                        const firstInvalidField = clientForm.elements[Object.keys(errors)[0]];
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Revisa los datos del cliente',
+                            html: `<ul style="text-align:left;margin:0;padding-left:20px">${Object.values(errors).map((message) => `<li>${message}</li>`).join('')}</ul>`,
+                            confirmButtonText: 'Entendido'
+                        });
+                        firstInvalidField.focus();
+                        return;
+                    }
+                    const isEditing = Boolean(values.id_clientes);
+                    try {
+                        const result = await postClientAction(isEditing ? 'modificar' : 'registrar', values);
+                        if (result.status !== 'success') {
+                            throw new Error((result.errors ? Object.values(result.errors).join('\n') : '') || result.message || 'No se pudo guardar el cliente.');
+                        }
+                        closeModal();
+                        window.location.reload();
+                    } catch (error) {
+                        await showClientError('No se pudo guardar el cliente', error.message || 'Intente nuevamente.');
+                    }
                 }
 
-                function deleteClient(clientId) {
-                    if (confirm('¿Está seguro de eliminar este cliente?')) {
-                        // Aquí implementarías la lógica para eliminar el cliente
-                        alert('Función de eliminar cliente (conectar con backend)');
+                async function deleteClient(clientId) {
+                    const confirmation = await Swal.fire({
+                        icon: 'warning',
+                        title: '¿Eliminar este cliente?',
+                        text: 'Esta acción no se puede deshacer.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar',
+                        reverseButtons: true,
+                        confirmButtonColor: '#dc3545'
+                    });
+                    if (!confirmation.isConfirmed) return;
+
+                    try {
+                        const result = await postClientAction('eliminar', { id_clientes: clientId });
+                        if (result.status !== 'success') {
+                            throw new Error((result.errors ? Object.values(result.errors).join('\n') : '') || result.message || 'No se pudo eliminar el cliente.');
+                        }
+                        await Swal.fire({ icon: 'success', title: 'Cliente eliminado', text: result.message || 'El cliente se eliminó correctamente.' });
+                        window.location.reload();
+                    } catch (error) {
+                        await showClientError('No se pudo eliminar el cliente', error.message || 'Intente nuevamente.');
                     }
                 }
 
                 function exportData() {
-                    // Aquí implementarías la lógica para exportar datos
-                    alert('Función de exportar datos (conectar con backend)');
+                    const rows = Array.from(document.querySelectorAll('.clients-table tbody tr'));
+                    const data = [['Nombre', 'Cédula', 'Teléfono', 'Correo', 'Estado']];
+                    rows.forEach((row) => {
+                        const cells = row.cells;
+                        data.push([
+                            cells[0].querySelector('.client-name')?.textContent.trim() || '',
+                            cells[1].textContent.trim(),
+                            cells[2].textContent.trim(),
+                            cells[3].textContent.trim(),
+                            cells[4].textContent.trim()
+                        ]);
+                    });
+                    const csv = data.map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(',')).join('\r\n');
+                    const url = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'clientes.csv';
+                    link.click();
+                    URL.revokeObjectURL(url);
                 }
 
                 // Event listeners para cerrar modales

@@ -35,30 +35,30 @@ class EnvLoader {
         
         $currentVar = null;
         $currentValue = '';
+        $currentQuote = null;
         $inMultiline = false;
         
         foreach ($lines as $line) {
             $trimmedLine = trim($line);
+
+            if ($inMultiline) {
+                $closingPosition = strrpos($line, $currentQuote);
+                if ($closingPosition !== false) {
+                    $currentValue .= "\n" . substr($line, 0, $closingPosition);
+                    self::setEnvVar($currentVar, $currentValue);
+                    $currentVar = null;
+                    $currentValue = '';
+                    $currentQuote = null;
+                    $inMultiline = false;
+                } else {
+                    $currentValue .= "\n" . $line;
+                }
+                continue;
+            }
             
             // Ignorar comentarios y líneas vacías (excepto cuando estamos en un valor multilínea)
-            if (!$inMultiline && (strpos($trimmedLine, '#') === 0 || $trimmedLine === '')) {
+            if (strpos($trimmedLine, '#') === 0 || $trimmedLine === '') {
                 continue;
-            }
-            
-            // Si estamos en un valor multilínea y la línea no empieza con un nombre de variable
-            if ($inMultiline && strpos($trimmedLine, '=') === false) {
-                // Continuar acumulando el valor
-                $currentValue .= "\n" . $line;
-                continue;
-            }
-            
-            // Si estamos en un valor multilínea y encontramos una nueva variable
-            if ($inMultiline && strpos($trimmedLine, '=') !== false) {
-                // Guardar la variable anterior
-                self::setEnvVar($currentVar, $currentValue);
-                $currentVar = null;
-                $currentValue = '';
-                $inMultiline = false;
             }
             
             // Procesar nueva variable
@@ -78,6 +78,7 @@ class EnvLoader {
                         // Valor multilínea
                         $inMultiline = true;
                         $currentVar = $name;
+                        $currentQuote = $quote;
                         $currentValue = substr($value, 1); // Remover comilla de apertura
                         continue;
                     }

@@ -1298,7 +1298,7 @@ ALTER TABLE `tbl_combo_detalle`
 -- Filtros para la tabla `tbl_despachos`
 --
 ALTER TABLE `tbl_despachos`
-  ADD CONSTRAINT `tbl_despachos_ibfk_1` FOREIGN KEY (`id_clientes`) REFERENCES `tbl_clientes` (`id_clientes`) ON DELETE CASCADE ON UPDATE CASCADE;
+    ADD CONSTRAINT `tbl_despachos_ibfk_1` FOREIGN KEY (`id_clientes`) REFERENCES `tbl_clientes` (`id_clientes`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `tbl_despacho_detalle`
@@ -1326,7 +1326,7 @@ ALTER TABLE `tbl_detalle_recepcion_productos`
 -- Filtros para la tabla `tbl_facturas`
 --
 ALTER TABLE `tbl_facturas`
-  ADD CONSTRAINT `tbl_facturas_ibfk_1` FOREIGN KEY (`cliente`) REFERENCES `tbl_clientes` (`id_clientes`) ON DELETE CASCADE ON UPDATE CASCADE;
+    ADD CONSTRAINT `tbl_facturas_ibfk_1` FOREIGN KEY (`cliente`) REFERENCES `tbl_clientes` (`id_clientes`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `tbl_factura_detalle`

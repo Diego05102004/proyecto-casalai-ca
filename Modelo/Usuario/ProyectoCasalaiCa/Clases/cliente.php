@@ -325,14 +325,16 @@ class cliente extends BD {
     private function validarIntegridadReferencial($id, $pdo) {
         $errores = [];
         
-        // Verificar si tiene compras asociadas
-        $sql = "SELECT COUNT(*) as total FROM tbl_compras WHERE id_clientes = ?";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM tbl_despachos WHERE id_clientes = ?");
         $stmt->execute([$id]);
-        $compras = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        $despachos = (int)$stmt->fetchColumn();
         
-        if ($compras > 0) {
-            $errores['integridad'] = "No se puede eliminar el cliente porque tiene {$compras} compra(s) asociada(s)";
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM tbl_facturas WHERE cliente = ?");
+        $stmt->execute([$id]);
+        $facturas = (int)$stmt->fetchColumn();
+
+        if ($despachos > 0 || $facturas > 0) {
+            $errores['integridad'] = 'No se puede eliminar el cliente porque tiene compras o facturas registradas.';
         }
         
         return $errores;
@@ -418,9 +420,11 @@ class cliente extends BD {
             return $errores;
         }
         
-        // Para eliminación, solo validar ID y existencia
-        // La integridad referencial se maneja a nivel de base de datos
-        return [];
+        $erroresIntegridad = $this->ejecutarConConexionSegura(function($pdo) use ($id) {
+            return $this->validarIntegridadReferencial($id, $pdo);
+        }, false);
+
+        return array_merge($errores, $erroresIntegridad);
     }
 
     public function validarDescarga($parametros) {

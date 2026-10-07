@@ -20,87 +20,68 @@ class Encryption {
     private $rsaPublicKey;
     private $rsaPrivateKey;
     private $aesMethod = 'AES-256-CBC';
-    
+
     /**
      * Constructor
-     * Carga claves RSA desde variables de entorno
+     * Carga claves RSA desde variables de entorno o desde .env.
      */
     public function __construct() {
         $this->loadRSAKeys();
     }
-    
-    /**
-     * Carga claves RSA desde variables de entorno o directamente del archivo .env
-     * @throws \RuntimeException si las claves no están configuradas
-     */
+
     private function loadRSAKeys() {
-        // Intentar cargar desde variables de entorno primero
         $publicKey = getenv('RSA_PUBLIC_KEY');
         $privateKey = getenv('RSA_PRIVATE_KEY');
-        
-        error_log("[ENCRYPTION] Cargando claves RSA desde variables de entorno...");
-        error_log("[ENCRYPTION] Clave pública desde getenv: " . ($publicKey !== false ? "YES" : "NO"));
-        error_log("[ENCRYPTION] Clave privada desde getenv: " . ($privateKey !== false ? "YES" : "NO"));
-        
-        // Fallback: Si no están en variables de entorno, cargar directamente del archivo .env
-        if ($publicKey === false || $privateKey === false) {
-            error_log("[ENCRYPTION] Variables de entorno no disponibles, cargando desde archivo .env...");
-            
+
+        if ($publicKey === false || trim($publicKey) === '' ||
+            $privateKey === false || trim($privateKey) === '') {
             $envPath = dirname(__DIR__, 2) . '/.env';
-            if (file_exists($envPath)) {
+            if (is_file($envPath)) {
                 $content = file_get_contents($envPath);
-                
-                // Extraer claves RSA del archivo .env
                 preg_match('/RSA_PUBLIC_KEY="(.+?)"/s', $content, $publicMatch);
                 preg_match('/RSA_PRIVATE_KEY="(.+?)"/s', $content, $privateMatch);
-                
-                if ($publicMatch && $privateMatch) {
-                    $publicKey = $publicMatch[1];
-                    $privateKey = $privateMatch[1];
-                    
-                    // Convertir \n a saltos de línea reales
-                    $publicKey = str_replace('\\n', "\n", $publicKey);
-                    $privateKey = str_replace('\\n', "\n", $privateKey);
-                    
-                    error_log("[ENCRYPTION] Claves cargadas desde archivo .env exitosamente");
-                } else {
-                    error_log("[ENCRYPTION] No se encontraron claves RSA en archivo .env");
+
+                if ($publicKey === false || trim($publicKey) === '') {
+                    $publicKey = $publicMatch[1] ?? false;
                 }
-            } else {
-                error_log("[ENCRYPTION] Archivo .env no encontrado en: $envPath");
+                if ($privateKey === false || trim($privateKey) === '') {
+                    $privateKey = $privateMatch[1] ?? false;
+                }
             }
         }
-        
-        if ($publicKey !== false) {
-            error_log("[ENCRYPTION] Longitud clave pública: " . strlen($publicKey));
-            error_log("[ENCRYPTION] Primeros 100 chars clave pública: " . substr($publicKey, 0, 100));
-        }
-        
-        if ($privateKey !== false) {
-            error_log("[ENCRYPTION] Longitud clave privada: " . strlen($privateKey));
-            error_log("[ENCRYPTION] Primeros 100 chars clave privada: " . substr($privateKey, 0, 100));
-        }
-        
-        if ($publicKey === false || $privateKey === false) {
+
+        if ($publicKey === false || $privateKey === false ||
+            trim($publicKey) === '' || trim($privateKey) === '') {
             throw new \RuntimeException(
-                'Las claves RSA no están configuradas en variables de entorno ni en el archivo .env. ' .
-                'Configure RSA_PUBLIC_KEY y RSA_PRIVATE_KEY en el archivo .env'
+                'Las claves RSA no están configuradas en variables de entorno ni en el archivo .env.'
             );
         }
-        
-        // Validar formato de claves (PEM)
-        if (strpos($publicKey, '-----BEGIN PUBLIC KEY-----') === false || 
-            strpos($privateKey, '-----BEGIN PRIVATE KEY-----') === false) {
+
+        $normalizeKey = static function($key) {
+            return trim(str_replace(['\\n', "\r\n", "\r"], ["\n", "\n", "\n"], $key));
+        };
+        $publicKey = $normalizeKey($publicKey);
+        $privateKey = $normalizeKey($privateKey);
+
+        $publicKeyResource = @openssl_pkey_get_public($publicKey);
+        $privateKeyResource = @openssl_pkey_get_private($privateKey);
+        if ($publicKeyResource === false || $privateKeyResource === false) {
             throw new \RuntimeException(
-                'Las claves RSA no tienen formato PEM válido. ' .
-                'Asegúrese de incluir los encabezados -----BEGIN/END PUBLIC/PRIVATE KEY-----'
+                'No se pudieron interpretar las claves RSA. Verifique que el contenido PEM esté completo y válido.'
             );
         }
-        
+
+        $publicDetails = openssl_pkey_get_details($publicKeyResource);
+        $privateDetails = openssl_pkey_get_details($privateKeyResource);
+        if ($publicDetails['type'] !== OPENSSL_KEYTYPE_RSA ||
+            $privateDetails['type'] !== OPENSSL_KEYTYPE_RSA ||
+            !hash_equals($publicDetails['rsa']['n'], $privateDetails['rsa']['n']) ||
+            !hash_equals($publicDetails['rsa']['e'], $privateDetails['rsa']['e'])) {
+            throw new \RuntimeException('La clave pública y la clave privada RSA no forman una pareja válida.');
+        }
+
         $this->rsaPublicKey = $publicKey;
         $this->rsaPrivateKey = $privateKey;
-        
-        error_log("[ENCRYPTION] Claves RSA cargadas exitosamente");
     }
     
     /**
@@ -300,9 +281,6 @@ public function decryptArray($data, $fields, $debugMode = false) {
                 error_log("[ENCRYPTION-DEBUG]   Longitud original: " . strlen($valorOriginal) . 
                          " | Longitud descifrada: " . strlen($valorDescifrado));
                 
-                // Mostrar primeros caracteres para verificar
-                error_log("[ENCRYPTION-DEBUG]   Original (primeros 50): " . substr($valorOriginal, 0, 50));
-                error_log("[ENCRYPTION-DEBUG]   Descifrado (primeros 50): " . substr($valorDescifrado, 0, 50));
             } else {
                 error_log("[ENCRYPTION-DEBUG] ⚠️ CAMPO '$field' NO SE MODIFICÓ (puede no estar cifrado)");
             }
@@ -310,9 +288,6 @@ public function decryptArray($data, $fields, $debugMode = false) {
         } catch (\Exception $e) {
             error_log("[ENCRYPTION-DEBUG] ❌ ERROR DESCIFRANDO CAMPO '$field': " . $e->getMessage());
             error_log("[ENCRYPTION-DEBUG]   Tipo de error: " . get_class($e));
-            error_log("[ENCRYPTION-DEBUG]   Valor original (primeros 100): " . substr($valorOriginal, 0, 100));
-            error_log("[ENCRYPTION-DEBUG]   Stack trace: " . $e->getTraceAsString());
-            
             // Mantener valor original
             $data[$field] = $valorOriginal;
         }
@@ -491,12 +466,11 @@ public function decryptWithDiagnostico($encryptedData, $fieldName) {
 public function testEncryption($plainText, $fieldName = 'test') {
     error_log("[ENCRYPTION-TEST] =======================");
     error_log("[ENCRYPTION-TEST] Probando campo '$fieldName'");
-    error_log("[ENCRYPTION-TEST] Texto original: '$plainText'");
+    error_log("[ENCRYPTION-TEST] Probando valor de longitud: " . strlen($plainText));
     error_log("[ENCRYPTION-TEST] Longitud: " . strlen($plainText));
     
     // 1. Cifrar
     $encrypted = $this->encrypt($plainText);
-    error_log("[ENCRYPTION-TEST] Cifrado: '$encrypted'");
     error_log("[ENCRYPTION-TEST] Longitud cifrado: " . strlen($encrypted));
     
     // 2. Descifrar
