@@ -26,6 +26,16 @@ if (!Auth::validateToken() && isset($_SESSION['id_usuario']) && isset($_SESSION[
 // Variables para los componentes reutilizables
 $pagina_actual = 'producto';
 $titulo_pagina = 'Gestión de Productos';
+$permisosProducto = is_array($permisosUsuario ?? null) ? $permisosUsuario : [];
+$puedeConsultarProductos = !empty($permisosProducto['consultar']);
+$puedeIncluirProductos = !empty($permisosProducto['incluir']) || !empty($permisosProducto['ingresar']);
+$puedeModificarProductos = !empty($permisosProducto['modificar']);
+$puedeEliminarProductos = !empty($permisosProducto['eliminar']);
+
+if (!$puedeConsultarProductos) {
+    header('Location: ?pagina=acceso-denegado');
+    exit();
+}
 
 // Iniciar el buffer de contenido
 ob_start();
@@ -33,10 +43,21 @@ ob_start();
 
 <?php
 // Cálculos previos para summary cards
+$productos = is_array($productos ?? null) ? $productos : [];
+foreach ($productos as &$producto) {
+    $producto['stock_actual'] = (int)($producto['stock_actual'] ?? $producto['stock'] ?? 0);
+    $producto['stock_minimo'] = (int)($producto['stock_minimo'] ?? 0);
+}
+unset($producto);
+
 $total_productos = count($productos ?? []);
-$stock_bajo = count(array_filter($productos ?? [], function($p) { return ($p['stock_actual'] ?? 0) < ($p['stock_minimo'] ?? 0); }));
-$total_categorias = count($categoriasDinamicas ?? []);
-$productos_recepcion = count($productosMasRecibidos ?? []);
+$stock_bajo = count(array_filter($productos, function($p) { return $p['stock_actual'] <= $p['stock_minimo']; }));
+$total_categorias = count(is_array($categorias ?? null) ? $categorias : []);
+$recepcionesProducto = is_array($productosMasRecibidos ?? null) ? $productosMasRecibidos : [];
+$nombresProductosRecibidos = array_unique(array_filter(array_map(function($recepcion) {
+    return mb_strtolower(trim((string)($recepcion['label'] ?? '')));
+}, $recepcionesProducto)));
+$productos_recepcion = count($nombresProductosRecibidos);
 
 // Calcular porcentajes
 $porcentaje_total = 100; // Siempre 100% para el total
@@ -95,7 +116,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 <div class="summary-card recepcion">
                     <div class="card-icon"><i class="fas fa-inbox"></i></div>
                     <div class="card-content">
-                        <h3>En Recepción</h3>
+                        <h3>Con recepción</h3>
                         <p class="card-value"><?php echo $productos_recepcion; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
@@ -113,10 +134,12 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 <div class="section-header">
                     <h2>Inventario de Productos</h2>
                     <div class="section-actions">
-                        <button class="btn-add-product" onclick="openModal('registrar')">
+                        <?php if ($puedeIncluirProductos): ?>
+                        <button type="button" class="btn-add-product" onclick="openModal('registrar')" <?php echo empty($categoriasDinamicas) ? 'disabled' : ''; ?>>
                             <span class="btn-icon"><i class="fas fa-plus"></i></span>
                             Agregar Producto
                         </button>
+                        <?php endif; ?>
                         <button class="btn-filter" onclick="openFilterModal()">
                             <span class="btn-icon"><i class="fas fa-search"></i></span>
                             Filtrar
@@ -162,9 +185,13 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                                         </span>
                                     </div>
                                     <div class="product-actions">
-                                        <button class="btn-action btn-edit" onclick="openModal('editar', <?php echo $producto['id_producto']; ?>)"><i class="fas fa-edit"></i></button>
-                                        <button class="btn-action btn-delete" onclick="deleteProduct(<?php echo $producto['id_producto']; ?>)"><i class="fas fa-trash"></i></button>
-                                        <button class="btn-action btn-view" onclick="viewProduct(<?php echo $producto['id_producto']; ?>)"><i class="fas fa-eye"></i></button>
+                                        <?php if ($puedeModificarProductos): ?>
+                                        <button type="button" class="btn-action btn-edit" onclick="openModal('editar', <?php echo (int)$producto['id_producto']; ?>)" title="Editar producto" aria-label="Editar producto"><i class="fas fa-edit"></i></button>
+                                        <?php endif; ?>
+                                        <?php if ($puedeEliminarProductos): ?>
+                                        <button type="button" class="btn-action btn-delete" onclick="deleteProduct(<?php echo (int)$producto['id_producto']; ?>)" title="Eliminar producto" aria-label="Eliminar producto"><i class="fas fa-trash"></i></button>
+                                        <?php endif; ?>
+                                        <button type="button" class="btn-action btn-view" onclick="viewProduct(<?php echo (int)$producto['id_producto']; ?>)" title="Ver producto" aria-label="Ver producto"><i class="fas fa-eye"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -209,8 +236,10 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         <span class="close-modal">&times;</span>
                     </div>
                     <div class="modal-body">
-                        <form id="productForm">
-                            <input type="hidden" id="productId" name="id">
+                        <form id="productForm" enctype="multipart/form-data">
+                            <input type="hidden" id="productId" name="id_producto">
+                            <input type="hidden" name="accion" id="productAction" value="ingresar">
+                            <input type="hidden" id="productCategoryTable" name="tabla_categoria">
                             
                             <div class="form-row">
                                 <div class="form-group">
@@ -236,11 +265,11 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                             
                             <div class="form-group">
                                 <label for="productCategory">Categoría*</label>
-                                <select id="productCategory" name="categoria" required>
+                                    <select id="productCategory" name="Categoria" required>
                                     <option value="">Seleccione una categoría</option>
                                     <?php if (!empty($categoriasDinamicas)): ?>
                                         <?php foreach ($categoriasDinamicas as $categoria): ?>
-                                            <option value="<?php echo $categoria['id_categoria']; ?>">
+                                            <option value="<?php echo htmlspecialchars($categoria['tabla'], ENT_QUOTES, 'UTF-8'); ?>">
                                                 <?php echo htmlspecialchars($categoria['nombre_categoria']); ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -250,11 +279,11 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                             
                             <div class="form-group">
                                 <label for="productPrice">Precio*</label>
-                                <input type="number" id="productPrice" name="precio" required 
+                                <input type="number" id="productPrice" name="Precio" required
                                        placeholder="0.00" step="0.01" min="0">
                             </div>
                             
-                            <div class="form-row">
+                            <div class="form-row stock-fields">
                                 <div class="form-group">
                                     <label for="stockActual">Stock Actual*</label>
                                     <input type="number" id="stockActual" name="Stock_Actual" required 
@@ -283,24 +312,67 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                             <div class="form-group">
                                 <label for="productImage">Imagen del Producto</label>
                                 <input type="file" id="productImage" name="imagen" accept="image/*">
+                                <div class="product-image-preview" id="productImagePreviewFrame">
+                                    <img id="productImagePreview" alt="Vista previa de la imagen seleccionada" hidden>
+                                    <span id="productImagePreviewPlaceholder">Seleccione una imagen para previsualizarla</span>
+                                </div>
                             </div>
                             
                             <div class="form-group">
                                 <label for="productWarranty">Garantía</label>
-                                <input type="text" id="productWarranty" name="Clausula_garantia" 
+                                    <input type="text" id="productWarranty" name="Clausula_garantia" required
                                        placeholder="Ej: 1 año de garantía">
                             </div>
                             
                             <div class="form-group">
                                 <label for="productSerial">Serial/Código</label>
-                                <input type="text" id="productSerial" name="Seriales" 
+                                <input type="text" id="productSerial" name="Seriales" required
                                        placeholder="Código único del producto">
                             </div>
+                            <div id="productCategoryFields" class="form-group"></div>
                         </form>
                     </div>
                     <div class="modal-footer">
                         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-                        <button class="btn-save" onclick="saveProduct()">Guardar</button>
+                        <button type="submit" class="btn-save" form="productForm">Guardar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="productDetailsModal" class="modal" aria-hidden="true">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <h2 id="detailProductTitle">Detalles del Producto</h2>
+                        <button type="button" class="close-modal" aria-label="Cerrar detalles">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="product-details-layout">
+                            <div class="product-details-image-frame">
+                                <img id="detailProductImage" alt="Imagen completa del producto" hidden>
+                                <div id="detailProductImagePlaceholder" class="image-placeholder">
+                                    <i class="fas fa-box-open" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <div class="product-details-grid">
+                                <div class="product-detail"><span>ID</span><strong id="detailProductId">-</strong></div>
+                                <div class="product-detail"><span>Nombre</span><strong id="detailProductName">-</strong></div>
+                                <div class="product-detail"><span>Categoría</span><strong id="detailProductCategory">-</strong></div>
+                                <div class="product-detail"><span>Modelo</span><strong id="detailProductModel">-</strong></div>
+                                <div class="product-detail"><span>Marca</span><strong id="detailProductBrand">-</strong></div>
+                                <div class="product-detail"><span>Precio</span><strong id="detailProductPrice">-</strong></div>
+                                <div class="product-detail"><span>Stock actual</span><strong id="detailProductStock">-</strong></div>
+                                <div class="product-detail"><span>Stock mínimo</span><strong id="detailProductMinStock">-</strong></div>
+                                <div class="product-detail"><span>Stock máximo</span><strong id="detailProductMaxStock">-</strong></div>
+                                <div class="product-detail"><span>Serial</span><strong id="detailProductSerial">-</strong></div>
+                                <div class="product-detail"><span>Estado</span><strong id="detailProductStatus">-</strong></div>
+                                <div class="product-detail product-detail-wide"><span>Descripción</span><strong id="detailProductDescription">-</strong></div>
+                                <div class="product-detail product-detail-wide"><span>Garantía</span><strong id="detailProductWarranty">-</strong></div>
+                                <div id="detailProductCharacteristics" class="product-details-grid product-detail-wide"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" id="closeProductDetails">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -666,6 +738,216 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     font-size: 1rem;
                 }
 
+                #productModal.modal, #productDetailsModal.modal {
+                    overflow-y: auto;
+                    padding: 16px 0;
+                }
+
+                #productModal .modal-content, #productDetailsModal .modal-content {
+                    display: flex;
+                    flex-direction: column;
+                    width: min(860px, calc(100vw - 32px));
+                    max-width: 860px;
+                    max-height: calc(100vh - 32px);
+                    margin: 0 auto;
+                }
+
+                #productModal .modal-body, #productDetailsModal .modal-body {
+                    min-height: 0;
+                    overflow-y: auto;
+                    flex: 1 1 auto;
+                }
+
+                #productModal .modal-header, #productModal .modal-footer,
+                #productDetailsModal .modal-header, #productDetailsModal .modal-footer {
+                    flex: 0 0 auto;
+                }
+
+                #productModal .form-row {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 16px;
+                }
+
+                #productModal .stock-fields {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+
+                #productModal .form-group {
+                    min-width: 0;
+                    margin-bottom: 18px;
+                }
+
+                #productModal .form-group label {
+                    display: block;
+                    margin-bottom: 8px;
+                    color: #333;
+                    font-weight: 600;
+                }
+
+                #productModal .form-group input,
+                #productModal .form-group select,
+                #productModal .form-group textarea {
+                    display: block;
+                    width: 100%;
+                    min-height: 44px;
+                    padding: 11px 12px;
+                    border: 1px solid #d5dbe3;
+                    border-radius: 8px;
+                    background: #fff;
+                    color: #1f2937;
+                    font: inherit;
+                    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                }
+
+                #productModal .form-group textarea {
+                    min-height: 90px;
+                    resize: vertical;
+                }
+
+                #productModal .form-group input:focus,
+                #productModal .form-group select:focus,
+                #productModal .form-group textarea:focus {
+                    outline: none;
+                    border-color: #2196f3;
+                    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.16);
+                }
+
+                #productModal input[type="file"] {
+                    padding: 8px;
+                    background: #f8fafc;
+                }
+
+                #productModal .modal-header, #productDetailsModal .modal-header {
+                    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+                    color: #fff;
+                }
+
+                #productModal .modal-footer, #productDetailsModal .modal-footer {
+                    border-top: 1px solid #e5e7eb;
+                }
+
+                #productModal .close-modal, #productDetailsModal .close-modal {
+                    padding: 0;
+                    border: 0;
+                    background: transparent;
+                    color: #fff;
+                }
+
+                #productModal .btn-save, #productModal .btn-cancel,
+                #productDetailsModal .btn-cancel {
+                    min-height: 42px;
+                    padding: 10px 24px;
+                    border: 0;
+                    border-radius: 8px;
+                    color: #fff;
+                    font: inherit;
+                    font-weight: 600;
+                    cursor: pointer;
+                }
+
+                #productModal .btn-save {
+                    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+                }
+
+                #productModal .btn-cancel, #productDetailsModal .btn-cancel {
+                    background: #6c757d;
+                }
+
+                .product-details-layout {
+                    display: grid;
+                    grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.5fr);
+                    gap: 24px;
+                    align-items: start;
+                }
+
+                .product-details-image-frame {
+                    display: grid;
+                    height: min(60vh, 620px);
+                    min-height: 320px;
+                    place-items: center;
+                    overflow: auto;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 10px;
+                    background: #f8fafc;
+                    padding: 12px;
+                }
+
+                #detailProductImage {
+                    display: block;
+                    width: auto;
+                    height: auto;
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                }
+
+                .product-image-preview {
+                    display: grid;
+                    width: min(100%, 420px);
+                    height: 190px;
+                    margin-top: 12px;
+                    padding: 10px;
+                    place-items: center;
+                    overflow: hidden;
+                    border: 1px dashed #b8c4d1;
+                    border-radius: 8px;
+                    background: #f8fafc;
+                    color: #64748b;
+                    text-align: center;
+                }
+
+                #productImagePreview {
+                    display: block;
+                    width: auto;
+                    height: auto;
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                }
+
+                #productImagePreview[hidden], #detailProductImage[hidden] {
+                    display: none;
+                }
+
+                .product-details-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 12px;
+                }
+
+                .product-detail {
+                    display: flex;
+                    min-width: 0;
+                    flex-direction: column;
+                    gap: 5px;
+                    padding: 12px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    background: #f8fafc;
+                }
+
+                .product-detail span {
+                    color: #64748b;
+                    font-size: 0.82rem;
+                    font-weight: 600;
+                }
+
+                .product-detail strong {
+                    overflow-wrap: anywhere;
+                    color: #1f2937;
+                    font-weight: 600;
+                    white-space: pre-wrap;
+                }
+
+                .product-detail-wide {
+                    grid-column: 1 / -1;
+                }
+
+                #detailProductCharacteristics:empty {
+                    display: none;
+                }
+
                 /* Responsive */
                 @media (max-width: 768px) {
                     .products-grid {
@@ -682,6 +964,16 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     .categories-grid {
                         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
                     }
+
+                    #productModal .form-row, #productModal .stock-fields,
+                    .product-details-layout {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .product-details-image-frame {
+                        height: min(45vh, 420px);
+                        min-height: 240px;
+                    }
                 }
 
                 @media (max-width: 480px) {
@@ -696,49 +988,286 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
             </style>
 
             <script>
+                const categoriasDinamicasProducto = <?php echo json_encode($categoriasDinamicas ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+                const productosDisponibles = <?php echo json_encode($productos ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+
+                const productForm = document.getElementById('productForm');
+                const productModal = document.getElementById('productModal');
+                const productCategory = document.getElementById('productCategory');
+                const productCategoryTable = document.getElementById('productCategoryTable');
+                const productCategoryFields = document.getElementById('productCategoryFields');
+                const productDetailsModal = document.getElementById('productDetailsModal');
+                const productImageInput = document.getElementById('productImage');
+                const productImagePreview = document.getElementById('productImagePreview');
+                const productImagePreviewPlaceholder = document.getElementById('productImagePreviewPlaceholder');
+                let temporaryProductImageUrl = null;
+
+                function showProductImagePreview(source) {
+                    if (!source) {
+                        productImagePreview.removeAttribute('src');
+                        productImagePreview.hidden = true;
+                        productImagePreviewPlaceholder.hidden = false;
+                        return;
+                    }
+
+                    productImagePreview.src = source;
+                    productImagePreview.hidden = false;
+                    productImagePreviewPlaceholder.hidden = true;
+                }
+
+                function clearTemporaryProductImageUrl() {
+                    if (temporaryProductImageUrl) {
+                        URL.revokeObjectURL(temporaryProductImageUrl);
+                        temporaryProductImageUrl = null;
+                    }
+                }
+
+                productImageInput.addEventListener('change', function () {
+                    clearTemporaryProductImageUrl();
+                    const selectedImage = this.files && this.files[0];
+                    if (!selectedImage) {
+                        return;
+                    }
+                    temporaryProductImageUrl = URL.createObjectURL(selectedImage);
+                    showProductImagePreview(temporaryProductImageUrl);
+                });
+
+                function renderProductCategoryFields(tabla, valores = {}) {
+                    const categoria = categoriasDinamicasProducto.find(item => item.tabla === tabla);
+                    productCategoryFields.replaceChildren();
+                    productCategoryTable.value = tabla || '';
+
+                    if (!categoria) {
+                        return;
+                    }
+
+                    categoria.caracteristicas.forEach(caracteristica => {
+                        const group = document.createElement('div');
+                        group.className = 'form-group';
+
+                        const label = document.createElement('label');
+                        label.htmlFor = `productCaracteristica_${caracteristica.nombre}`;
+                        label.textContent = caracteristica.nombre.replace(/_/g, ' ');
+
+                        const input = document.createElement('input');
+                        input.id = label.htmlFor;
+                        input.name = `carac[${caracteristica.nombre}]`;
+                        input.type = ['int', 'float'].includes(caracteristica.tipo) ? 'number' : 'text';
+                        input.required = true;
+                        if (input.type === 'number') {
+                            input.min = '0';
+                            if (caracteristica.tipo === 'float') input.step = 'any';
+                        } else {
+                            input.maxLength = Number(caracteristica.max) || 255;
+                        }
+                        if (Object.prototype.hasOwnProperty.call(valores, caracteristica.nombre)) {
+                            input.value = valores[caracteristica.nombre] ?? '';
+                        }
+
+                        group.append(label, input);
+                        productCategoryFields.appendChild(group);
+                    });
+                }
+
+                productCategory.addEventListener('change', function () {
+                    renderProductCategoryFields(this.value);
+                });
+
                 function openModal(type, productId = null) {
+                    clearTemporaryProductImageUrl();
+                    productForm.reset();
+                    document.getElementById('productId').value = '';
+                    document.getElementById('productAction').value = 'ingresar';
+                    productCategoryFields.replaceChildren();
+                    productCategoryTable.value = '';
+                    showProductImagePreview('');
+
                     if (type === 'registrar') {
                         document.getElementById('modalTitle').textContent = 'Agregar Producto';
-                        document.getElementById('productForm').reset();
-                        document.getElementById('productId').value = '';
                     } else if (type === 'editar') {
+                        const producto = productosDisponibles.find(item => Number(item.id_producto) === Number(productId));
+                        if (!producto) {
+                            Swal.fire({ icon: 'error', title: 'Producto no encontrado', text: 'Actualiza la página e inténtalo de nuevo.' });
+                            return;
+                        }
+
                         document.getElementById('modalTitle').textContent = 'Editar Producto';
-                        document.getElementById('productId').value = productId;
-                        // Aquí cargarías los datos del producto para editar
-                        alert('Función para cargar datos del producto (conectar con backend)');
+                        document.getElementById('productId').value = producto.id_producto;
+                        document.getElementById('productAction').value = 'modificar';
+                        document.getElementById('productName').value = producto.nombre_producto || '';
+                        document.getElementById('productDescription').value = producto.descripcion_producto || '';
+                        document.getElementById('productModel').value = producto.id_modelo || '';
+                        document.getElementById('productPrice').value = producto.precio || '';
+                        document.getElementById('stockActual').value = producto.stock_actual ?? producto.stock ?? 0;
+                        document.getElementById('stockMinimo').value = producto.stock_minimo ?? 0;
+                        document.getElementById('stockMaximo').value = producto.stock_maximo ?? 0;
+                        document.getElementById('productWarranty').value = producto.clausula_garantia || '';
+                        document.getElementById('productSerial').value = producto.serial || '';
+                        showProductImagePreview(producto.imagen || '');
+
+                        const normalizarCategoria = value => String(value || '').toLowerCase().replace(/[\s_-]+/g, '');
+                        const categoria = categoriasDinamicasProducto.find(item => normalizarCategoria(item.nombre_categoria) === normalizarCategoria(producto.nombre_categoria));
+                        productCategory.value = categoria ? categoria.tabla : '';
+                        renderProductCategoryFields(productCategory.value, producto.caracteristicas || {});
                     }
-                    document.getElementById('productModal').style.display = 'block';
+                    productModal.style.display = 'block';
                 }
 
                 function closeModal() {
-                    document.getElementById('productModal').style.display = 'none';
+                    productModal.style.display = 'none';
+                    clearTemporaryProductImageUrl();
+                    productForm.reset();
+                    productCategoryFields.replaceChildren();
+                    productCategoryTable.value = '';
+                    showProductImagePreview('');
                 }
 
-                function deleteProduct(productId) {
-                    if (confirm('¿Está seguro de eliminar este producto?')) {
-                        alert('Función para eliminar producto (conectar con backend)');
+                async function enviarAccionProducto(datos) {
+                    const response = await fetch(window.location.href, {
+                        method: 'POST',
+                        body: datos,
+                        credentials: 'same-origin'
+                    });
+                    const resultado = await response.json();
+                    if (!response.ok || resultado.status === 'error') {
+                        throw new Error(resultado.message || resultado.mensaje || 'No se pudo completar la operación.');
+                    }
+                    return resultado;
+                }
+
+                productForm.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+                    if (!productForm.reportValidity()) return;
+
+                    productCategoryTable.value = productCategory.value;
+                    const datos = new FormData(productForm);
+                    const submitButton = document.querySelector('#productModal .btn-save');
+                    const title = document.getElementById('productAction').value === 'modificar' ? 'Producto modificado' : 'Producto registrado';
+                    if (submitButton) submitButton.disabled = true;
+                    closeModal();
+                    try {
+                        const resultado = await enviarAccionProducto(datos);
+                        await Swal.fire({
+                            icon: 'success',
+                            title,
+                            text: resultado.mensaje || resultado.message || 'Los cambios se guardaron correctamente.'
+                        });
+                        window.location.reload();
+                    } catch (error) {
+                        Swal.fire({ icon: 'error', title: 'No se pudo guardar', text: error.message });
+                    } finally {
+                        if (submitButton) submitButton.disabled = false;
+                    }
+                });
+
+                async function deleteProduct(productId) {
+                    const confirmacion = await Swal.fire({
+                        icon: 'warning',
+                        title: '¿Eliminar producto?',
+                        text: 'La operación será validada por el sistema antes de aplicarse.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Eliminar',
+                        cancelButtonText: 'Cancelar'
+                    });
+                    if (!confirmacion.isConfirmed) return;
+
+                    const datos = new FormData();
+                    datos.append('accion', 'eliminar');
+                    datos.append('id_producto', String(productId));
+                    try {
+                        const resultado = await enviarAccionProducto(datos);
+                        await Swal.fire({ icon: 'success', title: 'Producto eliminado', text: resultado.message || 'Se eliminó correctamente.' });
+                        window.location.reload();
+                    } catch (error) {
+                        Swal.fire({ icon: 'error', title: 'No se pudo eliminar', text: error.message });
                     }
                 }
 
                 function viewProduct(productId) {
-                    alert('Función para ver detalles del producto (conectar con backend)');
+                    const producto = productosDisponibles.find(item => Number(item.id_producto) === Number(productId));
+                    if (!producto) return;
+
+                    const setDetail = (id, value) => {
+                        document.getElementById(id).textContent = value === null || value === undefined || value === '' ? '-' : String(value);
+                    };
+
+                    document.getElementById('detailProductTitle').textContent = producto.nombre_producto || 'Detalles del Producto';
+                    setDetail('detailProductId', producto.id_producto);
+                    setDetail('detailProductName', producto.nombre_producto);
+                    setDetail('detailProductCategory', producto.nombre_categoria);
+                    setDetail('detailProductModel', producto.nombre_modelo);
+                    setDetail('detailProductBrand', producto.nombre_marca);
+                    setDetail('detailProductPrice', `$${Number(producto.precio || 0).toFixed(2)}`);
+                    setDetail('detailProductStock', producto.stock_actual ?? producto.stock);
+                    setDetail('detailProductMinStock', producto.stock_minimo);
+                    setDetail('detailProductMaxStock', producto.stock_maximo);
+                    setDetail('detailProductSerial', producto.serial);
+                    setDetail('detailProductStatus', producto.estado);
+                    setDetail('detailProductDescription', producto.descripcion_producto);
+                    setDetail('detailProductWarranty', producto.clausula_garantia);
+
+                    const image = document.getElementById('detailProductImage');
+                    const placeholder = document.getElementById('detailProductImagePlaceholder');
+                    if (producto.imagen) {
+                        image.src = producto.imagen;
+                        image.hidden = false;
+                        placeholder.hidden = true;
+                    } else {
+                        image.removeAttribute('src');
+                        image.hidden = true;
+                        placeholder.hidden = false;
+                    }
+
+                    const characteristics = document.getElementById('detailProductCharacteristics');
+                    characteristics.replaceChildren();
+                    Object.entries(producto.caracteristicas || {}).forEach(([name, value]) => {
+                        if (['id', 'id_producto'].includes(name)) return;
+                        const item = document.createElement('div');
+                        item.className = 'product-detail';
+                        const label = document.createElement('span');
+                        label.textContent = name.replace(/_/g, ' ');
+                        const detailValue = document.createElement('strong');
+                        detailValue.textContent = value === null || value === '' ? '-' : String(value);
+                        item.append(label, detailValue);
+                        characteristics.appendChild(item);
+                    });
+
+                    productDetailsModal.style.display = 'block';
+                    productDetailsModal.setAttribute('aria-hidden', 'false');
                 }
 
-                function saveProduct() {
-                    alert('Función para guardar producto (conectar con backend)');
-                    closeModal();
+                function closeProductDetails() {
+                    productDetailsModal.style.display = 'none';
+                    productDetailsModal.setAttribute('aria-hidden', 'true');
                 }
 
                 function openFilterModal() {
-                    alert('Función para abrir filtros (conectar con backend)');
+                    Swal.fire({
+                        title: 'Filtrar productos',
+                        input: 'text',
+                        inputPlaceholder: 'Nombre, categoría, modelo o marca',
+                        showCancelButton: true,
+                        confirmButtonText: 'Filtrar',
+                        cancelButtonText: 'Limpiar'
+                    }).then(result => {
+                        const filtro = result.isConfirmed ? (result.value || '').trim().toLocaleLowerCase() : '';
+                        document.querySelectorAll('.product-card').forEach(card => {
+                            card.hidden = filtro !== '' && !card.textContent.toLocaleLowerCase().includes(filtro);
+                        });
+                    });
                 }
 
                 // Event listeners para cerrar modal
-                document.querySelector('#productModal .close-modal').addEventListener('click', closeModal);
+                productModal.querySelector('.close-modal').addEventListener('click', closeModal);
+                productDetailsModal.querySelector('.close-modal').addEventListener('click', closeProductDetails);
+                document.getElementById('closeProductDetails').addEventListener('click', closeProductDetails);
 
                 window.addEventListener('click', function(event) {
-                    if (event.target === document.getElementById('productModal')) {
+                    if (event.target === productModal) {
                         closeModal();
+                    }
+                    if (event.target === productDetailsModal) {
+                        closeProductDetails();
                     }
                 });
             </script>

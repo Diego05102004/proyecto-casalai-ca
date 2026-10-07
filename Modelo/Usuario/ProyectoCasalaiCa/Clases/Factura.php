@@ -961,7 +961,7 @@ public function facturaConsultarMovil()
                     'facturas' => $facturas
                 ]
             ];
-        } catch (Throwable $e) {
+        } catch (PDOException $e) {
             return [
                 'status' => 'error',
                 'message' => 'Error al consultar facturas.',
@@ -1409,61 +1409,6 @@ public function facturaConsultarMovil()
      */
     public function validarCancelarFactura($datos) {
         return $this->validarCancelar($datos);
-    }
-    
-    /**
-     * Verifica si una factura existe por ID
-     */
-    private function verificarFacturaExistente($idFactura) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            try{
-                $sql = "SELECT COUNT(*) FROM tbl_facturas WHERE id_factura = :id_factura";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindValue(':id_factura', $idFactura, PDO::PARAM_INT);
-                $stmt->execute();
-                return $stmt->fetchColumn() > 0;
-            } catch (PDOException $e) {
-                error_log('Error en verificarFacturaExistente: ' . $e->getMessage());
-                return false;
-            }
-        });
-    }
-    
-    /**
-     * Verifica si un cliente existe por cédula
-     */
-    private function verificarClienteExistente($cedula) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($cedula){
-            try{
-                $sql = "SELECT COUNT(*) FROM tbl_clientes WHERE cedula = :cedula AND activo = 1";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindValue(':cedula', $cedula, PDO::PARAM_STR);
-                $stmt->execute();
-                return $stmt->fetchColumn() > 0;
-            } catch (PDOException $e) {
-                error_log('Error en verificarClienteExistente: ' . $e->getMessage());
-                return false;
-            }
-        });
-    }
-    
-    /**
-     * Verifica si una factura está en un estado que permite cancelación
-     */
-    private function verificarFacturaCancelable($idFactura) {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            try{
-                $sql = "SELECT estatus FROM tbl_facturas WHERE id_factura = :id_factura";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindValue(':id_factura', $idFactura, PDO::PARAM_INT);
-                $stmt->execute();
-                $estatus = $stmt->fetchColumn();
-                return $estatus === 'Borrador';
-            } catch (PDOException $e) {
-                error_log('Error en verificarFacturaCancelable: ' . $e->getMessage());
-                return false;
-            }
-        });
     }
 }
 ?>
