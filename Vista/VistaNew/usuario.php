@@ -147,111 +147,70 @@ $porcentaje_admin = $total_usuarios > 0 ? round(($administradores / $total_usuar
                                 <th>Email</th>
                                 <th>Rol</th>
                                 <th>Estado</th>
-                                <th>Último Acceso</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="user-avatar-small">
-                                            <span class="avatar-initial">J</span>
+                            <?php if (!empty($usuarios)): ?>
+                                <?php foreach ($usuarios as $usuario): ?>
+                                <tr data-id="<?php echo (int)($usuario['id_usuario'] ?? 0); ?>">
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar-small">
+                                                <span class="avatar-initial">
+                                                    <?php echo htmlspecialchars(mb_substr($usuario['username'] ?? '', 0, 1, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?>
+                                                </span>
+                                            </div>
+                                            <span class="username">
+                                                <?php echo htmlspecialchars($usuario['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                                            </span>
                                         </div>
-                                        <span class="username">jperrez</span>
-                                    </div>
-                                </td>
-                                <td>Juan Pérez</td>
-                                <td>juan.perez@casalai.com</td>
-                                <td><span class="role-badge admin">Administrador</span></td>
-                                <td><span class="status active">Activo</span></td>
-                                <td>2024-01-19 10:30</td>
-                                <td>
-                                    <button class="btn-action btn-view" onclick="viewUser(1)"><i class="fas fa-eye"></i></button>
-                                    <button class="btn-action btn-edit" onclick="editUser(1)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action btn-delete" onclick="deleteUser(1)"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="user-avatar-small">
-                                            <span class="avatar-initial">M</span>
-                                        </div>
-                                        <span class="username">mgonzalez</span>
-                                    </div>
-                                </td>
-                                <td>María González</td>
-                                <td>maria.gonzalez@casalai.com</td>
-                                <td><span class="role-badge gerente">Gerente</span></td>
-                                <td><span class="status active">Activo</span></td>
-                                <td>2024-01-19 09:15</td>
-                                <td>
-                                    <button class="btn-action btn-view" onclick="viewUser(2)"><i class="fas fa-eye"></i></button>
-                                    <button class="btn-action btn-edit" onclick="editUser(2)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action btn-delete" onclick="deleteUser(2)"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="user-avatar-small">
-                                            <span class="avatar-initial">C</span>
-                                        </div>
-                                        <span class="username">crodriguez</span>
-                                    </div>
-                                </td>
-                                <td>Carlos Rodríguez</td>
-                                <td>carlos.rodriguez@casalai.com</td>
-                                <td><span class="role-badge vendedor">Vendedor</span></td>
-                                <td><span class="status active">Activo</span></td>
-                                <td>2024-01-18 16:45</td>
-                                <td>
-                                    <button class="btn-action btn-view" onclick="viewUser(3)"><i class="fas fa-eye"></i></button>
-                                    <button class="btn-action btn-edit" onclick="editUser(3)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action btn-delete" onclick="deleteUser(3)"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="user-avatar-small">
-                                            <span class="avatar-initial">A</span>
-                                        </div>
-                                        <span class="username">amartinez</span>
-                                    </div>
-                                </td>
-                                <td>Ana Martínez</td>
-                                <td>ana.martinez@casalai.com</td>
-                                <td><span class="role-badge almacen">Almacén</span></td>
-                                <td><span class="status inactive">Inactivo</span></td>
-                                <td>2024-01-15 14:20</td>
-                                <td>
-                                    <button class="btn-action btn-view" onclick="viewUser(4)"><i class="fas fa-eye"></i></button>
-                                    <button class="btn-action btn-edit" onclick="editUser(4)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action btn-delete" onclick="deleteUser(4)"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="user-avatar-small">
-                                            <span class="avatar-initial">P</span>
-                                        </div>
-                                        <span class="username">psanchez</span>
-                                    </div>
-                                </td>
-                                <td>Pedro Sánchez</td>
-                                <td>pedro.sanchez@casalai.com</td>
-                                <td><span class="role-badge vendedor">Vendedor</span></td>
-                                <td><span class="status pending">Pendiente</span></td>
-                                <td>Nunca</td>
-                                <td>
-                                    <button class="btn-action btn-view" onclick="viewUser(5)"><i class="fas fa-eye"></i></button>
-                                    <button class="btn-action btn-edit" onclick="editUser(5)"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action btn-delete" onclick="deleteUser(5)"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td>
+                                        <?php echo htmlspecialchars(($usuario['nombres'] ?? '') . ' ' . ($usuario['apellidos'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo htmlspecialchars($usuario['correo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge <?php echo strtolower(str_replace(' ', '', $usuario['nombre_rol'] ?? '')); ?>">
+                                            <?php echo htmlspecialchars($usuario['nombre_rol'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="status <?php echo (strtolower($usuario['estatus'] ?? '') === 'habilitado') ? 'active' : 'inactive'; ?>"
+                                              <?php if (strtolower($usuario['nombre_rol'] ?? '') !== 'superusuario'): ?>
+                                              onclick="toggleUserStatus(<?php echo (int)($usuario['id_usuario'] ?? 0); ?>, '<?php echo htmlspecialchars($usuario['estatus'] ?? '', ENT_QUOTES, 'UTF-8'); ?>')"
+                                              title="Click para cambiar estado"
+                                              <?php endif; ?>
+                                              <?php if (strtolower($usuario['nombre_rol'] ?? '') === 'superusuario'): ?>
+                                              style="cursor: not-allowed; opacity: 0.6;"
+                                              <?php endif; ?>>
+                                            <?php echo htmlspecialchars($usuario['estatus'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if (strtolower($usuario['nombre_rol'] ?? '') !== 'superusuario'): ?>
+                                            <button class="btn-action btn-edit" onclick="openModal('editar', <?php echo (int)($usuario['id_usuario'] ?? 0); ?>)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn-action btn-view" onclick="viewUser(<?php echo (int)($usuario['id_usuario'] ?? 0); ?>)"><i class="fas fa-eye"></i></button>
+                                            <button class="btn-action btn-delete" onclick="deleteUser(<?php echo (int)($usuario['id_usuario'] ?? 0); ?>)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        <?php else: ?>
+                                            <span style="color: #999; font-size: 0.8rem;">No editable</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 20px;">
+                                        No hay usuarios registrados
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -266,80 +225,109 @@ $porcentaje_admin = $total_usuarios > 0 ? round(($administradores / $total_usuar
                     </div>
                     <div class="modal-body">
                         <form id="userForm">
-                            <input type="hidden" id="userId" name="id">
-                            
+                            <input type="hidden" id="userId" name="id_usuario">
+
                             <div class="form-group">
-                                <label for="username">Nombre de Usuario*</label>
-                                <input type="text" id="username" name="username" required 
-                                       placeholder="Ej: jperrez">
+                                <label for="nombre_usuario">Nombre de Usuario*</label>
+                                <input type="text" id="nombre_usuario" name="nombre_usuario" required
+                                       placeholder="Ej: jperrez" maxlength="20">
+                                <small class="field-error" data-error-for="nombre_usuario"></small>
                             </div>
-                            
+
                             <div class="form-group">
-                                <label for="firstName">Nombre*</label>
-                                <input type="text" id="firstName" name="nombre" required 
-                                       placeholder="Ej: Juan">
+                                <label for="nombre">Nombre*</label>
+                                <input type="text" id="nombre" name="nombre" required
+                                       placeholder="Ej: Juan" maxlength="50">
+                                <small class="field-error" data-error-for="nombre"></small>
                             </div>
-                            
+
                             <div class="form-group">
-                                <label for="lastName">Apellido*</label>
-                                <input type="text" id="lastName" name="apellido" required 
-                                       placeholder="Ej: Pérez">
+                                <label for="apellido_usuario">Apellido*</label>
+                                <input type="text" id="apellido_usuario" name="apellido_usuario" required
+                                       placeholder="Ej: Pérez" maxlength="50">
+                                <small class="field-error" data-error-for="apellido_usuario"></small>
                             </div>
-                            
+
                             <div class="form-group">
-                                <label for="email">Email*</label>
-                                <input type="email" id="email" name="email" required 
-                                       placeholder="juan.perez@casalai.com">
+                                <label for="correo_usuario">Email*</label>
+                                <input type="email" id="correo_usuario" name="correo_usuario" required
+                                       placeholder="juan.perez@casalai.com" maxlength="50">
+                                <small class="field-error" data-error-for="correo_usuario"></small>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="cedula">Cédula*</label>
-                                <input type="text" id="cedula" name="cedula" required 
-                                       placeholder="Ej: V-12345678">
+                                <input type="text" id="cedula" name="cedula" required
+                                       placeholder="12.345.678" maxlength="10">
+                                <small class="field-error" data-error-for="cedula"></small>
                             </div>
-                            
+
                             <div class="form-group">
-                                <label for="phone">Teléfono</label>
-                                <input type="tel" id="phone" name="telefono" 
-                                       placeholder="+58 412-123-4567">
+                                <label for="telefono_usuario">Teléfono*</label>
+                                <input type="text" id="telefono_usuario" name="telefono_usuario" required
+                                       placeholder="0414-123-4567" maxlength="13">
+                                <small class="field-error" data-error-for="telefono_usuario"></small>
                             </div>
-                            
+
                             <div class="form-group">
-                                <label for="role">Rol*</label>
-                                <select id="role" name="rol" required>
+                                <label for="rango">Rol*</label>
+                                <select id="rango" name="rango" required>
                                     <option value="">Seleccione rol</option>
-                                    <option value="admin">Administrador</option>
-                                    <option value="gerente">Gerente</option>
-                                    <option value="vendedor">Vendedor</option>
-                                    <option value="almacen">Almacén</option>
+                                    <?php
+                                    if (!empty($selecionarRol)) {
+                                        foreach ($selecionarRol as $rol) {
+                                            if($rol['nombre_rol'] != 'SuperUsuario' && $rol['nombre_rol'] != 'Cliente') {
+                                                echo '<option value="' . $rol['id_rol'] . '">' . htmlspecialchars($rol['nombre_rol']) . '</option>';
+                                            }
+                                        }
+                                    }
+                                    ?>
                                 </select>
+                                <small class="field-error" data-error-for="rango"></small>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="status">Estado*</label>
-                                <select id="status" name="estado" required>
-                                    <option value="active">Activo</option>
-                                    <option value="inactive">Inactivo</option>
-                                    <option value="pending">Pendiente</option>
-                                </select>
+
+                            <div class="form-group" id="passwordGroup">
+                                <label for="clave_usuario">Contraseña*</label>
+                                <input type="password" id="clave_usuario" name="clave_usuario" required
+                                       placeholder="Mínimo 6 caracteres" maxlength="15">
+                                <small class="field-error" data-error-for="clave_usuario"></small>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="password">Contraseña*</label>
-                                <input type="password" id="password" name="password" required 
-                                       placeholder="Mínimo 6 caracteres">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="confirmPassword">Confirmar Contraseña*</label>
-                                <input type="password" id="confirmPassword" name="confirm_password" required 
-                                       placeholder="Repetir contraseña">
+
+                            <div class="form-group" id="confirmPasswordGroup">
+                                <label for="clave_confirmar">Confirmar Contraseña*</label>
+                                <input type="password" id="clave_confirmar" name="clave_confirmar" required
+                                       placeholder="Repetir contraseña" maxlength="15">
+                                <small class="field-error" data-error-for="clave_confirmar"></small>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
                         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
                         <button class="btn-save" onclick="saveUser()">Guardar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="userDetailsModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Detalles del usuario</h2>
+                        <span class="close-modal" id="closeUserDetails">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <dl class="user-details-grid">
+                            <div><dt>Usuario</dt><dd id="detailUsername">-</dd></div>
+                            <div><dt>Nombre</dt><dd id="detailFirstName">-</dd></div>
+                            <div><dt>Apellido</dt><dd id="detailLastName">-</dd></div>
+                            <div><dt>Correo</dt><dd id="detailEmail">-</dd></div>
+                            <div><dt>Cédula</dt><dd id="detailCedula">-</dd></div>
+                            <div><dt>Teléfono</dt><dd id="detailPhone">-</dd></div>
+                            <div><dt>Rol</dt><dd id="detailRole">-</dd></div>
+                            <div><dt>Estado</dt><dd id="detailStatus">-</dd></div>
+                        </dl>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" type="button" onclick="closeUserDetailsModal()">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -467,6 +455,31 @@ $porcentaje_admin = $total_usuarios > 0 ? round(($administradores / $total_usuar
                     gap: 10px;
                 }
 
+                .user-details-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 16px;
+                    margin: 0;
+                }
+
+                .user-details-grid div {
+                    min-width: 0;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #eee;
+                }
+
+                .user-details-grid dt {
+                    color: #667085;
+                    font-size: 0.85rem;
+                    margin-bottom: 4px;
+                }
+
+                .user-details-grid dd {
+                    margin: 0;
+                    color: #222;
+                    overflow-wrap: anywhere;
+                }
+
                 .user-avatar-small {
                     width: 35px;
                     height: 35px;
@@ -578,6 +591,10 @@ $porcentaje_admin = $total_usuarios > 0 ? round(($administradores / $total_usuar
                     .users-table {
                         font-size: 0.85rem;
                     }
+
+                    .user-details-grid {
+                        grid-template-columns: 1fr;
+                    }
                     
                     .users-table th, .users-table td {
                         padding: 10px;
@@ -587,95 +604,393 @@ $porcentaje_admin = $total_usuarios > 0 ? round(($administradores / $total_usuar
 
             <script>
                 const userModal = document.getElementById('userModal');
+                const userDetailsModal = document.getElementById('userDetailsModal');
                 const modalTitle = document.getElementById('modalTitle');
                 const closeModalBtn = document.querySelector('#userModal .close-modal');
+                const closeUserDetailsBtn = document.getElementById('closeUserDetails');
+                const userForm = document.getElementById('userForm');
+                const userFields = Array.from(userForm.querySelectorAll('[name]'));
 
-                function openModal(type, userId = null) {
+                function clearUserValidation() {
+                    document.querySelectorAll('#userForm .field-error').forEach((field) => {
+                        field.textContent = '';
+                    });
+                }
+
+                function validateUserForm() {
+                    const values = Object.fromEntries(new FormData(userForm).entries());
+                    values.nombre = (values.nombre || '').replace(/\s{2,}/g, ' ').trim();
+                    values.apellido_usuario = (values.apellido_usuario || '').replace(/\s{2,}/g, ' ').trim();
+                    values.cedula = (values.cedula || '').trim();
+                    values.telefono_usuario = (values.telefono_usuario || '').trim();
+                    values.correo_usuario = (values.correo_usuario || '').trim();
+                    userForm.elements.nombre.value = values.nombre;
+                    userForm.elements.apellido_usuario.value = values.apellido_usuario;
+                    userForm.elements.cedula.value = values.cedula;
+                    userForm.elements.telefono_usuario.value = values.telefono_usuario;
+                    userForm.elements.correo_usuario.value = values.correo_usuario;
+
+                    const isEditing = Boolean(values.id_usuario);
+                    const rules = [
+                        { field: 'nombre', pattern: /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,50}$/, message: 'Ingrese un nombre de 2 a 50 caracteres, solo con letras y espacios.' },
+                        { field: 'apellido_usuario', pattern: /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s]{2,50}$/, message: 'Ingrese un apellido de 2 a 50 caracteres, solo con letras y espacios.' },
+                        { field: 'cedula', pattern: /^(?:\d{1,2}\.\d{3}\.\d{3})$/, message: 'Use el formato de cédula 1.234.567 o 12.345.678.' },
+                        { field: 'telefono_usuario', pattern: /^\d{4}-\d{3}-\d{4}$/, message: 'Use el formato telefónico 0400-000-0000.' },
+                        { field: 'correo_usuario', pattern: /^[A-Za-z0-9._%+\-ÁÉÍÓÚáéíóúñÑ]+@(gmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/, message: 'Use un correo de Gmail, Outlook, Yahoo o iCloud.' },
+                        { field: 'nombre_usuario', pattern: /^[a-zA-Z0-9_]{3,20}$/, message: 'El nombre de usuario debe tener entre 3 y 20 caracteres alfanuméricos.' }
+                    ];
+
+                    // Solo validar contraseña si es nuevo usuario
+                    if (!isEditing) {
+                        rules.push(
+                            { field: 'clave_usuario', pattern: /^.{6,15}$/, message: 'La contraseña debe tener entre 6 y 15 caracteres.' },
+                            { field: 'clave_confirmar', pattern: /^.{6,15}$/, message: 'La confirmación debe tener entre 6 y 15 caracteres.' }
+                        );
+                    }
+
+                    const errors = {};
+                    clearUserValidation();
+
+                    rules.forEach(({ field, pattern, message }) => {
+                        if (values[field] && !pattern.test(values[field])) {
+                            errors[field] = message;
+                            const errorElement = document.querySelector(`[data-error-for="${field}"]`);
+                            if (errorElement) errorElement.textContent = message;
+                        }
+                    });
+
+                    // Validar que las contraseñas coincidan
+                    if (!isEditing && values.clave_usuario !== values.clave_confirmar) {
+                        errors['clave_confirmar'] = 'Las contraseñas no coinciden';
+                        const errorElement = document.querySelector('[data-error-for="clave_confirmar"]');
+                        if (errorElement) errorElement.textContent = 'Las contraseñas no coinciden';
+                    }
+
+                    return { values, errors };
+                }
+
+                const userDebug = { logs: [] };
+                window.userDebug = userDebug;
+
+                function debugUserLog(label, payload) {
+                    const entry = { label, payload, timestamp: new Date().toISOString() };
+                    userDebug.logs.push(entry);
+                    console.debug('[Usuario debug]', label, payload);
+                }
+
+                async function showUserError(title, message) {
+                    return Swal.fire({ icon: 'error', title, text: message, confirmButtonText: 'Entendido' });
+                }
+
+                userForm.elements.cedula.addEventListener('input', function() {
+                    const digits = this.value.replace(/\D/g, '').slice(0, 8);
+                    if (digits.length === 7) this.value = `${digits.slice(0, 1)}.${digits.slice(1, 4)}.${digits.slice(4)}`;
+                    else if (digits.length === 8) this.value = `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+                    else this.value = digits;
+                });
+
+                userForm.elements.telefono_usuario.addEventListener('input', function() {
+                    const digits = this.value.replace(/\D/g, '').slice(0, 11);
+                    if (digits.length > 7) this.value = `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}`;
+                    else if (digits.length > 4) this.value = `${digits.slice(0, 4)}-${digits.slice(4)}`;
+                    else this.value = digits;
+                });
+
+                userFields.forEach((field) => field.addEventListener('input', () => {
+                    const error = document.querySelector(`[data-error-for="${field.name}"]`);
+                    if (error) error.textContent = '';
+                }));
+
+                async function openModal(type, userId = null) {
                     if (type === 'agregar') {
                         modalTitle.textContent = 'Agregar Usuario';
-                        document.getElementById('userForm').reset();
+                        userForm.reset();
                         document.getElementById('userId').value = '';
+                        document.getElementById('passwordGroup').style.display = 'block';
+                        document.getElementById('confirmPasswordGroup').style.display = 'block';
+                        clearUserValidation();
                     } else if (type === 'editar') {
                         modalTitle.textContent = 'Editar Usuario';
-                        document.getElementById('userId').value = userId;
-                        // Simulación de datos
-                        document.getElementById('username').value = 'jperrez';
-                        document.getElementById('firstName').value = 'Juan';
-                        document.getElementById('lastName').value = 'Pérez';
-                        document.getElementById('email').value = 'juan.perez@casalai.com';
-                        document.getElementById('cedula').value = 'V-12345678';
-                        document.getElementById('phone').value = '+58 412-123-4567';
-                        document.getElementById('role').value = 'admin';
-                        document.getElementById('status').value = 'active';
+                        const usuario = await fetchUser(userId);
+                        if (!usuario) return;
+                        userForm.reset();
+                        clearUserValidation();
+                        document.getElementById('userId').value = usuario.id_usuario;
+                        document.getElementById('nombre_usuario').value = usuario.username || '';
+                        document.getElementById('nombre').value = usuario.nombres || '';
+                        document.getElementById('apellido_usuario').value = usuario.apellidos || '';
+                        document.getElementById('correo_usuario').value = usuario.correo || '';
+                        document.getElementById('cedula').value = usuario.cedula || '';
+                        document.getElementById('telefono_usuario').value = usuario.telefono || '';
+                        document.getElementById('rango').value = usuario.id_rol || '';
+                        // Ocultar campos de contraseña al editar
+                        document.getElementById('passwordGroup').style.display = 'none';
+                        document.getElementById('confirmPasswordGroup').style.display = 'none';
                     }
                     userModal.style.display = 'block';
+                }
+
+                async function postUserAction(action, values = {}) {
+                    const formData = new FormData();
+                    formData.append('accion', action);
+                    Object.entries(values).forEach(([key, value]) => formData.append(key, value));
+                    debugUserLog('POST usuario', { action, values });
+                    const response = await fetch(window.location.href, { method: 'POST', body: formData });
+                    const result = await response.json();
+                    debugUserLog('Respuesta usuario', { action, status: response.status, result });
+                    return result;
+                }
+
+                async function fetchUser(userId) {
+                    try {
+                        const result = await postUserAction('obtener_usuario', { id_usuario: userId });
+                        if (result.status === 'error') throw new Error(result.message || 'No se pudo obtener el usuario.');
+                        return result;
+                    } catch (error) {
+                        await showUserError('No se pudo consultar el usuario', error.message || 'Intente nuevamente.');
+                        return null;
+                    }
+                }
+
+                function userDetailValue(value) {
+                    const text = String(value ?? '').trim();
+                    if (!text) return '-';
+
+                    if (/^[A-Za-z0-9+/]+={0,2}$/.test(text) && text.length > 24) {
+                        try {
+                            const decoded = atob(text);
+                            const keyLength = decoded.length >= 4
+                                ? ((decoded.charCodeAt(0) << 24) | (decoded.charCodeAt(1) << 16) | (decoded.charCodeAt(2) << 8) | decoded.charCodeAt(3)) >>> 0
+                                : 0;
+                            if (keyLength === 256) return 'Dato cifrado no disponible';
+                        } catch (error) {
+                            return text;
+                        }
+                    }
+
+                    return text;
+                }
+
+                async function viewUser(userId) {
+                    const usuario = await fetchUser(userId);
+                    if (!usuario) return;
+
+                    document.getElementById('detailUsername').textContent = userDetailValue(usuario.username);
+                    document.getElementById('detailFirstName').textContent = userDetailValue(usuario.nombres);
+                    document.getElementById('detailLastName').textContent = userDetailValue(usuario.apellidos);
+                    document.getElementById('detailEmail').textContent = userDetailValue(usuario.correo);
+                    document.getElementById('detailCedula').textContent = userDetailValue(usuario.cedula);
+                    document.getElementById('detailPhone').textContent = userDetailValue(usuario.telefono);
+                    document.getElementById('detailRole').textContent = userDetailValue(usuario.nombre_rol);
+                    document.getElementById('detailStatus').textContent = userDetailValue(usuario.estatus);
+                    userDetailsModal.style.display = 'block';
+                }
+
+                window.viewUser = viewUser;
+
+                function closeUserDetailsModal() {
+                    userDetailsModal.style.display = 'none';
                 }
 
                 function closeModal() {
                     userModal.style.display = 'none';
                 }
 
-                function viewUser(userId) {
-                    alert('Función de ver detalles de usuario (conectar con backend)');
-                }
-
-                function editUser(userId) {
-                    openModal('editar', userId);
-                }
-
-                function deleteUser(userId) {
-                    if (confirm('¿Está seguro de eliminar este usuario?')) {
-                        alert('Función de eliminar usuario (conectar con backend)');
-                    }
-                }
-
-                function saveUser() {
-                    const password = document.getElementById('password').value;
-                    const confirmPassword = document.getElementById('confirmPassword').value;
-
-                    if (password !== confirmPassword) {
-                        alert('Las contraseñas no coinciden');
+                async function saveUser() {
+                    const { values, errors } = validateUserForm();
+                    if (Object.keys(errors).length) {
+                        const firstInvalidField = userForm.elements[Object.keys(errors)[0]];
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Revisa los datos del usuario',
+                            html: `<ul style="text-align:left;margin:0;padding-left:20px">${Object.values(errors).map((message) => `<li>${message}</li>`).join('')}</ul>`,
+                            confirmButtonText: 'Entendido'
+                        });
+                        firstInvalidField.focus();
                         return;
                     }
-
-                    if (password.length < 6) {
-                        alert('La contraseña debe tener al menos 6 caracteres');
-                        return;
+                    const isEditing = Boolean(values.id_usuario);
+                    try {
+                        const result = await postUserAction(isEditing ? 'modificar' : 'registrar', values);
+                        if (result.status !== 'success') {
+                            throw new Error((result.errors ? Object.values(result.errors).join('\n') : '') || result.message || 'No se pudo guardar el usuario.');
+                        }
+                        closeModal();
+                        await Swal.fire({
+                            icon: 'success',
+                            title: isEditing ? 'Usuario modificado' : 'Usuario registrado',
+                            text: result.message || 'La operación se completó correctamente',
+                            confirmButtonText: 'Entendido'
+                        });
+                        window.location.reload();
+                    } catch (error) {
+                        await showUserError('No se pudo guardar el usuario', error.message || 'Intente nuevamente.');
                     }
+                }
 
-                    alert('Función de guardar usuario (conectar con backend)');
-                    closeModal();
+                async function deleteUser(userId) {
+                    const confirmation = await Swal.fire({
+                        icon: 'warning',
+                        title: '¿Eliminar este usuario?',
+                        text: 'Esta acción no se puede deshacer.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar',
+                        reverseButtons: true,
+                        confirmButtonColor: '#dc3545'
+                    });
+                    if (!confirmation.isConfirmed) return;
+
+                    try {
+                        const result = await postUserAction('eliminar', { id_usuario: userId });
+                        if (result.status !== 'success') {
+                            throw new Error((result.errors ? Object.values(result.errors).join('\n') : '') || result.message || 'No se pudo eliminar el usuario.');
+                        }
+                        await Swal.fire({ icon: 'success', title: 'Usuario eliminado', text: result.message || 'El usuario se eliminó correctamente.' });
+                        window.location.reload();
+                    } catch (error) {
+                        await showUserError('No se pudo eliminar el usuario', error.message || 'Intente nuevamente.');
+                    }
+                }
+
+                // Función para cambiar el estado del usuario
+                async function toggleUserStatus(userId, currentStatus) {
+                    const nextStatus = currentStatus === 'habilitado' ? 'inhabilitado' : 'habilitado';
+                    const confirmation = await Swal.fire({
+                        icon: 'question',
+                        title: '¿Cambiar estado del usuario?',
+                        text: currentStatus === 'habilitado' ? 'El usuario será deshabilitado' : 'El usuario será habilitado',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, cambiar',
+                        cancelButtonText: 'Cancelar',
+                        reverseButtons: true,
+                        confirmButtonColor: '#2196F3'
+                    });
+
+                    if (!confirmation.isConfirmed) return;
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('accion', 'cambiar_estatus');
+                        formData.append('id_usuario', userId);
+                        formData.append('nuevo_estatus', nextStatus);
+
+                        debugUserLog('toggleUserStatus', { userId, currentStatus, nextStatus });
+
+                        const response = await fetch(window.location.href, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+                        debugUserLog('toggleUserStatus respuesta', { userId, status: response.status, result });
+
+                        if (result.status === 'success') {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Estado cambiado',
+                                text: result.message || 'El estado del usuario se actualizó correctamente.',
+                                confirmButtonText: 'Entendido'
+                            });
+                            window.location.reload();
+                        } else {
+                            throw new Error(result.message || 'No se pudo cambiar el estado');
+                        }
+                    } catch (error) {
+                        debugUserLog('toggleUserStatus error', { userId, error: error.message });
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message || 'No se pudo cambiar el estado del usuario',
+                            confirmButtonText: 'Entendido'
+                        });
+                    }
+                }
+
+                function applyUserTableFilters() {
+                    const searchInput = document.getElementById('searchUser');
+                    const roleFilter = document.getElementById('roleFilter');
+                    const statusFilter = document.getElementById('statusFilter');
+
+                    const query = (searchInput?.value || '').trim().toLowerCase();
+                    const roleValue = (roleFilter?.value || '').trim().toLowerCase();
+                    const statusValue = (statusFilter?.value || '').trim().toLowerCase();
+
+                    const rows = document.querySelectorAll('.users-table tbody tr[data-id]');
+                    rows.forEach((row) => {
+                        const text = (row.textContent || '').toLowerCase();
+                        const roleText = (row.querySelector('.role-badge')?.textContent || '').trim().toLowerCase();
+                        const statusText = (row.querySelector('.status')?.textContent || '').trim().toLowerCase();
+
+                        const matchesSearch = !query || text.includes(query);
+                        const matchesRole = !roleValue || roleText.includes(roleValue);
+                        const matchesStatus = !statusValue || (
+                            statusValue === 'active' ? statusText.includes('habilitado') :
+                            statusValue === 'inactive' ? statusText.includes('inhabilitado') :
+                            true
+                        );
+
+                        row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+                    });
                 }
 
                 function searchUsers() {
-                    const searchTerm = document.getElementById('searchUser').value;
-                    alert('Función de búsqueda: ' + searchTerm + ' (conectar con backend)');
+                    applyUserTableFilters();
                 }
 
                 function filterByRole() {
-                    const role = document.getElementById('roleFilter').value;
-                    alert('Filtrar por rol: ' + role + ' (conectar con backend)');
+                    applyUserTableFilters();
                 }
 
                 function filterByStatus() {
-                    const status = document.getElementById('statusFilter').value;
-                    alert('Filtrar por estado: ' + status + ' (conectar con backend)');
+                    applyUserTableFilters();
                 }
 
                 function importUsers() {
-                    alert('Función de importar usuarios (conectar con backend)');
+                    debugUserLog('importUsers', { message: 'Función de importación pendiente por implementar' });
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Importación pendiente',
+                        text: 'La importación de usuarios aún no está implementada.',
+                        confirmButtonText: 'Entendido'
+                    });
                 }
 
                 function exportUsers() {
-                    alert('Función de exportar usuarios (conectar con backend)');
+                    debugUserLog('exportUsers inicio', { rows: document.querySelectorAll('.users-table tbody tr[data-id]').length });
+                    const rows = Array.from(document.querySelectorAll('.users-table tbody tr[data-id]'));
+                    const visibleRows = rows.filter((row) => row.style.display !== 'none');
+                    const data = [['Usuario', 'Nombre', 'Email', 'Rol', 'Estado']];
+                    visibleRows.forEach((row) => {
+                        const cells = row.cells;
+                        data.push([
+                            cells[0].querySelector('.username')?.textContent.trim() || '',
+                            cells[1].textContent.trim(),
+                            cells[2].textContent.trim(),
+                            cells[3].textContent.trim(),
+                            cells[4].textContent.trim()
+                        ]);
+                    });
+                    const csv = data.map((row) => row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+                    const url = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'usuarios.csv';
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    debugUserLog('exportUsers fin', { total: visibleRows.length });
                 }
 
                 // Event listeners para cerrar modal
                 closeModalBtn.addEventListener('click', closeModal);
+                closeUserDetailsBtn.addEventListener('click', closeUserDetailsModal);
 
                 window.addEventListener('click', function(event) {
                     if (event.target === userModal) {
                         closeModal();
+                    }
+                    if (event.target === userDetailsModal) {
+                        closeUserDetailsModal();
                     }
                 });
             </script>

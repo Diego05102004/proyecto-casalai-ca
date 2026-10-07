@@ -13,6 +13,7 @@ define('MODULO_PROVEEDORES', "Proveedores"); // Cambiar según tu estructura de 
 $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('proveedores'));
+$puedeConsultarProveedores = !empty($permisosUsuario['consultar']);
 
 $reporteProveedor = new Proveedores();
 $reporteRankingProveedores = $reporteProveedor->getRankingProveedores();
@@ -25,6 +26,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $accion = $_POST['accion'];
     } else {
         $accion = '';
+    }
+
+    $permisosPorAccion = [
+        'registrar' => 'incluir',
+        'obtener_proveedor' => 'consultar',
+        'modificar' => 'modificar',
+        'eliminar' => 'eliminar',
+        'cambiar_estado' => 'modificar',
+        'generar_reporte' => 'generar reporte'
+    ];
+    if (isset($permisosPorAccion[$accion]) && empty($permisosUsuario[$permisosPorAccion[$accion]])) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'No tiene permiso para realizar esta acción.'
+        ]);
+        exit;
     }
 
     switch ($accion) {
@@ -228,7 +247,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            if ($proveedor->cambiarEstatus($nuevoEstatus)) {
+            if ($proveedor->cambiarEstatus($nuevoEstatus, $id_usuario_sesion)) {
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Estatus cambiado correctamente'
@@ -344,9 +363,9 @@ if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
             'media'
         );
     }
-    $proveedores = getproveedores();
+    $proveedores = $puedeConsultarProveedores ? getproveedores() : [];
     $productos = obtenerProductosConBajoStock();
-    $recepcionesPorProveedor = getRecepcionesPorProveedor();
+    $recepcionesPorProveedor = $puedeConsultarProveedores ? getRecepcionesPorProveedor() : [];
     require_once("Vista/VistaNew/" . $pagina . ".php");
 } elseif (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
@@ -359,9 +378,9 @@ if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
             'media'
         );
     }
-    $proveedores = getproveedores();
+    $proveedores = $puedeConsultarProveedores ? getproveedores() : [];
     $productos = obtenerProductosConBajoStock();
-    $recepcionesPorProveedor = getRecepcionesPorProveedor();
+    $recepcionesPorProveedor = $puedeConsultarProveedores ? getRecepcionesPorProveedor() : [];
     require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";

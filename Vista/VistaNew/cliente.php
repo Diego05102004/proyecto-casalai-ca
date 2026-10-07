@@ -29,6 +29,41 @@ $titulo_pagina = 'Gestión de Clientes';
 
 // Iniciar el buffer de contenido
 ob_start();
+
+if (!function_exists('desencriptarCampoCliente')) {
+    function desencriptarCampoCliente($valor) {
+        if (!is_string($valor) || $valor === '') {
+            return $valor;
+        }
+
+        if (strlen($valor) <= 24 || !preg_match('/^[A-Za-z0-9+\/=]+$/', $valor)) {
+            return $valor;
+        }
+
+        try {
+            $encryption = new Usuario\ProyectoCasalaiCa\Config\Encryption();
+            $descifrado = $encryption->decrypt($valor);
+            return is_string($descifrado) && $descifrado !== '' && $descifrado !== $valor ? $descifrado : $valor;
+        } catch (Throwable $e) {
+            error_log('[VISTA_CLIENTE] Error desencriptando campo: ' . $e->getMessage());
+            return $valor;
+        }
+    }
+}
+
+if (is_array($clientes ?? null)) {
+    foreach ($clientes as $indice => $cliente) {
+        if (!is_array($cliente)) {
+            continue;
+        }
+
+        foreach (['nombre', 'direccion', 'telefono', 'correo'] as $campo) {
+            if (isset($cliente[$campo])) {
+                $clientes[$indice][$campo] = desencriptarCampoCliente($cliente[$campo]);
+            }
+        }
+    }
+}
 ?>
 
 <?php

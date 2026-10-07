@@ -26,6 +26,7 @@
         </div>
     </main>
 
+    <script src="assets/public/js/sweetalert2.js"></script>
     <script>
         function confirmarCerrarSesion() {
             if (confirm('¿Está seguro que desea cerrar sesión?')) {

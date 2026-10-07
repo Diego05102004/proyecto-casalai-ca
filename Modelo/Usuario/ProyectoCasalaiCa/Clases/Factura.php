@@ -1,6 +1,7 @@
 <?php
 namespace Usuario\ProyectoCasalaiCa\Modelo\Clases;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\Encryption;
 use PDO;
 use PDOException;
 
@@ -15,6 +16,7 @@ class Factura extends BD
     private $cantidad;
 
     private $cedula;
+    private $encryption;
     
     // Constantes para validaciones
     const MAX_DESCUENTO = 100;
@@ -23,7 +25,7 @@ class Factura extends BD
     const MIN_CANTIDAD = 1;
     const MAX_CLIENTE = 50;
     const MIN_CLIENTE = 3;
-    const ESTADOS_PERMITIDOS = ['Borrador', 'Pagada Presencialmente', 'Pagada', 'Cancelada'];
+    const ESTADOS_PERMITIDOS = ['Borrador', 'Pagada Presencialmente', 'Pagada', 'Anulada'];
     const ESTADOS_PAGO = ['En Proceso', 'Pago Incompleto', 'Pago Procesado', 'Pago No Encontrado'];
 
     public function getId() { return $this->id; }
@@ -51,6 +53,27 @@ class Factura extends BD
 
     public function __construct($tipo = 'P') {
     }
+
+    private function descifrarDatosCliente(array $registros): array {
+        if ($registros === []) {
+            return $registros;
+        }
+
+        if (!($this->encryption instanceof Encryption)) {
+            $this->encryption = new Encryption();
+        }
+
+        foreach ($registros as &$registro) {
+            foreach (['cliente', 'nombre', 'direccion', 'telefono', 'correo'] as $campo) {
+                if (isset($registro[$campo]) && is_string($registro[$campo])) {
+                    $registro[$campo] = $this->encryption->decrypt($registro[$campo]);
+                }
+            }
+        }
+        unset($registro);
+
+        return $registros;
+    }
     
     /**
      * @return PDO
@@ -58,7 +81,7 @@ class Factura extends BD
     public function getConexion() {
         return $this->pdo;
     }
-    
+
     /**
      * @param callable
      * @return mixed
@@ -317,6 +340,42 @@ class Factura extends BD
         });
     }
 
+    public function obtenerFacturasListado() {
+        return $this->ejecutarConConexionSegura(function($pdo) {
+            $stmt = $pdo->query("SELECT
+                    f.id_factura,
+                    f.fecha,
+                    COALESCE(c.nombre, 'Cliente no registrado') AS cliente,
+                    f.estatus,
+                    ROUND(COALESCE(SUM(df.cantidad * df.precio_unitario), 0), 2) AS total
+                FROM tbl_facturas f
+                LEFT JOIN tbl_clientes c ON c.id_clientes = f.cliente
+                LEFT JOIN tbl_factura_detalle df ON df.factura_id = f.id_factura
+                GROUP BY f.id_factura, f.fecha, c.nombre, f.estatus
+                ORDER BY f.id_factura DESC");
+
+            $facturas = $this->descifrarDatosCliente($stmt->fetchAll(PDO::FETCH_ASSOC));
+            $detalleFacturas = [];
+
+            $stmtDetalle = $pdo->query("SELECT df.factura_id, p.nombre_producto, df.cantidad, df.precio_unitario
+                FROM tbl_factura_detalle df
+                INNER JOIN tbl_productos p ON p.id_producto = df.id_producto
+                ORDER BY df.factura_id, p.nombre_producto");
+
+            foreach ($stmtDetalle->fetchAll(PDO::FETCH_ASSOC) as $detalle) {
+                $idFactura = (int)($detalle['factura_id'] ?? 0);
+                if ($idFactura > 0) {
+                    $detalleFacturas[$idFactura][] = $detalle;
+                }
+            }
+
+            return [
+                'facturas' => $facturas,
+                'detalleFacturas' => $detalleFacturas
+            ];
+        });
+    }
+
     private function facturaConsultarTodas() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             // Primero obtenemos información de pagos para validar después
@@ -348,7 +407,7 @@ class Factura extends BD
 
             $stmt = $pdo->prepare($sqlDetalles);
             $stmt->execute();
-            $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $detalles = $this->descifrarDatosCliente($stmt->fetchAll(PDO::FETCH_ASSOC));
 
             if (!$detalles) {
                 return ['resultado' => 'error', 'mensaje' => 'No hay facturas registradas.'];
@@ -393,6 +452,7 @@ class Factura extends BD
                 // Verificar si es una factura pagada presencialmente y si todos los pagos están procesados
                 $esPagadaPresencialmente = ($estatus == 'Pagada Presencialmente');
                 $esBorrador = ($estatus == 'Borrador');
+                $esAnulada = (stripos((string)$estatus, 'anulada') !== false);
                 $todosPagosProcesados = true;
                 
                 if ($esPagadaPresencialmente && isset($estatusPorFactura[$id_factura])) {
@@ -420,6 +480,8 @@ class Factura extends BD
                     $datosCliente .= '<strong>Estatus:</strong> <span class="badge bg-success">' . htmlspecialchars($estatus) . '</span></p>';
                 } else if ($esBorrador) {
                     $datosCliente .= '<strong>Estatus:</strong> <span class="badge bg-warning">' . htmlspecialchars($estatus) . '</span></p>';
+                } else if ($esAnulada) {
+                    $datosCliente .= '<strong>Estatus:</strong> <span class="badge bg-danger">' . htmlspecialchars($estatus) . '</span></p>';
                 } else {
                     $datosCliente .= '<strong>Estatus:</strong> ' . htmlspecialchars($estatus) . '</p>';
                 }
@@ -430,6 +492,10 @@ class Factura extends BD
 
                 $estatusPago = $mapaPagos[$id_factura]['estatus'] ?? null;
                 $observaciones = $mapaPagos[$id_factura]['observaciones'] ?? null;
+                $estadoResumen = $estatus;
+                if (stripos((string)$estatus, 'anul') === false && stripos((string)$estatus, 'cancel') === false && $estatusPago && $estatusPago !== 'Pago Procesado') {
+                    $estadoResumen = $estatusPago;
+                }
 
                 if ($esBorrador) {
                     $mensajePago = '<div class="alert alert-warning"><strong>Borrador:</strong> El pago aún no ha sido enviado para validación.</div>';
@@ -442,6 +508,8 @@ class Factura extends BD
                             <input type="hidden" name="id_factura" value="' . $id_factura . '">
                             <button type="button" class="btn btn-danger btn-lg cancelar" name="accion" value="cancelar">Cancelar</button>
                         </form>';
+                } else if ($esAnulada) {
+                    $mensajePago = '<div class="alert alert-danger"><strong>Anulada:</strong> La factura ha sido anulada.</div>';
                 } else if ($estatusPago) {
                     switch ($estatusPago) {
                         case 'En Proceso':
@@ -510,7 +578,7 @@ class Factura extends BD
                 $contenido .= '<tr><td colspan="4"><strong>Total con Impuestos:</strong></td><td>' . number_format($montoTotal, 2) . ' BS</td></tr>';            
                 $contenido .= '</tbody></table></div>' . $form . $botones . '</div>';
 
-                $html .= '<div class="accordion-item w-100">';
+                $html .= '<div class="accordion-item w-100" data-summary-status="' . htmlspecialchars((string)$estadoResumen, ENT_QUOTES, 'UTF-8') . '">';
                 $html .= '<h2 class="accordion-header" id="heading' . $id_factura . '">';
                 
                 // Estilo especial para el encabezado de facturas según su estatus
@@ -528,8 +596,6 @@ class Factura extends BD
             }
 
             $html .= '</div>';
-            $html .= "<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css' rel='stylesheet'>
-                <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'></script>";
 
             $resultadoListado = [
                 'resultado' => 'listado',
@@ -578,7 +644,7 @@ class Factura extends BD
             $stmt = $pdo->prepare($sqlDetalles);
             $stmt->bindParam(':cedula', $this->cedula);
             $stmt->execute();
-            $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $detalles = $this->descifrarDatosCliente($stmt->fetchAll(PDO::FETCH_ASSOC));
 
             if (!$detalles) {
                 return ['resultado' => 'error', 'mensaje' => 'No hay facturas registradas para esta cédula.'];
@@ -623,6 +689,7 @@ class Factura extends BD
                 // Verificar si es una factura pagada presencialmente y si todos los pagos están procesados
                 $esPagadaPresencialmente = ($estatus == 'Pagada Presencialmente');
                 $esBorrador = ($estatus == 'Borrador');
+                $esAnulada = (stripos((string)$estatus, 'anulada') !== false);
                 $todosPagosProcesados = true;
                 
                 if ($esPagadaPresencialmente && isset($estatusPorFactura[$id_factura])) {
@@ -650,6 +717,8 @@ class Factura extends BD
                     $datosCliente .= '<strong>Estatus:</strong> <span class="badge bg-success">' . htmlspecialchars($estatus) . '</span></p>';
                 } else if ($esBorrador) {
                     $datosCliente .= '<strong>Estatus:</strong> <span class="badge bg-warning">' . htmlspecialchars($estatus) . '</span></p>';
+                } else if ($esAnulada) {
+                    $datosCliente .= '<strong>Estatus:</strong> <span class="badge bg-danger">' . htmlspecialchars($estatus) . '</span></p>';   
                 } else {
                     $datosCliente .= '<strong>Estatus:</strong> ' . htmlspecialchars($estatus) . '</p>';
                 }
@@ -660,6 +729,10 @@ class Factura extends BD
 
                 $estatusPago = $mapaPagos[$id_factura]['estatus'] ?? null;
                 $observaciones = $mapaPagos[$id_factura]['observaciones'] ?? null;
+                $estadoResumen = $estatus;
+                if (stripos((string)$estatus, 'anul') === false && stripos((string)$estatus, 'cancel') === false && $estatusPago && $estatusPago !== 'Pago Procesado') {
+                    $estadoResumen = $estatusPago;
+                }
 
                 if ($esBorrador) {
                     $mensajePago = '<div class="alert alert-warning"><strong>Borrador:</strong> El pago aún no ha sido enviado para validación.</div>';
@@ -743,7 +816,7 @@ class Factura extends BD
                 $contenido .= '<tr><td colspan="4"><strong>Total con Impuestos:</strong></td><td>' . number_format($montoTotal, 2) . ' BS</td></tr>';            
                 $contenido .= '</tbody></table></div>' . $form . $botones . '</div>';
 
-                $html .= '<div class="accordion-item w-100">';
+                $html .= '<div class="accordion-item w-100" data-summary-status="' . htmlspecialchars((string)$estadoResumen, ENT_QUOTES, 'UTF-8') . '">';
                 $html .= '<h2 class="accordion-header" id="heading' . $id_factura . '">';
                 
                 // Estilo especial para el encabezado de facturas según su estatus
@@ -761,8 +834,6 @@ class Factura extends BD
             }
 
             $html .= '</div>';
-            $html .= "<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css' rel='stylesheet'>
-                <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'></script>";
 
             $resulListado = [
                 'resultado' => 'listado',
@@ -910,7 +981,7 @@ public function facturaConsultarMovil()
     }
     private function c_facturaCancelar($id) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id){
-            $stmt = $pdo->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
+            $stmt = $pdo->prepare("UPDATE tbl_facturas SET estatus = 'Anulada' WHERE id_factura = ?");
             return $stmt->execute([$id]);
         });
     }
@@ -1160,7 +1231,7 @@ public function facturaConsultarMovil()
                     $factura['precio_convertido'] = $factura['precio'] * $tasa;
                 }
             }
-            
+            $facturas = $this->descifrarDatosCliente($facturas);
             return $facturas;
         });
     }
