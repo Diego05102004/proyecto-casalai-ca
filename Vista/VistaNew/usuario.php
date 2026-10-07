@@ -31,19 +31,37 @@ $titulo_pagina = 'Gestión de Usuarios';
 ob_start();
 ?>
 
+<?php
+// Cálculos previos para summary cards
+$total_usuarios = count($usuarios ?? []);
+$usuarios_activos = count($usuariosHabilitados ?? []);
+$usuarios_inactivos = count($usuariosDeshabilitados ?? []);
+
+// Calcular administradores (usuarios con rol de administrador)
+$administradores = count(array_filter($usuarios ?? [], function($u) {
+    return (isset($u['nombre_rol']) && stripos($u['nombre_rol'], 'admin') !== false) ||
+           (isset($u['id_rol']) && (int)$u['id_rol'] === 1);
+}));
+
+// Calcular porcentajes
+$porcentaje_total = 100;
+$porcentaje_activos = $total_usuarios > 0 ? round(($usuarios_activos / $total_usuarios) * 100) : 0;
+$porcentaje_admin = $total_usuarios > 0 ? round(($administradores / $total_usuarios) * 100) : 0;
+?>
+
             <!-- Summary Cards para Usuarios -->
             <div class="summary-cards">
                 <div class="summary-card sales">
                     <div class="card-icon"><i class="fas fa-users"></i></div>
                     <div class="card-content">
                         <h3>Total Usuarios</h3>
-                        <p class="card-value">124</p>
+                        <p class="card-value"><?php echo $total_usuarios; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">75%</span>
+                            <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -52,13 +70,13 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-check-circle"></i></div>
                     <div class="card-content">
                         <h3>Activos</h3>
-                        <p class="card-value">98</p>
+                        <p class="card-value"><?php echo $usuarios_activos; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="79, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_activos; ?>, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">79%</span>
+                            <span class="percentage"><?php echo $porcentaje_activos; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -67,13 +85,13 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-crown"></i></div>
                     <div class="card-content">
                         <h3>Administradores</h3>
-                        <p class="card-value">8</p>
+                        <p class="card-value"><?php echo $administradores; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="6, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_admin; ?>, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">6%</span>
+                            <span class="percentage"><?php echo $porcentaje_admin; ?>%</span>
                         </div>
                     </div>
                 </div>

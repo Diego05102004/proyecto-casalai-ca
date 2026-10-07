@@ -31,19 +31,33 @@ $titulo_pagina = 'Gestión de Productos';
 ob_start();
 ?>
 
+<?php
+// Cálculos previos para summary cards
+$total_productos = count($productos ?? []);
+$stock_bajo = count(array_filter($productos ?? [], function($p) { return ($p['stock_actual'] ?? 0) < ($p['stock_minimo'] ?? 0); }));
+$total_categorias = count($categoriasDinamicas ?? []);
+$productos_recepcion = count($productosMasRecibidos ?? []);
+
+// Calcular porcentajes
+$porcentaje_total = 100; // Siempre 100% para el total
+$porcentaje_stock_bajo = $total_productos > 0 ? round(($stock_bajo / $total_productos) * 100) : 0;
+$porcentaje_categorias = 100; // No tiene sentido calcular porcentaje aquí
+$porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $total_productos) * 100) : 0;
+?>
+
             <!-- Summary Cards para Productos -->
             <div class="summary-cards">
                 <div class="summary-card sales">
                     <div class="card-icon"><i class="fas fa-box"></i></div>
                     <div class="card-content">
                         <h3>Total Productos</h3>
-                        <p class="card-value"><?php echo count($productos ?? []); ?></p>
+                        <p class="card-value"><?php echo $total_productos; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="78, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">78%</span>
+                            <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -52,13 +66,13 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-chart-down"></i></div>
                     <div class="card-content">
                         <h3>Stock Bajo</h3>
-                        <p class="card-value"><?php echo count(array_filter($productos ?? [], function($p) { return ($p['stock_actual'] ?? 0) < ($p['stock_minimo'] ?? 0); })); ?></p>
+                        <p class="card-value"><?php echo $stock_bajo; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="23, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_stock_bajo; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">23%</span>
+                            <span class="percentage"><?php echo $porcentaje_stock_bajo; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -67,13 +81,13 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-tag"></i></div>
                     <div class="card-content">
                         <h3>Categorías</h3>
-                        <p class="card-value"><?php echo count($categoriasDinamicas ?? []); ?></p>
+                        <p class="card-value"><?php echo $total_categorias; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="90, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_categorias; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">90%</span>
+                            <span class="percentage"><?php echo $porcentaje_categorias; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -82,13 +96,13 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-inbox"></i></div>
                     <div class="card-content">
                         <h3>En Recepción</h3>
-                        <p class="card-value"><?php echo count($productosMasRecibidos ?? []); ?></p>
+                        <p class="card-value"><?php echo $productos_recepcion; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="45, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_recepcion; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">45%</span>
+                            <span class="percentage"><?php echo $porcentaje_recepcion; ?>%</span>
                         </div>
                     </div>
                 </div>

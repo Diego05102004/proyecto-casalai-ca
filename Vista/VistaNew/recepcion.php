@@ -33,19 +33,31 @@ ob_start();
 
 <link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
 
+<?php
+// Cálculos previos para summary cards
+$total_recepciones = count($recepciones ?? []);
+$recepciones_pendientes = count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'pendiente'; }));
+$recepciones_completadas = count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'completada'; }));
+
+// Calcular porcentajes
+$porcentaje_total = 100;
+$porcentaje_pendientes = $total_recepciones > 0 ? round(($recepciones_pendientes / $total_recepciones) * 100) : 0;
+$porcentaje_completadas = $total_recepciones > 0 ? round(($recepciones_completadas / $total_recepciones) * 100) : 0;
+?>
+
 <!-- Summary Cards para Recepciones -->
 <div class="summary-cards">
     <div class="summary-card sales">
         <div class="card-icon"><i class="fas fa-inbox"></i></div>
         <div class="card-content">
             <h3>Recepciones Hoy</h3>
-            <p class="card-value"><?php echo count($recepciones ?? []); ?></p>
+            <p class="card-value"><?php echo $total_recepciones; ?></p>
             <div class="progress-circle">
                 <svg viewBox="0 0 36 36" class="circular-chart">
                     <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="85, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 </svg>
-                <span class="percentage">85%</span>
+                <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
             </div>
         </div>
     </div>
@@ -54,13 +66,13 @@ ob_start();
         <div class="card-icon"><i class="fas fa-truck"></i></div>
         <div class="card-content">
             <h3>Pendientes</h3>
-            <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'pendiente'; })); ?></p>
+            <p class="card-value"><?php echo $recepciones_pendientes; ?></p>
             <div class="progress-circle">
                 <svg viewBox="0 0 36 36" class="circular-chart">
                     <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="35, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_pendientes; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 </svg>
-                <span class="percentage">35%</span>
+                <span class="percentage"><?php echo $porcentaje_pendientes; ?>%</span>
             </div>
         </div>
     </div>
@@ -69,13 +81,13 @@ ob_start();
         <div class="card-icon"><i class="fas fa-check-circle"></i></div>
         <div class="card-content">
             <h3>Completadas</h3>
-            <p class="card-value"><?php echo count(array_filter($recepciones ?? [], function($r) { return ($r['estatus'] ?? '') === 'completada'; })); ?></p>
+            <p class="card-value"><?php echo $recepciones_completadas; ?></p>
             <div class="progress-circle">
                 <svg viewBox="0 0 36 36" class="circular-chart">
                     <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="92, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_completadas; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 </svg>
-                <span class="percentage">92%</span>
+                <span class="percentage"><?php echo $porcentaje_completadas; ?>%</span>
             </div>
         </div>
     </div>

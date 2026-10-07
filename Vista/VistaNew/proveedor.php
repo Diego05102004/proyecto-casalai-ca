@@ -31,19 +31,31 @@ $titulo_pagina = 'Gestión de Proveedores';
 ob_start();
 ?>
 
+<?php
+// Cálculos previos para summary cards
+$total_proveedores = count($proveedores ?? []);
+$proveedores_activos = count(array_filter($proveedores ?? [], function($p) { return ($p['estatus'] ?? '') === 'activo'; }));
+$total_recepciones = count($recepcionesPorProveedor ?? []);
+
+// Calcular porcentajes
+$porcentaje_total = 100;
+$porcentaje_activos = $total_proveedores > 0 ? round(($proveedores_activos / $total_proveedores) * 100) : 0;
+$porcentaje_recepciones = $total_proveedores > 0 ? round(($total_recepciones / $total_proveedores) * 100) : 0;
+?>
+
             <!-- Summary Cards para Proveedores -->
             <div class="summary-cards">
                 <div class="summary-card sales">
                     <div class="card-icon"><i class="fas fa-building"></i></div>
                     <div class="card-content">
                         <h3>Total Proveedores</h3>
-                        <p class="card-value"><?php echo count($proveedores ?? []); ?></p>
+                        <p class="card-value"><?php echo $total_proveedores; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="78, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">78%</span>
+                            <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -52,13 +64,13 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-star"></i></div>
                     <div class="card-content">
                         <h3>Activos</h3>
-                        <p class="card-value"><?php echo count(array_filter($proveedores ?? [], function($p) { return ($p['estatus'] ?? '') === 'activo'; })); ?></p>
+                        <p class="card-value"><?php echo $proveedores_activos; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="86, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_activos; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">86%</span>
+                            <span class="percentage"><?php echo $porcentaje_activos; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -67,13 +79,13 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-inbox"></i></div>
                     <div class="card-content">
                         <h3>Recepciones</h3>
-                        <p class="card-value"><?php echo count($recepcionesPorProveedor ?? []); ?></p>
+                        <p class="card-value"><?php echo $total_recepciones; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="65, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_recepciones; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">65%</span>
+                            <span class="percentage"><?php echo $porcentaje_recepciones; ?>%</span>
                         </div>
                     </div>
                 </div>

@@ -31,22 +31,65 @@ $titulo_pagina = 'Gestión de Despachos';
 ob_start();
 ?>
 
+<?php
+// Cálculos previos para summary cards
+$total_despachos = isset($totalDespachos) ? $totalDespachos : count($despachos ?? []);
+$despachos_pendientes = count(array_filter($despachos ?? [], function($d) { return ($d['estado'] ?? '') === 'Por Despachar'; }));
+$despachos_completados = count(array_filter($despachos ?? [], function($d) { return ($d['estado'] ?? '') === 'Despachado'; }));
+
+// Calcular porcentajes
+$porcentaje_total = 100;
+$porcentaje_pendientes = $total_despachos > 0 ? round(($despachos_pendientes / $total_despachos) * 100) : 0;
+$porcentaje_completados = $total_despachos > 0 ? round(($despachos_completados / $total_despachos) * 100) : 0;
+?>
+
             <!-- Summary Cards para Despachos -->
             <div class="summary-cards">
                 <div class="summary-card sales">
                     <div class="card-icon"><i class="fas fa-truck"></i></div>
                     <div class="card-content">
                         <h3>Total Despachos</h3>
-                        <p class="card-value">234</p>
+                        <p class="card-value"><?php echo $total_despachos; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="82, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">82%</span>
+                            <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
                         </div>
                     </div>
                 </div>
+
+                <div class="summary-card expenses">
+                    <div class="card-icon"><i class="fas fa-clock"></i></div>
+                    <div class="card-content">
+                        <h3>Pendientes</h3>
+                        <p class="card-value"><?php echo $despachos_pendientes; ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_pendientes; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage"><?php echo $porcentaje_pendientes; ?>%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card income">
+                    <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="card-content">
+                        <h3>Completados</h3>
+                        <p class="card-value"><?php echo $despachos_completados; ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_completados; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage"><?php echo $porcentaje_completados; ?>%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
                 <div class="summary-card expenses">
                     <div class="card-icon"><i class="fas fa-clock"></i></div>

@@ -138,7 +138,11 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                                 <td><?php echo htmlspecialchars($cliente['cedula'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
                                 <td><?php echo htmlspecialchars($cliente['telefono'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
                                 <td><?php echo htmlspecialchars($cliente['correo'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
-                                <td><span class="status <?php echo (int)($cliente['activo'] ?? 0) === 1 ? 'active' : 'inactive'; ?>"><?php echo (int)($cliente['activo'] ?? 0) === 1 ? 'Habilitado' : 'Deshabilitado'; ?></span></td>
+                                <td><span class="status <?php echo (int)($cliente['activo'] ?? 0) === 1 ? 'active' : 'inactive'; ?>" 
+                                      onclick="toggleClientStatus(<?php echo (int)$cliente['id_clientes']; ?>, <?php echo (int)($cliente['activo'] ?? 0); ?>)"
+                                      title="Click para cambiar estado">
+                                      <?php echo (int)($cliente['activo'] ?? 0) === 1 ? 'Habilitado' : 'Deshabilitado'; ?>
+                                </span></td>
                                 <td>
                                     <button class="btn-action btn-edit" title="Editar" onclick="openModal('editar', <?php echo (int)$cliente['id_clientes']; ?>)">
                                         <i class="fas fa-edit"></i>
@@ -177,6 +181,54 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                 </div>
             </div>
 
+            <!-- Reporte estadístico de compras por cliente -->
+            <div class="reporte-container" style="max-width:900px; margin:40px auto; background:#fff; padding:32px 24px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+                <h3 style="text-align:center; color:#1f66df; margin-bottom:16px;">Top 10 Clientes por Productos Comprados</h3>
+                <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:16px;">
+                    <div style="flex:1 1 320px; min-width:0;">
+                        <canvas id="graficoComprasClientes" style="width:100%; height:260px;"></canvas>
+                    </div>
+                    <div style="flex:1 1 320px; min-width:0;">
+                        <div style="max-width:100%; overflow-x:auto;">
+                        <table class="table table-bordered table-striped" style="margin:0 auto 32px auto; width:100%; min-width:480px;">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Cantidad de <br> Productos Comprados</th>
+                                    <th>Porcentaje (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $totalComprasClientes = isset($totalComprasClientes) ? $totalComprasClientes : array_sum(array_column($reporteComprasClientes ?? [], 'cantidad'));
+                                foreach ($reporteComprasClientes ?? [] as $cliente): 
+                                    $porcentaje = $totalComprasClientes > 0 ? round(($cliente['cantidad'] / $totalComprasClientes) * 100, 2) : 0;
+                                ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($cliente['nombre'] ?? '') ?></td>
+                                        <td><?= $cliente['cantidad'] ?? 0 ?></td>
+                                        <td><?= $porcentaje ?>%</td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total</th>
+                                    <th><?= $totalComprasClientes ?></th>
+                                    <th>100%</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        </div>
+                        <div style="text-align:center; margin-top:20px;">
+                            <button id="descargarPDFClientes" class="btn btn-success" style="padding:10px 24px; font-size:16px; border-radius:6px; background:#27ae60; color:#fff; border:none; cursor:pointer;">
+                                Descargar Reporte de Compras
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Modal para Registrar/Editar Cliente -->
             <div id="clientModal" class="modal">
                 <div class="modal-content">
@@ -187,38 +239,39 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                     <div class="modal-body">
                         <form id="clientForm">
                             <input type="hidden" id="clientId" name="id_clientes">
-                            
+                            <input type="hidden" id="clientStatus" name="activo">
+
                             <div class="form-group">
                                 <label for="clientName">Nombre Completo*</label>
-                                <input type="text" id="clientName" name="nombre" required 
+                                <input type="text" id="clientName" name="nombre" required
                                        placeholder="Nombres y apellidos" maxlength="100">
                                 <small class="field-error" data-error-for="nombre" aria-live="polite"></small>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="clientCedula">Cédula*</label>
-                                <input type="text" id="clientCedula" name="cedula" required 
+                                <input type="text" id="clientCedula" name="cedula" required
                                        placeholder="12.345.678" maxlength="10">
                                     <small class="field-error" data-error-for="cedula" aria-live="polite"></small>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="clientPhone">Teléfono*</label>
-                                <input type="text" id="clientPhone" name="telefono" required 
+                                <input type="text" id="clientPhone" name="telefono" required
                                        placeholder="0414-123-4567" maxlength="13">
                                     <small class="field-error" data-error-for="telefono" aria-live="polite"></small>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="clientEmail">Correo Electrónico*</label>
-                                <input type="email" id="clientEmail" name="correo" required 
+                                <input type="email" id="clientEmail" name="correo" required
                                        placeholder="ejemplo@email.com" maxlength="50">
                                     <small class="field-error" data-error-for="correo" aria-live="polite"></small>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="clientAddress">Dirección*</label>
-                                <textarea id="clientAddress" name="direccion" required 
+                                <textarea id="clientAddress" name="direccion" required
                                           placeholder="Estado/Ciudad/Calle o Avenida..." rows="3" maxlength="100"></textarea>
                                 <small class="field-error" data-error-for="direccion" aria-live="polite"></small>
                             </div>
@@ -392,6 +445,14 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                     border-radius: 20px;
                     font-size: 0.85rem;
                     font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    user-select: none;
+                }
+
+                .status:hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
                 }
 
                 .status.active {
@@ -579,9 +640,28 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                     flex-direction: column;
                     gap: 15px;
                 }
+
+                .reporte-container {
+                    max-width: 900px;
+                    margin: 40px auto;
+                    background: #fff;
+                    padding: 32px 24px;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+                }
+
+                .reporte-container table {
+                    margin: 0 auto 32px auto;
+                    width: 100%;
+                    min-width: 480px;
+                }
             </style>
 
-            <script src="assets/javascript/sweetalert2.all.min.js"></script>
+            <!-- Cargar librerías externas -->
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
             <script>
                 // Funciones para modales
                 const clientModal = document.getElementById('clientModal');
@@ -659,6 +739,7 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                         modalTitle.textContent = 'Agregar Cliente';
                         clientForm.reset();
                         document.getElementById('clientId').value = '';
+                        document.getElementById('clientStatus').value = '1'; // Por defecto activo al registrar
                         clearClientValidation();
                     } else if (type === 'editar') {
                         modalTitle.textContent = 'Editar Cliente';
@@ -672,6 +753,7 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                         document.getElementById('clientPhone').value = cliente.telefono || '';
                         document.getElementById('clientEmail').value = cliente.correo || '';
                         document.getElementById('clientAddress').value = cliente.direccion || '';
+                        document.getElementById('clientStatus').value = cliente.activo || '1'; // Mantener estado actual
                     }
                     clientModal.style.display = 'block';
                 }
@@ -735,6 +817,13 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                             throw new Error((result.errors ? Object.values(result.errors).join('\n') : '') || result.message || 'No se pudo guardar el cliente.');
                         }
                         closeModal();
+                        // Mostrar SweetAlert de éxito antes de recargar
+                        await Swal.fire({
+                            icon: 'success',
+                            title: isEditing ? 'Cliente modificado' : 'Cliente registrado',
+                            text: result.message || 'La operación se completó correctamente',
+                            confirmButtonText: 'Entendido'
+                        });
                         window.location.reload();
                     } catch (error) {
                         await showClientError('No se pudo guardar el cliente', error.message || 'Intente nuevamente.');
@@ -788,6 +877,55 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                     URL.revokeObjectURL(url);
                 }
 
+                // Función para cambiar el estado del cliente
+                async function toggleClientStatus(clientId, currentStatus) {
+                    const confirmation = await Swal.fire({
+                        icon: 'question',
+                        title: '¿Cambiar estado del cliente?',
+                        text: currentStatus === 1 ? 'El cliente será deshabilitado' : 'El cliente será habilitado',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, cambiar',
+                        cancelButtonText: 'Cancelar',
+                        reverseButtons: true,
+                        confirmButtonColor: '#2196F3'
+                    });
+
+                    if (!confirmation.isConfirmed) return;
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('accion', 'cambiar_estado');
+                        formData.append('id_clientes', clientId);
+                        formData.append('estado_actual', currentStatus);
+
+                        const response = await fetch(window.location.href, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.status === 'success') {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Estado cambiado',
+                                text: result.message,
+                                confirmButtonText: 'Entendido'
+                            });
+                            window.location.reload();
+                        } else {
+                            throw new Error(result.message || 'No se pudo cambiar el estado');
+                        }
+                    } catch (error) {
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message || 'No se pudo cambiar el estado del cliente',
+                            confirmButtonText: 'Entendido'
+                        });
+                    }
+                }
+
                 // Event listeners para cerrar modales
                 closeModalBtn.addEventListener('click', closeModal);
                 closeDetailsBtn.addEventListener('click', closeDetailsModal);
@@ -800,6 +938,59 @@ $porcentaje_deshabilitados = $total_clientes > 0 ? round(($clientes_deshabilitad
                         closeDetailsModal();
                     }
                 });
+
+                // Inicializar gráfico de compras de clientes
+                <?php if (!empty($reporteComprasClientes)): ?>
+                const labelsClientes = <?= json_encode(array_column($reporteComprasClientes, 'nombre')) ?>;
+                const dataClientes = <?= json_encode(array_column($reporteComprasClientes, 'cantidad')) ?>;
+                const ctxClientes = document.getElementById('graficoComprasClientes');
+                if (ctxClientes) {
+                    new Chart(ctxClientes.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: labelsClientes,
+                            datasets: [{
+                                label: 'Productos comprados',
+                                data: dataClientes,
+                                backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                                borderColor: 'rgba(39, 174, 96, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: 'Top 10 Clientes por Productos Comprados' }
+                            },
+                            scales: {
+                                x: { beginAtZero: true }
+                            }
+                        }
+                    });
+                }
+
+                // Función para descargar PDF del reporte
+                document.getElementById('descargarPDFClientes').addEventListener('click', function () {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'pt',
+                        format: 'a4'
+                    });
+
+                    const reporte = document.querySelector('.reporte-container');
+                    html2canvas(reporte).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        const imgWidth = pageWidth - 40;
+                        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+                        doc.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
+                        doc.save('Reporte_Compras_Clientes.pdf');
+                    });
+                });
+                <?php endif; ?>
             </script>
 
 <?php

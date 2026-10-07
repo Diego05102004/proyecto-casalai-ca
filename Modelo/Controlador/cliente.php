@@ -155,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // Validar datos de entrada
             $cliente = new cliente();
-            
+
             $id = $_POST['id_clientes'];
             $cliente->setId($id);
             $cliente->setnombre($_POST['nombre']);
@@ -163,11 +163,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $cliente->settelefono($_POST['telefono']);
             $cliente->setdireccion($_POST['direccion']);
             $cliente->setcorreo($_POST['correo']);
-            $cliente->setactivo(1); // Establecer cliente como activo
 
             // Depuración: registrar lo que se recibe
             error_log("Datos recibidos para modificar: " . print_r($_POST, true));
-            
+
             $errores = $cliente->validarModificar($_POST);
             error_log("Errores de validación modificar: " . print_r($errores, true));
 
@@ -179,11 +178,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
-            
+
             // Verificar que el cliente exista antes de modificar
             $clienteExistente = $cliente->obtenerclientesPorId($id);
             error_log("Cliente existente para modificar: " . ($clienteExistente ? 'Sí' : 'No'));
-            
+
             if (!$clienteExistente) {
                 echo json_encode([
                     'status' => 'error',
@@ -191,6 +190,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
                 exit;
             }
+
+            // Mantener el estado actual del cliente (no cambiarlo al modificar)
+            $cliente->setactivo($clienteExistente['activo'] ?? 1);
 
             $resultado = $cliente->modificarclientes($id, $id_usuario_sesion);
             error_log("Resultado de modificación: " . ($resultado ? 'Exitoso' : 'Fallido'));
@@ -289,6 +291,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'status' => 'error',
                     'message' => 'Error en el servidor: ' . $e->getMessage(),
                     'debug' => 'Exception: ' . $e->getTraceAsString()
+                ]);
+            }
+            exit;
+
+        case 'cambiar_estado':
+            // Limpiar cualquier salida previa y establecer cabeceras
+            if (ob_get_length()) ob_clean();
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-cache, must-revalidate');
+
+            $id = isset($_POST['id_clientes']) ? $_POST['id_clientes'] : null;
+            $estado_actual = isset($_POST['estado_actual']) ? (int)$_POST['estado_actual'] : null;
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+
+            if ($id === null || !ctype_digit((string)$id) || $estado_actual === null || !$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos inválidos para cambiar el estado'
+                ]);
+                exit;
+            }
+
+            try {
+                $cliente = new cliente();
+                
+                // Verificar que el cliente exista
+                $clienteExistente = $cliente->obtenerclientesPorId($id);
+                if (!$clienteExistente) {
+                    echo json_encode(['status' => 'error', 'message' => 'El cliente no existe']);
+                    exit;
+                }
+
+                // Calcular nuevo estado (invertir el actual)
+                $nuevo_estado = ($estado_actual === 1) ? 0 : 1;
+
+                // Actualizar el estado
+                $cliente->setId($id);
+                $cliente->setnombre($clienteExistente['nombre']);
+                $cliente->setcedula($clienteExistente['cedula']);
+                $cliente->settelefono($clienteExistente['telefono']);
+                $cliente->setdireccion($clienteExistente['direccion']);
+                $cliente->setcorreo($clienteExistente['correo']);
+                $cliente->setactivo($nuevo_estado);
+
+                $resultado = $cliente->modificarclientes($id, $id_usuario_sesion);
+
+                if ($resultado) {
+                    $mensaje_estado = ($nuevo_estado === 1) ? 'habilitado' : 'deshabilitado';
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => "Cliente {$mensaje_estado} correctamente",
+                        'nuevo_estado' => $nuevo_estado
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Error al cambiar el estado del cliente'
+                    ]);
+                }
+            } catch (Exception $e) {
+                error_log("Excepción en cambiar_estado: " . $e->getMessage());
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error en el servidor: ' . $e->getMessage()
                 ]);
             }
             exit;

@@ -31,22 +31,65 @@ $titulo_pagina = 'Notificaciones';
 ob_start();
 ?>
 
+<?php
+// Cálculos previos para summary cards
+$total_notificaciones = count($notificaciones ?? []);
+$notificaciones_no_leidas = count(array_filter($notificaciones ?? [], function($n) { return ($n['leida'] ?? 0) === 0; }));
+$notificaciones_leidas = count(array_filter($notificaciones ?? [], function($n) { return ($n['leida'] ?? 0) === 1; }));
+
+// Calcular porcentajes
+$porcentaje_total = 100;
+$porcentaje_no_leidas = $total_notificaciones > 0 ? round(($notificaciones_no_leidas / $total_notificaciones) * 100) : 0;
+$porcentaje_leidas = $total_notificaciones > 0 ? round(($notificaciones_leidas / $total_notificaciones) * 100) : 0;
+?>
+
             <!-- Summary Cards para Notificaciones -->
             <div class="summary-cards">
                 <div class="summary-card sales">
                     <div class="card-icon"><i class="fas fa-comments"></i></div>
                     <div class="card-content">
                         <h3>Total Notificaciones</h3>
-                        <p class="card-value">47</p>
+                        <p class="card-value"><?php echo $total_notificaciones; ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="67, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span class="percentage">67%</span>
+                            <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
                         </div>
                     </div>
                 </div>
+
+                <div class="summary-card expenses">
+                    <div class="card-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="card-content">
+                        <h3>No Leídas</h3>
+                        <p class="card-value"><?php echo $notificaciones_no_leidas; ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_no_leidas; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage"><?php echo $porcentaje_no_leidas; ?>%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card income">
+                    <div class="card-icon"><i class="fas fa-check-double"></i></div>
+                    <div class="card-content">
+                        <h3>Leídas</h3>
+                        <p class="card-value"><?php echo $notificaciones_leidas; ?></p>
+                        <div class="progress-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_leidas; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="percentage"><?php echo $porcentaje_leidas; ?>%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
                 <div class="summary-card expenses">
                     <div class="card-icon"><i class="fas fa-bell"></i></div>
