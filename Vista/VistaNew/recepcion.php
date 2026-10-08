@@ -206,19 +206,19 @@ ob_start();
                             </div>
                             <div class="form-group">
                                 <label>Código*</label>
-                                <input type="text" class="producto-codigo input-testnum" required>
+                                <input type="text" class="producto-codigo input-testnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Marca*</label>
-                                <input type="text" class="producto-marca input-testnum" required>
+                                <input type="text" class="producto-marca input-testnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Modelo*</label>
-                                <input type="text" class="producto-modelo input-testnum" required>
+                                <input type="text" class="producto-modelo input-testnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Serial*</label>
-                                <input type="text" class="producto-serial input-testnum" required>
+                                <input type="text" class="producto-serial input-testnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>
@@ -741,13 +741,13 @@ ob_start();
                                 : data.factura_resguardada
                                     ? 'Recepción registrada.'
                                     : 'Recepción registrada correctamente.';
+                            document.getElementById('recepcionModal').style.display = 'none';
                             await Swal.fire({
                                 icon: 'success',
                                 title: '¡Éxito!',
                                 text: mensaje,
                                 showConfirmButton: true,
                             });
-                            closeModal();
                             location.reload();
                         } else {
                             await Swal.fire({
@@ -923,24 +923,12 @@ ob_start();
 
                 // Función para confirmar anulación
                 async function confirmarAnulacion() {
-                    const motivo = document.getElementById('motivoAnulacion').value;
                     const correlativo = document.getElementById('anularCorrelativo').textContent;
-                    
-                    if (!motivo.trim()) {
-                        await Swal.fire({
-                            icon: 'warning',
-                            title: 'Motivo requerido',
-                            text: 'Por favor, ingrese el motivo de la anulación.',
-                            confirmButtonText: 'Entendido'
-                        });
-                        return;
-                    }
                     
                     // Enviar anulación al backend
                     const formData = new FormData();
                     formData.append('accion', 'anular');
                     formData.append('correlativo', correlativo);
-                    formData.append('motivo', motivo);
                     
                     const botonConfirmar = document.querySelector('#anularModal .btn-danger');
                     botonConfirmar.disabled = true;
@@ -951,13 +939,13 @@ ob_start();
                         });
                         const data = await response.json();
                         if (data && data.status === 'success') {
+                            document.getElementById('anularModal').style.display = 'none';
                             await Swal.fire({
                                 icon: 'success',
-                                title: 'Recepción Anulada Correctamente',
+                                title: '¡Éxito!',
                                 text: data.message || 'La recepción se anuló correctamente.',
                                 confirmButtonText: 'OK'
                             });
-                            closeAnularModal();
                             location.reload();
                         } else {
                             await Swal.fire({
