@@ -316,24 +316,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $id_recepcion = $recepcionRegistrada['id_recepcion'];
 
                     if (!defined('SKIP_SIDE_EFFECTS')) {
-                        $bd_seguridad = new BD('S');
-                        $pdo_seguridad = $bd_seguridad->getConexion();
-                        $notificacionModel = new NotificacionModel($pdo_seguridad);
-                        $notificacionModel->crear(
-                            $_SESSION['id_usuario'],
-                            'recepcion',
-                            'Nueva recepción registrada',
-                            "Se ha registrado una nueva recepción #".$_POST['correlativo']." con ".array_sum($_POST['cantidad'])." unidades por el usuario ".$_SESSION['name'],
-                            'media',
-                            MODULO_RECEPCION,
-                            'ingresar',
-                            $id_recepcion
-                        );
+                        try {
+                            $bd_seguridad = new BD('S');
+                            $pdo_seguridad = $bd_seguridad->getConexion();
+                            $notificacionModel = new NotificacionModel($pdo_seguridad);
+                            $notificacionModel->crear(
+                                $_SESSION['id_usuario'],
+                                'recepcion',
+                                'Nueva Recepción Registrada',
+                                "Se ha registrado una nueva recepción #".$_POST['correlativo']." con ".array_sum($_POST['cantidad'])." unidades por el usuario ".$_SESSION['name'],
+                                'media',
+                                MODULO_RECEPCION,
+                                'ingresar',
+                                $id_recepcion
+                            );
+                        } catch (Throwable $e) {
+                            error_log('No se pudo crear la notificación de recepción registrada: ' . $e->getMessage());
+                        }
                     }
 
                 echo json_encode([
                     'status' => 'success',
-                    'message' => 'Recepción registrada correctamente',
+                    'message' => 'Recepción Registrada Correctamente',
                     'factura_resguardada' => $rutaFacturaResguardada !== null,
                     'procesamiento_pendiente' => ($_POST['modo_contingencia'] ?? '') === 'true',
                     'recepcion' => $recepcionRegistrada
@@ -424,23 +428,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $resultado = $k->anularRecepcion($correlativo, (int)($_SESSION['id_usuario'] ?? 1));
 
-            if ($resultado['status'] === 'success') {
+            if (($resultado['status'] ?? '') === 'success') {
                 // Obtener id_recepcion para referenciar en notificación
                 if (!defined('SKIP_SIDE_EFFECTS')) {
-                    $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
-                    $bd_seguridad = new BD('S');
-                    $pdo_seguridad = $bd_seguridad->getConexion();
-                    $notificacionModel = new NotificacionModel($pdo_seguridad);
-                    $notificacionModel->crear(
-                        $_SESSION['id_usuario'],
-                        'recepcion',
-                        'Recepción anulada',
-                        "Se ha anulado la recepción #".$correlativo." por parte del usuario ".($_SESSION['name'] ?? ''),
-                        'media',
-                        MODULO_RECEPCION,
-                        'eliminar',
-                        $id_recepcion
-                    );
+                    try {
+                        $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
+                        $bd_seguridad = new BD('S');
+                        $pdo_seguridad = $bd_seguridad->getConexion();
+                        $notificacionModel = new NotificacionModel($pdo_seguridad);
+                        $notificacionModel->crear(
+                            $_SESSION['id_usuario'],
+                            'recepcion',
+                            'Recepción Anulada',
+                            "Se ha anulado la recepción #".$correlativo." por parte del usuario ".($_SESSION['name'] ?? ''),
+                            'media',
+                            MODULO_RECEPCION,
+                            'eliminar',
+                            $id_recepcion
+                        );
+                    } catch (Throwable $e) {
+                        error_log('No se pudo crear la notificación de recepción anulada: ' . $e->getMessage());
+                    }
                 }
             }
             echo json_encode($resultado);

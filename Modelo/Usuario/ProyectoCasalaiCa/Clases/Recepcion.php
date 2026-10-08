@@ -771,11 +771,12 @@ class Recepcion extends BD{
                 $stmt->closeCursor();
                 $resultado = (int)$pdo->query('SELECT @resultado_anulacion')->fetchColumn();
                 return $resultado === 1
-                    ? ['status' => 'success', 'message' => 'Recepción anulada correctamente']
+                    ? ['status' => 'success', 'message' => 'Recepción Anulada Correctamente']
                     : ['status' => 'error', 'message' => 'No se pudo anular la recepción'];
             }, false);
         } catch (\Throwable $e) {
-            return ['status' => 'error', 'message' => $e->getMessage()];
+            error_log('Error al anular recepción mediante sp_anular_recepcion: ' . $e->getMessage());
+            return ['status' => 'error', 'message' => 'No se pudo anular la recepción. Inténtelo nuevamente.'];
         }
     }
 

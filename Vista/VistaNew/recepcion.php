@@ -737,20 +737,35 @@ ob_start();
                         const data = await response.json();
                         if (data && data.status === 'success') {
                             const mensaje = data.procesamiento_pendiente
-                                ? 'Recepción registrada. La factura quedó resguardada y marcada para procesamiento posterior.'
+                                ? 'Recepción registrada. La recepción quedó resguardada y marcada para procesamiento posterior.'
                                 : data.factura_resguardada
-                                    ? 'Recepción registrada. La factura quedó resguardada de forma privada.'
+                                    ? 'Recepción registrada.'
                                     : 'Recepción registrada correctamente.';
-                            alert(mensaje);
+                            await Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: mensaje,
+                                showConfirmButton: true,
+                            });
                             closeModal();
                             location.reload();
                         } else {
-                            alert('Error al registrar recepción: ' + (data.message || 'Error desconocido'));
+                            await Swal.fire({
+                                icon: 'error',
+                                title: 'Error al registrar recepción',
+                                text: data.message || 'Error desconocido',
+                                showConfirmButton: true,
+                            });
                         }
                     } catch (error) {
                         console.error('Error al guardar recepción:', error);
                         establecerEstadoIARecepcion(error.message || 'Error al guardar recepción.', 'error');
-                        alert(error.message || 'Error al guardar recepción. Por favor, intente nuevamente.');
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Error al registrar recepción',
+                            text: error.message || 'Por favor, intente nuevamente.',
+                            showConfirmButton: true
+                        });
                     } finally {
                         botonGuardar.disabled = false;
                     }
@@ -907,12 +922,17 @@ ob_start();
                 }
 
                 // Función para confirmar anulación
-                function confirmarAnulacion() {
+                async function confirmarAnulacion() {
                     const motivo = document.getElementById('motivoAnulacion').value;
                     const correlativo = document.getElementById('anularCorrelativo').textContent;
                     
                     if (!motivo.trim()) {
-                        alert('Por favor, ingrese el motivo de la anulación');
+                        await Swal.fire({
+                            icon: 'warning',
+                            title: 'Motivo requerido',
+                            text: 'Por favor, ingrese el motivo de la anulación.',
+                            confirmButtonText: 'Entendido'
+                        });
                         return;
                     }
                     
@@ -922,25 +942,42 @@ ob_start();
                     formData.append('correlativo', correlativo);
                     formData.append('motivo', motivo);
                     
-                    fetch('?pagina=recepcion', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
+                    const botonConfirmar = document.querySelector('#anularModal .btn-danger');
+                    botonConfirmar.disabled = true;
+                    try {
+                        const response = await fetch('?pagina=recepcion', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
                         if (data && data.status === 'success') {
-                            alert('Recepción anulada correctamente');
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Recepción Anulada Correctamente',
+                                text: data.message || 'La recepción se anuló correctamente.',
+                                confirmButtonText: 'OK'
+                            });
                             closeAnularModal();
-                            // Recargar la página para mostrar los cambios
                             location.reload();
                         } else {
-                            alert('Error al anular recepción: ' + (data.message || 'Error desconocido'));
+                            await Swal.fire({
+                                icon: 'error',
+                                title: 'Error al anular recepción',
+                                text: data.message || 'Error desconocido',
+                                confirmButtonText: 'Entendido'
+                            });
                         }
-                    })
-                    .catch(error => {
+                    } catch (error) {
                         console.error('Error al anular recepción:', error);
-                        alert('Error al anular recepción. Por favor, intente nuevamente.');
-                    });
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Error al anular recepción',
+                            text: error.message || 'Por favor, intente nuevamente.',
+                            confirmButtonText: 'Entendido'
+                        });
+                    } finally {
+                        botonConfirmar.disabled = false;
+                    }
                 }
 
                 // Función para imprimir recepción
