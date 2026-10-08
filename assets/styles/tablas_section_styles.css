@@ -26,7 +26,7 @@
 }
 
 /*Botones Superiores*/
-.btn-table-superior {
+.btn-table-superior, .btn-ayuda-modal {
     color: white;
     border: none;
     padding: 8px 14px;

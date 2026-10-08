@@ -70,7 +70,7 @@
                             <li>Seleccione los productos y cantidades recibidas</li>
                             <li>Confirme la operación para guardar</li>
                         </ul>
-                        <div class="alert alert-info">
+                        <div class="alert alert-info"><br>
                             <strong>Importante:</strong><br>
                             - N° de Factura: (único en el sistema) <br>
                             - Costo: Valor unitario requerido
@@ -121,7 +121,7 @@
                             <li>Confirme la anulación en el mensaje de advertencia</li>
                             <li>La recepción será marcada como anulada</li>
                         </ul>
-                        <div class="alert alert-warning">
+                        <div class="alert alert-warning"><br>
                             <strong>Importante:</strong> Esta acción no se puede deshacer
                         </div>
                     </div>

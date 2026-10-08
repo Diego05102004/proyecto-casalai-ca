@@ -68,7 +68,7 @@ function marcarProductosAgregados() {
     });
 }
 
-$(document).ready(function () {
+$(document).ready(function() {
 
     var $tabla = $('#tablaConsultas');
     if ($tabla.length) {

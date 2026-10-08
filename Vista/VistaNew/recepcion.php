@@ -31,6 +31,8 @@ $titulo_pagina = 'Gestionar de Recepción';
 ob_start();
 ?>
 
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/javascript/recepcion-ia.js"></script>
 <link rel="stylesheet" href="assets/styles/modal-recepcion-ia.css">
 
 <!-- Recepciones Section -->
@@ -109,6 +111,9 @@ ob_start();
                     <h2 id="modalTitle">Nueva Recepción</h2>
                     <p>Complete los datos para registrar una nueva recepción de productos</p>
                 </div>
+                <button type="button" class="btn-ayuda-modal btn-ayuda" title="Ayuda para Incluir Recepción" data-contexto="registrar">
+                    <img src="assets/img/info-ayuda.svg">
+                </button>
             </div>
             <span class="close-modal">&times;</span>
         </div>
@@ -121,6 +126,16 @@ ob_start();
                         <h3>Información General</h3>
                     </div>
                     <div class="form-row">
+                        <div class="form-group">
+                            <label for="fotoFacturaRecepcion">
+                                <i class="fas fa-robot"></i>
+                                Factura para análisis asistido
+                            </label>
+                            <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
+                            <br>
+                            <small><br> Adjunte una imagen o PDF (máximo 5 MB). <br>
+                                El análisis rellenará los datos detectados.</small>
+                        </div>
                         <div class="form-group">
                             <label for="correlativo">
                                 <i class="fas fa-file-invoice"></i>
@@ -145,16 +160,6 @@ ob_start();
                                     <option value="">No hay proveedores disponibles</option>
                                 <?php endif; ?>
                             </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="fotoFacturaRecepcion">
-                                <i class="fas fa-robot"></i>
-                                Factura para análisis asistido
-                            </label>
-                            <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
-                            <br>
-                            <small><br> Adjunte una imagen o PDF (máximo 5 MB). <br>
-                                El análisis rellenará los datos detectados.</small>
                         </div>
                     </div>
                     <div id="previewFacturaRecepcion" class="recepcion-ia-preview" hidden>
