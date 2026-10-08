@@ -168,6 +168,11 @@ if ($id_usuario_header > 0) {
     </div>
 </div>
 
+<link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
+<link rel="stylesheet" href="assets/styles/modal-registrar.css">
+<link rel="stylesheet" href="assets/styles/modal-detallar.css">
+<link rel="stylesheet" href="assets/styles/modal-eliminar-anular.css">
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const panels = [

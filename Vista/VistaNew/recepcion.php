@@ -31,9 +31,7 @@ $titulo_pagina = 'Gestionar de Recepción';
 ob_start();
 ?>
 
-<link rel="stylesheet" href="assets/styles/tablas_section_styles.css">
-<link rel="stylesheet" href="assets/styles/modal-detallar.css">
-<link rel="stylesheet" href="assets/styles/modal-eliminar-anular.css">
+<link rel="stylesheet" href="assets/styles/modal-recepcion-ia.css">
 
 <!-- Recepciones Section -->
 <div class="table-section">
@@ -99,191 +97,191 @@ ob_start();
     </table>
 </div>
 
-            <!-- Modal para Registrar Recepción -->
-            <div id="recepcionModal" class="modal">
-                <div class="modal-content modal-large">
-                    <div class="modal-header">
-                        <div class="modal-header-content">
-                            <div class="modal-icon">
-                                <i class="fas fa-inbox"></i>
-                            </div>
-                            <div class="modal-title-content">
-                                <h2 id="modalTitle">Nueva Recepción</h2>
-                                <p>Complete los datos para registrar una nueva recepción de productos</p>
-                            </div>
-                        </div>
-                        <span class="close-modal">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="recepcionForm" enctype="multipart/form-data">
-                            <!-- Información General -->
-                            <div class="form-section">
-                                <div class="section-title">
-                                    <i class="fas fa-info-circle"></i>
-                                    <h3>Información General</h3>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="proveedor">
-                                            <i class="fas fa-building"></i>
-                                            Proveedor*
-                                        </label>
-                                        <select id="proveedor" name="proveedor" required>
-                                            <option value="">Seleccione un proveedor</option>
-                                            <?php if (!empty($proveedores)): ?>
-                                                <?php foreach ($proveedores as $proveedor): ?>
-                                                    <option value="<?php echo $proveedor['id_proveedor'] ?? ''; ?>">
-                                                        <?php echo htmlspecialchars($proveedor['nombre_proveedor'] ?? 'Sin nombre'); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            <?php else: ?>
-                                                <option value="">No hay proveedores disponibles</option>
-                                            <?php endif; ?>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="correlativo">
-                                            <i class="fas fa-file-invoice"></i>
-                                            Número de Factura*
-                                        </label>
-                                        <input type="text" id="correlativo" name="correlativo" required 
-                                               placeholder="Ej: FAC-001" class="input-with-icon">
-                                        <i class="fas fa-hashtag input-icon"></i>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="fotoFacturaRecepcion">
-                                        <i class="fas fa-robot"></i>
-                                        Factura para análisis asistido
-                                    </label>
-                                    <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
-                                    <small>Adjunte una imagen o PDF (máximo 5 MB). El análisis rellenará los datos detectados.</small>
-                                </div>
-                                <div id="previewFacturaRecepcion" class="recepcion-ia-preview" hidden>
-                                    <img id="previewImagenRecepcion" alt="Vista previa de la factura" hidden>
-                                    <iframe id="previewPdfRecepcion" title="Vista previa de la factura PDF" hidden></iframe>
-                                </div>
-                                <div id="estadoIARecepcion" class="recepcion-ia-status" role="status" aria-live="polite" hidden></div>
-                                <div id="resultadoIARecepcion" class="recepcion-ia-result" hidden></div>
-                            </div>
-                            
-                            <!-- Productos de la Recepción -->
-                            <div class="form-section productos-section">
-                                <div class="section-title">
-                                    <i class="fas fa-boxes"></i>
-                                    <h3>Productos de la Recepción</h3>
-                                    <span class="product-count">0 productos</span>
-                                </div>
-                                <div id="productosList">
-                                    <div class="producto-row">
-                                        <div class="form-group">
-                                            <label>Código</label>
-                                            <input type="text" class="producto-codigo" readonly>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>
-                                                <i class="fas fa-box"></i>
-                                                Nombre del producto*
-                                            </label>
-                                            <select name="producto[]" class="producto-select" required onchange="seleccionarProducto(this)">
-                                                <option value="">Seleccione un producto</option>
-                                                <?php if (!empty($productos)): ?>
-                                                    <?php foreach ($productos as $producto): ?>
-                                                        <option value="<?php echo htmlspecialchars((string)($producto['id_producto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                                                                data-codigo="<?php echo htmlspecialchars((string)($producto['id_producto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                                                                data-marca="<?php echo htmlspecialchars($producto['nombre_marca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                                                data-modelo="<?php echo htmlspecialchars($producto['nombre_modelo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                                                data-serial="<?php echo htmlspecialchars($producto['serial'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                                            <?php echo htmlspecialchars($producto['nombre_producto'] ?? 'Sin nombre', ENT_QUOTES, 'UTF-8'); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                <?php else: ?>
-                                                    <option value="">No hay productos disponibles</option>
-                                                <?php endif; ?>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Marca</label>
-                                            <input type="text" class="producto-marca" readonly>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Modelo</label>
-                                            <input type="text" class="producto-modelo" readonly>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Serial</label>
-                                            <input type="text" class="producto-serial" readonly>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>
-                                                <i class="fas fa-dollar-sign"></i>
-                                                Costo Unitario*
-                                            </label>
-                                            <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon" oninput="calcularSubtotal(this)">
-                                            <i class="fas fa-dollar-sign input-icon"></i>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>
-                                                <i class="fas fa-cubes"></i>
-                                                Cantidad*
-                                            </label>
-                                            <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon" oninput="calcularSubtotal(this)">
-                                            <i class="fas fa-hashtag input-icon"></i>
-                                        </div>
-                                        <div class="form-group subtotal-group">
-                                            <label>
-                                                <i class="fas fa-calculator"></i>
-                                                Subtotal
-                                            </label>
-                                            <input type="text" class="subtotal-display" readonly value="$0.00">
-                                        </div>
-                                        <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Eliminar producto">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="productos-footer">
-                                    <button type="button" class="btn-add-row" onclick="addProductoRow()">
-                                        <i class="fas fa-plus"></i> Agregar Producto
-                                    </button>
-                                    <div class="total-section recepcion-resumen-factura">
-                                        <div class="resumen-factura-item">
-                                            <span class="total-label">Subtotal:</span>
-                                            <strong class="total-value" id="subtotalRecepcion">$0.00</strong>
-                                        </div>
-                                        <div class="resumen-factura-item resumen-iva-tasa">
-                                            <label for="porcentajeIvaRecepcion">IVA (%)</label>
-                                            <input type="number" id="porcentajeIvaRecepcion" name="porcentaje_iva" value="0" min="0" max="100" step="0.01" oninput="calcularTotal()">
-                                        </div>
-                                        <div class="resumen-factura-item">
-                                            <span class="total-label">Monto IVA:</span>
-                                            <strong class="total-value" id="montoIvaRecepcion">$0.00</strong>
-                                        </div>
-                                        <div class="resumen-factura-item resumen-factura-total">
-                                            <span class="total-label">Total factura:</span>
-                                            <strong class="total-value" id="totalValue">$0.00</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn-cancel" onclick="closeModal()">
-                                    <i class="fas fa-times"></i> Cancelar
-                                </button>
-                                <button class="btn-save" onclick="saveRecepcion()">
-                                    <i class="fas fa-check"></i> Guardar Recepción
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+<!-- Modal para Registrar Recepción -->
+<div id="recepcionModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <div class="modal-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <div class="modal-title-content">
+                    <h2 id="modalTitle">Nueva Recepción</h2>
+                    <p>Complete los datos para registrar una nueva recepción de productos</p>
                 </div>
             </div>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="recepcionForm" enctype="multipart/form-data">
+                <!-- Información General -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Información General</h3>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="proveedor">
+                                <i class="fas fa-building"></i>
+                                Proveedor*
+                            </label>
+                            <select id="proveedor" name="proveedor" required>
+                                <option value="">Seleccione un proveedor</option>
+                                <?php if (!empty($proveedores)): ?>
+                                    <?php foreach ($proveedores as $proveedor): ?>
+                                        <option value="<?php echo $proveedor['id_proveedor'] ?? ''; ?>">
+                                            <?php echo htmlspecialchars($proveedor['nombre_proveedor'] ?? 'Sin nombre'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <option value="">No hay proveedores disponibles</option>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="correlativo">
+                                <i class="fas fa-file-invoice"></i>
+                                Número de Factura*
+                            </label>
+                            <input type="text" id="correlativo" name="correlativo" required 
+                                    placeholder="Ej: FAC-001" class="input-with-icon">
+                            <i class="fas fa-hashtag input-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fotoFacturaRecepcion">
+                            <i class="fas fa-robot"></i>
+                            Factura para análisis asistido
+                        </label>
+                        <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
+                        <small>Adjunte una imagen o PDF (máximo 5 MB). El análisis rellenará los datos detectados.</small>
+                    </div>
+                    <div id="previewFacturaRecepcion" class="recepcion-ia-preview" hidden>
+                        <img id="previewImagenRecepcion" alt="Vista previa de la factura" hidden>
+                        <iframe id="previewPdfRecepcion" title="Vista previa de la factura PDF" hidden></iframe>
+                    </div>
+                    <div id="estadoIARecepcion" class="recepcion-ia-status" role="status" aria-live="polite" hidden></div>
+                    <div id="resultadoIARecepcion" class="recepcion-ia-result" hidden></div>
+                </div>
+                
+                <!-- Productos de la Recepción -->
+                <div class="form-section productos-section">
+                    <div class="section-title">
+                        <i class="fas fa-boxes"></i>
+                        <h3>Productos de la Recepción</h3>
+                        <span class="product-count">0 productos</span>
+                    </div>
+                    <div id="productosList">
+                        <div class="producto-row">
+                            <div class="form-group">
+                                <label>Código</label>
+                                <input type="text" class="producto-codigo" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-box"></i>
+                                    Nombre del producto*
+                                </label>
+                                <select name="producto[]" class="producto-select" required onchange="seleccionarProducto(this)">
+                                    <option value="">Seleccione un producto</option>
+                                    <?php if (!empty($productos)): ?>
+                                        <?php foreach ($productos as $producto): ?>
+                                            <option value="<?php echo htmlspecialchars((string)($producto['id_producto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-codigo="<?php echo htmlspecialchars((string)($producto['id_producto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-marca="<?php echo htmlspecialchars($producto['nombre_marca'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-modelo="<?php echo htmlspecialchars($producto['nombre_modelo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                    data-serial="<?php echo htmlspecialchars($producto['serial'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                                <?php echo htmlspecialchars($producto['nombre_producto'] ?? 'Sin nombre', ENT_QUOTES, 'UTF-8'); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="">No hay productos disponibles</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Marca</label>
+                                <input type="text" class="producto-marca" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Modelo</label>
+                                <input type="text" class="producto-modelo" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Serial</label>
+                                <input type="text" class="producto-serial" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-dollar-sign"></i>
+                                    Costo Unitario*
+                                </label>
+                                <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon" oninput="calcularSubtotal(this)">
+                                <i class="fas fa-dollar-sign input-icon"></i>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-cubes"></i>
+                                    Cantidad*
+                                </label>
+                                <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon" oninput="calcularSubtotal(this)">
+                                <i class="fas fa-hashtag input-icon"></i>
+                            </div>
+                            <div class="form-group subtotal-group">
+                                <label>
+                                    <i class="fas fa-calculator"></i>
+                                    Subtotal
+                                </label>
+                                <input type="text" class="subtotal-display" readonly value="$0.00">
+                            </div>
+                            <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Eliminar producto">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="productos-footer">
+                        <button type="button" class="btn-add-row" onclick="addProductoRow()">
+                            <i class="fas fa-plus"></i> Agregar Producto
+                        </button>
+                        <div class="total-section recepcion-resumen-factura">
+                            <div class="resumen-factura-item">
+                                <span class="total-label">Subtotal:</span>
+                                <strong class="total-value" id="subtotalRecepcion">$0.00</strong>
+                            </div>
+                            <div class="resumen-factura-item resumen-iva-tasa">
+                                <label for="porcentajeIvaRecepcion">IVA (%)</label>
+                                <input type="number" id="porcentajeIvaRecepcion" name="porcentaje_iva" value="0" min="0" max="100" step="0.01" oninput="calcularTotal()">
+                            </div>
+                            <div class="resumen-factura-item">
+                                <span class="total-label">Monto IVA:</span>
+                                <strong class="total-value" id="montoIvaRecepcion">$0.00</strong>
+                            </div>
+                            <div class="resumen-factura-item resumen-factura-total">
+                                <span class="total-label">Total factura:</span>
+                                <strong class="total-value" id="totalValue">$0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btm-confirmar btn-cancel" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button class="btm-confirmar btn-save" onclick="saveRecepcion()">
+                        <i class="fas fa-check"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Modal para Ver Detalles de Recepción -->
 <div id="viewModal" class="modal">
-    <div class="modal-content modal-large">
+    <div class="modal-content">
         <div class="modal-header">
             <div class="modal-header-content">
                 <div class="modal-icon">
@@ -413,413 +411,6 @@ ob_start();
         </div>
     </div>
 </div>
-
-            <style>
-                /* Estilos específicos de Recepciones */
-                .recepciones-section {
-                    margin-top: 30px;
-                }
-
-                /* Override modal size for recepcion */
-                #recepcionModal .modal-content.modal-large {
-                    max-width: 95%;
-                    width: 1300px;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                }
-
-                #recepcionModal .modal-body {
-                    max-height: 70vh;
-                    overflow-y: auto;
-                }
-
-                #recepcionModal .recepcion-ia-preview {
-                    margin: 12px 0 18px;
-                }
-
-                #recepcionModal [hidden] {
-                    display: none !important;
-                }
-
-                #recepcionModal .recepcion-ia-preview img,
-                #recepcionModal .recepcion-ia-preview iframe {
-                    display: block;
-                    width: 100%;
-                    max-height: 360px;
-                    border: 1px solid rgba(33, 150, 243, 0.2);
-                    border-radius: 8px;
-                    background: white;
-                }
-
-                #recepcionModal .recepcion-ia-preview img {
-                    width: auto;
-                    max-width: 100%;
-                    height: auto;
-                }
-
-                #recepcionModal .recepcion-ia-preview iframe {
-                    height: 360px;
-                }
-
-                #recepcionModal .recepcion-ia-status,
-                #recepcionModal .recepcion-ia-result {
-                    margin-top: 12px;
-                    padding: 12px 16px;
-                    border: 1px solid rgba(33, 150, 243, 0.2);
-                    border-radius: 8px;
-                    background: rgba(33, 150, 243, 0.05);
-                    color: #2d3748;
-                    white-space: pre-line;
-                }
-
-                #recepcionModal .recepcion-ia-status[data-state="error"] {
-                    border-color: rgba(220, 53, 69, 0.3);
-                    background: rgba(220, 53, 69, 0.08);
-                }
-
-                .status-badge {
-                    padding: 6px 14px;
-                    border-radius: 20px;
-                    font-size: 0.75rem;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-
-                .status-badge.completed {
-                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-                    color: white;
-                }
-
-                .status-badge.pending {
-                    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-                    color: white;
-                }
-
-                .status-badge.cancelled {
-                    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-                    color: white;
-                }
-
-                /* Productos de Recepción */
-                .form-section {
-                    background: rgba(33, 150, 243, 0.03);
-                    border-radius: 12px;
-                    padding: 25px;
-                    margin-bottom: 20px;
-                    border: 1px solid rgba(33, 150, 243, 0.1);
-                }
-
-                .section-title {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    margin-bottom: 20px;
-                    padding-bottom: 15px;
-                    border-bottom: 2px solid rgba(33, 150, 243, 0.1);
-                }
-
-                .section-title i {
-                    font-size: 1.3rem;
-                    color: #2196F3;
-                }
-
-                .section-title h3 {
-                    font-size: 1.1rem;
-                    font-weight: 700;
-                    color: #2d3748;
-                    margin: 0;
-                }
-
-                .section-title .product-count {
-                    margin-left: auto;
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    color: white;
-                    padding: 4px 12px;
-                    border-radius: 20px;
-                    font-size: 0.8rem;
-                    font-weight: 600;
-                }
-
-                .productos-section {
-                    background: linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(25, 118, 210, 0.05) 100%);
-                }
-
-                #productosList {
-                    overflow-x: auto;
-                    padding-bottom: 8px;
-                }
-
-                .productos-recepcion h3 {
-                    font-size: 1.1rem;
-                    font-weight: 700;
-                    color: #2d3748;
-                    margin-bottom: 15px;
-                }
-
-                .producto-row {
-                    display: grid;
-                    grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
-                    min-width: 1080px;
-                    gap: 12px;
-                    margin-bottom: 15px;
-                    align-items: start;
-                    background: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-                    border: 1px solid rgba(33, 150, 243, 0.1);
-                }
-
-                .subtotal-group {
-                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-                    border-radius: 8px;
-                    padding: 10px;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-
-                .subtotal-group label {
-                    color: white;
-                    font-size: 0.7rem;
-                    font-weight: 600;
-                    margin-bottom: 5px;
-                }
-
-                .subtotal-display {
-                    background: white;
-                    border: none;
-                    color: #2d3748;
-                    font-weight: 700;
-                    text-align: right;
-                    font-size: 0.9rem;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    width: 100%;
-                }
-
-                .productos-footer {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-top: 20px;
-                    padding-top: 20px;
-                    border-top: 2px solid rgba(33, 150, 243, 0.1);
-                }
-
-                .total-section {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    padding: 12px 20px;
-                    border-radius: 10px;
-                    color: white;
-                }
-
-                .total-label {
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                }
-
-                .total-value {
-                    font-size: 1.3rem;
-                    font-weight: 800;
-                }
-
-                .recepcion-resumen-factura {
-                    display: grid;
-                    grid-template-columns: repeat(4, minmax(130px, 1fr));
-                    align-items: center;
-                    flex: 1;
-                }
-
-                .resumen-factura-item {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                    min-width: 0;
-                }
-
-                .resumen-factura-item .total-label,
-                .resumen-factura-item label {
-                    color: white;
-                    font-size: 0.8rem;
-                    font-weight: 600;
-                }
-
-                .resumen-factura-item .total-value {
-                    font-size: 1rem;
-                }
-
-                .resumen-iva-tasa input {
-                    width: 100%;
-                    min-width: 0;
-                    padding: 5px 8px;
-                    border: 1px solid rgba(255, 255, 255, 0.7);
-                    border-radius: 5px;
-                }
-
-                .resumen-factura-total {
-                    border-left: 1px solid rgba(255, 255, 255, 0.35);
-                    padding-left: 14px;
-                }
-
-                .input-with-icon {
-                    position: relative;
-                }
-
-                .input-icon {
-                    position: absolute;
-                    right: 15px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    color: #2196F3;
-                    pointer-events: none;
-                }
-
-                .input-with-icon input,
-                .input-with-icon select {
-                    padding-right: 40px;
-                }
-
-                /* Mejoras en labels */
-                .form-group label {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-weight: 600;
-                    color: #2d3748;
-                    margin-bottom: 8px;
-                }
-
-                .form-group label i {
-                    color: #2196F3;
-                    font-size: 0.9rem;
-                }
-
-                /* Modal Header Mejorado */
-                .modal-header-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                }
-
-                .modal-icon {
-                    width: 50px;
-                    height: 50px;
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    border-radius: 12px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .modal-icon i {
-                    font-size: 1.5rem;
-                    color: white;
-                }
-
-                .modal-title-content h2 {
-                    font-size: 1.4rem;
-                    font-weight: 700;
-                    color: white;
-                    margin: 0 0 5px 0;
-                }
-
-                .modal-title-content p {
-                    font-size: 0.85rem;
-                    color: rgba(255, 255, 255, 0.8);
-                    margin: 0;
-                }
-
-                .btn-save {
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    color: white;
-                }
-
-                .btn-save:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-                }
-
-                .observaciones-text {
-                    background: white;
-                    padding: 15px;
-                    border-radius: 8px;
-                    border: 1px solid rgba(33, 150, 243, 0.1);
-                }
-
-                .observaciones-text p {
-                    margin: 0;
-                    color: #2d3748;
-                    line-height: 1.6;
-                }
-
-                /* Botones de sección */
-                .btn-add-recepcion, .btn-filter {
-                    padding: 12px 20px;
-                    border: none;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: all 0.3s ease;
-                }
-
-                .btn-add-recepcion {
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    color: white;
-                }
-
-                .btn-filter {
-                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                    color: white;
-                }
-
-                .btn-report {
-                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-                    color: white;
-                }
-
-                .btn-add-recepcion:hover, .btn-filter:hover, .btn-report:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
-                }
-
-                /* Responsive */
-                @media (max-width: 768px) {
-                    .productos-footer {
-                        align-items: stretch;
-                        flex-direction: column;
-                        gap: 12px;
-                    }
-
-                    .recepcion-resumen-factura {
-                        grid-template-columns: repeat(2, minmax(120px, 1fr));
-                    }
-
-                    .resumen-factura-total {
-                        border-left: 0;
-                        padding-left: 0;
-                    }
-
-                    .producto-row {
-                        grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
-                    }
-                }
-
-                @media (max-width: 1200px) {
-                    .producto-row {
-                        grid-template-columns: minmax(190px, 1.8fr) minmax(75px, 0.55fr) repeat(3, minmax(95px, 0.9fr)) minmax(125px, 1.1fr) minmax(90px, 0.8fr) minmax(95px, 0.9fr) auto;
-                        gap: 10px;
-                    }
-                }
-            </style>
 
             <script src="microservicio/javascript/asistente_recepcion.js"></script>
             <script>
@@ -1166,6 +757,8 @@ ob_start();
                         botonGuardar.disabled = false;
                     }
                 }
+
+
 
                 // Función para ver detalles de recepción
                 function viewRecepcion(boton) {
