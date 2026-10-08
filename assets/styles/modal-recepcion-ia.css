@@ -200,6 +200,51 @@
     padding-right: 40px;
 }
 
+.btn-add-row {
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+.btn-remove-row {
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    align-items: center;
+    margin-top: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-add-row img, .btn-remove-row img {
+    margin-top: 2px;
+    width:1.5em;
+    height:1.5em;
+    filter:brightness(0) invert(1);
+}
+
+.btn-add-row{
+    background: linear-gradient(135deg, #a8e7f7 0%, #059cf3 100%);
+}
+.btn-add-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(44, 75, 250, 0.479);
+}
+
+.btn-remove-row{
+    background: linear-gradient(135deg, #fd8c8c 0%, #f14404 100%);
+}
+.btn-remove-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 78, 78, 0.479);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .productos-footer {

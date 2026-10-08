@@ -171,19 +171,18 @@ ob_start();
                         <i class="fas fa-boxes"></i>
                         <h3>Productos de la Recepción</h3>
                         <span class="product-count">0 productos</span>
+
+                        <button type="button" class="btn-add-row" title="Agregar Producto" onclick="addProductoRow()">
+                        <img src="assets/img/plus.svg">
+                    </button>
                     </div>
                     <div id="productosList">
                         <div class="producto-row">
                             <div class="form-group">
-                                <label>Código</label>
-                                <input type="text" class="producto-codigo" readonly>
-                            </div>
-                            <div class="form-group">
                                 <label>
-                                    <i class="fas fa-box"></i>
-                                    Nombre del producto*
+                                    Producto*
                                 </label>
-                                <select name="producto[]" class="producto-select" required onchange="seleccionarProducto(this)">
+                                <select name="producto[]" class="producto-select input-select" required onchange="seleccionarProducto(this)">
                                     <option value="">Seleccione un producto</option>
                                     <?php if (!empty($productos)): ?>
                                         <?php foreach ($productos as $producto): ?>
@@ -201,47 +200,45 @@ ob_start();
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Marca</label>
-                                <input type="text" class="producto-marca" readonly>
+                                <label>Código*</label>
+                                <input type="text" class="producto-codigo input-testnum" required>
                             </div>
                             <div class="form-group">
-                                <label>Modelo</label>
-                                <input type="text" class="producto-modelo" readonly>
+                                <label>Marca*</label>
+                                <input type="text" class="producto-marca input-testnum" required>
                             </div>
                             <div class="form-group">
-                                <label>Serial</label>
-                                <input type="text" class="producto-serial" readonly>
+                                <label>Modelo*</label>
+                                <input type="text" class="producto-modelo input-testnum" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Serial*</label>
+                                <input type="text" class="producto-serial input-testnum" required>
                             </div>
                             <div class="form-group">
                                 <label>
-                                    <i class="fas fa-dollar-sign"></i>
                                     Costo Unitario*
                                 </label>
-                                <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon" oninput="calcularSubtotal(this)">
+                                <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
                             </div>
                             <div class="form-group">
                                 <label>
-                                    <i class="fas fa-cubes"></i>
                                     Cantidad*
                                 </label>
-                                <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon" oninput="calcularSubtotal(this)">
+                                <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
                             </div>
                             <div class="form-group subtotal-group">
                                 <label>
-                                    <i class="fas fa-calculator"></i>
                                     Subtotal
                                 </label>
                                 <input type="text" class="subtotal-display" readonly value="$0.00">
                             </div>
-                            <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Eliminar producto">
-                                <i class="fas fa-trash"></i>
+                            <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="RemoverProducto">
+                                <img src="assets/img/circle-x.svg">
                             </button>
                         </div>
                     </div>
                     <div class="productos-footer">
-                        <button type="button" class="btn-add-row" onclick="addProductoRow()">
-                            <i class="fas fa-plus"></i> Agregar Producto
-                        </button>
                         <div class="total-section recepcion-resumen-factura">
                             <div class="resumen-factura-item">
                                 <span class="total-label">Subtotal:</span>

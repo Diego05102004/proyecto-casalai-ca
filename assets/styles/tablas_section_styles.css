@@ -119,12 +119,12 @@
 .btn-detallar {
     background: linear-gradient(135deg, #a8e7f7 0%, #059cf3 100%);
 }
-.btn-anular {
-    background: linear-gradient(135deg, #fd8c8c 0%, #f14404 100%);
-}
-
 .btn-detallar:hover {
     box-shadow: 0 4px 12px rgba(44, 75, 250, 0.479);
+}
+
+.btn-anular {
+    background: linear-gradient(135deg, #fd8c8c 0%, #f14404 100%);
 }
 .btn-anular:hover {
     box-shadow: 0 4px 12px rgba(236, 78, 78, 0.479);
