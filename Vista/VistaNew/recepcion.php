@@ -147,7 +147,6 @@ ob_start();
                             </label>
                             <input type="text" id="correlativo" name="correlativo" required 
                                     placeholder="Ej: FAC-001" class="input-with-icon">
-                            <i class="fas fa-hashtag input-icon"></i>
                         </div>
                     </div>
                     
@@ -220,7 +219,6 @@ ob_start();
                                     Costo Unitario*
                                 </label>
                                 <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon" oninput="calcularSubtotal(this)">
-                                <i class="fas fa-dollar-sign input-icon"></i>
                             </div>
                             <div class="form-group">
                                 <label>
@@ -228,7 +226,6 @@ ob_start();
                                     Cantidad*
                                 </label>
                                 <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon" oninput="calcularSubtotal(this)">
-                                <i class="fas fa-hashtag input-icon"></i>
                             </div>
                             <div class="form-group subtotal-group">
                                 <label>

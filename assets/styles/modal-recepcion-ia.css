@@ -194,15 +194,6 @@
     position: relative;
 }
 
-.input-icon {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #2196F3;
-    pointer-events: none;
-}
-
 .input-with-icon input,
 .input-with-icon select {
     padding-right: 40px;
