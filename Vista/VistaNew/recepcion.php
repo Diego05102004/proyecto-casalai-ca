@@ -251,7 +251,7 @@ ob_start();
                             </div>
                             <div class="resumen-factura-item resumen-iva-tasa">
                                 <label for="porcentajeIvaRecepcion">IVA (%)</label>
-                                <input type="number" id="porcentajeIvaRecepcion" name="porcentaje_iva" value="0" min="0" max="100" step="0.01" oninput="calcularTotal()">
+                                <input type="number" id="porcentajeIvaRecepcion" name="porcentaje_iva" value="16" min="0" max="100" step="0.01" oninput="calcularTotal()">
                             </div>
                             <div class="resumen-factura-item">
                                 <span class="total-label">Monto IVA:</span>
