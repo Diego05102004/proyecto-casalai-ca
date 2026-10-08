@@ -122,11 +122,18 @@ ob_start();
                     </div>
                     <div class="form-row">
                         <div class="form-group">
+                            <label for="correlativo">
+                                <i class="fas fa-file-invoice"></i>
+                                Número de Factura*
+                            </label>
+                            <input type="text" placeholder="Ej: 012345" class="input-testnum" id="correlativo" name="correlativo" maxlength="6" required>
+                        </div>
+                        <div class="form-group">
                             <label for="proveedor">
                                 <i class="fas fa-building"></i>
                                 Proveedor*
                             </label>
-                            <select id="proveedor" name="proveedor" required>
+                            <select id="proveedor" name="proveedor" class="input-select" required>
                                 <option value="">Seleccione un proveedor</option>
                                 <?php if (!empty($proveedores)): ?>
                                     <?php foreach ($proveedores as $proveedor): ?>
@@ -139,24 +146,16 @@ ob_start();
                                 <?php endif; ?>
                             </select>
                         </div>
-                        
                         <div class="form-group">
-                            <label for="correlativo">
-                                <i class="fas fa-file-invoice"></i>
-                                Número de Factura*
+                            <label for="fotoFacturaRecepcion">
+                                <i class="fas fa-robot"></i>
+                                Factura para análisis asistido
                             </label>
-                            <input type="text" id="correlativo" name="correlativo" required 
-                                    placeholder="Ej: FAC-001" class="input-with-icon">
+                            <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
+                            <br>
+                            <small><br> Adjunte una imagen o PDF (máximo 5 MB). <br>
+                                El análisis rellenará los datos detectados.</small>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="fotoFacturaRecepcion">
-                            <i class="fas fa-robot"></i>
-                            Factura para análisis asistido
-                        </label>
-                        <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
-                        <small>Adjunte una imagen o PDF (máximo 5 MB). El análisis rellenará los datos detectados.</small>
                     </div>
                     <div id="previewFacturaRecepcion" class="recepcion-ia-preview" hidden>
                         <img id="previewImagenRecepcion" alt="Vista previa de la factura" hidden>

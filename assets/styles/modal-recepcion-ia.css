@@ -2,6 +2,7 @@
     max-width: 95%;
     width: 1300px;
     max-height: 90vh;
+    margin-top: 8vh;
 }
 
 #recepcionModal .modal-body {
