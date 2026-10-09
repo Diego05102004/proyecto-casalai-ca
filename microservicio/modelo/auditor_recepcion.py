@@ -588,7 +588,7 @@ class AuditorRecepcion:
             # Configurar ruta de Poppler para Windows
             import platform
             if platform.system() == 'Windows':
-                poppler_path = r"C:\Poppler\poppler-25.12.0\Library\bin"
+                poppler_path = r"C:\xampp\htdocs\proyecto-casalai-ca\microservicio\Poppler\poppler-25.12.0\Library\bin"
                 if Path(poppler_path).exists():
                     imagenes = convert_from_path(ruta_pdf, dpi=200, fmt='jpeg', poppler_path=poppler_path)
                 else:

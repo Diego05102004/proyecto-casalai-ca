@@ -310,3 +310,16 @@
 2026-10-08 20:48:58,986 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
 2026-10-08 20:49:02,801 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
 2026-10-08 20:49:02,802 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 20:52:34,985 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205234_08b55608.pdf
+2026-10-08 20:52:35,630 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 20:52:40,877 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-08 20:52:40,878 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 20:53:22,936 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205322_66192a6b.pdf
+2026-10-08 20:53:22,952 - modelo.auditor_recepcion - ERROR - Error convirtiendo PDF C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205322_66192a6b.pdf: Unable to get page count. Is poppler installed and in PATH?
+2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-08 20:54:41,241 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205441_2e256138.pdf
+2026-10-08 20:54:42,038 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 20:54:46,764 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-08 20:54:46,766 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
