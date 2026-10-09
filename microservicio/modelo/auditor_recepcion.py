@@ -257,9 +257,9 @@ class AuditorRecepcion:
                 prod = self._parsear_linea_producto(linea, lineas[i:i+3])
                 if prod and prod.nombre: productos.append(prod)
         
-        # Método 2: Parsing inteligente para facturas como eBay
+        # Método 2: Parsing inteligente para facturas
         if not productos:
-            productos = self._extraer_productos_ebay_style(texto)
+            productos = self._extraer_productos_style(texto)
         
         # Método 3: Extracción general como fallback
         if not productos:
@@ -312,7 +312,7 @@ class AuditorRecepcion:
             linea_limpia = linea.strip()
             if not producto_actual or not linea_limpia:
                 continue
-            if re.match(r'^(?:subtotal|iva|impuesto|total|gracias|eBay International)\b', linea_limpia, re.IGNORECASE):
+            if re.match(r'^(?:subtotal|iva|impuesto|total|gracias)\b', linea_limpia, re.IGNORECASE):
                 producto_actual = None
                 continue
 
@@ -329,21 +329,21 @@ class AuditorRecepcion:
         descripcion = re.sub(r"[^\w\s&+-]", " ", descripcion, flags=re.UNICODE)
         return re.sub(r"\s+", " ", descripcion).strip()
 
-    def _extraer_productos_ebay_style(self, texto: str) -> List[ProductoExtraido]:
-        """Extrae productos de facturas con formato eBay/e-commerce"""
+    def _extraer_productos_style(self, texto: str) -> List[ProductoExtraido]:
+        """Extrae productos de facturas"""
         productos = []
         lineas = texto.split('\n')
         
         for i, linea in enumerate(lineas):
             # Buscar patrones como "HP: DeskJet 2775 HP 0002 $1520.00 2 $3040.00"
             if '$' in linea and any(marca in linea.upper() for marca in ['HP', 'CANON', 'EPSON', 'DELL', 'LENOVO']):
-                prod = self._parsear_linea_ebay(linea)
+                prod = self._parsear_linea(linea)
                 if prod: productos.append(prod)
         
         return productos
 
-    def _parsear_linea_ebay(self, linea: str) -> Optional[ProductoExtraido]:
-        """Parsea líneas con formato eBay: MARCA: Modelo MARCA Serial Precio Cantidad Total"""
+    def _parsear_linea(self, linea: str) -> Optional[ProductoExtraido]:
+        """Parsea líneas con formato Proveedor: MARCA: Modelo MARCA Serial Precio Cantidad Total"""
         try:
             prod = ProductoExtraido()
             
@@ -399,7 +399,7 @@ class AuditorRecepcion:
             return prod if prod.nombre else None
             
         except Exception as e:
-            logger.warning(f"Error parseando línea eBay: {e}")
+            logger.warning(f"Error parseando línea: {e}")
             return None
 
     def _parsear_linea_producto(self, linea: str, contexto: List[str]) -> Optional[ProductoExtraido]:
