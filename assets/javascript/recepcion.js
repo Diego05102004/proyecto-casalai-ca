@@ -356,7 +356,7 @@ function enviarAjax(datos, callback) {
     });
 }
 
-
+/*
     $(document).on('click', '.btn-anular', function (e) {
         e.preventDefault();
         Swal.fire({
@@ -405,7 +405,7 @@ function enviarAjax(datos, callback) {
         const tabla = $('#tablaConsultas').DataTable();
         const fila = $(`#tablaConsultas tbody tr[data-id="${correlativo}"]`).addClass('anulada');
         tabla.row(fila).remove().draw();
-    }
+    }*/
 
     function verificarPermisosEnTiempoRealRecepcion() {
         var datos = new FormData();
