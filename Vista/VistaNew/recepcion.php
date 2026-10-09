@@ -32,7 +32,7 @@ ob_start();
 ?>
 
 <script src="assets/public/js/jquery-3.7.1.min.js"></script>
-<script src="assets/javascript/recepcion-ia.js"></script>
+<script src="assets/javascript/recepcion.js"></script>
 <link rel="stylesheet" href="assets/styles/modal-recepcion-ia.css">
 
 <!-- Recepciones Section -->
@@ -770,8 +770,6 @@ ob_start();
                         botonGuardar.disabled = false;
                     }
                 }
-
-
 
                 // Función para ver detalles de recepción
                 function viewRecepcion(boton) {
