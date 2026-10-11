@@ -39,6 +39,7 @@ body {
     height: 60px;
     border-radius: 12px;
     margin-bottom: 10px;
+    filter: brightness(0) invert(1);
 }
 
 .sidebar-header h2 {
