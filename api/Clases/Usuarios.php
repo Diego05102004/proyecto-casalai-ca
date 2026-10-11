@@ -1266,7 +1266,6 @@ class Usuarios extends BD {
         $apellidos = $encryption->decrypt($data['apellidos'] ?? null);
         $nombres = $encryption->decrypt($data['nombres'] ?? null);
         $telefono = $encryption->decrypt($data['telefono'] ?? null);
-        $username = $encryption->decrypt($data['username'] ?? null);
         $clave_actual = $encryption->decrypt($data['clave_actual'] ?? null);
 
         if (empty($id_usuario)) {
@@ -1300,9 +1299,6 @@ class Usuarios extends BD {
         }
 
         // Validar username único
-        if (isset($datosActualizar['username']) && $this->existeUsuario($datosActualizar['username'], $id_usuario)) {
-            throw new RuntimeException('El nombre de usuario ya está en uso');
-        }
 
         if (empty($datosActualizar)) {
             throw new RuntimeException('No se proporcionaron datos para actualizar');
