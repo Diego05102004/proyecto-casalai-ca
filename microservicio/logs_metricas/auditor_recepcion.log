@@ -317,6 +317,7 @@
 2026-10-08 20:53:22,936 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205322_66192a6b.pdf
 2026-10-08 20:53:22,952 - modelo.auditor_recepcion - ERROR - Error convirtiendo PDF C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205322_66192a6b.pdf: Unable to get page count. Is poppler installed and in PATH?
 2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+<<<<<<< Updated upstream
 2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
 2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
 2026-10-08 20:54:41,241 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205441_2e256138.pdf
@@ -339,3 +340,47 @@
 2026-10-08 21:25:54,374 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 94.00%
 2026-10-08 21:28:46,523 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008212846_ed6db6ba.pdf
 2026-10-08 21:28:48,734 - modelo.auditor_recepcion - INFO - PDF convertido a 1 pï¿½ginas para OCR
+=======
+2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-08 20:54:24,882 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-08 20:54:41,241 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008205441_2e256138.pdf
+2026-10-08 20:54:42,038 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 20:54:46,764 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-08 20:54:46,766 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 21:27:24,021 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008212723_7ede24ca.pdf
+2026-10-08 21:27:25,205 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 21:27:29,434 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-08 21:27:29,437 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 21:27:45,455 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008212723_7ede24ca
+2026-10-08 21:27:45,469 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-08 21:30:26,771 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008213026_ae80ab61.pdf
+2026-10-08 21:30:26,939 - modelo.auditor_recepcion - ERROR - Error convirtiendo PDF C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008213026_ae80ab61.pdf: Unable to get page count. Is poppler installed and in PATH?
+2026-10-08 21:30:45,871 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-08 21:30:45,871 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-08 21:30:51,348 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008213051_85a0f7d4.pdf
+2026-10-08 21:30:51,781 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 21:30:56,085 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-08 21:30:56,087 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 21:31:56,000 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008213051_85a0f7d4
+2026-10-08 21:31:56,001 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-08 22:06:35,292 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008220635_c7e03fa3.pdf
+2026-10-08 22:06:36,028 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 22:06:41,925 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-08 22:06:41,930 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 22:11:34,150 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008221134_782a2f70.jpeg
+2026-10-08 22:11:36,356 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-08 22:16:31,931 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008221631_88e00446.jpeg
+2026-10-08 22:16:33,366 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 76.00%
+2026-10-08 22:19:24,088 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008221631_88e00446
+2026-10-08 22:19:24,097 - modelo.auditor_recepcion - INFO - Verificación: 6 discrepancias
+2026-10-08 22:21:22,183 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008221631_88e00446
+2026-10-08 22:21:22,184 - modelo.auditor_recepcion - INFO - Verificación: 6 discrepancias
+2026-10-08 22:22:02,289 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008221631_88e00446
+2026-10-08 22:22:02,290 - modelo.auditor_recepcion - INFO - Verificación: 6 discrepancias
+2026-10-08 22:22:26,554 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008222226_d6d63324.pdf
+2026-10-08 22:22:26,905 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 22:22:29,960 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para Tarjeta SD Kingston; se recalculó como total/cantidad.
+2026-10-08 22:22:29,960 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 22:23:57,097 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008222226_d6d63324
+2026-10-08 22:23:57,098 - modelo.auditor_recepcion - INFO - Verificación: 4 discrepancias
+>>>>>>> Stashed changes
