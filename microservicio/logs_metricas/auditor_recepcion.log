@@ -339,3 +339,23 @@
 2026-10-08 21:30:56,087 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
 2026-10-08 21:31:56,000 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008213051_85a0f7d4
 2026-10-08 21:31:56,001 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-08 22:06:35,292 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008220635_c7e03fa3.pdf
+2026-10-08 22:06:36,028 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 22:06:41,925 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-08 22:06:41,930 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 22:11:34,150 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008221134_782a2f70.jpeg
+2026-10-08 22:11:36,356 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-08 22:16:31,931 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008221631_88e00446.jpeg
+2026-10-08 22:16:33,366 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 76.00%
+2026-10-08 22:19:24,088 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008221631_88e00446
+2026-10-08 22:19:24,097 - modelo.auditor_recepcion - INFO - Verificación: 6 discrepancias
+2026-10-08 22:21:22,183 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008221631_88e00446
+2026-10-08 22:21:22,184 - modelo.auditor_recepcion - INFO - Verificación: 6 discrepancias
+2026-10-08 22:22:02,289 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008221631_88e00446
+2026-10-08 22:22:02,290 - modelo.auditor_recepcion - INFO - Verificación: 6 discrepancias
+2026-10-08 22:22:26,554 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261008222226_d6d63324.pdf
+2026-10-08 22:22:26,905 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-08 22:22:29,960 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para Tarjeta SD Kingston; se recalculó como total/cantidad.
+2026-10-08 22:22:29,960 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-08 22:23:57,097 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261008222226_d6d63324
+2026-10-08 22:23:57,098 - modelo.auditor_recepcion - INFO - Verificación: 4 discrepancias
