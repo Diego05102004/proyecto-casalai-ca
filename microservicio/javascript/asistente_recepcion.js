@@ -113,7 +113,10 @@ class AsistenteRecepcionIA {
             if (!error.contingencia) {
                 this._registrarFalloCircuito();
                 error.contingencia = true;
-                if (error.name === 'AbortError') error.message = 'Tiempo de espera agotado al consultar el microservicio.';
+if (error.name === 'AbortError') {
+    error = new Error('Tiempo de espera agotado al consultar el microservicio.');
+    error.contingencia = true;
+}
             }
             throw error;
         } finally {

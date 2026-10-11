@@ -415,7 +415,7 @@ ob_start();
                 const asistenteRecepcionIA = typeof AsistenteRecepcionIA !== 'undefined'
                     ? new AsistenteRecepcionIA({
                         apiUrl: 'http://127.0.0.1:8000',
-                        proxyUrl: '?pagina=recepcion',
+                        debug: true,
                         selectores: { alertas: '#estadoIARecepcion' }
                     })
                     : null;
