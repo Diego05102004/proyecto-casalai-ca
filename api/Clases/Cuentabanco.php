@@ -632,10 +632,6 @@ class Cuentabanco extends BD {
         return $this->c_cuentabanco(); 
     }
 
-    public function cuentabancoConsultar() {
-        return $this->c_cuentabanco();
-    }
-
     private function c_cuentabanco() {
         $resultado = $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "CALL sp_consultar_cuenta()";
