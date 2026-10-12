@@ -32,6 +32,7 @@ ob_start();
 ?>
 
 <script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="microservicio/javascript/asistente_recepcion.js"></script>
 <script src="assets/javascript/recepcion.js"></script>
 <link rel="stylesheet" href="assets/styles/modal-recepcion-ia.css">
 
@@ -84,7 +85,7 @@ ob_start();
                                 onclick="viewRecepcion(this)">
                                 <img src="assets/img/eye.svg">
                             </button>
-                            <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'Administrador'): ?>
+                            <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'SuperUsuario'): ?>
                                 <button class="btn-action btn-anular" 
                                     title="Anular Recepción"
                                     onclick="anularRecepcion('<?php echo htmlspecialchars($recepcion['correlativo'] ?? ''); ?>')">
@@ -115,7 +116,7 @@ ob_start();
                     <img src="assets/img/info-ayuda.svg">
                 </button>
             </div>
-            <span class="close-modal">&times;</span>
+            <span class="close-modal" onclick="closeRecepcionModal()">&times;</span>
         </div>
         <div class="modal-body">
             <form id="recepcionForm" enctype="multipart/form-data">
@@ -141,14 +142,15 @@ ob_start();
                                 <i class="fas fa-file-invoice"></i>
                                 Número de Factura*
                             </label>
-                            <input type="text" placeholder="Ej: 012345" class="input-testnum" id="correlativo" name="correlativo" maxlength="6" required>
+                            <input type="text" placeholder="Ej: 012345" class="input-testnum" id="correlativo" name="correlativo" maxlength="6">
+                            <span class="span-value" id="scorrelativo"></span>
                         </div>
                         <div class="form-group">
                             <label for="proveedor">
                                 <i class="fas fa-building"></i>
                                 Proveedor*
                             </label>
-                            <select id="proveedor" name="proveedor" class="input-select" required>
+                            <select id="proveedor" name="proveedor" class="input-select">
                                 <option value="">Seleccione un proveedor</option>
                                 <?php if (!empty($proveedores)): ?>
                                     <?php foreach ($proveedores as $proveedor): ?>
@@ -159,7 +161,8 @@ ob_start();
                                 <?php else: ?>
                                     <option value="">No hay proveedores disponibles</option>
                                 <?php endif; ?>
-                            </select>
+                            </select><br>
+                            <span class="span-value" id="sproveedor"></span>
                         </div>
                     </div>
                     <div id="previewFacturaRecepcion" class="recepcion-ia-preview" hidden>
@@ -187,7 +190,7 @@ ob_start();
                                 <label>
                                     Producto*
                                 </label>
-                                <select name="producto[]" class="producto-select input-select" required onchange="seleccionarProducto(this)">
+                                <select name="producto[]" class="producto-select input-select" onchange="seleccionarProducto(this)">
                                     <option value="">Seleccione un producto</option>
                                     <?php if (!empty($productos)): ?>
                                         <?php foreach ($productos as $producto): ?>
@@ -224,13 +227,13 @@ ob_start();
                                 <label>
                                     Costo Unitario*
                                 </label>
-                                <input type="number" name="costo[]" required placeholder="0.00" step="0.01" min="0" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
+                                <input type="number" name="costo[]" placeholder="0.00" step="0.01" min="0" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
                             </div>
                             <div class="form-group">
                                 <label>
                                     Cantidad*
                                 </label>
-                                <input type="number" name="cantidad[]" required placeholder="0" min="1" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
+                                <input type="number" name="cantidad[]" placeholder="0" min="1" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
                             </div>
                             <div class="form-group subtotal-group">
                                 <label>
@@ -265,10 +268,10 @@ ob_start();
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btm-confirmar btn-cancel" onclick="closeModal()">
+                    <button type="button" class="btm-confirmar btn-cancel" onclick="closeModal()">
                         <i class="fas fa-times"></i> Cancelar
                     </button>
-                    <button class="btm-confirmar btn-save" onclick="saveRecepcion()">
+                    <button type="button" class="btm-confirmar btn-save" onclick="saveRecepcion()">
                         <i class="fas fa-check"></i> Guardar
                     </button>
                 </div>
@@ -409,7 +412,7 @@ ob_start();
         </div>
     </div>
 </div>
-
+<!--
             <script src="microservicio/javascript/asistente_recepcion.js"></script>
             <script>
                 const asistenteRecepcionIA = typeof AsistenteRecepcionIA !== 'undefined'
@@ -660,10 +663,115 @@ ob_start();
                     }
                 }
 
+                if($.trim($("#mensajes").text()) != ""){
+                    mensajes("warning", "Atención", $("#mensajes").html());
+                }
+
+                $("#correlativo").on("keypress", function(e){
+                    validarkeypress(/^[0-9]*$/, e);
+                    let correlativo = document.getElementById("correlativo");
+                    correlativo.value = space(correlativo.value);
+                });
+                $("#correlativo").on("keyup", function(){
+                    validarkeyup(
+                        /^[0-9]{6}$/,
+                        $(this),
+                        $("#scorrelativo"),
+                        "*Formato válido: 012345*"
+                    );
+                });
+
+                $("#proveedor").on("change", function() {
+                    if ($(this).val()) {
+                        $(this).removeClass("is-invalid").addClass("is-valid");
+                        $("#sproveedor").text("");
+                    } else {
+                        $(this).removeClass("is-valid").addClass("is-invalid");
+                        $("#sproveedor").text("*Debe seleccionar un proveedor*");
+                    }
+                });
+
+                function validarEnvioRecepcion(){
+                    let correlativo = document.getElementById("correlativo");
+                    correlativo.value = space(correlativo.value).trim();
+
+                    let esValido = true;
+
+                    // Validar Correlativo
+                    if (validarkeyup(/^[0-9]{6}$/, $("#correlativo"), $("#scorrelativo"), "*El N° de factura debe tener 6 dígitos*") == 0) {
+                        $("#correlativo").removeClass("is-valid").addClass("is-invalid");
+                        $("#scorrelativo").text("*El N° de factura es obligatorio (6 dígitos)*");
+                        esValido = false;
+                    }
+
+                    // Validar Select Proveedor
+                    if ($("#proveedor").val()) {
+                        $("#proveedor").removeClass("is-invalid").addClass("is-valid");
+                        $("#sproveedor").text("");
+                    } else {
+                        $("#proveedor").removeClass("is-valid").addClass("is-invalid");
+                        $("#sproveedor").text("*Debe seleccionar un proveedor*");
+                        esValido = false;
+                    }
+
+                    if (!esValido) {
+                        mensajes('error', 'Campos incompletos', 'Por favor complete los campos obligatorios (*)');
+                    }
+
+                    return esValido;
+                }
+
+                /*function validarEnvioRecepcion(){
+                    let correlativo = document.getElementById("correlativo");
+                    correlativo.value = space(correlativo.value).trim();
+
+                    if(validarkeyup(
+                        /^[0-9]{4,10}$/,
+                        $("#correlativo"),
+                        $("#scorrelativo"),
+                        "*El N° de factura debe tener de 6 dígitos*"
+                    )==0){
+                        mensajes('error', 'Verifique el N° de factura', 'Le faltan dígitos al N° de factura');
+                        return false;
+                    }
+
+                    if($("#proveedor").val()) {
+                        $("#proveedor").removeClass("is-invalid").addClass("is-valid");
+                        $("#sproveedor").text("");
+                    } else {
+                        $("#proveedor").removeClass("is-valid").addClass("is-invalid");
+                        $("#sproveedor").text("*Debe seleccionar un proveedor*");
+                        mensajes('error', 'Verifique el proveedor', 'El campo esta vacio');
+                        return false;
+                    }
+                    return true;
+                }*/
+
+                function verificaproductos() {
+                    var existe = false;
+                    if ($("#recepcion1 tr").length > 0) {
+                        existe = true;
+                    } else {
+                        mensajes('error', 'Verifique los productos', 'Debe seleccionar algun producto');
+                    }
+                    return existe;
+                }
+
+                function mensajes(icono, titulo, mensaje){
+                    Swal.fire({
+                        icon: icono,
+                        title: titulo,
+                        text: mensaje,
+                        showConfirmButton: true,
+                        confirmButtonText: 'Aceptar',
+                    });
+                }
+
                 // Función para guardar recepción
                 async function saveRecepcion() {
                     const form = document.getElementById('recepcionForm');
-                    if (!form.reportValidity()) return;
+                    const esValido = validarEnvioRecepcion();
+                    if (!esValido) return;
                     const botonGuardar = document.querySelector('#recepcionModal .modal-footer .btn-save');
                     botonGuardar.disabled = true;
                     
@@ -727,35 +835,37 @@ ob_start();
                             }
                         }
 
-                        const formData = new FormData(form);
-                        formData.delete('foto_factura');
-                        formData.append('accion', 'registrar');
-                        if (archivo) formData.append('factura_contingencia', archivo, archivo.name);
-                        if (modoContingencia) formData.append('modo_contingencia', 'true');
-                        if (iaVerificada) formData.append('ia_verificada', 'true');
-                        const response = await fetch('?pagina=recepcion', { method: 'POST', body: formData });
-                        const data = await response.json();
-                        if (data && data.status === 'success') {
-                            const mensaje = data.procesamiento_pendiente
-                                ? 'Recepción registrada. La recepción quedó resguardada y marcada para procesamiento posterior.'
-                                : data.factura_resguardada
-                                    ? 'Recepción registrada.'
-                                    : 'Recepción registrada correctamente.';
-                            document.getElementById('recepcionModal').style.display = 'none';
-                            await Swal.fire({
-                                icon: 'success',
-                                title: '¡Éxito!',
-                                text: mensaje,
-                                showConfirmButton: true,
-                            });
-                            location.reload();
-                        } else {
-                            await Swal.fire({
-                                icon: 'error',
-                                title: 'Error al registrar recepción',
-                                text: data.message || 'Error desconocido',
-                                showConfirmButton: true,
-                            });
+                        if (validarEnvioRecepcion() && verificaproductos()) {
+                            const formData = new FormData(form);
+                            formData.delete('foto_factura');
+                            formData.append('accion', 'registrar');
+                            if (archivo) formData.append('factura_contingencia', archivo, archivo.name);
+                            if (modoContingencia) formData.append('modo_contingencia', 'true');
+                            if (iaVerificada) formData.append('ia_verificada', 'true');
+                            const response = await fetch('?pagina=recepcion', { method: 'POST', body: formData });
+                            const data = await response.json();
+                            if (data && data.status === 'success') {
+                                const mensaje = data.procesamiento_pendiente
+                                    ? 'Recepción registrada. La recepción quedó resguardada y marcada para procesamiento posterior.'
+                                    : data.factura_resguardada
+                                        ? 'Recepción registrada.'
+                                        : 'Recepción registrada correctamente.';
+                                document.getElementById('recepcionModal').style.display = 'none';
+                                await Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Éxito!',
+                                    text: mensaje,
+                                    showConfirmButton: true,
+                                });
+                                location.reload();
+                            } else {
+                                await Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error al registrar recepción',
+                                    text: data.message || 'Error desconocido',
+                                    showConfirmButton: true,
+                                });
+                            }
                         }
                     } catch (error) {
                         console.error('Error al guardar recepción:', error);
@@ -1093,7 +1203,7 @@ ob_start();
                 `;
                 document.head.appendChild(style);
             </script>
-
+-->
 <?php
 $contenido_pagina = ob_get_clean();
 

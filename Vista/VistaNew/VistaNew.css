@@ -13,6 +13,10 @@ body {
     min-height: 100vh;
 }
 
+.modal{
+    z-index: 1001 !important;
+}
+
 /* ===== Sidebar ===== */
 .sidebar {
     width: 260px;
@@ -39,6 +43,7 @@ body {
     height: 60px;
     border-radius: 12px;
     margin-bottom: 10px;
+    filter: brightness(0) invert(1);
 }
 
 .sidebar-header h2 {
@@ -155,21 +160,6 @@ body {
 
 .date-input:focus {
     border-color: #2196F3;
-}
-
-.user-profile {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    background: #f7fafc;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.user-profile:hover {
-    background: #edf2f7;
 }
 
 .user-avatar {

@@ -282,6 +282,15 @@ RecibirPeticion($categoria, $operations);
   - `por_id`: Producto por ID
   - `por_categoria`: Productos por categoría
   - `detallado`: Producto con características dinámicas
+- **carrito.php**: Carrito sincronizado por usuario autenticado
+  - `GET ?funcion=consultar`: Devuelve los productos y el total del carrito.
+  - `POST {"funcion":"agregar","items":[{"id_producto":34,"cantidad":2}]}`: Agrega productos; admite varios componentes en una misma operación.
+  - `POST {"funcion":"actualizar","id_carrito_detalle":43,"cantidad":3}`: Actualiza una línea.
+  - `POST {"funcion":"eliminar","id_carrito_detalle":43}`: Elimina una línea.
+  - `POST {"funcion":"vaciar"}`: Vacía las líneas del carrito.
+  - Requiere `Authorization: Bearer <token>`; el endpoint busca la cédula del usuario en `casalai_seguridad.tbl_usuarios` y la compara con `casalai_principal.tbl_clientes.cedula`. Guarda en `tbl_carrito.id_cliente` el `id_clientes` resuelto, nunca el `id_usuario` del token ni un identificador enviado por el cliente.
+
+Las operaciones devuelven el formato JSON estándar de la API. En caso de éxito, `data` contiene `items` y `total`; cada línea incluye `id_carrito_detalle`, `id_producto`, `cantidad`, `name`, `price`, `stock` e `image`.
 
 ## Configuración de URLs
 
