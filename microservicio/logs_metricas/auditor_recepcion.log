@@ -405,3 +405,5 @@
 2026-10-11 21:29:17,610 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
 2026-10-11 21:29:20,331 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para Tarjeta SD Kingston; se recalculó como total/cantidad.
 2026-10-11 21:29:20,332 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-11 21:35:03,278 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-11 21:35:03,278 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
