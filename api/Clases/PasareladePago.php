@@ -425,10 +425,8 @@ class PasareladePago extends Factura {
                 return $this->pagoIngresar();                 
             case 'Consultar':
                 return $this->pagoConsultar();
-                case 'ConsultarTodos':
+            case 'ConsultarTodos':
                 return $this->pagoConsultarTodos();
-            case 'Modificar':
-                return $this->pagoModificar();
             case 'Procesar':
                 return $this->pagoProcesar();
             default:
@@ -797,26 +795,6 @@ class PasareladePago extends Factura {
         });
     }
 
-    private function pagoModificar() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "UPDATE `tbl_detalles_pago` 
-                SET `id_factura` = :id_factura,
-                    `id_cuenta` = :id_cuenta,
-                    `tipo` = :tipo,
-                    `referencia` = :referencia,
-                    `fecha` = :fecha
-                WHERE id_detalles = :id_detalles";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_detalles', $this->id_detalles);
-            $stmt->bindParam(':id_factura', $this->factura);
-            $stmt->bindParam(':id_cuenta', $this->cuenta);
-            $stmt->bindParam(':tipo', $this->tipo);
-            $stmt->bindParam(':referencia', $this->referencia);
-            $stmt->bindParam(':fecha', $this->fecha);
-            return $stmt->execute();
-        });
-    }
-
     public function validarCodigoReferencia(){
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT COUNT(*) FROM tbl_detalles_pago WHERE referencia = :referencia";
@@ -904,15 +882,6 @@ class PasareladePago extends Factura {
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
-        });
-    }
-
-    private function pagoEliminar() {
-        return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "DELETE FROM tbl_detalles_pago WHERE id_detalles = :id_detalles";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':id_detalles', $this->id_detalles, PDO::PARAM_INT);
-            return $stmt->execute();
         });
     }
 }
