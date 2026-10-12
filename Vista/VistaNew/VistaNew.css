@@ -13,6 +13,10 @@ body {
     min-height: 100vh;
 }
 
+.modal{
+    z-index: 1001 !important;
+}
+
 /* ===== Sidebar ===== */
 .sidebar {
     width: 260px;

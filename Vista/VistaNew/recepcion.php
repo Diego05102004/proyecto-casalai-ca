@@ -33,7 +33,7 @@ ob_start();
 
 <script src="assets/public/js/jquery-3.7.1.min.js"></script>
 <script src="microservicio/javascript/asistente_recepcion.js"></script>
-<script src="assets/javascript/recepcion-new.js"></script>
+<script src="assets/javascript/recepcion.js"></script>
 <link rel="stylesheet" href="assets/styles/modal-recepcion-ia.css">
 
 <!-- Recepciones Section -->
@@ -116,7 +116,7 @@ ob_start();
                     <img src="assets/img/info-ayuda.svg">
                 </button>
             </div>
-            <span class="close-modal">&times;</span>
+            <span class="close-modal" onclick="closeRecepcionModal()">&times;</span>
         </div>
         <div class="modal-body">
             <form id="recepcionForm" enctype="multipart/form-data">
@@ -161,7 +161,7 @@ ob_start();
                                 <?php else: ?>
                                     <option value="">No hay proveedores disponibles</option>
                                 <?php endif; ?>
-                            </select>
+                            </select><br>
                             <span class="span-value" id="sproveedor"></span>
                         </div>
                     </div>
