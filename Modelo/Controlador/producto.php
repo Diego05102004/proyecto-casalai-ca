@@ -148,12 +148,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errores = $Producto->validarRegistrarProducto($datos_validacion);
             if (!empty($errores)) {
                 error_log("❌ Errores de validación encontrados: " . print_r($errores, true));
+                // Construir mensaje con todos los errores
+                $mensaje_errores = "Error en los datos del producto:\n\n";
+                foreach ($errores as $campo => $mensaje) {
+                    $mensaje_errores .= "• $campo: $mensaje\n";
+                }
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos del producto',
+                    'message' => $mensaje_errores,
                     'errors' => $errores
-                ]);
+                ], JSON_UNESCAPED_UNICODE);
                 exit;
             }
             error_log("✅ Validación de datos exitosa");
@@ -260,12 +265,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Validar datos del producto usando las nuevas validaciones centralizadas
             $errores = $Producto->validarModificarProducto($datos_validacion);
             if (!empty($errores)) {
+                // Construir mensaje con todos los errores
+                $mensaje_errores = "Error en los datos del producto:\n\n";
+                foreach ($errores as $campo => $mensaje) {
+                    $mensaje_errores .= "• $campo: $mensaje\n";
+                }
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Error en los datos del producto',
+                    'message' => $mensaje_errores,
                     'errors' => $errores
-                ]);
+                ], JSON_UNESCAPED_UNICODE);
                 exit;
             }
 
@@ -557,7 +567,7 @@ $mostrarFormulario = !empty($categoriasDinamicas);
 $pagina = "producto";
 
 // Buscar primero en Vista/VistaNew/ y luego en Vista/
-if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+if (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {
             $bitacoraModel = new Bitacora();
@@ -574,7 +584,7 @@ if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     $modelos = obtenerModelos();
     $productos = obtenerProductos();
     $productosMasRecibidos = obtenerProductosMasRecibidos();
-    require_once("Vista/VistaNew/" . $pagina . ".php");
+    require_once("Vista/" . $pagina . ".php");
 } elseif (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {

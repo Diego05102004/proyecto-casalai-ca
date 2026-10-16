@@ -487,23 +487,23 @@ if (!empty($_SESSION['foto_perfil'])) {
         <h2>Mi Cuenta</h2>
         <div class="profile-info">
             <?php  
-$inicial = substr($_SESSION['name'] ?? 'U', 0, 1);
+            $inicial = substr($_SESSION['name'] ?? 'U', 0, 1);
 
-// Validar si hay una imagen real en sesión
-if (!empty($_SESSION['foto_perfil'])) { 
-?>
-    <div class="user-avatar">
-        <img src="assets/img/uploads/<?php echo $_SESSION['foto_perfil']; ?>" alt="User Avatar">
-    </div>
-<?php 
-} else { 
-?>
-    <div class="user-avatar">
-        <?php echo $inicial; ?>
-    </div>
-<?php 
-} 
-?><div class="profile-details">
+            // Validar si hay una imagen real en sesión
+            if (!empty($_SESSION['foto_perfil'])) { 
+            ?>
+                <div class="user-avatar">
+                    <img src="assets/img/uploads/<?php echo $_SESSION['foto_perfil']; ?>" alt="User Avatar">
+                </div>
+            <?php 
+            } else { 
+            ?>
+                <div class="user-avatar">
+                    <?php echo $inicial; ?>
+                </div>
+            <?php 
+            } 
+            ?><div class="profile-details">
                 <div class="profile-name"><?php echo htmlspecialchars($_SESSION['name'] ?? 'Usuario'); ?></div>
                 <div class="profile-role"><?php echo htmlspecialchars($_SESSION['nombre_rol'] ?? 'Rol'); ?></div>
             </div>
