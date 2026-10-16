@@ -1,8 +1,13 @@
-// Sistema de protección de selects
+/**
+ * recepcion-new.js - Script unificado para la gestión de Recepciones
+ */
+
+// ==========================================
+// 1. SISTEMA DE PROTECCIÓN DE SELECTS
+// ==========================================
 function protegerSelects(selectIds, interval = 1000) {
     const originales = {};
 
-    // Guardar opciones originales de cada select
     selectIds.forEach(id => {
         const select = document.getElementById(id);
         if (!select) return;
@@ -13,7 +18,6 @@ function protegerSelects(selectIds, interval = 1000) {
         }));
     });
 
-    // Monitorear periódicamente cambios en las opciones
     setInterval(() => {
         selectIds.forEach(id => {
             const select = document.getElementById(id);
@@ -39,110 +43,685 @@ function protegerSelects(selectIds, interval = 1000) {
                     opt.textContent = optData.text;
                     select.appendChild(opt);
                 });
-
-                console.warn(`⚠ Opciones del <select id="${id}"> fueron alteradas. Restauradas automáticamente.`);
             }
         });
     }, interval);
 }
 
-// Función para marcar productos agregados
-function marcarProductosAgregados() {
-    // Obtener IDs de productos ya en la lista principal
-    let idsAgregados = [];
-    $('#recepcion1 input[name="producto[]"]').each(function() {
-        idsAgregados.push($(this).val());
-    });
-
-    // Marcar filas en el modal
-    $('#modalp #listadop tr').each(function() {
-        const idProducto = $(this).find('td:eq(0)').text().trim(); // ID del producto
-        if (idsAgregados.includes(idProducto)) {
-            $(this).addClass('agregado');
-            $(this).find('.btn-agregar-prod').prop('disabled', true).text('Agregado');
-            $(this).removeClass('tr-seleccionado'); // Remover selección verde si ya está agregado
-        } else {
-            $(this).removeClass('agregado');
-            $(this).find('.btn-agregar-prod').prop('disabled', false).text('Agregar');
-        }
+// ==========================================
+// 2. FUNCIONES AUXILIARES Y DE UTILIDAD
+// ==========================================
+function mensajes(icono, titulo, mensaje) {
+    Swal.fire({
+        icon: icono,
+        title: titulo,
+        text: mensaje,
+        showConfirmButton: true,
+        confirmButtonText: 'Aceptar',
     });
 }
 
-$(document).ready(function() {
+function validarkeypress(er, e) {
+    let key = e.keyCode;
+    let tecla = String.fromCharCode(key);
+    let a = er.test(tecla);
 
-    var $tabla = $('#tablaConsultas');
-    if ($tabla.length) {
-        var tablaRecepcion;
-        if (!$.fn.DataTable.isDataTable('#tablaConsultas')) {
-            tablaRecepcion = $tabla.DataTable({
-                language: {
-                    url: 'assets/public/js/es-ES.json'
-                },
-                scrollX: true,
-                scrollCollapse: true,
-                order: [[0, 'desc']],
-                initComplete: function () {
-                    var api = this.api();
-                    var $wrapper = $(api.table().container());
+    if (!a) {
+        e.preventDefault();
+    }
+}
 
-                    api.columns.adjust();
+function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
+    let a = er.test(etiqueta.val());
 
-                    var $filter = $wrapper.find('.dataTables_filter');
-                    if (!$filter.length) return;
+    if (a) {
+        etiquetamensaje.text("");
+        etiqueta.removeClass("is-invalid").addClass("is-valid");
+        return 1;
+    } else {
+        etiquetamensaje.text(mensaje);
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+}
 
-                    // Evitar duplicar el botón si ya existe
-                    if ($filter.find('#btnIncluirRecepcion').length) return;
+function space(str) {
+    if (!str) return '';
+    return str.replace(/\s{2,}/g, ' ');
+}
 
-                    // Estilos flex para alinear label + buscador + botón
-                    $filter.css({
-                        display: 'flex',
-                        'align-items': 'center',
-                        'justify-content': 'flex-end',
-                        gap: '10px'
-                    });
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return '';
+    const partes = fechaStr.split('-');
+    if (partes.length === 3) {
+        return `${partes[2].padStart(2, '0')}/${partes[1].padStart(2, '0')}/${partes[0]}`;
+    }
+    return fechaStr;
+}
 
-                    $filter.find('label').css({ 'margin-bottom': '0' });
+// ==========================================
+// 3. VALIDACIONES DE FORMULARIO
+// ==========================================
+function validarEnvioRecepcion() {
+    let correlativoInput = $("#correlativo");
+    let correlativoVal = space(correlativoInput.val()).trim();
+    correlativoInput.val(correlativoVal);
 
-                    var $btnWrapper = $('<div>', { 'class': 'space-btn-incluir' });
-                    var $btn = $('<button>', {
-                        id: 'btnIncluirRecepcion',
-                        'class': 'btn-incluir',
-                        type: 'button',
-                        title: 'Incluir Recepción'
-                    }).append($('<img>', { src: 'assets/img/plus.svg' }));
+    let esValido = true;
 
-                    $btnWrapper.append($btn);
-                    $filter.append($btnWrapper);
+    if (validarkeyup(/^[0-9]{6}$/, correlativoInput,$("#scorrelativo"), "*El N° de factura debe tener exactamente 6 dígitos*") == 0) {
+        esValido = false;
+    }
+
+    let proveedorVal = $("#proveedor").val();
+    if (proveedorVal) {
+        $("#proveedor").removeClass("is-invalid").addClass("is-valid");
+        $("#sproveedor").text("");
+    } else {
+        $("#proveedor").removeClass("is-invalid").addClass("is-invalid");
+        $("#sproveedor").text("*Debe seleccionar un proveedor*");
+        esValido = false;
+    }
+
+    if (!esValido) {
+        mensajes('error', 'Campos incompletos', 'Por favor complete los campos obligatorios (*)');
+    }
+
+    return esValido;
+}
+
+function verificaproductos() {
+    var filasModal = $("#productosList .producto-row").length;
+    if (filasModal > 0) {
+        let valido = true;
+        $("#productosList .producto-row").each(function() {
+            let prodSel = $(this).find('.producto-select').val();
+            let cant = $(this).find('input[name="cantidad[]"]').val();
+            if (!prodSel || !cant || Number(cant) <= 0) {
+                valido = false;
+            }
+        });
+        if (!valido) {
+            mensajes('error', 'Verifique los productos', 'Debe seleccionar un producto válido y asignar una cantidad mayor a 0');
+            return false;
+        }
+        return true;
+    } else {
+        mensajes('error', 'Verifique los productos', 'Debe seleccionar algún producto');
+        return false;
+    }
+}
+
+// ==========================================
+// 4. INTEGRACIÓN SEGURA CON EL MICROSERVICIO (LAZY INITIALIZATION)
+// ==========================================
+let asistenteRecepcionIA = null;
+let urlPreviewFacturaRecepcion = null;
+
+function obtenerAsistenteIA() {
+    if (!asistenteRecepcionIA && typeof AsistenteRecepcionIA !== 'undefined') {
+        asistenteRecepcionIA = new AsistenteRecepcionIA({
+            apiUrl: 'http://127.0.0.1:8000',
+            debug: true,
+            selectores: { alertas: '#estadoIARecepcion' }
+        });
+    }
+    return asistenteRecepcionIA;
+}
+
+function establecerEstadoIARecepcion(mensaje, estado = 'info') {
+    const estadoEl = document.getElementById('estadoIARecepcion');
+    if (!estadoEl) return;
+    estadoEl.textContent = mensaje;
+    estadoEl.dataset.state = estado;
+    estadoEl.hidden = !mensaje;
+}
+
+function activarContingenciaIARecepcion(detalle = '') {
+    establecerEstadoIARecepcion(
+        `El servicio de lectura automática por IA no está disponible temporalmente. Se ha habilitado el formulario manual.${detalle ? ` Detalle: ${detalle}` : ''}`,
+        'error'
+    );
+}
+
+function normalizarTextoRecepcion(valor) {
+    return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function buscarOpcionCatalogo(select, texto) {
+    const buscado = normalizarTextoRecepcion(texto);
+    if (!buscado) return null;
+    const opciones = Array.from(select.options).filter(opcion => opcion.value);
+    const exactas = opciones.filter(opcion => normalizarTextoRecepcion(opcion.textContent) === buscado);
+    if (exactas.length === 1) return exactas[0];
+    const parciales = opciones.filter(opcion => {
+        const nombre = normalizarTextoRecepcion(opcion.textContent);
+        return nombre.includes(buscado) || buscado.includes(nombre);
+    });
+    return parciales.length === 1 ? parciales[0] : null;
+}
+
+function rellenarRecepcionDesdeFactura(factura) {
+    const correlativo = document.getElementById('correlativo');
+    if (factura.numero_factura) correlativo.value = factura.numero_factura;
+
+    const proveedor = document.getElementById('proveedor');
+    const proveedorEncontrado = buscarOpcionCatalogo(proveedor, factura.nombre_proveedor);
+    if (proveedorEncontrado) proveedor.value = proveedorEncontrado.value;
+
+    const productosDetectados = Array.isArray(factura.productos) ? factura.productos : [];
+    if (productosDetectados.length) {
+        const productosList = document.getElementById('productosList');
+        while (productosList.querySelectorAll('.producto-row').length > 1) {
+            productosList.lastElementChild.remove();
+        }
+        productosList.querySelector('.producto-row').querySelectorAll('select, input').forEach(campo => {
+            if (campo.classList.contains('subtotal-display')) campo.value = '$0.00';
+            else campo.value = '';
+        });
+
+        productosDetectados.forEach((producto, indice) => {
+            const fila = indice === 0
+                ? productosList.querySelector('.producto-row')
+                : addProductoRow();
+            const selector = fila.querySelector('.producto-select');
+            const opcion = buscarOpcionCatalogo(selector, producto.nombre);
+            if (opcion) {
+                selector.value = opcion.value;
+                seleccionarProducto(selector);
+            }
+            fila.querySelector('input[name="cantidad[]"]').value = producto.cantidad > 0 ? producto.cantidad : 1;
+            fila.querySelector('input[name="costo[]"]').value = Number(producto.costo_unitario || 0).toFixed(2);
+            calcularSubtotal(fila.querySelector('input[name="costo[]"]'));
+        });
+    }
+
+    const inputIva = document.getElementById('porcentajeIvaRecepcion');
+    if (inputIva) inputIva.value = Number(factura.porcentaje_iva || 0).toFixed(2);
+    calcularTotal();
+    actualizarContadorProductos();
+    establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.`);
+}
+
+function limpiarFacturaIARecepcion() {
+    const aiClient = obtenerAsistenteIA();
+    if (aiClient) aiClient.limpiarCache();
+    if (urlPreviewFacturaRecepcion) URL.revokeObjectURL(urlPreviewFacturaRecepcion);
+    urlPreviewFacturaRecepcion = null;
+    
+    const previewFac = document.getElementById('previewFacturaRecepcion');
+    const prevImg = document.getElementById('previewImagenRecepcion');
+    const prevPdf = document.getElementById('previewPdfRecepcion');
+    const resIA = document.getElementById('resultadoIARecepcion');
+
+    if (previewFac) previewFac.hidden = true;
+    if (prevImg) { prevImg.hidden = true; prevImg.removeAttribute('src'); }
+    if (prevPdf) { prevPdf.hidden = true; prevPdf.removeAttribute('src'); }
+    if (resIA) { resIA.textContent = ''; resIA.hidden = true; }
+    establecerEstadoIARecepcion('');
+}
+
+async function analizarFacturaRecepcion(archivo) {
+    const aiClient = obtenerAsistenteIA();
+    if (!aiClient) {
+        activarContingenciaIARecepcion('Librería del microservicio no disponible.');
+        return;
+    }
+    establecerEstadoIARecepcion('Analizando factura con OCR...');
+    const resultado = await aiClient.extraerDesdeImagen(archivo);
+    if (!resultado.exito) {
+        if (resultado.contingencia) activarContingenciaIARecepcion(resultado.error);
+        else establecerEstadoIARecepcion(`No se pudo analizar la factura: ${resultado.error || 'error'}`, 'error');
+        return;
+    }
+    rellenarRecepcionDesdeFactura(resultado.data);
+}
+
+// ==========================================
+// 5. GESTIÓN DE MODALES Y PRODUCTOS
+// ==========================================
+function openModal(type) {
+    const modal = document.getElementById('recepcionModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const form = document.getElementById('recepcionForm');
+    
+    if (type === 'registrar') {
+        if (modalTitle) modalTitle.textContent = 'Nueva Recepción';
+        if (form) form.reset();
+        limpiarFacturaIARecepcion();
+        const filas = document.querySelectorAll('#productosList .producto-row');
+        filas.forEach((fila, indice) => { if (indice > 0) fila.remove(); });
+        actualizarContadorProductos();
+        calcularTotal();
+    }
+    if (modal) {
+        modal.style.display = 'block';
+        modal.style.animation = 'fadeIn 0.3s ease';
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('recepcionModal');
+    if (!modal) return;
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+function addProductoRow() {
+    const productosList = document.getElementById('productosList');
+    if (!productosList) return null;
+    const firstRow = productosList.querySelector('.producto-row');
+    if (!firstRow) return null;
+
+    const newRow = firstRow.cloneNode(true);
+    newRow.style.animation = 'slideDown 0.3s ease';
+    newRow.querySelector('.producto-select').value = '';
+    newRow.querySelector('.producto-codigo').value = '';
+    newRow.querySelector('.producto-marca').value = '';
+    newRow.querySelector('.producto-modelo').value = '';
+    newRow.querySelector('.producto-serial').value = '';
+    newRow.querySelector('input[name="cantidad[]"]').value = '';
+    newRow.querySelector('input[name="costo[]"]').value = '';
+    newRow.querySelector('.subtotal-display').value = '$0.00';
+    productosList.appendChild(newRow);
+    actualizarContadorProductos();
+    return newRow;
+}
+
+function seleccionarProducto(select) {
+    const opcion = select.selectedOptions[0];
+    const fila = select.closest('.producto-row');
+    if (!fila) return;
+    fila.querySelector('.producto-codigo').value = opcion?.dataset.codigo || '';
+    fila.querySelector('.producto-marca').value = opcion?.dataset.marca || '';
+    fila.querySelector('.producto-modelo').value = opcion?.dataset.modelo || '';
+    fila.querySelector('.producto-serial').value = opcion?.dataset.serial || '';
+    calcularSubtotal(select);
+}
+
+function calcularSubtotal(input) {
+    const row = input.closest('.producto-row');
+    if (!row) return;
+    const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
+    const costo = parseFloat(row.querySelector('input[name="costo[]"]').value) || 0;
+    const subtotal = cantidad * costo;
+    const display = row.querySelector('.subtotal-display');
+    if (display) display.value = '$' + subtotal.toFixed(2);
+    calcularTotal();
+}
+
+function calcularTotal() {
+    const filas = document.querySelectorAll('#productosList .producto-row');
+    const subtotal = Array.from(filas).reduce((suma, fila) => {
+        const cantidad = Number(fila.querySelector('input[name="cantidad[]"]')?.value) || 0;
+        const costo = Number(fila.querySelector('input[name="costo[]"]')?.value) || 0;
+        return suma + cantidad * costo;
+    }, 0);
+
+    const porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
+    const montoIva = Math.round((subtotal * (porcentajeIva / 100) + Number.EPSILON) * 100) / 100;
+
+    if (document.getElementById('subtotalRecepcion')) document.getElementById('subtotalRecepcion').textContent = '$' + subtotal.toFixed(2);
+    if (document.getElementById('montoIvaRecepcion')) document.getElementById('montoIvaRecepcion').textContent = '$' + montoIva.toFixed(2);
+    if (document.getElementById('totalValue')) document.getElementById('totalValue').textContent = '$' + (subtotal + montoIva).toFixed(2);
+}
+
+function actualizarContadorProductos() {
+    const count = document.querySelectorAll('.producto-row').length;
+    const counterEl = document.querySelector('.product-count');
+    if (counterEl) counterEl.textContent = count + ' producto' + (count !== 1 ? 's' : '');
+}
+
+function removeProductoRow(button) {
+    const row = button.closest('.producto-row');
+    if (document.querySelectorAll('.producto-row').length > 1) {
+        row.style.animation = 'slideUp 0.3s ease';
+        setTimeout(() => {
+            row.remove();
+            actualizarContadorProductos();
+            calcularTotal();
+        }, 300);
+    } else {
+        alert('Debe haber al menos un producto');
+    }
+}
+
+// ==========================================
+// 6. ACCIONES: GUARDAR, DETALLAR, ANULAR
+// ==========================================
+async function saveRecepcion(event) {
+    if (event) event.preventDefault();
+
+    const form = document.getElementById('recepcionForm');
+    if (!validarEnvioRecepcion()) return;
+    if (!verificaproductos()) return;
+
+    const botonGuardar = document.querySelector('#recepcionModal .modal-footer .btn-save');
+    if (botonGuardar) botonGuardar.disabled = true;
+    
+    try {
+        const archivo = document.getElementById('fotoFacturaRecepcion')?.files[0];
+        let modoContingencia = false;
+        let iaVerificada = false;
+        const aiClient = obtenerAsistenteIA();
+
+        if (archivo) {
+            if (!aiClient) {
+                modoContingencia = true;
+            } else if (!aiClient.getFacturaId()) {
+                const extraccion = await aiClient.extraerDesdeImagen(archivo);
+                if (!extraccion.exito) {
+                    if (!extraccion.contingencia) throw new Error(extraccion.error || 'No se pudo analizar la factura.');
+                    modoContingencia = true;
+                } else {
+                    rellenarRecepcionDesdeFactura(extraccion.data);
                 }
+            }
+
+            if (!modoContingencia && aiClient) {
+                establecerEstadoIARecepcion('Verificando los datos antes del registro...');
+                const datosFormulario = {
+                    numero_factura: document.getElementById('correlativo').value,
+                    nombre_proveedor: document.querySelector('#proveedor option:checked').textContent,
+                    productos: Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
+                        nombre: fila.querySelector('.producto-select option:checked').textContent,
+                        modelo: fila.querySelector('.producto-modelo').value,
+                        marca: fila.querySelector('.producto-marca').value,
+                        serial: fila.querySelector('.producto-serial').value,
+                        cantidad: Number(fila.querySelector('input[name="cantidad[]"]').value),
+                        costo: Number(fila.querySelector('input[name="costo[]"]').value)
+                    }))
+                };
+                const verificacion = await aiClient.verificarCoherencia(
+                    aiClient.getFacturaId(), datosFormulario
+                );
+                if (verificacion.error) {
+                    if (!verificacion.contingencia) throw new Error(verificacion.error);
+                    modoContingencia = true;
+                } else if (!verificacion.exito) {
+                    const discrepancias = verificacion.discrepancias || [];
+                    const detalle = discrepancias.map(item =>
+                        `${item.campo}: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"`
+                    ).join('\n');
+                    if (discrepancias.some(item => item.severidad === 'CRITICA')) {
+                        establecerEstadoIARecepcion('Registro bloqueado: corrige las discrepancias críticas con la factura.', 'error');
+                        alert(`La verificación encontró diferencias críticas. Corrige los datos antes de guardar.\n\n${detalle}`);
+                        if (botonGuardar) botonGuardar.disabled = false;
+                        return;
+                    }
+                    if (!confirm(`Se encontraron diferencias con la factura:\n\n${detalle}\n\n¿Deseas guardar de todos modos?`)) {
+                        if (botonGuardar) botonGuardar.disabled = false;
+                        return;
+                    }
+                    iaVerificada = true;
+                } else {
+                    iaVerificada = true;
+                }
+            }
+
+            if (modoContingencia) {
+                activarContingenciaIARecepcion();
+                if (!confirm('El servicio de lectura automática por IA no está disponible temporalmente. Se ha habilitado el formulario manual. La factura se conservará al registrar. ¿Deseas continuar con el registro manual?')) {
+                    if (botonGuardar) botonGuardar.disabled = false;
+                    return;
+                }
+            }
+        }
+
+        const formData = new FormData(form);
+        formData.delete('foto_factura');
+        formData.append('accion', 'registrar');
+        if (archivo) formData.append('factura_contingencia', archivo, archivo.name);
+        if (modoContingencia) formData.append('modo_contingencia', 'true');
+        if (iaVerificada) formData.append('ia_verificada', 'true');
+
+        const response = await fetch('?pagina=recepcion', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (data && data.status === 'success') {
+            document.getElementById('recepcionModal').style.display = 'none';
+            
+            if ($.fn.DataTable.isDataTable('table.table-info')) {
+                const tabla = $('table.table-info').DataTable();
+                
+                const rec = data.recepcion || {};
+                const rawFecha = rec.fecha || rec.fecha_recepcion || new Date().toISOString().split('T')[0];
+                const fechaRaw = typeof rawFecha === 'object' ? (rawFecha.date || String(rawFecha)) : String(rawFecha);
+                const nuevaFecha = formatearFecha(fechaRaw);
+                const correlativoNum = String(rec.correlativo || document.getElementById('correlativo').value || '');
+                const proveedorNombre = String(rec.nombre_proveedor || $('#proveedor option:checked').text() || '');
+                const totalMontoStr = document.getElementById('totalValue')?.textContent || '$0.00';
+                
+                const $nuevaFila =$(`<tr>
+                    <td data-order="${fechaRaw}">${nuevaFecha}</td>
+                    <td>${correlativoNum}</td>
+                    <td>${proveedorNombre}</td>
+                    <td>${totalMontoStr}</td>
+                    <td class="action-buttons">
+                        <button class="btn-action btn-detallar" title="Ver Detalles" data-correlativo="${correlativoNum}" data-proveedor="${proveedorNombre}" data-fecha="${fechaRaw}" onclick="viewRecepcion(this)"><img src="assets/img/eye.svg"></button>
+                        <button class="btn-action btn-anular" title="Anular Recepción" onclick="anularRecepcion('${correlativoNum}')"><img src="assets/img/circle-x.svg"></button>
+                    </td>
+                </tr>`);
+
+                tabla.row.add($nuevaFila).draw(false);
+            }
+
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: data.message || 'Recepción registrada correctamente.',
+                showConfirmButton: true,
             });
         } else {
-            tablaRecepcion = $tabla.DataTable();
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error al registrar recepción',
+                text: data.message || 'Error desconocido',
+                showConfirmButton: true,
+            });
         }
+    } catch (error) {
+        console.error('Error al guardar recepción:', error);
+        establecerEstadoIARecepcion(error.message || 'Error al guardar recepción.', 'error');
+        await Swal.fire({
+            icon: 'error',
+            title: 'Error al registrar recepción',
+            text: error.message || 'Por favor, intente nuevamente.',
+            showConfirmButton: true
+        });
+    } finally {
+        if (botonGuardar) botonGuardar.disabled = false;
+    }
+}
+
+function viewRecepcion(boton) {
+    const datosFila = boton instanceof HTMLElement ? boton.dataset : {};
+    const correlativo = datosFila.correlativo || boton;
+    const proveedorFila = datosFila.proveedor || '';
+    const fechaFila = datosFila.fecha || '';
+
+    function actualizarInformacionGeneral(recepcion = {}) {
+        if (document.getElementById('viewCorrelativo')) document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || correlativo || 'N/A';
+        if (document.getElementById('viewProveedor')) document.getElementById('viewProveedor').textContent = proveedorFila || recepcion.nombre_proveedor || 'No disponible';
+        if (document.getElementById('viewFecha')) document.getElementById('viewFecha').textContent = fechaFila || recepcion.fecha || 'No disponible';
+    }
+
+    actualizarInformacionGeneral();
+
+    fetch('?pagina=recepcion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'accion=obtener_detalle_recepcion&correlativo=' + encodeURIComponent(correlativo)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.status === 'success') {
+            const recepcion = data.recepcion;
+            actualizarInformacionGeneral(recepcion);
+            
+            const productosTable = document.getElementById('viewProductos');
+            if (productosTable) {
+                productosTable.innerHTML = '';
+                const productosRecepcion = recepcion.productos || data.productos || [];
+                const subtotalProductos = productosRecepcion.reduce((suma, prod) => suma + (Number(prod.cantidad) || 0) * (Number(prod.costo) || 0), 0);
+                
+                productosRecepcion.forEach(prod => {
+                    const cantidad = Number(prod.cantidad) || 0;
+                    const costo = Number(prod.costo) || 0;
+                    productosTable.innerHTML += `
+                        <tr>
+                            <td>${prod.producto || prod.nombre_producto || 'N/A'}</td>
+                            <td>${cantidad}</td>
+                            <td>$${costo.toFixed(2)}</td>
+                            <td>$${(cantidad * costo).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                if (document.getElementById('viewSubtotal')) document.getElementById('viewSubtotal').textContent = '$' + subtotalProductos.toFixed(2);
+                if (document.getElementById('viewTotal')) document.getElementById('viewTotal').textContent = '$' + (recepcion.total_factura ? Number(recepcion.total_factura).toFixed(2) : subtotalProductos.toFixed(2));
+            }
+        }
+        const modal = document.getElementById('viewModal');
+        if (modal) { modal.style.display = 'block'; modal.style.animation = 'fadeIn 0.3s ease'; }
+    })
+    .catch(() => {
+        const modal = document.getElementById('viewModal');
+        if (modal) { modal.style.display = 'block'; modal.style.animation = 'fadeIn 0.3s ease'; }
+    });
+}
+
+function closeRecepcionModal() {
+    const modal = document.getElementById('recepcionModal');
+    if (!modal) return;
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+function closeViewModal() {
+    const modal = document.getElementById('viewModal');
+    if (!modal) return;
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+function anularRecepcion(correlativo) {
+    const anularCorr = document.getElementById('anularCorrelativo');
+    if (anularCorr) anularCorr.textContent = correlativo;
+    
+    const modal = document.getElementById('anularModal');
+    if (modal) {
+        modal.style.display = 'block';
+        modal.style.animation = 'fadeIn 0.3s ease';
+    }
+}
+
+function closeAnularModal() {
+    const modal = document.getElementById('anularModal');
+    if (!modal) return;
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+async function confirmarAnulacion() {
+    const correlativo = document.getElementById('anularCorrelativo')?.textContent;
+    if (!correlativo) return;
+
+    const formData = new FormData();
+    formData.append('accion', 'anular');
+    formData.append('correlativo', correlativo);
+    
+    const botonConfirmar = document.querySelector('#anularModal .btn-danger');
+    if (botonConfirmar) botonConfirmar.disabled = true;
+
+    try {
+        const response = await fetch('?pagina=recepcion', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data && data.status === 'success') {
+            document.getElementById('anularModal').style.display = 'none';
+            
+            if ($.fn.DataTable.isDataTable('table.table-info')) {
+                const tabla = $('table.table-info').DataTable();
+                tabla.rows().every(function() {
+                    let $row =$(this.node());
+                    let rowCorrelativo = $row.find('td:eq(1)').text().trim();
+                    if (rowCorrelativo === correlativo) {
+                        tabla.row(this).remove();
+                    }
+                });
+                tabla.draw(false);
+            }
+
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: data.message || 'La recepción se anuló correctamente.',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error al anular recepción',
+                text: data.message || 'Error desconocido',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    } catch (error) {
+        console.error('Error al anular recepción:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Error al anular recepción',
+            text: error.message || 'Por favor, intente nuevamente.',
+            confirmButtonText: 'Entendido'
+        });
+    } finally {
+        if (botonConfirmar) botonConfirmar.disabled = false;
+    }
+}
+
+// ==========================================
+// 7. INICIALIZACIÓN DOCUMENT READY
+// ==========================================
+$(document).ready(function() {
+    // Inicialización de la tabla
+    var $tabla =$('table.table-info, table[data-datatable]');
+    if ($tabla.length && !$.fn.DataTable.isDataTable($tabla)) {$tabla.DataTable({
+            language: { url: 'assets/public/js/es-ES.json' },
+            scrollX: true,
+            scrollCollapse: true,
+            order: [[0, 'desc']],
+            initComplete: function () {
+                var api = this.api();
+                var $wrapper =$(api.table().container());
+                api.columns.adjust();
+
+                var $filter =$wrapper.find('.dataTables_filter');
+                if ($filter.length) {
+                    $filter.css({                         display: 'flex',                         'align-items': 'center',                         'justify-content': 'flex-end',                         gap: '10px'                     });$filter.find('label').css({ 'margin-bottom': '0' });
+                }
+            }
+        });
     }
 
     protegerSelects(['proveedor']);
-
-    if($.trim($("#mensajes").text()) != ""){
-        mensajes("warning", "Atención", $("#mensajes").html());
-    }
 
     $("#correlativo").on("keypress", function(e){
         validarkeypress(/^[0-9]*$/, e);
         let correlativo = document.getElementById("correlativo");
         correlativo.value = space(correlativo.value);
     });
+
     $("#correlativo").on("keyup", function(){
-        validarkeyup(
-            /^[0-9]{6}$/,
-            $(this),
-            $("#scorrelativo"),
-            "*Formato válido: 012345*"
-        );
+        validarkeyup(/^[0-9]{6}$/, $(this),$("#scorrelativo"), "*Formato válido: 6 dígitos numéricos*");
     });
 
     $("#proveedor").on("change", function() {
-        if ($(this).val()) {
-            $(this).removeClass("is-invalid").addClass("is-valid");
+        if ($(this).val()) {$(this).removeClass("is-invalid").addClass("is-valid");
             $("#sproveedor").text("");
         } else {
             $(this).removeClass("is-valid").addClass("is-invalid");
@@ -150,658 +729,37 @@ $(document).ready(function() {
         }
     });
 
-    function validarEnvioRecepcion(){
-        let correlativo = document.getElementById("correlativo");
-        correlativo.value = space(correlativo.value).trim();
-
-        if(validarkeyup(
-            /^[0-9]{4,10}$/,
-            $("#correlativo"),
-            $("#scorrelativo"),
-            "*El N° de factura debe tener de 6 dígitos*"
-        )==0){
-            mensajes('error', 'Verifique el N° de factura', 'Le faltan dígitos al N° de factura');
-            return false;
-        }
-
-        if($("#proveedor").val()) {
-            $("#proveedor").removeClass("is-invalid").addClass("is-valid");
-            $("#sproveedor").text("");
-        } else {
-            $("#proveedor").removeClass("is-valid").addClass("is-invalid");
-            $("#sproveedor").text("*Debe seleccionar un proveedor*");
-            mensajes('error', 'Verifique el proveedor', 'El campo esta vacio');
-            return false;
-        }
-        return true;
-    }
-
-    function agregarFilaRecepcion(recepcion) {
-        const nuevaFila = [
-            `<span class="campo-numeros">${recepcion.fecha ? formatearFecha(recepcion.fecha) : ''}</span>`,
-            `<span class="campo-numeros">${recepcion.correlativo}</span>`,
-            `<span class="campo-nombres">${recepcion.nombre_proveedor}</span>`,
-            `<span class="campo-numeros">${Number(recepcion.costo_inversion).toLocaleString('es-VE', {minimumFractionDigits:2})}</span>`,
-            `<ul>
-                <button class="btn-detalle"
-                    title="Detallar"
-                    data-id_recepcion="${recepcion.id_recepcion}"
-                    data-fecha="${recepcion.fecha}"
-                    data-correlativo="${recepcion.correlativo}"
-                    data-proveedor="${recepcion.nombre_proveedor}"
-                    data-costo_inversion="${recepcion.costo_inversion}">
-                    <img src="assets/img/eye.svg">
-                </button>
-                <button class="btn-anular"
-                    title="Anular Recepción"
-                    data-correlativo="${recepcion.correlativo}">
-                    <img src="assets/img/circle-x.svg">
-                </button>
-            </ul>`
-        ];
-        const tabla = $('#tablaConsultas').DataTable();
-        const rowIdx = tabla.row.add(nuevaFila).draw(false).index();
-        $(tabla.row(rowIdx).node()).attr('data-id', recepcion.correlativo);
-        tabla.page('last').draw('page');
-    }
-
-    function formatearFecha(fechaStr) {
-        // fechaStr: '2025-09-08'
-        const partes = fechaStr.split('-');
-        if (partes.length === 3) {
-            const anio = partes[0];
-            const mes = partes[1].padStart(2, '0');
-            const dia = partes[2].padStart(2, '0');
-            return `${dia}/${mes}/${anio}`;
-        }
-        return fechaStr;
-    }
-
-    function resetRecepcion() {
-        $("#correlativo").val("");
-        $("#scorrelativo").text("");
-        $("#proveedor").val("");
-        $("#proveedor").removeClass("is-valid is-invalid");
-        $("#proveedor").prop('checked', false);
-    }
-
-    $('#ingresarRecepcion').on('reset', function() {
-        setTimeout(function() {
-            $("#proveedor").val("");
-            $("#proveedor").removeClass("is-valid is-invalid");
-        }, 0);
-    });
-
-    $(document).on('click', '#btnIncluirRecepcion', function() {
-        $('#ingresarRecepcion')[0].reset();
-        $('#scorrelativo').text('');
-        $("#proveedor").removeClass("is-valid is-invalid");
-        $("#proveedor").prop('checked', false);
-        $('#registrarRecepcionModal').modal('show');
-    });
-
-    $(document).on('click', '#registrarRecepcionModal .close', function() {
-        $('#registrarRecepcionModal').modal('hide');
-    });
-
-    $(document).on('click', '#modalp .close-2', function() {
-        // Limpiar selección verde al cerrar el modal
-        $('#listadop tr').removeClass('tr-seleccionado');
-        $('#modalp').modal('hide');
-    });
-
-    // Limpiar selección cuando se cierra el modal haciendo clic fuera
-    $(document).on('hidden.bs.modal', '#modalp', function() {
-        $('#listadop tr').removeClass('tr-seleccionado');
-    });
-
-    $('#ingresarRecepcion').on('submit', function(e) {
-        e.preventDefault();
-
-        if (validarEnvioRecepcion() && verificaproductos()) {
-            var datos = new FormData(this);
-            datos.append("accion", "registrar");
-            enviarAjax(datos, function(respuesta){
-                if(respuesta.status === "success" || respuesta.resultado === "success"){
-                    
-                    // Mostrar mensaje de éxito
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: respuesta.message || 'Recepción registrada correctamente',
-                        showConfirmButton: true,
-                    });
-                    
-                    // Limpiar el formulario
-                    resetRecepcion();
-                    
-                    // Limpiar la tabla de productos del modal
-                    const tablaRecepcion = document.getElementById('recepcion1');
-                    if (tablaRecepcion) {
-                        tablaRecepcion.innerHTML = '';
-                    }
-                    
-                    // Agregar la nueva recepción a la tabla
-                    if(respuesta.recepcion){
-                        agregarFilaRecepcion(respuesta.recepcion);
-                    }
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: respuesta.message || 'No se pudo registrar la recepción',
-                        showConfirmButton: true
-                    });
-                }
-            });
-        }
-    });
-
-    $(document).on('click', '#registrarOrdenModal .close', function() {
-        $('#registrarOrdenModal').modal('hide');
-    });
-
-    //function para saber si selecciono algun productos
-    function verificaproductos() {
-        var existe = false;
-        if ($("#recepcion1 tr").length > 0) {
-            existe = true;
-        } else {
-            mensajes('error', 'Verifique los productos', 'Debe seleccionar algun producto');
-        }
-        return existe;
-    }
-
-function enviarAjax(datos, callback) {
-    $.ajax({
-        url: '',
-        type: 'POST',
-        data: datos,
-        contentType: false,
-        processData: false,
-        cache: false,
-        success: function (respuesta) {
-            if (typeof respuesta === "string") {
-                try {
-                    respuesta = JSON.parse(respuesta);
-                } catch (e) {
-                    console.error("Error al parsear JSON:", e, respuesta);
-                    Swal.fire('Error', 'Respuesta no válida del servidor.', 'error');
-                    return;
-                }
-            }
-            if (callback) callback(respuesta);
-        },
-        error: function (xhr, status, error) {
-            console.error("Detalles del error AJAX:", {
-                estado: status,
-                error: error,
-                codigo: xhr.status,
-                textoEstado: xhr.statusText,
-                respuestaServidor: xhr.responseText
-            });
-
-            Swal.fire({
-                title: 'Error en la solicitud AJAX',
-                html: `
-                    <b>Código:</b> ${xhr.status} <br>
-                    <b>Estado:</b> ${xhr.statusText} <br>
-                    <b>Error:</b> ${error} <br>
-                    <b>Respuesta:</b> <pre>${xhr.responseText}</pre>
-                `,
-                icon: 'error',
-                width: 600
-            });
-        }
-    });
-}
-
-/*
-    $(document).on('click', '.btn-anular', function (e) {
-        e.preventDefault();
-        Swal.fire({
-            title: '¿Está seguro?',
-            text: "¡No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, anularla!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var correlativo = $(this).data('correlativo');
-                var datos = new FormData();
-                datos.append('accion', 'anular');
-                datos.append('correlativo', correlativo);
-
-                $.ajax({
-                    url: '',
-                    type: 'POST',
-                    data: datos,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function (respuesta) {
-                        if (respuesta.status === 'success') {
-                            Swal.fire(
-                                'Anulada!',
-                                'La recepción ha sido anulada.',
-                                'success'
-                            );
-                            anularFilaRecepcion(correlativo);
-                        } else {
-                            Swal.fire('Error', respuesta.message || 'Error al anular la recepción', 'error');
-                        }
-                    },
-                    error: function () {
-                        Swal.fire('Error', 'Error en la solicitud AJAX', 'error');
-                    }
-                });
-            }
-        });
-    });
-
-    function anularFilaRecepcion(correlativo) {
-        const tabla = $('#tablaConsultas').DataTable();
-        const fila = $(`#tablaConsultas tbody tr[data-id="${correlativo}"]`).addClass('anulada');
-        tabla.row(fila).remove().draw();
-    }*/
-
-    function verificarPermisosEnTiempoRealRecepcion() {
-        var datos = new FormData();
-        datos.append('accion', 'permisos_tiempo_real');
-        enviarAjax(datos, function(permisos) {
-            // Si no tiene permiso de consultar
-            if (!permisos.consultar) {
-                $('#tablaConsultas').hide();
-                $('.space-btn-incluir').hide();
-                if ($('#mensaje-permiso').length === 0) {
-                    $('.contenedor-tabla').prepend('<div id="mensaje-permiso" style="color:red; text-align:center; margin:20px 0;">No tiene permiso para consultar los registros.</div>');
-                }
+    const archivoFactura = document.getElementById('fotoFacturaRecepcion');
+    if (archivoFactura) {
+        archivoFactura.addEventListener('change', async function() {
+            limpiarFacturaIARecepcion();
+            const archivo = this.files[0];
+            if (!archivo) return;
+            if (archivo.size > 5 * 1024 * 1024) {
+                this.value = '';
+                establecerEstadoIARecepcion('El archivo debe ser menor a 5 MB.', 'error');
                 return;
-            } else {
-                $('#tablaConsultas').show();
-                $('.space-btn-incluir').show();
-                $('#mensaje-permiso').remove();
             }
+            urlPreviewFacturaRecepcion = URL.createObjectURL(archivo);
+            const contenedorPreview = document.getElementById('previewFacturaRecepcion');
+            const previewImagen = document.getElementById('previewImagenRecepcion');
+            const previewPdf = document.getElementById('previewPdfRecepcion');
+            if (contenedorPreview) contenedorPreview.hidden = false;
 
-            // Mostrar/ocultar botón de incluir
-            if (permisos.incluir) {
-                $('#btnIncluirRecepcion').show();
-            } else {
-                $('#btnIncluirRecepcion').hide();
+            if (archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf')) {
+                if (previewPdf) { previewPdf.src = urlPreviewFacturaRecepcion; previewPdf.hidden = false; }
+            } else if (archivo.type.startsWith('image/')) {
+                if (previewImagen) { previewImagen.src = urlPreviewFacturaRecepcion; previewImagen.hidden = false; }
             }
-
-            // Mostrar/ocultar botones de modificar/eliminar
-            $('.btn-modificar').each(function() {
-                if (permisos.modificar) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-            $('.btn-eliminar').each(function() {
-                if (permisos.eliminar) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-
-            // Ocultar columna Acciones si ambos permisos son falsos
-            if (!permisos.modificar && !permisos.eliminar) {
-                $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').hide();
-            } else {
-                $('#tablaConsultas th:first-child, #tablaConsultas td:first-child').show();
-            }
+            await analizarFacturaRecepcion(archivo);
         });
     }
 
-    // Llama la función al cargar la página y luego cada 10 segundos
-    $(document).ready(function() {
-        verificarPermisosEnTiempoRealRecepcion();
-        setInterval(verificarPermisosEnTiempoRealRecepcion, 10000); // 10 segundos
+    window.addEventListener('click', function(event) {
+        if (event.target === document.getElementById('recepcionModal')) closeModal();
+        if (event.target === document.getElementById('viewModal')) closeViewModal();
+        if (event.target === document.getElementById('anularModal')) closeAnularModal();
     });
 
-    function mensajes(icono, titulo, mensaje){
-        Swal.fire({
-            icon: icono,
-            title: titulo,
-            text: mensaje,
-            showConfirmButton: true,
-            confirmButtonText: 'Aceptar',
-        });
-    }
-
-    function validarkeypress(er, e) {
-        key = e.keyCode;
-        tecla = String.fromCharCode(key);
-        a = er.test(tecla);
-
-        if (!a) {
-            e.preventDefault();
-        }
-    }
-
-    function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
-        a = er.test(etiqueta.val());
-
-        if (a) {
-            etiquetamensaje.text("");
-            return 1;
-        } else {
-            etiquetamensaje.text(mensaje);
-            return 0;
-        }
-    }
-
-    function space(str) {
-        const regex = /\s{2,}/g;
-        var str = str.replace(regex, ' ');
-        return str;
-    }
-});
-
-function muestraMensaje(mensaje) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: mensaje
-    });
-}
-
-carga_productos();    //boton para levantar modal de productos
-    $("#listado").on("click",function(){
-    $("#modalp").modal("show");
-});
-
-$("#codigoproducto").on("keyup",function(){
-    var codigo = $(this).val();
-    $(this).addClass('agregado')
-    $("#listadop tr").each(function(){
-        if(codigo == $(this).find("td:eq(1)").text()){
-            colocaproducto($(this));
-        }
-    });
-});	
-
-function carga_productos(){
-    var datos = new FormData();
-    datos.append('accion','listado'); //le digo que me muestre un listado de aulas
-    enviaAjax(datos);
-}
-
-function enviaAjax(datos) {
-    fetch('', {
-        method: 'POST',
-        body: datos
-    })
-    .then(res => res.text())
-    .then(respuesta => {
-        try {
-            let lee = JSON.parse(respuesta);
-            console.log(lee);
-
-            if (lee.resultado == 'listado') {
-                document.querySelector('#listadop').innerHTML = lee.mensaje;
-
-            } else if (lee.resultado === 'registrar') {
-                muestraMensaje('success', 6000, 'REGISTRAR', lee.mensaje);
-                borrar();
-                if (lee.data) insertarFilaTabla(lee.data);
-
-            } else if (lee.resultado === 'encontro') {
-                muestraMensaje('warning', 6000, 'Atención', lee.mensaje);
-
-            } else if (lee.resultado === 'error') {
-                muestraMensaje('error', 6000, 'Error', lee.mensaje);
-            }
-
-        } catch (e) {
-            console.error("Error en JSON: " + e.message);
-        }
-    })
-    .catch(err => console.error("Error AJAX:", err));
-}
-
-function borrar(){
-    $("#correlativo").val('');
-    $("#proveedor").val("disabled");
-    $("#recepcion1 tr").remove();
-    $("#descripcion").val('');
-}
-
-//funcion para colocar los productos - MODIFICADA PARA APLICAR COLOR VERDE
-function colocaproducto(linea){
-    var id = $(linea).find("td:eq(0)").text();
-    var encontro = false;
-    
-    // Aplicar estilo verde a la línea seleccionada
-    $(linea).addClass('tr-seleccionado');
-    
-    // Remover el estilo después de 2 segundos (opcional)
-    setTimeout(function() {
-        $(linea).removeClass('tr-seleccionado');
-    }, 2000);
-    
-    $("#recepcion1 tr").each(function(){
-        if(id*1 == $(this).find("td:eq(1)").text()*1){
-            encontro = true
-            var t = $(this).find("td:eq(4)").children();
-            t.val(t.val()*1+1);
-            modificasubtotal(t);
-        } 
-    });
-    
-    if(!encontro){
-        var l = `
-            <tr>
-            <td>
-            <button type="button" class="btn-eliminar-pr" onclick="borrarp(this)">Eliminar</button>
-            </td>
-            <td style="display:none">
-                <input type="text" name="producto[]" style="display:none"
-                value="`+
-                    $(linea).find("td:eq(0)").text()+
-                `"/>`+	
-                    $(linea).find("td:eq(0)").text()+
-            `</td>
-            <td>`+
-                    $(linea).find("td:eq(1)").text()+
-            `</td>
-            <td>`+
-                    $(linea).find("td:eq(2)").text()+
-            `</td>
-            <td>`+
-                    $(linea).find("td:eq(3)").text()+
-            `</td>
-            <td>`+
-                    $(linea).find("td:eq(4)").text()+
-            `</td>
-            <td>`+
-                    $(linea).find("td:eq(5)").text()+
-            `</td>
-            <td>
-                <input type="number" class="numerico" name="costo[]" min="0.01" step="0.01" value="1" required>
-            </td>
-            <td>
-                <input type="number" class="numerico" name="cantidad[]" min="1" step="1" value="1" required>
-            </td>
-            </tr>`;
-        $("#recepcion1").append(l);
-    }
-    
-    // Actualizar el estado de productos agregados
-    marcarProductosAgregados();
-}
-//fin de funcion modifica subtotal
-
-//funcion para eliminar linea de detalle de ventas
-function borrarp(boton){
-    $(boton).closest('tr').remove();
-    // Actualizar el estado de productos agregados después de eliminar
-    marcarProductosAgregados();
-}
-
-const tabla = document.getElementById('tablaConsultas');
-const modal = document.getElementById('modalDetallesRecepcion');
-const cerrar = document.getElementById('cerrarModalDetallesRecepcion');
-
-tabla.addEventListener('click', function (e) {
-    const btn = e.target.closest('.btn-detalle');
-    if (!btn) return; // Si no se hizo clic en un botón detalle, no hace nada
-
-    // Cargar datos principales
-    document.getElementById('detalle-fecha').textContent = btn.dataset.fecha;
-    document.getElementById('detalle-correlativo').textContent = btn.dataset.correlativo;
-    document.getElementById('detalle-proveedor').textContent = btn.dataset.proveedor;
-
-    // Limpiar tabla y costo
-    document.getElementById('tbodyDetalleProductosRecepcion').innerHTML =
-        '<tr><td colspan="7">Cargando...</td></tr>';
-    document.getElementById('detalle-costo-inversion').textContent = '';
-
-    // Obtener productos de la recepción por AJAX
-    fetch('', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `accion=productos_recepcion&id_recepcion=${encodeURIComponent(btn.dataset.id_recepcion)}`
-    })
-    .then(response => response.json())
-    .then(productos => {
-        let html = '';
-        let total = 0;
-        if (productos.length) {
-            productos.forEach(prod => {
-                html += `<tr>
-                    <td><span class="campo-numeros">${prod.codigo}</span></td>
-                    <td><span class="campo-nombres">${prod.producto}</span></td>
-                    <td><span class="campo-nombres">${prod.modelo}</span></td>
-                    <td><span class="campo-nombres">${prod.marca}</span></td>
-                    <td><span class="campo-numeros">${prod.serial}</span></td>
-                    <td><span class="campo-numeros">${prod.cantidad}</span></td>
-                    <td><span class="campo-tex-num">${parseFloat(prod.costo).toLocaleString('es-VE', { minimumFractionDigits: 2 })}</span></td>
-                </tr>`;
-                total += parseFloat(prod.costo) * parseFloat(prod.cantidad);
-            });
-        } else {
-            html = '<tr><td colspan="7" style="text-align:center;">Sin productos asociados.</td></tr>';
-        }
-        document.getElementById('tbodyDetalleProductosRecepcion').innerHTML = html;
-        document.getElementById('detalle-costo-inversion').textContent =
-            total.toLocaleString('es-VE', { minimumFractionDigits: 2 });
-    });
-
-    // Mostrar modal
-    modal.classList.add('mostrar');
-});
-
-// Cierre al hacer clic en el botón "X"
-cerrar.addEventListener('click', () => {
-    modal.classList.remove('mostrar');
-});
-
-// Cierre al hacer clic fuera del contenido del modal
-window.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        modal.classList.remove('mostrar');
-    }
-});
-
-// Modal de Ayuda - Integración para Recepción
-$(document).ready(function() {
-    let modalAyudaInstance = null;
-    
-    // Función para cargar y mostrar el modal de ayuda con contexto específico
-    function cargarYMostrarModalAyuda(contexto = null) {
-        // Cargar CSS si no está cargado
-        if (!$('link[href*="ayuda/css/modal.css"]').length) {
-            $('<link>')
-                .attr({
-                    'rel': 'stylesheet',
-                    'type': 'text/css',
-                    'href': 'assets/public/ayuda/css/modal.css'
-                })
-                .appendTo('head');
-        }
-        
-        // Cargar HTML del modal
-        $.get('assets/public/ayuda/recepcion.php')
-            .done(function(html) {
-                // Solo agregar modal si no existe
-                if (!$('#modalAyuda').length) {
-                    $('body').append(html);
-                }
-                
-                // Cargar JS del modal si no está cargado
-                if (!$('script[src*="ayuda/js/modal.js"]').length) {
-                    $.getScript('assets/public/ayuda/js/modal.js')
-                        .done(function() {
-                            // Inicializar modal
-                            if (typeof inicializarModalAyudaUsuario === 'function') {
-                                modalAyudaInstance = inicializarModalAyudaUsuario();
-                                
-                                // Abrir modal con contexto si se proporciona
-                                if (contexto) {
-                                    setTimeout(() => {
-                                        const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                        if (slideIndex !== undefined) {
-                                            modalAyudaInstance.goToSlide(slideIndex);
-                                        }
-                                    }, 300);
-                                }
-                                
-                                // Abrir modal
-                                modalAyudaInstance.openModal();
-                            } else {
-                                console.error('La función inicializarModalAyudaUsuario no está disponible');
-                            }
-                        })
-                        .fail(function() {
-                            console.error('Error al cargar el JavaScript del modal de ayuda');
-                        });
-                } else {
-                    // Si el JS ya está cargado, solo abrir el modal existente
-                    if (typeof inicializarModalAyudaUsuario === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaUsuario();
-                        
-                        // Abrir modal con contexto si se proporciona
-                        if (contexto) {
-                            setTimeout(() => {
-                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                if (slideIndex !== undefined) {
-                                    modalAyudaInstance.goToSlide(slideIndex);
-                                }
-                            }, 300);
-                        }
-                        
-                        // Abrir modal
-                        modalAyudaInstance.openModal();
-                    }
-                }
-            })
-            .fail(function() {
-                console.error('Error al cargar el HTML del modal de recepción');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar el contenido de ayuda'
-                });
-            });
-    }
-    
-    // Botón de ayuda principal (si existe)
-    $('.btn-ayuda').off('click.ayuda').on('click.ayuda', function(e) {
-        e.preventDefault();
-        console.log('Clic en botón de ayuda detectado');
-        cargarYMostrarModalAyuda(); // Sin contexto específico
-    });
-    
-    // Botón de ayuda dentro de modales
-    $(document).on('click.ayuda', '.btn-ayuda-modal', function(e) {
-        e.preventDefault();
-        const contexto = $(this).data('contexto');
-        console.log('Clic en botón de ayuda modal con contexto:', contexto);
-        cargarYMostrarModalAyuda(contexto);
-    });
+    actualizarContadorProductos();
 });

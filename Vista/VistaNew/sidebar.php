@@ -31,10 +31,6 @@
             <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
             <span class="nav-text">Análisis</span>
         </a>
-        <a href="?pagina=notificacion" class="nav-link <?php echo ($pagina_actual ?? '') === 'notificacion' ? 'active' : ''; ?>">
-            <span class="nav-icon"><i class="fas fa-bell"></i></span>
-            <span class="nav-text">Mensajes</span>
-        </a>
         <a href="?pagina=producto" class="nav-link <?php echo ($pagina_actual ?? '') === 'producto' ? 'active' : ''; ?>">
             <span class="nav-icon"><i class="fas fa-store"></i></span>
             <span class="nav-text">Productos</span>
@@ -59,20 +55,5 @@
             <span class="nav-icon"><i class="fas fa-inbox"></i></span>
             <span class="nav-text">Recepciones</span>
         </a>
-        <a href="?pagina=perfil" class="nav-link <?php echo ($pagina_actual ?? '') === 'perfil' ? 'active' : ''; ?>">
-            <span class="nav-icon"><i class="fas fa-cog"></i></span>
-            <span class="nav-text">Configuración</span>
-        </a>
-        <a href="?pagina=producto" class="nav-link add-product <?php echo ($pagina_actual ?? '') === 'producto' ? 'active' : ''; ?>">
-            <span class="nav-icon"><i class="fas fa-plus-circle"></i></span>
-            <span class="nav-text">Agregar Producto</span>
-        </a>
     </nav>
-    
-    <div class="sidebar-footer">
-        <a href="#" onclick="confirmarCerrarSesion(); return false;" class="nav-link logout">
-            <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>
-            <span class="nav-text">Cerrar Sesión</span>
-        </a>
-    </div>
 </aside>
