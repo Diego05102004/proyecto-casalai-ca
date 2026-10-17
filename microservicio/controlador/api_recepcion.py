@@ -111,7 +111,9 @@ async def extraer_factura(imagen: UploadFile = File(...)):
         factura = auditor.extraer_desde_imagen(str(file_path), factura_id)
         productos_list = [{"nombre": p.nombre, "modelo": p.modelo, "marca": p.marca, "serial": p.serial, "cantidad": p.cantidad, "costo_unitario": p.costo_unitario, "confianza": p.confianza} for p in factura.productos]
         confianza = factura.metadatos_extraccion.get('confianza_promedio', 0.0)
-        return ExtraccionResponse(exito=True, factura_id=factura_id, numero_factura=factura.numero_factura, nombre_proveedor=factura.nombre_proveedor, fecha_factura=factura.fecha_factura, subtotal_factura=factura.subtotal_factura, porcentaje_iva=factura.porcentaje_iva, monto_iva=factura.monto_iva, total_factura=factura.total_factura, productos=productos_list, confianza_promedio=confianza, mensaje=f"Extracción completada. ID: {factura_id}")
+        return ExtraccionResponse(exito=True, factura_id=factura_id, numero_factura=factura.numero_factura, nombre_proveedor=factura.nombre_proveedor,
+         fecha_factura=factura.fecha_factura, subtotal_factura=factura.subtotal_factura, porcentaje_iva=factura.porcentaje_iva, monto_iva=factura.monto_iva, total_factura=factura.total_factura, 
+         productos=productos_list, confianza_promedio=confianza, mensaje=f"Extracción completada. ID: {factura_id}")
     except Exception as e: raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
     finally:
         await imagen.close()
@@ -125,7 +127,8 @@ async def verificar_datos(request: VerificacionRequest):
     resultado = auditor.verificar_coherencia(request.factura_id, datos_dict)
     discrepancias_resp = [DiscrepanciaResponse(campo=d.campo, valor_factura=d.valor_factura, valor_formulario=d.valor_formulario, severidad=d.severidad, mensaje=d.mensaje) for d in resultado.discrepancias]
     mensaje = "✅ Verificación exitosa" if resultado.exito else f"⚠️ {len(discrepancias_resp)} discrepancias encontradas"
-    return VerificacionResponse(exito=resultado.exito, discrepancias=discrepancias_resp, reporte_detallado=resultado.reporte_detallado, hash_verificacion=resultado.hash_verificacion, timestamp=resultado.timestamp, mensaje=mensaje)
+    return VerificacionResponse(exito=resultado.exito, discrepancias=discrepancias_resp, reporte_detallado=resultado.reporte_detallado, hash_verificacion=resultado.hash_verificacion,
+     timestamp=resultado.timestamp, mensaje=mensaje)
 
 @app.post("/fase1/comparar-directo")
 async def comparar_directo(imagen: UploadFile = File(...), datos_json: str = Form(...)):

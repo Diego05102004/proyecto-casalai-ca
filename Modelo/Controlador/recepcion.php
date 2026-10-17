@@ -36,7 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'ia_extraer':
             header('Content-Type: application/json; charset=utf-8');
-            $respuestaIA = (new RecepcionIAProxy())->extraer($_FILES['imagen'] ?? []);
+            $recepcionIA= new RecepcionIAProxy();
+            $respuestaIA = $recepcionIA->extraer($_FILES['imagen'] ?? []);
             http_response_code($respuestaIA['http_status']);
             echo json_encode($respuestaIA['data'], JSON_UNESCAPED_UNICODE);
             exit;
@@ -49,7 +50,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode(['detail' => 'La solicitud de verificación no es válida.']);
                 exit;
             }
-            $respuestaIA = (new RecepcionIAProxy())->verificar($solicitudIA);
+            $recepcionIA= new RecepcionIAProxy();
+            $respuestaIA = $recepcionIA->verificar($solicitudIA);
             http_response_code($respuestaIA['http_status']);
             echo json_encode($respuestaIA['data'], JSON_UNESCAPED_UNICODE);
             exit;

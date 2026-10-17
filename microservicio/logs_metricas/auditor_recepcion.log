@@ -415,3 +415,39 @@
 2026-10-14 09:12:20,111 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
 2026-10-14 15:54:26,223 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
 2026-10-14 15:54:26,223 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-16 18:10:23,950 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-16 18:10:23,950 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-16 18:10:58,089 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016181058_d63f5332.pdf
+2026-10-16 18:10:59,862 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-16 18:11:06,883 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-16 18:11:22,982 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016181122_621f02ca.jpg
+2026-10-16 18:11:25,714 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 76.00%
+2026-10-16 18:11:42,846 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261016181122_621f02ca
+2026-10-16 18:11:42,849 - modelo.auditor_recepcion - INFO - Verificación: 4 discrepancias
+2026-10-16 18:11:59,889 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261016181122_621f02ca
+2026-10-16 18:11:59,900 - modelo.auditor_recepcion - INFO - Verificación: 4 discrepancias
+2026-10-16 18:13:27,454 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016181327_c1b64438.jpeg
+2026-10-16 18:13:30,207 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-16 18:13:44,204 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261016181327_c1b64438
+2026-10-16 18:13:44,205 - modelo.auditor_recepcion - INFO - Verificación: 3 discrepancias
+2026-10-16 18:14:23,921 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016181423_3ad1bc0f.pdf
+2026-10-16 18:14:25,669 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-16 18:14:31,717 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 50.00%
+2026-10-16 18:14:54,582 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016181454_2f353793.jpg
+2026-10-16 18:14:57,695 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 76.00%
+2026-10-16 18:15:56,789 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261016181454_2f353793
+2026-10-16 18:15:56,799 - modelo.auditor_recepcion - INFO - Verificación: 5 discrepancias
+2026-10-16 18:16:52,060 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016181652_5bfa505d.jpg
+2026-10-16 18:16:57,880 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-16 18:17:12,433 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261016181652_5bfa505d
+2026-10-16 18:17:12,435 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
+2026-10-16 18:43:38,518 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016184338_e1705840.jpg
+2026-10-16 18:43:47,877 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-16 18:44:55,433 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016184455_c99315e0.jpg
+2026-10-16 18:45:00,450 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-16 18:45:16,470 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261016184455_c99315e0
+2026-10-16 18:45:16,503 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
+2026-10-16 18:45:50,741 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261016184550_61065e65.jpg
+2026-10-16 18:45:55,697 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-16 18:46:05,247 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261016184550_61065e65
+2026-10-16 18:46:05,263 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias

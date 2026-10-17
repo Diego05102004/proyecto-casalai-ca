@@ -66,7 +66,7 @@ class RecepcionIAProxy
         }
 
         $url = $this->baseUrl . $endpoint;
-        $limite = microtime(true) + 7.5;
+        $limite = microtime(true) + 17.5;
         $respuesta = false;
         $codigoHttp = 0;
         $errorCurl = '';
