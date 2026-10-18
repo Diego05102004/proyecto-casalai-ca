@@ -308,7 +308,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $k->setestado('habilitado');
 
             if ($_POST['correlativo'] != ''){
-                if ($k->existeCorrelativo($r)) {
+                if ($k->existeCorrelativo(['correlativo' => $_POST['correlativo']])) {
                     echo json_encode([
                         'status' => 'error',
                         'message' => 'El número de factura ya existe'
@@ -316,7 +316,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     exit;
                 }
             }
-
+            
             try {
                 if ($k->registrarRecepcion(
                     $_POST['producto'],
