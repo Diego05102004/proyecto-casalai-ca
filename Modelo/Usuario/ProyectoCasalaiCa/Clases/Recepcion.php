@@ -713,7 +713,11 @@ class Recepcion extends BD{
         }, false);
     }
 
-    private function existeCorrelativo($r) {
+    public function existeCorrelativo($r) {
+        return $this->ex_correlativo($r); 
+    }
+
+    private function ex_correlativo($r) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($r) {
             $filas = $this->ejecutarProcedimiento(
                 $pdo,

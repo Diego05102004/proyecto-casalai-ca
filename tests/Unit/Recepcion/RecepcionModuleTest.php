@@ -34,6 +34,15 @@ final class RecepcionModuleTest extends TestCase
 
     private function seedBasico(): void
     {
+        // Insertar usuario de prueba para satisfacer la llave foránea de la bitácora
+        try {
+            $this->pdo->prepare("INSERT IGNORE INTO tbl_usuarios (id_usuario, usuario) VALUES (9, 'admin_test')")->execute();
+        } catch (\Throwable $e) {
+            try {
+                $this->pdo->prepare("INSERT IGNORE INTO tbl_usuarios (id_usuario) VALUES (9)")->execute();
+            } catch (\Throwable $e2) {}
+        }
+
         $this->pdo->prepare("INSERT INTO tbl_proveedores (nombre_proveedor) VALUES ('Proveedor Test')")->execute();
         
         $this->pdo->prepare("INSERT INTO tbl_marcas (nombre_marca) VALUES ('Marca T')")->execute();
@@ -74,7 +83,7 @@ final class RecepcionModuleTest extends TestCase
         $r->setestado('habilitado');
 
         $idProd = $this->getPrimerProductoId();
-        $res = $r->registrarRecepcion([$idProd], [2], [50.00], [16], [3]);
+        $res = $r->registrarRecepcion([$idProd], [2], [50.00], 16, 9);
 
         $this->assertIsArray($res);
         $this->assertArrayHasKey('id_recepcion', $res);
@@ -85,8 +94,8 @@ final class RecepcionModuleTest extends TestCase
         $this->assertIsArray($ultima);
         $this->assertSame('123456', $ultima['correlativo']);
 
-        $this->assertTrue($r->existeCorrelativo('123456'));
-        $this->assertFalse($r->existeCorrelativo('999999'));
+        $this->assertTrue($r->existeCorrelativo(['correlativo' => '123456']));
+        $this->assertFalse($r->existeCorrelativo(['correlativo' => '999999']));
 
         // Verificar que se creó asiento en ingresos/egresos
         $cnt = (int)$this->pdo->query("SELECT COUNT(*) FROM tbl_ingresos_egresos")->fetchColumn();
@@ -127,7 +136,7 @@ final class RecepcionModuleTest extends TestCase
         $r->setcorrelativo('200001');
         $r->setestado('habilitado');
         $idProd = $this->getPrimerProductoId();
-        $res = $r->registrarRecepcion([$idProd], [3], [10.00], [16], [3]);
+        $res = $r->registrarRecepcion([$idProd], [3], [10.00], 16, 9);
 
         $items = $r->obtenerProductosPorRecepcion($res['id_recepcion']);
         $this->assertIsArray($items);
@@ -145,15 +154,15 @@ final class RecepcionModuleTest extends TestCase
         $r->setcorrelativo('300001');
         $r->setestado('habilitado');
         $idProd = $this->getPrimerProductoId();
-        $r->registrarRecepcion([$idProd], [1], [5.00], [16], [3]);
+        $r->registrarRecepcion([$idProd], [1], [5.00], 16, 9);
 
         // Otra y luego anularla
         $r2 = new Recepcion();
         $r2->setidproveedor($this->getPrimerProveedorId());
         $r2->setcorrelativo('300002');
         $r2->setestado('habilitado');
-        $r2->registrarRecepcion([$idProd], [1], [5.00], [16], [3]);
-        $r2->anularRecepcion('300002');
+        $r2->registrarRecepcion([$idProd], [1], [5.00], 16, 9);
+        $r2->anularRecepcion('300002', 9);
 
         $lista = $r->getrecepcion();
         $this->assertIsArray($lista);
@@ -169,9 +178,9 @@ final class RecepcionModuleTest extends TestCase
         $r->setcorrelativo('400001');
         $r->setestado('habilitado');
         $idProd = $this->getPrimerProductoId();
-        $r->registrarRecepcion([$idProd], [1], [1.00], [16], [3]);
+        $r->registrarRecepcion([$idProd], [1], [1.00], 16, 9);
 
-        $res = $r->anularRecepcion('400001');
+        $res = $r->anularRecepcion('400001', 9);
         $this->assertSame('success', $res['status'] ?? null);
 
         $estado = $this->pdo->query("SELECT estado FROM tbl_recepcion_productos WHERE correlativo='400001' LIMIT 1")->fetchColumn();
