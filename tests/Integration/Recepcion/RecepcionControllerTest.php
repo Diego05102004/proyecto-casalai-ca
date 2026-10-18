@@ -116,22 +116,55 @@ final class RecepcionControllerTest extends TestCase
         $this->assertStringContainsString('<tr', $resp['mensaje'] ?? '');
     }
 
-    public function testRegistrarRecepcionDesdeControlador(): void
+    public function testRegistrarRecepcionSinMicroservicioManual(): void
     {
         $resp = $this->runController([
             'accion' => 'registrar',
             'proveedor' => (string)$this->getPrimerProveedorId(),
             'correlativo' => '555001',
-            'tamanocompra' => 'Mediano',
-            
             'producto' => [ (string)$this->getPrimerProductoId() ],
             'cantidad' => [ '2' ],
             'costo' => [ '25.50' ],
+            'usar_ia' => 'false'
         ]);
 
-        $this->assertSame('success', $resp['status'] ?? null, 'Registro debería ser success');
+        $this->assertSame('success', $resp['status'] ?? null, 'Registro manual debería ser success');
         $this->assertIsArray($resp['recepcion'] ?? null);
         $this->assertSame('555001', $resp['recepcion']['correlativo'] ?? null);
+    }
+
+    public function testRegistrarRecepcionConMicroservicioVerificada(): void
+    {
+        $resp = $this->runController([
+            'accion' => 'registrar',
+            'proveedor' => (string)$this->getPrimerProveedorId(),
+            'correlativo' => '555002',
+            'producto' => [ (string)$this->getPrimerProductoId() ],
+            'cantidad' => [ '2' ],
+            'costo' => [ '30.00' ],
+            'usar_ia' => 'true',
+            'ia_verificada' => 'true'
+        ]);
+
+        $this->assertSame('success', $resp['status'] ?? null, 'Registro con IA verificada debería ser success');
+        $this->assertSame('555002', $resp['recepcion']['correlativo'] ?? null);
+    }
+
+    public function testRegistrarRecepcionConMicroservicioBloqueadaSinVerificar(): void
+    {
+        $resp = $this->runController([
+            'accion' => 'registrar',
+            'proveedor' => (string)$this->getPrimerProveedorId(),
+            'correlativo' => '555003',
+            'producto' => [ (string)$this->getPrimerProductoId() ],
+            'cantidad' => [ '2' ],
+            'costo' => [ '30.00' ],
+            'usar_ia' => 'true'
+            // ia_verificada omitida deliberadamente para probar bloqueo
+        ]);
+
+        $this->assertSame('error', $resp['status'] ?? null);
+        $this->assertStringContainsString('La verificación con IA no fue completada', $resp['message'] ?? '');
     }
 
     public function testProductosRecepcionDesdeControlador(): void
@@ -139,14 +172,13 @@ final class RecepcionControllerTest extends TestCase
         $this->runController([
             'accion' => 'registrar',
             'proveedor' => (string)$this->getPrimerProveedorId(),
-            'correlativo' => '555002',
-            'tamanocompra' => 'Pequeño',
+            'correlativo' => '555004',
             'producto' => [ (string)$this->getPrimerProductoId() ],
             'cantidad' => [ '3' ],
             'costo' => [ '10.00' ],
         ]);
         
-        $id = (int)$this->pdo->query("SELECT id_recepcion FROM tbl_recepcion_productos WHERE correlativo='555002' LIMIT 1")->fetchColumn();
+        $id = (int)$this->pdo->query("SELECT id_recepcion FROM tbl_recepcion_productos WHERE correlativo='555004' LIMIT 1")->fetchColumn();
 
         $resp = $this->runController([
             'accion' => 'productos_recepcion',
@@ -162,8 +194,7 @@ final class RecepcionControllerTest extends TestCase
         $this->runController([
             'accion' => 'registrar',
             'proveedor' => (string)$this->getPrimerProveedorId(),
-            'correlativo' => '555003',
-            'tamanocompra' => 'Grande',
+            'correlativo' => '555005',
             'producto' => [ (string)$this->getPrimerProductoId() ],
             'cantidad' => [ '1' ],
             'costo' => [ '5.00' ],
@@ -171,11 +202,27 @@ final class RecepcionControllerTest extends TestCase
 
         $resp = $this->runController([
             'accion' => 'anular',
-            'correlativo' => '555003'
+            'correlativo' => '555005'
         ]);
         $this->assertSame('success', $resp['status'] ?? null);
 
-        $estado = $this->pdo->query("SELECT estado FROM tbl_recepcion_productos WHERE correlativo='555003' LIMIT 1")->fetchColumn();
+        $estado = $this->pdo->query("SELECT estado FROM tbl_recepcion_productos WHERE correlativo='555005' LIMIT 1")->fetchColumn();
         $this->assertSame('anulado', $estado);
+    }
+
+    public function testAccionesMicroservicioProxyRouting(): void
+    {
+        // Prueba de enrutamiento para ia_health
+        $respHealth = $this->runController([
+            'accion' => 'ia_health'
+        ]);
+        $this->assertIsArray($respHealth);
+
+        // Prueba de enrutamiento y validación defensiva para ia_verificar con payload inválido
+        $respVerificar = $this->runController([
+            'accion' => 'ia_verificar',
+            'solicitud' => 'invalid_json_payload'
+        ]);
+        $this->assertIsArray($respVerificar);
     }
 }

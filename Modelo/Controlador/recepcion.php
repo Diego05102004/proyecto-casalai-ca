@@ -83,6 +83,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'registrar':
             header('Content-Type: application/json; charset=utf-8');
 
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+            
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
+
             $k = new Recepcion();
 
             // VALIDACIÓN MEJORADA: Verificar datos requeridos
@@ -163,6 +173,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             $porcentajeIva = $_POST['porcentaje_iva'] ?? '0';
+            if ($porcentajeIva === '') {
+                $porcentajeIva = '0';
+            }
             if (!is_numeric($porcentajeIva) || (float)$porcentajeIva < 0 || (float)$porcentajeIva > 100) {
                 http_response_code(400);
                 echo json_encode([
@@ -174,13 +187,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $porcentajeIva = (float)$porcentajeIva;
 
-            if (isset($_POST['ia_verificada']) && $_POST['ia_verificada'] !== 'true') {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'La verificación con IA no fue completada. Corrija las discrepancias primero.',
-                    'field' => 'ia_verificacion'
-                ]);
-                exit;
+            $modoContingencia = ($_POST['modo_contingencia'] ?? '') === 'true';
+            $usoMicroservicio = isset($_POST['usar_ia']) && $_POST['usar_ia'] === 'true';
+
+            if ($usoMicroservicio && !$modoContingencia) {
+                if (!isset($_POST['ia_verificada']) || $_POST['ia_verificada'] !== 'true') {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'La verificación con IA no fue completada. Corrija las discrepancias o use el modo manual.',
+                        'field' => 'ia_verificacion'
+                    ]);
+                    exit;
+                }
             }
 
             // Validación adicional usando las validaciones existentes
@@ -288,15 +306,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $k->setestado('habilitado');
 
             try {
-                $registro = $k->registrarRecepcion(
+                if ($k->registrarRecepcion(
                     $_POST['producto'],
                     $_POST['cantidad'],
                     $_POST['costo'],
-                    $porcentajeIva,
-                    (int)($_SESSION['id_usuario'] ?? 1)
-                );
-                $recepcionRegistrada = $registro['recepcion'] ?? null;
-                $resultado = $recepcionRegistrada !== null;
+                    $porcentajeIva, 
+                    $id_usuario_sesion)) {
+
+                    $recepcionRegistrada = $k->obtenerUltimaRecepcion();
+                    $resultado = $recepcionRegistrada !== null;
+                } else {
+                    $recepcionRegistrada = null;
+                    $resultado = false;
+                }
             } catch (Throwable $e) {
                 error_log('Error al registrar recepción mediante SP: ' . $e->getMessage());
                 $recepcionRegistrada = null;
@@ -402,6 +424,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Content-Type: application/json; charset=utf-8');
             $k = new Recepcion();
             $correlativo = $_POST['correlativo'] ?? '';
+            $id_usuario_sesion = $_SESSION['id_usuario'] ?? null;
+                
+            if (!$id_usuario_sesion) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Error de autenticación: Sesión de usuario no válida.'
+                ]);
+                exit;
+            }
             
             $datos_validacion = ['correlativo' => $correlativo];
             $errores = $k->validarAnular($correlativo);
@@ -426,7 +457,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
-            $resultado = $k->anularRecepcion($correlativo, (int)($_SESSION['id_usuario'] ?? 1));
+            $resultado = $k->anularRecepcion($correlativo, $id_usuario_sesion);
 
             if (($resultado['status'] ?? '') === 'success') {
                 // Obtener id_recepcion para referenciar en notificación

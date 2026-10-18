@@ -71,11 +71,10 @@ final class RecepcionModuleTest extends TestCase
         $r = new Recepcion();
         $r->setidproveedor($this->getPrimerProveedorId());
         $r->setcorrelativo('123456');
-        $r->settamanocompra('Mediano');
         $r->setestado('habilitado');
 
         $idProd = $this->getPrimerProductoId();
-        $res = $r->registrarRecepcion([$idProd], [2], [50.00]);
+        $res = $r->registrarRecepcion([$idProd], [2], [50.00], [16], [3]);
 
         $this->assertIsArray($res);
         $this->assertArrayHasKey('id_recepcion', $res);
@@ -123,14 +122,12 @@ final class RecepcionModuleTest extends TestCase
 
     public function testObtenerProductosPorRecepcion(): void
     {
-        // Prepara recepción
         $r = new Recepcion();
         $r->setidproveedor($this->getPrimerProveedorId());
         $r->setcorrelativo('200001');
-        $r->settamanocompra('Pequeño');
         $r->setestado('habilitado');
         $idProd = $this->getPrimerProductoId();
-        $res = $r->registrarRecepcion([$idProd], [3], [10.00]);
+        $res = $r->registrarRecepcion([$idProd], [3], [10.00], [16], [3]);
 
         $items = $r->obtenerProductosPorRecepcion($res['id_recepcion']);
         $this->assertIsArray($items);
@@ -146,23 +143,20 @@ final class RecepcionModuleTest extends TestCase
         // Habilitada
         $r->setidproveedor($this->getPrimerProveedorId());
         $r->setcorrelativo('300001');
-        $r->settamanocompra('Grande');
         $r->setestado('habilitado');
         $idProd = $this->getPrimerProductoId();
-        $r->registrarRecepcion([$idProd], [1], [5.00]);
+        $r->registrarRecepcion([$idProd], [1], [5.00], [16], [3]);
 
         // Otra y luego anularla
         $r2 = new Recepcion();
         $r2->setidproveedor($this->getPrimerProveedorId());
         $r2->setcorrelativo('300002');
-        $r2->settamanocompra('Grande');
         $r2->setestado('habilitado');
-        $r2->registrarRecepcion([$idProd], [1], [5.00]);
+        $r2->registrarRecepcion([$idProd], [1], [5.00], [16], [3]);
         $r2->anularRecepcion('300002');
 
         $lista = $r->getrecepcion();
         $this->assertIsArray($lista);
-        // Debe listar solo la habilitada
         $correlativos = array_map(fn($x) => $x['correlativo'], $lista);
         $this->assertContains('300001', $correlativos);
         $this->assertNotContains('300002', $correlativos);
@@ -173,10 +167,9 @@ final class RecepcionModuleTest extends TestCase
         $r = new Recepcion();
         $r->setidproveedor($this->getPrimerProveedorId());
         $r->setcorrelativo('400001');
-        $r->settamanocompra('Mediano');
         $r->setestado('habilitado');
         $idProd = $this->getPrimerProductoId();
-        $r->registrarRecepcion([$idProd], [1], [1.00]);
+        $r->registrarRecepcion([$idProd], [1], [1.00], [16], [3]);
 
         $res = $r->anularRecepcion('400001');
         $this->assertSame('success', $res['status'] ?? null);
