@@ -9,15 +9,15 @@ final class RecepcionControllerTest extends TestCase
     protected function setUp(): void
     {
         $this->pdo = test_pdo();
-        $this->controllerPath = __DIR__ . '/../../../controlador/Recepcion.php';
+        $this->controllerPath = __DIR__ . '/../../../Modelo/Controlador/recepcion.php';
         $this->limpiarTablas();
         $this->seedBasico();
         
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        $_SESSION['id_usuario'] = $_SESSION['id_usuario'] ?? 1;
-        $_SESSION['id_rol'] = $_SESSION['id_rol'] ?? 1;
+        $_SESSION['id_usuario'] = $_SESSION['id_usuario'] ?? 9;
+        $_SESSION['id_rol'] = $_SESSION['id_rol'] ?? 6;
         $_SESSION['name'] = $_SESSION['name'] ?? 'Tester';
     }
 
@@ -71,22 +71,24 @@ final class RecepcionControllerTest extends TestCase
         $wrapper = tempnam(sys_get_temp_dir(), 'it_rece_') . '.php';
 
         $escapedRoot = addslashes($projectRoot);
+        $escapedController = addslashes($this->controllerPath);
         $script  = "<?php\n";
         $script .= "error_reporting(E_ALL);\n";
         $script .= "ini_set('display_errors','1');\n";
         $script .= "if (session_status() === PHP_SESSION_NONE) { session_start(); }\n";
-        $script .= "if (!isset(\$_SESSION['id_usuario'])) { \$_SESSION['id_usuario'] = 1; }\n";
-        $script .= "if (!isset(\$_SESSION['id_rol'])) { \$_SESSION['id_rol'] = 1; }\n";
+        $script .= "if (!isset(\$_SESSION['id_usuario'])) { \$_SESSION['id_usuario'] = 9; }\n";
+        $script .= "if (!isset(\$_SESSION['id_rol'])) { \$_SESSION['id_rol'] = 6; }\n";
         $script .= "if (!isset(\$_SESSION['name'])) { \$_SESSION['name'] = 'Tester'; }\n";
         $script .= "\$_SERVER['REQUEST_METHOD'] = 'POST';\n";
         $script .= "\$_POST = " . $postExport . ";\n";
-        $script .= "$"."pagina = 'Recepcion';\n";
+        $script .= "$" . "pagina = 'Recepcion';\n";
         $script .= "chdir('" . $escapedRoot . "');\n";
+        $script .= "require_once '" . addslashes($projectRoot . '/vendor/autoload.php') . "';\n";
         $script .= "define('SKIP_SIDE_EFFECTS', true);\n";
         $script .= "ob_start();\n";
-        $script .= "require 'controlador/Recepcion.php';\n";
-        $script .= "$"."out = ob_get_clean();\n";
-        $script .= "echo $"."out;\n";
+        $script .= "require '" . $escapedController . "';\n";
+        $script .= "$" . "out = ob_get_clean();\n";
+        $script .= "echo $" . "out;\n";
 
         file_put_contents($wrapper, $script);
         
