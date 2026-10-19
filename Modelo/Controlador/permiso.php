@@ -67,7 +67,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardarPermisos'])) {
 }
 
 $pagina = "permiso";
-if (is_file("Vista/" . $pagina . ".php")) {
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+    if (!defined('SKIP_SIDE_EFFECTS')) {
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
+            $_SESSION['id_usuario'],
+            MODULO_PERMISOS,
+            'ACCESAR',
+            'El usuario accedió al módulo de Permisos',
+            'media'
+        );
+    }
+} elseif (is_file("Vista/" . $pagina . ".php")) {
     require_once("Vista/" . $pagina . ".php");
     if (!defined('SKIP_SIDE_EFFECTS')) {
         $bitacoraModel = new Bitacora();

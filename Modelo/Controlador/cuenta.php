@@ -309,16 +309,36 @@ function cuentasReportes() {
 }
 
 $pagina = "cuenta";
-if (is_file("Vista/" . $pagina . ".php")) {
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
-        $bitacoraModel = new Bitacora();
-        $bitacoraModel->registrarBitacora(
-        $_SESSION['id_usuario'],
-        'MODULO_CUENTA_BANCARIA',
-        'ACCESAR',
-        'El usuario accedió al módulo de Cuentas Bancarias',
-        'media'
-    );}
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                'MODULO_CUENTA_BANCARIA',
+                'ACCESAR',
+                'El usuario accedió al módulo de Cuentas Bancarias',
+                'media'
+            );
+        }
+    }
+    $cuentabancos = consultarCuentabanco();
+    $cuentasReportes = cuentasReportes();
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
+    if (isset($_SESSION['id_usuario'])) {
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                'MODULO_CUENTA_BANCARIA',
+                'ACCESAR',
+                'El usuario accedió al módulo de Cuentas Bancarias',
+                'media'
+            );
+        }
+    }
     $cuentabancos = consultarCuentabanco();
     $cuentasReportes = cuentasReportes();
     require_once("Vista/" . $pagina . ".php");

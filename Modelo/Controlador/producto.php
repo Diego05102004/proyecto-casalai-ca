@@ -567,7 +567,7 @@ $mostrarFormulario = !empty($categoriasDinamicas);
 $pagina = "producto";
 
 // Buscar primero en Vista/VistaNew/ y luego en Vista/
-if (is_file("Vista/" . $pagina . ".php")) {
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {
             $bitacoraModel = new Bitacora();
@@ -584,7 +584,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
     $modelos = obtenerModelos();
     $productos = obtenerProductos();
     $productosMasRecibidos = obtenerProductosMasRecibidos();
-    require_once("Vista/" . $pagina . ".php");
+    require_once("Vista/VistaNew/" . $pagina . ".php");
 } elseif (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {

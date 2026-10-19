@@ -3,6 +3,8 @@
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Clientes;
+use Usuario\ProyectoCasalaiCa\ModeloClases\Productos;
 
 $permisosObj = new Permisos();
 $permisosUsuario = $permisosObj->getPermisosPorRolModulo();
@@ -17,6 +19,19 @@ if (is_file("Vista/gestionarfactura.php")) {
         error_log('Error al cargar facturas en controlador: ' . $e->getMessage());
         $facturas = [];
         $detalleFacturas = [];
+    }
+    
+    // Cargar clientes y productos para el formulario de creación
+    try {
+        $clientesModel = new Clientes();
+        $clientes = $clientesModel->obtenerClientes();
+        
+        $productosModel = new Productos();
+        $productos = $productosModel->obtenerProductoStock();
+    } catch (Throwable $e) {
+        error_log('Error al cargar clientes/productos: ' . $e->getMessage());
+        $clientes = [];
+        $productos = [];
     }
     
     if (isset($_POST['descargarFactura'])) {
