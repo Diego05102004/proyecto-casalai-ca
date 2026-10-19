@@ -500,7 +500,9 @@ async function saveRecepcion(event) {
                     <td>${totalMontoStr}</td>
                     <td class="action-buttons">
                         <button class="btn-action btn-detallar" title="Ver Detalles" data-correlativo="${correlativoNum}" data-proveedor="${proveedorNombre}" data-fecha="${fechaRaw}" onclick="viewRecepcion(this)"><img src="assets/img/eye.svg"></button>
+                        <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'Administrador'): ?>
                         <button class="btn-action btn-anular" title="Anular Recepción" onclick="anularRecepcion('${correlativoNum}')"><img src="assets/img/circle-x.svg"></button>
+                        <?php endif; ?>
                     </td>
                 </tr>`);
 
