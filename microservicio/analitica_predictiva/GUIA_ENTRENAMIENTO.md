@@ -119,6 +119,38 @@ Esta señal representa preferencia del usuario, no resultado comercial. Para med
 | KPI «No disponible» | Revisa si stock o stock mínimo está en `NULL`; el sistema no inventa el valor. |
 | No se recomiendan combos | La regla requiere que la pareja aparezca junta en al menos dos facturas pagadas. |
 
+## Generar historial sintético local para pruebas
+
+Este script es solo para la base local de XAMPP `casalai_principal`. Las facturas generadas tienen estado `Pago Procesado`, por lo que afectan los reportes de ventas y la analítica; no las uses como ventas reales ni ejecutes el script en producción.
+
+Desde la raíz del repositorio, primero revisa el plan:
+
+```powershell
+php .\microservicio\analitica_predictiva\seed_historial_local.php
+```
+
+La vista previa no cambia la base. Para insertar el conjunto:
+
+```powershell
+php .\microservicio\analitica_predictiva\seed_historial_local.php --apply
+```
+
+El script crea 144 facturas: una por producto y semana para seis productos habilitados, repartidas a lo largo de las últimas 24 semanas completas. Cada factura usa un cliente activo existente y contiene una línea de detalle con cantidad sintética. Así, cada producto seleccionado aparece en ventas de las 24 semanas y cumple el mínimo de seis semanas con ventas. No se crean pagos ni despachos, y tampoco se modifica el inventario.
+
+Opcionalmente, especifica seis IDs de productos existentes:
+
+```powershell
+php .\microservicio\analitica_predictiva\seed_historial_local.php --apply --products=28,29,30,31,32,33
+```
+
+El script registra las facturas que crea en `tbl_analitica_seed_facturas`, impide duplicarlas y permite borrar solo esos registros:
+
+```powershell
+php .\microservicio\analitica_predictiva\seed_historial_local.php --remove
+```
+
+Después de generarlas, vuelve a Productos y pulsa **Entrenar modelo local**. Los datos sintéticos sirven para validar el flujo técnico, no para evaluar la precisión comercial.
+
 ## Seguridad y operación
 
 Mantén FastAPI en loopback cuando PHP comparte el mismo host. Usa el secreto por entorno, no por código ni en JavaScript. Conserva los archivos del modelo y de valoraciones fuera de Git; respáldalos según la política local de la empresa. El endpoint de entrenamiento escribe un único artefacto, así que ejecuta FastAPI con un solo worker si se activa entrenamiento concurrente.
