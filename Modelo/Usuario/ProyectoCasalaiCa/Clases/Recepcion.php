@@ -846,25 +846,13 @@ class Recepcion extends BD{
     private function bus($incluirEstado) {
         try {
             return $this->ejecutarConConexionSegura(function($pdo) use ($incluirEstado) {
-                $columnaEstado = $incluirEstado ? 'r.estado, ' : '';
-                $stmt = $pdo->prepare(
-                    'SELECT r.id_recepcion, r.id_proveedor, p.nombre_proveedor, r.fecha,
-                            r.correlativo, ' . $columnaEstado . '
-                            (SELECT COALESCE(SUM(d.cantidad * d.costo), 0)
-                             FROM tbl_detalle_recepcion_productos d
-                             WHERE d.id_recepcion = r.id_recepcion) AS costo_inversion,
-                            r.subtotal_factura, r.porcentaje_iva, r.monto_iva, r.total_factura
-                     FROM tbl_recepcion_productos r
-                     INNER JOIN tbl_proveedores p ON p.id_proveedor = r.id_proveedor
-                     WHERE r.correlativo = :correlativo
-                     ORDER BY r.id_recepcion DESC
-                     LIMIT 1'
-                );
-                $stmt->bindValue(':correlativo', $this->correlativo, PDO::PARAM_STR);
-                $stmt->execute();
-                $recepcion = $stmt->fetch(PDO::FETCH_ASSOC);
-                if (!$recepcion) {
+                $filas = $this->ejecutarProcedimiento($pdo, 'CALL sp_obtener_recepcion_por_correlativo(?)', [$this->correlativo]);
+                if (empty($filas)) {
                     return ['resultado' => 'no_encontro', 'mensaje' => 'No se encontró la recepción.'];
+                }
+                $recepcion = $filas[0];
+                if (!$incluirEstado && isset($recepcion['estado'])) {
+                    unset($recepcion['estado']);
                 }
                 $recepcion = $this->encryption->decryptArray($recepcion, self::CAMPOS_CIFRADOS_PROVEEDORES);
                 $recepcion['resultado'] = 'encontró';

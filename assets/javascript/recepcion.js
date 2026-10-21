@@ -566,23 +566,57 @@ function viewRecepcion(boton) {
             if (productosTable) {
                 productosTable.innerHTML = '';
                 const productosRecepcion = recepcion.productos || data.productos || [];
-                const subtotalProductos = productosRecepcion.reduce((suma, prod) => suma + (Number(prod.cantidad) || 0) * (Number(prod.costo) || 0), 0);
                 
+                const subtotalFactura = recepcion.subtotal_factura !== undefined && recepcion.subtotal_factura !== null ? Number(recepcion.subtotal_factura) : 0;
+                const porcentajeIva = recepcion.porcentaje_iva !== undefined && recepcion.porcentaje_iva !== null ? Number(recepcion.porcentaje_iva) : 0;
+                const montoIva = recepcion.monto_iva !== undefined && recepcion.monto_iva !== null ? Number(recepcion.monto_iva) : 0;
+                const totalFactura = recepcion.total_factura !== undefined && recepcion.total_factura !== null ? Number(recepcion.total_factura) : (subtotalFactura + montoIva);
+
                 productosRecepcion.forEach(prod => {
                     const cantidad = Number(prod.cantidad) || 0;
                     const costo = Number(prod.costo) || 0;
+                    const subtotalItem = cantidad * costo;
+                    
+                    // Columnas independientes
+                    const codigo = prod.codigo || prod.id_producto || 'N/A';
+                    const nombreProd = prod.producto || prod.nombre_producto || 'N/A';
+                    const marca = prod.marca || prod.nombre_marca || 'N/A';
+                    const modelo = prod.modelo || prod.nombre_modelo || 'N/A';
+                    const serial = prod.serial || 'N/A';
+
                     productosTable.innerHTML += `
                         <tr>
-                            <td>${prod.producto || prod.nombre_producto || 'N/A'}</td>
+                            <td>${nombreProd}</td>
+                            <td>${codigo}</td>
+                            <td>${marca}</td>
+                            <td>${modelo}</td>
+                            <td>${serial}</td>
                             <td>${cantidad}</td>
                             <td>$${costo.toFixed(2)}</td>
-                            <td>$${(cantidad * costo).toFixed(2)}</td>
+                            <td>$${subtotalItem.toFixed(2)}</td>
                         </tr>
                     `;
                 });
 
-                if (document.getElementById('viewSubtotal')) document.getElementById('viewSubtotal').textContent = '$' + subtotalProductos.toFixed(2);
-                if (document.getElementById('viewTotal')) document.getElementById('viewTotal').textContent = '$' + (recepcion.total_factura ? Number(recepcion.total_factura).toFixed(2) : subtotalProductos.toFixed(2));
+                if (document.getElementById('viewSubtotal')) {
+                    document.getElementById('viewSubtotal').textContent = '$' + subtotalFactura.toFixed(2);
+                }
+                
+                // Mostrar el porcentaje de IVA correctamente
+                const ivaPorcentajeEl = document.getElementById('viewIvaPorcentaje');
+                if (ivaPorcentajeEl) {
+                    ivaPorcentajeEl.textContent = porcentajeIva > 0 ? porcentajeIva + '%' : '0%';
+                }
+                
+                // Mostrar el monto del IVA correctamente
+                const ivaMontoEl = document.getElementById('viewMontoIva');
+                if (ivaMontoEl) {
+                    ivaMontoEl.textContent = montoIva > 0 ? '$' + montoIva.toFixed(2) : 'No registrado';
+                }
+
+                if (document.getElementById('viewTotal')) {
+                    document.getElementById('viewTotal').textContent = '$' + totalFactura.toFixed(2);
+                }
             }
         }
         const modal = document.getElementById('viewModal');

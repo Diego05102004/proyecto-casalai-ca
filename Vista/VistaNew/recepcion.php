@@ -282,7 +282,7 @@ ob_start();
 
 <!-- Modal para Ver Detalles de Recepción -->
 <div id="viewModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content modal-large">
         <div class="modal-header">
             <div class="modal-header-content">
                 <div class="modal-icon">
@@ -325,42 +325,35 @@ ob_start();
                         <i class="fas fa-boxes"></i>
                         <h3>Productos Recibidos</h3>
                     </div>
-                    <div class="detalle-table">
-                        <table>
+                    <div class="detalle-table" style="overflow-x: auto;">
+                        <table style="width: 100%; white-space: nowrap;">
                             <thead>
                                 <tr>
                                     <th>Producto</th>
+                                    <th>Código</th>
+                                    <th>Marca</th>
+                                    <th>Modelo</th>
+                                    <th>Serial</th>
                                     <th>Cantidad</th>
                                     <th>Costo Unitario</th>
                                     <th>Subtotal</th>
                                 </tr>
                             </thead>
                             <tbody id="viewProductos">
-                                <tr>
-                                    <td>iPhone 15 Pro Max</td>
-                                    <td>10</td>
-                                    <td>$1,199.00</td>
-                                    <td>$11,990.00</td>
-                                </tr>
-                                <tr>
-                                    <td>MacBook Air M3</td>
-                                    <td>5</td>
-                                    <td>$1,099.00</td>
-                                    <td>$5,495.00</td>
-                                </tr>
+                                <!-- Se llena dinámicamente -->
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3" class="monto"><strong>Subtotal:</strong></td>
-                                    <td><span id="viewSubtotal">$17,485.00</span></td>
+                                    <td colspan="7" class="monto"><strong>Subtotal:</strong></td>
+                                    <td><span id="viewSubtotal">$0.00</span></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3" class="monto"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
+                                    <td colspan="7" class="monto"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
                                     <td><span id="viewMontoIva">No registrado</span></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3" class="monto"><strong>Total factura:</strong></td>
-                                    <td><span id="viewTotal">$17,485.00</span></td>
+                                    <td colspan="7" class="monto"><strong>Total factura:</strong></td>
+                                    <td><span id="viewTotal">$0.00</span></td>
                                 </tr>
                             </tfoot>
                         </table>
