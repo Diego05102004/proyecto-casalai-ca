@@ -48,6 +48,17 @@ function protegerSelects(selectIds, interval = 1000) {
     }, interval);
 }
 
+function actualizarProteccionSelectsProductos() {
+    const idsProductos = [];
+    document.querySelectorAll('.producto-select').forEach((sel, index) => {
+        if (!sel.id) {
+            sel.id = 'producto_dinamico_' + index;
+        }
+        idsProductos.push(sel.id);
+    });
+    protegerSelects(['proveedor', ...idsProductos], 1000);
+}
+
 // ==========================================
 // 2. FUNCIONES AUXILIARES Y DE UTILIDAD
 // ==========================================
@@ -77,6 +88,65 @@ function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
     if (a) {
         etiquetamensaje.text("");
         etiqueta.removeClass("is-invalid").addClass("is-valid");
+        return 1;
+    } else {
+        etiquetamensaje.text(mensaje);
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+}
+
+// Nuevas validaciones para decimales y enteros estrictos (Bloqueo de 'e' y caracteres no numéricos)
+function validarKeyPressDecimal(e) {
+    let key = e.key;
+    if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
+        return;
+    }
+    if (['e', 'E', '+', '-'].includes(key)) {
+        e.preventDefault();
+        return;
+    }
+    if (!/[0-9.]/.test(key)) {
+        e.preventDefault();
+        return;
+    }
+    if (key === '.' && e.target.value.includes('.')) {
+        e.preventDefault();
+    }
+}
+
+function validarKeyUpDecimal(etiqueta, etiquetamensaje, mensaje) {
+    let val = etiqueta.val().trim();
+    let er = /^\d+(\.\d{1,2})?$/;
+    
+    if (val === '' || er.test(val)) {
+        etiquetamensaje.text("");
+        etiqueta.removeClass("is-invalid").addClass("is-valid");
+        return 1;
+    } else {
+        etiquetamensaje.text(mensaje);
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+}
+
+function validarKeyPressEntero(e) {
+    let key = e.key;
+    if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
+        return;
+    }
+    if (!/[0-9]/.test(key)) {
+        e.preventDefault();
+    }
+}
+
+function validarKeyUpEntero(etiqueta, etiquetamensaje, mensaje) {
+    let val = etiqueta.val().trim();
+    let er = /^[0-9]+$/;
+    
+    if (val !== '' && er.test(val) && parseInt(val, 10) > 0) {
+        etiquetamensaje.text("");
+        etiqueta.removeClass("is-valid is-invalid").addClass("is-valid");
         return 1;
     } else {
         etiquetamensaje.text(mensaje);
@@ -123,8 +193,35 @@ function validarEnvioRecepcion() {
         esValido = false;
     }
 
+    // Validar filas de productos
+    $("#productosList .producto-row").each(function() {
+        let $prodSelect =$(this).find('.producto-select');
+        if (!$prodSelect.val()) {$prodSelect.removeClass("is-valid").addClass("is-invalid");
+            $(this).find('.sproducto-msg').text("*Debe seleccionar un producto*");
+            esValido = false;
+        } else {
+            $prodSelect.removeClass("is-invalid").addClass("is-valid");
+            $(this).find('.sproducto-msg').text("");
+        }
+
+        let $costoInput =$(this).find('.costo-input');
+        if (validarKeyUpDecimal($costoInput,$(this).find('.scosto-msg'), "*Costo inválido*") == 0) {
+            esValido = false;
+        }
+
+        let $cantInput =$(this).find('.cantidad-input');
+        if (validarKeyUpEntero($cantInput,$(this).find('.scantidad-msg'), "*Cantidad inválida*") == 0) {
+            esValido = false;
+        }
+    });
+
+    let $ivaInput =$("#porcentajeIvaRecepcion");
+    if (validarKeyUpDecimal($ivaInput,$("#sporcentajeIva"), "*IVA inválido*") == 0) {
+        esValido = false;
+    }
+
     if (!esValido) {
-        mensajes('error', 'Campos incompletos', 'Por favor complete los campos obligatorios (*)');
+        mensajes('error', 'Campos incompletos', 'Por favor complete correctamente los campos obligatorios (*)');
     }
 
     return esValido;
@@ -316,7 +413,9 @@ function addProductoRow() {
 
     const newRow = firstRow.cloneNode(true);
     newRow.style.animation = 'slideDown 0.3s ease';
+    // Limpiar valores de la nueva fila
     newRow.querySelector('.producto-select').value = '';
+    newRow.querySelector('.producto-select').removeAttribute('id');
     newRow.querySelector('.producto-codigo').value = '';
     newRow.querySelector('.producto-marca').value = '';
     newRow.querySelector('.producto-modelo').value = '';
@@ -324,8 +423,10 @@ function addProductoRow() {
     newRow.querySelector('input[name="cantidad[]"]').value = '';
     newRow.querySelector('input[name="costo[]"]').value = '';
     newRow.querySelector('.subtotal-display').value = '$0.00';
+    
     productosList.appendChild(newRow);
     actualizarContadorProductos();
+    actualizarProteccionSelectsProductos();
     return newRow;
 }
 
@@ -390,6 +491,20 @@ function removeProductoRow(button) {
 // ==========================================
 // 6. ACCIONES: GUARDAR, DETALLAR, ANULAR
 // ==========================================
+
+function limitarDosDecimales(input) {
+    // Reemplaza comas por puntos por si el usuario usa teclado numérico con coma
+    let valor = input.value.replace(',', '.');
+    
+    // Separa la parte entera de la decimal
+    let partes = valor.split('.');
+    
+    if (partes.length > 1) {
+        // Limita la parte decimal a un máximo de 2 dígitos
+        input.value = partes[0] + '.' + partes[1].substring(0, 2);
+    }
+}
+
 async function saveRecepcion(event) {
     if (event) event.preventDefault();
 
@@ -728,13 +843,10 @@ async function confirmarAnulacion() {
 // 7. INICIALIZACIÓN DOCUMENT READY
 // ==========================================
 $(document).ready(function() {
-    var $tabla = $('table.table-info, table[data-datatable]');
+    var $tabla =$('table.table-info, table[data-datatable]');
     
-    // Validar que la tabla exista y que el plugin DataTable esté cargado
-    if ($tabla.length && typeof $.fn.DataTable !== 'undefined') {
-        if (!$.fn.DataTable.isDataTable($tabla)) {
-            $tabla.DataTable({
-                // Opcional: Idioma directo integrado para evitar fallos de red con el JSON en F5
+    if ($tabla.length && typeof$.fn.DataTable !== 'undefined') {
+        if (!$.fn.DataTable.isDataTable($tabla)) {$tabla.DataTable({
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay datos disponibles en la tabla",
@@ -758,29 +870,22 @@ $(document).ready(function() {
                 order: [[0, 'desc']],
                 initComplete: function () {
                     var api = this.api();
-                    var $wrapper = $(api.table().container());
+                    var $wrapper =$(api.table().container());
                     
-                    // Forzar el ajuste de columnas tras renderizar
                     setTimeout(function() {
                         api.columns.adjust();
                     }, 150);
 
-                    var $filter = $wrapper.find('.dataTables_filter');
+                    var $filter =$wrapper.find('.dataTables_filter');
                     if ($filter.length) {
-                        $filter.css({
-                            display: 'flex',
-                            'align-items': 'center',
-                            'justify-content': 'flex-end',
-                            gap: '10px'
-                        });
-                        $filter.find('label').css({ 'margin-bottom': '0' });
+                        $filter.css({ display: 'flex', 'align-items': 'center', 'justify-content': 'flex-end', gap: '10px' });$filter.find('label').css({ 'margin-bottom': '0' });
                     }
                 }
             });
         }
     }
 
-    protegerSelects(['proveedor']);
+    actualizarProteccionSelectsProductos();
 
     $("#correlativo").on("keypress", function(e){
         validarkeypress(/^[0-9]*$/, e);
@@ -799,6 +904,31 @@ $(document).ready(function() {
             $(this).removeClass("is-valid").addClass("is-invalid");
             $("#sproveedor").text("*Debe seleccionar un proveedor*");
         }
+    });
+
+    // Delegación de eventos para validaciones en campos dinámicos y estáticos
+    $(document).on('keypress', '.costo-input', function(e) { validarKeyPressDecimal(e); });$(document).on('keyup', '.costo-input', function() {
+        validarKeyUpDecimal($(this),$(this).siblings('.scosto-msg'), "*Costo inválido (Ej: 10.50)*");
+    });
+
+    $(document).on('keypress', '.cantidad-input', function(e) { validarKeyPressEntero(e); });$(document).on('keyup', '.cantidad-input', function() {
+        validarKeyUpEntero($(this),$(this).siblings('.scantidad-msg'), "*Debe ser un entero mayor a 0*");
+    });
+
+    $(document).on('change', '.producto-select', function() {
+        if ($(this).val()) {$(this).removeClass("is-invalid").addClass("is-valid");
+            $(this).siblings('.sproducto-msg').text("");
+        } else {
+            $(this).removeClass("is-valid").addClass("is-invalid");
+            $(this).siblings('.sproducto-msg').text("*Debe seleccionar un producto*");
+        }
+    });
+
+    $("#porcentajeIvaRecepcion").on('keypress', function(e) {
+        validarKeyPressDecimal(e);
+    });
+    $("#porcentajeIvaRecepcion").on('keyup', function() {
+        validarKeyUpDecimal($(this),$("#sporcentajeIva"), "*IVA inválido (0-100)*");
     });
 
     const archivoFactura = document.getElementById('fotoFacturaRecepcion');

@@ -190,9 +190,7 @@ ob_start();
                     <div id="productosList">
                         <div class="producto-row">
                             <div class="form-group">
-                                <label>
-                                    Producto*
-                                </label>
+                                <label>Producto*</label>
                                 <select name="producto[]" class="producto-select input-select" onchange="seleccionarProducto(this)">
                                     <option value="">Seleccione un producto</option>
                                     <?php if (!empty($productos)): ?>
@@ -209,6 +207,7 @@ ob_start();
                                         <option value="">No hay productos disponibles</option>
                                     <?php endif; ?>
                                 </select>
+                                <span class="span-value sproducto-msg"></span>
                             </div>
                             <div class="form-group">
                                 <label>Código*</label>
@@ -227,24 +226,20 @@ ob_start();
                                 <input type="text" class="producto-serial input-testnum" readonly>
                             </div>
                             <div class="form-group">
-                                <label>
-                                    Costo Unitario*
-                                </label>
-                                <input type="number" name="costo[]" placeholder="0.00" step="0.01" min="0" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
+                                <label>Costo Unitario*</label>
+                                <input type="text" name="costo[]" placeholder="0.00" class="input-with-icon input-testnum costo-input" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <span class="span-value scosto-msg"></span>
                             </div>
                             <div class="form-group">
-                                <label>
-                                    Cantidad*
-                                </label>
-                                <input type="number" name="cantidad[]" placeholder="0" min="1" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
+                                <label>Cantidad*</label>
+                                <input type="text" name="cantidad[]" placeholder="0" class="input-with-icon input-testnum cantidad-input" oninput="calcularSubtotal(this)">
+                                <span class="span-value scantidad-msg"></span>
                             </div>
                             <div class="form-group subtotal-group">
-                                <label>
-                                    Subtotal
-                                </label>
+                                <label>Subtotal</label>
                                 <input type="text" class="subtotal-display" readonly value="$0.00">
                             </div>
-                            <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="RemoverProducto">
+                            <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Remover Producto">
                                 <img src="assets/img/circle-x.svg">
                             </button>
                         </div>
@@ -257,7 +252,8 @@ ob_start();
                             </div>
                             <div class="resumen-factura-item resumen-iva-tasa">
                                 <label for="porcentajeIvaRecepcion">IVA (%)</label>
-                                <input type="number" id="porcentajeIvaRecepcion" name="porcentaje_iva" value="16" min="0" max="100" step="0.01" oninput="calcularTotal()">
+                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" value="16" class="input-with-icon input-testnum costo-input" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <span class="span-value" id="sporcentajeIva"></span>
                             </div>
                             <div class="resumen-factura-item">
                                 <span class="total-label">Monto IVA:</span>
