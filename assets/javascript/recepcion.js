@@ -611,18 +611,29 @@ function evaluarDiscrepanciasInteractivas() {
             const idx = indexMatch ? parseInt(indexMatch[0], 10) - 1 : 0;
             if (productosForm[idx]) {
                 const prod = productosForm[idx];
-                if (normalizarTextoRecepcion(prod.nombre) === normalizarTextoRecepcion(item.valor_factura) ||
-                    (item.valor_factura === 'No encontrado' && prod.nombre !== '')) {
-                    resuelto = true;
+                // CORRECCIÓN: Solo dar por resuelto si coincide exactamente con la factura (o si la factura decía 'No encontrado', solo si coincide con el catálogo seleccionado válido)
+                if (item.valor_factura !== 'No encontrado') {
+                    if (normalizarTextoRecepcion(prod.nombre) === normalizarTextoRecepcion(item.valor_factura)) {
+                        resuelto = true;
+                    }
+                } else {
+                    // Si el servidor devolvió 'No encontrado', se verifica si el producto seleccionado en formulario ya no es el que generó la incoherencia original
+                    if (normalizarTextoRecepcion(prod.nombre) !== normalizarTextoRecepcion(item.valor_formulario) && prod.nombre !== '') {
+                        resuelto = true;
+                    }
                 }
             }
         }
 
         if (!resuelto) {
-            // Actualizar valor_formulario con el estado dinámico del campo
             let valFormActual = item.valor_formulario;
             if (item.campo.toLowerCase().includes('factura')) valFormActual = correlativoForm;
             else if (item.campo.toLowerCase().includes('proveedor')) valFormActual = proveedorForm;
+            else if (item.campo.toLowerCase().includes('producto')) {
+                const indexMatch = item.campo.match(/\d+/);
+                const idx = indexMatch ? parseInt(indexMatch[0], 10) - 1 : 0;
+                if (productosForm[idx]) valFormActual = productosForm[idx].nombre || 'Sin seleccionar';
+            }
 
             pendientes.push({
                 ...item,
@@ -642,7 +653,6 @@ function evaluarDiscrepanciasInteractivas() {
 
         establecerEstadoIARecepcion(mensajeBloqueoHTML, 'error');
     } else {
-        // TODAS LAS DISCREPANCIAS HAN SIDO RESUELTAS
         const mensajeExitoHTML = `<b>Registro Desbloqueado:</b> discrepancias críticas corregidas, puede proceder a incluir la recepción.`;
         establecerEstadoIARecepcion(mensajeExitoHTML, 'success');
     }
@@ -703,7 +713,6 @@ async function saveRecepcion(event) {
                 } else if (!verificacion.exito) {
                     const discrepancias = verificacion.discrepancias || [];
                     
-                    // Guardar discrepancias para el seguimiento dinámico
                     discrepanciasActivasIA = {
                         listaOriginal: discrepancias
                     };
@@ -712,33 +721,17 @@ async function saveRecepcion(event) {
                         `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
                     ).join('');
 
-                    if (discrepancias.some(item => item.severidad === 'CRITICA')) {
-                        evaluarDiscrepanciasInteractivas();
+                    evaluarDiscrepanciasInteractivas();
 
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Diferencias críticas detectadas',
-                            html: `La verificación encontró diferencias críticas. Corrige los datos antes de guardar.<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
-                            confirmButtonText: 'Entendido'
-                        });
-                        if (botonGuardar) botonGuardar.disabled = false;
-                        return;
-                    }
-
-                    const confirmRes = await Swal.fire({
-                        icon: 'warning',
-                        title: 'Diferencias con la factura',
-                        html: `Se encontraron diferencias con la factura:<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div><br>¿Deseas guardar de todos modos?`,
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, guardar',
-                        cancelButtonText: 'Cancelar'
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Diferencias detectadas',
+                        html: `La verificación encontró diferencias con la factura. Corrige todos los datos antes de guardar.<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
+                        confirmButtonText: 'Entendido'
                     });
 
-                    if (!confirmRes.isConfirmed) {
-                        if (botonGuardar) botonGuardar.disabled = false;
-                        return;
-                    }
-                    iaVerificada = true;
+                    if (botonGuardar) botonGuardar.disabled = false;
+                    return;
                 } else {
                     iaVerificada = true;
                 }

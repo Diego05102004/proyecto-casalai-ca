@@ -96,7 +96,7 @@ function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
     }
 }
 
-// Validaciones para decimales y enteros estrictos (Bloqueo de 'e' y caracteres no numéricos)
+// Validaciones para decimales y enteros strictly Bloqueo de 'e' y caracteres no numéricos
 function validarKeyPressDecimal(e) {
     let key = e.key;
     if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
@@ -613,18 +613,27 @@ function evaluarDiscrepanciasInteractivas() {
             const idx = indexMatch ? parseInt(indexMatch[0], 10) - 1 : 0;
             if (productosForm[idx]) {
                 const prod = productosForm[idx];
-                if (normalizarTextoRecepcion(prod.nombre) === normalizarTextoRecepcion(item.valor_factura) ||
-                    (item.valor_factura === 'No encontrado' && prod.nombre !== '')) {
-                    resuelto = true;
+                if (item.valor_factura !== 'No encontrado') {
+                    if (normalizarTextoRecepcion(prod.nombre) === normalizarTextoRecepcion(item.valor_factura)) {
+                        resuelto = true;
+                    }
+                } else {
+                    if (normalizarTextoRecepcion(prod.nombre) !== normalizarTextoRecepcion(item.valor_formulario) && prod.nombre !== '') {
+                        resuelto = true;
+                    }
                 }
             }
         }
 
         if (!resuelto) {
-            // Actualizar valor_formulario con el estado dinámico del campo
             let valFormActual = item.valor_formulario;
             if (item.campo.toLowerCase().includes('factura')) valFormActual = correlativoForm;
             else if (item.campo.toLowerCase().includes('proveedor')) valFormActual = proveedorForm;
+            else if (item.campo.toLowerCase().includes('producto')) {
+                const indexMatch = item.campo.match(/\d+/);
+                const idx = indexMatch ? parseInt(indexMatch[0], 10) - 1 : 0;
+                if (productosForm[idx]) valFormActual = productosForm[idx].nombre || 'Sin seleccionar';
+            }
 
             pendientes.push({
                 ...item,
@@ -644,7 +653,6 @@ function evaluarDiscrepanciasInteractivas() {
 
         establecerEstadoIARecepcion(mensajeBloqueoHTML, 'error');
     } else {
-        // TODAS LAS DISCREPANCIAS HAN SIDO RESUELTAS
         const mensajeExitoHTML = `<b>Registro Desbloqueado:</b> discrepancias críticas corregidas, puede proceder a incluir la recepción.`;
         establecerEstadoIARecepcion(mensajeExitoHTML, 'success');
     }
@@ -705,7 +713,6 @@ async function saveRecepcion(event) {
                 } else if (!verificacion.exito) {
                     const discrepancias = verificacion.discrepancias || [];
                     
-                    // Guardar discrepancias para el seguimiento dinámico
                     discrepanciasActivasIA = {
                         listaOriginal: discrepancias
                     };
@@ -714,33 +721,18 @@ async function saveRecepcion(event) {
                         `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
                     ).join('');
 
-                    if (discrepancias.some(item => item.severidad === 'CRITICA')) {
-                        evaluarDiscrepanciasInteractivas();
+                    // BLOQUEO ESTRICTO: Cualquier discrepancia bloquea el registro sin dar opción a guardar de todos modos
+                    evaluarDiscrepanciasInteractivas();
 
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Diferencias críticas detectadas',
-                            html: `La verificación encontró diferencias críticas. Corrige los datos antes de guardar.<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
-                            confirmButtonText: 'Entendido'
-                        });
-                        if (botonGuardar) botonGuardar.disabled = false;
-                        return;
-                    }
-
-                    const confirmRes = await Swal.fire({
-                        icon: 'warning',
-                        title: 'Diferencias con la factura',
-                        html: `Se encontraron diferencias con la factura:<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div><br>¿Deseas guardar de todos modos?`,
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, guardar',
-                        cancelButtonText: 'Cancelar'
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Diferencias detectadas',
+                        html: `La verificación encontró diferencias con la factura. Corrige todos los datos antes de guardar.<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
+                        confirmButtonText: 'Entendido'
                     });
 
-                    if (!confirmRes.isConfirmed) {
-                        if (botonGuardar) botonGuardar.disabled = false;
-                        return;
-                    }
-                    iaVerificada = true;
+                    if (botonGuardar) botonGuardar.disabled = false;
+                    return;
                 } else {
                     iaVerificada = true;
                 }
@@ -1101,7 +1093,7 @@ $(document).ready(function() {
         if ($(this).val()) {$(this).removeClass("is-invalid").addClass("is-valid");
             $(this).siblings('.sproducto-msg').text("");
         } else {
-            $(this).removeClass("is-valid").addClass("is-invalid");
+            $(this).removeClass("is-invalid").addClass("is-invalid");
             $(this).siblings('.sproducto-msg').text("*Debe seleccionar un producto*");
         }
         evaluarDiscrepanciasInteractivas();
