@@ -489,3 +489,9 @@
 2026-10-21 09:34:51,063 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
 2026-10-21 09:34:57,126 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021093447_7c278ff0
 2026-10-21 09:34:57,145 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-21 10:31:08,805 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021103108_baecfa9f.pdf
+2026-10-21 10:31:09,768 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 10:31:14,370 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 10:31:14,372 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 10:31:32,394 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021103108_baecfa9f
+2026-10-21 10:31:32,416 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
