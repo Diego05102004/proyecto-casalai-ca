@@ -280,7 +280,13 @@ function obtenerAsistenteIA() {
 function establecerEstadoIARecepcion(mensaje, estado = 'info') {
     const estadoEl = document.getElementById('estadoIARecepcion');
     if (!estadoEl) return;
-    estadoEl.textContent = mensaje;
+    
+    if (mensaje && mensaje.includes('<')) {
+        estadoEl.innerHTML = mensaje;
+    } else {
+        estadoEl.textContent = mensaje;
+    }
+    
     estadoEl.dataset.state = estado;
     estadoEl.hidden = !mensaje;
 }
@@ -565,9 +571,80 @@ function removeProductoRow(button) {
             actualizarContadorProductos();
             calcularTotal();
             actualizarProteccionSelectsProductos();
+            evaluarDiscrepanciasInteractivas();
         }, 300);
     } else {
         alert('Debe haber al menos un producto');
+    }
+}
+
+// ==========================================
+// EVALUACIÓN INTERACTIVA DE DISCREPANCIAS EN TIEMPO REAL
+// ==========================================
+function evaluarDiscrepanciasInteractivas() {
+    if (!discrepanciasActivasIA || !discrepanciasActivasIA.listaOriginal) return;
+
+    const correlativoForm = space(document.getElementById('correlativo')?.value || '').trim();
+    const proveedorForm = document.querySelector('#proveedor option:checked')?.textContent?.trim() || '';
+    
+    const productosForm = Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
+        nombre: fila.querySelector('.producto-select option:checked')?.textContent?.trim() || '',
+        cantidad: Number(fila.querySelector('input[name="cantidad[]"]')?.value || 0),
+        costo: Number(fila.querySelector('input[name="costo[]"]')?.value || 0)
+    }));
+
+    const pendientes = [];
+
+    discrepanciasActivasIA.listaOriginal.forEach(item => {
+        let resuelto = false;
+
+        if (item.campo.toLowerCase().includes('factura')) {
+            if (normalizarTextoRecepcion(correlativoForm) === normalizarTextoRecepcion(item.valor_factura)) {
+                resuelto = true;
+            }
+        } else if (item.campo.toLowerCase().includes('proveedor')) {
+            if (normalizarTextoRecepcion(proveedorForm) === normalizarTextoRecepcion(item.valor_factura)) {
+                resuelto = true;
+            }
+        } else if (item.campo.toLowerCase().includes('producto')) {
+            const indexMatch = item.campo.match(/\d+/);
+            const idx = indexMatch ? parseInt(indexMatch[0], 10) - 1 : 0;
+            if (productosForm[idx]) {
+                const prod = productosForm[idx];
+                if (normalizarTextoRecepcion(prod.nombre) === normalizarTextoRecepcion(item.valor_factura) ||
+                    (item.valor_factura === 'No encontrado' && prod.nombre !== '')) {
+                    resuelto = true;
+                }
+            }
+        }
+
+        if (!resuelto) {
+            // Actualizar valor_formulario con el estado dinámico del campo
+            let valFormActual = item.valor_formulario;
+            if (item.campo.toLowerCase().includes('factura')) valFormActual = correlativoForm;
+            else if (item.campo.toLowerCase().includes('proveedor')) valFormActual = proveedorForm;
+
+            pendientes.push({
+                ...item,
+                valor_formulario: valFormActual
+            });
+        }
+    });
+
+    if (pendientes.length > 0) {
+        const detalleHTML = pendientes.map(item =>
+            `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
+        ).join('');
+
+        const mensajeBloqueoHTML = 
+            `<div><b>Registro bloqueado:</b> corrige las discrepancias críticas con la factura.</div>` +
+            `<ul style="margin: 8px 0 0 18px; padding: 0; text-align: left; font-size: 0.9em; list-style-type: disc;">${detalleHTML}</ul>`;
+
+        establecerEstadoIARecepcion(mensajeBloqueoHTML, 'error');
+    } else {
+        // TODAS LAS DISCREPANCIAS HAN SIDO RESUELTAS
+        const mensajeExitoHTML = `<b>Registro Desbloqueado:</b> discrepancias críticas corregidas, puede proceder a incluir la recepción.`;
+        establecerEstadoIARecepcion(mensajeExitoHTML, 'success');
     }
 }
 
@@ -625,16 +702,39 @@ async function saveRecepcion(event) {
                     modoContingencia = true;
                 } else if (!verificacion.exito) {
                     const discrepancias = verificacion.discrepancias || [];
-                    const detalle = discrepancias.map(item =>
-                        `${item.campo}: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"`
-                    ).join('\n');
+                    
+                    // Guardar discrepancias para el seguimiento dinámico
+                    discrepanciasActivasIA = {
+                        listaOriginal: discrepancias
+                    };
+
+                    const detalleHTML = discrepancias.map(item =>
+                        `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
+                    ).join('');
+
                     if (discrepancias.some(item => item.severidad === 'CRITICA')) {
-                        establecerEstadoIARecepcion('Registro bloqueado: corrige las discrepancias críticas con la factura.', 'error');
-                        alert(`La verificación encontró diferencias críticas. Corrige los datos antes de guardar.\n\n${detalle}`);
+                        evaluarDiscrepanciasInteractivas();
+
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Diferencias críticas detectadas',
+                            html: `La verificación encontró diferencias críticas. Corrige los datos antes de guardar.<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
+                            confirmButtonText: 'Entendido'
+                        });
                         if (botonGuardar) botonGuardar.disabled = false;
                         return;
                     }
-                    if (!confirm(`Se encontraron diferencias con la factura:\n\n${detalle}\n\n¿Deseas guardar de todos modos?`)) {
+
+                    const confirmRes = await Swal.fire({
+                        icon: 'warning',
+                        title: 'Diferencias con la factura',
+                        html: `Se encontraron diferencias con la factura:<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div><br>¿Deseas guardar de todos modos?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, guardar',
+                        cancelButtonText: 'Cancelar'
+                    });
+
+                    if (!confirmRes.isConfirmed) {
                         if (botonGuardar) botonGuardar.disabled = false;
                         return;
                     }
@@ -965,6 +1065,7 @@ $(document).ready(function() {
 
     $("#correlativo").on("keyup", function(){
         validarkeyup(/^[0-9]{6}$/, $(this),$("#scorrelativo"), "*Formato válido: 6 dígitos numéricos*");
+        evaluarDiscrepanciasInteractivas();
     });
 
     $("#proveedor").on("change", function() {
@@ -974,19 +1075,24 @@ $(document).ready(function() {
             $(this).removeClass("is-valid").addClass("is-invalid");
             $("#sproveedor").text("*Debe seleccionar un proveedor*");
         }
+        evaluarDiscrepanciasInteractivas();
     });
 
     // Delegación de eventos para validaciones
     $(document).on('keypress', '.costo-input', function(e) {
         validarKeyPressDecimal(e);
-    });$(document).on('keyup', '.costo-input', function() {
+    });
+    $(document).on('keyup', '.costo-input', function() {
         validarKeyUpDecimal($(this),$(this).siblings('.scosto-msg'), "*Costo inválido (Ej: 10.50)*");
+        evaluarDiscrepanciasInteractivas();
     });
 
     $(document).on('keypress', '.cantidad-input', function(e) {
         validarKeyPressEntero(e);
-    });$(document).on('keyup', '.cantidad-input', function() {
+    });
+    $(document).on('keyup', '.cantidad-input', function() {
         validarKeyUpEntero($(this),$(this).siblings('.scantidad-msg'), "*Debe ser un entero mayor a 0*");
+        evaluarDiscrepanciasInteractivas();
     });
 
     $(document).on('change', '.producto-select', function() {
@@ -996,6 +1102,7 @@ $(document).ready(function() {
             $(this).removeClass("is-valid").addClass("is-invalid");
             $(this).siblings('.sproducto-msg').text("*Debe seleccionar un producto*");
         }
+        evaluarDiscrepanciasInteractivas();
     });
 
     $("#porcentajeIvaRecepcion").on('keypress', function(e) {
@@ -1003,6 +1110,7 @@ $(document).ready(function() {
     });
     $("#porcentajeIvaRecepcion").on('keyup', function() {
         validarKeyUpDecimal($(this),$("#sporcentajeIva"), "*IVA inválido (0-100)*");
+        evaluarDiscrepanciasInteractivas();
     });
 
     const archivoFactura = document.getElementById('fotoFacturaRecepcion');
