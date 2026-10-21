@@ -32,6 +32,9 @@ ob_start();
 ?>
 
 <script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script>
+    const rolUsuarioActual = "<?php echo isset($_SESSION['nombre_rol']) ? $_SESSION['nombre_rol'] : ''; ?>";
+</script>
 <script src="microservicio/javascript/asistente_recepcion.js"></script>
 <script src="assets/javascript/recepcion.js"></script>
 <link rel="stylesheet" href="assets/styles/modal-recepcion-ia.css">
@@ -55,7 +58,7 @@ ob_start();
         <thead>
             <tr>
                 <th>Fecha</th>
-                <th>Correlativo</th>
+                <th>Número de Factura</th>
                 <th>Proveedor</th>
                 <th>Monto Total</th>
                 <th>Acciones</th>
@@ -187,9 +190,7 @@ ob_start();
                     <div id="productosList">
                         <div class="producto-row">
                             <div class="form-group">
-                                <label>
-                                    Producto*
-                                </label>
+                                <label>Producto*</label>
                                 <select name="producto[]" class="producto-select input-select" onchange="seleccionarProducto(this)">
                                     <option value="">Seleccione un producto</option>
                                     <?php if (!empty($productos)): ?>
@@ -206,6 +207,7 @@ ob_start();
                                         <option value="">No hay productos disponibles</option>
                                     <?php endif; ?>
                                 </select>
+                                <span class="span-value sproducto-msg"></span>
                             </div>
                             <div class="form-group">
                                 <label>Código*</label>
@@ -224,24 +226,20 @@ ob_start();
                                 <input type="text" class="producto-serial input-testnum" readonly>
                             </div>
                             <div class="form-group">
-                                <label>
-                                    Costo Unitario*
-                                </label>
-                                <input type="number" name="costo[]" placeholder="0.00" step="0.01" min="0" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
+                                <label>Costo Unitario*</label>
+                                <input type="text" name="costo[]" placeholder="0.00" class="input-with-icon input-testnum costo-input" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <span class="span-value scosto-msg"></span>
                             </div>
                             <div class="form-group">
-                                <label>
-                                    Cantidad*
-                                </label>
-                                <input type="number" name="cantidad[]" placeholder="0" min="1" class="input-with-icon input-testnum" oninput="calcularSubtotal(this)">
+                                <label>Cantidad*</label>
+                                <input type="text" name="cantidad[]" placeholder="0" class="input-with-icon input-testnum cantidad-input" maxlength="9" oninput="calcularSubtotal(this)">
+                                <span class="span-value scantidad-msg"></span>
                             </div>
                             <div class="form-group subtotal-group">
-                                <label>
-                                    Subtotal
-                                </label>
+                                <label>Subtotal</label>
                                 <input type="text" class="subtotal-display" readonly value="$0.00">
                             </div>
-                            <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="RemoverProducto">
+                            <button type="button" class="btn-remove-row" onclick="removeProductoRow(this)" title="Remover Producto">
                                 <img src="assets/img/circle-x.svg">
                             </button>
                         </div>
@@ -254,7 +252,8 @@ ob_start();
                             </div>
                             <div class="resumen-factura-item resumen-iva-tasa">
                                 <label for="porcentajeIvaRecepcion">IVA (%)</label>
-                                <input type="number" id="porcentajeIvaRecepcion" name="porcentaje_iva" value="16" min="0" max="100" step="0.01" oninput="calcularTotal()">
+                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" class="input-with-icon input-testnum costo-input" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <span class="span-value" id="sporcentajeIva"></span>
                             </div>
                             <div class="resumen-factura-item">
                                 <span class="total-label">Monto IVA:</span>
@@ -282,7 +281,7 @@ ob_start();
 
 <!-- Modal para Ver Detalles de Recepción -->
 <div id="viewModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content modal-large">
         <div class="modal-header">
             <div class="modal-header-content">
                 <div class="modal-icon">
@@ -305,7 +304,7 @@ ob_start();
                     </div>
                     <div class="detalle-grid">
                         <div class="detalle-item">
-                            <label>Correlativo:</label>
+                            <label>Número de Factura:</label>
                             <span id="viewCorrelativo"></span>
                         </div>
                         <div class="detalle-item">
@@ -325,42 +324,35 @@ ob_start();
                         <i class="fas fa-boxes"></i>
                         <h3>Productos Recibidos</h3>
                     </div>
-                    <div class="detalle-table">
-                        <table>
+                    <div class="detalle-table" style="overflow-x: auto;">
+                        <table style="width: 100%; white-space: nowrap;">
                             <thead>
                                 <tr>
                                     <th>Producto</th>
+                                    <th>Código</th>
+                                    <th>Marca</th>
+                                    <th>Modelo</th>
+                                    <th>Serial</th>
                                     <th>Cantidad</th>
                                     <th>Costo Unitario</th>
                                     <th>Subtotal</th>
                                 </tr>
                             </thead>
                             <tbody id="viewProductos">
-                                <tr>
-                                    <td>iPhone 15 Pro Max</td>
-                                    <td>10</td>
-                                    <td>$1,199.00</td>
-                                    <td>$11,990.00</td>
-                                </tr>
-                                <tr>
-                                    <td>MacBook Air M3</td>
-                                    <td>5</td>
-                                    <td>$1,099.00</td>
-                                    <td>$5,495.00</td>
-                                </tr>
+                                <!-- Se llena dinámicamente -->
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3" class="monto"><strong>Subtotal:</strong></td>
-                                    <td><span id="viewSubtotal">$17,485.00</span></td>
+                                    <td colspan="7" class="monto"><strong>Subtotal:</strong></td>
+                                    <td><span id="viewSubtotal">$0.00</span></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3" class="monto"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
+                                    <td colspan="7" class="monto"><strong>IVA (<span id="viewIvaPorcentaje">0%</span>):</strong></td>
                                     <td><span id="viewMontoIva">No registrado</span></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3" class="monto"><strong>Total factura:</strong></td>
-                                    <td><span id="viewTotal">$17,485.00</span></td>
+                                    <td colspan="7" class="monto"><strong>Total factura:</strong></td>
+                                    <td><span id="viewTotal">$0.00</span></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -396,7 +388,7 @@ ob_start();
                 
                 <div class="anular-info">
                     <div class="info-row">
-                        <label>Correlativo:</label>
+                        <label>Número de Factura:</label>
                         <span id="anularCorrelativo"></span>
                     </div>
                 </div>
@@ -412,798 +404,6 @@ ob_start();
         </div>
     </div>
 </div>
-<!--
-            <script src="microservicio/javascript/asistente_recepcion.js"></script>
-            <script>
-                const asistenteRecepcionIA = typeof AsistenteRecepcionIA !== 'undefined'
-                    ? new AsistenteRecepcionIA({
-                        apiUrl: 'http://127.0.0.1:8000',
-                        debug: true,
-                        selectores: { alertas: '#estadoIARecepcion' }
-                    })
-                    : null;
-                let urlPreviewFacturaRecepcion = null;
-
-                function establecerEstadoIARecepcion(mensaje, estado = 'info') {
-                    const estadoEl = document.getElementById('estadoIARecepcion');
-                    estadoEl.textContent = mensaje;
-                    estadoEl.dataset.state = estado;
-                    estadoEl.hidden = !mensaje;
-                }
-
-                function activarContingenciaIARecepcion(detalle = '') {
-                    establecerEstadoIARecepcion(
-                        `El servicio de lectura automática por IA no está disponible temporalmente. Se ha habilitado el formulario manual. La factura se conservará al registrar.${detalle ? ` Detalle: ${detalle}` : ''}`,
-                        'error'
-                    );
-                }
-
-                function normalizarTextoRecepcion(valor) {
-                    return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                        .toLowerCase().replace(/[^a-z0-9]/g, '');
-                }
-
-                function buscarOpcionCatalogo(select, texto) {
-                    const buscado = normalizarTextoRecepcion(texto);
-                    if (!buscado) return null;
-                    const opciones = Array.from(select.options).filter(opcion => opcion.value);
-                    const exactas = opciones.filter(opcion => normalizarTextoRecepcion(opcion.textContent) === buscado);
-                    if (exactas.length === 1) return exactas[0];
-                    const parciales = opciones.filter(opcion => {
-                        const nombre = normalizarTextoRecepcion(opcion.textContent);
-                        return nombre.includes(buscado) || buscado.includes(nombre);
-                    });
-                    return parciales.length === 1 ? parciales[0] : null;
-                }
-
-                function rellenarRecepcionDesdeFactura(factura) {
-                    const correlativo = document.getElementById('correlativo');
-                    if (factura.numero_factura) correlativo.value = factura.numero_factura;
-
-                    const proveedor = document.getElementById('proveedor');
-                    const proveedorEncontrado = buscarOpcionCatalogo(proveedor, factura.nombre_proveedor);
-                    if (proveedorEncontrado) proveedor.value = proveedorEncontrado.value;
-
-                    const productosDetectados = Array.isArray(factura.productos) ? factura.productos : [];
-                    if (productosDetectados.length) {
-                        const productosList = document.getElementById('productosList');
-                        while (productosList.querySelectorAll('.producto-row').length > 1) {
-                            productosList.lastElementChild.remove();
-                        }
-                        productosList.querySelector('.producto-row').querySelectorAll('select, input').forEach(campo => {
-                            if (campo.classList.contains('subtotal-display')) campo.value = '$0.00';
-                            else campo.value = '';
-                        });
-
-                        productosDetectados.forEach((producto, indice) => {
-                            const fila = indice === 0
-                                ? productosList.querySelector('.producto-row')
-                                : addProductoRow();
-                            const selector = fila.querySelector('.producto-select');
-                            const opcion = buscarOpcionCatalogo(selector, producto.nombre);
-                            if (opcion) {
-                                selector.value = opcion.value;
-                                seleccionarProducto(selector);
-                            }
-                            fila.querySelector('input[name="cantidad[]"]').value = producto.cantidad > 0 ? producto.cantidad : 1;
-                            fila.querySelector('input[name="costo[]"]').value = Number(producto.costo_unitario || 0).toFixed(2);
-                            calcularSubtotal(fila.querySelector('input[name="costo[]"]'));
-                        });
-                    }
-
-                    document.getElementById('porcentajeIvaRecepcion').value =
-                        Number(factura.porcentaje_iva || 0).toFixed(2);
-                    calcularTotal();
-
-                    actualizarContadorProductos();
-                    const camposPendientes = [];
-                    if (factura.nombre_proveedor && !proveedorEncontrado) camposPendientes.push('proveedor');
-                    if (productosDetectados.some(producto => !buscarOpcionCatalogo(document.querySelector('.producto-select'), producto.nombre))) {
-                        camposPendientes.push('selección de productos del catálogo');
-                    }
-                    const nota = camposPendientes.length
-                        ? ` Revisa manualmente: ${camposPendientes.join(' y ')}.`
-                        : ' Revisa los datos antes de guardar.';
-                    establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.${nota}`);
-                    document.getElementById('resultadoIARecepcion').textContent =
-                        `Proveedor detectado: ${factura.nombre_proveedor || 'no detectado'}\n` +
-                        `Productos detectados: ${productosDetectados.length}\n` +
-                        `Subtotal: $${Number(factura.subtotal_factura || 0).toFixed(2)}\n` +
-                        `IVA: ${Number(factura.porcentaje_iva || 0).toFixed(2)}% ($${Number(factura.monto_iva || 0).toFixed(2)})\n` +
-                        `Total factura: $${Number(factura.total_factura || 0).toFixed(2)}\n` +
-                        `Confianza OCR: ${(Number(factura.confianza_promedio || 0) * 100).toFixed(1)}%`;
-                    document.getElementById('resultadoIARecepcion').hidden = false;
-                }
-
-                function limpiarFacturaIARecepcion() {
-                    if (asistenteRecepcionIA) asistenteRecepcionIA.limpiarCache();
-                    if (urlPreviewFacturaRecepcion) URL.revokeObjectURL(urlPreviewFacturaRecepcion);
-                    urlPreviewFacturaRecepcion = null;
-                    document.getElementById('previewFacturaRecepcion').hidden = true;
-                    document.getElementById('previewImagenRecepcion').hidden = true;
-                    document.getElementById('previewPdfRecepcion').hidden = true;
-                    document.getElementById('previewImagenRecepcion').removeAttribute('src');
-                    document.getElementById('previewPdfRecepcion').removeAttribute('src');
-                    document.getElementById('resultadoIARecepcion').textContent = '';
-                    document.getElementById('resultadoIARecepcion').hidden = true;
-                    establecerEstadoIARecepcion('');
-                }
-
-                async function analizarFacturaRecepcion(archivo) {
-                    if (!asistenteRecepcionIA) {
-                        establecerEstadoIARecepcion('No se pudo cargar el cliente del microservicio.', 'error');
-                        return;
-                    }
-                    establecerEstadoIARecepcion('Analizando factura con OCR...');
-                    const resultado = await asistenteRecepcionIA.extraerDesdeImagen(archivo);
-                    if (!resultado.exito) {
-                        if (resultado.contingencia) activarContingenciaIARecepcion(resultado.error);
-                        else establecerEstadoIARecepcion(`No se pudo analizar la factura: ${resultado.error || 'error del servicio'}`, 'error');
-                        return;
-                    }
-                    rellenarRecepcionDesdeFactura(resultado.data);
-                }
-
-                // Función para abrir modal de recepción
-                function openModal(type) {
-                    const modal = document.getElementById('recepcionModal');
-                    const modalTitle = document.getElementById('modalTitle');
-                    const form = document.getElementById('recepcionForm');
-                    
-                    if (type === 'registrar') {
-                        modalTitle.textContent = 'Nueva Recepción';
-                        form.reset();
-                        limpiarFacturaIARecepcion();
-                        const filas = document.querySelectorAll('#productosList .producto-row');
-                        filas.forEach((fila, indice) => { if (indice > 0) fila.remove(); });
-                        actualizarContadorProductos();
-                        calcularTotal();
-                    }
-                    
-                    modal.style.display = 'block';
-                    modal.style.animation = 'fadeIn 0.3s ease';
-                }
-
-                // Función para cerrar modal de recepción
-                function closeModal() {
-                    const modal = document.getElementById('recepcionModal');
-                    modal.style.animation = 'fadeOut 0.3s ease';
-                    setTimeout(() => {
-                        modal.style.display = 'none';
-                    }, 300);
-                }
-
-                // Función para abrir modal de búsqueda
-                function openFilterModal() {
-                    const modal = document.getElementById('searchModal');
-                    modal.style.display = 'block';
-                    modal.style.animation = 'fadeIn 0.3s ease';
-                }
-
-                // Función para cerrar modal de búsqueda
-                function closeSearchModal() {
-                    const modal = document.getElementById('searchModal');
-                    modal.style.animation = 'fadeOut 0.3s ease';
-                    setTimeout(() => {
-                        modal.style.display = 'none';
-                    }, 300);
-                }
-
-                // Función para agregar fila de producto
-                function addProductoRow() {
-                    const productosList = document.getElementById('productosList');
-                    const newRow = productosList.querySelector('.producto-row').cloneNode(true);
-                    newRow.style.animation = 'slideDown 0.3s ease';
-                    newRow.querySelector('.producto-select').value = '';
-                    newRow.querySelector('.producto-codigo').value = '';
-                    newRow.querySelector('.producto-marca').value = '';
-                    newRow.querySelector('.producto-modelo').value = '';
-                    newRow.querySelector('.producto-serial').value = '';
-                    newRow.querySelector('input[name="cantidad[]"]').value = '';
-                    newRow.querySelector('input[name="costo[]"]').value = '';
-                    newRow.querySelector('.subtotal-display').value = '$0.00';
-                    productosList.appendChild(newRow);
-                    actualizarContadorProductos();
-                    return newRow;
-                }
-
-                function seleccionarProducto(select) {
-                    const opcion = select.selectedOptions[0];
-                    const fila = select.closest('.producto-row');
-                    fila.querySelector('.producto-codigo').value = opcion?.dataset.codigo || '';
-                    fila.querySelector('.producto-marca').value = opcion?.dataset.marca || '';
-                    fila.querySelector('.producto-modelo').value = opcion?.dataset.modelo || '';
-                    fila.querySelector('.producto-serial').value = opcion?.dataset.serial || '';
-                    calcularSubtotal(select);
-                }
-
-                // Función para calcular subtotal de una fila
-                function calcularSubtotal(input) {
-                    const row = input.closest('.producto-row');
-                    const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
-                    const costo = parseFloat(row.querySelector('input[name="costo[]"]').value) || 0;
-                    const subtotal = cantidad * costo;
-                    row.querySelector('.subtotal-display').value = '$' + subtotal.toFixed(2);
-                    calcularTotal();
-                }
-
-                // Función para calcular total general
-                function calcularTotal() {
-                    const subtotal = Array.from(document.querySelectorAll('#productosList .producto-row'))
-                        .reduce((suma, fila) => {
-                            const cantidad = Number(fila.querySelector('input[name="cantidad[]"]').value) || 0;
-                            const costo = Number(fila.querySelector('input[name="costo[]"]').value) || 0;
-                            return suma + cantidad * costo;
-                        }, 0);
-                    const porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
-                    const montoIva = Math.round((subtotal * (porcentajeIva / 100) + Number.EPSILON) * 100) / 100;
-                    document.getElementById('subtotalRecepcion').textContent = '$' + subtotal.toFixed(2);
-                    document.getElementById('montoIvaRecepcion').textContent = '$' + montoIva.toFixed(2);
-                    document.getElementById('totalValue').textContent = '$' + (subtotal + montoIva).toFixed(2);
-                }
-
-                // Función para actualizar contador de productos
-                function actualizarContadorProductos() {
-                    const count = document.querySelectorAll('.producto-row').length;
-                    document.querySelector('.product-count').textContent = count + ' producto' + (count !== 1 ? 's' : '');
-                }
-
-                // Función para eliminar fila de producto
-                function removeProductoRow(button) {
-                    const row = button.closest('.producto-row');
-                    if (document.querySelectorAll('.producto-row').length > 1) {
-                        row.style.animation = 'slideUp 0.3s ease';
-                        setTimeout(() => {
-                            row.remove();
-                            actualizarContadorProductos();
-                            calcularTotal();
-                        }, 300);
-                    } else {
-                        alert('Debe haber al menos un producto');
-                    }
-                }
-
-                if($.trim($("#mensajes").text()) != ""){
-                    mensajes("warning", "Atención", $("#mensajes").html());
-                }
-
-                $("#correlativo").on("keypress", function(e){
-                    validarkeypress(/^[0-9]*$/, e);
-                    let correlativo = document.getElementById("correlativo");
-                    correlativo.value = space(correlativo.value);
-                });
-                $("#correlativo").on("keyup", function(){
-                    validarkeyup(
-                        /^[0-9]{6}$/,
-                        $(this),
-                        $("#scorrelativo"),
-                        "*Formato válido: 012345*"
-                    );
-                });
-
-                $("#proveedor").on("change", function() {
-                    if ($(this).val()) {
-                        $(this).removeClass("is-invalid").addClass("is-valid");
-                        $("#sproveedor").text("");
-                    } else {
-                        $(this).removeClass("is-valid").addClass("is-invalid");
-                        $("#sproveedor").text("*Debe seleccionar un proveedor*");
-                    }
-                });
-
-                function validarEnvioRecepcion(){
-                    let correlativo = document.getElementById("correlativo");
-                    correlativo.value = space(correlativo.value).trim();
-
-                    let esValido = true;
-
-                    // Validar Correlativo
-                    if (validarkeyup(/^[0-9]{6}$/, $("#correlativo"), $("#scorrelativo"), "*El N° de factura debe tener 6 dígitos*") == 0) {
-                        $("#correlativo").removeClass("is-valid").addClass("is-invalid");
-                        $("#scorrelativo").text("*El N° de factura es obligatorio (6 dígitos)*");
-                        esValido = false;
-                    }
-
-                    // Validar Select Proveedor
-                    if ($("#proveedor").val()) {
-                        $("#proveedor").removeClass("is-invalid").addClass("is-valid");
-                        $("#sproveedor").text("");
-                    } else {
-                        $("#proveedor").removeClass("is-valid").addClass("is-invalid");
-                        $("#sproveedor").text("*Debe seleccionar un proveedor*");
-                        esValido = false;
-                    }
-
-                    if (!esValido) {
-                        mensajes('error', 'Campos incompletos', 'Por favor complete los campos obligatorios (*)');
-                    }
-
-                    return esValido;
-                }
-
-                /*function validarEnvioRecepcion(){
-                    let correlativo = document.getElementById("correlativo");
-                    correlativo.value = space(correlativo.value).trim();
-
-                    if(validarkeyup(
-                        /^[0-9]{4,10}$/,
-                        $("#correlativo"),
-                        $("#scorrelativo"),
-                        "*El N° de factura debe tener de 6 dígitos*"
-                    )==0){
-                        mensajes('error', 'Verifique el N° de factura', 'Le faltan dígitos al N° de factura');
-                        return false;
-                    }
-
-                    if($("#proveedor").val()) {
-                        $("#proveedor").removeClass("is-invalid").addClass("is-valid");
-                        $("#sproveedor").text("");
-                    } else {
-                        $("#proveedor").removeClass("is-valid").addClass("is-invalid");
-                        $("#sproveedor").text("*Debe seleccionar un proveedor*");
-                        mensajes('error', 'Verifique el proveedor', 'El campo esta vacio');
-                        return false;
-                    }
-                    return true;
-                }*/
-
-                function verificaproductos() {
-                    var existe = false;
-                    if ($("#recepcion1 tr").length > 0) {
-                        existe = true;
-                    } else {
-                        mensajes('error', 'Verifique los productos', 'Debe seleccionar algun producto');
-                    }
-                    return existe;
-                }
-
-                function mensajes(icono, titulo, mensaje){
-                    Swal.fire({
-                        icon: icono,
-                        title: titulo,
-                        text: mensaje,
-                        showConfirmButton: true,
-                        confirmButtonText: 'Aceptar',
-                    });
-                }
-
-                // Función para guardar recepción
-                async function saveRecepcion() {
-                    const form = document.getElementById('recepcionForm');
-                    const esValido = validarEnvioRecepcion();
-                    if (!esValido) return;
-                    const botonGuardar = document.querySelector('#recepcionModal .modal-footer .btn-save');
-                    botonGuardar.disabled = true;
-                    
-                    try {
-                        const archivo = document.getElementById('fotoFacturaRecepcion').files[0];
-                        let modoContingencia = false;
-                        let iaVerificada = false;
-                        if (archivo) {
-                            if (!asistenteRecepcionIA) {
-                                modoContingencia = true;
-                            } else if (!asistenteRecepcionIA.getFacturaId()) {
-                                const extraccion = await asistenteRecepcionIA.extraerDesdeImagen(archivo);
-                                if (!extraccion.exito) {
-                                    if (!extraccion.contingencia) throw new Error(extraccion.error || 'No se pudo analizar la factura.');
-                                    modoContingencia = true;
-                                } else {
-                                    rellenarRecepcionDesdeFactura(extraccion.data);
-                                }
-                            }
-
-                            if (!modoContingencia) {
-                                establecerEstadoIARecepcion('Verificando los datos antes del registro...');
-                                const datosFormulario = {
-                                    numero_factura: document.getElementById('correlativo').value,
-                                    nombre_proveedor: document.querySelector('#proveedor option:checked').textContent,
-                                    productos: Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
-                                        nombre: fila.querySelector('.producto-select option:checked').textContent,
-                                        modelo: fila.querySelector('.producto-modelo').value,
-                                        marca: fila.querySelector('.producto-marca').value,
-                                        serial: fila.querySelector('.producto-serial').value,
-                                        cantidad: Number(fila.querySelector('input[name="cantidad[]"]').value),
-                                        costo: Number(fila.querySelector('input[name="costo[]"]').value)
-                                    }))
-                                };
-                                const verificacion = await asistenteRecepcionIA.verificarCoherencia(
-                                    asistenteRecepcionIA.getFacturaId(), datosFormulario
-                                );
-                                if (verificacion.error) {
-                                    if (!verificacion.contingencia) throw new Error(verificacion.error);
-                                    modoContingencia = true;
-                                } else if (!verificacion.exito) {
-                                    const discrepancias = verificacion.discrepancias || [];
-                                    const detalle = discrepancias.map(item =>
-                                        `${item.campo}: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"`
-                                    ).join('\n');
-                                    if (discrepancias.some(item => item.severidad === 'CRITICA')) {
-                                        establecerEstadoIARecepcion('Registro bloqueado: corrige las discrepancias críticas con la factura.', 'error');
-                                        alert(`La verificación encontró diferencias críticas. Corrige los datos antes de guardar.\n\n${detalle}`);
-                                        return;
-                                    }
-                                    if (!confirm(`Se encontraron diferencias con la factura:\n\n${detalle}\n\n¿Deseas guardar de todos modos?`)) return;
-                                    iaVerificada = true;
-                                } else {
-                                    iaVerificada = true;
-                                }
-                            }
-
-                            if (modoContingencia) {
-                                activarContingenciaIARecepcion();
-                                if (!confirm('El servicio de lectura automática por IA no está disponible temporalmente. Se ha habilitado el formulario manual. La factura se conservará al registrar. ¿Deseas continuar con el registro manual?')) return;
-                            }
-                        }
-
-                        if (validarEnvioRecepcion() && verificaproductos()) {
-                            const formData = new FormData(form);
-                            formData.delete('foto_factura');
-                            formData.append('accion', 'registrar');
-                            if (archivo) formData.append('factura_contingencia', archivo, archivo.name);
-                            if (modoContingencia) formData.append('modo_contingencia', 'true');
-                            if (iaVerificada) formData.append('ia_verificada', 'true');
-                            const response = await fetch('?pagina=recepcion', { method: 'POST', body: formData });
-                            const data = await response.json();
-                            if (data && data.status === 'success') {
-                                const mensaje = data.procesamiento_pendiente
-                                    ? 'Recepción registrada. La recepción quedó resguardada y marcada para procesamiento posterior.'
-                                    : data.factura_resguardada
-                                        ? 'Recepción registrada.'
-                                        : 'Recepción registrada correctamente.';
-                                document.getElementById('recepcionModal').style.display = 'none';
-                                await Swal.fire({
-                                    icon: 'success',
-                                    title: '¡Éxito!',
-                                    text: mensaje,
-                                    showConfirmButton: true,
-                                });
-                                location.reload();
-                            } else {
-                                await Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error al registrar recepción',
-                                    text: data.message || 'Error desconocido',
-                                    showConfirmButton: true,
-                                });
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error al guardar recepción:', error);
-                        establecerEstadoIARecepcion(error.message || 'Error al guardar recepción.', 'error');
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Error al registrar recepción',
-                            text: error.message || 'Por favor, intente nuevamente.',
-                            showConfirmButton: true
-                        });
-                    } finally {
-                        botonGuardar.disabled = false;
-                    }
-                }
-
-                // Función para ver detalles de recepción
-                function viewRecepcion(boton) {
-                    const datosFila = boton instanceof HTMLElement ? boton.dataset : {};
-                    const correlativo = datosFila.correlativo || boton;
-                    const proveedorFila = datosFila.proveedor || '';
-                    const fechaFila = datosFila.fecha || '';
-
-                    function actualizarInformacionGeneral(recepcion = {}) {
-                        const proveedor = proveedorFila || recepcion.nombre_proveedor || recepcion.proveedor;
-                        const fecha = fechaFila || recepcion.fecha || recepcion.fecha_recepcion;
-
-                        document.getElementById('viewCorrelativo').textContent = recepcion.correlativo || correlativo || 'N/A';
-                        document.getElementById('viewProveedor').textContent = proveedor || 'No disponible';
-                        document.getElementById('viewFecha').textContent = fecha || 'No disponible';
-                    }
-
-                    actualizarInformacionGeneral();
-
-                    // Cargar datos reales desde el backend
-                    fetch('?pagina=recepcion', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'accion=obtener_detalle_recepcion&correlativo=' + encodeURIComponent(correlativo)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data && data.status === 'success') {
-                            const recepcion = data.recepcion;
-                            actualizarInformacionGeneral(recepcion);
-                            
-                            // Cargar productos
-                            const productosTable = document.getElementById('viewProductos');
-                            productosTable.innerHTML = '';
-                            const productosRecepcion = recepcion.productos || data.productos || [];
-                            const subtotalProductos = productosRecepcion.reduce((suma, prod) =>
-                                suma + (Number(prod.cantidad) || 0) * (Number(prod.costo) || 0), 0);
-                            productosRecepcion.forEach(prod => {
-                                    const cantidad = Number(prod.cantidad) || 0;
-                                    const costo = Number(prod.costo) || 0;
-                                    const subtotal = cantidad * costo;
-                                    productosTable.innerHTML += `
-                                        <tr>
-                                            <td>${prod.producto || prod.nombre_producto || 'N/A'}</td>
-                                            <td>${cantidad}</td>
-                                            <td>$${costo.toFixed(2)}</td>
-                                            <td>$${subtotal.toFixed(2)}</td>
-                                        </tr>
-                                    `;
-                            });
-
-                            const subtotalFactura = recepcion.subtotal_factura === null || recepcion.subtotal_factura === undefined
-                                ? subtotalProductos
-                                : Number(recepcion.subtotal_factura);
-                            const ivaRegistrado = recepcion.porcentaje_iva !== null && recepcion.porcentaje_iva !== undefined &&
-                                recepcion.monto_iva !== null && recepcion.monto_iva !== undefined;
-                            document.getElementById('viewSubtotal').textContent = '$' + subtotalFactura.toFixed(2);
-                            document.getElementById('viewIvaPorcentaje').textContent = ivaRegistrado
-                                ? `${Number(recepcion.porcentaje_iva).toFixed(2)}%`
-                                : 'No registrado';
-                            document.getElementById('viewMontoIva').textContent = ivaRegistrado
-                                ? '$' + Number(recepcion.monto_iva).toFixed(2)
-                                : 'No registrado';
-                            document.getElementById('viewTotal').textContent = recepcion.total_factura !== null && recepcion.total_factura !== undefined
-                                ? '$' + Number(recepcion.total_factura).toFixed(2)
-                                : 'No registrado';
-                            
-                            // Observaciones
-                            document.getElementById('viewObservaciones').textContent = recepcion.observaciones || 'Sin observaciones';
-                            
-                            const modal = document.getElementById('viewModal');
-                            modal.style.display = 'block';
-                            modal.style.animation = 'fadeIn 0.3s ease';
-                        } else {
-                            actualizarInformacionGeneral();
-                            const modal = document.getElementById('viewModal');
-                            modal.style.display = 'block';
-                            modal.style.animation = 'fadeIn 0.3s ease';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error al cargar recepción:', error);
-                        actualizarInformacionGeneral();
-                        
-                        const modal = document.getElementById('viewModal');
-                        modal.style.display = 'block';
-                        modal.style.animation = 'fadeIn 0.3s ease';
-                    });
-                }
-
-                // Función para cerrar modal de detalles
-                function closeViewModal() {
-                    const modal = document.getElementById('viewModal');
-                    modal.style.animation = 'fadeOut 0.3s ease';
-                    setTimeout(() => {
-                        modal.style.display = 'none';
-                    }, 300);
-                }
-
-                // Función para abrir modal de anulación
-                function anularRecepcion(correlativo) {
-                    // Cargar datos reales desde el backend
-                    fetch('?pagina=recepcion', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'accion=obtener_recepcion&correlativo=' + encodeURIComponent(correlativo)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data && data.status === 'success') {
-                            const recepcion = data.recepcion;
-                            document.getElementById('anularCorrelativo').textContent = recepcion.correlativo || 'N/A';
-                            
-                            const modal = document.getElementById('anularModal');
-                            modal.style.display = 'block';
-                            modal.style.animation = 'fadeIn 0.3s ease';
-                        } else {
-                            // Fallback a datos simulados
-                            document.getElementById('anularCorrelativo').textContent = correlativo;
-                            
-                            const modal = document.getElementById('anularModal');
-                            modal.style.display = 'block';
-                            modal.style.animation = 'fadeIn 0.3s ease';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error al cargar recepción:', error);
-                        // Fallback a datos simulados
-                        document.getElementById('anularCorrelativo').textContent = correlativo;
-                        
-                        const modal = document.getElementById('anularModal');
-                        modal.style.display = 'block';
-                        modal.style.animation = 'fadeIn 0.3s ease';
-                    });
-                }
-
-                // Función para cerrar modal de anulación
-                function closeAnularModal() {
-                    const modal = document.getElementById('anularModal');
-                    modal.style.animation = 'fadeOut 0.3s ease';
-                    setTimeout(() => {
-                        modal.style.display = 'none';
-                    }, 300);
-                }
-
-                // Función para confirmar anulación
-                async function confirmarAnulacion() {
-                    const correlativo = document.getElementById('anularCorrelativo').textContent;
-                    
-                    // Enviar anulación al backend
-                    const formData = new FormData();
-                    formData.append('accion', 'anular');
-                    formData.append('correlativo', correlativo);
-                    
-                    const botonConfirmar = document.querySelector('#anularModal .btn-danger');
-                    botonConfirmar.disabled = true;
-                    try {
-                        const response = await fetch('?pagina=recepcion', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const data = await response.json();
-                        if (data && data.status === 'success') {
-                            document.getElementById('anularModal').style.display = 'none';
-                            await Swal.fire({
-                                icon: 'success',
-                                title: '¡Éxito!',
-                                text: data.message || 'La recepción se anuló correctamente.',
-                                confirmButtonText: 'OK'
-                            });
-                            location.reload();
-                        } else {
-                            await Swal.fire({
-                                icon: 'error',
-                                title: 'Error al anular recepción',
-                                text: data.message || 'Error desconocido',
-                                confirmButtonText: 'Entendido'
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error al anular recepción:', error);
-                        await Swal.fire({
-                            icon: 'error',
-                            title: 'Error al anular recepción',
-                            text: error.message || 'Por favor, intente nuevamente.',
-                            confirmButtonText: 'Entendido'
-                        });
-                    } finally {
-                        botonConfirmar.disabled = false;
-                    }
-                }
-
-                // Función para imprimir recepción
-                function imprimirRecepcion() {
-                    alert('Función para imprimir recepción (conectar con backend)');
-                }
-
-                // Función para buscar recepciones
-                function searchRecepcion() {
-                    const form = document.getElementById('searchForm');
-                    const formData = new FormData(form);
-                    
-                    alert('Búsqueda de recepciones\n(conectar con backend para mostrar resultados)');
-                    closeSearchModal();
-                }
-
-                // Event listeners para cerrar modales
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Cerrar modal de recepción
-                    const closeRecepcionModal = document.querySelector('#recepcionModal .close-modal');
-                    if (closeRecepcionModal) {
-                        closeRecepcionModal.addEventListener('click', closeModal);
-                    }
-
-                    // Cerrar modal de búsqueda
-                    const closeSearchModalBtn = document.querySelector('#searchModal .close-modal');
-                    if (closeSearchModalBtn) {
-                        closeSearchModalBtn.addEventListener('click', closeSearchModal);
-                    }
-
-                    // Cerrar modales al hacer clic fuera
-                    window.addEventListener('click', function(event) {
-                        const recepcionModal = document.getElementById('recepcionModal');
-                        const searchModal = document.getElementById('searchModal');
-                        const viewModal = document.getElementById('viewModal');
-                        const anularModal = document.getElementById('anularModal');
-                        
-                        if (event.target === recepcionModal) {
-                            closeModal();
-                        }
-                        if (event.target === searchModal) {
-                            closeSearchModal();
-                        }
-                        if (event.target === viewModal) {
-                            closeViewModal();
-                        }
-                        if (event.target === anularModal) {
-                            closeAnularModal();
-                        }
-                    });
-
-                    // Animaciones para filas de productos
-                    const productoRows = document.querySelectorAll('.producto-row');
-                    productoRows.forEach((row, index) => {
-                        row.style.animation = `slideDown 0.3s ease ${index * 0.1}s`;
-                    });
-
-                    // Inicializar contador de productos
-                    actualizarContadorProductos();
-
-                    const archivoFactura = document.getElementById('fotoFacturaRecepcion');
-                    archivoFactura.addEventListener('change', async function() {
-                        limpiarFacturaIARecepcion();
-                        const archivo = this.files[0];
-                        if (!archivo) return;
-                        if (archivo.size > 5 * 1024 * 1024) {
-                            this.value = '';
-                            establecerEstadoIARecepcion('El archivo debe ser menor a 5 MB.', 'error');
-                            return;
-                        }
-
-                        urlPreviewFacturaRecepcion = URL.createObjectURL(archivo);
-                        const contenedorPreview = document.getElementById('previewFacturaRecepcion');
-                        const previewImagen = document.getElementById('previewImagenRecepcion');
-                        const previewPdf = document.getElementById('previewPdfRecepcion');
-                        contenedorPreview.hidden = false;
-                        if (archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf')) {
-                            previewPdf.src = urlPreviewFacturaRecepcion;
-                            previewPdf.hidden = false;
-                        } else if (archivo.type.startsWith('image/')) {
-                            previewImagen.src = urlPreviewFacturaRecepcion;
-                            previewImagen.hidden = false;
-                        } else {
-                            this.value = '';
-                            limpiarFacturaIARecepcion();
-                            establecerEstadoIARecepcion('Selecciona una imagen o un archivo PDF.', 'error');
-                            return;
-                        }
-                        await analizarFacturaRecepcion(archivo);
-                    });
-                });
-
-                // Animaciones CSS
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes fadeIn {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    
-                    @keyframes fadeOut {
-                        from { opacity: 1; }
-                        to { opacity: 0; }
-                    }
-                    
-                    @keyframes slideDown {
-                        from {
-                            opacity: 0;
-                            transform: translateY(-20px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-                    
-                    @keyframes slideUp {
-                        from {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                        to {
-                            opacity: 0;
-                            transform: translateY(-20px);
-                        }
-                    }
-                `;
-                document.head.appendChild(style);
-            </script>
--->
 <?php
 $contenido_pagina = ob_get_clean();
 

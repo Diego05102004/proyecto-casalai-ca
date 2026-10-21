@@ -867,10 +867,10 @@ INSERT INTO `tbl_proveedores` (`id_proveedor`, `nombre_proveedor`, `rif_proveedo
 --
 
 CREATE TABLE `tbl_recepcion_productos` (
-  `id_recepcion` int(11) NOT NULL,
-  `id_proveedor` int(11) NOT NULL,
-  `fecha` date NOT NULL,
-  `correlativo` varchar(255) NOT NULL,
+    `id_recepcion` int(11) NOT NULL,
+    `id_proveedor` int(11) NOT NULL,
+    `fecha` date NOT NULL,
+    `correlativo` varchar(255) NOT NULL,
     `estado` enum('habilitado','anulado') NOT NULL DEFAULT 'habilitado',
     `subtotal_factura` decimal(12,2) DEFAULT NULL,
     `porcentaje_iva` decimal(7,2) DEFAULT NULL,
@@ -882,9 +882,9 @@ CREATE TABLE `tbl_recepcion_productos` (
 -- Volcado de datos para la tabla `tbl_recepcion_productos`
 --
 
-INSERT INTO `tbl_recepcion_productos` (`id_recepcion`, `id_proveedor`, `fecha`, `correlativo`, `estado`) VALUES
-(10, 1, '2025-07-22', '1235', 'habilitado'),
-(11, 1, '2025-07-27', '00012', 'habilitado');
+INSERT INTO `tbl_recepcion_productos` (`id_recepcion`, `id_proveedor`, `fecha`, `correlativo`, `estado`, `subtotal_factura`, `porcentaje_iva`, `monto_iva`, `total_factura`) VALUES
+(10, 2, '2025-07-22', '938210', 'habilitado', 2624.00, 16.00, 419.84, 3043.84),
+(11, 1, '2025-07-27', '012537', 'habilitado', 160.00, 16.00, 25.60, 185.60);
 
 --
 -- Índices para tablas volcadas

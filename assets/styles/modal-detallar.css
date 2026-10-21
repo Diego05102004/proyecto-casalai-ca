@@ -1,4 +1,11 @@
 /* Modal Header */
+#viewModal .modal-content.modal-large {
+    max-width: 95%;
+    width: 1300px;
+    max-height: 90vh;
+    margin-top: 8vh;
+}
+
 .modal-header-content {
     display: flex;
     align-items: center;

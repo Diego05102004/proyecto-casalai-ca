@@ -1,5 +1,5 @@
 /**
- * recepcion-new.js - Script unificado para la gestión de Recepciones
+ * recepcion.js - Script unificado para la gestión de Recepciones
  */
 
 // ==========================================
@@ -48,6 +48,17 @@ function protegerSelects(selectIds, interval = 1000) {
     }, interval);
 }
 
+function actualizarProteccionSelectsProductos() {
+    const idsProductos = [];
+    document.querySelectorAll('.producto-select').forEach((sel, index) => {
+        if (!sel.id) {
+            sel.id = 'producto_dinamico_' + index;
+        }
+        idsProductos.push(sel.id);
+    });
+    protegerSelects(['proveedor', ...idsProductos], 1000);
+}
+
 // ==========================================
 // 2. FUNCIONES AUXILIARES Y DE UTILIDAD
 // ==========================================
@@ -85,6 +96,109 @@ function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
     }
 }
 
+function validarKeyPressDecimal(e) {
+    let key = e.key;
+    if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
+        return;
+    }
+    if (['e', 'E', '+', '-'].includes(key)) {
+        e.preventDefault();
+        return;
+    }
+    if (!/[0-9.]/.test(key)) {
+        e.preventDefault();
+        return;
+    }
+    if (key === '.' && e.target.value.includes('.')) {
+        e.preventDefault();
+    }
+}
+
+function validarKeyUpDecimal(etiqueta, etiquetamensaje, mensaje) {
+    let val = etiqueta.val().trim();
+    let er = /^\d+(\.\d{1,2})?$/;
+    
+    if (val === '' || er.test(val)) {
+        etiquetamensaje.text("");
+        etiqueta.removeClass("is-invalid").addClass("is-valid");
+        return 1;
+    } else {
+        etiquetamensaje.text(mensaje);
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+}
+
+// Validación estricta para el campo IVA (Límite máximo de 99)
+function validarKeyUpIva(etiqueta, etiquetamensaje, mensaje) {
+    let valStr = etiqueta.val().trim();
+    let er = /^\d+(\.\d{1,2})?$/;
+    let valNum = parseFloat(valStr);
+
+    if (valStr === '') {
+        etiquetamensaje.text("");
+        etiqueta.removeClass("is-invalid is-valid");
+        return 1;
+    }
+
+    if (!er.test(valStr) || isNaN(valNum)) {
+        etiquetamensaje.text(mensaje || "*IVA inválido*");
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+
+    if (valNum > 99) {
+        etiqueta.val('99.00');
+        etiquetamensaje.text("*El porcentaje de IVA no puede ser mayor a 99%*");
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+
+    if (valNum < 0) {
+        etiqueta.val('0.00');
+        etiquetamensaje.text("*El porcentaje de IVA no puede ser menor a 0%*");
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+
+    etiquetamensaje.text("");
+    etiqueta.removeClass("is-invalid").addClass("is-valid");
+    return 1;
+}
+
+function validarKeyPressEntero(e) {
+    let key = e.key;
+    if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
+        return;
+    }
+    if (!/[0-9]/.test(key)) {
+        e.preventDefault();
+    }
+}
+
+function validarKeyUpEntero(etiqueta, etiquetamensaje, mensaje) {
+    let val = etiqueta.val().trim();
+    let er = /^[0-9]+$/;
+    
+    if (val !== '' && er.test(val) && parseInt(val, 10) > 0) {
+        etiquetamensaje.text("");
+        etiqueta.removeClass("is-valid is-invalid").addClass("is-valid");
+        return 1;
+    } else {
+        etiquetamensaje.text(mensaje);
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+}
+
+function limitarDosDecimales(input) {
+    let valor = input.value.replace(',', '.');
+    let partes = valor.split('.');
+    if (partes.length > 1) {
+        input.value = partes[0] + '.' + partes[1].substring(0, 2);
+    }
+}
+
 function space(str) {
     if (!str) return '';
     return str.replace(/\s{2,}/g, ' ');
@@ -118,13 +232,39 @@ function validarEnvioRecepcion() {
         $("#proveedor").removeClass("is-invalid").addClass("is-valid");
         $("#sproveedor").text("");
     } else {
-        $("#proveedor").removeClass("is-invalid").addClass("is-invalid");
+        $("#proveedor").removeClass("is-valid").addClass("is-invalid");
         $("#sproveedor").text("*Debe seleccionar un proveedor*");
         esValido = false;
     }
 
+    $("#productosList .producto-row").each(function() {
+        let $prodSelect =$(this).find('.producto-select');
+        if (!$prodSelect.val()) {$prodSelect.removeClass("is-valid").addClass("is-invalid");
+            $(this).find('.sproducto-msg').text("*Debe seleccionar un producto*");
+            esValido = false;
+        } else {
+            $prodSelect.removeClass("is-invalid").addClass("is-valid");
+            $(this).find('.sproducto-msg').text("");
+        }
+
+        let $costoInput =$(this).find('.costo-input');
+        if (validarKeyUpDecimal($costoInput,$(this).find('.scosto-msg'), "*Costo inválido*") == 0) {
+            esValido = false;
+        }
+
+        let $cantInput =$(this).find('.cantidad-input');
+        if (validarKeyUpEntero($cantInput,$(this).find('.scantidad-msg'), "*Cantidad inválida*") == 0) {
+            esValido = false;
+        }
+    });
+
+    let $ivaInput =$("#porcentajeIvaRecepcion");
+    if (validarKeyUpIva($ivaInput,$("#sporcentajeIva"), "*IVA inválido (0-99%)*") == 0) {
+        esValido = false;
+    }
+
     if (!esValido) {
-        mensajes('error', 'Campos incompletos', 'Por favor complete los campos obligatorios (*)');
+        mensajes('error', 'Campos incompletos', 'Por favor complete correctamente los campos obligatorios (*)');
     }
 
     return esValido;
@@ -153,18 +293,24 @@ function verificaproductos() {
 }
 
 // ==========================================
-// 4. INTEGRACIÓN SEGURA CON EL MICROSERVICIO (LAZY INITIALIZATION)
+// 4. INTEGRACIÓN SEGURA CON EL MICROSERVICIO (IA)
 // ==========================================
 let asistenteRecepcionIA = null;
 let urlPreviewFacturaRecepcion = null;
+let datosFacturaExtraidaIA = null;
+let discrepanciasActivasIA = null;
 
 function obtenerAsistenteIA() {
     if (!asistenteRecepcionIA && typeof AsistenteRecepcionIA !== 'undefined') {
-        asistenteRecepcionIA = new AsistenteRecepcionIA({
-            apiUrl: 'http://127.0.0.1:8000',
-            debug: true,
-            selectores: { alertas: '#estadoIARecepcion' }
-        });
+        try {
+            asistenteRecepcionIA = new AsistenteRecepcionIA({
+                apiUrl: 'http://127.0.0.1:8000',
+                debug: true,
+                selectores: { alertas: '#estadoIARecepcion' }
+            });
+        } catch (e) {
+            console.error('Error al instanciar AsistenteRecepcionIA:', e);
+        }
     }
     return asistenteRecepcionIA;
 }
@@ -172,7 +318,13 @@ function obtenerAsistenteIA() {
 function establecerEstadoIARecepcion(mensaje, estado = 'info') {
     const estadoEl = document.getElementById('estadoIARecepcion');
     if (!estadoEl) return;
-    estadoEl.textContent = mensaje;
+    
+    if (mensaje && mensaje.includes('<')) {
+        estadoEl.innerHTML = mensaje;
+    } else {
+        estadoEl.textContent = mensaje;
+    }
+    
     estadoEl.dataset.state = estado;
     estadoEl.hidden = !mensaje;
 }
@@ -190,6 +342,7 @@ function normalizarTextoRecepcion(valor) {
 }
 
 function buscarOpcionCatalogo(select, texto) {
+    if (!select) return null;
     const buscado = normalizarTextoRecepcion(texto);
     if (!buscado) return null;
     const opciones = Array.from(select.options).filter(opcion => opcion.value);
@@ -203,52 +356,104 @@ function buscarOpcionCatalogo(select, texto) {
 }
 
 function rellenarRecepcionDesdeFactura(factura) {
+    if (!factura) return;
+    datosFacturaExtraidaIA = factura;
+    
     const correlativo = document.getElementById('correlativo');
-    if (factura.numero_factura) correlativo.value = factura.numero_factura;
+    if (factura.numero_factura && correlativo) correlativo.value = factura.numero_factura;
 
     const proveedor = document.getElementById('proveedor');
     const proveedorEncontrado = buscarOpcionCatalogo(proveedor, factura.nombre_proveedor);
-    if (proveedorEncontrado) proveedor.value = proveedorEncontrado.value;
+    if (proveedorEncontrado && proveedor) proveedor.value = proveedorEncontrado.value;
 
     const productosDetectados = Array.isArray(factura.productos) ? factura.productos : [];
     if (productosDetectados.length) {
         const productosList = document.getElementById('productosList');
-        while (productosList.querySelectorAll('.producto-row').length > 1) {
-            productosList.lastElementChild.remove();
-        }
-        productosList.querySelector('.producto-row').querySelectorAll('select, input').forEach(campo => {
-            if (campo.classList.contains('subtotal-display')) campo.value = '$0.00';
-            else campo.value = '';
-        });
-
-        productosDetectados.forEach((producto, indice) => {
-            const fila = indice === 0
-                ? productosList.querySelector('.producto-row')
-                : addProductoRow();
-            const selector = fila.querySelector('.producto-select');
-            const opcion = buscarOpcionCatalogo(selector, producto.nombre);
-            if (opcion) {
-                selector.value = opcion.value;
-                seleccionarProducto(selector);
+        if (productosList) {
+            while (productosList.querySelectorAll('.producto-row').length > 1) {
+                productosList.lastElementChild.remove();
             }
-            fila.querySelector('input[name="cantidad[]"]').value = producto.cantidad > 0 ? producto.cantidad : 1;
-            fila.querySelector('input[name="costo[]"]').value = Number(producto.costo_unitario || 0).toFixed(2);
-            calcularSubtotal(fila.querySelector('input[name="costo[]"]'));
-        });
+            const primeraFila = productosList.querySelector('.producto-row');
+            if (primeraFila) {
+                primeraFila.querySelectorAll('select, input').forEach(campo => {
+                    if (campo.classList.contains('subtotal-display')) campo.value = '$0.00';
+                    else campo.value = '';
+                });
+            }
+
+            productosDetectados.forEach((producto, indice) => {
+                const fila = indice === 0
+                    ? productosList.querySelector('.producto-row')
+                    : addProductoRow();
+                if (!fila) return;
+                const selector = fila.querySelector('.producto-select');
+                const opcion = buscarOpcionCatalogo(selector, producto.nombre);
+                if (opcion && selector) {
+                    selector.value = opcion.value;
+                    seleccionarProducto(selector);
+                }
+                const inputCant = fila.querySelector('input[name="cantidad[]"]');
+                if (inputCant) inputCant.value = producto.cantidad > 0 ? producto.cantidad : 1;
+                
+                const inputCosto = fila.querySelector('input[name="costo[]"]');
+                if (inputCosto) {
+                    inputCosto.value = Number(producto.costo_unitario || producto.costo || 0).toFixed(2);
+                    calcularSubtotal(inputCosto);
+                }
+            });
+        }
     }
 
     const inputIva = document.getElementById('porcentajeIvaRecepcion');
-    if (inputIva) inputIva.value = Number(factura.porcentaje_iva || 0).toFixed(2);
+    if (inputIva) {
+        let ivaVal = Number(factura.porcentaje_iva || 0);
+        if (ivaVal > 99) ivaVal = 99;
+        inputIva.value = ivaVal.toFixed(2);
+    }
     calcularTotal();
     actualizarContadorProductos();
-    establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.`);
+
+    const camposPendientes = [];
+    if (factura.nombre_proveedor && !proveedorEncontrado) camposPendientes.push('proveedor');
+    const primerSelector = document.querySelector('.producto-select');
+    if (productosDetectados.some(producto => primerSelector && !buscarOpcionCatalogo(primerSelector, producto.nombre))) {
+        camposPendientes.push('selección de productos del catálogo');
+    }
+    const nota = camposPendientes.length
+        ? ` Revisa manualmente: ${camposPendientes.join(' y ')}.`
+        : ' Revisa los datos antes de guardar.';
+    
+    establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.${nota}`);
+
+    const resultadoIARecepcionEl = document.getElementById('resultadoIARecepcion');
+    if (resultadoIARecepcionEl) {
+        resultadoIARecepcionEl.textContent =
+            `Proveedor detectado: ${factura.nombre_proveedor || 'no detectado'}\n` +
+            `Productos detectados: ${productosDetectados.length}\n` +
+            `Subtotal: $${Number(factura.subtotal_factura || 0).toFixed(2)}\n` +
+            `IVA: ${Number(factura.porcentaje_iva || 0).toFixed(2)}% ($${Number(factura.monto_iva || 0).toFixed(2)})\n` +
+            `Total factura: $${Number(factura.total_factura || 0).toFixed(2)}\n` +
+            `Confianza OCR: ${(Number(factura.confianza_promedio || 0) * 100).toFixed(1)}%`;
+        resultadoIARecepcionEl.hidden = false;
+    }
 }
 
 function limpiarFacturaIARecepcion() {
-    const aiClient = obtenerAsistenteIA();
-    if (aiClient) aiClient.limpiarCache();
-    if (urlPreviewFacturaRecepcion) URL.revokeObjectURL(urlPreviewFacturaRecepcion);
+    try {
+        const aiClient = obtenerAsistenteIA();
+        if (aiClient && typeof aiClient.limpiarCache === 'function') {
+            aiClient.limpiarCache();
+        }
+    } catch (e) {
+        console.warn('Aviso limpiando caché IA:', e);
+    }
+
+    if (urlPreviewFacturaRecepcion) {
+        URL.revokeObjectURL(urlPreviewFacturaRecepcion);
+    }
     urlPreviewFacturaRecepcion = null;
+    discrepanciasActivasIA = null;
+    datosFacturaExtraidaIA = null;
     
     const previewFac = document.getElementById('previewFacturaRecepcion');
     const prevImg = document.getElementById('previewImagenRecepcion');
@@ -263,19 +468,24 @@ function limpiarFacturaIARecepcion() {
 }
 
 async function analizarFacturaRecepcion(archivo) {
-    const aiClient = obtenerAsistenteIA();
-    if (!aiClient) {
-        activarContingenciaIARecepcion('Librería del microservicio no disponible.');
-        return;
+    try {
+        const aiClient = obtenerAsistenteIA();
+        if (!aiClient) {
+            activarContingenciaIARecepcion('Librería del microservicio no disponible.');
+            return;
+        }
+        establecerEstadoIARecepcion('Analizando factura con OCR...');
+        const resultado = await aiClient.extraerDesdeImagen(archivo);
+        if (!resultado || !resultado.exito) {
+            if (resultado && resultado.contingencia) activarContingenciaIARecepcion(resultado.error);
+            else establecerEstadoIARecepcion(`No se pudo analizar la factura: ${resultado?.error || 'error'}`, 'error');
+            return;
+        }
+        rellenarRecepcionDesdeFactura(resultado.data);
+    } catch (error) {
+        console.error('Error al analizar factura con IA:', error);
+        activarContingenciaIARecepcion(error.message || 'Error de comunicación con el microservicio.');
     }
-    establecerEstadoIARecepcion('Analizando factura con OCR...');
-    const resultado = await aiClient.extraerDesdeImagen(archivo);
-    if (!resultado.exito) {
-        if (resultado.contingencia) activarContingenciaIARecepcion(resultado.error);
-        else establecerEstadoIARecepcion(`No se pudo analizar la factura: ${resultado.error || 'error'}`, 'error');
-        return;
-    }
-    rellenarRecepcionDesdeFactura(resultado.data);
 }
 
 // ==========================================
@@ -316,16 +526,36 @@ function addProductoRow() {
 
     const newRow = firstRow.cloneNode(true);
     newRow.style.animation = 'slideDown 0.3s ease';
-    newRow.querySelector('.producto-select').value = '';
-    newRow.querySelector('.producto-codigo').value = '';
-    newRow.querySelector('.producto-marca').value = '';
-    newRow.querySelector('.producto-modelo').value = '';
-    newRow.querySelector('.producto-serial').value = '';
-    newRow.querySelector('input[name="cantidad[]"]').value = '';
-    newRow.querySelector('input[name="costo[]"]').value = '';
-    newRow.querySelector('.subtotal-display').value = '$0.00';
+    
+    const select = newRow.querySelector('.producto-select');
+    if (select) {
+        select.value = '';
+        select.removeAttribute('id');
+    }
+
+    const codigoInput = newRow.querySelector('.producto-codigo');
+    if (codigoInput) codigoInput.value = '';
+    const marcaInput = newRow.querySelector('.producto-marca');
+    if (marcaInput) marcaInput.value = '';
+    const modeloInput = newRow.querySelector('.producto-modelo');
+    if (modeloInput) modeloInput.value = '';
+    const serialInput = newRow.querySelector('.producto-serial');
+    if (serialInput) serialInput.value = '';
+    
+    const cantInput = newRow.querySelector('input[name="cantidad[]"]');
+    if (cantInput) cantInput.value = '';
+    const costoInput = newRow.querySelector('input[name="costo[]"]');
+    if (costoInput) costoInput.value = '';
+    
+    const subtotalDisplay = newRow.querySelector('.subtotal-display');
+    if (subtotalDisplay) subtotalDisplay.value = '$0.00';
+
+    newRow.querySelectorAll('.span-value').forEach(el => el.textContent = '');
+    newRow.querySelectorAll('.is-valid, .is-invalid').forEach(el => el.classList.remove('is-valid', 'is-invalid'));
+
     productosList.appendChild(newRow);
     actualizarContadorProductos();
+    actualizarProteccionSelectsProductos();
     return newRow;
 }
 
@@ -333,18 +563,22 @@ function seleccionarProducto(select) {
     const opcion = select.selectedOptions[0];
     const fila = select.closest('.producto-row');
     if (!fila) return;
-    fila.querySelector('.producto-codigo').value = opcion?.dataset.codigo || '';
-    fila.querySelector('.producto-marca').value = opcion?.dataset.marca || '';
-    fila.querySelector('.producto-modelo').value = opcion?.dataset.modelo || '';
-    fila.querySelector('.producto-serial').value = opcion?.dataset.serial || '';
+    const codigoInput = fila.querySelector('.producto-codigo');
+    if (codigoInput) codigoInput.value = opcion?.dataset.codigo || '';
+    const marcaInput = fila.querySelector('.producto-marca');
+    if (marcaInput) marcaInput.value = opcion?.dataset.marca || '';
+    const modeloInput = fila.querySelector('.producto-modelo');
+    if (modeloInput) modeloInput.value = opcion?.dataset.modelo || '';
+    const serialInput = fila.querySelector('.producto-serial');
+    if (serialInput) serialInput.value = opcion?.dataset.serial || '';
     calcularSubtotal(select);
 }
 
 function calcularSubtotal(input) {
     const row = input.closest('.producto-row');
     if (!row) return;
-    const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
-    const costo = parseFloat(row.querySelector('input[name="costo[]"]').value) || 0;
+    const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]')?.value) || 0;
+    const costo = parseFloat(row.querySelector('input[name="costo[]"]')?.value) || 0;
     const subtotal = cantidad * costo;
     const display = row.querySelector('.subtotal-display');
     if (display) display.value = '$' + subtotal.toFixed(2);
@@ -359,7 +593,9 @@ function calcularTotal() {
         return suma + cantidad * costo;
     }, 0);
 
-    const porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
+    let porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
+    if (porcentajeIva > 99) porcentajeIva = 99;
+
     const montoIva = Math.round((subtotal * (porcentajeIva / 100) + Number.EPSILON) * 100) / 100;
 
     if (document.getElementById('subtotalRecepcion')) document.getElementById('subtotalRecepcion').textContent = '$' + subtotal.toFixed(2);
@@ -381,9 +617,203 @@ function removeProductoRow(button) {
             row.remove();
             actualizarContadorProductos();
             calcularTotal();
+            actualizarProteccionSelectsProductos();
+            evaluarDiscrepanciasInteractivas();
         }, 300);
     } else {
         alert('Debe haber al menos un producto');
+    }
+}
+
+// ==========================================
+// CONSTRUCTOR GRANULAR Y EVALUADOR COMPLETO
+// ==========================================
+function construirListaGranularDiscrepancias(discrepanciasRaw) {
+    const listaGranular = [];
+
+    // 1. Evaluación de IVA %
+    if (datosFacturaExtraidaIA && datosFacturaExtraidaIA.porcentaje_iva !== undefined) {
+        const ivaFactura = Number(datosFacturaExtraidaIA.porcentaje_iva || 0);
+        const ivaFormulario = Number(document.getElementById('porcentajeIvaRecepcion')?.value || 0);
+        
+        if (Math.abs(ivaFormulario - ivaFactura) > 0.01) {
+            listaGranular.push({
+                tipo: 'porcentaje_iva',
+                campo: 'Porcentaje de IVA (%)',
+                valor_factura: `${ivaFactura.toFixed(2)}%`,
+                valor_formulario: `${ivaFormulario.toFixed(2)}%`
+            });
+        }
+    }
+
+    // 2. Evaluación de otros campos y productos
+    discrepanciasRaw.forEach(item => {
+        if (item.campo.toLowerCase().includes('producto')) {
+            const indexMatch = item.campo.match(/\d+/);
+            const idx = indexMatch ? parseInt(indexMatch[0], 10) - 1 : 0;
+            const productoFactura = datosFacturaExtraidaIA?.productos?.[idx] || {};
+
+            const filaForm = document.querySelectorAll('#productosList .producto-row')[idx];
+            const nombreForm = filaForm?.querySelector('.producto-select option:checked')?.textContent?.trim() || item.valor_formulario;
+            const costoForm = Number(filaForm?.querySelector('input[name="costo[]"]')?.value || 0);
+            const cantidadForm = Number(filaForm?.querySelector('input[name="cantidad[]"]')?.value || 0);
+
+            const nombreFactura = productoFactura.nombre || item.valor_factura;
+            const costoFactura = Number(productoFactura.costo_unitario || productoFactura.costo || 0);
+            const cantidadFactura = Number(productoFactura.cantidad || 0);
+
+            // Diferencia en Nombre
+            if (normalizarTextoRecepcion(nombreForm) !== normalizarTextoRecepcion(nombreFactura)) {
+                listaGranular.push({
+                    tipo: 'producto_nombre',
+                    index: idx,
+                    campo: `Producto ${idx + 1} (Nombre)`,
+                    valor_factura: nombreFactura !== 'No encontrado' ? nombreFactura : 'Según factura',
+                    valor_formulario: nombreForm || 'Sin seleccionar'
+                });
+            }
+
+            // Diferencia en Costo Unitario
+            if (costoFactura > 0 && Math.abs(costoForm - costoFactura) > 0.01) {
+                listaGranular.push({
+                    tipo: 'producto_costo',
+                    index: idx,
+                    campo: `Producto ${idx + 1} (Costo Unitario)`,
+                    valor_factura: `$${costoFactura.toFixed(2)}`,
+                    valor_formulario: `$${costoForm.toFixed(2)}`
+                });
+            }
+
+            // Diferencia en Cantidad
+            if (cantidadFactura > 0 && cantidadForm !== cantidadFactura) {
+                listaGranular.push({
+                    tipo: 'producto_cantidad',
+                    index: idx,
+                    campo: `Producto ${idx + 1} (Cantidad)`,
+                    valor_factura: `${cantidadFactura}`,
+                    valor_formulario: `${cantidadForm}`
+                });
+            }
+
+            if (!listaGranular.some(g => g.index === idx)) {
+                listaGranular.push({
+                    tipo: 'producto_generico',
+                    index: idx,
+                    campo: item.campo,
+                    valor_factura: item.valor_factura,
+                    valor_formulario: item.valor_formulario
+                });
+            }
+        } else if (item.campo.toLowerCase().includes('factura')) {
+            listaGranular.push({
+                tipo: 'factura',
+                campo: item.campo,
+                valor_factura: item.valor_factura,
+                valor_formulario: item.valor_formulario
+            });
+        } else if (item.campo.toLowerCase().includes('proveedor')) {
+            listaGranular.push({
+                tipo: 'proveedor',
+                campo: item.campo,
+                valor_factura: item.valor_factura,
+                valor_formulario: item.valor_formulario
+            });
+        }
+    });
+
+    return listaGranular;
+}
+
+function evaluarDiscrepanciasInteractivas() {
+    if (!discrepanciasActivasIA || !discrepanciasActivasIA.listaOriginal) return;
+
+    const correlativoForm = space(document.getElementById('correlativo')?.value || '').trim();
+    const proveedorForm = document.querySelector('#proveedor option:checked')?.textContent?.trim() || '';
+    const ivaForm = Number(document.getElementById('porcentajeIvaRecepcion')?.value || 0);
+
+    const productosForm = Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
+        nombre: fila.querySelector('.producto-select option:checked')?.textContent?.trim() || '',
+        cantidad: Number(fila.querySelector('input[name="cantidad[]"]')?.value || 0),
+        costo: Number(fila.querySelector('input[name="costo[]"]')?.value || 0)
+    }));
+
+    const pendientes = [];
+
+    discrepanciasActivasIA.listaGranular.forEach(item => {
+        let resuelto = false;
+
+        if (item.tipo === 'porcentaje_iva') {
+            const ivaFactura = Number(datosFacturaExtraidaIA?.porcentaje_iva || 0);
+            if (Math.abs(ivaForm - ivaFactura) <= 0.01) {
+                resuelto = true;
+            } else {
+                item.valor_formulario = `${ivaForm.toFixed(2)}%`;
+            }
+        } else if (item.tipo === 'factura') {
+            if (normalizarTextoRecepcion(correlativoForm) === normalizarTextoRecepcion(item.valor_factura)) {
+                resuelto = true;
+            } else {
+                item.valor_formulario = correlativoForm || 'Vacio';
+            }
+        } else if (item.tipo === 'proveedor') {
+            if (normalizarTextoRecepcion(proveedorForm) === normalizarTextoRecepcion(item.valor_factura)) {
+                resuelto = true;
+            } else {
+                item.valor_formulario = proveedorForm || 'Sin seleccionar';
+            }
+        } else if (item.tipo.startsWith('producto_')) {
+            const idx = item.index;
+            const prodForm = productosForm[idx];
+            const prodFactura = datosFacturaExtraidaIA?.productos?.[idx] || {};
+
+            if (prodForm) {
+                if (item.tipo === 'producto_nombre') {
+                    const nombreFactura = prodFactura.nombre || item.valor_factura;
+                    if (normalizarTextoRecepcion(prodForm.nombre) === normalizarTextoRecepcion(nombreFactura)) {
+                        resuelto = true;
+                    } else {
+                        item.valor_formulario = prodForm.nombre || 'Sin seleccionar';
+                    }
+                } else if (item.tipo === 'producto_costo') {
+                    const costoFactura = Number(prodFactura.costo_unitario || prodFactura.costo || 0);
+                    if (Math.abs(prodForm.costo - costoFactura) <= 0.01) {
+                        resuelto = true;
+                    } else {
+                        item.valor_formulario = `$${prodForm.costo.toFixed(2)}`;
+                    }
+                } else if (item.tipo === 'producto_cantidad') {
+                    const cantFactura = Number(prodFactura.cantidad || 0);
+                    if (prodForm.cantidad === cantFactura) {
+                        resuelto = true;
+                    } else {
+                        item.valor_formulario = `${prodForm.cantidad}`;
+                    }
+                } else if (item.tipo === 'producto_generico') {
+                    if (normalizarTextoRecepcion(prodForm.nombre) === normalizarTextoRecepcion(item.valor_factura)) {
+                        resuelto = true;
+                    }
+                }
+            }
+        }
+
+        if (!resuelto) {
+            pendientes.push(item);
+        }
+    });
+
+    if (pendientes.length > 0) {
+        const detalleHTML = pendientes.map(item =>
+            `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
+        ).join('');
+
+        const mensajeBloqueoHTML = 
+            `<div><b>Registro bloqueado:</b> corrige las discrepancias críticas con la factura.</div>` +
+            `<ul style="margin: 8px 0 0 18px; padding: 0; text-align: left; font-size: 0.9em; list-style-type: disc;">${detalleHTML}</ul>`;
+
+        establecerEstadoIARecepcion(mensajeBloqueoHTML, 'error');
+    } else {
+        const mensajeExitoHTML = `<b>Registro Desbloqueado:</b> discrepancias críticas corregidas, puede proceder a incluir la recepción.`;
+        establecerEstadoIARecepcion(mensajeExitoHTML, 'success');
     }
 }
 
@@ -424,6 +854,7 @@ async function saveRecepcion(event) {
                 const datosFormulario = {
                     numero_factura: document.getElementById('correlativo').value,
                     nombre_proveedor: document.querySelector('#proveedor option:checked').textContent,
+                    porcentaje_iva: Number(document.getElementById('porcentajeIvaRecepcion').value || 0),
                     productos: Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
                         nombre: fila.querySelector('.producto-select option:checked').textContent,
                         modelo: fila.querySelector('.producto-modelo').value,
@@ -436,25 +867,31 @@ async function saveRecepcion(event) {
                 const verificacion = await aiClient.verificarCoherencia(
                     aiClient.getFacturaId(), datosFormulario
                 );
-                if (verificacion.error) {
-                    if (!verificacion.contingencia) throw new Error(verificacion.error);
-                    modoContingencia = true;
-                } else if (!verificacion.exito) {
-                    const discrepancias = verificacion.discrepancias || [];
-                    const detalle = discrepancias.map(item =>
-                        `${item.campo}: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"`
-                    ).join('\n');
-                    if (discrepancias.some(item => item.severidad === 'CRITICA')) {
-                        establecerEstadoIARecepcion('Registro bloqueado: corrige las discrepancias críticas con la factura.', 'error');
-                        alert(`La verificación encontró diferencias críticas. Corrige los datos antes de guardar.\n\n${detalle}`);
-                        if (botonGuardar) botonGuardar.disabled = false;
-                        return;
-                    }
-                    if (!confirm(`Se encontraron diferencias con la factura:\n\n${detalle}\n\n¿Deseas guardar de todos modos?`)) {
-                        if (botonGuardar) botonGuardar.disabled = false;
-                        return;
-                    }
-                    iaVerificada = true;
+                
+                const discrepanciasRaw = verificacion.discrepancias || [];
+                const listaGranular = construirListaGranularDiscrepancias(discrepanciasRaw);
+
+                if (listaGranular.length > 0) {
+                    discrepanciasActivasIA = {
+                        listaOriginal: discrepanciasRaw,
+                        listaGranular: listaGranular
+                    };
+
+                    const detalleHTML = listaGranular.map(item =>
+                        `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
+                    ).join('');
+
+                    evaluarDiscrepanciasInteractivas();
+
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Diferencias detectadas',
+                        html: `La verificación encontró diferencias con la factura. Corrige todos los datos antes de guardar.<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
+                        confirmButtonText: 'Entendido'
+                    });
+
+                    if (botonGuardar) botonGuardar.disabled = false;
+                    return;
                 } else {
                     iaVerificada = true;
                 }
@@ -493,16 +930,19 @@ async function saveRecepcion(event) {
                 const proveedorNombre = String(rec.nombre_proveedor || $('#proveedor option:checked').text() || '');
                 const totalMontoStr = document.getElementById('totalValue')?.textContent || '$0.00';
                 
+                let botonesAccion = `<button class="btn-action btn-detallar" title="Ver Detalles" data-correlativo="${correlativoNum}" data-proveedor="${proveedorNombre}" data-fecha="${fechaRaw}" onclick="viewRecepcion(this)"><img src="assets/img/eye.svg"></button>`;
+                
+                if (typeof rolUsuarioActual !== 'undefined' && rolUsuarioActual === 'Administrador') {
+                    botonesAccion += `<button class="btn-action btn-anular" title="Anular Recepción" onclick="anularRecepcion('${correlativoNum}')"><img src="assets/img/circle-x.svg"></button>`;
+                }
+
                 const $nuevaFila =$(`<tr>
                     <td data-order="${fechaRaw}">${nuevaFecha}</td>
                     <td>${correlativoNum}</td>
                     <td>${proveedorNombre}</td>
                     <td>${totalMontoStr}</td>
                     <td class="action-buttons">
-                        <button class="btn-action btn-detallar" title="Ver Detalles" data-correlativo="${correlativoNum}" data-proveedor="${proveedorNombre}" data-fecha="${fechaRaw}" onclick="viewRecepcion(this)"><img src="assets/img/eye.svg"></button>
-                        <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'Administrador'): ?>
-                        <button class="btn-action btn-anular" title="Anular Recepción" onclick="anularRecepcion('${correlativoNum}')"><img src="assets/img/circle-x.svg"></button>
-                        <?php endif; ?>
+                        ${botonesAccion}
                     </td>
                 </tr>`);
 
@@ -566,23 +1006,54 @@ function viewRecepcion(boton) {
             if (productosTable) {
                 productosTable.innerHTML = '';
                 const productosRecepcion = recepcion.productos || data.productos || [];
-                const subtotalProductos = productosRecepcion.reduce((suma, prod) => suma + (Number(prod.cantidad) || 0) * (Number(prod.costo) || 0), 0);
                 
+                const subtotalFactura = recepcion.subtotal_factura !== undefined && recepcion.subtotal_factura !== null ? Number(recepcion.subtotal_factura) : 0;
+                const porcentajeIva = recepcion.porcentaje_iva !== undefined && recepcion.porcentaje_iva !== null ? Number(recepcion.porcentaje_iva) : 0;
+                const montoIva = recepcion.monto_iva !== undefined && recepcion.monto_iva !== null ? Number(recepcion.monto_iva) : 0;
+                const totalFactura = recepcion.total_factura !== undefined && recepcion.total_factura !== null ? Number(recepcion.total_factura) : (subtotalFactura + montoIva);
+
                 productosRecepcion.forEach(prod => {
                     const cantidad = Number(prod.cantidad) || 0;
                     const costo = Number(prod.costo) || 0;
+                    const subtotalItem = cantidad * costo;
+                    
+                    const codigo = prod.codigo || prod.id_producto || 'N/A';
+                    const nombreProd = prod.producto || prod.nombre_producto || 'N/A';
+                    const marca = prod.marca || prod.nombre_marca || 'N/A';
+                    const modelo = prod.modelo || prod.nombre_modelo || 'N/A';
+                    const serial = prod.serial || 'N/A';
+
                     productosTable.innerHTML += `
                         <tr>
-                            <td>${prod.producto || prod.nombre_producto || 'N/A'}</td>
+                            <td>${nombreProd}</td>
+                            <td>${codigo}</td>
+                            <td>${marca}</td>
+                            <td>${modelo}</td>
+                            <td>${serial}</td>
                             <td>${cantidad}</td>
                             <td>$${costo.toFixed(2)}</td>
-                            <td>$${(cantidad * costo).toFixed(2)}</td>
+                            <td>$${subtotalItem.toFixed(2)}</td>
                         </tr>
                     `;
                 });
 
-                if (document.getElementById('viewSubtotal')) document.getElementById('viewSubtotal').textContent = '$' + subtotalProductos.toFixed(2);
-                if (document.getElementById('viewTotal')) document.getElementById('viewTotal').textContent = '$' + (recepcion.total_factura ? Number(recepcion.total_factura).toFixed(2) : subtotalProductos.toFixed(2));
+                if (document.getElementById('viewSubtotal')) {
+                    document.getElementById('viewSubtotal').textContent = '$' + subtotalFactura.toFixed(2);
+                }
+                
+                const ivaPorcentajeEl = document.getElementById('viewIvaPorcentaje');
+                if (ivaPorcentajeEl) {
+                    ivaPorcentajeEl.textContent = porcentajeIva > 0 ? porcentajeIva + '%' : '0%';
+                }
+                
+                const ivaMontoEl = document.getElementById('viewMontoIva');
+                if (ivaMontoEl) {
+                    ivaMontoEl.textContent = montoIva > 0 ? '$' + montoIva.toFixed(2) : 'No registrado';
+                }
+
+                if (document.getElementById('viewTotal')) {
+                    document.getElementById('viewTotal').textContent = '$' + totalFactura.toFixed(2);
+                }
             }
         }
         const modal = document.getElementById('viewModal');
@@ -650,7 +1121,7 @@ async function confirmarAnulacion() {
             if ($.fn.DataTable.isDataTable('table.table-info')) {
                 const tabla = $('table.table-info').DataTable();
                 tabla.rows().every(function() {
-                    let $row =$(this.node());
+                    let $row = $(this.node());
                     let rowCorrelativo = $row.find('td:eq(1)').text().trim();
                     if (rowCorrelativo === correlativo) {
                         tabla.row(this).remove();
@@ -690,27 +1161,54 @@ async function confirmarAnulacion() {
 // 7. INICIALIZACIÓN DOCUMENT READY
 // ==========================================
 $(document).ready(function() {
-    // Inicialización de la tabla
-    var $tabla =$('table.table-info, table[data-datatable]');
-    if ($tabla.length && !$.fn.DataTable.isDataTable($tabla)) {$tabla.DataTable({
-            language: { url: 'assets/public/js/es-ES.json' },
-            scrollX: true,
-            scrollCollapse: true,
-            order: [[0, 'desc']],
-            initComplete: function () {
-                var api = this.api();
-                var $wrapper =$(api.table().container());
-                api.columns.adjust();
+    var $tabla = $('table.table-info, table[data-datatable]');
+    
+    if ($tabla.length && typeof $.fn.DataTable !== 'undefined') {
+        if (!$.fn.DataTable.isDataTable($tabla)) {$tabla.DataTable({
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay datos disponibles en la tabla",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 to 0 of 0 registros",
+                    "infoFiltered": "(filtrado de _MAX_ registros totales)",
+                    "lengthMenu": "Mostrar _MENU_ registros",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron registros coincidentes",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    }
+                },
+                scrollX: true,
+                scrollCollapse: true,
+                order: [[0, 'desc']],
+                initComplete: function () {
+                    var api = this.api();
+                    var $wrapper =$(api.table().container());
+                    
+                    setTimeout(function() {
+                        api.columns.adjust();
+                    }, 150);
 
-                var $filter =$wrapper.find('.dataTables_filter');
-                if ($filter.length) {
-                    $filter.css({                         display: 'flex',                         'align-items': 'center',                         'justify-content': 'flex-end',                         gap: '10px'                     });$filter.find('label').css({ 'margin-bottom': '0' });
+                    var $filter =$wrapper.find('.dataTables_filter');
+                    if ($filter.length) {
+                        $filter.css({
+                            display: 'flex',
+                            'align-items': 'center',
+                            'justify-content': 'flex-end',
+                            gap: '10px'
+                        });$filter.find('label').css({ 'margin-bottom': '0' });
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
-    protegerSelects(['proveedor']);
+    actualizarProteccionSelectsProductos();
 
     $("#correlativo").on("keypress", function(e){
         validarkeypress(/^[0-9]*$/, e);
@@ -720,6 +1218,7 @@ $(document).ready(function() {
 
     $("#correlativo").on("keyup", function(){
         validarkeyup(/^[0-9]{6}$/, $(this),$("#scorrelativo"), "*Formato válido: 6 dígitos numéricos*");
+        evaluarDiscrepanciasInteractivas();
     });
 
     $("#proveedor").on("change", function() {
@@ -729,6 +1228,43 @@ $(document).ready(function() {
             $(this).removeClass("is-valid").addClass("is-invalid");
             $("#sproveedor").text("*Debe seleccionar un proveedor*");
         }
+        evaluarDiscrepanciasInteractivas();
+    });
+
+    // Delegación de eventos para validaciones
+    $(document).on('keypress', '.costo-input', function(e) {
+        validarKeyPressDecimal(e);
+    });
+    $(document).on('keyup', '.costo-input', function() {
+        validarKeyUpDecimal($(this),$(this).siblings('.scosto-msg'), "*Costo inválido (Ej: 10.50)*");
+        evaluarDiscrepanciasInteractivas();
+    });
+
+    $(document).on('keypress', '.cantidad-input', function(e) {
+        validarKeyPressEntero(e);
+    });
+    $(document).on('keyup', '.cantidad-input', function() {
+        validarKeyUpEntero($(this),$(this).siblings('.scantidad-msg'), "*Debe ser un entero mayor a 0*");
+        evaluarDiscrepanciasInteractivas();
+    });
+
+    $(document).on('change', '.producto-select', function() {
+        if ($(this).val()) {$(this).removeClass("is-invalid").addClass("is-valid");
+            $(this).siblings('.sproducto-msg').text("");
+        } else {
+            $(this).removeClass("is-valid").addClass("is-invalid");
+            $(this).siblings('.sproducto-msg').text("*Debe seleccionar un producto*");
+        }
+        evaluarDiscrepanciasInteractivas();
+    });
+
+    $("#porcentajeIvaRecepcion").on('keypress', function(e) {
+        validarKeyPressDecimal(e);
+    });
+    $("#porcentajeIvaRecepcion").on('keyup input', function() {
+        validarKeyUpIva($(this), $("#sporcentajeIva"), "*El IVA no puede ser mayor a 99%*");
+        calcularTotal();
+        evaluarDiscrepanciasInteractivas();
     });
 
     const archivoFactura = document.getElementById('fotoFacturaRecepcion');
@@ -752,6 +1288,11 @@ $(document).ready(function() {
                 if (previewPdf) { previewPdf.src = urlPreviewFacturaRecepcion; previewPdf.hidden = false; }
             } else if (archivo.type.startsWith('image/')) {
                 if (previewImagen) { previewImagen.src = urlPreviewFacturaRecepcion; previewImagen.hidden = false; }
+            } else {
+                this.value = '';
+                limpiarFacturaIARecepcion();
+                establecerEstadoIARecepcion('Selecciona una imagen o un archivo PDF.', 'error');
+                return;
             }
             await analizarFacturaRecepcion(archivo);
         });

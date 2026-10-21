@@ -451,13 +451,149 @@
 2026-10-16 18:45:55,697 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 94.00%
 2026-10-16 18:46:05,247 - modelo.auditor_recepcion - INFO - Verificaciï¿½n de coherencia: fact_20261016184550_61065e65
 2026-10-16 18:46:05,263 - modelo.auditor_recepcion - INFO - Verificaciï¿½n: 1 discrepancias
-2026-10-20 22:32:41,774 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-10-20 22:32:41,775 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
-2026-10-20 23:17:26,391 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-10-20 23:17:26,392 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
-2026-10-20 23:19:32,997 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-10-20 23:19:32,997 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
-2026-10-20 23:26:56,767 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-10-20 23:26:56,767 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
-2026-10-20 23:41:19,607 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
-2026-10-20 23:41:19,607 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-10-17 22:05:04,026 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-17 22:05:04,026 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificaciï¿½n Asistida
+2026-10-17 23:00:50,809 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261017230050_72a40d47.pdf
+2026-10-17 23:00:51,657 - modelo.auditor_recepcion - INFO - PDF convertido a 1 pï¿½ginas para OCR
+2026-10-17 23:00:54,953 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculï¿½ como total/cantidad.
+2026-10-17 23:00:54,957 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 94.00%
+2026-10-17 23:00:56,793 - modelo.auditor_recepcion - INFO - Verificaciï¿½n de coherencia: fact_20261017230050_72a40d47
+2026-10-17 23:00:56,810 - modelo.auditor_recepcion - INFO - Verificaciï¿½n: exitosa
+2026-10-17 23:04:55,662 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261017230455_8608e3a5.pdf
+2026-10-17 23:04:56,254 - modelo.auditor_recepcion - INFO - PDF convertido a 1 pï¿½ginas para OCR
+2026-10-17 23:04:59,483 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculï¿½ como total/cantidad.
+2026-10-17 23:04:59,484 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 94.00%
+2026-10-17 23:05:01,527 - modelo.auditor_recepcion - INFO - Verificaciï¿½n de coherencia: fact_20261017230455_8608e3a5
+2026-10-17 23:05:01,540 - modelo.auditor_recepcion - INFO - Verificaciï¿½n: exitosa
+2026-10-17 23:05:12,628 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261017230512_725c8d30.pdf
+2026-10-17 23:05:12,857 - modelo.auditor_recepcion - INFO - PDF convertido a 1 pï¿½ginas para OCR
+2026-10-17 23:05:15,722 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculï¿½ como total/cantidad.
+2026-10-17 23:05:15,722 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 94.00%
+2026-10-17 23:05:17,528 - modelo.auditor_recepcion - INFO - Verificaciï¿½n de coherencia: fact_20261017230512_725c8d30
+2026-10-17 23:05:17,529 - modelo.auditor_recepcion - INFO - Verificaciï¿½n: exitosa
+2026-10-18 20:45:43,722 - modelo.auditor_recepcion - INFO - Iniciando extracciï¿½n OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261018204543_88af9110.pdf
+2026-10-18 20:45:44,622 - modelo.auditor_recepcion - INFO - PDF convertido a 1 pï¿½ginas para OCR
+2026-10-18 20:45:48,387 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculï¿½ como total/cantidad.
+2026-10-18 20:45:48,387 - modelo.auditor_recepcion - INFO - Extracciï¿½n completada. Confianza: 94.00%
+2026-10-18 20:45:49,832 - modelo.auditor_recepcion - INFO - Verificaciï¿½n de coherencia: fact_20261018204543_88af9110
+2026-10-18 20:45:49,837 - modelo.auditor_recepcion - INFO - Verificaciï¿½n: exitosa
+2026-10-21 06:49:15,377 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-21 06:49:15,377 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-21 09:27:55,308 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021092755_0d141b18.pdf
+2026-10-21 09:27:56,211 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 09:28:00,159 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 09:28:00,159 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 09:34:47,703 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021093447_7c278ff0.pdf
+2026-10-21 09:34:48,178 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 09:34:51,063 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 09:34:51,063 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 09:34:57,126 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021093447_7c278ff0
+2026-10-21 09:34:57,145 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-21 10:31:08,805 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021103108_baecfa9f.pdf
+2026-10-21 10:31:09,768 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 10:31:14,370 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 10:31:14,372 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 10:31:32,394 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021103108_baecfa9f
+2026-10-21 10:31:32,416 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
+2026-10-21 10:40:12,705 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021104012_d39f1eff.pdf
+2026-10-21 10:40:13,482 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 10:40:16,613 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 10:40:16,613 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 10:46:28,163 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021104628_6345f9b2.pdf
+2026-10-21 10:46:28,759 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 10:46:31,804 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 10:46:31,804 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 10:46:41,729 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021104628_6345f9b2
+2026-10-21 10:46:41,738 - modelo.auditor_recepcion - INFO - Verificación: 2 discrepancias
+2026-10-21 10:47:56,450 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021104628_6345f9b2
+2026-10-21 10:47:56,451 - modelo.auditor_recepcion - INFO - Verificación: 2 discrepancias
+2026-10-21 10:58:18,554 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021105818_04bac1cf.pdf
+2026-10-21 10:58:18,737 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 10:58:21,250 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 10:58:21,250 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 10:58:36,804 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021105818_04bac1cf
+2026-10-21 10:58:36,820 - modelo.auditor_recepcion - INFO - Verificación: 3 discrepancias
+2026-10-21 11:02:08,617 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021110208_560591f6.pdf
+2026-10-21 11:02:09,017 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:02:11,986 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:02:11,987 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:02:19,198 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021110208_560591f6
+2026-10-21 11:02:19,207 - modelo.auditor_recepcion - INFO - Verificación: 2 discrepancias
+2026-10-21 11:05:32,746 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021110532_bd1b1cbd.pdf
+2026-10-21 11:05:33,318 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:05:36,027 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:05:36,027 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:05:49,856 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021110532_bd1b1cbd
+2026-10-21 11:05:49,861 - modelo.auditor_recepcion - INFO - Verificación: 3 discrepancias
+2026-10-21 11:18:44,894 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021111844_6a932301.pdf
+2026-10-21 11:18:45,085 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:18:47,594 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:18:47,594 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:18:58,048 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021111844_6a932301
+2026-10-21 11:18:58,064 - modelo.auditor_recepcion - INFO - Verificación: 3 discrepancias
+2026-10-21 11:19:21,383 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021111844_6a932301
+2026-10-21 11:19:21,383 - modelo.auditor_recepcion - INFO - Verificación: 3 discrepancias
+2026-10-21 11:30:24,099 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021113024_69c5e017.pdf
+2026-10-21 11:30:24,300 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:30:27,041 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:30:27,041 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:31:07,183 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021113024_69c5e017
+2026-10-21 11:31:07,183 - modelo.auditor_recepcion - INFO - Verificación: 5 discrepancias
+2026-10-21 11:32:24,609 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021113224_5e6ed67c.pdf
+2026-10-21 11:32:24,822 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:32:27,427 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:32:27,427 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:32:52,441 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021113224_5e6ed67c
+2026-10-21 11:32:52,441 - modelo.auditor_recepcion - INFO - Verificación: 5 discrepancias
+2026-10-21 11:33:12,751 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021113312_28b305f1.pdf
+2026-10-21 11:33:12,986 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:33:15,624 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:33:15,624 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:33:26,033 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021113312_28b305f1
+2026-10-21 11:33:26,033 - modelo.auditor_recepcion - INFO - Verificación: 5 discrepancias
+2026-10-21 11:34:19,750 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021113312_28b305f1
+2026-10-21 11:34:19,765 - modelo.auditor_recepcion - INFO - Verificación: 4 discrepancias
+2026-10-21 11:35:05,172 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021113312_28b305f1
+2026-10-21 11:35:05,172 - modelo.auditor_recepcion - INFO - Verificación: 5 discrepancias
+2026-10-21 11:36:23,877 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021113312_28b305f1
+2026-10-21 11:36:23,888 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-21 11:37:04,688 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021113704_57db1448.pdf
+2026-10-21 11:37:04,882 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:37:07,361 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:37:07,361 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:37:37,101 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021113704_57db1448
+2026-10-21 11:37:37,101 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
+2026-10-21 11:43:01,573 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021114301_eec040f1.pdf
+2026-10-21 11:43:02,000 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:43:04,876 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:43:04,893 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:43:17,249 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021114301_eec040f1
+2026-10-21 11:43:17,249 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
+2026-10-21 11:43:28,996 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021114301_eec040f1
+2026-10-21 11:43:28,996 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
+2026-10-21 11:54:07,739 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021115407_b37acd1a.pdf
+2026-10-21 11:54:08,423 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:54:11,715 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:54:11,715 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:54:36,946 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021115407_b37acd1a
+2026-10-21 11:54:36,958 - modelo.auditor_recepcion - INFO - Verificación: 1 discrepancias
+2026-10-21 11:55:52,026 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021115407_b37acd1a
+2026-10-21 11:55:52,026 - modelo.auditor_recepcion - INFO - Verificación: 2 discrepancias
+2026-10-21 11:56:48,572 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021115648_9cffa242.pdf
+2026-10-21 11:56:48,723 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:56:51,392 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:56:51,392 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:58:01,350 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021115801_b0f0beb2.pdf
+2026-10-21 11:58:01,558 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 11:58:04,221 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 11:58:04,222 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 11:58:17,828 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021115801_b0f0beb2
+2026-10-21 11:58:17,828 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-21 12:01:59,075 - modelo.auditor_recepcion - INFO - Iniciando extracción OCR: C:\xampp\htdocs\proyecto-casalai-ca\microservicio\temp_uploads\fact_20261021120159_5fbd2a47.pdf
+2026-10-21 12:01:59,475 - modelo.auditor_recepcion - INFO - PDF convertido a 1 páginas para OCR
+2026-10-21 12:02:02,173 - modelo.auditor_recepcion - WARNING - Precio unitario OCR inconsistente para HP DeskJet 2775; se recalculó como total/cantidad.
+2026-10-21 12:02:02,174 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
+2026-10-21 12:02:55,773 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021120159_5fbd2a47
+2026-10-21 12:02:55,773 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-21 12:10:17,055 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-21 12:10:17,055 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
