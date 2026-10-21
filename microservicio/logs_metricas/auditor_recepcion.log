@@ -595,3 +595,5 @@
 2026-10-21 12:02:02,174 - modelo.auditor_recepcion - INFO - Extracción completada. Confianza: 94.00%
 2026-10-21 12:02:55,773 - modelo.auditor_recepcion - INFO - Verificación de coherencia: fact_20261021120159_5fbd2a47
 2026-10-21 12:02:55,773 - modelo.auditor_recepcion - INFO - Verificación: exitosa
+2026-10-21 12:10:17,055 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-21 12:10:17,055 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
