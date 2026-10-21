@@ -1,5 +1,5 @@
 /**
- * recepcion-new.js - Script unificado para la gestión de Recepciones
+ * recepcion.js - Script unificado para la gestión de Recepciones
  */
 
 // ==========================================
@@ -96,7 +96,7 @@ function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
     }
 }
 
-// Nuevas validaciones para decimales y enteros estrictos (Bloqueo de 'e' y caracteres no numéricos)
+// Validaciones para decimales y enteros estrictos (Bloqueo de 'e' y caracteres no numéricos)
 function validarKeyPressDecimal(e) {
     let key = e.key;
     if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
@@ -155,6 +155,14 @@ function validarKeyUpEntero(etiqueta, etiquetamensaje, mensaje) {
     }
 }
 
+function limitarDosDecimales(input) {
+    let valor = input.value.replace(',', '.');
+    let partes = valor.split('.');
+    if (partes.length > 1) {
+        input.value = partes[0] + '.' + partes[1].substring(0, 2);
+    }
+}
+
 function space(str) {
     if (!str) return '';
     return str.replace(/\s{2,}/g, ' ');
@@ -188,12 +196,11 @@ function validarEnvioRecepcion() {
         $("#proveedor").removeClass("is-invalid").addClass("is-valid");
         $("#sproveedor").text("");
     } else {
-        $("#proveedor").removeClass("is-invalid").addClass("is-invalid");
+        $("#proveedor").removeClass("is-valid").addClass("is-invalid");
         $("#sproveedor").text("*Debe seleccionar un proveedor*");
         esValido = false;
     }
 
-    // Validar filas de productos
     $("#productosList .producto-row").each(function() {
         let $prodSelect =$(this).find('.producto-select');
         if (!$prodSelect.val()) {$prodSelect.removeClass("is-valid").addClass("is-invalid");
@@ -250,18 +257,22 @@ function verificaproductos() {
 }
 
 // ==========================================
-// 4. INTEGRACIÓN SEGURA CON EL MICROSERVICIO (LAZY INITIALIZATION)
+// 4. INTEGRACIÓN SEGURA CON EL MICROSERVICIO (IA)
 // ==========================================
 let asistenteRecepcionIA = null;
 let urlPreviewFacturaRecepcion = null;
 
 function obtenerAsistenteIA() {
     if (!asistenteRecepcionIA && typeof AsistenteRecepcionIA !== 'undefined') {
-        asistenteRecepcionIA = new AsistenteRecepcionIA({
-            apiUrl: 'http://127.0.0.1:8000',
-            debug: true,
-            selectores: { alertas: '#estadoIARecepcion' }
-        });
+        try {
+            asistenteRecepcionIA = new AsistenteRecepcionIA({
+                apiUrl: 'http://127.0.0.1:8000',
+                debug: true,
+                selectores: { alertas: '#estadoIARecepcion' }
+            });
+        } catch (e) {
+            console.error('Error al instanciar AsistenteRecepcionIA:', e);
+        }
     }
     return asistenteRecepcionIA;
 }
@@ -287,6 +298,7 @@ function normalizarTextoRecepcion(valor) {
 }
 
 function buscarOpcionCatalogo(select, texto) {
+    if (!select) return null;
     const buscado = normalizarTextoRecepcion(texto);
     if (!buscado) return null;
     const opciones = Array.from(select.options).filter(opcion => opcion.value);
@@ -300,51 +312,96 @@ function buscarOpcionCatalogo(select, texto) {
 }
 
 function rellenarRecepcionDesdeFactura(factura) {
+    if (!factura) return;
+    
     const correlativo = document.getElementById('correlativo');
-    if (factura.numero_factura) correlativo.value = factura.numero_factura;
+    if (factura.numero_factura && correlativo) correlativo.value = factura.numero_factura;
 
     const proveedor = document.getElementById('proveedor');
     const proveedorEncontrado = buscarOpcionCatalogo(proveedor, factura.nombre_proveedor);
-    if (proveedorEncontrado) proveedor.value = proveedorEncontrado.value;
+    if (proveedorEncontrado && proveedor) proveedor.value = proveedorEncontrado.value;
 
     const productosDetectados = Array.isArray(factura.productos) ? factura.productos : [];
     if (productosDetectados.length) {
         const productosList = document.getElementById('productosList');
-        while (productosList.querySelectorAll('.producto-row').length > 1) {
-            productosList.lastElementChild.remove();
-        }
-        productosList.querySelector('.producto-row').querySelectorAll('select, input').forEach(campo => {
-            if (campo.classList.contains('subtotal-display')) campo.value = '$0.00';
-            else campo.value = '';
-        });
-
-        productosDetectados.forEach((producto, indice) => {
-            const fila = indice === 0
-                ? productosList.querySelector('.producto-row')
-                : addProductoRow();
-            const selector = fila.querySelector('.producto-select');
-            const opcion = buscarOpcionCatalogo(selector, producto.nombre);
-            if (opcion) {
-                selector.value = opcion.value;
-                seleccionarProducto(selector);
+        if (productosList) {
+            while (productosList.querySelectorAll('.producto-row').length > 1) {
+                productosList.lastElementChild.remove();
             }
-            fila.querySelector('input[name="cantidad[]"]').value = producto.cantidad > 0 ? producto.cantidad : 1;
-            fila.querySelector('input[name="costo[]"]').value = Number(producto.costo_unitario || 0).toFixed(2);
-            calcularSubtotal(fila.querySelector('input[name="costo[]"]'));
-        });
+            const primeraFila = productosList.querySelector('.producto-row');
+            if (primeraFila) {
+                primeraFila.querySelectorAll('select, input').forEach(campo => {
+                    if (campo.classList.contains('subtotal-display')) campo.value = '$0.00';
+                    else campo.value = '';
+                });
+            }
+
+            productosDetectados.forEach((producto, indice) => {
+                const fila = indice === 0
+                    ? productosList.querySelector('.producto-row')
+                    : addProductoRow();
+                if (!fila) return;
+                const selector = fila.querySelector('.producto-select');
+                const opcion = buscarOpcionCatalogo(selector, producto.nombre);
+                if (opcion && selector) {
+                    selector.value = opcion.value;
+                    seleccionarProducto(selector);
+                }
+                const inputCant = fila.querySelector('input[name="cantidad[]"]');
+                if (inputCant) inputCant.value = producto.cantidad > 0 ? producto.cantidad : 1;
+                
+                const inputCosto = fila.querySelector('input[name="costo[]"]');
+                if (inputCosto) {
+                    inputCosto.value = Number(producto.costo_unitario || producto.costo || 0).toFixed(2);
+                    calcularSubtotal(inputCosto);
+                }
+            });
+        }
     }
 
     const inputIva = document.getElementById('porcentajeIvaRecepcion');
     if (inputIva) inputIva.value = Number(factura.porcentaje_iva || 0).toFixed(2);
     calcularTotal();
     actualizarContadorProductos();
-    establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.`);
+
+    const camposPendientes = [];
+    if (factura.nombre_proveedor && !proveedorEncontrado) camposPendientes.push('proveedor');
+    const primerSelector = document.querySelector('.producto-select');
+    if (productosDetectados.some(producto => primerSelector && !buscarOpcionCatalogo(primerSelector, producto.nombre))) {
+        camposPendientes.push('selección de productos del catálogo');
+    }
+    const nota = camposPendientes.length
+        ? ` Revisa manualmente: ${camposPendientes.join(' y ')}.`
+        : ' Revisa los datos antes de guardar.';
+    
+    establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.${nota}`);
+
+    const resultadoIARecepcionEl = document.getElementById('resultadoIARecepcion');
+    if (resultadoIARecepcionEl) {
+        resultadoIARecepcionEl.textContent =
+            `Proveedor detectado: ${factura.nombre_proveedor || 'no detectado'}\n` +
+            `Productos detectados: ${productosDetectados.length}\n` +
+            `Subtotal: $${Number(factura.subtotal_factura || 0).toFixed(2)}\n` +
+            `IVA: ${Number(factura.porcentaje_iva || 0).toFixed(2)}% ($${Number(factura.monto_iva || 0).toFixed(2)})\n` +
+            `Total factura: $${Number(factura.total_factura || 0).toFixed(2)}\n` +
+            `Confianza OCR: ${(Number(factura.confianza_promedio || 0) * 100).toFixed(1)}%`;
+        resultadoIARecepcionEl.hidden = false;
+    }
 }
 
 function limpiarFacturaIARecepcion() {
-    const aiClient = obtenerAsistenteIA();
-    if (aiClient) aiClient.limpiarCache();
-    if (urlPreviewFacturaRecepcion) URL.revokeObjectURL(urlPreviewFacturaRecepcion);
+    try {
+        const aiClient = obtenerAsistenteIA();
+        if (aiClient && typeof aiClient.limpiarCache === 'function') {
+            aiClient.limpiarCache();
+        }
+    } catch (e) {
+        console.warn('Aviso limpiando caché IA:', e);
+    }
+
+    if (urlPreviewFacturaRecepcion) {
+        URL.revokeObjectURL(urlPreviewFacturaRecepcion);
+    }
     urlPreviewFacturaRecepcion = null;
     
     const previewFac = document.getElementById('previewFacturaRecepcion');
@@ -360,19 +417,24 @@ function limpiarFacturaIARecepcion() {
 }
 
 async function analizarFacturaRecepcion(archivo) {
-    const aiClient = obtenerAsistenteIA();
-    if (!aiClient) {
-        activarContingenciaIARecepcion('Librería del microservicio no disponible.');
-        return;
+    try {
+        const aiClient = obtenerAsistenteIA();
+        if (!aiClient) {
+            activarContingenciaIARecepcion('Librería del microservicio no disponible.');
+            return;
+        }
+        establecerEstadoIARecepcion('Analizando factura con OCR...');
+        const resultado = await aiClient.extraerDesdeImagen(archivo);
+        if (!resultado || !resultado.exito) {
+            if (resultado && resultado.contingencia) activarContingenciaIARecepcion(resultado.error);
+            else establecerEstadoIARecepcion(`No se pudo analizar la factura: ${resultado?.error || 'error'}`, 'error');
+            return;
+        }
+        rellenarRecepcionDesdeFactura(resultado.data);
+    } catch (error) {
+        console.error('Error al analizar factura con IA:', error);
+        activarContingenciaIARecepcion(error.message || 'Error de comunicación con el microservicio.');
     }
-    establecerEstadoIARecepcion('Analizando factura con OCR...');
-    const resultado = await aiClient.extraerDesdeImagen(archivo);
-    if (!resultado.exito) {
-        if (resultado.contingencia) activarContingenciaIARecepcion(resultado.error);
-        else establecerEstadoIARecepcion(`No se pudo analizar la factura: ${resultado.error || 'error'}`, 'error');
-        return;
-    }
-    rellenarRecepcionDesdeFactura(resultado.data);
 }
 
 // ==========================================
@@ -413,17 +475,33 @@ function addProductoRow() {
 
     const newRow = firstRow.cloneNode(true);
     newRow.style.animation = 'slideDown 0.3s ease';
-    // Limpiar valores de la nueva fila
-    newRow.querySelector('.producto-select').value = '';
-    newRow.querySelector('.producto-select').removeAttribute('id');
-    newRow.querySelector('.producto-codigo').value = '';
-    newRow.querySelector('.producto-marca').value = '';
-    newRow.querySelector('.producto-modelo').value = '';
-    newRow.querySelector('.producto-serial').value = '';
-    newRow.querySelector('input[name="cantidad[]"]').value = '';
-    newRow.querySelector('input[name="costo[]"]').value = '';
-    newRow.querySelector('.subtotal-display').value = '$0.00';
     
+    const select = newRow.querySelector('.producto-select');
+    if (select) {
+        select.value = '';
+        select.removeAttribute('id');
+    }
+
+    const codigoInput = newRow.querySelector('.producto-codigo');
+    if (codigoInput) codigoInput.value = '';
+    const marcaInput = newRow.querySelector('.producto-marca');
+    if (marcaInput) marcaInput.value = '';
+    const modeloInput = newRow.querySelector('.producto-modelo');
+    if (modeloInput) modeloInput.value = '';
+    const serialInput = newRow.querySelector('.producto-serial');
+    if (serialInput) serialInput.value = '';
+    
+    const cantInput = newRow.querySelector('input[name="cantidad[]"]');
+    if (cantInput) cantInput.value = '';
+    const costoInput = newRow.querySelector('input[name="costo[]"]');
+    if (costoInput) costoInput.value = '';
+    
+    const subtotalDisplay = newRow.querySelector('.subtotal-display');
+    if (subtotalDisplay) subtotalDisplay.value = '$0.00';
+
+    newRow.querySelectorAll('.span-value').forEach(el => el.textContent = '');
+    newRow.querySelectorAll('.is-valid, .is-invalid').forEach(el => el.classList.remove('is-valid', 'is-invalid'));
+
     productosList.appendChild(newRow);
     actualizarContadorProductos();
     actualizarProteccionSelectsProductos();
@@ -434,18 +512,22 @@ function seleccionarProducto(select) {
     const opcion = select.selectedOptions[0];
     const fila = select.closest('.producto-row');
     if (!fila) return;
-    fila.querySelector('.producto-codigo').value = opcion?.dataset.codigo || '';
-    fila.querySelector('.producto-marca').value = opcion?.dataset.marca || '';
-    fila.querySelector('.producto-modelo').value = opcion?.dataset.modelo || '';
-    fila.querySelector('.producto-serial').value = opcion?.dataset.serial || '';
+    const codigoInput = fila.querySelector('.producto-codigo');
+    if (codigoInput) codigoInput.value = opcion?.dataset.codigo || '';
+    const marcaInput = fila.querySelector('.producto-marca');
+    if (marcaInput) marcaInput.value = opcion?.dataset.marca || '';
+    const modeloInput = fila.querySelector('.producto-modelo');
+    if (modeloInput) modeloInput.value = opcion?.dataset.modelo || '';
+    const serialInput = fila.querySelector('.producto-serial');
+    if (serialInput) serialInput.value = opcion?.dataset.serial || '';
     calcularSubtotal(select);
 }
 
 function calcularSubtotal(input) {
     const row = input.closest('.producto-row');
     if (!row) return;
-    const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
-    const costo = parseFloat(row.querySelector('input[name="costo[]"]').value) || 0;
+    const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]')?.value) || 0;
+    const costo = parseFloat(row.querySelector('input[name="costo[]"]')?.value) || 0;
     const subtotal = cantidad * costo;
     const display = row.querySelector('.subtotal-display');
     if (display) display.value = '$' + subtotal.toFixed(2);
@@ -482,6 +564,7 @@ function removeProductoRow(button) {
             row.remove();
             actualizarContadorProductos();
             calcularTotal();
+            actualizarProteccionSelectsProductos();
         }, 300);
     } else {
         alert('Debe haber al menos un producto');
@@ -491,20 +574,6 @@ function removeProductoRow(button) {
 // ==========================================
 // 6. ACCIONES: GUARDAR, DETALLAR, ANULAR
 // ==========================================
-
-function limitarDosDecimales(input) {
-    // Reemplaza comas por puntos por si el usuario usa teclado numérico con coma
-    let valor = input.value.replace(',', '.');
-    
-    // Separa la parte entera de la decimal
-    let partes = valor.split('.');
-    
-    if (partes.length > 1) {
-        // Limita la parte decimal a un máximo de 2 dígitos
-        input.value = partes[0] + '.' + partes[1].substring(0, 2);
-    }
-}
-
 async function saveRecepcion(event) {
     if (event) event.preventDefault();
 
@@ -608,7 +677,6 @@ async function saveRecepcion(event) {
                 const proveedorNombre = String(rec.nombre_proveedor || $('#proveedor option:checked').text() || '');
                 const totalMontoStr = document.getElementById('totalValue')?.textContent || '$0.00';
                 
-                // Evaluar si es Administrador usando la variable global limpia
                 let botonesAccion = `<button class="btn-action btn-detallar" title="Ver Detalles" data-correlativo="${correlativoNum}" data-proveedor="${proveedorNombre}" data-fecha="${fechaRaw}" onclick="viewRecepcion(this)"><img src="assets/img/eye.svg"></button>`;
                 
                 if (typeof rolUsuarioActual !== 'undefined' && rolUsuarioActual === 'Administrador') {
@@ -696,7 +764,6 @@ function viewRecepcion(boton) {
                     const costo = Number(prod.costo) || 0;
                     const subtotalItem = cantidad * costo;
                     
-                    // Columnas independientes
                     const codigo = prod.codigo || prod.id_producto || 'N/A';
                     const nombreProd = prod.producto || prod.nombre_producto || 'N/A';
                     const marca = prod.marca || prod.nombre_marca || 'N/A';
@@ -721,13 +788,11 @@ function viewRecepcion(boton) {
                     document.getElementById('viewSubtotal').textContent = '$' + subtotalFactura.toFixed(2);
                 }
                 
-                // Mostrar el porcentaje de IVA correctamente
                 const ivaPorcentajeEl = document.getElementById('viewIvaPorcentaje');
                 if (ivaPorcentajeEl) {
                     ivaPorcentajeEl.textContent = porcentajeIva > 0 ? porcentajeIva + '%' : '0%';
                 }
                 
-                // Mostrar el monto del IVA correctamente
                 const ivaMontoEl = document.getElementById('viewMontoIva');
                 if (ivaMontoEl) {
                     ivaMontoEl.textContent = montoIva > 0 ? '$' + montoIva.toFixed(2) : 'No registrado';
@@ -803,7 +868,7 @@ async function confirmarAnulacion() {
             if ($.fn.DataTable.isDataTable('table.table-info')) {
                 const tabla = $('table.table-info').DataTable();
                 tabla.rows().every(function() {
-                    let $row =$(this.node());
+                    let $row = $(this.node());
                     let rowCorrelativo = $row.find('td:eq(1)').text().trim();
                     if (rowCorrelativo === correlativo) {
                         tabla.row(this).remove();
@@ -843,9 +908,9 @@ async function confirmarAnulacion() {
 // 7. INICIALIZACIÓN DOCUMENT READY
 // ==========================================
 $(document).ready(function() {
-    var $tabla =$('table.table-info, table[data-datatable]');
+    var $tabla = $('table.table-info, table[data-datatable]');
     
-    if ($tabla.length && typeof$.fn.DataTable !== 'undefined') {
+    if ($tabla.length && typeof $.fn.DataTable !== 'undefined') {
         if (!$.fn.DataTable.isDataTable($tabla)) {$tabla.DataTable({
                 language: {
                     "decimal": "",
@@ -878,7 +943,12 @@ $(document).ready(function() {
 
                     var $filter =$wrapper.find('.dataTables_filter');
                     if ($filter.length) {
-                        $filter.css({ display: 'flex', 'align-items': 'center', 'justify-content': 'flex-end', gap: '10px' });$filter.find('label').css({ 'margin-bottom': '0' });
+                        $filter.css({
+                            display: 'flex',
+                            'align-items': 'center',
+                            'justify-content': 'flex-end',
+                            gap: '10px'
+                        });$filter.find('label').css({ 'margin-bottom': '0' });
                     }
                 }
             });
@@ -906,12 +976,16 @@ $(document).ready(function() {
         }
     });
 
-    // Delegación de eventos para validaciones en campos dinámicos y estáticos
-    $(document).on('keypress', '.costo-input', function(e) { validarKeyPressDecimal(e); });$(document).on('keyup', '.costo-input', function() {
+    // Delegación de eventos para validaciones
+    $(document).on('keypress', '.costo-input', function(e) {
+        validarKeyPressDecimal(e);
+    });$(document).on('keyup', '.costo-input', function() {
         validarKeyUpDecimal($(this),$(this).siblings('.scosto-msg'), "*Costo inválido (Ej: 10.50)*");
     });
 
-    $(document).on('keypress', '.cantidad-input', function(e) { validarKeyPressEntero(e); });$(document).on('keyup', '.cantidad-input', function() {
+    $(document).on('keypress', '.cantidad-input', function(e) {
+        validarKeyPressEntero(e);
+    });$(document).on('keyup', '.cantidad-input', function() {
         validarKeyUpEntero($(this),$(this).siblings('.scantidad-msg'), "*Debe ser un entero mayor a 0*");
     });
 
@@ -952,6 +1026,11 @@ $(document).ready(function() {
                 if (previewPdf) { previewPdf.src = urlPreviewFacturaRecepcion; previewPdf.hidden = false; }
             } else if (archivo.type.startsWith('image/')) {
                 if (previewImagen) { previewImagen.src = urlPreviewFacturaRecepcion; previewImagen.hidden = false; }
+            } else {
+                this.value = '';
+                limpiarFacturaIARecepcion();
+                establecerEstadoIARecepcion('Selecciona una imagen o un archivo PDF.', 'error');
+                return;
             }
             await analizarFacturaRecepcion(archivo);
         });
