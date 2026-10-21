@@ -129,6 +129,43 @@ function validarKeyUpDecimal(etiqueta, etiquetamensaje, mensaje) {
     }
 }
 
+// Validación estricta para el campo IVA (Límite máximo de 99)
+function validarKeyUpIva(etiqueta, etiquetamensaje, mensaje) {
+    let valStr = etiqueta.val().trim();
+    let er = /^\d+(\.\d{1,2})?$/;
+    let valNum = parseFloat(valStr);
+
+    if (valStr === '') {
+        etiquetamensaje.text("");
+        etiqueta.removeClass("is-invalid is-valid");
+        return 1;
+    }
+
+    if (!er.test(valStr) || isNaN(valNum)) {
+        etiquetamensaje.text(mensaje || "*IVA inválido*");
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+
+    if (valNum > 99) {
+        etiqueta.val('99.00');
+        etiquetamensaje.text("*El porcentaje de IVA no puede ser mayor a 99%*");
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+
+    if (valNum < 0) {
+        etiqueta.val('0.00');
+        etiquetamensaje.text("*El porcentaje de IVA no puede ser menor a 0%*");
+        etiqueta.removeClass("is-valid").addClass("is-invalid");
+        return 0;
+    }
+
+    etiquetamensaje.text("");
+    etiqueta.removeClass("is-invalid").addClass("is-valid");
+    return 1;
+}
+
 function validarKeyPressEntero(e) {
     let key = e.key;
     if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
@@ -222,7 +259,7 @@ function validarEnvioRecepcion() {
     });
 
     let $ivaInput =$("#porcentajeIvaRecepcion");
-    if (validarKeyUpDecimal($ivaInput,$("#sporcentajeIva"), "*IVA inválido*") == 0) {
+    if (validarKeyUpIva($ivaInput,$("#sporcentajeIva"), "*IVA inválido (0-99%)*") == 0) {
         esValido = false;
     }
 
@@ -260,7 +297,7 @@ function verificaproductos() {
 // ==========================================
 let asistenteRecepcionIA = null;
 let urlPreviewFacturaRecepcion = null;
-let datosFacturaExtraidaIA = null; // Copia de respaldo de la factura para validación local estricta
+let datosFacturaExtraidaIA = null;
 let discrepanciasActivasIA = null;
 
 function obtenerAsistenteIA() {
@@ -320,7 +357,7 @@ function buscarOpcionCatalogo(select, texto) {
 
 function rellenarRecepcionDesdeFactura(factura) {
     if (!factura) return;
-    datosFacturaExtraidaIA = factura; // Guardar datos originales de la lectura de factura
+    datosFacturaExtraidaIA = factura;
     
     const correlativo = document.getElementById('correlativo');
     if (factura.numero_factura && correlativo) correlativo.value = factura.numero_factura;
@@ -368,7 +405,11 @@ function rellenarRecepcionDesdeFactura(factura) {
     }
 
     const inputIva = document.getElementById('porcentajeIvaRecepcion');
-    if (inputIva) inputIva.value = Number(factura.porcentaje_iva || 0).toFixed(2);
+    if (inputIva) {
+        let ivaVal = Number(factura.porcentaje_iva || 0);
+        if (ivaVal > 99) ivaVal = 99;
+        inputIva.value = ivaVal.toFixed(2);
+    }
     calcularTotal();
     actualizarContadorProductos();
 
@@ -552,7 +593,9 @@ function calcularTotal() {
         return suma + cantidad * costo;
     }, 0);
 
-    const porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
+    let porcentajeIva = Number(document.getElementById('porcentajeIvaRecepcion')?.value) || 0;
+    if (porcentajeIva > 99) porcentajeIva = 99;
+
     const montoIva = Math.round((subtotal * (porcentajeIva / 100) + Number.EPSILON) * 100) / 100;
 
     if (document.getElementById('subtotalRecepcion')) document.getElementById('subtotalRecepcion').textContent = '$' + subtotal.toFixed(2);
@@ -583,11 +626,27 @@ function removeProductoRow(button) {
 }
 
 // ==========================================
-// CONSTRUCTOR GRANULAR DE DISCREPANCIAS Y EVALUACIÓN INTERACTIVA
+// CONSTRUCTOR GRANULAR Y EVALUADOR COMPLETO
 // ==========================================
 function construirListaGranularDiscrepancias(discrepanciasRaw) {
     const listaGranular = [];
 
+    // 1. Evaluación de IVA %
+    if (datosFacturaExtraidaIA && datosFacturaExtraidaIA.porcentaje_iva !== undefined) {
+        const ivaFactura = Number(datosFacturaExtraidaIA.porcentaje_iva || 0);
+        const ivaFormulario = Number(document.getElementById('porcentajeIvaRecepcion')?.value || 0);
+        
+        if (Math.abs(ivaFormulario - ivaFactura) > 0.01) {
+            listaGranular.push({
+                tipo: 'porcentaje_iva',
+                campo: 'Porcentaje de IVA (%)',
+                valor_factura: `${ivaFactura.toFixed(2)}%`,
+                valor_formulario: `${ivaFormulario.toFixed(2)}%`
+            });
+        }
+    }
+
+    // 2. Evaluación de otros campos y productos
     discrepanciasRaw.forEach(item => {
         if (item.campo.toLowerCase().includes('producto')) {
             const indexMatch = item.campo.match(/\d+/);
@@ -603,7 +662,7 @@ function construirListaGranularDiscrepancias(discrepanciasRaw) {
             const costoFactura = Number(productoFactura.costo_unitario || productoFactura.costo || 0);
             const cantidadFactura = Number(productoFactura.cantidad || 0);
 
-            // 1. Diferencia en Nombre
+            // Diferencia en Nombre
             if (normalizarTextoRecepcion(nombreForm) !== normalizarTextoRecepcion(nombreFactura)) {
                 listaGranular.push({
                     tipo: 'producto_nombre',
@@ -614,7 +673,7 @@ function construirListaGranularDiscrepancias(discrepanciasRaw) {
                 });
             }
 
-            // 2. Diferencia en Costo Unitario
+            // Diferencia en Costo Unitario
             if (costoFactura > 0 && Math.abs(costoForm - costoFactura) > 0.01) {
                 listaGranular.push({
                     tipo: 'producto_costo',
@@ -625,7 +684,7 @@ function construirListaGranularDiscrepancias(discrepanciasRaw) {
                 });
             }
 
-            // 3. Diferencia en Cantidad
+            // Diferencia en Cantidad
             if (cantidadFactura > 0 && cantidadForm !== cantidadFactura) {
                 listaGranular.push({
                     tipo: 'producto_cantidad',
@@ -636,7 +695,6 @@ function construirListaGranularDiscrepancias(discrepanciasRaw) {
                 });
             }
 
-            // Fallback en caso de que solo venga la cadena genérica
             if (!listaGranular.some(g => g.index === idx)) {
                 listaGranular.push({
                     tipo: 'producto_generico',
@@ -646,9 +704,16 @@ function construirListaGranularDiscrepancias(discrepanciasRaw) {
                     valor_formulario: item.valor_formulario
                 });
             }
-        } else {
+        } else if (item.campo.toLowerCase().includes('factura')) {
             listaGranular.push({
-                tipo: item.campo.toLowerCase().includes('factura') ? 'factura' : 'proveedor',
+                tipo: 'factura',
+                campo: item.campo,
+                valor_factura: item.valor_factura,
+                valor_formulario: item.valor_formulario
+            });
+        } else if (item.campo.toLowerCase().includes('proveedor')) {
+            listaGranular.push({
+                tipo: 'proveedor',
                 campo: item.campo,
                 valor_factura: item.valor_factura,
                 valor_formulario: item.valor_formulario
@@ -664,7 +729,8 @@ function evaluarDiscrepanciasInteractivas() {
 
     const correlativoForm = space(document.getElementById('correlativo')?.value || '').trim();
     const proveedorForm = document.querySelector('#proveedor option:checked')?.textContent?.trim() || '';
-    
+    const ivaForm = Number(document.getElementById('porcentajeIvaRecepcion')?.value || 0);
+
     const productosForm = Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
         nombre: fila.querySelector('.producto-select option:checked')?.textContent?.trim() || '',
         cantidad: Number(fila.querySelector('input[name="cantidad[]"]')?.value || 0),
@@ -676,7 +742,14 @@ function evaluarDiscrepanciasInteractivas() {
     discrepanciasActivasIA.listaGranular.forEach(item => {
         let resuelto = false;
 
-        if (item.tipo === 'factura') {
+        if (item.tipo === 'porcentaje_iva') {
+            const ivaFactura = Number(datosFacturaExtraidaIA?.porcentaje_iva || 0);
+            if (Math.abs(ivaForm - ivaFactura) <= 0.01) {
+                resuelto = true;
+            } else {
+                item.valor_formulario = `${ivaForm.toFixed(2)}%`;
+            }
+        } else if (item.tipo === 'factura') {
             if (normalizarTextoRecepcion(correlativoForm) === normalizarTextoRecepcion(item.valor_factura)) {
                 resuelto = true;
             } else {
@@ -781,6 +854,7 @@ async function saveRecepcion(event) {
                 const datosFormulario = {
                     numero_factura: document.getElementById('correlativo').value,
                     nombre_proveedor: document.querySelector('#proveedor option:checked').textContent,
+                    porcentaje_iva: Number(document.getElementById('porcentajeIvaRecepcion').value || 0),
                     productos: Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
                         nombre: fila.querySelector('.producto-select option:checked').textContent,
                         modelo: fila.querySelector('.producto-modelo').value,
@@ -793,13 +867,11 @@ async function saveRecepcion(event) {
                 const verificacion = await aiClient.verificarCoherencia(
                     aiClient.getFacturaId(), datosFormulario
                 );
-                if (verificacion.error) {
-                    if (!verificacion.contingencia) throw new Error(verificacion.error);
-                    modoContingencia = true;
-                } else if (!verificacion.exito) {
-                    const discrepanciasRaw = verificacion.discrepancias || [];
-                    const listaGranular = construirListaGranularDiscrepancias(discrepanciasRaw);
-                    
+                
+                const discrepanciasRaw = verificacion.discrepancias || [];
+                const listaGranular = construirListaGranularDiscrepancias(discrepanciasRaw);
+
+                if (listaGranular.length > 0) {
                     discrepanciasActivasIA = {
                         listaOriginal: discrepanciasRaw,
                         listaGranular: listaGranular
@@ -1189,8 +1261,9 @@ $(document).ready(function() {
     $("#porcentajeIvaRecepcion").on('keypress', function(e) {
         validarKeyPressDecimal(e);
     });
-    $("#porcentajeIvaRecepcion").on('keyup', function() {
-        validarKeyUpDecimal($(this),$("#sporcentajeIva"), "*IVA inválido (0-100)*");
+    $("#porcentajeIvaRecepcion").on('keyup input', function() {
+        validarKeyUpIva($(this), $("#sporcentajeIva"), "*El IVA no puede ser mayor a 99%*");
+        calcularTotal();
         evaluarDiscrepanciasInteractivas();
     });
 
