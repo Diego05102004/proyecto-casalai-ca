@@ -295,7 +295,15 @@ $porcentaje_completados = $total_despachos > 0 ? round(($despachos_completados /
             <div id="dispatchModal" class="modal">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 id="modalTitle">Crear Despacho</h2>
+                        <div class="modal-header-content">
+                            <div class="modal-icon">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="modal-title-content">
+                                <h2 id="modalTitle">Crear Despacho</h2>
+                                <p>Complete los datos para registrar un nuevo despacho</p>
+                            </div>
+                        </div>
                         <span class="close-modal">&times;</span>
                     </div>
                     <div class="modal-body">
@@ -303,46 +311,71 @@ $porcentaje_completados = $total_despachos > 0 ? round(($despachos_completados /
                             <input type="hidden" id="dispatchId" name="id">
                             
                             <div class="form-group">
-                                <label for="orderId">Pedido*</label>
+                                <label for="orderId">
+                                    <i class="fas fa-file-invoice"></i>
+                                    Pedido*
+                                </label>
                                 <select id="orderId" name="pedido_id" required>
                                     <option value="">Seleccione pedido</option>
-                                    <option value="ORD-006">#ORD-006 - Juan Pérez</option>
-                                    <option value="ORD-005">#ORD-005 - María González</option>
-                                    <option value="ORD-004">#ORD-004 - Carlos Rodríguez</option>
+                                    <?php if (!empty($pedidosList)): ?>
+                                        <?php foreach ($pedidosList as $pedido): ?>
+                                            <option value="<?php echo $pedido['id_factura']; ?>">
+                                                #<?php echo htmlspecialchars($pedido['id_factura']); ?> - 
+                                                <?php echo htmlspecialchars($pedido['nombre_cliente'] ?? 'N/A'); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             
                             <div class="form-group">
-                                <label for="carrier">Transportista*</label>
+                                <label for="carrier">
+                                    <i class="fas fa-shipping-fast"></i>
+                                    Transportista*
+                                </label>
                                 <select id="carrier" name="transportista" required>
                                     <option value="">Seleccione transportista</option>
                                     <option value="zoom">Zoom Delivery</option>
                                     <option value="mrw">MRW</option>
                                     <option value="dhl">DHL</option>
                                     <option value="fedex">FedEx</option>
+                                    <option value="domesa">Domesa</option>
+                                    <option value="tealca">Tealca</option>
                                 </select>
                             </div>
                             
                             <div class="form-group">
-                                <label for="address">Dirección de Entrega*</label>
+                                <label for="address">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Dirección de Entrega*
+                                </label>
                                 <input type="text" id="address" name="direccion" required 
                                        placeholder="Dirección completa">
                             </div>
                             
                             <div class="form-group">
-                                <label for="phone">Teléfono de Contacto*</label>
+                                <label for="phone">
+                                    <i class="fas fa-phone"></i>
+                                    Teléfono de Contacto*
+                                </label>
                                 <input type="tel" id="phone" name="telefono" required 
                                        placeholder="+58 412-123-4567">
                             </div>
                             
                             <div class="form-group">
-                                <label for="instructions">Instrucciones Especiales</label>
+                                <label for="instructions">
+                                    <i class="fas fa-comment-alt"></i>
+                                    Instrucciones Especiales
+                                </label>
                                 <textarea id="instructions" name="instrucciones" rows="3"
                                           placeholder="Instrucciones para el delivery"></textarea>
                             </div>
                             
                             <div class="form-group">
-                                <label for="priority">Prioridad</label>
+                                <label for="priority">
+                                    <i class="fas fa-flag"></i>
+                                    Prioridad
+                                </label>
                                 <select id="priority" name="prioridad">
                                     <option value="normal">Normal</option>
                                     <option value="high">Alta</option>
@@ -352,8 +385,12 @@ $porcentaje_completados = $total_despachos > 0 ? round(($despachos_completados /
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-                        <button class="btn-save" onclick="saveDispatch()">Guardar</button>
+                        <button class="btn-cancel" onclick="closeModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="btn-save" onclick="saveDispatch()">
+                            <i class="fas fa-check"></i> Guardar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -393,6 +430,108 @@ $porcentaje_completados = $total_despachos > 0 ? round(($despachos_completados /
                     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
                 }
 
+                /* Estilos del Modal */
+                .modal-header-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+                
+                .modal-icon {
+                    width: 50px;
+                    height: 50px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .modal-icon i {
+                    font-size: 1.5rem;
+                    color: white;
+                }
+                
+                .modal-title-content h2 {
+                    font-size: 1.4rem;
+                    font-weight: 700;
+                    margin: 0 0 5px 0;
+                }
+                
+                .modal-title-content p {
+                    font-size: 0.85rem;
+                    opacity: 0.9;
+                    margin: 0;
+                }
+                
+                .form-group {
+                    margin-bottom: 20px;
+                }
+                
+                .form-group label {
+                    display: block;
+                    margin-bottom: 8px;
+                    font-weight: 600;
+                    color: #2d3748;
+                }
+                
+                .form-group label i {
+                    color: #2196F3;
+                    margin-right: 8px;
+                }
+                
+                .form-group input,
+                .form-group select,
+                .form-group textarea {
+                    width: 100%;
+                    padding: 12px 15px;
+                    border: 2px solid #e9ecef;
+                    border-radius: 8px;
+                    font-size: 0.95rem;
+                    transition: all 0.3s ease;
+                }
+                
+                .form-group input:focus,
+                .form-group select:focus,
+                .form-group textarea:focus {
+                    border-color: #2196F3;
+                    outline: none;
+                    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+                }
+                
+                .btn-cancel, .btn-save {
+                    padding: 12px 25px;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.3s ease;
+                }
+                
+                .btn-cancel {
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                    color: white;
+                }
+                
+                .btn-cancel:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+                }
+                
+                .btn-save {
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                }
+                
+                .btn-save:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+                }
+                
                 .filters-section {
                     background: white;
                     border-radius: 12px;

@@ -664,11 +664,11 @@ class Recepcion extends BD{
         }, false);
     }
 
-    public function registrarRecepcion($idproducto, $cantidad, $costo, $porcentajeIva = 0, $idUsuarioAuditor = 1) {
-        return $this->r_recepcion($idproducto, $cantidad, $costo, $porcentajeIva, $idUsuarioAuditor);
+    public function registrarRecepcion($idproducto, $cantidad, $costo, $porcentajeIva, $id_usuario_auditor) {
+        return $this->r_recepcion($idproducto, $cantidad, $costo, $porcentajeIva, $id_usuario_auditor);
     }
 
-    private function r_recepcion($idproducto, $cantidad, $costo, $porcentajeIva, $idUsuarioAuditor) {
+    private function r_recepcion($idproducto, $cantidad, $costo, $porcentajeIva, $id_usuario_auditor) {
         $productos = [];
         foreach ($idproducto as $indice => $id) {
             $productos[] = [
@@ -682,14 +682,14 @@ class Recepcion extends BD{
             throw new \RuntimeException('No se pudieron preparar los productos de la recepción.');
         }
 
-        return $this->ejecutarConConexionSegura(function($pdo) use ($productosJson, $porcentajeIva, $idUsuarioAuditor) {
-            $stmt = $pdo->prepare('CALL sp_registrar_recepcion(:proveedor, :correlativo, :estado, :iva, :productos, :usuario, @id_recepcion)');
+        return $this->ejecutarConConexionSegura(function($pdo) use ($productosJson, $porcentajeIva, $id_usuario_auditor) {
+            $stmt = $pdo->prepare('CALL sp_registrar_recepcion(:proveedor, :correlativo, :estado, :iva, :productos, :id_usuario_auditor, @id_recepcion)');
             $stmt->bindValue(':proveedor', (int)$this->idproveedor, PDO::PARAM_INT);
             $stmt->bindValue(':correlativo', (string)$this->correlativo, PDO::PARAM_STR);
             $stmt->bindValue(':estado', (string)$this->estado, PDO::PARAM_STR);
             $stmt->bindValue(':iva', number_format((float)$porcentajeIva, 2, '.', ''), PDO::PARAM_STR);
             $stmt->bindValue(':productos', $productosJson, PDO::PARAM_STR);
-            $stmt->bindValue(':usuario', (int)$idUsuarioAuditor, PDO::PARAM_INT);
+            $stmt->bindValue(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
             $stmt->execute();
             $stmt->closeCursor();
 
@@ -713,7 +713,11 @@ class Recepcion extends BD{
         }, false);
     }
 
-    private function existeCorrelativo($r) {
+    public function existeCorrelativo($r) {
+        return $this->ex_correlativo($r); 
+    }
+
+    private function ex_correlativo($r) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($r) {
             $filas = $this->ejecutarProcedimiento(
                 $pdo,
@@ -758,15 +762,15 @@ class Recepcion extends BD{
         }, false);
     }
 
-    public function anularRecepcion($correlativo, $idUsuarioAuditor = 1) {
-        return $this->an_recepcion($correlativo, $idUsuarioAuditor);
+    public function anularRecepcion($correlativo, $id_usuario_auditor) {
+        return $this->an_recepcion($correlativo, $id_usuario_auditor);
     }
-    private function an_recepcion($correlativo, $idUsuarioAuditor) {
+    private function an_recepcion($correlativo, $id_usuario_auditor) {
         try {
-            return $this->ejecutarConConexionSegura(function($pdo) use ($correlativo, $idUsuarioAuditor) {
-                $stmt = $pdo->prepare('CALL sp_anular_recepcion(:correlativo, :usuario, @resultado_anulacion)');
+            return $this->ejecutarConConexionSegura(function($pdo) use ($correlativo, $id_usuario_auditor) {
+                $stmt = $pdo->prepare('CALL sp_anular_recepcion(:correlativo, :id_usuario_auditor, @resultado_anulacion)');
                 $stmt->bindValue(':correlativo', (string)$correlativo, PDO::PARAM_STR);
-                $stmt->bindValue(':usuario', (int)$idUsuarioAuditor, PDO::PARAM_INT);
+                $stmt->bindValue(':id_usuario_auditor', $id_usuario_auditor, \PDO::PARAM_INT);
                 $stmt->execute();
                 $stmt->closeCursor();
                 $resultado = (int)$pdo->query('SELECT @resultado_anulacion')->fetchColumn();

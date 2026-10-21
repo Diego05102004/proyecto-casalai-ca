@@ -143,11 +143,19 @@ if ($_SESSION['nombre_rol'] != 'Cliente') {
     $datos = $pasarela->pasarelaTransaccion('Consultar');
 }
 
-$pagina = "pasarela";
-if (is_file("Vista/" . $pagina . ".php")) {
+$pagina = "PasareladePago";
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], 'Pasarela', 'ACCESAR', 'El usuario accedió al módulo de Pagos', 'media');
     }
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/VistaNew/pasarela.php")) {
+    if (isset($_SESSION['id_usuario'])) {
+        $bitacoraModel->registrarBitacora($_SESSION['id_usuario'], 'Pasarela', 'ACCESAR', 'El usuario accedió al módulo de Pagos', 'media');
+    }
+    require_once("Vista/VistaNew/pasarela.php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
     require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";

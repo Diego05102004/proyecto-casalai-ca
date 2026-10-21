@@ -272,7 +272,8 @@ function consultarCategorias() {
 }
 
 $pagina = "categoria";
-if (is_file("Vista/" . $pagina . ".php")) {
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     try {
         if (!defined('SKIP_SIDE_EFFECTS')) {
             $bitacoraModel = new Bitacora();
@@ -285,7 +286,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
             );
         }
         $categorias = consultarCategorias();
-        require_once("Vista/" . $pagina . ".php");
+        require_once("Vista/VistaNew/" . $pagina . ".php");
     } catch (Exception $e) {
         echo "<div style='padding: 20px; background-color: #ffe6e6; border: 1px solid #ff0000; margin: 20px;'>";
         echo "<h3>Error en el módulo de categorías</h3>";

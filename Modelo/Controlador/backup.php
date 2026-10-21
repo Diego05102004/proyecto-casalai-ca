@@ -330,7 +330,8 @@ try {
     // Si no hay acción AJAX, renderizar vista normal (GET a la página)
     // NOTA: aquí asumimos que quieres mostrar la vista cuando accedes por navegador
     $pagina = "backup";
-    if (is_file("vista/" . $pagina . ".php")) {
+    // Buscar primero en Vista/VistaNew/ y luego en Vista/
+    if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
         // Antes de renderizar, limpiar buffer intermedio (captura de warnings) y registrar si existió salida
         $output = trim(ob_get_clean());
         if (!empty($output)) {
@@ -338,7 +339,17 @@ try {
         }
         $backup = new BackupClass();
         $backups = $backup->listar();
-        require_once("vista/" . $pagina . ".php");
+        require_once("Vista/VistaNew/" . $pagina . ".php");
+        exit;
+    } elseif (is_file("Vista/" . $pagina . ".php")) {
+        // Antes de renderizar, limpiar buffer intermedio (captura de warnings) y registrar si existió salida
+        $output = trim(ob_get_clean());
+        if (!empty($output)) {
+            backup_debug_log('Salida inesperada antes de render vista: ' . $output);
+        }
+        $backup = new BackupClass();
+        $backups = $backup->listar();
+        require_once("Vista/" . $pagina . ".php");
         exit;
     } else {
         // Limpiar buffer y mostrar mensaje

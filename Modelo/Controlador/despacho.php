@@ -3,6 +3,7 @@ use Usuario\ProyectoCasalaiCa\Modelo\Clases\Despacho;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\NotificacionModel;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Factura;
 use Usuario\ProyectoCasalaiCa\Config\BD;
 define('MODULO_DESPACHO', "Despacho");
 
@@ -11,6 +12,16 @@ $id_rol = $_SESSION['id_rol'];
 $permisos = new Permisos();
 $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
 $permisosUsuario = $permisos->getPermisosUsuarioModulo($id_rol, strtolower('despacho'));
+
+// Cargar pedidos disponibles para despacho
+try {
+    $facturaModel = new Factura();
+    $pedidos = $facturaModel->obtenerFacturasListado();
+    $pedidosList = $pedidos['facturas'] ?? [];
+} catch (Throwable $e) {
+    error_log('Error al cargar pedidos: ' . $e->getMessage());
+    $pedidosList = [];
+}
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

@@ -582,7 +582,7 @@ CREATE TABLE `tbl_ingresos_egresos` (
   `id_despacho` int(11) DEFAULT NULL,
   `id_detalle_recepcion_productos` int(11) DEFAULT NULL,
   `tipo` enum('ingreso','egreso') NOT NULL,
-  `monto` float(6,2) NOT NULL,
+  `monto` float(12,2) NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
   `fecha` date NOT NULL,
   `estado` int(1) NOT NULL
@@ -4194,7 +4194,7 @@ BEGIN
         SET v_indice = v_indice + 1;
     END WHILE;
 
-    INSERT INTO casalai_seguridad.tbl_bitacora
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora`
         (fecha_hora, nombre_modulo, accion, datos_nuevos, datos_viejos, id_usuario, prioridad, descripcion)
     VALUES
         (NOW(), 'Recepcion', 'INCLUIR',
@@ -4335,7 +4335,7 @@ BEGIN
     SET estado = 'anulado'
     WHERE id_recepcion = v_id_recepcion;
 
-    INSERT INTO casalai_seguridad.tbl_bitacora
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora`
         (fecha_hora, nombre_modulo, accion, datos_nuevos, datos_viejos, id_usuario, prioridad, descripcion)
     VALUES
         (NOW(), 'Recepcion', 'ANULAR',

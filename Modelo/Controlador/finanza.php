@@ -197,7 +197,22 @@ $totalIngresos = array_sum(array_column($finanzas['ingresos'], 'monto'));
 $totalEgresos = array_sum(array_column($finanzas['egresos'], 'monto'));
 
 $pagina = "finanza";
-if (is_file("Vista/" . $pagina . ".php")) {
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+    if (isset($_SESSION['id_usuario'])) {
+        if (!defined('SKIP_SIDE_EFFECTS')) {
+            $bitacoraModel = new Bitacora();
+            $bitacoraModel->registrarBitacora(
+                $_SESSION['id_usuario'],
+                MODULO_FINANZA,
+                'ACCESAR',
+                'El usuario accedió al módulo de Finanzas',
+                'media'
+            );
+        }
+    }
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
     require_once("Vista/" . $pagina . ".php");
         if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {
