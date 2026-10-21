@@ -493,16 +493,20 @@ async function saveRecepcion(event) {
                 const proveedorNombre = String(rec.nombre_proveedor || $('#proveedor option:checked').text() || '');
                 const totalMontoStr = document.getElementById('totalValue')?.textContent || '$0.00';
                 
+                // Evaluar si es Administrador usando la variable global limpia
+                let botonesAccion = `<button class="btn-action btn-detallar" title="Ver Detalles" data-correlativo="${correlativoNum}" data-proveedor="${proveedorNombre}" data-fecha="${fechaRaw}" onclick="viewRecepcion(this)"><img src="assets/img/eye.svg"></button>`;
+                
+                if (typeof rolUsuarioActual !== 'undefined' && rolUsuarioActual === 'Administrador') {
+                    botonesAccion += `<button class="btn-action btn-anular" title="Anular Recepción" onclick="anularRecepcion('${correlativoNum}')"><img src="assets/img/circle-x.svg"></button>`;
+                }
+
                 const $nuevaFila =$(`<tr>
                     <td data-order="${fechaRaw}">${nuevaFecha}</td>
                     <td>${correlativoNum}</td>
                     <td>${proveedorNombre}</td>
                     <td>${totalMontoStr}</td>
                     <td class="action-buttons">
-                        <button class="btn-action btn-detallar" title="Ver Detalles" data-correlativo="${correlativoNum}" data-proveedor="${proveedorNombre}" data-fecha="${fechaRaw}" onclick="viewRecepcion(this)"><img src="assets/img/eye.svg"></button>
-                        <?php if (isset($_SESSION['nombre_rol']) && $_SESSION['nombre_rol'] === 'Administrador'): ?>
-                        <button class="btn-action btn-anular" title="Anular Recepción" onclick="anularRecepcion('${correlativoNum}')"><img src="assets/img/circle-x.svg"></button>
-                        <?php endif; ?>
+                        ${botonesAccion}
                     </td>
                 </tr>`);
 
