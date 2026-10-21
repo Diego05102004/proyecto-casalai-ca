@@ -55,7 +55,7 @@ ob_start();
         <thead>
             <tr>
                 <th>Fecha</th>
-                <th>Correlativo</th>
+                <th>Número de Factura</th>
                 <th>Proveedor</th>
                 <th>Monto Total</th>
                 <th>Acciones</th>
@@ -305,7 +305,7 @@ ob_start();
                     </div>
                     <div class="detalle-grid">
                         <div class="detalle-item">
-                            <label>Correlativo:</label>
+                            <label>Número de Factura:</label>
                             <span id="viewCorrelativo"></span>
                         </div>
                         <div class="detalle-item">
@@ -396,7 +396,7 @@ ob_start();
                 
                 <div class="anular-info">
                     <div class="info-row">
-                        <label>Correlativo:</label>
+                        <label>Número de Factura:</label>
                         <span id="anularCorrelativo"></span>
                     </div>
                 </div>
