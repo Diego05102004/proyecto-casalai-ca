@@ -15,6 +15,7 @@ from pydantic import BaseModel
 import uvicorn
 
 from modelo.auditor_recepcion import AuditorRecepcion
+from controlador.api_analitica import router as analitica_router
 
 BASE_DIR = Path(__file__).parent.parent
 UPLOAD_DIR = BASE_DIR / "temp_uploads"
@@ -46,6 +47,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Casalai AI - Microservicio Recepción", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.include_router(analitica_router)
 
 class ProductoFormulario(BaseModel):
     nombre: str

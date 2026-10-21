@@ -231,11 +231,47 @@ class Factura extends BD
 
     public function facturaIngresarMovil($data = []) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($data) {
-            // Instanciar clase de encriptación
+            // Instanciar clase de encriptación - desencriptar internamente como en cambiarPersonal
             $encryption = new Encryption();
 
-            // Extraer datos del parámetro $data
-            $cedula = $data['cedula'] ?? null;
+            // Desencriptar la cédula recibida de la app móvil
+            $cedulaCifrada = $data['cedula'] ?? null;
+            $cedula = null;
+            
+            if ($cedulaCifrada && is_string($cedulaCifrada) && strlen($cedulaCifrada) > 50) {
+                try {
+                    $cedulaCifrada = str_replace(' ', '+', $cedulaCifrada);
+                    $cedula = trim($encryption->decrypt($cedulaCifrada));
+                    error_log("[FACTURA_INGRESAR] Cédula desencriptada: " . substr($cedula, 0, 20) . "...");
+                } catch (\Throwable $e) {
+                    error_log("[FACTURA_INGRESAR] Error desencriptando cédula: " . $e->getMessage());
+                    throw new PDOException("No se pudo desencriptar la cédula del cliente.");
+                }
+            } else {
+                $cedula = $cedulaCifrada;
+            }
+
+            // Desencriptar también el campo cliente (se envía duplicado por seguridad)
+            $clienteCifrado = $data['cliente'] ?? null;
+            $cliente = null;
+            
+            if ($clienteCifrado && is_string($clienteCifrado) && strlen($clienteCifrado) > 50) {
+                try {
+                    $clienteCifrado = str_replace(' ', '+', $clienteCifrado);
+                    $cliente = trim($encryption->decrypt($clienteCifrado));
+                    error_log("[FACTURA_INGRESAR] Cliente desencriptado: " . substr($cliente, 0, 20) . "...");
+                } catch (\Throwable $e) {
+                    error_log("[FACTURA_INGRESAR] Error desencriptando cliente: " . $e->getMessage());
+                    // No lanzar error, usar cédula como fallback
+                }
+            }
+
+            // Validar que ambos campos coincidan si ambos se desencriptaron
+            if ($cedula && $cliente && $cedula !== $cliente) {
+                error_log("[FACTURA_INGRESAR] WARNING: cédula y cliente no coinciden - usando cédula");
+            }
+
+            // Extraer otros datos
             $fecha = $data['fecha'] ?? date('Y-m-d');
             $descuento = $data['descuento'] ?? 0;
             $estatus = $data['estatus'] ?? 'Borrador';
@@ -269,7 +305,7 @@ class Factura extends BD
             $id_cliente = null;
             foreach ($clientes as $cliente) {
                 try {
-                    $cedulaDesencriptada = $encryption->decrypt($cliente['cedula']);
+                    $cedulaDesencriptada = trim((string)$encryption->decrypt($cliente['cedula']));
                     if ($cedulaDesencriptada === $cedula) {
                         $id_cliente = $cliente['id_clientes'];
                         error_log("[FACTURA_INGRESAR] Cliente encontrado: ID=" . $id_cliente);
@@ -331,8 +367,6 @@ class Factura extends BD
             return [
                 'factura_id' => $factura_id,
                 'numero_factura' => 'FAC-' . $factura_id,
-                //'cliente_id' => $id_cliente,
-                //'cedula' => $cedula,
                 'fecha' => $fecha,
                 'descuento' => $descuento,
                 'estatus' => $estatus,
@@ -884,13 +918,36 @@ class Factura extends BD
     }
     
 
-public function facturaConsultarMovil()
+public function facturaConsultarMovil($data = [])
 {
-    return $this->ejecutarConConexionSegura(function ($pdo) {
-        if (empty($this->cedula)) {
-            $pdo->cerrar();
-            $pdo = null;
+    return $this->ejecutarConConexionSegura(function ($pdo) use ($data) {
+        // Instanciar clase de encriptación - desencriptar internamente como en cambiarPersonal
+        $encryption = new Encryption();
 
+        // Desencriptar la cédula recibida de la app móvil
+        $cedulaCifrada = $data['cedula'] ?? null;
+        $cedula = null;
+        
+        if ($cedulaCifrada && is_string($cedulaCifrada) && strlen($cedulaCifrada) > 50) {
+            try {
+                $cedulaCifrada = str_replace(' ', '+', $cedulaCifrada);
+                $cedula = trim($encryption->decrypt($cedulaCifrada));
+                error_log("[FACTURA_CONSULTAR_MOVIL] Cédula desencriptada: " . substr($cedula, 0, 20) . "...");
+            } catch (\Throwable $e) {
+                error_log("[FACTURA_CONSULTAR_MOVIL] Error desencriptando cédula: " . $e->getMessage());
+                return [
+                    'resultado' => 'error',
+                    'mensaje' => 'No se pudo desencriptar la cédula del cliente.',
+                    'data' => [
+                        'facturas' => []
+                    ]
+                ];
+            }
+        } else {
+            $cedula = $cedulaCifrada;
+        }
+
+        if (empty($cedula)) {
             return [
                 'resultado' => 'error',
                 'mensaje' => 'No se ha proporcionado la cédula para consultar facturas.',
@@ -901,13 +958,6 @@ public function facturaConsultarMovil()
         }
 
         try {
-            // Instanciar clase de encriptación
-            $encryption = new Encryption();
-
-            // DEBUG: Log de la cédula recibida
-            error_log("[FACTURA_CONSULTAR_MOVIL] Cédula recibida: " . $this->cedula);
-            error_log("[FACTURA_CONSULTAR_MOVIL] Longitud cédula recibida: " . strlen($this->cedula));
-
             // Consultar todas las cédulas de clientes
             $sqlClientes = "SELECT id_clientes, cedula FROM tbl_clientes";
             $stmtClientes = $pdo->prepare($sqlClientes);
@@ -919,23 +969,14 @@ public function facturaConsultarMovil()
             // Buscar el cliente desencriptando cada cédula y comparando
             $idClienteEncontrado = null;
             $cedulaEncontrada = null;
-            $cedulasDesencriptadas = [];
 
             foreach ($clientes as $cliente) {
                 try {
-                    $cedulaDesencriptada = $encryption->decrypt($cliente['cedula']);
-                    $cedulasDesencriptadas[] = [
-                        'id_cliente' => $cliente['id_clientes'],
-                        'cedula_encriptada' => substr($cliente['cedula'], 0, 20) . '...',
-                        'cedula_desencriptada' => $cedulaDesencriptada
-                    ];
-
-                    error_log("[FACTURA_CONSULTAR_MOVIL] Cliente ID " . $cliente['id_clientes'] . " - Cédula desencriptada: " . $cedulaDesencriptada);
-
-                    if ($cedulaDesencriptada === $this->cedula) {
+                    $cedulaDesencriptada = trim((string)$encryption->decrypt($cliente['cedula']));
+                    if ($cedulaDesencriptada === $cedula) {
                         $idClienteEncontrado = $cliente['id_clientes'];
                         $cedulaEncontrada = $cedulaDesencriptada;
-                        error_log("[FACTURA_CONSULTAR_MOVIL] ✓ Cliente encontrado: ID=" . $idClienteEncontrado . ", Cédula=" . $cedulaEncontrada);
+                        error_log("[FACTURA_CONSULTAR_MOVIL] ✓ Cliente encontrado: ID=" . $idClienteEncontrado);
                         break;
                     }
                 } catch (\Throwable $e) {
@@ -945,16 +986,10 @@ public function facturaConsultarMovil()
             }
 
             if (!$idClienteEncontrado) {
-                error_log("[FACTURA_CONSULTAR_MOVIL] ✗ No se encontró cliente con cédula: " . $this->cedula);
+                error_log("[FACTURA_CONSULTAR_MOVIL] ✗ No se encontró cliente con cédula: " . substr($cedula, 0, 20) . "...");
                 return [
                     'resultado' => 'error',
                     'mensaje' => 'No se encontró un cliente con la cédula proporcionada.',
-                    'debug' => [
-                        'cedula_recibida' => $this->cedula,
-                        'cedula_recibida_longitud' => strlen($this->cedula),
-                        'total_clientes' => count($clientes),
-                        'cedulas_comparadas' => $cedulasDesencriptadas
-                    ],
                     'data' => [
                         'facturas' => []
                     ]

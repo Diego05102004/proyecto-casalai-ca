@@ -129,6 +129,114 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 </div>
             </div>
 
+            <section class="analytics-section" aria-labelledby="analyticsTitle">
+                <div class="analytics-header">
+                    <div>
+                        <span class="analytics-eyebrow"><i class="fas fa-brain" aria-hidden="true"></i> Analítica local</span>
+                        <h2 id="analyticsTitle">Asistente inteligente de inventario</h2>
+                        <p>Explora demanda real de facturas pagadas, patrones de compra y señales de reposición.</p>
+                    </div>
+                    <span class="analytics-source">Fuente: facturas pagadas</span>
+                </div>
+
+                <div class="analytics-filters">
+                    <div class="analytics-filter">
+                        <label for="analyticsProduct">Producto</label>
+                        <select id="analyticsProduct">
+                            <option value="">Seleccionar producto</option>
+                            <?php foreach ($productos as $producto): ?>
+                                <option value="<?php echo (int)$producto['id_producto']; ?>">
+                                    <?php echo htmlspecialchars($producto['nombre_producto'] ?? 'Producto', ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <span class="analytics-or">o</span>
+                    <div class="analytics-filter">
+                        <label for="analyticsCategory">Categoría</label>
+                        <select id="analyticsCategory">
+                            <option value="">Seleccionar categoría</option>
+                            <?php foreach (($categorias ?? []) as $categoria): ?>
+                                <option value="<?php echo (int)$categoria['id_categoria']; ?>">
+                                    <?php echo htmlspecialchars($categoria['nombre_categoria'] ?? 'Categoría', ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="analytics-filter">
+                        <label for="analyticsFrequency">Frecuencia</label>
+                        <select id="analyticsFrequency">
+                            <option value="diaria">Diaria</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="mensual">Mensual</option>
+                        </select>
+                    </div>
+                    <div class="analytics-filter">
+                        <label for="analyticsHorizon">Horizonte</label>
+                        <select id="analyticsHorizon">
+                            <option value="15">15 días</option>
+                            <option value="30" selected>30 días</option>
+                            <option value="60">60 días</option>
+                            <option value="90">90 días</option>
+                        </select>
+                    </div>
+                    <button type="button" class="analytics-button" id="runAnalytics">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i> Analizar
+                    </button>
+                    <?php if ($puedeModificarProductos): ?>
+                        <button type="button" class="analytics-button analytics-train" id="trainAnalytics">
+                            <i class="fas fa-rotate" aria-hidden="true"></i> Entrenar modelo local
+                        </button>
+                    <?php endif; ?>
+                </div>
+
+                <p class="analytics-status" id="analyticsStatus" role="status" aria-live="polite">
+                    Selecciona un producto o una categoría y pulsa «Analizar».
+                </p>
+
+                <div class="analytics-kpis" id="analyticsKpis" hidden>
+                    <article class="analytics-kpi"><span>Venta proyectada</span><strong data-metric="venta_proyectada">—</strong><small>unidades en el horizonte</small></article>
+                    <article class="analytics-kpi"><span>Días hasta agotamiento</span><strong data-metric="dias_estimados_agotamiento">—</strong><small>estimación con stock actual</small></article>
+                    <article class="analytics-kpi"><span>Punto de reorden</span><strong data-metric="punto_reorden">—</strong><small>stock mínimo configurado</small></article>
+                    <article class="analytics-kpi"><span>Compra sugerida</span><strong data-metric="cantidad_sugerida_compra">—</strong><small>no descuenta órdenes abiertas</small></article>
+                    <article class="analytics-kpi"><span>Rotación proyectada</span><strong data-metric="rotacion_proyectada">—</strong><small>veces en el horizonte</small></article>
+                </div>
+
+                <div class="analytics-chart-card">
+                    <div class="analytics-chart-heading">
+                        <h3>Ventas históricas y demanda estimada</h3>
+                        <span>La banda representa el intervalo estimado del modelo.</span>
+                    </div>
+                    <div class="analytics-chart-frame">
+                        <canvas id="analyticsChart" aria-label="Gráfico de ventas y demanda estimada" role="img"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-actions">
+                    <div class="analytics-chart-heading">
+                        <h3>Acciones recomendadas</h3>
+                        <span>Las valoraciones ajustan la prioridad futura por tipo de recomendación.</span>
+                    </div>
+                    <div class="analytics-table-wrap">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto / acción</th>
+                                    <th>Señal</th>
+                                    <th>Cantidad sugerida</th>
+                                    <th>Confianza</th>
+                                    <th>Calculado</th>
+                                    <th>Valoración</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsRecommendations">
+                                <tr><td colspan="6">Aún no hay recomendaciones cargadas.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- Productos Grid Section -->
             <div class="products-section">
                 <div class="section-header">
@@ -379,6 +487,227 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
 
             <style>
                 /* Estilos específicos de Productos */
+                .analytics-section {
+                    margin: 28px 0 36px;
+                    padding: 24px;
+                    border: 1px solid #dbeafe;
+                    border-radius: 18px;
+                    background: #fff;
+                    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+                }
+
+                .analytics-header, .analytics-chart-heading {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 16px;
+                }
+
+                .analytics-header h2, .analytics-chart-heading h3 {
+                    margin: 6px 0;
+                    color: #172554;
+                }
+
+                .analytics-header p, .analytics-chart-heading span {
+                    margin: 0;
+                    color: #64748b;
+                    font-size: 0.9rem;
+                }
+
+                .analytics-eyebrow {
+                    color: #2563eb;
+                    font-size: 0.78rem;
+                    font-weight: 700;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                }
+
+                .analytics-source {
+                    padding: 7px 11px;
+                    border-radius: 20px;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    white-space: nowrap;
+                }
+
+                .analytics-filters {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: flex-end;
+                    gap: 12px;
+                    margin-top: 20px;
+                }
+
+                .analytics-filter {
+                    display: grid;
+                    flex: 1 1 145px;
+                    gap: 6px;
+                    min-width: 135px;
+                }
+
+                .analytics-filter label {
+                    color: #334155;
+                    font-size: 0.82rem;
+                    font-weight: 600;
+                }
+
+                .analytics-filter select {
+                    min-height: 42px;
+                    padding: 8px 10px;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 8px;
+                    background: #fff;
+                    color: #1e293b;
+                    font: inherit;
+                }
+
+                .analytics-or {
+                    padding-bottom: 12px;
+                    color: #64748b;
+                    font-size: 0.82rem;
+                }
+
+                .analytics-button {
+                    min-height: 42px;
+                    padding: 9px 14px;
+                    border: 0;
+                    border-radius: 8px;
+                    background: #2563eb;
+                    color: #fff;
+                    font: inherit;
+                    font-weight: 600;
+                    cursor: pointer;
+                }
+
+                .analytics-button:hover:not(:disabled) {
+                    background: #1d4ed8;
+                }
+
+                .analytics-button:disabled {
+                    cursor: wait;
+                    opacity: 0.65;
+                }
+
+                .analytics-train {
+                    background: #0f766e;
+                }
+
+                .analytics-train:hover:not(:disabled) {
+                    background: #115e59;
+                }
+
+                .analytics-status {
+                    min-height: 22px;
+                    margin: 16px 0;
+                    color: #475569;
+                    font-size: 0.9rem;
+                }
+
+                .analytics-status.error {
+                    color: #b91c1c;
+                }
+
+                .analytics-status.success {
+                    color: #047857;
+                }
+
+                .analytics-kpis {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 12px;
+                    margin: 18px 0;
+                }
+
+                .analytics-kpi {
+                    display: grid;
+                    gap: 7px;
+                    padding: 15px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    background: #f8fafc;
+                }
+
+                .analytics-kpi span {
+                    color: #475569;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                }
+
+                .analytics-kpi strong {
+                    color: #1d4ed8;
+                    font-size: 1.35rem;
+                }
+
+                .analytics-kpi small {
+                    color: #64748b;
+                    line-height: 1.35;
+                }
+
+                .analytics-chart-card, .analytics-actions {
+                    margin-top: 20px;
+                    padding: 18px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    background: #fff;
+                }
+
+                .analytics-chart-frame {
+                    position: relative;
+                    height: 320px;
+                    margin-top: 16px;
+                }
+
+                .analytics-table-wrap {
+                    overflow-x: auto;
+                    margin-top: 12px;
+                }
+
+                .analytics-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    text-align: left;
+                }
+
+                .analytics-table th, .analytics-table td {
+                    padding: 11px 10px;
+                    border-bottom: 1px solid #e2e8f0;
+                    color: #334155;
+                    font-size: 0.84rem;
+                    vertical-align: middle;
+                }
+
+                .analytics-table th {
+                    background: #f8fafc;
+                    color: #475569;
+                    font-weight: 700;
+                    white-space: nowrap;
+                }
+
+                .analytics-rating {
+                    display: flex;
+                    gap: 2px;
+                    white-space: nowrap;
+                }
+
+                .analytics-rating button {
+                    padding: 3px;
+                    border: 0;
+                    background: transparent;
+                    color: #94a3b8;
+                    cursor: pointer;
+                    font-size: 1rem;
+                }
+
+                .analytics-rating button:hover, .analytics-rating button.selected {
+                    color: #f59e0b;
+                }
+
+                .analytics-rating button:disabled {
+                    cursor: default;
+                }
+
                 .products-section {
                     margin-top: 30px;
                 }
@@ -950,6 +1279,22 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
 
                 /* Responsive */
                 @media (max-width: 768px) {
+                    .analytics-section {
+                        padding: 16px;
+                    }
+
+                    .analytics-header, .analytics-chart-heading {
+                        flex-direction: column;
+                    }
+
+                    .analytics-or {
+                        display: none;
+                    }
+
+                    .analytics-chart-frame {
+                        height: 250px;
+                    }
+
                     .products-grid {
                         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
                         gap: 20px;
@@ -987,6 +1332,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 }
             </style>
 
+            <script src="assets/public/js/chart.js"></script>
             <script>
                 const categoriasDinamicasProducto = <?php echo json_encode($categoriasDinamicas ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
                 const productosDisponibles = <?php echo json_encode($productos ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
@@ -1256,6 +1602,268 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         });
                     });
                 }
+
+                const analyticsProduct = document.getElementById('analyticsProduct');
+                const analyticsCategory = document.getElementById('analyticsCategory');
+                const analyticsStatus = document.getElementById('analyticsStatus');
+                const analyticsKpis = document.getElementById('analyticsKpis');
+                const analyticsRecommendations = document.getElementById('analyticsRecommendations');
+                const analyticsCanvas = document.getElementById('analyticsChart');
+                let analyticsChart = null;
+
+                function setAnalyticsStatus(message, type = '') {
+                    analyticsStatus.textContent = message;
+                    analyticsStatus.className = `analytics-status ${type}`.trim();
+                }
+
+                async function postAnalytics(action, values = {}) {
+                    const form = new FormData();
+                    form.append('accion', action);
+                    Object.entries(values).forEach(([key, value]) => form.append(key, String(value)));
+                    const response = await fetch(window.location.href, { method: 'POST', body: form });
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.detail || result.message || 'No se pudo completar la solicitud.');
+                    }
+                    return result;
+                }
+
+                function displayMetric(value, suffix = '') {
+                    if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+                        return 'No disponible';
+                    }
+                    return `${Number(value).toLocaleString('es-VE', { maximumFractionDigits: 2 })}${suffix}`;
+                }
+
+                function renderAnalyticsChart(data) {
+                    if (typeof Chart === 'undefined') {
+                        setAnalyticsStatus('Chart.js no está disponible; los datos del análisis sí se recibieron.', 'error');
+                        return;
+                    }
+                    const historical = Array.isArray(data.historico) ? data.historico : [];
+                    const forecast = Array.isArray(data.prediccion) ? data.prediccion : [];
+                    const labels = [...historical.map(item => item.fecha), ...forecast.map(item => item.fecha)];
+                    const empty = Array(historical.length).fill(null);
+                    const missingForecast = Array(forecast.length).fill(null);
+                    const datasets = [
+                        {
+                            label: 'Ventas reales',
+                            data: [...historical.map(item => item.valor), ...missingForecast],
+                            borderColor: '#2563eb',
+                            backgroundColor: '#2563eb',
+                            borderWidth: 2,
+                            pointRadius: 1,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Demanda estimada',
+                            data: [...empty, ...forecast.map(item => item.valor)],
+                            borderColor: '#f97316',
+                            backgroundColor: '#f97316',
+                            borderWidth: 2,
+                            borderDash: [7, 5],
+                            pointRadius: 1,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'Límite inferior',
+                            data: [...empty, ...forecast.map(item => item.limite_inferior)],
+                            borderColor: 'rgba(249, 115, 22, 0)',
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Intervalo estimado',
+                            data: [...empty, ...forecast.map(item => item.limite_superior)],
+                            borderColor: 'rgba(249, 115, 22, 0)',
+                            backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                            pointRadius: 0,
+                            fill: 2
+                        }
+                    ];
+
+                    if (analyticsChart) analyticsChart.destroy();
+                    analyticsChart = new Chart(analyticsCanvas.getContext('2d'), {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: { mode: 'index', intersect: false },
+                            plugins: {
+                                legend: { position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: context => `${context.dataset.label}: ${context.parsed.y === null ? '—' : `${context.parsed.y.toLocaleString('es-VE', { maximumFractionDigits: 2 })} unidades`}`
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, title: { display: true, text: 'Unidades' } },
+                                x: { title: { display: true, text: `Fecha · horizonte ${data.horizonte_dias} días` } }
+                            }
+                        }
+                    });
+                }
+
+                function renderAnalyticsRecommendations(items) {
+                    analyticsRecommendations.replaceChildren();
+                    if (!items.length) {
+                        const row = document.createElement('tr');
+                        const cell = document.createElement('td');
+                        cell.colSpan = 6;
+                        cell.textContent = 'No hay acciones recomendadas con la información disponible.';
+                        row.appendChild(cell);
+                        analyticsRecommendations.appendChild(row);
+                        return;
+                    }
+
+                    items.forEach(item => {
+                        const row = document.createElement('tr');
+                        const values = [
+                            item.producto || 'Producto',
+                            item.senal || '—',
+                            item.cantidad_sugerida === null || item.cantidad_sugerida === undefined ? '—' : `${item.cantidad_sugerida} unidades`,
+                            `${item.nivel_confianza || '—'} (${Math.round((item.confianza || 0) * 100)}%)`,
+                            item.calculado_en ? new Date(item.calculado_en).toLocaleString('es-VE') : '—'
+                        ];
+                        values.forEach(value => {
+                            const cell = document.createElement('td');
+                            cell.textContent = value;
+                            row.appendChild(cell);
+                        });
+
+                        const ratingCell = document.createElement('td');
+                        const rating = document.createElement('div');
+                        rating.className = 'analytics-rating';
+                        rating.setAttribute('role', 'group');
+                        rating.setAttribute('aria-label', `Valorar ${item.producto || 'recomendación'}`);
+                        for (let stars = 1; stars <= 5; stars += 1) {
+                            const button = document.createElement('button');
+                            button.type = 'button';
+                            button.textContent = '★';
+                            button.dataset.recommendationId = item.recomendacion_id;
+                            button.dataset.recommendationType = item.tipo;
+                            button.dataset.stars = String(stars);
+                            button.setAttribute('aria-label', `${stars} estrellas`);
+                            button.title = `${stars} estrellas`;
+                            rating.appendChild(button);
+                        }
+                        ratingCell.appendChild(rating);
+                        row.appendChild(ratingCell);
+                        analyticsRecommendations.appendChild(row);
+                    });
+                }
+
+                async function loadAnalytics() {
+                    const productId = analyticsProduct.value;
+                    const categoryId = analyticsCategory.value;
+                    if (Boolean(productId) === Boolean(categoryId)) {
+                        setAnalyticsStatus('Selecciona un producto o una categoría, pero no ambos.', 'error');
+                        return;
+                    }
+
+                    const button = document.getElementById('runAnalytics');
+                    button.disabled = true;
+                    setAnalyticsStatus('Consultando ventas y calculando el análisis…');
+                    try {
+                        const result = await postAnalytics('analitica_dashboard', {
+                            producto_id: productId || '',
+                            categoria_id: categoryId || '',
+                            frecuencia: document.getElementById('analyticsFrequency').value,
+                            horizonte: document.getElementById('analyticsHorizon').value
+                        });
+                        if (result.calidad?.estado === 'sin_datos') {
+                            analyticsKpis.hidden = true;
+                            renderAnalyticsRecommendations([]);
+                            setAnalyticsStatus('El producto o categoría seleccionado no tiene productos activos.');
+                            return;
+                        }
+                        if (result.calidad?.estado === 'sin_ventas') {
+                            analyticsKpis.hidden = true;
+                            renderAnalyticsChart(result);
+                            renderAnalyticsRecommendations([]);
+                            setAnalyticsStatus('No hay ventas de facturas pagadas para este filtro en los últimos 365 días.');
+                            return;
+                        }
+
+                        analyticsKpis.hidden = false;
+                        const metrics = result.metricas || {};
+                        analyticsKpis.querySelector('[data-metric="venta_proyectada"]').textContent = displayMetric(metrics.venta_proyectada);
+                        analyticsKpis.querySelector('[data-metric="dias_estimados_agotamiento"]').textContent = displayMetric(metrics.dias_estimados_agotamiento, ' días');
+                        analyticsKpis.querySelector('[data-metric="punto_reorden"]').textContent = displayMetric(metrics.punto_reorden, ' unidades');
+                        analyticsKpis.querySelector('[data-metric="cantidad_sugerida_compra"]').textContent = displayMetric(metrics.cantidad_sugerida_compra, ' unidades');
+                        analyticsKpis.querySelector('[data-metric="rotacion_proyectada"]').textContent = displayMetric(metrics.rotacion_proyectada, 'x');
+                        renderAnalyticsChart(result);
+                        renderAnalyticsRecommendations(result.recomendaciones || []);
+
+                        const quality = result.calidad || {};
+                        if (quality.estado === 'insuficiente_historial') {
+                            setAnalyticsStatus('Historial insuficiente: se requieren al menos 24 semanas y seis semanas con ventas para entrenar el modelo.');
+                        } else if (quality.estado === 'modelo_pendiente') {
+                            setAnalyticsStatus('Se muestran ventas reales. Entrena el modelo local para habilitar predicciones.');
+                        } else {
+                            setAnalyticsStatus(`Modelo ${quality.modelo || ''} · entrenamiento ${quality.fecha_entrenamiento || 'sin fecha'} · ${result.horizonte_dias} días.`);
+                        }
+                    } catch (error) {
+                        setAnalyticsStatus(error.message, 'error');
+                    } finally {
+                        button.disabled = false;
+                    }
+                }
+
+                document.getElementById('runAnalytics').addEventListener('click', loadAnalytics);
+                analyticsProduct.addEventListener('change', function () {
+                    if (this.value) analyticsCategory.value = '';
+                });
+                analyticsCategory.addEventListener('change', function () {
+                    if (this.value) analyticsProduct.value = '';
+                });
+
+                const trainAnalyticsButton = document.getElementById('trainAnalytics');
+                if (trainAnalyticsButton) {
+                    trainAnalyticsButton.addEventListener('click', async function () {
+                        this.disabled = true;
+                        setAnalyticsStatus('Entrenando el modelo local con las 24 semanas completas más recientes…');
+                        try {
+                            const result = await postAnalytics('analitica_entrenar');
+                            if (result.estado === 'insuficiente_historial') {
+                                setAnalyticsStatus('No se actualizó el modelo: ningún producto alcanzó seis semanas con ventas dentro de la ventana. El modelo anterior se conservó.');
+                            } else {
+                                setAnalyticsStatus(
+                                    `Entrenamiento completado: ${result.modelos_entrenados} modelos guardados; ${result.productos_sin_historial_suficiente} productos sin historial suficiente.`,
+                                    'success'
+                                );
+                            }
+                            if (analyticsProduct.value || analyticsCategory.value) await loadAnalytics();
+                        } catch (error) {
+                            setAnalyticsStatus(error.message, 'error');
+                        } finally {
+                            this.disabled = false;
+                        }
+                    });
+                }
+
+                analyticsRecommendations.addEventListener('click', async function (event) {
+                    const button = event.target.closest('button[data-recommendation-id]');
+                    if (!button || button.disabled) return;
+                    const group = button.parentElement;
+                    group.querySelectorAll('button').forEach(star => { star.disabled = true; });
+                    try {
+                        await postAnalytics('analitica_feedback', {
+                            recomendacion_id: button.dataset.recommendationId,
+                            tipo: button.dataset.recommendationType,
+                            estrellas: button.dataset.stars
+                        });
+                        group.querySelectorAll('button').forEach(star => {
+                            if (Number(star.dataset.stars) <= Number(button.dataset.stars)) star.classList.add('selected');
+                        });
+                        setAnalyticsStatus('Valoración guardada. Se tendrá en cuenta al priorizar futuras recomendaciones.', 'success');
+                    } catch (error) {
+                        group.querySelectorAll('button').forEach(star => { star.disabled = false; });
+                        setAnalyticsStatus(error.message, 'error');
+                    }
+                });
 
                 // Event listeners para cerrar modal
                 productModal.querySelector('.close-modal').addEventListener('click', closeModal);
