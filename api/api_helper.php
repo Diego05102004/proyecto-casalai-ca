@@ -54,28 +54,45 @@ function RecibirPeticion($instance, $operations) {
 
         // Desencriptar datos sensibles si están cifrados (para todos los métodos)
         $encryption = new Encryption();
-        $sensitiveFields = ['username', 'password', 'nombres', 'apellidos', 'cedula', 'correo', 'telefono', 'direccion', 'nombre', 'apellido', 'clave'];
+        $sensitiveFields = ['username', 'password', 'nombres', 'apellidos', 'cedula', 'cliente', 'correo', 'telefono', 'direccion', 'nombre', 'apellido', 'clave'];
+        // Solo desencriptar en api_helper para operaciones que NO son de factura
+        // Las operaciones de factura desencriptan internamente como hace cambiarPersonal
+        $isMobileInvoice = in_array($funcion, ['facturaingresarmovil', 'facturaingresar'], true);
+        
         foreach ($sensitiveFields as $field) {
             if (isset($data[$field]) && $data[$field] !== '') {
                 try {
                     // Solo desencriptar si parece estar encriptado (es largo y tiene caracteres de Base64)
                     $value = $data[$field];
                     if (is_string($value) && strlen($value) > 50 && !preg_match('/^\d+$/', $value)) {
+                        // Para operaciones de factura, NO desencriptar aquí - hacerlo en la clase
+                        if ($isMobileInvoice && in_array($field, ['cliente', 'cedula'], true)) {
+                            continue;
+                        }
                         // Restaurar espacios en blanco a '+' para Base64
                         $value = str_replace(' ', '+', $value);
                         $decrypted = $encryption->decrypt($value);
-                        // Solo usar el valor desencriptado si no falló
-                        if ($decrypted !== $value) {
-                            $data[$field] = $decrypted;
-                            error_log("[API_HELPER] Campo '$field' desencriptado exitosamente");
+                        if (!is_string($decrypted) || $decrypted === $value || trim($decrypted) === '') {
+                            throw new \RuntimeException('El descifrado no produjo un valor válido.');
                         }
+                        $data[$field] = trim($decrypted);
                     }
                 } catch (\Throwable $decryptError) {
                     error_log("[API_HELPER] Error descifrando campo '$field': " . $decryptError->getMessage());
-                    // Continuar con el valor original si falla el desencriptado
+                    if ($isMobileInvoice && in_array($field, ['cliente', 'cedula'], true)) {
+                        continue; // No lanzar error para factura, dejar que la clase lo maneje
+                    }
+                    errorResponse('No se pudieron descifrar los datos: ' . $decryptError->getMessage(), 400);
                 }
             }
         }
+
+        // Solo validar cédula para operaciones de factura que realmente la necesitan
+        if ($isMobileInvoice && empty($data['cedula'])) {
+            errorResponse('La cédula del cliente es requerida o no pudo descifrarse.', 400);
+        }
+        // No validar que cliente y cédula coincidan aquí porque se cifran por separado
+        // con claves AES aleatorias diferentes. La clase Factura los desencripta y valida.
 
         // Importante: NO desencriptar el campo 'funcion' ya que se usa para enrutamiento
 
@@ -87,7 +104,6 @@ function RecibirPeticion($instance, $operations) {
         // Establecer cédula en la instancia si está presente (para Factura)
         if (isset($data['cedula']) && method_exists($instance, 'setCedula')) {
             $instance->setCedula($data['cedula']);
-            error_log("[API_HELPER] Cédula establecida en instancia: " . $data['cedula']);
         }
 
         // Verificar si el método existe en la instancia
@@ -105,4 +121,3 @@ function RecibirPeticion($instance, $operations) {
         errorResponse('Error al procesar la petición: ' . $e->getMessage(), 500);
     }
 }
-

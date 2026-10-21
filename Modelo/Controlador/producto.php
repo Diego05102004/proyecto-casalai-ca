@@ -3,6 +3,9 @@ ob_start();
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Permisos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Servicio\AnaliticaPredictivaProxy;
+
+require_once dirname(__DIR__) . '/Servicio/AnaliticaPredictivaProxy.php';
 
 define('MODULO_PRODUCTOS', "Productos");
 
@@ -17,7 +20,10 @@ $accionPermiso = [
     'eliminar' => 'eliminar',
     'cambiar_estatus' => 'modificar',
     'reporte_parametrizado' => 'generar reporte',
-    'obtener_producto' => 'consultar'
+    'obtener_producto' => 'consultar',
+    'analitica_dashboard' => 'consultar',
+    'analitica_feedback' => 'consultar',
+    'analitica_entrenar' => 'modificar'
 ];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' && empty($permisosUsuario['consultar'])) {
@@ -519,6 +525,91 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             break;
 
+        case 'analitica_dashboard':
+            header('Content-Type: application/json; charset=utf-8');
+            $productoId = filter_var($_POST['producto_id'] ?? null, FILTER_VALIDATE_INT);
+            $categoriaId = filter_var($_POST['categoria_id'] ?? null, FILTER_VALIDATE_INT);
+            $frecuencia = $_POST['frecuencia'] ?? '';
+            $horizonte = filter_var($_POST['horizonte'] ?? null, FILTER_VALIDATE_INT);
+            $hayProducto = $productoId !== false && $productoId !== null && $productoId > 0;
+            $hayCategoria = $categoriaId !== false && $categoriaId !== null && $categoriaId > 0;
+
+            if ($hayProducto === $hayCategoria ||
+                !in_array($frecuencia, ['diaria', 'semanal', 'mensual'], true) ||
+                !in_array($horizonte, [15, 30, 60, 90], true)) {
+                http_response_code(400);
+                echo json_encode(['detail' => 'Seleccione un producto o categoría, frecuencia y horizonte válidos.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            try {
+                $productoModel = new Productos();
+                $datosAnalitica = $productoModel->obtenerDatosAnaliticaPredictiva(365);
+                $solicitud = array_merge($datosAnalitica, [
+                    'producto_id' => $hayProducto ? $productoId : null,
+                    'categoria_id' => $hayCategoria ? $categoriaId : null,
+                    'frecuencia' => $frecuencia,
+                    'horizonte' => $horizonte
+                ]);
+                $resultado = (new AnaliticaPredictivaProxy())->obtenerDashboard($solicitud);
+                echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            } catch (\RuntimeException | \JsonException $e) {
+                error_log('Error en dashboard de analítica predictiva: ' . $e->getMessage());
+                http_response_code(503);
+                echo json_encode(['detail' => 'No se pudo consultar la analítica. Verifique que el microservicio esté disponible y configurado.'], JSON_UNESCAPED_UNICODE);
+            } catch (\InvalidArgumentException $e) {
+                http_response_code(400);
+                echo json_encode(['detail' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+
+        case 'analitica_entrenar':
+            header('Content-Type: application/json; charset=utf-8');
+            try {
+                $productoModel = new Productos();
+                $datosAnalitica = $productoModel->obtenerDatosAnaliticaPredictiva(365);
+                if (empty($datosAnalitica['productos']) || empty($datosAnalitica['ventas'])) {
+                    http_response_code(422);
+                    echo json_encode(['detail' => 'No hay productos o facturas pagadas suficientes para entrenar en los últimos 365 días.'], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
+                $resultado = (new AnaliticaPredictivaProxy())->entrenar($datosAnalitica);
+                echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            } catch (\RuntimeException | \JsonException $e) {
+                error_log('Error al entrenar analítica predictiva: ' . $e->getMessage());
+                http_response_code(503);
+                echo json_encode(['detail' => 'No se pudo entrenar el modelo. Verifique el microservicio y la configuración.'], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+
+        case 'analitica_feedback':
+            header('Content-Type: application/json; charset=utf-8');
+            $recomendacionId = trim((string)($_POST['recomendacion_id'] ?? ''));
+            $tipo = $_POST['tipo'] ?? '';
+            $estrellas = filter_var($_POST['estrellas'] ?? null, FILTER_VALIDATE_INT);
+            if (!preg_match('/^(combo|reposicion):[0-9,]+$/', $recomendacionId) ||
+                !in_array($tipo, ['combo', 'reposicion'], true) ||
+                $estrellas === false || $estrellas < 1 || $estrellas > 5) {
+                http_response_code(400);
+                echo json_encode(['detail' => 'La valoración de la recomendación no es válida.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            try {
+                $resultado = (new AnaliticaPredictivaProxy())->guardarFeedback([
+                    'recomendacion_id' => $recomendacionId,
+                    'tipo' => $tipo,
+                    'estrellas' => $estrellas,
+                    'usuario_id' => isset($_SESSION['id_usuario']) ? (int)$_SESSION['id_usuario'] : null
+                ]);
+                echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            } catch (\RuntimeException | \JsonException $e) {
+                error_log('Error al guardar feedback de analítica predictiva: ' . $e->getMessage());
+                http_response_code(503);
+                echo json_encode(['detail' => 'No se pudo guardar la valoración. Inténtelo nuevamente.'], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
+
         default:
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['status' => 'error', 'message' => 'Acción no válida'], JSON_UNESCAPED_UNICODE);
@@ -567,7 +658,7 @@ $mostrarFormulario = !empty($categoriasDinamicas);
 $pagina = "producto";
 
 // Buscar primero en Vista/VistaNew/ y luego en Vista/
-if (is_file("Vista/" . $pagina . ".php")) {
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {
             $bitacoraModel = new Bitacora();
@@ -584,7 +675,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
     $modelos = obtenerModelos();
     $productos = obtenerProductos();
     $productosMasRecibidos = obtenerProductosMasRecibidos();
-    require_once("Vista/" . $pagina . ".php");
+    require_once("Vista/VistaNew/" . $pagina . ".php");
 } elseif (is_file("Vista/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {
         if (!defined('SKIP_SIDE_EFFECTS')) {

@@ -183,7 +183,21 @@ function consultarRoles() {
 }
 
 $pagina = "rol";
-if (is_file("Vista/" . $pagina . ".php")) {
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
+            $_SESSION['id_usuario'],
+            MODULO_ROLES,
+            'ACCESAR',
+            'El usuario accedió al módulo de Roles',
+            'media'
+        );
+    }
+    $roles = consultarRoles();
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
         $bitacoraModel = new Bitacora();
         $bitacoraModel->registrarBitacora(

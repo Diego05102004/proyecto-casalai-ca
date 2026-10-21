@@ -306,7 +306,9 @@ if (isset($_POST['id_factura'])) {
     $monto = $facturaModel->obtenerMontoTotalFactura($idFactura);
 
     $pagina = "PasareladePago";
-    if (is_file("Vista/" . $pagina . ".php")) {
+    if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
+        require_once("Vista/VistaNew/" . $pagina . ".php");
+    } elseif (is_file("Vista/" . $pagina . ".php")) {
         require_once("Vista/" . $pagina . ".php");
     } else {
         echo "Página en construcción";

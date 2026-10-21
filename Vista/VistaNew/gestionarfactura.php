@@ -49,11 +49,11 @@ ob_start();
     <div class="section-header">
         <h2>Gestión de Pedidos</h2>
         <div class="section-actions">
-            <button type="button" class="btn-add-order" onclick="Swal.fire({ icon: 'info', title: 'Pedido nuevo', text: 'La creación de pedidos se realiza desde la compra o el flujo de facturación disponible.' });">
+            <button type="button" class="btn-add-order" onclick="openCreateOrderModal()">
                 <span class="btn-icon"><i class="fas fa-plus"></i></span>
                 Crear Pedido
             </button>
-            <button type="button" class="btn-filter" onclick="Swal.fire({ icon: 'info', title: 'Filtro', text: 'Usa la búsqueda del listado para filtrar los pedidos actuales.' });">
+            <button type="button" class="btn-filter" onclick="openFilterModal()">
                 <span class="btn-icon"><i class="fas fa-search"></i></span>
                 Filtrar
             </button>
@@ -153,6 +153,146 @@ ob_start();
         </div>
         <div class="modal-footer">
             <button type="button" class="btn-close" onclick="closeDetailsModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear Pedido -->
+<div id="createOrderModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <div class="modal-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="modal-title-content">
+                    <h2>Crear Nuevo Pedido</h2>
+                    <p>Complete los datos para registrar una venta presencial</p>
+                </div>
+            </div>
+            <span class="close-modal" onclick="closeCreateOrderModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="createOrderForm">
+                <input type="hidden" name="accion" value="registrar">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cliente">
+                            <i class="fas fa-user"></i>
+                            Cliente*
+                        </label>
+                        <select id="cliente" name="cliente" required>
+                            <option value="">Seleccione un cliente</option>
+                            <?php if (!empty($clientes)): ?>
+                                <?php foreach ($clientes as $cliente): ?>
+                                    <option value="<?php echo $cliente['id_cliente']; ?>">
+                                        <?php echo htmlspecialchars($cliente['nombre_cliente'] ?? ''); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fecha">
+                            <i class="fas fa-calendar"></i>
+                            Fecha*
+                        </label>
+                        <input type="date" id="fecha" name="fecha" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="descuento">
+                            <i class="fas fa-percent"></i>
+                            Descuento (%)
+                        </label>
+                        <input type="number" id="descuento" name="descuento" value="0" min="0" max="100" step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="estatus">
+                            <i class="fas fa-toggle-on"></i>
+                            Estatus*
+                        </label>
+                        <select id="estatus" name="estatus" required>
+                            <option value="borrador">Borrador</option>
+                            <option value="proceso">En Proceso</option>
+                            <option value="completado">Completado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="products-section">
+                    <h3><i class="fas fa-box"></i> Productos del Pedido</h3>
+                    
+                    <div class="product-selection">
+                        <div class="form-group">
+                            <label for="producto">
+                                <i class="fas fa-tag"></i>
+                                Producto
+                            </label>
+                            <select id="producto" name="producto">
+                                <option value="">Seleccione un producto</option>
+                                <?php if (!empty($productos)): ?>
+                                    <?php foreach ($productos as $producto): ?>
+                                        <option value="<?php echo $producto['id_producto']; ?>">
+                                            <?php echo htmlspecialchars($producto['nombre_producto'] ?? ''); ?> - 
+                                            $<?php echo number_format($producto['precio'] ?? 0, 2); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cantidad">
+                                <i class="fas fa-hashtag"></i>
+                                Cantidad
+                            </label>
+                            <input type="number" id="cantidad" name="cantidad" min="1" value="1">
+                        </div>
+                        
+                        <button type="button" class="btn-add-product" onclick="addProduct()">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de productos agregados -->
+                <div class="products-list" id="productsList">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Los productos se agregarán aquí dinámicamente -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: 700;">Total:</td>
+                                <td colspan="2" id="totalAmount" style="font-weight: 700; color: #2196F3;">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-close" onclick="closeCreateOrderModal()">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="button" class="btn-save" onclick="submitOrder()">
+                <i class="fas fa-check"></i> Registrar Pedido
+            </button>
         </div>
     </div>
 </div>
@@ -260,6 +400,202 @@ ob_start();
     .status.pending { background: #fee2e2; color: #991b1b; }
     .status.cancelled { background: #e5e7eb; color: #374151; }
     .cancelled-orders .card-icon { background: linear-gradient(135deg, #64748b, #475569); }
+    
+    /* Modal de Creación de Pedidos */
+    .modal-large {
+        max-width: 900px;
+    }
+    
+    .modal-header-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .modal-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-icon i {
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .modal-title-content h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0 0 5px 0;
+    }
+    
+    .modal-title-content p {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2d3748;
+    }
+    
+    .form-group label i {
+        color: #2196F3;
+        margin-right: 8px;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: #2196F3;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+    
+    .products-section {
+        margin-top: 25px;
+        padding-top: 25px;
+        border-top: 2px solid #e9ecef;
+    }
+    
+    .products-section h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .products-section h3 i {
+        color: #2196F3;
+    }
+    
+    .product-selection {
+        display: grid;
+        grid-template-columns: 2fr 1fr auto;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .product-selection {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .btn-add-product {
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-product:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
+    }
+    
+    .products-list {
+        margin-top: 20px;
+    }
+    
+    .products-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .products-table thead {
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        color: white;
+    }
+    
+    .products-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .products-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .products-table tfoot td {
+        padding: 15px 12px;
+        background: #f8f9fa;
+        font-weight: 700;
+    }
+    
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
     #listado .accordion { width: 100%; }
     #listado .accordion-item { border-bottom: 1px solid #e5e7eb; }
     #listado .accordion-header { margin: 0; }
@@ -509,6 +845,156 @@ ob_start();
         button.setAttribute('aria-expanded', String(!expanded));
         button.classList.toggle('collapsed', expanded);
         target.classList.toggle('show', !expanded);
+    });
+
+    // Funciones para el modal de creación de pedidos
+    let orderProducts = [];
+
+    function openCreateOrderModal() {
+        document.getElementById('createOrderModal').style.display = 'block';
+        // Establecer fecha actual por defecto
+        document.getElementById('fecha').valueAsDate = new Date();
+    }
+
+    function closeCreateOrderModal() {
+        document.getElementById('createOrderModal').style.display = 'none';
+        document.getElementById('createOrderForm').reset();
+        orderProducts = [];
+        updateProductsTable();
+    }
+
+    function addProduct() {
+        const productoSelect = document.getElementById('producto');
+        const cantidadInput = document.getElementById('cantidad');
+        
+        const productoId = productoSelect.value;
+        const productoNombre = productoSelect.options[productoSelect.selectedIndex].text;
+        const cantidad = parseInt(cantidadInput.value);
+        
+        if (!productoId || cantidad <= 0) {
+            alert('Por favor, seleccione un producto y una cantidad válida');
+            return;
+        }
+        
+        // Extraer precio del texto del producto
+        const precioTexto = productoNombre.split('-')[1].trim().replace('$', '');
+        const precio = parseFloat(precioTexto);
+        const nombre = productoNombre.split('-')[0].trim();
+        
+        // Verificar si el producto ya está en la lista
+        const existingIndex = orderProducts.findIndex(p => p.id === productoId);
+        if (existingIndex >= 0) {
+            orderProducts[existingIndex].cantidad += cantidad;
+            orderProducts[existingIndex].subtotal = orderProducts[existingIndex].cantidad * orderProducts[existingIndex].precio;
+        } else {
+            orderProducts.push({
+                id: productoId,
+                nombre: nombre,
+                precio: precio,
+                cantidad: cantidad,
+                subtotal: precio * cantidad
+            });
+        }
+        
+        updateProductsTable();
+        productoSelect.value = '';
+        cantidadInput.value = 1;
+    }
+
+    function removeProduct(index) {
+        orderProducts.splice(index, 1);
+        updateProductsTable();
+    }
+
+    function updateProductsTable() {
+        const tbody = document.getElementById('productsTableBody');
+        tbody.innerHTML = '';
+        
+        let total = 0;
+        
+        orderProducts.forEach((product, index) => {
+            total += product.subtotal;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${product.nombre}</td>
+                <td>$${product.precio.toFixed(2)}</td>
+                <td>${product.cantidad}</td>
+                <td>$${product.subtotal.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn-action btn-delete" onclick="removeProduct(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        document.getElementById('totalAmount').textContent = '$' + total.toFixed(2);
+    }
+
+    function submitOrder() {
+        const form = document.getElementById('createOrderForm');
+        const cliente = form.querySelector('#cliente').value;
+        const fecha = form.querySelector('#fecha').value;
+        const estatus = form.querySelector('#estatus').value;
+        const descuento = form.querySelector('#descuento').value;
+        
+        if (!cliente || !fecha || !estatus) {
+            alert('Por favor, complete todos los campos obligatorios');
+            return;
+        }
+        
+        if (orderProducts.length === 0) {
+            alert('Por favor, agregue al menos un producto al pedido');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('accion', 'registrar');
+        formData.append('cliente', cliente);
+        formData.append('fecha', fecha);
+        formData.append('estatus', estatus);
+        formData.append('descuento', descuento);
+        
+        orderProducts.forEach((product, index) => {
+            formData.append(`id_producto[${index}]`, product.id);
+            formData.append(`cantidad[${index}]`, product.cantidad);
+        });
+        
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.status === 'success') {
+                alert('Pedido registrado correctamente');
+                closeCreateOrderModal();
+                location.reload();
+            } else {
+                alert('Error al registrar pedido: ' + (data.message || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al registrar pedido. Por favor, intente nuevamente.');
+        });
+    }
+
+    // Event listeners para el modal de creación
+    document.addEventListener('DOMContentLoaded', function () {
+        const createModal = document.getElementById('createOrderModal');
+        if (createModal) {
+            const closeButton = createModal.querySelector('.close-modal');
+            if (closeButton) {
+                closeButton.addEventListener('click', closeCreateOrderModal);
+            }
+            createModal.addEventListener('click', function (event) {
+                if (event.target === createModal) {
+                    closeCreateOrderModal();
+                }
+            });
+        }
     });
 </script>
 

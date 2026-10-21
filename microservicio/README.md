@@ -9,9 +9,14 @@ Microservicio de Inteligencia Artificial para auditoría de recepción de mercan
 ```
 microservicio/
 ├── modelo/
-│   └── auditor_recepcion.py      # Lógica IA (OCR + PLN)
+│   ├── auditor_recepcion.py      # Lógica IA (OCR + PLN)
+│   └── analitica_predictiva.py   # Entrenamiento e inferencia de demanda
 ├── controlador/
-│   └── api_recepcion.py          # API REST FastAPI
+│   ├── api_recepcion.py          # API REST FastAPI
+│   └── api_analitica.py          # Endpoints protegidos de analítica
+├── analitica_predictiva/
+│   ├── GUIA_ENTRENAMIENTO.md     # Guía local, paso a paso
+│   └── GUIA_ENTRENAMIENTO.pdf    # Guía descargable
 ├── javascript/
 │   └── asistente_recepcion.js    # Cliente JS para PHP
 ├── config/                       # Configuración
@@ -65,8 +70,13 @@ uvicorn controlador.api_recepcion:app --host 0.0.0.0 --port 8000 --reload
 | POST | `/fase1/comparar-directo` | Extraer + verificar en un paso |
 | GET | `/fase1/cache/{id}` | Ver factura en cache |
 | GET | `/fase1/estadisticas` | Estadísticas de uso |
+| POST | `/api/v1/analitica/dashboard` | Histórico, inferencia y recomendaciones |
+| POST | `/api/v1/analitica/entrenar` | Entrenar modelos locales |
+| POST | `/api/v1/analitica/feedback` | Registrar una valoración de 1–5 estrellas |
 
 El módulo PHP invoca estos endpoints a través de `Modelo/Servicio/RecepcionIAProxy.php`; PHP debe tener habilitada la extensión cURL. La URL base se configura con `RECEPCION_IA_URL` y por defecto es `http://127.0.0.1:8000`. El proxy aplica timeout total de 7,5 segundos, un reintento limitado para fallos de conexión/HTTP transitorios y un circuit breaker compartido en el host PHP: tres fallos consecutivos abren el circuito por dos minutos. El frontend aplica además un timeout de 8 segundos y activa el registro manual cuando detecta indisponibilidad.
+
+La vista de productos usa `Modelo/Servicio/AnaliticaPredictivaProxy.php` para comunicarse con los endpoints nuevos. Configurar `ANALITICA_PREDICTIVA_URL` (por defecto `http://127.0.0.1:8000`) y el mismo secreto privado `ANALITICA_PREDICTIVA_TOKEN` en los entornos de PHP/Apache y FastAPI. FastAPI comprueba el token en las tres rutas de analítica; no exponerlo al navegador. Mantener el servicio enlazado a `127.0.0.1` cuando se ejecuta en el host de PHP.
 
 La factura adjunta se conserva en `comprobantes/recepcion/`, con acceso HTTP denegado. Los manifiestos `.json` indican el correlativo, la recepción y si quedó `pendiente_ocr`; todavía no existe un trabajador batch que procese automáticamente esos pendientes.
 
@@ -91,7 +101,8 @@ La carga acepta PDF e imágenes de hasta 5 MB. En los PDFs se analiza cada pági
 
 - [Texto para memoria técnica: arquitectura, seguridad e IA/OCR](ARQUITECTURA_Y_SEGURIDAD.md): degradación grácil, parámetros del breaker, política de adjuntos y pipeline implementado.
 - [Ficha de caracterización del dataset de facturas](DATASET_FACTURAS.md): variabilidad, etiquetado, particiones, evaluación y rol actual/futuro de CNN.
-- [Contrato propuesto para Analítica Predictiva](ANALITICA_PREDICTIVA.md): fuente de datos, endpoint, métricas de negocio y especificación del dashboard. No hay aún API predictiva implementada.
+- [Implementación de Analítica Predictiva](ANALITICA_PREDICTIVA.md): fuente pagada acordada, arquitectura, endpoint, reglas de negocio y límites del MVP.
+- [Guía de entrenamiento local (Markdown)](analitica_predictiva/GUIA_ENTRENAMIENTO.md) y [PDF](analitica_predictiva/GUIA_ENTRENAMIENTO.pdf): flujo de datos, entrenamiento, lectura de métricas y solución de problemas.
 
 ## 📝 Ejemplo de Uso en PHP/JavaScript
 
@@ -144,7 +155,7 @@ Crear `config/config.json`:
 ## 📊 Fases del Proyecto
 
 - **Fase 1** ✅: Verificación Asistida (El Guardián) - Actual
-- **Fase 2**: Sugerencia Inteligente (El Asistente) - Próximo
+- **Fase 2** 🚧: Sugerencia Inteligente (El Asistente) - MVP de demanda, combos y reposición disponible en Productos; abastecimiento de proveedores pendiente de datos de lead time.
 - **Fase 3**: Automatización Completa (El Piloto) - Futuro
 
 ## 🔧 Tecnologías

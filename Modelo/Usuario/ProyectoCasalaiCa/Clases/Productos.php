@@ -1721,6 +1721,58 @@ class Productos extends BD{
         });
     }
 
+    public function obtenerDatosAnaliticaPredictiva($dias = 365) {
+        $dias = (int)$dias;
+        if ($dias < 90 || $dias > 730) {
+            throw new \InvalidArgumentException('El historial de analítica debe estar entre 90 y 730 días.');
+        }
+        $fechaDesde = (new \DateTimeImmutable('today'))->modify('-' . $dias . ' days')->format('Y-m-d');
+
+        return $this->ejecutarConConexionSegura(function($pdo) use ($fechaDesde) {
+            $sqlProductos = "
+                SELECT
+                    p.id_producto,
+                    p.nombre_producto,
+                    p.id_categoria,
+                    c.nombre_categoria,
+                    p.stock,
+                    p.stock_minimo,
+                    p.stock_maximo,
+                    p.estado
+                FROM tbl_productos p
+                LEFT JOIN tbl_categoria c ON c.id_categoria = p.id_categoria
+                WHERE p.estado = 'habilitado'
+                ORDER BY p.nombre_producto ASC
+            ";
+            $stmtProductos = $pdo->prepare($sqlProductos);
+            $stmtProductos->execute();
+
+            $sqlVentas = "
+                SELECT
+                    f.id_factura,
+                    DATE_FORMAT(f.fecha, '%Y-%m-%d') AS fecha,
+                    fd.id_producto,
+                    SUM(fd.cantidad) AS cantidad
+                FROM tbl_facturas f
+                INNER JOIN tbl_factura_detalle fd ON fd.factura_id = f.id_factura
+                INNER JOIN tbl_productos p ON p.id_producto = fd.id_producto
+                WHERE f.estatus IN ('Pagada', 'Pagada Presencialmente', 'Pago Procesado')
+                    AND f.fecha >= :fecha_desde
+                    AND f.fecha < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                    AND p.estado = 'habilitado'
+                GROUP BY f.id_factura, DATE(f.fecha), fd.id_producto
+                ORDER BY f.fecha ASC, f.id_factura ASC
+            ";
+            $stmtVentas = $pdo->prepare($sqlVentas);
+            $stmtVentas->execute([':fecha_desde' => $fechaDesde]);
+
+            return [
+                'productos' => $stmtProductos->fetchAll(PDO::FETCH_ASSOC),
+                'ventas' => $stmtVentas->fetchAll(PDO::FETCH_ASSOC),
+            ];
+        });
+    }
+
     public function getStockProductos() {
         return $this->g_stockProductos();
     }

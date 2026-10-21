@@ -183,7 +183,8 @@ function getmarcas() {
 }
 
 $pagina = "modelo";
-if (is_file("Vista/" . $pagina . ".php")) {
+// Buscar primero en Vista/VistaNew/ y luego en Vista/
+if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     $modelos = getModelos();
     $marcas = getmarcas();
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
@@ -195,7 +196,21 @@ if (is_file("Vista/" . $pagina . ".php")) {
         'El usuario accedió al módulo de Modelos',
         'media'
     );
-}
+    }
+    require_once("Vista/VistaNew/" . $pagina . ".php");
+} elseif (is_file("Vista/" . $pagina . ".php")) {
+    $modelos = getModelos();
+    $marcas = getmarcas();
+    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+        $bitacoraModel = new Bitacora();
+        $bitacoraModel->registrarBitacora(
+        $_SESSION['id_usuario'],
+        'Modelos',
+        'ACCESAR',
+        'El usuario accedió al módulo de Modelos',
+        'media'
+        );
+    }
     require_once("Vista/" . $pagina . ".php");
 } else {
     echo "Página en construcción";
