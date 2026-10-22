@@ -6,9 +6,9 @@ import json
 import shutil
 
 # Importación de tus módulos existentes y nuevos
-from auditor_recepcion import AuditorRecepcion
-from model_registry import ModelRegistry
-from logger import logger  # Mantenemos e importamos tu logger personalizado
+from ..modelo.auditor_recepcion import AuditorRecepcion
+from ..modelo.model_registry import ModelRegistry
+from ..modelo.logger import logger
 
 app = FastAPI(
     title="Microservicio de Auditoría y Recepción - Casa Lai, C.A.",
