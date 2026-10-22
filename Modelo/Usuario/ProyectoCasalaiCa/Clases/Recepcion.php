@@ -932,15 +932,16 @@ class Recepcion extends BD{
 
     private function agg_FilaHistoricalData($datosRecepcion, $productosRegistrados) {
         // Ruta hacia el historical_data.csv dentro del microservicio
-        $rutaCsv = dirname(__DIR__, 2) . '/microservicio/entrenamiento/historical_data.csv';
-        
+        $rutaCsv = dirname(__DIR__) . '/microservicio/entrenamiento/historical_data.csv';
+
         if (!file_exists($rutaCsv)) {
-            error_log("El archivo historical_data.csv no existe en la ruta especificada.");
+            error_log("CRítico: No se encontró el historical_data.csv en: " . $rutaCsv);
             return false;
         }
 
         $fp = fopen($rutaCsv, 'a');
         if ($fp === false) {
+            error_log("CRítico: No se pudo abrir el archivo CSV para escritura.");
             return false;
         }
 
