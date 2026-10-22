@@ -349,25 +349,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 $id_recepcion = $recepcionRegistrada['id_recepcion'];
 
-                    if (!defined('SKIP_SIDE_EFFECTS')) {
-                        try {
-                            $bd_seguridad = new BD('S');
-                            $pdo_seguridad = $bd_seguridad->getConexion();
-                            $notificacionModel = new NotificacionModel($pdo_seguridad);
-                            $notificacionModel->crear(
-                                $_SESSION['id_usuario'],
-                                'recepcion',
-                                'Nueva Recepción Registrada',
-                                "Se ha registrado una nueva recepción #".$_POST['correlativo']." con ".array_sum($_POST['cantidad'])." unidades por el usuario ".$_SESSION['name'],
-                                'media',
-                                MODULO_RECEPCION,
-                                'ingresar',
-                                $id_recepcion
-                            );
-                        } catch (Throwable $e) {
-                            error_log('No se pudo crear la notificación de recepción registrada: ' . $e->getMessage());
-                        }
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    try {
+                        $bd_seguridad = new BD('S');
+                        $pdo_seguridad = $bd_seguridad->getConexion();
+                        $notificacionModel = new NotificacionModel($pdo_seguridad);
+                        $notificacionModel->crear(
+                            $_SESSION['id_usuario'],
+                            'recepcion',
+                            'Nueva Recepción Registrada',
+                            "Se ha registrado una nueva recepción #".$_POST['correlativo']." con ".array_sum($_POST['cantidad'])." unidades por el usuario ".$_SESSION['name'],
+                            'media',
+                            MODULO_RECEPCION,
+                            'ingresar',
+                            $id_recepcion
+                        );
+                    } catch (Throwable $e) {
+                        error_log('No se pudo crear la notificación de recepción registrada: ' . $e->getMessage());
                     }
+                }
+
+                try {
+                    $productosRegistrados = $k->obtenerProductosPorRecepcion($recepcionRegistrada['id_recepcion']);
+                    $k->agregarFilaHistoricalData($recepcionRegistrada, $productosRegistrados);
+                } catch (Throwable $e) {
+                    error_log('Error al actualizar historical_data.csv: ' . $e->getMessage());
+                }
 
                 echo json_encode([
                     'status' => 'success',
