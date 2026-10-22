@@ -431,6 +431,9 @@ def build_dashboard(
         product_model = artifact["models"].get(f"producto:{product_id}")
         if product_model is None:
             continue
+        # Si el producto no tiene registros de ventas diarias, salta al siguiente o asígnale vacío
+        if product_id not in daily_by_product:
+             continue   # Si estás dentro de un ciclo 'for', usa continue para saltarlo de forma segura.
         _, product_weekly = _weekly_series(daily_by_product[product_id], today)
         forecast = _forecast_daily(product_model, product_weekly, min(horizon, 90))
         projected_demand = sum(item["valor"] for item in forecast)
