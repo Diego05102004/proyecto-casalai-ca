@@ -349,25 +349,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 $id_recepcion = $recepcionRegistrada['id_recepcion'];
 
-                    if (!defined('SKIP_SIDE_EFFECTS')) {
-                        try {
-                            $bd_seguridad = new BD('S');
-                            $pdo_seguridad = $bd_seguridad->getConexion();
-                            $notificacionModel = new NotificacionModel($pdo_seguridad);
-                            $notificacionModel->crear(
-                                $_SESSION['id_usuario'],
-                                'recepcion',
-                                'Nueva Recepción Registrada',
-                                "Se ha registrado una nueva recepción #".$_POST['correlativo']." con ".array_sum($_POST['cantidad'])." unidades por el usuario ".$_SESSION['name'],
-                                'media',
-                                MODULO_RECEPCION,
-                                'ingresar',
-                                $id_recepcion
-                            );
-                        } catch (Throwable $e) {
-                            error_log('No se pudo crear la notificación de recepción registrada: ' . $e->getMessage());
+                if (!defined('SKIP_SIDE_EFFECTS')) {
+                    try {
+                        $bd_seguridad = new BD('S');
+                        $pdo_seguridad = $bd_seguridad->getConexion();
+                        $notificacionModel = new NotificacionModel($pdo_seguridad);
+                        $notificacionModel->crear(
+                            $_SESSION['id_usuario'],
+                            'recepcion',
+                            'Nueva Recepción Registrada',
+                            "Se ha registrado una nueva recepción #".$_POST['correlativo']." con ".array_sum($_POST['cantidad'])." unidades por el usuario ".$_SESSION['name'],
+                            'media',
+                            MODULO_RECEPCION,
+                            'ingresar',
+                            $id_recepcion
+                        );
+                    } catch (Throwable $e) {
+                        error_log('No se pudo crear la notificación de recepción registrada: ' . $e->getMessage());
+                    }
+                }
+
+                try {
+                    $productosRegistrados = $k->obtenerProductosPorRecepcion($recepcionRegistrada['id_recepcion']);
+                    
+                    $subtotalFacturaCalc = 0;
+                    if (isset($_POST['cantidad'], $_POST['costo']) && is_array($_POST['cantidad'])) {
+                        foreach ($_POST['cantidad'] as $i => $cant) {
+                            $subtotalFacturaCalc += (floatval($cant) * floatval($_POST['costo'][$i] ?? 0));
                         }
                     }
+                    $montoIvaCalc = $subtotalFacturaCalc * ($porcentajeIva / 100);
+                    $totalFacturaCalc = $subtotalFacturaCalc + $montoIvaCalc;
+
+                    $idProveedor = $_POST['proveedor'] ?? ($recepcionRegistrada['id_proveedor'] ?? 0);
+                    
+                    $datosCompletosCsv = [
+                        'fecha' => $recepcionRegistrada['fecha'] ?? date('Y-m-d'),
+                        'id_proveedor' => $idProveedor,
+                        'nombre_proveedor' => $recepcionRegistrada['nombre_proveedor'] ?? ('Proveedor #' . $idProveedor),
+                        'porcentaje_iva' => $porcentajeIva,
+                        'subtotal_factura' => $subtotalFacturaCalc,
+                        'total_factura' => $totalFacturaCalc
+                    ];
+
+                    $resultadoCsv = $k->agregarFilaHistoricalData($datosCompletosCsv, $productosRegistrados);
+                    
+                    if (!$resultadoCsv) {
+                        error_log('ADVERTENCIA: agregarFilaHistoricalData retornó falso al intentar escribir en historical_data.csv');
+                    }
+                } catch (Throwable $e) {
+                    error_log('Error crítico al actualizar historical_data.csv: ' . $e->getMessage() . ' en línea ' . $e->getLine());
+                }
 
                 echo json_encode([
                     'status' => 'success',

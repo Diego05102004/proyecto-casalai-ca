@@ -925,5 +925,56 @@ class Recepcion extends BD{
             return $resultados;
         }, false);
     }
+
+    public function agregarFilaHistoricalData($datosRecepcion, $productosRegistrados) {
+        return $this->agg_FilaHistoricalData($datosRecepcion, $productosRegistrados);
+    }
+
+    private function agg_FilaHistoricalData($datosRecepcion, $productosRegistrados) {
+        // Ruta hacia el historical_data.csv dentro del microservicio
+        $rutaCsv = dirname(__DIR__) . '/microservicio/entrenamiento/historical_data.csv';
+
+        if (!file_exists($rutaCsv)) {
+            error_log("CRítico: No se encontró el historical_data.csv en: " . $rutaCsv);
+            return false;
+        }
+
+        $fp = fopen($rutaCsv, 'a');
+        if ($fp === false) {
+            error_log("CRítico: No se pudo abrir el archivo CSV para escritura.");
+            return false;
+        }
+
+        $fecha = $datosRecepcion['fecha'] ?? date('Y-m-d');
+        $idProveedor = $datosRecepcion['id_proveedor'] ?? $this->idproveedor;
+        $nombreProveedor = $datosRecepcion['nombre_proveedor'] ?? '';
+        $porcentajeIva = $datosRecepcion['porcentaje_iva'] ?? 0;
+        $subtotalFactura = $datosRecepcion['subtotal_factura'] ?? 0;
+        $totalFactura = $datosRecepcion['total_factura'] ?? 0;
+
+        foreach ($productosRegistrados as $prod) {
+            $idProducto = $prod['codigo'] ?? $prod['id_producto'] ?? 0;
+            $cantidad = $prod['cantidad'] ?? 0;
+            $costo = $prod['costo'] ?? 0;
+            $subtotalItem = $cantidad * $costo;
+
+            $fila = [
+                $fecha,
+                $idProveedor,
+                $nombreProveedor,
+                $idProducto,
+                $cantidad,
+                $costo,
+                $subtotalItem,
+                $porcentajeIva,
+                $totalFactura
+            ];
+
+            fputcsv($fp, $fila);
+        }
+
+        fclose($fp);
+        return true;
+    }
 }
 ?>

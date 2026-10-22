@@ -871,7 +871,7 @@ async function saveRecepcion(event) {
                 const discrepanciasRaw = verificacion.discrepancias || [];
                 const listaGranular = construirListaGranularDiscrepancias(discrepanciasRaw);
 
-                if (listaGranular.length > 0) {
+                /*if (listaGranular.length > 0) {
                     discrepanciasActivasIA = {
                         listaOriginal: discrepanciasRaw,
                         listaGranular: listaGranular
@@ -892,6 +892,34 @@ async function saveRecepcion(event) {
 
                     if (botonGuardar) botonGuardar.disabled = false;
                     return;
+                }*/
+                if (listaGranular.length > 0) {
+                    discrepanciasActivasIA = {
+                        listaOriginal: discrepanciasRaw,
+                        listaGranular: listaGranular
+                    };
+
+                    const detalleHTML = listaGranular.map(item =>
+                        `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
+                    ).join('');
+
+                    evaluarDiscrepanciasInteractivas();
+
+                    const resultadoSwal = await Swal.fire({
+                        icon: 'warning',
+                        title: 'Diferencias detectadas',
+                        html: `La verificación encontró diferencias con la factura. ¿Deseas registrar de igual forma la recepción o volver al formulario?<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, registrar igual',
+                        cancelButtonText: 'Volver al formulario',
+                        confirmButtonColor: 'rgb(192, 218, 47)',
+                        cancelButtonColor: '#3085d6'
+                    });
+
+                    if (!resultadoSwal.isConfirmed) {
+                        if (botonGuardar) botonGuardar.disabled = false;
+                        return;
+                    }
                 } else {
                     iaVerificada = true;
                 }
