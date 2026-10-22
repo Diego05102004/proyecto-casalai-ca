@@ -931,51 +931,49 @@ class Recepcion extends BD{
     }
 
     private function agg_FilaHistoricalData($datosRecepcion, $productosRegistrados) {
-    // Ruta hacia el historical_data.csv dentro del microservicio
-    $rutaCsv = dirname(__DIR__, 2) . '/microservicio/entrenamiento/historical_data.csv';
-    
-    if (!file_exists($rutaCsv)) {
-        error_log("El archivo historical_data.csv no existe en la ruta especificada.");
-        return false;
+        // Ruta hacia el historical_data.csv dentro del microservicio
+        $rutaCsv = dirname(__DIR__, 2) . '/microservicio/entrenamiento/historical_data.csv';
+        
+        if (!file_exists($rutaCsv)) {
+            error_log("El archivo historical_data.csv no existe en la ruta especificada.");
+            return false;
+        }
+
+        $fp = fopen($rutaCsv, 'a');
+        if ($fp === false) {
+            return false;
+        }
+
+        $fecha = $datosRecepcion['fecha'] ?? date('Y-m-d');
+        $idProveedor = $datosRecepcion['id_proveedor'] ?? $this->idproveedor;
+        $nombreProveedor = $datosRecepcion['nombre_proveedor'] ?? '';
+        $porcentajeIva = $datosRecepcion['porcentaje_iva'] ?? 0;
+        $subtotalFactura = $datosRecepcion['subtotal_factura'] ?? 0;
+        $totalFactura = $datosRecepcion['total_factura'] ?? 0;
+
+        foreach ($productosRegistrados as $prod) {
+            $idProducto = $prod['codigo'] ?? $prod['id_producto'] ?? 0;
+            $cantidad = $prod['cantidad'] ?? 0;
+            $costo = $prod['costo'] ?? 0;
+            $subtotalItem = $cantidad * $costo;
+
+            $fila = [
+                $fecha,
+                $idProveedor,
+                $nombreProveedor,
+                $idProducto,
+                $cantidad,
+                $costo,
+                $subtotalItem,
+                $porcentajeIva,
+                $totalFactura
+            ];
+
+            fputcsv($fp, $fila);
+        }
+
+        fclose($fp);
+        return true;
     }
-
-    $fp = fopen($rutaCsv, 'a');
-    if ($fp === false) {
-        return false;
-    }
-
-    $fecha = $datosRecepcion['fecha'] ?? date('Y-m-d');
-    $idProveedor = $datosRecepcion['id_proveedor'] ?? $this->idproveedor;
-    $nombreProveedor = $datosRecepcion['nombre_proveedor'] ?? '';
-    $porcentajeIva = $datosRecepcion['porcentaje_iva'] ?? 0;
-    $subtotalFactura = $datosRecepcion['subtotal_factura'] ?? 0;
-    $totalFactura = $datosRecepcion['total_factura'] ?? 0;
-
-    // Iterar sobre cada producto registrado en la recepción para agregarlo como fila histórica
-    foreach ($productosRegistrados as $prod) {
-        $idProducto = $prod['id_producto'] ?? 0;
-        $cantidad = $prod['cantidad'] ?? 0;
-        $costo = $prod['costo'] ?? 0;
-        $subtotalItem = $cantidad * $costo;
-
-        // Estructura de la fila adaptada al mapeo del CSV
-        $fila = [
-            $fecha,
-            $idProveedor,
-            $nombreProveedor,
-            $idProducto,
-            $cantidad,
-            $costo,
-            $subtotalItem,
-            $porcentajeIva,
-            $totalFactura
-        ];
-
-        fputcsv($fp, $fila);
-    }
-
-    fclose($fp);
-    return true;
-}
 }
 ?>
