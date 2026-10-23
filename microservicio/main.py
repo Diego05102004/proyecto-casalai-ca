@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
+from modelo.logger import logger
 
 # Importación de los routers ubicados en la carpeta controlador/
 # Asegúrate de que api_analitica.py y api_recepcion.py expongan una variable llamada 'router'
@@ -33,6 +34,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+def startup_event():
+    logger.info("Iniciando microservicio unificado de recepción y analítica Casa Lai, C.A...")
+
 # Ruta Raíz de Verificación de Estado (Health Check)
 @app.get("/", tags=["Estado del Sistema"])
 def root():
@@ -46,16 +51,18 @@ def root():
 if recepcion_router:
     app.include_router(
         recepcion_router, 
-        prefix=f"{settings.API_V1_STR}/recepcion", 
-        tags=["Recepción y Verificación"]
+        prefix=settings.API_V1_STR
     )
 
 if analitica_router:
     app.include_router(
         analitica_router, 
-        prefix=f"{settings.API_V1_STR}/analitica", 
-        tags=["Analítica Predictiva"]
+        prefix=settings.API_V1_STR
     )
+
+# Incluir también endpoints de fase1 sin el prefijo /api/v1 para compatibilidad con PHP
+if recepcion_router:
+    app.include_router(recepcion_router)
 
 # Punto de ejecución local opcional (ej: python main.py)
 if __name__ == "__main__":

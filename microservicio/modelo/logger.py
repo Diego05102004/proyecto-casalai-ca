@@ -1,8 +1,16 @@
 import pandas as pd
 import os
+import logging
 from datetime import datetime
 
 DATA_PATH = "microservicio/entrenamiento/feedback_dataset.csv"
+
+# Configurar logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 def log_prediction_data(input_features: dict, prediction_result: dict):
     """Almacena los datos de entrada y la predicción generada para auditoría y reentrenamiento en feedback_dataset.csv."""
