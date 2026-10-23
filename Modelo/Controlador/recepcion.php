@@ -194,7 +194,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Capturar datos de predicción de la IA si se usó el microservicio
             $prediccionIA = null;
-            if ($usoMicroservicio && isset($_POST['ia_prediccion'])) {
+            if (isset($_POST['ia_prediccion'])) {
                 $prediccionIA = json_decode($_POST['ia_prediccion'], true);
             }
 
@@ -401,18 +401,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $datosFeedback = [
                             'id_recepcion' => $recepcionRegistrada['id_recepcion'],
                             'id_factura' => $_POST['correlativo'] ?? '',
-                            'prediccion_proveedor' => $prediccionIA['proveedor'] ?? '',
+                            'prediccion_proveedor' => $prediccionIA['nombre_proveedor'] ?? '',
                             'ground_truth_proveedor' => $recepcionRegistrada['nombre_proveedor'] ?? '',
                             'prediccion_correlativo' => $prediccionIA['numero_factura'] ?? '',
                             'ground_truth_correlativo' => $_POST['correlativo'] ?? '',
                             'prediccion_productos' => $prediccionIA['productos'] ?? [],
                             'ground_truth_productos' => $productosGt,
-                            'prediccion_subtotal' => $prediccionIA['subtotal'] ?? 0,
+                            'prediccion_subtotal' => $prediccionIA['subtotal_factura'] ?? 0,
                             'ground_truth_subtotal' => $subtotalFacturaCalc,
-                            'prediccion_total' => $prediccionIA['total'] ?? 0,
+                            'prediccion_total' => $prediccionIA['total_factura'] ?? 0,
                             'ground_truth_total' => $totalFacturaCalc,
                             'discrepancias_corregidas' => $prediccionIA['discrepancias'] ?? [],
-                            'confianza_ocr_promedio' => $prediccionIA['confianza'] ?? 0
+                            'confianza_ocr_promedio' => $prediccionIA['confianza_promedio'] ?? 0
                         ];
 
                         $resultadoFeedback = $k->agregarFeedbackDataset($datosFeedback);
