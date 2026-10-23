@@ -834,6 +834,7 @@ async function saveRecepcion(event) {
         const archivo = document.getElementById('fotoFacturaRecepcion')?.files[0];
         let modoContingencia = false;
         let iaVerificada = false;
+        let prediccionIA = null; // Para guardar los datos de predicción de la IA
         const aiClient = obtenerAsistenteIA();
 
         if (archivo) {
@@ -845,6 +846,8 @@ async function saveRecepcion(event) {
                     if (!extraccion.contingencia) throw new Error(extraccion.error || 'No se pudo analizar la factura.');
                     modoContingencia = true;
                 } else {
+                    // Guardar datos de predicción para feedback
+                    prediccionIA = extraccion.data;
                     rellenarRecepcionDesdeFactura(extraccion.data);
                 }
             }
@@ -920,6 +923,10 @@ async function saveRecepcion(event) {
                         if (botonGuardar) botonGuardar.disabled = false;
                         return;
                     }
+                    // Agregar discrepancias a los datos de predicción para feedback
+                    if (prediccionIA) {
+                        prediccionIA.discrepancias = listaGranular;
+                    }
                 } else {
                     iaVerificada = true;
                 }
@@ -940,6 +947,10 @@ async function saveRecepcion(event) {
         if (archivo) formData.append('factura_contingencia', archivo, archivo.name);
         if (modoContingencia) formData.append('modo_contingencia', 'true');
         if (iaVerificada) formData.append('ia_verificada', 'true');
+        // Enviar datos de predicción de la IA para feedback de aprendizaje
+        if (prediccionIA) {
+            formData.append('ia_prediccion', JSON.stringify(prediccionIA));
+        }
 
         const response = await fetch('?pagina=recepcion', { method: 'POST', body: formData });
         const data = await response.json();

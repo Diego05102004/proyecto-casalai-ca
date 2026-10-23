@@ -926,55 +926,142 @@ class Recepcion extends BD{
         }, false);
     }
 
-    public function agregarFilaHistoricalData($datosRecepcion, $productosRegistrados) {
-        return $this->agg_FilaHistoricalData($datosRecepcion, $productosRegistrados);
+    public function agregarFeedbackDataset($datosFeedback) {
+        return $this->agg_FeedbackDataset($datosFeedback);
     }
 
-    private function agg_FilaHistoricalData($datosRecepcion, $productosRegistrados) {
-        // Ruta hacia el historical_data.csv dentro del microservicio
-        $rutaCsv = dirname(__DIR__) . '/microservicio/entrenamiento/historical_data.csv';
+    private function agg_FeedbackDataset($datosFeedback) {
+        // Ruta hacia el feedback_dataset.csv dentro del microservicio
+        $rutaCsv = dirname(__DIR__, 4) . '/microservicio/entrenamiento/feedback_dataset.csv';
 
         if (!file_exists($rutaCsv)) {
-            error_log("CRítico: No se encontró el historical_data.csv en: " . $rutaCsv);
+            error_log("CRítico: No se encontró el feedback_dataset.csv en: " . $rutaCsv);
             return false;
         }
 
         $fp = fopen($rutaCsv, 'a');
         if ($fp === false) {
-            error_log("CRítico: No se pudo abrir el archivo CSV para escritura.");
+            error_log("CRítico: No se pudo abrir el archivo feedback_dataset.csv para escritura.");
             return false;
         }
 
-        $fecha = $datosRecepcion['fecha'] ?? date('Y-m-d');
-        $idProveedor = $datosRecepcion['id_proveedor'] ?? $this->idproveedor;
-        $nombreProveedor = $datosRecepcion['nombre_proveedor'] ?? '';
-        $porcentajeIva = $datosRecepcion['porcentaje_iva'] ?? 0;
-        $subtotalFactura = $datosRecepcion['subtotal_factura'] ?? 0;
-        $totalFactura = $datosRecepcion['total_factura'] ?? 0;
+        $timestamp = date('Y-m-d H:i:s');
+        $idRecepcion = $datosFeedback['id_recepcion'] ?? 0;
+        $idFactura = $datosFeedback['id_factura'] ?? '';
+        
+        // Datos de predicciones vs ground truth
+        $predProveedor = $datosFeedback['prediccion_proveedor'] ?? '';
+        $gtProveedor = $datosFeedback['ground_truth_proveedor'] ?? '';
+        $errorProveedor = $this->calcularErrorCampo($predProveedor, $gtProveedor);
+        
+        $predCorrelativo = $datosFeedback['prediccion_correlativo'] ?? '';
+        $gtCorrelativo = $datosFeedback['ground_truth_correlativo'] ?? '';
+        $errorCorrelativo = $this->calcularErrorCampo($predCorrelativo, $gtCorrelativo);
+        
+        $predProductos = json_encode($datosFeedback['prediccion_productos'] ?? [], JSON_UNESCAPED_UNICODE);
+        $gtProductos = json_encode($datosFeedback['ground_truth_productos'] ?? [], JSON_UNESCAPED_UNICODE);
+        $errorProductos = $this->calcularErrorProductos($datosFeedback['prediccion_productos'] ?? [], $datosFeedback['ground_truth_productos'] ?? []);
+        
+        $predSubtotal = $datosFeedback['prediccion_subtotal'] ?? 0;
+        $gtSubtotal = $datosFeedback['ground_truth_subtotal'] ?? 0;
+        $errorSubtotal = $this->calcularErrorNumerico($predSubtotal, $gtSubtotal);
+        
+        $predTotal = $datosFeedback['prediccion_total'] ?? 0;
+        $gtTotal = $datosFeedback['ground_truth_total'] ?? 0;
+        $errorTotal = $this->calcularErrorNumerico($predTotal, $gtTotal);
+        
+        $discrepanciasCorregidas = $datosFeedback['discrepancias_corregidas'] ?? [];
 
-        foreach ($productosRegistrados as $prod) {
-            $idProducto = $prod['codigo'] ?? $prod['id_producto'] ?? 0;
-            $cantidad = $prod['cantidad'] ?? 0;
-            $costo = $prod['costo'] ?? 0;
-            $subtotalItem = $cantidad * $costo;
+        $fila = [
+            $timestamp,
+            $idRecepcion,
+            $idFactura,
+            $predProveedor,
+            $gtProveedor,
+            $errorProveedor,
+            $predCorrelativo,
+            $gtCorrelativo,
+            $errorCorrelativo,
+            $predProductos,
+            $gtProductos,
+            $errorProductos,
+            $predSubtotal,
+            $gtSubtotal,
+            $errorSubtotal,
+            $predTotal,
+            $gtTotal,
+            $errorTotal,
+            json_encode($discrepanciasCorregidas, JSON_UNESCAPED_UNICODE),
+            $datosFeedback['confianza_ocr_promedio'] ?? 0
+        ];
 
-            $fila = [
-                $fecha,
-                $idProveedor,
-                $nombreProveedor,
-                $idProducto,
-                $cantidad,
-                $costo,
-                $subtotalItem,
-                $porcentajeIva,
-                $totalFactura
-            ];
-
-            fputcsv($fp, $fila);
-        }
-
+        fputcsv($fp, $fila);
         fclose($fp);
         return true;
+    }
+
+    private function calcularErrorCampo($prediccion, $groundTruth) {
+        if (empty($prediccion) && empty($groundTruth)) return 0;
+        if (empty($prediccion) || empty($groundTruth)) return 1;
+        
+        $pred = strtolower(trim($prediccion));
+        $gt = strtolower(trim($groundTruth));
+        
+        if ($pred === $gt) return 0;
+        
+        // Calcular similitud de Levenshtein
+        $distancia = levenshtein($pred, $gt);
+        $maxLen = max(strlen($pred), strlen($gt));
+        return $maxLen > 0 ? ($distancia / $maxLen) : 1;
+    }
+
+    private function calcularErrorNumerico($prediccion, $groundTruth) {
+        $pred = floatval($prediccion);
+        $gt = floatval($groundTruth);
+        
+        if ($gt == 0) return $pred == 0 ? 0 : 1;
+        
+        $diferencia = abs($pred - $gt);
+        return $diferencia / $gt;
+    }
+
+    private function calcularErrorProductos($predProductos, $gtProductos) {
+        if (empty($predProductos) && empty($gtProductos)) return 0;
+        if (empty($predProductos) || empty($gtProductos)) return 1;
+        
+        $totalError = 0;
+        $count = 0;
+        
+        foreach ($gtProductos as $gtProd) {
+            $gtNombre = strtolower($gtProd['nombre'] ?? $gtProd['descripcion'] ?? '');
+            $gtCantidad = intval($gtProd['cantidad'] ?? 0);
+            $gtCosto = floatval($gtProd['costo'] ?? 0);
+            
+            // Buscar producto correspondiente en predicciones
+            $encontrado = false;
+            foreach ($predProductos as $predProd) {
+                $predNombre = strtolower($predProd['nombre'] ?? $predProd['descripcion'] ?? '');
+                
+                if (levenshtein($predNombre, $gtNombre) <= 3) {
+                    $predCantidad = intval($predProd['cantidad'] ?? 0);
+                    $predCosto = floatval($predProd['costo'] ?? 0);
+                    
+                    $errorCantidad = $gtCantidad > 0 ? abs($predCantidad - $gtCantidad) / $gtCantidad : 0;
+                    $errorCosto = $gtCosto > 0 ? abs($predCosto - $gtCosto) / $gtCosto : 0;
+                    
+                    $totalError += ($errorCantidad + $errorCosto) / 2;
+                    $encontrado = true;
+                    break;
+                }
+            }
+            
+            if (!$encontrado) {
+                $totalError += 1; // Producto no encontrado = 100% error
+            }
+            $count++;
+        }
+        
+        return $count > 0 ? ($totalError / $count) : 1;
     }
 }
 ?>
