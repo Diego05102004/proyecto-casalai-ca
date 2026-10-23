@@ -834,6 +834,7 @@ async function saveRecepcion(event) {
         const archivo = document.getElementById('fotoFacturaRecepcion')?.files[0];
         let modoContingencia = false;
         let iaVerificada = false;
+        let prediccionIA = null; // Para guardar los datos de predicción de la IA
         const aiClient = obtenerAsistenteIA();
 
         if (archivo) {
@@ -845,7 +846,19 @@ async function saveRecepcion(event) {
                     if (!extraccion.contingencia) throw new Error(extraccion.error || 'No se pudo analizar la factura.');
                     modoContingencia = true;
                 } else {
+                    // Guardar datos de predicción para feedback
+                    prediccionIA = extraccion.data;
                     rellenarRecepcionDesdeFactura(extraccion.data);
+                }
+            } else {
+                // Ya existe una extracción previa, recuperar sus datos para feedback
+                try {
+                    const datosExistentes = aiClient.obtenerDatosExtraidos();
+                    if (datosExistentes) {
+                        prediccionIA = datosExistentes;
+                    }
+                } catch (e) {
+                    console.log('No se pudieron recuperar datos de extracción previa:', e);
                 }
             }
 
@@ -920,6 +933,12 @@ async function saveRecepcion(event) {
                         if (botonGuardar) botonGuardar.disabled = false;
                         return;
                     }
+                    // Usuario confirma registro a pesar de discrepancias
+                    iaVerificada = true;
+                    // Agregar discrepancias a los datos de predicción para feedback
+                    if (prediccionIA) {
+                        prediccionIA.discrepancias = listaGranular;
+                    }
                 } else {
                     iaVerificada = true;
                 }
@@ -940,6 +959,14 @@ async function saveRecepcion(event) {
         if (archivo) formData.append('factura_contingencia', archivo, archivo.name);
         if (modoContingencia) formData.append('modo_contingencia', 'true');
         if (iaVerificada) formData.append('ia_verificada', 'true');
+        // Indicar si se usó el microservicio de IA
+        if (!modoContingencia && aiClient) {
+            formData.append('usar_ia', 'true');
+        }
+        // Enviar datos de predicción de la IA para feedback de aprendizaje
+        if (prediccionIA) {
+            formData.append('ia_prediccion', JSON.stringify(prediccionIA));
+        }
 
         const response = await fetch('?pagina=recepcion', { method: 'POST', body: formData });
         const data = await response.json();
