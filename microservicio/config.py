@@ -12,6 +12,10 @@ class Settings(BaseSettings):
 
     # Credenciales y Seguridad
     API_KEY: str = os.getenv("API_KEY", "clave_secreta_por_defecto_cambiar_en_produccion")
+    
+    # Tokens de autenticación para microservicios
+    AUDITOR_RECEPCION_TOKEN: str = os.getenv("AUDITOR_RECEPCION_TOKEN", "")
+    ANALITICA_PREDICTIVA_TOKEN: str = os.getenv("ANALITICA_PREDICTIVA_TOKEN", "")
 
     # Rutas de Modelos y Almacenamiento
     MODEL_PATH: str = os.getenv("MODEL_PATH", "modelo/analitica_predictiva.pkl")
@@ -23,6 +27,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Permite variables de entorno extra sin error
 
 # Instancia global de configuración
 settings = Settings()

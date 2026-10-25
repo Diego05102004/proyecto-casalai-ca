@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
+# Cargar variables de entorno desde archivo .env
+load_dotenv()
 
 from config import settings
 from modelo.logger import logger

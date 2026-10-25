@@ -1,0 +1,10 @@
+# Configuración de variables de entorno para el microservicio de auditoría
+# Este token debe coincidir con el configurado en el entorno de FastAPI
+SetEnv AUDITOR_RECEPCION_TOKEN "V2ULrTMDqWierxYc7i71JKpewJozqORhdI_JbmbsTVo"
+
+# Configuración de variables de entorno para el microservicio de analítica predictiva
+SetEnv ANALITICA_PREDICTIVA_TOKEN "tu-token-analitica-aqui"
+
+# Configuración de errores PHP (ya existente en el sistema)
+php_flag display_errors Off
+php_flag log_errors On
