@@ -2,6 +2,7 @@
 import hmac
 import os
 import re
+import logging
 from datetime import date
 from typing import Literal
 
@@ -15,7 +16,13 @@ from modelo.analitica_predictiva import (
     train_models,
 )
 
-router = APIRouter(prefix="/api/v1/analitica", tags=["Analítica Predictiva"])
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/analitica", tags=["Analítica Predictiva"])
+
+@router.get("/")
+def analitica_root():
+    return {"status": "online", "service": "Analítica Predictiva"}
 
 
 def validar_token_analitica(x_analitica_token: str = Header(default="", max_length=256)) -> None:
