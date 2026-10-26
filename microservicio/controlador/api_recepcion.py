@@ -187,8 +187,10 @@ async def fase1_extraer(imagen: UploadFile = File(...)):
                 }
                 for p in resultado.productos
             ],
-            "subtotal": resultado.subtotal_factura,
-            "total": resultado.total_factura,
+            "subtotal_factura": resultado.subtotal_factura,
+            "porcentaje_iva": resultado.porcentaje_iva,
+            "monto_iva": resultado.monto_iva,
+            "total_factura": resultado.total_factura,
             "confianza_promedio": resultado.metadatos_extraccion.get('confianza_promedio', 0.0)
         }
         
