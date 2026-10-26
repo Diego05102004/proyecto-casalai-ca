@@ -1,5 +1,7 @@
 """API REST FastAPI - Fase 1: Verificación Asistida."""
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+import hmac
+import os
+from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends
 from pydantic import BaseModel
 from pathlib import Path
 import json
@@ -15,6 +17,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     tags=["Recepción y Auditoría"]
 )
+
+def validar_token_auditor(x_auditor_token: str = Header(default="", max_length=256)) -> None:
+    """
+    Valida el token de autenticación para el microservicio de auditoría.
+    Similar al sistema de analítica predictiva.
+    """
+    expected = os.getenv("AUDITOR_RECEPCION_TOKEN", "")
+    if len(expected) < 32:
+        raise HTTPException(status_code=503, detail="AUDITOR_RECEPCION_TOKEN debe tener al menos 32 caracteres.")
+    if not hmac.compare_digest(x_auditor_token.encode("utf-8"), expected.encode("utf-8")):
+        raise HTTPException(status_code=403, detail="Token de auditoría inválido.")
 
 # Inicialización de componentes principales
 registry = ModelRegistry()
@@ -51,7 +64,7 @@ def read_root():
         "model_metrics": info["metrics"]
     }
 
-@router.post("/auditar")
+@router.post("/api/v1/auditar", dependencies=[Depends(validar_token_auditor)])
 async def auditar_documento(file: UploadFile = File(...)):
     """
     Endpoint principal para recibir facturas/documentos, 
@@ -73,11 +86,21 @@ async def auditar_documento(file: UploadFile = File(...)):
         resultado = auditor.procesar_documento(str(file_path))
         
         logger.info(f"Documento {file.filename} procesado exitosamente usando el modelo {active_v}")
-        return {
+        
+        # Construir respuesta base
+        response = {
             "status": "success",
             "version_modelo": active_v,
             "resultado_auditoria": resultado
         }
+        
+        # Incluir confiabilidad ML si está disponible en los metadatos
+        if isinstance(resultado, dict) and 'metadatos_extraccion' in resultado:
+            if 'confiabilidad_ml' in resultado['metadatos_extraccion']:
+                response["confiabilidad_ml"] = resultado['metadatos_extraccion']['confiabilidad_ml']
+                logger.info(f"Confiabilidad ML incluida en respuesta: {response['confiabilidad_ml']:.2%}")
+        
+        return response
     except Exception as e:
         logger.error(f"Error crítico procesando el archivo {file.filename}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error procesando documento: {str(e)}")
@@ -126,7 +149,7 @@ def recargar_modelo():
         raise HTTPException(status_code=500, detail=f"Error al recargar modelo: {str(e)}")
 
 # Endpoints compatibles con el proxy PHP original
-@router.post("/fase1/extraer")
+@router.post("/fase1/extraer", dependencies=[Depends(validar_token_auditor)])
 async def fase1_extraer(imagen: UploadFile = File(...)):
     """
     Endpoint compatible con el proxy PHP original para extraer datos de factura.
@@ -146,7 +169,7 @@ async def fase1_extraer(imagen: UploadFile = File(...)):
         logger.info(f"Extraer - Archivo procesado: {imagen.filename}")
         
         # Convertir el resultado al formato esperado por el JavaScript
-        return {
+        response_data = {
             "exito": True,
             "factura_id": factura_id,
             "numero_factura": resultado.numero_factura,
@@ -164,10 +187,19 @@ async def fase1_extraer(imagen: UploadFile = File(...)):
                 }
                 for p in resultado.productos
             ],
-            "subtotal": resultado.subtotal_factura,
-            "total": resultado.total_factura,
+            "subtotal_factura": resultado.subtotal_factura,
+            "porcentaje_iva": resultado.porcentaje_iva,
+            "monto_iva": resultado.monto_iva,
+            "total_factura": resultado.total_factura,
             "confianza_promedio": resultado.metadatos_extraccion.get('confianza_promedio', 0.0)
         }
+        
+        # Incluir confiabilidad ML si está disponible
+        if 'confiabilidad_ml' in resultado.metadatos_extraccion:
+            response_data["confiabilidad_ml"] = resultado.metadatos_extraccion['confiabilidad_ml']
+            logger.info(f"Confiabilidad ML incluida en fase1/extraer: {response_data['confiabilidad_ml']:.2%}")
+        
+        return response_data
     except Exception as e:
         logger.error(f"Error en fase1/extraer: {str(e)}")
         return {
@@ -178,7 +210,7 @@ async def fase1_extraer(imagen: UploadFile = File(...)):
         if file_path.exists():
             file_path.unlink()
 
-@router.post("/fase1/verificar")
+@router.post("/fase1/verificar", dependencies=[Depends(validar_token_auditor)])
 def fase1_verificar(datos: dict):
     """
     Endpoint compatible con el proxy PHP original para verificar coherencia.
@@ -199,7 +231,7 @@ def fase1_verificar(datos: dict):
             "error": str(e)
         }
 
-@router.post("/fase1/comparar-directo")
+@router.post("/fase1/comparar-directo", dependencies=[Depends(validar_token_auditor)])
 async def fase1_comparar_directo(imagen: UploadFile = File(...), datos_json: str = Form(...)):
     """
     Endpoint compatible con el proxy PHP original para comparación directa.

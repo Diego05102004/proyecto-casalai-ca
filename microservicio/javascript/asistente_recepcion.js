@@ -12,6 +12,7 @@ class AsistenteRecepcionIA {
     constructor(config = {}) {
         this.apiUrl = config.apiUrl || 'http://localhost:8000';
         this.proxyUrl = config.proxyUrl || null;
+        this.authToken = config.authToken || null; // Token de autenticación para el microservicio
         this.facturaIdActual = null;
         this.datosExtraidos = null;
         this.modoDebug = config.debug || false;
@@ -100,6 +101,12 @@ class AsistenteRecepcionIA {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
         try {
+            // Agregar header de autenticación si hay token configurado
+            if (this.authToken && !this.proxyUrl) {
+                opciones.headers = opciones.headers || {};
+                opciones.headers['X-Auditor-Token'] = this.authToken;
+            }
+            
             const response = await fetch(url, { ...opciones, signal: controller.signal });
             if (response.status === 408 || response.status === 429 || response.status >= 500) {
                 this._registrarFalloCircuito();
@@ -181,6 +188,12 @@ if (error.name === 'AbortError') {
                 this.datosExtraidos = resultado;
                 
                 this._mostrarPreviewExtraccion(resultado);
+                
+                // Verificar confiabilidad ML si está disponible
+                if (resultado.confiabilidad_ml !== undefined) {
+                    this._verificarConfiabilidadML(resultado.confiabilidad_ml);
+                }
+                
                 this.callbacks.onExtraccionExitosa(resultado);
                 
                 this._log(`Extracción exitosa. ID: ${this.facturaIdActual}`);
@@ -453,6 +466,24 @@ if (error.name === 'AbortError') {
             const alert = document.getElementById(alertId);
             if (alert) alert.remove();
         }, 10000);
+    }
+
+    _verificarConfiabilidadML(confiabilidad) {
+        const confiabilidadPorcentaje = (confiabilidad * 100).toFixed(1);
+        
+        if (confiabilidad < 0.5) {
+            this._mostrarAlerta('warning', 
+                `⚠️ El modelo ML indica que esta extracción puede tener errores (confiabilidad: ${confiabilidadPorcentaje}%). Por favor revise cuidadosamente los datos antes de registrar.`
+            );
+            this._log(`Confiabilidad ML baja: ${confiabilidadPorcentaje}%`, 'warn');
+        } else if (confiabilidad < 0.7) {
+            this._mostrarAlerta('info', 
+                `ℹ️ Confiabilidad ML moderada: ${confiabilidadPorcentaje}%. Se recomienda revisar los datos.`
+            );
+            this._log(`Confiabilidad ML moderada: ${confiabilidadPorcentaje}%`, 'info');
+        } else {
+            this._log(`Confiabilidad ML alta: ${confiabilidadPorcentaje}%`);
+        }
     }
 
     /**

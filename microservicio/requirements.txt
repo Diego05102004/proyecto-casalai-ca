@@ -8,6 +8,7 @@ uvicorn[standard]>=0.24.0
 
 # Gestión de Configuración y Variables de Entorno
 pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
 
 # Procesamiento de Imagen y OCR
 pillow>=10.0.0

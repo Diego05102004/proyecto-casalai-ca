@@ -38,23 +38,18 @@ def run_retraining():
     print(f"Error Total: {error_promedio_total:.2%}")
     print(f"Confianza OCR Promedio: {confianza_promedio:.2%}")
 
-    # Crear características para el modelo basado en errores históricos
+    # Crear características para el modelo basado SOLO en confianza OCR
+    # Esto permite predecir confiabilidad durante la extracción (sin ground_truth)
     features = []
     targets = []
 
     for _, row in df.iterrows():
-        # Características: errores por campo + confianza
-        feat = [
-            row['error_proveedor'],
-            row['error_correlativo'],
-            row['error_productos'],
-            row['error_subtotal'],
-            row['error_total'],
-            row['confianza_ocr_promedio']
-        ]
+        # Característica: solo confianza OCR (disponible durante extracción)
+        feat = [row['confianza_ocr_promedio']]
         
         # Target: 1 si el error total es bajo (< 0.3), 0 si es alto
         # Esto entrena al modelo a predecir cuándo una extracción es confiable
+        # basándose únicamente en la confianza OCR
         target = 1 if row['error_total'] < 0.3 else 0
         
         features.append(feat)

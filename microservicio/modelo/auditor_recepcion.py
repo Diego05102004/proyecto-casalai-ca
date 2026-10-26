@@ -12,6 +12,7 @@ import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
+import joblib
 
 # Asegurar que el directorio de logs exista
 BASE_DIR = Path(__file__).parent.parent
@@ -94,6 +95,19 @@ class AuditorRecepcion:
         self.config = self._cargar_configuracion(config_path)
         self.cache_facturas: Dict[str, FacturaExtraida] = {}
         self.historial_verificaciones: List[ResultadoVerificacion] = []
+        
+        # Cargar modelo ML entrenado si existe
+        self.modelo_ml = None
+        model_path = Path(__file__).parent / "modelo_actual.pkl"
+        if model_path.exists():
+            try:
+                self.modelo_ml = joblib.load(model_path)
+                logger.info("Modelo ML cargado exitosamente desde modelo_actual.pkl")
+            except Exception as e:
+                logger.warning(f"No se pudo cargar el modelo ML: {e}")
+        else:
+            logger.info("No se encontró modelo_actual.pkl. El modelo ML no estará disponible.")
+        
         logger.info("AuditorRecepcion inicializado - Fase 1: Verificación Asistida")
 
     def _cargar_configuracion(self, config_path: Optional[str]) -> Dict:
@@ -126,12 +140,24 @@ class AuditorRecepcion:
         else:
             texto_extraido = self._ejecutar_ocr(imagenes_procesadas)
         factura = self._extraer_campos_factura(texto_extraido)
-        factura.metadatos_extraccion = {'timestamp': datetime.now().isoformat(), 'longitud_texto': len(texto_extraido),
-            'confianza_promedio': self._calcular_confianza_promedio(factura), 'lineas_detectadas': len(texto_extraido.split('\n')),
-            'metodo': 'OCR_Tesseract + Regex_Contextual'}
+        confianza_promedio = self._calcular_confianza_promedio(factura)
+        
+        factura.metadatos_extraccion = {
+            'timestamp': datetime.now().isoformat(),
+            'longitud_texto': len(texto_extraido),
+            'confianza_promedio': confianza_promedio,
+            'lineas_detectadas': len(texto_extraido.split('\n')),
+            'metodo': 'OCR_Tesseract + Regex_Contextual'
+        }
+        
+        # Predecir confiabilidad usando el modelo ML si está disponible
+        if self.modelo_ml:
+            factura.metadatos_extraccion['confiabilidad_ml'] = self._predecir_confiabilidad(confianza_promedio)
+            logger.info(f"Confiabilidad ML predicha: {factura.metadatos_extraccion['confiabilidad_ml']:.2%}")
+        
         if id_cache and self.config['guardar_cache']:
             self.cache_facturas[id_cache] = factura
-        logger.info(f"Extracción completada. Confianza: {factura.metadatos_extraccion['confianza_promedio']:.2%}")
+        logger.info(f"Extracción completada. Confianza OCR: {confianza_promedio:.2%}")
         return factura
 
     def verificar_coherencia(self, id_factura_cache: str, datos_formulario: Dict) -> ResultadoVerificacion:
@@ -164,6 +190,39 @@ class AuditorRecepcion:
         id_temp = f"temp_{datetime.now().strftime('%Y%m%d%H%M%S')}_{hashlib.md5(ruta_imagen.encode()).hexdigest()[:8]}"
         factura = self.extraer_desde_imagen(ruta_imagen, id_temp)
         return self.verificar_coherencia(id_temp, datos_formulario)
+
+    def _predecir_confiabilidad(self, confianza_ocr: float) -> float:
+        """
+        Usa el modelo RandomForest para predecir si la extracción es confiable.
+        Retorna probabilidad de que sea confiable (0.0 a 1.0).
+        
+        El modelo se entrena para predecir confiabilidad basándose únicamente en
+        la confianza OCR, ya que durante la extracción no tenemos ground_truth.
+        """
+        if not self.modelo_ml:
+            logger.warning("Modelo ML no disponible, retornando 0.0")
+            return 0.0
+        
+        try:
+            # Feature: solo confianza OCR (disponible durante extracción)
+            features = [[confianza_ocr]]
+            
+            # Obtener probabilidades de predicción
+            prediccion = self.modelo_ml.predict_proba(features)[0]
+            logger.info(f"Predicción ML para confianza_ocr={confianza_ocr:.2%}: {prediccion}")
+            
+            # Si el modelo solo tiene una clase, usar la confianza OCR como fallback
+            if len(prediccion) == 1:
+                logger.warning("Modelo solo tiene una clase, usando confianza OCR como fallback")
+                return confianza_ocr
+            
+            # Retornar probabilidad de clase 1 (confiable)
+            # Asumimos que las clases son [0: no confiable, 1: confiable]
+            return prediccion[1]
+        except Exception as e:
+            logger.warning(f"Error prediciendo confiabilidad: {e}")
+            # En caso de error, usar la confianza OCR como fallback
+            return confianza_ocr
 
     def _preprocesar_imagen(self, ruta_imagen: str) -> Any:
         if Path(ruta_imagen).suffix.lower() == '.pdf':
@@ -200,8 +259,9 @@ class AuditorRecepcion:
         factura.fecha_factura = self._extraer_con_patrones(texto_limpio, self.PATRONES['fecha'])
         factura.productos = self._extraer_productos(texto_limpio)
 
+        # Patrones más flexibles para subtotal (acepta comas/puntos al final)
         subtotal_match = re.search(
-            r'^\s*sub\s*total\s*[:\-]?\s*\$?\s*([\d.,]*\d)',
+            r'(?:sub\s*total|subtotal|amount|amount\s*before\s*tax)\s*[:\-]?\s*\$?\s*([\d.,]+)',
             texto_limpio,
             re.IGNORECASE | re.MULTILINE
         )
@@ -212,8 +272,9 @@ class AuditorRecepcion:
                 sum(producto.cantidad * producto.costo_unitario for producto in factura.productos), 2
             )
 
+        # Patrones más flexibles para IVA (acepta comas/puntos al final)
         iva_match = re.search(
-            r'^\s*(?:iva|igv|vat)\b\s*'
+            r'(?:iva|igv|vat|tax|impuesto|sales\s*tax)\s*'
             r'(?:\(?\s*([\d.,]+)\s*%\s*\)?\s*)?'
             r'[:\-]?\s*\$?\s*([\d.,]+)',
             texto_limpio,
@@ -225,8 +286,10 @@ class AuditorRecepcion:
             if factura.monto_iva > 0 and factura.porcentaje_iva == 0 and factura.subtotal_factura > 0:
                 factura.porcentaje_iva = round(factura.monto_iva / factura.subtotal_factura * 100, 2)
 
+        # Patrones más flexibles para total (acepta comas/puntos al final)
+        # Usamos negative lookbehind para evitar capturar "subtotal"
         total_match = re.search(
-            r'^\s*(?:(?:gran\s+)?total(?:\s+a\s+pagar)?|importe\s+total)\b\s*[:\-]?\s*\$?\s*([\d.,]+)',
+            r'(?<!sub)(?:total|gran\s+total|total\s+a\s+pagar|importe\s*total|order\s+total|grand\s+total)\s*[:\-]?\s*\$?\s*([\d.,]+)',
             texto_limpio,
             re.IGNORECASE | re.MULTILINE
         )
@@ -536,7 +599,10 @@ class AuditorRecepcion:
 
     def _parsear_monto(self, texto: str) -> float:
         if not texto: return 0.0
+        # Eliminar caracteres no numéricos excepto punto, coma, signos
         numero = re.sub(r'[^\d,.+-]', '', str(texto)).strip()
+        # Eliminar comas/puntos al final del string (común en OCR)
+        numero = numero.rstrip('.,')
         if not numero:
             return 0.0
 

@@ -305,6 +305,7 @@ function obtenerAsistenteIA() {
         try {
             asistenteRecepcionIA = new AsistenteRecepcionIA({
                 apiUrl: 'http://127.0.0.1:8000',
+                authToken: 'V2ULrTMDqWierxYc7i71JKpewJozqORhdI_JbmbsTVo',
                 debug: true,
                 selectores: { alertas: '#estadoIARecepcion' }
             });
@@ -359,6 +360,11 @@ function rellenarRecepcionDesdeFactura(factura) {
     if (!factura) return;
     datosFacturaExtraidaIA = factura;
     
+    console.log('Datos de factura recibidos:', factura);
+    console.log('Subtotal:', factura.subtotal_factura);
+    console.log('IVA:', factura.porcentaje_iva, factura.monto_iva);
+    console.log('Total:', factura.total_factura);
+    
     const correlativo = document.getElementById('correlativo');
     if (factura.numero_factura && correlativo) correlativo.value = factura.numero_factura;
 
@@ -411,6 +417,18 @@ function rellenarRecepcionDesdeFactura(factura) {
         inputIva.value = ivaVal.toFixed(2);
     }
     calcularTotal();
+    
+    // Establecer explícitamente los montos extraídos de la factura
+    if (factura.subtotal_factura && document.getElementById('subtotalRecepcion')) {
+        document.getElementById('subtotalRecepcion').textContent = '$' + Number(factura.subtotal_factura).toFixed(2);
+    }
+    if (factura.monto_iva && document.getElementById('montoIvaRecepcion')) {
+        document.getElementById('montoIvaRecepcion').textContent = '$' + Number(factura.monto_iva).toFixed(2);
+    }
+    if (factura.total_factura && document.getElementById('totalValue')) {
+        document.getElementById('totalValue').textContent = '$' + Number(factura.total_factura).toFixed(2);
+    }
+    
     actualizarContadorProductos();
 
     const camposPendientes = [];
@@ -1360,4 +1378,10 @@ $(document).ready(function() {
     });
 
     actualizarContadorProductos();
+});
+
+const aiClient = new AsistenteRecepcionIA({
+    apiUrl: 'http://127.0.0.1:8000',
+    authToken: 'V2ULrTMDqWierxYc7i71JKpewJozqORhdI_JbmbsTVo',
+    debug: true
 });
