@@ -47,10 +47,49 @@ try {
 
     // Obtener IDs de clientes y productos
     $clientes = $pdo->query("SELECT id_clientes FROM tbl_clientes WHERE activo = 1")->fetchAll(PDO::FETCH_COLUMN);
-    $productos = $pdo->query("SELECT id_producto, precio FROM tbl_productos WHERE estado = 'habilitado'")->fetchAll();
+    $productos = $pdo->query("SELECT id_producto, precio, stock, stock_minimo FROM tbl_productos WHERE estado = 'habilitado'")->fetchAll();
 
     echo "Clientes activos: " . count($clientes) . "\n";
     echo "Productos activos: " . count($productos) . "\n\n";
+
+    // Simular diferentes escenarios de rotación de productos
+    // Productos populares: alta frecuencia de ventas en todo el periodo
+    // Productos congelados: ventas hace 60+ días, nada recientemente
+    // Productos normales: ventas consistentes pero moderadas
+    
+    $productosPopulares = [];
+    $productosCongelados = [];
+    $productosNormales = [];
+    
+    foreach ($productos as $idx => $producto) {
+        $idProducto = $producto['id_producto'];
+        
+        // Asignar roles (20% populares, 20% congelados, 60% normales)
+        if ($idx < count($productos) * 0.2) {
+            $productosPopulares[] = $idProducto;
+            // Actualizar stock bajo para productos populares
+            $stockNuevo = mt_rand(5, 15);
+            $stockMinimo = mt_rand(5, 10);
+            $pdo->prepare("UPDATE tbl_productos SET stock = ?, stock_minimo = ? WHERE id_producto = ?")->execute([$stockNuevo, $stockMinimo, $idProducto]);
+        } elseif ($idx < count($productos) * 0.4) {
+            $productosCongelados[] = $idProducto;
+            // Actualizar stock alto para productos congelados
+            $stockNuevo = mt_rand(50, 100);
+            $stockMinimo = mt_rand(5, 15);
+            $pdo->prepare("UPDATE tbl_productos SET stock = ?, stock_minimo = ? WHERE id_producto = ?")->execute([$stockNuevo, $stockMinimo, $idProducto]);
+        } else {
+            $productosNormales[] = $idProducto;
+            // Stock normal para productos normales
+            $stockNuevo = mt_rand(20, 40);
+            $stockMinimo = mt_rand(10, 20);
+            $pdo->prepare("UPDATE tbl_productos SET stock = ?, stock_minimo = ? WHERE id_producto = ?")->execute([$stockNuevo, $stockMinimo, $idProducto]);
+        }
+    }
+    
+    echo "Productos populares: " . count($productosPopulares) . "\n";
+    echo "Productos congelados: " . count($productosCongelados) . "\n";
+    echo "Productos normales: " . count($productosNormales) . "\n\n";
+    echo "Stock de productos actualizado para simular diferentes escenarios\n\n";
 
     // Obtener el último ID de factura para continuar
     $ultimoIdFactura = $pdo->query("SELECT MAX(id_factura) FROM tbl_facturas")->fetchColumn();
@@ -75,7 +114,7 @@ try {
     // Preparar statements
     $stmtFactura = $pdo->prepare("
         INSERT INTO tbl_facturas (id_factura, fecha, cliente, descuento, estatus)
-        VALUES (?, ?, ?, ?, 'Completada')
+        VALUES (?, ?, ?, ?, 'Pagada')
     ");
 
     $stmtDetalle = $pdo->prepare("
@@ -94,6 +133,12 @@ try {
         // Generar fecha aleatoria dentro del rango
         $timestampAleatorio = mt_rand($fechaInicio->getTimestamp(), $fechaHoy->getTimestamp());
         $fechaVenta = date('Y-m-d', $timestampAleatorio);
+        
+        // Verificar si la fecha es reciente (últimos 30 días)
+        $fechaVentaDT = new DateTime($fechaVenta);
+        $fecha30DiasAtras = clone $fechaHoy;
+        $fecha30DiasAtras->sub(new DateInterval('P30D'));
+        $esFechaReciente = $fechaVentaDT >= $fecha30DiasAtras;
 
         // Seleccionar cliente aleatorio
         $idCliente = $clientes[array_rand($clientes)];
@@ -116,16 +161,44 @@ try {
 
         $facturasCreadas++;
 
-        // Generar detalles de la factura (productos aleatorios)
+        // Generar detalles de la factura (productos aleatorios con lógica de rotación)
         $numProductosFactura = mt_rand(PRODUCTOS_POR_FACTURA_MIN, PRODUCTOS_POR_FACTURA_MAX);
         $productosUsados = [];
 
         for ($j = 0; $j < $numProductosFactura; $j++) {
-            // Seleccionar producto aleatorio (evitar duplicados en la misma factura)
-            do {
-                $producto = $productos[array_rand($productos)];
-                $idProducto = $producto['id_producto'];
-            } while (in_array($idProducto, $productosUsados));
+            // Seleccionar producto según el escenario de rotación
+            $idProducto;
+            
+            if ($esFechaReciente) {
+                // En fechas recientes: 
+                // - 70% probabilidad de productos populares
+                // - 30% probabilidad de productos normales
+                // - 0% probabilidad de productos congelados
+                if (mt_rand(1, 10) <= 7 && !empty($productosPopulares)) {
+                    $idProducto = $productosPopulares[array_rand($productosPopulares)];
+                } else {
+                    $idProducto = $productosNormales[array_rand($productosNormales)];
+                }
+            } else {
+                // En fechas antiguas (antes de 30 días):
+                // - 40% probabilidad de productos populares
+                // - 40% probabilidad de productos normales
+                // - 20% probabilidad de productos congelados (para que tengan historial)
+                $rand = mt_rand(1, 10);
+                if ($rand <= 4 && !empty($productosPopulares)) {
+                    $idProducto = $productosPopulares[array_rand($productosPopulares)];
+                } elseif ($rand <= 8) {
+                    $idProducto = $productosNormales[array_rand($productosNormales)];
+                } else {
+                    $idProducto = $productosCongelados[array_rand($productosCongelados)];
+                }
+            }
+            
+            // Evitar duplicados en la misma factura
+            if (in_array($idProducto, $productosUsados)) {
+                // Si ya está, intentar con un producto normal
+                $idProducto = $productosNormales[array_rand($productosNormales)];
+            }
 
             $productosUsados[] = $idProducto;
 

@@ -200,6 +200,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     <article class="analytics-kpi"><span>Punto de reorden</span><strong data-metric="punto_reorden">—</strong><small>stock mínimo configurado</small></article>
                     <article class="analytics-kpi"><span>Compra sugerida</span><strong data-metric="cantidad_sugerida_compra">—</strong><small>no descuenta órdenes abiertas</small></article>
                     <article class="analytics-kpi"><span>Rotación proyectada</span><strong data-metric="rotacion_proyectada">—</strong><small>veces en el horizonte</small></article>
+                    <article class="analytics-kpi"><span>Explicaciones</span><strong data-metric="explicaciones">—</strong><small>del modelo</small></article>
                 </div>
 
                 <div class="analytics-chart-card">
@@ -210,6 +211,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     <div class="analytics-chart-frame">
                         <canvas id="analyticsChart" aria-label="Gráfico de ventas y demanda estimada" role="img"></canvas>
                     </div>
+                
                 </div>
 
                 <div class="analytics-actions">
@@ -1711,7 +1713,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     if (!items.length) {
                         const row = document.createElement('tr');
                         const cell = document.createElement('td');
-                        cell.colSpan = 6;
+                        cell.colSpan = 6;  // 6 columnas (sin explicación)
                         cell.textContent = 'No hay acciones recomendadas con la información disponible.';
                         row.appendChild(cell);
                         analyticsRecommendations.appendChild(row);
@@ -1719,11 +1721,12 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     }
 
                     items.forEach(item => {
+                        // Fila principal con los datos del combo
                         const row = document.createElement('tr');
                         const values = [
                             item.producto || 'Producto',
                             item.senal || '—',
-                            item.cantidad_sugerida === null || item.cantidad_sugerida === undefined ? '—' : `${item.cantidad_sugerida} unidades`,
+                            item.cantidad_sugerida === null || item.cantidad_sugerida === undefined ? '—' : item.cantidad_sugerida,
                             `${item.nivel_confianza || '—'} (${Math.round((item.confianza || 0) * 100)}%)`,
                             item.calculado_en ? new Date(item.calculado_en).toLocaleString('es-VE') : '—'
                         ];
@@ -1752,6 +1755,40 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         ratingCell.appendChild(rating);
                         row.appendChild(ratingCell);
                         analyticsRecommendations.appendChild(row);
+
+                        // Fila secundaria para la explicación
+                        if (item.explicacion) {
+                            const explanationRow = document.createElement('tr');
+                            explanationRow.className = 'explanation-row';
+                            
+                            // Celda para la explicación que abarca las primeras 5 columnas (producto, señal, cantidad, confianza, calculado)
+                            const explanationCell = document.createElement('td');
+                            explanationCell.colSpan = 5;  // Abarca desde Producto / acción hasta Calculado
+                            explanationCell.style.padding = '12px';
+                            explanationCell.style.backgroundColor = '#f9f9f9';
+                            explanationCell.style.borderTop = '1px solid #e0e0e0';
+                            explanationCell.style.fontSize = '0.85em';
+                            explanationCell.style.color = '#333';
+                            explanationCell.style.whiteSpace = 'normal';
+                            explanationCell.style.wordWrap = 'break-word';
+                            explanationCell.style.lineHeight = '1.5';
+                            
+                            // Convertir saltos de línea en explicación a <br>
+                            const formattedExplanation = item.explicacion.replace(/\n/g, '<br>');
+                            explanationCell.innerHTML = formattedExplanation;
+                            
+                            explanationRow.appendChild(explanationCell);
+                            
+                            // Celda vacía para la columna de valoración
+                            const emptyRatingCell = document.createElement('td');
+                            emptyRatingCell.style.padding = '0';
+                            emptyRatingCell.style.border = 'none';
+                            emptyRatingCell.style.backgroundColor = '#f9f9f9';
+                            emptyRatingCell.style.borderTop = '1px solid #e0e0e0';
+                            explanationRow.appendChild(emptyRatingCell);
+                            
+                            analyticsRecommendations.appendChild(explanationRow);
+                        }
                     });
                 }
 
@@ -1771,7 +1808,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                             producto_id: productId || '',
                             categoria_id: categoryId || '',
                             frecuencia: document.getElementById('analyticsFrequency').value,
-                            horizonte: document.getElementById('analyticsHorizon').value
+                            horizonte: document.getElementById('analyticsHorizon').value,
                         });
                         if (result.calidad?.estado === 'sin_datos') {
                             analyticsKpis.hidden = true;
@@ -1794,6 +1831,18 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         analyticsKpis.querySelector('[data-metric="punto_reorden"]').textContent = displayMetric(metrics.punto_reorden, ' unidades');
                         analyticsKpis.querySelector('[data-metric="cantidad_sugerida_compra"]').textContent = displayMetric(metrics.cantidad_sugerida_compra, ' unidades');
                         analyticsKpis.querySelector('[data-metric="rotacion_proyectada"]').textContent = displayMetric(metrics.rotacion_proyectada, 'x');
+                        
+                        // Mostrar explicaciones de manera especial
+                        const explicacionesElement = analyticsKpis.querySelector('[data-metric="explicaciones"]');
+                        if (metrics.explicaciones && typeof metrics.explicaciones === 'object') {
+                            // Crear un tooltip o texto expandible con las explicaciones
+                            const explicacionesText = Object.values(metrics.explicaciones).filter(e => e).join('\n\n');
+                            explicacionesElement.textContent = explicacionesText.length > 100 ? explicacionesText.substring(0, 100) + '...' : explicacionesText;
+                            explicacionesElement.title = explicacionesText; // Tooltip completo
+                            explicacionesElement.style.cursor = 'help';
+                        } else {
+                            explicacionesElement.textContent = 'No disponible';
+                        }
                         renderAnalyticsChart(result);
                         renderAnalyticsRecommendations(result.recomendaciones || []);
 

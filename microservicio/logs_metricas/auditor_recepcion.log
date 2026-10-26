@@ -719,3 +719,6 @@
 2026-10-25 19:54:21,931 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
 2026-10-25 19:58:34,906 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
 2026-10-25 19:58:34,912 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida
+2026-10-26 04:36:48,644 - modelo.auditor_recepcion - INFO - Tesseract encontrado en: C:\Program Files\Tesseract-OCR\tesseract.exe
+2026-10-26 04:37:02,584 - modelo.auditor_recepcion - INFO - Modelo ML cargado exitosamente desde modelo_actual.pkl
+2026-10-26 04:37:02,584 - modelo.auditor_recepcion - INFO - AuditorRecepcion inicializado - Fase 1: Verificación Asistida

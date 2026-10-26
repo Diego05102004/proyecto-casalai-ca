@@ -78,6 +78,8 @@ El módulo PHP invoca estos endpoints a través de `Modelo/Servicio/RecepcionIAP
 
 La vista de productos usa `Modelo/Servicio/AnaliticaPredictivaProxy.php` para comunicarse con los endpoints nuevos. Configurar `ANALITICA_PREDICTIVA_URL` (por defecto `http://127.0.0.1:8000`) y el mismo secreto privado `ANALITICA_PREDICTIVA_TOKEN` en los entornos de PHP/Apache y FastAPI. FastAPI comprueba el token en las tres rutas de analítica; no exponerlo al navegador. Mantener el servicio enlazado a `127.0.0.1` cuando se ejecuta en el host de PHP.
 
+En Apache, define el token una sola vez en la configuración activa del servidor. No agregues a `.htaccess` un `SetEnv ANALITICA_PREDICTIVA_TOKEN` con un valor de ejemplo, porque puede sobrescribir el token real heredado por PHP.
+
 La factura adjunta se conserva en `comprobantes/recepcion/`, con acceso HTTP denegado. Los manifiestos `.json` indican el correlativo, la recepción y si quedó `pendiente_ocr`; todavía no existe un trabajador batch que procese automáticamente esos pendientes.
 
 Para actualizar una base existente con los campos fiscales, ejecutar una vez `agregar_iva_recepcion.sql` sobre la base principal. Los registros anteriores quedan con IVA no registrado; solo se completan al revisar su factura original.

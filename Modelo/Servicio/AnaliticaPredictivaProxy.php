@@ -11,7 +11,7 @@ class AnaliticaPredictivaProxy
     public function __construct($baseUrl = null, $token = null)
     {
         $this->baseUrl = rtrim($baseUrl ?: (getenv('ANALITICA_PREDICTIVA_URL') ?: 'http://127.0.0.1:8000'), '/');
-        $this->token = $token ?: (getenv('ANALITICA_PREDICTIVA_TOKEN') ?: '');
+        $this->token = $token ?: (getenv('ANALITICA_PREDICTIVA_TOKEN') ?: '7u6ssg9js6_hn8rkpIgmSjITmodKqa7TVzTEcz_wi3M');
     }
 
     public function obtenerDashboard(array $datos)

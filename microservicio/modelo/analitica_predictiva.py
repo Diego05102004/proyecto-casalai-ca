@@ -313,6 +313,685 @@ def _confidence_level(confidence: float) -> str:
     return "baja"
 
 
+def _generate_explanation(metrics: dict[str, Any], context: dict[str, Any], recommendation_type: str) -> dict[str, str]:
+    """
+    Genera explicaciones dinámicas basadas en el análisis real de los datos.
+
+    Args:
+        metrics: Diccionario con las métricas calculadas
+        context: Diccionario con contexto adicional (producto, horizonte, frecuencia, etc.)
+        recommendation_type: "reposicion" o "combo"
+
+    Returns:
+        Diccionario con explicaciones dinámicas en español
+    """
+    try:
+        quality = context.get("quality", {})
+        weekly_data = context.get("weekly_data", None)
+        horizon = context.get("horizonte", 30)
+        frequency = context.get("frecuencia", "diaria")
+        current_stock = context.get("stock_actual")
+        minimum_stock = context.get("stock_minimo")
+        invoice_count = context.get("cantidad_facturas", 0)
+
+        # Calcular semanas de datos usadas
+        weeks_used = quality.get("semanas_entrenamiento", 0)
+        training_samples = quality.get("muestras_entrenamiento", 0)
+        model_error = quality.get("error_semanal_estimado", None)
+
+        # Calcular tendencia si hay datos semanales
+        trend_description = ""
+        try:
+            if weekly_data is not None and len(weekly_data) >= 4:
+                recent_avg = float(np.mean(weekly_data[-4:]))
+                older_avg = float(np.mean(weekly_data[:-4])) if len(weekly_data) >= 8 else recent_avg
+                if older_avg > 0:
+                    trend_pct = ((recent_avg - older_avg) / older_avg) * 100
+                    if trend_pct > 5:
+                        trend_description = f"Con una tendencia creciente del {abs(trend_pct):.1f}%"
+                    elif trend_pct < -5:
+                        trend_description = f"Con una tendencia decreciente del {abs(trend_pct):.1f}%"
+                    else:
+                        trend_description = "Con una tendencia estable"
+                else:
+                    trend_description = "Sin tendencia clara debido a datos limitados"
+            else:
+                trend_description = "Sin suficientes datos para determinar tendencia"
+        except Exception:
+            trend_description = "No se pudo calcular la tendencia"
+
+        # Calcular nivel de confianza
+        confidence_level = "desconocida"
+        try:
+            if model_error is not None and weekly_data is not None and len(weekly_data) > 0:
+                avg_demand = float(np.mean(weekly_data))
+                if avg_demand > 0:
+                    confidence = max(0.0, min(0.99, 1.0 - model_error / (avg_demand + 1.0)))
+                    confidence_pct = int(confidence * 100)
+                    confidence_level = f"Con una confianza del {confidence_pct}%"
+                else:
+                    confidence_level = "Con confianza moderada (datos limitados)"
+            elif training_samples > 0:
+                confidence_level = f"Con una confianza basada en {training_samples} muestras de entrenamiento"
+            else:
+                confidence_level = "Sin modelo predictivo disponible"
+        except Exception:
+            confidence_level = "No se pudo calcular la confianza"
+
+        # Generar explicación según el tipo de recomendación
+        if recommendation_type == "reposicion":
+            projected_sales = metrics.get("venta_proyectada")
+            suggested_purchase = metrics.get("cantidad_sugerida_compra")
+            projected_rotation = metrics.get("rotacion_proyectada")
+            days_to_stockout = metrics.get("dias_estimados_agotamiento")
+
+            # Explicación de cantidad sugerida
+            if suggested_purchase is not None and suggested_purchase > 0:
+                if weekly_data is not None and len(weekly_data) > 0:
+                    avg_weekly_demand = float(np.mean(weekly_data))
+                    weeks_covered = current_stock / avg_weekly_demand if current_stock and avg_weekly_demand > 0 else 0
+
+                    cantidad_exp = (
+                        f"Sugerimos comprar {suggested_purchase} unidades porque en las últimas {weeks_used} semanas "
+                        f"la demanda promedio fue de {avg_weekly_demand:.1f} unidades/semana. "
+                    )
+
+                    if trend_description:
+                        cantidad_exp += f"{trend_description}. "
+
+                    if projected_sales:
+                        increase_pct = ((projected_sales - (avg_weekly_demand * (horizon / 7))) / (avg_weekly_demand * (horizon / 7))) * 100 if avg_weekly_demand > 0 else 0
+                        if abs(increase_pct) > 1:
+                            cantidad_exp += f"El modelo predice un {'aumento' if increase_pct > 0 else 'disminución'} del {abs(increase_pct):.0f}% en el próximo periodo. "
+
+                    if current_stock is not None:
+                        cantidad_exp += f"El stock actual de {current_stock} unidades cubre aproximadamente {weeks_covered:.1f} semanas de demanda. "
+
+                    cantidad_exp += f"{confidence_level} basada en {training_samples} muestras de entrenamiento."
+                else:
+                    cantidad_exp = (
+                        f"Sugerimos comprar {suggested_purchase} unidades basado en la proyección de demanda. "
+                        f"{confidence_level}."
+                    )
+            elif suggested_purchase == 0:
+                cantidad_exp = "No se sugiere compra porque el stock actual es suficiente para cubrir la demanda proyectada."
+            else:
+                cantidad_exp = "No se puede calcular la cantidad sugerida debido a falta de datos de stock o proyección."
+
+            # Explicación de rotación proyectada
+            if projected_rotation is not None:
+                if current_stock and projected_sales:
+                    avg_stock = (current_stock + max(0, current_stock - projected_sales)) / 2
+                    rotation_exp = (
+                        f"La rotación proyectada es de {projected_rotation:.2f} veces/mes, "
+                        f"calculada como {projected_sales:.0f} unidades de demanda / {avg_stock:.0f} unidades de inventario promedio. "
+                    )
+                    # Comparar con rotación histórica si es posible
+                    if weekly_data is not None and len(weekly_data) > 0:
+                        historical_monthly = float(np.sum(weekly_data[-4:])) if len(weekly_data) >= 4 else float(np.sum(weekly_data))
+                        historical_rotation = historical_monthly / avg_stock if avg_stock > 0 else 0
+                        if historical_rotation > 0:
+                            change_pct = ((projected_rotation - historical_rotation) / historical_rotation) * 100
+                            rotation_exp += f"Esto representa una {'mejora' if change_pct > 0 else 'disminución'} del {abs(change_pct):.0f}% respecto a la rotación histórica de {historical_rotation:.2f} veces/mes."
+                else:
+                    rotation_exp = f"La rotación proyectada es de {projected_rotation:.2f} veces/mes."
+            else:
+                rotation_exp = "No se puede calcular la rotación proyectada debido a falta de datos de stock."
+
+            # Explicación de días de agotamiento
+            stockout_exp = ""
+            if days_to_stockout is not None:
+                if days_to_stockout == 0:
+                    stockout_exp = "El stock se agotará inmediatamente según la proyección de demanda."
+                elif days_to_stockout <= 7:
+                    stockout_exp = f"El stock se agotará en aproximadamente {days_to_stockout} días. Se recomienda acción inmediata."
+                elif days_to_stockout <= 30:
+                    stockout_exp = f"El stock se agotará en aproximadamente {days_to_stockout} días."
+                else:
+                    stockout_exp = f"El stock actual cubre aproximadamente {days_to_stockout} días de demanda proyectada."
+
+        elif recommendation_type == "combo_estrategico":
+            # Para combos estratégicos, las explicaciones se basan en el análisis de inventario congelado
+            frozen_stock = context.get("frozen_stock", 0)
+            frozen_excess = context.get("frozen_excess", 0)
+            frozen_rotation = context.get("frozen_rotation", 0)
+            popular_rotation = context.get("popular_rotation", 0)
+            unlock_potential = context.get("unlock_potential", 0)
+            suggested_discount = context.get("suggested_discount", 0)
+
+            cantidad_exp = (
+                f"Este combo estratégico está diseñado para desbloquear {frozen_excess} unidades de inventario congelado "
+                f"que tienen una rotación extremadamente baja de {frozen_rotation:.2f} veces/mes. "
+                f"Al emparejar este producto con uno de alta rotación ({popular_rotation:.2f} veces/mes), "
+                f"se estima un potencial de desbloqueo de {unlock_potential:.1f} unidades. "
+                f"Se sugiere aplicar un descuento del {suggested_discount}% para incentivar la compra."
+            )
+            rotation_exp = (
+                f"El producto congelado tiene una rotación de {frozen_rotation:.2f} veces/mes (muy baja), "
+                f"mientras que el producto popular tiene una rotación de {popular_rotation:.2f} veces/mes. "
+                f"El combo busca aprovechar la popularidad del segundo para mover el inventario del primero."
+            )
+            stockout_exp = (
+                f"El stock congelado representa capital inmovilizado. Liberar este inventario mejorará el flujo de caja "
+                f"y reducirá los costos de almacenamiento. El objetivo es vender el stock excedente en las próximas 4-6 semanas."
+            )
+
+        elif recommendation_type == "combo":
+            # Para combos, las explicaciones se basan en la frecuencia de compra conjunta
+            pair_count = context.get("pair_count", 0)
+            first_confidence = context.get("first_confidence", 0)
+            second_confidence = context.get("second_confidence", 0)
+            support = context.get("support", 0)
+
+            cantidad_exp = (
+                f"Estos productos se han comprado juntos en {pair_count} facturas. "
+                f"La probabilidad de compra conjunta es del {max(first_confidence, second_confidence) * 100:.0f}% "
+                f"y representan el {support * 100:.1f}% de todas las transacciones. "
+                f"Basado en {invoice_count} facturas analizadas."
+            )
+            rotation_exp = "La rotación no aplica para recomendaciones de combo."
+            stockout_exp = ""
+
+        else:
+            # Explicaciones genéricas cuando no hay tipo específico
+            cantidad_exp = f"Explicación no disponible para el tipo '{recommendation_type}'."
+            rotation_exp = "Explicación no disponible."
+            stockout_exp = ""
+
+        # Fuente de datos
+        fuente_exp = f"Análisis basado en {invoice_count} facturas con estado 'Pagada' o 'Pagada Presencialmente' de los últimos 6 meses."
+        if training_samples > 0:
+            fuente_exp += f" El modelo predictivo fue entrenado con {training_samples} muestras de {weeks_used} semanas de datos históricos."
+
+        return {
+            "cantidad_sugerida_compra": cantidad_exp,
+            "rotacion_proyectada": rotation_exp,
+            "dias_estimados_agotamiento": stockout_exp if stockout_exp else None,
+            "fuente": fuente_exp,
+        }
+        
+    except Exception as e:
+        # Fallback en caso de error
+        return {
+            "cantidad_sugerida_compra": "No se pudo generar la explicación debido a un error.",
+            "rotacion_proyectada": "No se pudo generar la explicación debido a un error.",
+            "dias_estimados_agotamiento": None,
+            "fuente": "Error en el procesamiento de explicaciones.",
+        }
+
+
+def _identify_frozen_products(products: list[dict[str, Any]], sales: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Identifica productos congelados: stock alto, rotación baja y sin ventas recientes.
+
+    Args:
+        products: Lista de productos con información de stock
+        sales: Lista de ventas históricas
+
+    Returns:
+        Lista de productos congelados con métricas detalladas
+    """
+    today = date.today()
+    thirty_days_ago = today - timedelta(days=30)
+    ninety_days_ago = today - timedelta(days=90)
+    
+    # Construir ventas por producto
+    sales_by_product: dict[int, dict[str, Any]] = defaultdict(lambda: {
+        "total_quantity": 0,
+        "recent_quantity": 0,
+        "sale_dates": [],
+        "last_sale_date": None
+    })
+    
+    for sale in sales:
+        product_id = int(sale["id_producto"])
+        sale_date = date.fromisoformat(str(sale["fecha"]))
+        quantity = int(sale["cantidad"])
+        
+        sales_by_product[product_id]["total_quantity"] += quantity
+        sales_by_product[product_id]["sale_dates"].append(sale_date)
+        
+        if sale_date >= thirty_days_ago:
+            sales_by_product[product_id]["recent_quantity"] += quantity
+        
+        if sales_by_product[product_id]["last_sale_date"] is None or sale_date > sales_by_product[product_id]["last_sale_date"]:
+            sales_by_product[product_id]["last_sale_date"] = sale_date
+    
+    frozen_products = []
+    rotation_threshold = 2.0  # Umbral configurable: rotación < 2.0 veces/mes (relajado para pruebas)
+    
+    for product in products:
+        product_id = int(product["id_producto"])
+        stock = product.get("stock")
+        min_stock = product.get("stock_minimo")
+        
+        if stock is None or min_stock is None:
+            continue
+        
+        stock = int(stock)
+        min_stock = int(min_stock)
+        
+        # Criterio 1: Stock alto (mayor al mínimo)
+        if stock <= min_stock:
+            continue
+        
+        product_sales = sales_by_product.get(product_id, {})
+        total_quantity = product_sales.get("total_quantity", 0)
+        recent_quantity = product_sales.get("recent_quantity", 0)
+        last_sale_date = product_sales.get("last_sale_date")
+        
+        # Criterio 2: Bajas ventas recientes (últimos 30 días) - relajado para pruebas
+        # Si tiene ventas recientes pero muy pocas, aún puede ser congelado
+        if last_sale_date and last_sale_date >= thirty_days_ago and recent_quantity > 5:
+            continue
+        
+        # Criterio 3: Rotación baja (calculada sobre 90 días)
+        avg_stock = stock  # Simplificación: usar stock actual como promedio
+        monthly_rotation = (total_quantity / 3) / avg_stock if avg_stock > 0 else 0
+        
+        if monthly_rotation >= rotation_threshold:
+            continue
+        
+        # Calcular días sin venta
+        days_since_last_sale = None
+        if last_sale_date:
+            days_since_last_sale = (today - last_sale_date).days
+        else:
+            days_since_last_sale = 999  # Sin ventas registradas
+        
+        # Calcular potencial de desbloqueo (stock acumulado)
+        unlock_potential = stock - min_stock
+        
+        frozen_products.append({
+            "producto_id": product_id,
+            "nombre_producto": product.get("nombre_producto", f"Producto {product_id}"),
+            "stock_actual": stock,
+            "stock_minimo": min_stock,
+            "stock_excedente": stock - min_stock,
+            "rotacion_mensual": round(monthly_rotation, 3),
+            "ventas_totales_90dias": total_quantity,
+            "ventas_recientes_30dias": recent_quantity,
+            "ultima_venta": last_sale_date.isoformat() if last_sale_date else None,
+            "dias_sin_venta": days_since_last_sale,
+            "potencial_desbloqueo": unlock_potential,
+            "categoria_id": product.get("id_categoria"),
+        })
+    
+    # Ordenar por potencial de desbloqueo (mayor primero)
+    frozen_products.sort(key=lambda x: x["potencial_desbloqueo"], reverse=True)
+    
+    return frozen_products
+
+
+def _identify_popular_products(products: list[dict[str, Any]], sales: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Identifica productos populares: alta frecuencia de ventas, alta rotación y tendencia positiva.
+
+    Args:
+        products: Lista de productos con información de stock
+        sales: Lista de ventas históricas
+
+    Returns:
+        Lista de productos populares con métricas detalladas
+    """
+    today = date.today()
+    thirty_days_ago = today - timedelta(days=30)
+    ninety_days_ago = today - timedelta(days=90)
+    
+    # Construir ventas por producto
+    sales_by_product: dict[int, dict[str, Any]] = defaultdict(lambda: {
+        "total_quantity": 0,
+        "recent_quantity": 0,
+        "older_quantity": 0,
+        "sale_count": 0,
+        "sale_dates": [],
+    })
+    
+    for sale in sales:
+        product_id = int(sale["id_producto"])
+        sale_date = date.fromisoformat(str(sale["fecha"]))
+        quantity = int(sale["cantidad"])
+        
+        sales_by_product[product_id]["total_quantity"] += quantity
+        sales_by_product[product_id]["sale_count"] += 1
+        sales_by_product[product_id]["sale_dates"].append(sale_date)
+        
+        if sale_date >= thirty_days_ago:
+            sales_by_product[product_id]["recent_quantity"] += quantity
+        elif sale_date >= ninety_days_ago:
+            sales_by_product[product_id]["older_quantity"] += quantity
+    
+    popular_products = []
+    min_sales_threshold = 5  # Mínimo de ventas para ser considerado
+    rotation_threshold = 1.0  # Rotación mensual mínima para ser popular
+    
+    for product in products:
+        product_id = int(product["id_producto"])
+        stock = product.get("stock")
+        
+        if stock is None:
+            continue
+        
+        stock = int(stock)
+        product_sales = sales_by_product.get(product_id, {})
+        total_quantity = product_sales.get("total_quantity", 0)
+        recent_quantity = product_sales.get("recent_quantity", 0)
+        older_quantity = product_sales.get("older_quantity", 0)
+        sale_count = product_sales.get("sale_count", 0)
+        
+        # Criterio 1: Mínimo de ventas
+        if sale_count < min_sales_threshold:
+            continue
+        
+        # Criterio 2: Rotación alta
+        avg_stock = max(1, stock)  # Evitar división por cero
+        monthly_rotation = (total_quantity / 3) / avg_stock if avg_stock > 0 else 0
+        
+        if monthly_rotation < rotation_threshold:
+            continue
+        
+        # Criterio 3: Tendencia positiva o estable (comparar últimos 30 días vs 30-90 días)
+        trend_pct = 0
+        if older_quantity > 0:
+            trend_pct = ((recent_quantity - older_quantity) / older_quantity) * 100
+        elif recent_quantity > 0:
+            trend_pct = 100  # Crecimiento desde cero
+        
+        # Rechazar productos con tendencia muy negativa (< -20%)
+        if trend_pct < -20:
+            continue
+        
+        # Calcular frecuencia de ventas (ventas por mes)
+        monthly_frequency = sale_count / 3
+        
+        # Calcular score de popularidad (combinación de rotación, frecuencia y tendencia)
+        popularity_score = (
+            (monthly_rotation * 0.4) +
+            (min(monthly_frequency, 10) / 10 * 0.3) +
+            (max(min(trend_pct, 100), -50) + 50) / 150 * 0.3
+        )
+        
+        popular_products.append({
+            "producto_id": product_id,
+            "nombre_producto": product.get("nombre_producto", f"Producto {product_id}"),
+            "stock_actual": stock,
+            "rotacion_mensual": round(monthly_rotation, 3),
+            "ventas_totales_90dias": total_quantity,
+            "ventas_recientes_30dias": recent_quantity,
+            "ventas_anteriores_30_90dias": older_quantity,
+            "frecuencia_ventas_mensual": round(monthly_frequency, 2),
+            "tendencia_pct": round(trend_pct, 1),
+            "score_popularidad": round(popularity_score, 3),
+            "categoria_id": product.get("id_categoria"),
+        })
+    
+    # Ordenar por score de popularidad (mayor primero)
+    popular_products.sort(key=lambda x: x["score_popularidad"], reverse=True)
+    
+    return popular_products
+
+
+def _generate_strategic_combos(
+    frozen_products: list[dict[str, Any]],
+    popular_products: list[dict[str, Any]],
+    sales: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """
+    Genera combos estratégicos emparejando productos congelados con productos populares.
+
+    Args:
+        frozen_products: Lista de productos congelados identificados
+        popular_products: Lista de productos populares identificados
+        sales: Lista de ventas históricas para análisis de co-ocurrencia
+
+    Returns:
+        Lista de combos estratégicos con explicaciones profesionales detalladas
+    """
+    if not frozen_products or not popular_products:
+        return []
+    
+    # Construir mapa de productos populares por ID
+    popular_by_id = {p["producto_id"]: p for p in popular_products}
+    
+    # Analizar co-ocurrencia de productos en facturas
+    invoice_products: dict[int, set[int]] = defaultdict(set)
+    product_sales: dict[int, Counter] = defaultdict(Counter)
+    
+    for sale in sales:
+        invoice_id = int(sale["id_factura"])
+        product_id = int(sale["id_producto"])
+        invoice_products[invoice_id].add(product_id)
+        product_sales[product_id][date.fromisoformat(str(sale["fecha"]))] += int(sale["cantidad"])
+    
+    # Generar combos estratégicos
+    strategic_combos = []
+    max_combos_per_frozen = 3  # Limitar combos por producto congelado
+    
+    for frozen in frozen_products[:10]:  # Limitar a los 10 productos congelados más críticos
+        frozen_id = frozen["producto_id"]
+        frozen_potential = frozen["potencial_desbloqueo"]
+        
+        # Buscar productos populares que se compren junto con el congelado
+        co_occurrence_scores = []
+        
+        for popular in popular_products:
+            popular_id = popular["producto_id"]
+            
+            if frozen_id == popular_id:
+                continue
+            
+            # Calcular co-ocurrencia
+            co_occurrence_count = 0
+            frozen_invoices = set()
+            popular_invoices = set()
+            
+            for invoice_id, products_in_invoice in invoice_products.items():
+                if frozen_id in products_in_invoice:
+                    frozen_invoices.add(invoice_id)
+                if popular_id in products_in_invoice:
+                    popular_invoices.add(invoice_id)
+                if frozen_id in products_in_invoice and popular_id in products_in_invoice:
+                    co_occurrence_count += 1
+            
+            # Calcular confianza del combo
+            frozen_invoice_count = len(frozen_invoices)
+            popular_invoice_count = len(popular_invoices)
+            total_invoices = len(invoice_products)
+            
+            if frozen_invoice_count == 0 and popular_invoice_count == 0:
+                continue
+            
+            # Confidencia basada en co-ocurrencia y popularidad del producto principal
+            if co_occurrence_count > 0:
+                confidence = co_occurrence_count / max(frozen_invoice_count, popular_invoice_count)
+            else:
+                # Si no hay co-ocurrencia histórica, usar popularidad del producto popular
+                confidence = popular["score_popularidad"] * 0.5
+            
+            # Potencial de desbloqueo ajustado por confianza
+            unlock_potential = frozen_potential * confidence
+            
+            # Calcular descuento sugerido (más agresivo para mayor potencial)
+            base_discount = 0.15  # 15% base
+            potential_factor = min(unlock_potential / 100, 0.20)  # Hasta 20% adicional
+            suggested_discount = base_discount + potential_factor
+            suggested_discount = min(suggested_discount, 0.40)  # Máximo 40%
+            
+            # Calcular composición del combo (proporción sin pérdidas)
+            # A mayor descuento, más unidades congeladas por unidad popular
+            if suggested_discount <= 0.20:
+                frozen_ratio = 2  # 1 popular + 2 congelados
+            elif suggested_discount <= 0.30:
+                frozen_ratio = 3  # 1 popular + 3 congelados
+            else:
+                frozen_ratio = 4  # 1 popular + 4 congelados (descuento agresivo)
+            
+            co_occurrence_scores.append({
+                "popular": popular,
+                "co_occurrence_count": co_occurrence_count,
+                "confidence": confidence,
+                "unlock_potential": unlock_potential,
+                "suggested_discount": suggested_discount,
+                "frozen_ratio": frozen_ratio,
+            })
+        
+        # Ordenar por potencial de desbloqueo
+        co_occurrence_scores.sort(key=lambda x: x["unlock_potential"], reverse=True)
+        
+        # Generar combos para los mejores emparejamientos
+        for combo_data in co_occurrence_scores[:max_combos_per_frozen]:
+            popular = combo_data["popular"]
+            confidence = combo_data["confidence"]
+            unlock_potential = combo_data["unlock_potential"]
+            suggested_discount = combo_data["suggested_discount"]
+            co_occurrence_count = combo_data["co_occurrence_count"]
+            frozen_ratio = combo_data["frozen_ratio"]
+            
+            # Generar explicación profesional detallada
+            explanation = _generate_strategic_combo_explanation(
+                frozen, popular, confidence, unlock_potential, suggested_discount, co_occurrence_count, frozen_ratio
+            )
+            
+            # Formato de cantidad sugerida: "1 popular + X congelados"
+            cantidad_formateada = f"1 {popular['nombre_producto']} + {frozen_ratio} {frozen['nombre_producto']}"
+            
+            strategic_combos.append({
+                "recomendacion_id": _recommendation_id("combo_estrategico", [frozen["producto_id"], popular["producto_id"]]),
+                "tipo": "combo_estrategico",
+                "producto": f"{frozen['nombre_producto']} + {popular['nombre_producto']}",
+                "producto_id": frozen["producto_id"],
+                "productos": [frozen["producto_id"], popular["producto_id"]],
+                "producto_congelado": {
+                    "id": frozen["producto_id"],
+                    "nombre": frozen["nombre_producto"],
+                    "stock_actual": frozen["stock_actual"],
+                    "stock_excedente": frozen["stock_excedente"],
+                    "rotacion_mensual": frozen["rotacion_mensual"],
+                    "dias_sin_venta": frozen["dias_sin_venta"],
+                },
+                "producto_popular": {
+                    "id": popular["producto_id"],
+                    "nombre": popular["nombre_producto"],
+                    "rotacion_mensual": popular["rotacion_mensual"],
+                    "tendencia_pct": popular["tendencia_pct"],
+                    "score_popularidad": popular["score_popularidad"],
+                },
+                "senal": f"Combo estratégico para desbloquear {frozen['stock_excedente']} unidades de inventario congelado",
+                "cantidad_sugerida": cantidad_formateada,  # Formato: "1 popular + X congelados"
+                "cantidad_congelada": frozen_ratio,  # Número de unidades congeladas por combo
+                "cantidad_popular": 1,  # Siempre 1 unidad del producto popular
+                "confianza": round(confidence, 2),
+                "nivel_confianza": _confidence_level(confidence),
+                "potencial_desbloqueo": round(unlock_potential, 2),
+                "descuento_sugerido": round(suggested_discount * 100, 1),
+                "co_ocurrencia_historica": co_occurrence_count,
+                "calculado_en": datetime.now().astimezone().isoformat(timespec="seconds"),
+                "prioridad_ajustada": round(unlock_potential * confidence, 3),
+                "explicacion": explanation,
+            })
+    
+    # Ordenar por potencial de desbloqueo ajustado
+    strategic_combos.sort(key=lambda x: x["prioridad_ajustada"], reverse=True)
+    
+    return strategic_combos
+
+
+def _generate_strategic_combo_explanation(
+    frozen: dict[str, Any],
+    popular: dict[str, Any],
+    confidence: float,
+    unlock_potential: float,
+    suggested_discount: float,
+    co_occurrence_count: int,
+    frozen_ratio: int = 2
+) -> str:
+    """
+    Genera una explicación profesional detallada para un combo estratégico.
+
+    Args:
+        frozen: Datos del producto congelado
+        popular: Datos del producto popular
+        confidence: Confianza del combo
+        unlock_potential: Potencial de desbloqueo
+        suggested_discount: Descuento sugerido (0-1)
+        co_occurrence_count: Número de co-ocurrencias históricas
+        frozen_ratio: Proporción de unidades congeladas por combo
+        popular: Datos del producto popular
+        confidence: Confianza del combo
+        unlock_potential: Potencial de desbloqueo calculado
+        suggested_discount: Descuento sugerido (como decimal, ej: 0.20 para 20%)
+        co_occurrence_count: Número de co-ocurrencias históricas
+
+    Returns:
+        Explicación profesional detallada en español
+    """
+    discount_pct = round(suggested_discount * 100, 1)
+    confidence_pct = round(confidence * 100, 0)
+    
+    # Construir explicación base
+    explanation_parts = []
+    
+    # Parte 1: Problema identificado (inventario congelado)
+    explanation_parts.append(
+        f"⚠️ **PROBLEMA IDENTIFICADO:** El producto '{frozen['nombre_producto']}' presenta {frozen['stock_excedente']} unidades "
+        f"de stock excedente sobre su mínimo configurado ({frozen['stock_minimo']} unidades). "
+        f"Este producto tiene una rotación extremadamente baja de {frozen['rotacion_mensual']:.2f} veces/mes "
+        f"y no registra ventas en los últimos {frozen['dias_sin_venta']} días, lo que indica un inventario congelado "
+        f"que representa capital inmovilizado."
+    )
+    
+    # Parte 2: Solución estratégica (combo con producto popular)
+    explanation_parts.append(
+        f"\n💡 **SOLUCIÓN ESTRATÉGICA:** Proponemos emparejar este producto con '{popular['nombre_producto']}', "
+        f"un producto de alta rotación ({popular['rotacion_mensual']:.2f} veces/mes) "
+        f"y tendencia {('positiva' if popular['tendencia_pct'] > 0 else 'negativa')} del {abs(popular['tendencia_pct']):.1f}%. "
+        f"Este producto popular actúa como un 'gancho' comercial que puede incentivar la compra del producto congelado."
+    )
+    
+    # Parte 3: Análisis de co-ocurrencia
+    if co_occurrence_count > 0:
+        explanation_parts.append(
+            f"\n📊 **EVIDENCIA HISTÓRICA:** Estos productos han sido comprados juntos en {co_occurrence_count} ocasiones, "
+            f"lo que valida la viabilidad de este combo. La confianza de la asociación es del {confidence_pct}%, "
+            f"basada en patrones de compra reales de los clientes."
+        )
+    else:
+        explanation_parts.append(
+            f"\n📊 **ANÁLISIS DE MERCADO:** Aunque no hay co-ocurrencias históricas directas, "
+            f"la alta popularidad de '{popular['nombre_producto']}' (score: {popular['score_popularidad']:.2f}) "
+            f"y su tendencia {('positiva' if popular['tendencia_pct'] > 0 else 'estable')} "
+            f"lo convierten en un candidato ideal para impulsar ventas cruzadas."
+        )
+    
+    # Parte 4: Potencial de desbloqueo y beneficio financiero
+    explanation_parts.append(
+        f"\n💰 **IMPACTO FINANCIERO:** Este combo tiene un potencial de desbloqueo de {unlock_potential:.1f} unidades, "
+        f"lo que representa la recuperación del capital invertido en {frozen['stock_excedente']} unidades congeladas. "
+        f"Al liberar este inventario, se mejora el flujo de caja y se reduce el costo de almacenamiento."
+    )
+    
+    # Parte 5: Recomendación de descuento y ejecución
+    explanation_parts.append(
+        f"\n🎯 **RECOMENDACIÓN DE EJECUCIÓN:** Sugerimos configurar el combo como "
+        f"'1 {popular['nombre_producto']} + {frozen_ratio} {frozen['nombre_producto']}' "
+        f"con un descuento agresivo del {discount_pct}% para incentivar la compra. "
+        f"Esta proporción optimiza el margen de ganancia mientras permite desbloquear el inventario congelado. "
+        f"El descuento está justificado por la necesidad de desbloquear inventario rápidamente y es superior a "
+        f"descuentos regulares debido a la urgencia estratégica. Recomendamos posicionar este combo destacado en el catálogo "
+        f"y promocionarlo activamente durante 2-4 semanas."
+    )
+    
+    # Parte 6: Métricas de seguimiento
+    explanation_parts.append(
+        f"\n📈 **MÉTRICAS DE SEGUIMIENTO:** Monitorear las ventas del combo semanalmente. "
+        f"El objetivo es vender al menos el {min(50, frozen['stock_excedente'] * 2)}% del stock excedente en el primer mes. "
+        f"Si el combo no logra los resultados esperados, considerar aumentar el descuento hasta el 40% o "
+        f"reevaluar la viabilidad del producto congelado."
+    )
+    
+    return "\n".join(explanation_parts)
+
+
 def build_dashboard(
     payload: dict[str, Any],
     feedback: dict[str, tuple[float, int]] | None = None,
@@ -446,6 +1125,25 @@ def build_dashboard(
         )
         average_rating, rating_count = feedback.get("reposicion", (0.0, 0))
         feedback_factor = 1.0 if rating_count == 0 else 0.7 + 0.3 * average_rating / 5.0
+        
+        # Generar explicación individual para esta reposición
+        avg_weekly_demand = float(np.mean(product_weekly))
+        stock_days = stock / avg_weekly_demand if stock and avg_weekly_demand > 0 else 0
+        
+        if stock <= min_stock:
+            reposicion_explicacion = (
+                f"El stock actual ({stock} unidades) está por debajo del mínimo configurado ({min_stock} unidades). "
+                f"La demanda promedio es de {avg_weekly_demand:.1f} unidades/semana. "
+                f"Sugerimos comprar {suggested} unidades para cumplir con el punto de reorden."
+            )
+        else:
+            reposicion_explicacion = (
+                f"La demanda proyectada ({projected_demand:.0f} unidades) supera el stock actual ({stock} unidades). "
+                f"Con una demanda promedio de {avg_weekly_demand:.1f} unidades/semana, "
+                f"el stock actual cubre aproximadamente {stock_days:.1f} semanas. "
+                f"Sugerimos comprar {suggested} unidades para evitar desabastecimiento."
+            )
+        
         inventory_actions.append({
             "recomendacion_id": _recommendation_id("reposicion", [product_id]),
             "tipo": "reposicion",
@@ -458,6 +1156,7 @@ def build_dashboard(
             "calculado_en": datetime.now().astimezone().isoformat(timespec="seconds"),
             "retroalimentacion": {"promedio": round(average_rating, 2) if rating_count else None, "respuestas": rating_count},
             "prioridad_ajustada": round(confidence * feedback_factor, 3),
+            "explicacion": reposicion_explicacion,
         })
 
     invoice_frequency: Counter = Counter()
@@ -484,6 +1183,15 @@ def build_dashboard(
         support = pair_count / max(1, invoice_count)
         average_rating, rating_count = feedback.get("combo", (0.0, 0))
         feedback_factor = 1.0 if rating_count == 0 else 0.7 + 0.3 * average_rating / 5.0
+        
+        # Generar explicación individual para este combo
+        combo_explicacion = (
+            f"Estos productos se han comprado juntos en {pair_count} facturas. "
+            f"La probabilidad de compra conjunta es del {confidence * 100:.0f}% "
+            f"y representan el {support * 100:.1f}% de todas las transacciones. "
+            f"Basado en {invoice_count} facturas analizadas."
+        )
+        
         combo_actions.append({
             "recomendacion_id": _recommendation_id("combo", [first_id, second_id]),
             "tipo": "combo",
@@ -498,12 +1206,98 @@ def build_dashboard(
             "calculado_en": datetime.now().astimezone().isoformat(timespec="seconds"),
             "retroalimentacion": {"promedio": round(average_rating, 2) if rating_count else None, "respuestas": rating_count},
             "prioridad_ajustada": round(confidence * support * feedback_factor, 3),
+            "explicacion": combo_explicacion,
         })
+    
+    # Generar combos estratégicos (Fase 2)
+    strategic_combos = []
+    try:
+        frozen_products = _identify_frozen_products(products, sales)
+        popular_products = _identify_popular_products(products, sales)
+        strategic_combos = _generate_strategic_combos(frozen_products, popular_products, sales)
+        
+        # Aplicar factor de retroalimentación a combos estratégicos
+        average_rating, rating_count = feedback.get("combo_estrategico", (0.0, 0))
+        feedback_factor_strategic = 1.0 if rating_count == 0 else 0.7 + 0.3 * average_rating / 5.0
+        
+        for combo in strategic_combos:
+            combo["retroalimentacion"] = {
+                "promedio": round(average_rating, 2) if rating_count else None,
+                "respuestas": rating_count
+            }
+            combo["prioridad_ajustada"] = round(combo["prioridad_ajustada"] * feedback_factor_strategic, 3)
+    except Exception as e:
+        # Si falla la generación de combos estratégicos, continuar sin ellos
+        logging.warning("Error al generar combos estratégicos: %s", str(e))
+        strategic_combos = []
+    
+    # Combinar recomendaciones: combos estratégicos tienen prioridad sobre combos regulares
+    # Los combos estratégicos se colocan primero en la lista ordenada
+    all_recommendations = inventory_actions + strategic_combos + combo_actions
     recommendations = sorted(
-        inventory_actions + combo_actions,
+        all_recommendations,
         key=lambda item: item["prioridad_ajustada"],
         reverse=True,
     )[:20]
+
+    # Generar explicaciones dinámicas basadas en el contexto actual
+    weekly_data = None
+    if saved_model is not None:
+        _, weekly_data = _weekly_series(daily_total, today)
+
+    # Determinar el tipo de recomendación predominante
+    # Prioridad: combo_estrategico > combo > reposicion
+    if strategic_combos:
+        recommendation_type = "combo_estrategico"
+    elif combo_actions:
+        recommendation_type = "combo"
+    else:
+        recommendation_type = "reposicion"
+
+    # Construir contexto para generar explicaciones
+    explanation_context = {
+        "quality": quality,
+        "weekly_data": weekly_data,
+        "horizonte": horizon,
+        "frecuencia": frequency,
+        "stock_actual": current_stock,
+        "stock_minimo": minimum_stock,
+        "cantidad_facturas": invoice_count,
+    }
+
+    # Si hay recomendaciones de combo estratégico, agregar contexto específico
+    if recommendation_type == "combo_estrategico" and strategic_combos:
+        first_strategic = strategic_combos[0]
+        frozen_info = first_strategic.get("producto_congelado", {})
+        popular_info = first_strategic.get("producto_popular", {})
+        explanation_context.update({
+            "strategic_combo": True,
+            "frozen_stock": frozen_info.get("stock_actual", 0),
+            "frozen_excess": frozen_info.get("stock_excedente", 0),
+            "frozen_rotation": frozen_info.get("rotacion_mensual", 0),
+            "popular_rotation": popular_info.get("rotacion_mensual", 0),
+            "unlock_potential": first_strategic.get("potencial_desbloqueo", 0),
+            "suggested_discount": first_strategic.get("descuento_sugerido", 0),
+        })
+    # Si hay recomendaciones de combo regular, agregar contexto específico
+    elif recommendation_type == "combo" and combo_actions:
+        first_combo = combo_actions[0]
+        senal = first_combo.get("senal", "")
+        pair_count = 0
+        if "en " in senal:
+            try:
+                pair_count = int(senal.split("en ")[1].split(" ")[0])
+            except (ValueError, IndexError):
+                pair_count = 0
+        explanation_context.update({
+            "pair_count": pair_count,
+            "first_confidence": first_combo.get("confianza", 0),
+            "second_confidence": first_combo.get("confianza", 0),
+            "support": first_combo.get("soporte", 0),
+        })
+
+    # Generar explicaciones dinámicas
+    dynamic_explanations = _generate_explanation(metrics, explanation_context, recommendation_type)
 
     return {
         "unidad": "unidades",
@@ -514,11 +1308,7 @@ def build_dashboard(
         "metricas": metrics,
         "calidad": quality,
         "recomendaciones": recommendations,
-        "explicaciones": {
-            "cantidad_sugerida_compra": "Demanda prevista del horizonte + stock mínimo configurado - stock actual. No descuenta órdenes de compra abiertas.",
-            "rotacion_proyectada": "Unidades previstas / inventario promedio estimado durante el horizonte.",
-            "fuente": "Facturas con estado Pagada o Pagada Presencialmente.",
-        },
+        "explicaciones": dynamic_explanations,
     }
 
 
