@@ -298,6 +298,8 @@ function verificaproductos() {
 let asistenteRecepcionIA = null;
 let urlPreviewFacturaRecepcion = null;
 let datosFacturaExtraidaIA = null;
+let asistenteIA = null;
+let facturaValidaParaRegistro = true; // Controla si la factura es válida para registro
 let discrepanciasActivasIA = null;
 
 function obtenerAsistenteIA() {
@@ -360,10 +362,13 @@ function rellenarRecepcionDesdeFactura(factura) {
     if (!factura) return;
     datosFacturaExtraidaIA = factura;
     
-    console.log('Datos de factura recibidos:', factura);
-    console.log('Subtotal:', factura.subtotal_factura);
-    console.log('IVA:', factura.porcentaje_iva, factura.monto_iva);
-    console.log('Total:', factura.total_factura);
+    // Validar si el documento es una factura válida
+    if (factura.es_factura_valida === false) {
+        establecerEstadoIARecepcion(factura.mensaje_validacion || 'El documento no parece ser una factura válida. Por favor seleccione una factura legítima.', 'error');
+        facturaValidaParaRegistro = false;
+        bloquearBotonGuardar(true);
+        return;
+    }
     
     const correlativo = document.getElementById('correlativo');
     if (factura.numero_factura && correlativo) correlativo.value = factura.numero_factura;
@@ -433,14 +438,33 @@ function rellenarRecepcionDesdeFactura(factura) {
 
     const camposPendientes = [];
     if (factura.nombre_proveedor && !proveedorEncontrado) camposPendientes.push('proveedor');
+    
+    // Validar si los productos están en el catálogo
     const primerSelector = document.querySelector('.producto-select');
-    if (productosDetectados.some(producto => primerSelector && !buscarOpcionCatalogo(primerSelector, producto.nombre))) {
+    let productos_no_en_catalogo = 0;
+    if (productosDetectados.length > 0 && primerSelector) {
+        productos_no_en_catalogo = productosDetectados.filter(producto => !buscarOpcionCatalogo(primerSelector, producto.nombre)).length;
+    }
+    
+    if (productos_no_en_catalogo > 0) {
         camposPendientes.push('selección de productos del catálogo');
     }
+    
     const nota = camposPendientes.length
         ? ` Revisa manualmente: ${camposPendientes.join(' y ')}.`
         : ' Revisa los datos antes de guardar.';
     
+    // Si todos los productos están fuera del catálogo, mostrar advertencia específica
+    if (productos_no_en_catalogo === productosDetectados.length && productosDetectados.length > 0) {
+        establecerEstadoIARecepcion(`La factura seleccionada no se relaciona con los productos del catálogo. Factura inválida para este sistema.${nota}`, 'error');
+        facturaValidaParaRegistro = false;
+        bloquearBotonGuardar(true);
+        return;
+    }
+    
+    // Factura válida, desbloquear botón
+    facturaValidaParaRegistro = true;
+    bloquearBotonGuardar(false);
     establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.${nota}`);
 
     const resultadoIARecepcionEl = document.getElementById('resultadoIARecepcion');
@@ -472,6 +496,8 @@ function limpiarFacturaIARecepcion() {
     urlPreviewFacturaRecepcion = null;
     discrepanciasActivasIA = null;
     datosFacturaExtraidaIA = null;
+    facturaValidaParaRegistro = true; // Reiniciar estado al limpiar
+    bloquearBotonGuardar(false);
     
     const previewFac = document.getElementById('previewFacturaRecepcion');
     const prevImg = document.getElementById('previewImagenRecepcion');
@@ -483,6 +509,18 @@ function limpiarFacturaIARecepcion() {
     if (prevPdf) { prevPdf.hidden = true; prevPdf.removeAttribute('src'); }
     if (resIA) { resIA.textContent = ''; resIA.hidden = true; }
     establecerEstadoIARecepcion('');
+}
+
+function bloquearBotonGuardar(bloquear) {
+    const botonGuardar = document.querySelector('#recepcionModal .modal-footer .btn-save');
+    if (botonGuardar) {
+        botonGuardar.disabled = bloquear;
+        if (bloquear) {
+            botonGuardar.title = 'No se puede registrar con una factura inválida';
+        } else {
+            botonGuardar.title = '';
+        }
+    }
 }
 
 async function analizarFacturaRecepcion(archivo) {
@@ -743,7 +781,8 @@ function construirListaGranularDiscrepancias(discrepanciasRaw) {
 }
 
 function evaluarDiscrepanciasInteractivas() {
-    if (!discrepanciasActivasIA || !discrepanciasActivasIA.listaOriginal) return;
+    // Si no hay datos extraídos por IA, no hay nada que comparar
+    if (!datosFacturaExtraidaIA) return;
 
     const correlativoForm = space(document.getElementById('correlativo')?.value || '').trim();
     const proveedorForm = document.querySelector('#proveedor option:checked')?.textContent?.trim() || '';
@@ -755,69 +794,107 @@ function evaluarDiscrepanciasInteractivas() {
         costo: Number(fila.querySelector('input[name="costo[]"]')?.value || 0)
     }));
 
+    const productosFactura = datosFacturaExtraidaIA?.productos || [];
+
     const pendientes = [];
 
-    discrepanciasActivasIA.listaGranular.forEach(item => {
-        let resuelto = false;
-
-        if (item.tipo === 'porcentaje_iva') {
-            const ivaFactura = Number(datosFacturaExtraidaIA?.porcentaje_iva || 0);
-            if (Math.abs(ivaForm - ivaFactura) <= 0.01) {
-                resuelto = true;
-            } else {
-                item.valor_formulario = `${ivaForm.toFixed(2)}%`;
-            }
-        } else if (item.tipo === 'factura') {
-            if (normalizarTextoRecepcion(correlativoForm) === normalizarTextoRecepcion(item.valor_factura)) {
-                resuelto = true;
-            } else {
-                item.valor_formulario = correlativoForm || 'Vacio';
-            }
-        } else if (item.tipo === 'proveedor') {
-            if (normalizarTextoRecepcion(proveedorForm) === normalizarTextoRecepcion(item.valor_factura)) {
-                resuelto = true;
-            } else {
-                item.valor_formulario = proveedorForm || 'Sin seleccionar';
-            }
-        } else if (item.tipo.startsWith('producto_')) {
-            const idx = item.index;
-            const prodForm = productosForm[idx];
-            const prodFactura = datosFacturaExtraidaIA?.productos?.[idx] || {};
-
-            if (prodForm) {
-                if (item.tipo === 'producto_nombre') {
-                    const nombreFactura = prodFactura.nombre || item.valor_factura;
-                    if (normalizarTextoRecepcion(prodForm.nombre) === normalizarTextoRecepcion(nombreFactura)) {
-                        resuelto = true;
-                    } else {
-                        item.valor_formulario = prodForm.nombre || 'Sin seleccionar';
-                    }
-                } else if (item.tipo === 'producto_costo') {
-                    const costoFactura = Number(prodFactura.costo_unitario || prodFactura.costo || 0);
-                    if (Math.abs(prodForm.costo - costoFactura) <= 0.01) {
-                        resuelto = true;
-                    } else {
-                        item.valor_formulario = `$${prodForm.costo.toFixed(2)}`;
-                    }
-                } else if (item.tipo === 'producto_cantidad') {
-                    const cantFactura = Number(prodFactura.cantidad || 0);
-                    if (prodForm.cantidad === cantFactura) {
-                        resuelto = true;
-                    } else {
-                        item.valor_formulario = `${prodForm.cantidad}`;
-                    }
-                } else if (item.tipo === 'producto_generico') {
-                    if (normalizarTextoRecepcion(prodForm.nombre) === normalizarTextoRecepcion(item.valor_factura)) {
-                        resuelto = true;
-                    }
-                }
-            }
+    // 2. Comparar número de factura
+    if (datosFacturaExtraidaIA?.numero_factura) {
+        if (normalizarTextoRecepcion(correlativoForm) !== normalizarTextoRecepcion(datosFacturaExtraidaIA.numero_factura)) {
+            pendientes.push({
+                tipo: 'factura',
+                campo: 'Número de Factura',
+                valor_factura: datosFacturaExtraidaIA.numero_factura,
+                valor_formulario: correlativoForm || 'Vacio'
+            });
         }
+    }
 
-        if (!resuelto) {
-            pendientes.push(item);
+    // 3. Comparar proveedor
+    if (datosFacturaExtraidaIA?.nombre_proveedor) {
+        if (normalizarTextoRecepcion(proveedorForm) !== normalizarTextoRecepcion(datosFacturaExtraidaIA.nombre_proveedor)) {
+            pendientes.push({
+                tipo: 'proveedor',
+                campo: 'Proveedor',
+                valor_factura: datosFacturaExtraidaIA.nombre_proveedor,
+                valor_formulario: proveedorForm || 'Sin seleccionar'
+            });
+        }
+    }
+
+    // 4. Comparar productos - detectar todos los cambios
+    // 4a. Productos en formulario que no están en factura (agregados manualmente)
+    productosForm.forEach((prodForm, idxForm) => {
+        const prodFactura = productosFactura.find(pf => 
+            normalizarTextoRecepcion(pf.nombre) === normalizarTextoRecepcion(prodForm.nombre)
+        );
+        
+        if (!prodFactura) {
+            // Producto agregado manualmente
+            pendientes.push({
+                tipo: 'producto_agregado',
+                index: idxForm,
+                campo: `Producto ${idxForm + 1} (Agregado manualmente)`,
+                valor_factura: 'No estaba en factura',
+                valor_formulario: prodForm.nombre || 'Sin seleccionar'
+            });
+        } else {
+            // Producto existe en ambos, comparar detalles
+            const idxFactura = productosFactura.indexOf(prodFactura);
+            
+            // Comparar cantidad
+            const cantFactura = Number(prodFactura.cantidad || 0);
+            if (prodForm.cantidad !== cantFactura && cantFactura > 0) {
+                pendientes.push({
+                    tipo: 'producto_cantidad',
+                    index: idxForm,
+                    campo: `Producto ${idxForm + 1} (Cantidad)`,
+                    valor_factura: `${cantFactura}`,
+                    valor_formulario: `${prodForm.cantidad}`
+                });
+            }
+            
+            // Comparar costo
+            const costoFactura = Number(prodFactura.costo_unitario || prodFactura.costo || 0);
+            if (costoFactura > 0 && Math.abs(prodForm.costo - costoFactura) > 0.01) {
+                pendientes.push({
+                    tipo: 'producto_costo',
+                    index: idxForm,
+                    campo: `Producto ${idxForm + 1} (Costo Unitario)`,
+                    valor_factura: `$${costoFactura.toFixed(2)}`,
+                    valor_formulario: `$${prodForm.costo.toFixed(2)}`
+                });
+            }
         }
     });
+
+    // 4b. Productos en factura que no están en formulario (eliminados)
+    productosFactura.forEach((prodFactura, idxFactura) => {
+        const prodForm = productosForm.find(pf => 
+            normalizarTextoRecepcion(pf.nombre) === normalizarTextoRecepcion(prodFactura.nombre)
+        );
+        
+        if (!prodForm) {
+            pendientes.push({
+                tipo: 'producto_eliminado',
+                index: idxFactura,
+                campo: `Producto ${idxFactura + 1} (Eliminado del formulario)`,
+                valor_factura: prodFactura.nombre || 'Según factura',
+                valor_formulario: 'No está en formulario'
+            });
+        }
+    });
+
+    // 1. Comparar IVA
+    const ivaFactura = Number(datosFacturaExtraidaIA?.porcentaje_iva || 0);
+    if (Math.abs(ivaForm - ivaFactura) > 0.01) {
+        pendientes.push({
+            tipo: 'porcentaje_iva',
+            campo: 'Porcentaje de IVA (%)',
+            valor_factura: `${ivaFactura.toFixed(2)}%`,
+            valor_formulario: `${ivaForm.toFixed(2)}%`
+        });
+    }
 
     if (pendientes.length > 0) {
         const detalleHTML = pendientes.map(item =>
@@ -841,7 +918,12 @@ function evaluarDiscrepanciasInteractivas() {
 async function saveRecepcion(event) {
     if (event) event.preventDefault();
 
-    const form = document.getElementById('recepcionForm');
+    // Verificar si la factura es válida para registro
+    if (!facturaValidaParaRegistro) {
+        mensajes('error', 'Factura inválida', 'No se puede registrar con una factura que no ha sido validada. Por favor seleccione una factura válida.');
+        return;
+    }
+
     if (!validarEnvioRecepcion()) return;
     if (!verificaproductos()) return;
 
@@ -882,59 +964,124 @@ async function saveRecepcion(event) {
 
             if (!modoContingencia && aiClient) {
                 establecerEstadoIARecepcion('Verificando los datos antes del registro...');
-                const datosFormulario = {
-                    numero_factura: document.getElementById('correlativo').value,
-                    nombre_proveedor: document.querySelector('#proveedor option:checked').textContent,
-                    porcentaje_iva: Number(document.getElementById('porcentajeIvaRecepcion').value || 0),
-                    productos: Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
-                        nombre: fila.querySelector('.producto-select option:checked').textContent,
-                        modelo: fila.querySelector('.producto-modelo').value,
-                        marca: fila.querySelector('.producto-marca').value,
-                        serial: fila.querySelector('.producto-serial').value,
-                        cantidad: Number(fila.querySelector('input[name="cantidad[]"]').value),
-                        costo: Number(fila.querySelector('input[name="costo[]"]').value)
-                    }))
-                };
-                const verificacion = await aiClient.verificarCoherencia(
-                    aiClient.getFacturaId(), datosFormulario
-                );
                 
-                const discrepanciasRaw = verificacion.discrepancias || [];
-                const listaGranular = construirListaGranularDiscrepancias(discrepanciasRaw);
+                // Usar las discrepancias actuales del formulario (ya calculadas por evaluarDiscrepanciasInteractivas)
+                // en lugar de las del backend, para detectar productos agregados/eliminados manualmente
+                const correlativoForm = space(document.getElementById('correlativo')?.value || '').trim();
+                const proveedorForm = document.querySelector('#proveedor option:checked')?.textContent?.trim() || '';
+                const ivaForm = Number(document.getElementById('porcentajeIvaRecepcion')?.value || 0);
 
-                /*if (listaGranular.length > 0) {
-                    discrepanciasActivasIA = {
-                        listaOriginal: discrepanciasRaw,
-                        listaGranular: listaGranular
-                    };
+                const productosForm = Array.from(document.querySelectorAll('#productosList .producto-row')).map(fila => ({
+                    nombre: fila.querySelector('.producto-select option:checked')?.textContent?.trim() || '',
+                    cantidad: Number(fila.querySelector('input[name="cantidad[]"]')?.value || 0),
+                    costo: Number(fila.querySelector('input[name="costo[]"]')?.value || 0)
+                }));
 
-                    const detalleHTML = listaGranular.map(item =>
-                        `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
-                    ).join('');
+                const productosFactura = datosFacturaExtraidaIA?.productos || [];
+                const pendientes = [];
 
-                    evaluarDiscrepanciasInteractivas();
+                // 2. Comparar número de factura
+                if (datosFacturaExtraidaIA?.numero_factura) {
+                    if (normalizarTextoRecepcion(correlativoForm) !== normalizarTextoRecepcion(datosFacturaExtraidaIA.numero_factura)) {
+                        pendientes.push({
+                            tipo: 'factura',
+                            campo: 'Número de Factura',
+                            valor_factura: datosFacturaExtraidaIA.numero_factura,
+                            valor_formulario: correlativoForm || 'Vacio'
+                        });
+                    }
+                }
 
-                    await Swal.fire({
-                        icon: 'error',
-                        title: 'Diferencias detectadas',
-                        html: `La verificación encontró diferencias con la factura. Corrige todos los datos antes de guardar.<br><br><div style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;"><ul style="margin: 0; padding-left: 15px;">${detalleHTML}</ul></div>`,
-                        confirmButtonText: 'Entendido'
+                // 3. Comparar proveedor
+                if (datosFacturaExtraidaIA?.nombre_proveedor) {
+                    if (normalizarTextoRecepcion(proveedorForm) !== normalizarTextoRecepcion(datosFacturaExtraidaIA.nombre_proveedor)) {
+                        pendientes.push({
+                            tipo: 'proveedor',
+                            campo: 'Proveedor',
+                            valor_factura: datosFacturaExtraidaIA.nombre_proveedor,
+                            valor_formulario: proveedorForm || 'Sin seleccionar'
+                        });
+                    }
+                }
+
+                // 4. Comparar productos - detectar todos los cambios
+                // 4a. Productos en formulario que no están en factura (agregados manualmente)
+                productosForm.forEach((prodForm, idxForm) => {
+                    const prodFactura = productosFactura.find(pf => 
+                        normalizarTextoRecepcion(pf.nombre) === normalizarTextoRecepcion(prodForm.nombre)
+                    );
+                    
+                    if (!prodFactura) {
+                        // Producto agregado manualmente
+                        pendientes.push({
+                            tipo: 'producto_agregado',
+                            index: idxForm,
+                            campo: `Producto ${idxForm + 1} (Agregado manualmente)`,
+                            valor_factura: 'No estaba en factura',
+                            valor_formulario: prodForm.nombre || 'Sin seleccionar'
+                        });
+                    } else {
+                        // Producto existe en ambos, comparar detalles
+                        const idxFactura = productosFactura.indexOf(prodFactura);
+                        
+                        // Comparar cantidad
+                        const cantFactura = Number(prodFactura.cantidad || 0);
+                        if (prodForm.cantidad !== cantFactura && cantFactura > 0) {
+                            pendientes.push({
+                                tipo: 'producto_cantidad',
+                                index: idxForm,
+                                campo: `Producto ${idxForm + 1} (Cantidad)`,
+                                valor_factura: `${cantFactura}`,
+                                valor_formulario: `${prodForm.cantidad}`
+                            });
+                        }
+                        
+                        // Comparar costo
+                        const costoFactura = Number(prodFactura.costo_unitario || prodFactura.costo || 0);
+                        if (costoFactura > 0 && Math.abs(prodForm.costo - costoFactura) > 0.01) {
+                            pendientes.push({
+                                tipo: 'producto_costo',
+                                index: idxForm,
+                                campo: `Producto ${idxForm + 1} (Costo Unitario)`,
+                                valor_factura: `$${costoFactura.toFixed(2)}`,
+                                valor_formulario: `$${prodForm.costo.toFixed(2)}`
+                            });
+                        }
+                    }
+                });
+
+                // 4b. Productos en factura que no están en formulario (eliminados)
+                productosFactura.forEach((prodFactura, idxFactura) => {
+                    const prodForm = productosForm.find(pf => 
+                        normalizarTextoRecepcion(pf.nombre) === normalizarTextoRecepcion(prodFactura.nombre)
+                    );
+                    
+                    if (!prodForm) {
+                        pendientes.push({
+                            tipo: 'producto_eliminado',
+                            index: idxFactura,
+                            campo: `Producto ${idxFactura + 1} (Eliminado del formulario)`,
+                            valor_factura: prodFactura.nombre || 'Según factura',
+                            valor_formulario: 'No está en formulario'
+                        });
+                    }
+                });
+
+                // 1. Comparar IVA
+                const ivaFactura = Number(datosFacturaExtraidaIA?.porcentaje_iva || 0);
+                if (Math.abs(ivaForm - ivaFactura) > 0.01) {
+                    pendientes.push({
+                        tipo: 'porcentaje_iva',
+                        campo: 'Porcentaje de IVA (%)',
+                        valor_factura: `${ivaFactura.toFixed(2)}%`,
+                        valor_formulario: `${ivaForm.toFixed(2)}%`
                     });
+                }
 
-                    if (botonGuardar) botonGuardar.disabled = false;
-                    return;
-                }*/
-                if (listaGranular.length > 0) {
-                    discrepanciasActivasIA = {
-                        listaOriginal: discrepanciasRaw,
-                        listaGranular: listaGranular
-                    };
-
-                    const detalleHTML = listaGranular.map(item =>
+                if (pendientes.length > 0) {
+                    const detalleHTML = pendientes.map(item =>
                         `<li style="margin-bottom: 3px;"><b>${item.campo}</b>: factura "${item.valor_factura}" / formulario "${item.valor_formulario}"</li>`
                     ).join('');
-
-                    evaluarDiscrepanciasInteractivas();
 
                     const resultadoSwal = await Swal.fire({
                         icon: 'warning',
@@ -949,13 +1096,15 @@ async function saveRecepcion(event) {
 
                     if (!resultadoSwal.isConfirmed) {
                         if (botonGuardar) botonGuardar.disabled = false;
+                        // Actualizar el estado para mostrar las discrepancias actuales
+                        evaluarDiscrepanciasInteractivas();
                         return;
                     }
                     // Usuario confirma registro a pesar de discrepancias
                     iaVerificada = true;
                     // Agregar discrepancias a los datos de predicción para feedback
                     if (prediccionIA) {
-                        prediccionIA.discrepancias = listaGranular;
+                        prediccionIA.discrepancias = pendientes;
                     }
                 } else {
                     iaVerificada = true;
@@ -971,6 +1120,7 @@ async function saveRecepcion(event) {
             }
         }
 
+        const form = document.getElementById('recepcionForm');
         const formData = new FormData(form);
         formData.delete('foto_factura');
         formData.append('accion', 'registrar');
@@ -1234,52 +1384,8 @@ async function confirmarAnulacion() {
 // 7. INICIALIZACIÓN DOCUMENT READY
 // ==========================================
 $(document).ready(function() {
-    var $tabla = $('table.table-info, table[data-datatable]');
-    
-    if ($tabla.length && typeof $.fn.DataTable !== 'undefined') {
-        if (!$.fn.DataTable.isDataTable($tabla)) {$tabla.DataTable({
-                language: {
-                    "decimal": "",
-                    "emptyTable": "No hay datos disponibles en la tabla",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    "infoEmpty": "Mostrando 0 to 0 of 0 registros",
-                    "infoFiltered": "(filtrado de _MAX_ registros totales)",
-                    "lengthMenu": "Mostrar _MENU_ registros",
-                    "loadingRecords": "Cargando...",
-                    "processing": "Procesando...",
-                    "search": "Buscar:",
-                    "zeroRecords": "No se encontraron registros coincidentes",
-                    "paginate": {
-                        "first": "Primero",
-                        "last": "Último",
-                        "next": "Siguiente",
-                        "previous": "Anterior"
-                    }
-                },
-                scrollX: true,
-                scrollCollapse: true,
-                order: [[0, 'desc']],
-                initComplete: function () {
-                    var api = this.api();
-                    var $wrapper =$(api.table().container());
-                    
-                    setTimeout(function() {
-                        api.columns.adjust();
-                    }, 150);
-
-                    var $filter =$wrapper.find('.dataTables_filter');
-                    if ($filter.length) {
-                        $filter.css({
-                            display: 'flex',
-                            'align-items': 'center',
-                            'justify-content': 'flex-end',
-                            gap: '10px'
-                        });$filter.find('label').css({ 'margin-bottom': '0' });
-                    }
-                }
-            });
-        }
-    }
+    // DataTable se inicializa automáticamente por data-table.js
+    // No duplicamos la inicialización aquí para evitar conflictos al recargar
 
     actualizarProteccionSelectsProductos();
 
