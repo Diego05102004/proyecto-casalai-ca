@@ -298,6 +298,8 @@ function verificaproductos() {
 let asistenteRecepcionIA = null;
 let urlPreviewFacturaRecepcion = null;
 let datosFacturaExtraidaIA = null;
+let asistenteIA = null;
+let facturaValidaParaRegistro = true; // Controla si la factura es válida para registro
 let discrepanciasActivasIA = null;
 
 function obtenerAsistenteIA() {
@@ -360,10 +362,13 @@ function rellenarRecepcionDesdeFactura(factura) {
     if (!factura) return;
     datosFacturaExtraidaIA = factura;
     
-    console.log('Datos de factura recibidos:', factura);
-    console.log('Subtotal:', factura.subtotal_factura);
-    console.log('IVA:', factura.porcentaje_iva, factura.monto_iva);
-    console.log('Total:', factura.total_factura);
+    // Validar si el documento es una factura válida
+    if (factura.es_factura_valida === false) {
+        establecerEstadoIARecepcion(factura.mensaje_validacion || 'El documento no parece ser una factura válida. Por favor seleccione una factura legítima.', 'error');
+        facturaValidaParaRegistro = false;
+        bloquearBotonGuardar(true);
+        return;
+    }
     
     const correlativo = document.getElementById('correlativo');
     if (factura.numero_factura && correlativo) correlativo.value = factura.numero_factura;
@@ -433,14 +438,33 @@ function rellenarRecepcionDesdeFactura(factura) {
 
     const camposPendientes = [];
     if (factura.nombre_proveedor && !proveedorEncontrado) camposPendientes.push('proveedor');
+    
+    // Validar si los productos están en el catálogo
     const primerSelector = document.querySelector('.producto-select');
-    if (productosDetectados.some(producto => primerSelector && !buscarOpcionCatalogo(primerSelector, producto.nombre))) {
+    let productos_no_en_catalogo = 0;
+    if (productosDetectados.length > 0 && primerSelector) {
+        productos_no_en_catalogo = productosDetectados.filter(producto => !buscarOpcionCatalogo(primerSelector, producto.nombre)).length;
+    }
+    
+    if (productos_no_en_catalogo > 0) {
         camposPendientes.push('selección de productos del catálogo');
     }
+    
     const nota = camposPendientes.length
         ? ` Revisa manualmente: ${camposPendientes.join(' y ')}.`
         : ' Revisa los datos antes de guardar.';
     
+    // Si todos los productos están fuera del catálogo, mostrar advertencia específica
+    if (productos_no_en_catalogo === productosDetectados.length && productosDetectados.length > 0) {
+        establecerEstadoIARecepcion(`La factura seleccionada no se relaciona con los productos del catálogo. Factura inválida para este sistema.${nota}`, 'error');
+        facturaValidaParaRegistro = false;
+        bloquearBotonGuardar(true);
+        return;
+    }
+    
+    // Factura válida, desbloquear botón
+    facturaValidaParaRegistro = true;
+    bloquearBotonGuardar(false);
     establecerEstadoIARecepcion(`Análisis completado. Factura: ${factura.numero_factura || 'no detectada'}.${nota}`);
 
     const resultadoIARecepcionEl = document.getElementById('resultadoIARecepcion');
@@ -472,6 +496,8 @@ function limpiarFacturaIARecepcion() {
     urlPreviewFacturaRecepcion = null;
     discrepanciasActivasIA = null;
     datosFacturaExtraidaIA = null;
+    facturaValidaParaRegistro = true; // Reiniciar estado al limpiar
+    bloquearBotonGuardar(false);
     
     const previewFac = document.getElementById('previewFacturaRecepcion');
     const prevImg = document.getElementById('previewImagenRecepcion');
@@ -483,6 +509,18 @@ function limpiarFacturaIARecepcion() {
     if (prevPdf) { prevPdf.hidden = true; prevPdf.removeAttribute('src'); }
     if (resIA) { resIA.textContent = ''; resIA.hidden = true; }
     establecerEstadoIARecepcion('');
+}
+
+function bloquearBotonGuardar(bloquear) {
+    const botonGuardar = document.querySelector('#recepcionModal .modal-footer .btn-save');
+    if (botonGuardar) {
+        botonGuardar.disabled = bloquear;
+        if (bloquear) {
+            botonGuardar.title = 'No se puede registrar con una factura inválida';
+        } else {
+            botonGuardar.title = '';
+        }
+    }
 }
 
 async function analizarFacturaRecepcion(archivo) {
@@ -841,7 +879,12 @@ function evaluarDiscrepanciasInteractivas() {
 async function saveRecepcion(event) {
     if (event) event.preventDefault();
 
-    const form = document.getElementById('recepcionForm');
+    // Verificar si la factura es válida para registro
+    if (!facturaValidaParaRegistro) {
+        mensajes('error', 'Factura inválida', 'No se puede registrar con una factura que no ha sido validada. Por favor seleccione una factura válida.');
+        return;
+    }
+
     if (!validarEnvioRecepcion()) return;
     if (!verificaproductos()) return;
 
@@ -971,6 +1014,7 @@ async function saveRecepcion(event) {
             }
         }
 
+        const form = document.getElementById('recepcionForm');
         const formData = new FormData(form);
         formData.delete('foto_factura');
         formData.append('accion', 'registrar');

@@ -1,11 +1,13 @@
 """API REST FastAPI - Fase 1: Verificación Asistida."""
 import hmac
 import os
-from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Depends, Request
 from pydantic import BaseModel
 from pathlib import Path
 import json
 import shutil
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 # Importación de tus módulos existentes y nuevos
 from modelo.auditor_recepcion import AuditorRecepcion
@@ -13,6 +15,9 @@ from modelo.model_registry import ModelRegistry
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Configuración de Rate Limiting
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(
     tags=["Recepción y Auditoría"]
@@ -65,7 +70,8 @@ def read_root():
     }
 
 @router.post("/api/v1/auditar", dependencies=[Depends(validar_token_auditor)])
-async def auditar_documento(file: UploadFile = File(...)):
+@limiter.limit("10/minute")
+async def auditar_documento(request: Request, file: UploadFile = File(...)):
     """
     Endpoint principal para recibir facturas/documentos, 
     procesarlos mediante OCR y aplicar las reglas de auditoría.
@@ -150,7 +156,8 @@ def recargar_modelo():
 
 # Endpoints compatibles con el proxy PHP original
 @router.post("/fase1/extraer", dependencies=[Depends(validar_token_auditor)])
-async def fase1_extraer(imagen: UploadFile = File(...)):
+@limiter.limit("10/minute")
+async def fase1_extraer(request: Request, imagen: UploadFile = File(...)):
     """
     Endpoint compatible con el proxy PHP original para extraer datos de factura.
     """
@@ -191,7 +198,9 @@ async def fase1_extraer(imagen: UploadFile = File(...)):
             "porcentaje_iva": resultado.porcentaje_iva,
             "monto_iva": resultado.monto_iva,
             "total_factura": resultado.total_factura,
-            "confianza_promedio": resultado.metadatos_extraccion.get('confianza_promedio', 0.0)
+            "confianza_promedio": resultado.metadatos_extraccion.get('confianza_promedio', 0.0),
+            "es_factura_valida": resultado.metadatos_extraccion.get('es_factura_valida', True),
+            "mensaje_validacion": resultado.metadatos_extraccion.get('mensaje_validacion', '')
         }
         
         # Incluir confiabilidad ML si está disponible
@@ -211,7 +220,8 @@ async def fase1_extraer(imagen: UploadFile = File(...)):
             file_path.unlink()
 
 @router.post("/fase1/verificar", dependencies=[Depends(validar_token_auditor)])
-def fase1_verificar(datos: dict):
+@limiter.limit("30/minute")
+def fase1_verificar(request: Request, datos: dict):
     """
     Endpoint compatible con el proxy PHP original para verificar coherencia.
     """
@@ -232,7 +242,8 @@ def fase1_verificar(datos: dict):
         }
 
 @router.post("/fase1/comparar-directo", dependencies=[Depends(validar_token_auditor)])
-async def fase1_comparar_directo(imagen: UploadFile = File(...), datos_json: str = Form(...)):
+@limiter.limit("10/minute")
+async def fase1_comparar_directo(request: Request, imagen: UploadFile = File(...), datos_json: str = Form(...)):
     """
     Endpoint compatible con el proxy PHP original para comparación directa.
     """

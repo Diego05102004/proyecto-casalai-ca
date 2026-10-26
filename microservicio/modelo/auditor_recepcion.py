@@ -79,16 +79,68 @@ class AuditorRecepcion:
     UMBRAL_CONFIANZA_ALTA = 0.85
     UMBRAL_CONFIANZA_MEDIA = 0.60
     PATRONES = {
-        'numero_factura': [r'(?:factura|n[°º]|nro|numero|#)\s*[.:]?\s*([A-Z0-9\-]{5,20})', r'(?:factura)\s*(?:n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)', r'(?:invoice|inv)\s*(?:#|n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)', r'(\d{6,10})'],
-        'proveedor': [r'(?:proveedor|vendedor|supplier|vendor|de|from)[:\s]+([A-Z][A-Za-z0-9\s&.,]+(?:S\.A|S\.R\.L|C\.A|LLC|INC|LTDA)?)', r'(?:razon social|nombre)[:\s]+([A-Z][A-Za-z0-9\s&.,]+)', r'eBay|Amazon|MercadoLibre|AliExpress'],
-        'fecha': [r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', r'(\d{4}[/-]\d{1,2}[/-]\d{1,2})'],
-        'producto': [r'(?:descripcion|producto|articulo|item)[:\s]+([^\n]+)', r'([A-Z][a-zA-Z0-9\s\-\+]+(?:Printer|Laptop|Desktop|Monitor|Phone|Tablet|Camera|Headphones|Speaker|Mouse|Keyboard|Router|Modem|Scanner|Copier))'],
-        'modelo': [r'(?:modelo|model|mod)[:\s]+([A-Z0-9\-]+)', r'([A-Z0-9]{3,15}(?:\s*[A-Z0-9\-]+)*)'],
-        'marca': [r'(?:marca|brand|fabricante)[:\s]+([A-Za-z0-9\s]+)', r'(HP|Canon|Epson|Brother|Xerox|Dell|Lenovo|Asus|Samsung|LG|Sony|Apple|Microsoft|Logitech|Intel|AMD|NVIDIA)'],
-        'serial': [r'(?:serial|s/n|serie|sn)[:\s]+([A-Z0-9\-]+)', r'(?:SN|S/N)[:\s]*([A-Z0-9\-]+)'],
-        'cantidad': [r'(?:cantidad|qty|quantity|cant)[:\s]+(\d+)', r'(?:und|unidades|units?)[:\s]+(\d+)', r'(\d+)\s*(?:und|unidades|units?)'],
-        'costo': [r'(?:precio|costo|price|valor|unitario|p/u)[:\s]+[\$]?\s*(\d+[.,]?\d*)', r'[\$]\s*(\d+[.,]?\d{2})', r'(\d+[.,]\d{2})'],
-        'total': [r'(?:total|monto total|importe)[:\s]+[\$]?\s*(\d+[.,]?\d{2})', r'total\s*[\$]?\s*(\d+[.,]?\d{2})']
+        'numero_factura': [
+            r'(?:factura|n[°º]|nro|numero|#)\s*[.:]?\s*([A-Z0-9\-]{5,20})',
+            r'(?:factura)\s*(?:n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)',
+            r'(?:invoice|inv)\s*(?:#|n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)',
+            r'(?:bill)\s*(?:#)?\s*[.:]?\s*([A-Z0-9\-]+)',
+            r'(?:receipt)\s*(?:#)?\s*[.:]?\s*([A-Z0-9\-]+)',
+            r'(\d{6,10})',
+            r'#\s*([A-Z0-9\-]+)'
+        ],
+        'proveedor': [
+            r'(?:proveedor|vendedor|supplier|vendor|de|from)[:\s]+([A-Z][A-Za-z0-9\s&.,\-]+(?:S\.A|S\.R\.L|C\.A|LLC|INC|LTDA|S\.A\.S|GmbH|Ltd|Pty)?)',
+            r'(?:razon social|nombre|company|empresa)[:\s]+([A-Z][A-Za-z0-9\s&.,\-]+)',
+            r'(?:sold\s*by|billed\s*by)[:\s]+([A-Z][A-Za-z0-9\s&.,\-]+)',
+            r'eBay|Amazon|MercadoLibre|AliExpress|Walmart|BestBuy|Newegg|Staples|Office Depot',
+            r'(?:HP|Canon|Epson|Brother|Xerox|Dell|Lenovo|Asus|Samsung|LG|Sony|Apple|Microsoft|Logitech|Intel|AMD|NVIDIA)\s+(?:Inc|Corp|LLC|GmbH|Ltd)?'
+        ],
+        'fecha': [
+            r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+            r'(\d{4}[/-]\d{1,2}[/-]\d{1,2})',
+            r'(\d{1,2}\s+(?:de|of|del)\s+[A-Za-z]+\s+\d{2,4})',
+            r'([A-Za-z]+\s+\d{1,2},?\s+\d{4})',
+            r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})',
+            r'(\d{8})'  # Formato compacto DDMMYYYY
+        ],
+        'producto': [
+            r'(?:descripcion|producto|articulo|item|product|description)[:\s]+([^\n]+)',
+            r'([A-Z][a-zA-Z0-9\s\-\+]+(?:Printer|Laptop|Desktop|Monitor|Phone|Tablet|Camera|Headphones|Speaker|Mouse|Keyboard|Router|Modem|Scanner|Copier|Ink|Toner|Cartridge|Memory|SSD|HDD|CPU|GPU))',
+            r'([A-Z][a-zA-Z0-9\s\-\+]{10,100})'
+        ],
+        'modelo': [
+            r'(?:modelo|model|mod|type)[:\s]+([A-Z0-9\-\s]+)',
+            r'([A-Z0-9]{3,15}(?:\s*[A-Z0-9\-]+)*)',
+            r'(?:model\s*no|model\s*number)[:\s]*([A-Z0-9\-\s]+)'
+        ],
+        'marca': [
+            r'(?:marca|brand|fabricante|manufacturer|maker)[:\s]+([A-Za-z0-9\s]+)',
+            r'(HP|Canon|Epson|Brother|Xerox|Dell|Lenovo|Asus|Samsung|LG|Sony|Apple|Microsoft|Logitech|Intel|AMD|NVIDIA|Kingston|SanDisk|Crucial|Seagate|Western Digital|Toshiba|Fujitsu|Kyocera|Lexmark|Ricoh|Konica|Oki)',
+            r'(?:by|from)\s+([A-Z][A-Za-z0-9]+)'
+        ],
+        'serial': [
+            r'(?:serial|s/n|serie|sn)[:\s]+([A-Z0-9\-]+)',
+            r'(?:SN|S/N)[:\s]*([A-Z0-9\-]+)',
+            r'(?:serial\s*number)[:\s]*([A-Z0-9\-]+)',
+            r'([A-Z0-9]{8,20})'
+        ],
+        'cantidad': [
+            r'(?:cantidad|qty|quantity|cant)[:\s]+(\d+)',
+            r'(?:und|unidades|units?|pcs|pieces)[:\s]+(\d+)',
+            r'(\d+)\s*(?:und|unidades|units?|pcs|pieces)',
+            r'(\d+)\s*x\s*'  # Formato "2x" para cantidad
+        ],
+        'costo': [
+            r'(?:precio|costo|price|valor|unitario|p/u|unit\s*price)[:\s]+[\$]?\s*(\d+[.,]?\d*)',
+            r'[\$]\s*(\d+[.,]?\d{2})',
+            r'(\d+[.,]\d{2})',
+            r'(?:rate)[:\s]+[\$]?\s*(\d+[.,]?\d*)'
+        ],
+        'total': [
+            r'(?:total|monto total|importe)[:\s]+[\$]?\s*(\d+[.,]?\d{2})',
+            r'total\s*[\$]?\s*(\d+[.,]?\d{2})',
+            r'(?:grand\s*total|amount\s*due|balance\s*due)[:\s]+[\$]?\s*(\d+[.,]?\d{2})'
+        ]
     }
 
     def __init__(self, config_path: Optional[str] = None):
@@ -142,12 +194,17 @@ class AuditorRecepcion:
         factura = self._extraer_campos_factura(texto_extraido)
         confianza_promedio = self._calcular_confianza_promedio(factura)
         
+        # Validar si el documento es una factura
+        es_factura_valida, mensaje_error = self._validar_es_factura(factura, texto_extraido)
+        
         factura.metadatos_extraccion = {
             'timestamp': datetime.now().isoformat(),
             'longitud_texto': len(texto_extraido),
             'confianza_promedio': confianza_promedio,
             'lineas_detectadas': len(texto_extraido.split('\n')),
-            'metodo': 'OCR_Tesseract + Regex_Contextual'
+            'metodo': 'OCR_Tesseract + Regex_Contextual',
+            'es_factura_valida': es_factura_valida,
+            'mensaje_validacion': mensaje_error
         }
         
         # Predecir confiabilidad usando el modelo ML si está disponible
@@ -250,6 +307,43 @@ class AuditorRecepcion:
         
         config_tesseract = '--psm 6 --oem 3'
         return pytesseract.image_to_string(imagen, lang=self.config['idioma_ocr'], config=config_tesseract)
+
+    def _validar_es_factura(self, factura: FacturaExtraida, texto: str) -> tuple[bool, str]:
+        """
+        Valida si el documento extraído parece ser una factura válida.
+        Retorna (es_valido, mensaje_error).
+        """
+        # Palabras clave que deben aparecer en una factura
+        palabras_clave_factura = [
+            'factura', 'invoice', 'bill', 'receipt', 'total', 'subtotal',
+            'iva', 'tax', 'impuesto', 'precio', 'costo', 'price', 'cantidad',
+            'quantity', 'proveedor', 'vendor', 'supplier'
+        ]
+        
+        texto_lower = texto.lower()
+        palabras_encontradas = sum(1 for palabra in palabras_clave_factura if palabra in texto_lower)
+        
+        # Si hay muy pocas palabras clave, probablemente no es una factura
+        if palabras_encontradas < 2:
+            return False, "El documento no parece ser una factura. Por favor seleccione una factura válida."
+        
+        # Validar que tenga al menos algunos campos básicos
+        campos_esenciales = [
+            factura.numero_factura,
+            factura.nombre_proveedor,
+            factura.fecha_factura,
+            factura.productos
+        ]
+        campos_llenos = sum(1 for campo in campos_esenciales if campo)
+        
+        if campos_llenos < 2:
+            return False, "El documento no tiene suficiente información para ser considerado una factura válida."
+        
+        # Validar que tenga montos monetarios
+        if factura.subtotal_factura == 0 and factura.total_factura == 0:
+            return False, "El documento no contiene montos monetarios. Verifique que sea una factura."
+        
+        return True, ""
 
     def _extraer_campos_factura(self, texto: str) -> FacturaExtraida:
         factura = FacturaExtraida()
