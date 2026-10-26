@@ -1384,52 +1384,8 @@ async function confirmarAnulacion() {
 // 7. INICIALIZACIÓN DOCUMENT READY
 // ==========================================
 $(document).ready(function() {
-    var $tabla = $('table.table-info, table[data-datatable]');
-    
-    if ($tabla.length && typeof $.fn.DataTable !== 'undefined') {
-        if (!$.fn.DataTable.isDataTable($tabla)) {$tabla.DataTable({
-                language: {
-                    "decimal": "",
-                    "emptyTable": "No hay datos disponibles en la tabla",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    "infoEmpty": "Mostrando 0 to 0 of 0 registros",
-                    "infoFiltered": "(filtrado de _MAX_ registros totales)",
-                    "lengthMenu": "Mostrar _MENU_ registros",
-                    "loadingRecords": "Cargando...",
-                    "processing": "Procesando...",
-                    "search": "Buscar:",
-                    "zeroRecords": "No se encontraron registros coincidentes",
-                    "paginate": {
-                        "first": "Primero",
-                        "last": "Último",
-                        "next": "Siguiente",
-                        "previous": "Anterior"
-                    }
-                },
-                scrollX: true,
-                scrollCollapse: true,
-                order: [[0, 'desc']],
-                initComplete: function () {
-                    var api = this.api();
-                    var $wrapper =$(api.table().container());
-                    
-                    setTimeout(function() {
-                        api.columns.adjust();
-                    }, 150);
-
-                    var $filter =$wrapper.find('.dataTables_filter');
-                    if ($filter.length) {
-                        $filter.css({
-                            display: 'flex',
-                            'align-items': 'center',
-                            'justify-content': 'flex-end',
-                            gap: '10px'
-                        });$filter.find('label').css({ 'margin-bottom': '0' });
-                    }
-                }
-            });
-        }
-    }
+    // DataTable se inicializa automáticamente por data-table.js
+    // No duplicamos la inicialización aquí para evitar conflictos al recargar
 
     actualizarProteccionSelectsProductos();
 
