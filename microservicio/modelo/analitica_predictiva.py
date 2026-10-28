@@ -1016,17 +1016,10 @@ def build_dashboard(
         }
         model_key = f"categoria:{int(selected_category)}"
     else:
-        # Si no se selecciona producto ni categoría, identificar productos congelados y seleccionar el primero
-        frozen_products = _identify_frozen_products(products, sales)
-        if frozen_products:
-            # Seleccionar el primer producto congelado para analizar
-            first_frozen = frozen_products[0]
-            selected_ids = {first_frozen["producto_id"]}
-            model_key = f"producto:{first_frozen['producto_id']}"
-        else:
-            # Si no hay productos congelados, seleccionar todos
-            selected_ids = set(product_by_id.keys())
-            model_key = "todos:productos"
+        # El análisis general necesita las ventas del inventario completo para
+        # identificar productos populares que puedan combinarse con el stock congelado.
+        selected_ids = set(product_by_id.keys())
+        model_key = "todos:productos"
     
     if not selected_ids:
         return {"calidad": {"estado": "sin_datos"}, "historico": [], "prediccion": [], "metricas": {}}

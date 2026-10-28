@@ -191,7 +191,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 </div>
 
                 <p class="analytics-status" id="analyticsStatus" role="status" aria-live="polite">
-                    Selecciona un producto o una categoría y pulsa «Analizar».
+                    El análisis general del inventario se ejecuta automáticamente al entrar. Puedes filtrar por producto o categoría y pulsar «Analizar».
                 </p>
 
                 <div class="analytics-kpis" id="analyticsKpis" hidden>
@@ -1862,8 +1862,11 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                                 card.style.fontSize = '1.5em';
                                 card.style.lineHeight = '1.5';
                                 
-                                const solucionText =  ejecucionSection.replace('🎯 **RECOMENDACIÓN DE EJECUCIÓN:**', '').trim();
-                                const metricasText = metricasSection ?  ejecucionSection.replace('🎯 **RECOMENDACIÓN DE EJECUCIÓN:**', '').trim() : '';
+                                const solucionText = (solucionSection || ejecucionSection || item.explicacion)
+                                    .replace(/^(?:💡 )?\*\*SOLUCIÓN ESTRATÉGICA:\*\*/i, '').trim();
+                                const metricasText = metricasSection
+                                    ? metricasSection.replace('📈 **MÉTRICAS DE SEGUIMIENTO:**', '').trim()
+                                    : '';
                                 
                                 let innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-weight:700;font-size:1.1em;color:#166534;">💡 SOLUCIÓN ESTRATÉGICA</div>' +
                                                '<div style="color:#166534;margin-bottom:16px;">' + solucionText + '</div>' +
@@ -1905,16 +1908,6 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     const productId = analyticsProduct.value;
                     const categoryId = analyticsCategory.value;
                     
-                    // Si ambos están vacíos, seleccionar automáticamente el primer producto
-                    if (!productId && !categoryId) {
-                        if (analyticsProduct.options.length > 1) {
-                            analyticsProduct.value = analyticsProduct.options[1].value; // Saltar la primera opción (vacía)
-                            setAnalyticsStatus('Producto seleccionado automáticamente para análisis de combos estratégicos');
-                        }
-                    }
-                    
-                    // Permitir que ambos sean nulos (analizar todos los productos)
-                    // Pero no permitir que ambos tengan valor
                     if (productId && categoryId) {
                         setAnalyticsStatus('Selecciona un producto o una categoría, pero no ambos.', 'error');
                         return;
@@ -1983,7 +1976,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
 
                 document.getElementById('runAnalytics').addEventListener('click', loadAnalytics);
                 
-                // Ejecutar análisis automáticamente al cargar la vista
+                // Sin filtros, el microservicio analiza el inventario completo y genera combos estratégicos.
                 loadAnalytics();
                 
                 // Event listener para botones "Agregar Combo Recomendado"
