@@ -1000,6 +1000,98 @@ class Recepcion extends BD{
         return true;
     }
 
+    public function eliminarFeedbackDataset($idRecepcion) {
+        return $this->del_FeedbackDataset($idRecepcion);
+    }
+
+    private function del_FeedbackDataset($idRecepcion) {
+        // Ruta hacia el feedback_dataset.csv dentro del microservicio
+        $rutaCsv = dirname(__DIR__, 4) . '/microservicio/entrenamiento/feedback_dataset.csv';
+
+        if (!file_exists($rutaCsv)) {
+            error_log("ADVERTENCIA: No se encontró el feedback_dataset.csv en: " . $rutaCsv);
+            return false;
+        }
+
+        // Leer todo el archivo
+        $filas = file($rutaCsv, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($filas === false) {
+            error_log("CRítico: No se pudo leer el archivo feedback_dataset.csv.");
+            return false;
+        }
+
+        // Convertir a array de arrays
+        $datos = [];
+        $encabezado = null;
+        foreach ($filas as $indice => $linea) {
+            $fila = str_getcsv($linea);
+            if ($indice === 0) {
+                $encabezado = $fila; // Guardar encabezado
+                continue;
+            }
+            // El id_recepcion está en la columna 1 (índice 1)
+            if (isset($fila[1]) && $fila[1] != $idRecepcion) {
+                $datos[] = $fila; // Mantener filas que no coinciden con el id_recepcion
+            }
+        }
+
+        // Reescribir el archivo con los datos filtrados
+        $fp = fopen($rutaCsv, 'w');
+        if ($fp === false) {
+            error_log("CRítico: No se pudo abrir el archivo feedback_dataset.csv para escritura.");
+            return false;
+        }
+
+        // Escribir encabezado
+        if ($encabezado !== null) {
+            fputcsv($fp, $encabezado);
+        }
+
+        // Escribir datos filtrados
+        foreach ($datos as $fila) {
+            fputcsv($fp, $fila);
+        }
+
+        fclose($fp);
+        
+        // Contar registros restantes (sin encabezado)
+        $registrosRestantes = count($datos);
+        error_log("Eliminado registro de feedback para recepción ID: $idRecepcion. Registros restantes: $registrosRestantes");
+        
+        // Si hay más de 10 registros, reentrenar el modelo
+        if ($registrosRestantes >= 10) {
+            $this->reentrenarModelo();
+        }
+        
+        return true;
+    }
+
+    private function reentrenarModelo() {
+        // Ruta hacia el script de reentrenamiento
+        $rutaScript = dirname(__DIR__, 4) . '/microservicio/retrain.py';
+        
+        if (!file_exists($rutaScript)) {
+            error_log("ADVERTENCIA: No se encontró el script retrain.py en: " . $rutaScript);
+            return false;
+        }
+
+        // Ejecutar el script de reentrenamiento
+        $comando = 'python "' . $rutaScript . '"';
+        $salida = [];
+        $codigoRetorno = 0;
+        
+        exec($comando, $salida, $codigoRetorno);
+        
+        if ($codigoRetorno !== 0) {
+            error_log("CRítico: Error al reentrenar el modelo. Código de retorno: $codigoRetorno");
+            error_log("Salida: " . implode("\n", $salida));
+            return false;
+        }
+        
+        error_log("Modelo reentrenado exitosamente después de eliminar feedback.");
+        return true;
+    }
+
     private function calcularErrorCampo($prediccion, $groundTruth) {
         if (empty($prediccion) && empty($groundTruth)) return 0;
         if (empty($prediccion) || empty($groundTruth)) return 1;

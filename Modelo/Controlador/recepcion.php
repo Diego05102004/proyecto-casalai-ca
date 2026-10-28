@@ -525,13 +525,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
             
+            // Obtener id_recepcion antes de anular para eliminar del feedback
+            $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
+            
             $resultado = $k->anularRecepcion($correlativo, $id_usuario_sesion);
 
             if (($resultado['status'] ?? '') === 'success') {
+                // Eliminar registro del feedback_dataset.csv para evitar contaminación del entrenamiento
+                try {
+                    $k->eliminarFeedbackDataset($id_recepcion);
+                } catch (Throwable $e) {
+                    error_log('No se pudo eliminar el registro del feedback_dataset: ' . $e->getMessage());
+                }
+                
                 // Obtener id_recepcion para referenciar en notificación
                 if (!defined('SKIP_SIDE_EFFECTS')) {
                     try {
-                        $id_recepcion = $k->obtenerIdRecepcionPorCorrelativo($correlativo);
                         $bd_seguridad = new BD('S');
                         $pdo_seguridad = $bd_seguridad->getConexion();
                         $notificacionModel = new NotificacionModel($pdo_seguridad);
