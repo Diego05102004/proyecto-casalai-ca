@@ -169,10 +169,10 @@
                             $todosDisponibles = $todosDisponibles && ($detalle['stock'] >= $detalle['cantidad']);
                         }
 
-                        $ahorro = $precioTotal * 0.1;
-                        $precioComboBs = ($precioTotal - $ahorro) * $data['monitors']['bcv']['price'];
-                        $precioOriginalBs = $precioTotal * $data['monitors']['bcv']['price'];
-                        $ahorroBs = $ahorro * $data['monitors']['bcv']['price'];
+                        $descuentoCombo = (float)($combo['descuento'] ?? 0);
+                        $precioOriginalBs = (float)($combo['precio_original'] ?? $precioTotal) * $data['monitors']['bcv']['price'];
+                        $precioComboBs = $precioTotal * $data['monitors']['bcv']['price'];
+                        $ahorroBs = max(0, $precioOriginalBs - $precioComboBs);
                     ?>
                         <div class="combo-card <?= !$combo['activo'] ? 'disabled-combo' : '' ?>">
                             <div class="combo-header">
@@ -233,6 +233,9 @@
                                                 <span class="badge bg-<?= $disponible ? 'primary' : 'danger' ?> rounded-pill">
                                                     <?= $detalle['cantidad'] ?>
                                                 </span>
+                                                <span class="ms-2 fw-semibold">
+                                                    <?= number_format($detalle['precio_unitario'] * $data['monitors']['bcv']['price'], 2) ?> BS c/u con descuento
+                                                </span>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -244,7 +247,7 @@
                                         <div class="precio-original"><?= number_format($precioOriginalBs, 2) ?> BS</div>
                                         <div class="precio-combo"><?= number_format($precioComboBs, 2) ?> BS</div>
                                     </div>
-                                    <div class="ahorro-combo">Ahorras <?= number_format($ahorroBs, 2) ?> BS</div>
+                                    <div class="ahorro-combo">Descuento <?= number_format($descuentoCombo, 2) ?>% · Ahorras <?= number_format($ahorroBs, 2) ?> BS</div>
                                 </div>
 
                                 <?php if($esCliente): ?>
@@ -312,6 +315,12 @@
                                 <label for="descripcion" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Descripción</label>
                                 <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
                             </div>
+                            <div class="envolver-form">
+                                <label for="descuento" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Descuento del combo (%)</label>
+                                <input type="number" class="form-control" id="descuento" name="descuento"
+                                       min="0" max="100" step="0.01" value="0" required>
+                                <small class="text-muted">El descuento se aplica únicamente a las unidades que pertenecen a este combo.</small>
+                            </div>
                             
                             <div class="card mb-3">
                                 <div class="card-header">
@@ -352,7 +361,7 @@
                                                 <tr>
                                                     <th>Producto</th>
                                                     <th>Cantidad</th>
-                                                    <th>Total</th>
+                                                    <th>Total con descuento</th>
                                                     <th>Acciones</th>
                                                 </tr>
                                             </thead>

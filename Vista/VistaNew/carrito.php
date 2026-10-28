@@ -129,19 +129,26 @@ ob_start();
                                                 <?php endif; ?>
                                                 <div>
                                                     <span class="product-name"><?php echo htmlspecialchars($carrito['nombre'] ?? 'N/A'); ?></span>
-                                                    <span class="product-category"><?php echo htmlspecialchars('Modelo ' . ($carrito['nombre_modelo'] ?? '') . ' - Marca ' . ($carrito['nombre_marca'] ?? '')); ?></span>
+                                                    <span class="product-category">
+                                                        <?php echo htmlspecialchars('Modelo ' . ($carrito['nombre_modelo'] ?? '') . ' - Marca ' . ($carrito['nombre_marca'] ?? '')); ?>
+                                                        <?php if (!empty($carrito['id_combo'])): ?>
+                                                            <br><strong>Parte del combo: <?php echo htmlspecialchars($carrito['nombre_combo'] ?? 'Combo'); ?></strong>
+                                                        <?php else: ?>
+                                                            <br><span>Unidad individual</span>
+                                                        <?php endif; ?>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>$<?php echo number_format($carrito['precio'] * $precioDolar, 2); ?> BS</td>
                                         <td>
                                             <div class="quantity-control">
-                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, -1)">
+                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, -<?php echo (int)$carrito['cantidad_combo']; ?>)">
                                                     <i class="fas fa-minus"></i>
                                                 </button>
                                                 <input type="number" class="qty-input" value="<?php echo $carrito['cantidad'] ?? 1; ?>" 
-                                                       onchange="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, this.value, true)" min="1" readonly>
-                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, 1)">
+                                                       onchange="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, this.value, true)" min="<?php echo (int)$carrito['cantidad_combo']; ?>" readonly>
+                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, <?php echo (int)$carrito['cantidad_combo']; ?>)">
                                                     <i class="fas fa-plus"></i>
                                                 </button>
                                             </div>
@@ -415,10 +422,10 @@ ob_start();
                     }
                 }
 
-                function updateCartBackend(productId, quantity) {
+                function updateCartBackend(detailId, quantity) {
                     const formData = new FormData();
                     formData.append('accion', 'actualizar_cantidad');
-                    formData.append('id_producto', productId);
+                    formData.append('id_carrito_detalle', detailId);
                     formData.append('cantidad', quantity);
                     
                     fetch('?pagina=carrito', {
@@ -442,8 +449,8 @@ ob_start();
                 function removeFromCart(productId) {
                     if (confirm('¿Está seguro de eliminar este producto del carrito?')) {
                         const formData = new FormData();
-                        formData.append('accion', 'eliminar');
-                        formData.append('id_producto', productId);
+                        formData.append('accion', 'eliminar_del_carrito');
+                        formData.append('id_carrito_detalle', productId);
                         
                         fetch('?pagina=carrito', {
                             method: 'POST',
@@ -467,7 +474,7 @@ ob_start();
                 function clearCart() {
                     if (confirm('¿Está seguro de vaciar el carrito?')) {
                         const formData = new FormData();
-                        formData.append('accion', 'vaciar');
+                        formData.append('accion', 'eliminar_todo_carrito');
                         
                         fetch('?pagina=carrito', {
                             method: 'POST',
@@ -488,15 +495,31 @@ ob_start();
                     }
                 }
 
-                function checkout() {
+                async function checkout() {
                     const carritoCount = <?php echo count($carritos ?? []); ?>;
                     if (carritoCount === 0) {
                         alert('El carrito está vacío. Agregue productos antes de procesar la compra.');
                         return;
                     }
                     
-                    if (confirm('¿Desea procesar la compra?')) {
-                        window.location.href = '?pagina=gestionarfactura';
+                    if (confirm('¿Desea registrar el pedido con los precios vigentes?')) {
+                        const formData = new FormData();
+                        formData.append('accion', 'registrar_compra');
+                        try {
+                            const response = await fetch('?pagina=carrito', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await response.json();
+                            if (data && data.status === 'success') {
+                                window.location.href = '?pagina=gestionarfactura';
+                            } else {
+                                alert('Error al registrar el pedido: ' + (data.message || 'Error desconocido'));
+                            }
+                        } catch (error) {
+                            console.error('Error al registrar el pedido:', error);
+                            alert('No fue posible registrar el pedido. Intente nuevamente.');
+                        }
                     }
                 }
             </script>

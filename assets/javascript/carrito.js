@@ -48,9 +48,7 @@ $(document).ready(function() {
                     url: '',
                     type: 'POST',
                     data: {
-                        accion: 'registrar_compra',
-                        productos: datos.map(d => d.id_producto),
-                        cantidad: datos.map(d => d.cantidad)
+                        accion: 'registrar_compra'
                     },
                     dataType: 'json' // Esperamos JSON pero manejaremos errores
                 }).then(response => {

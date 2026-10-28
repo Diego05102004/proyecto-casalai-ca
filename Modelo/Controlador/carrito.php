@@ -281,87 +281,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         case 'registrar_compra':
             try {
-                // Verificar sesión
-                if (!isset($_SESSION['cedula'])) {
+                if (empty($_SESSION['cedula']) || empty($_SESSION['id_usuario'])) {
                     jsonResponse(['status' => 'error', 'message' => 'Sesión de cliente no válida']);
                 }
 
-                // Obtener datos
-                $productos = $_POST['productos'] ?? [];
-                $cantidades = $_POST['cantidad'] ?? [];
-
-                // Validar datos básicos
-                if (!is_array($productos) || !is_array($cantidades) || empty($productos) || count($productos) !== count($cantidades)) {
-                    jsonResponse(['status' => 'error', 'message' => 'Datos de productos o cantidades inválidos']);
-                }
-
-                // Validar productos
-                $productosValidados = [];
-                $cantidadesValidadas = [];
-                $productoModel = new Productos();
-                $errorMensaje = null;
-
-                foreach ($productos as $index => $idProductoRaw) {
-                    $idProducto = (int)$idProductoRaw;
-                    $cantidad = isset($cantidades[$index]) ? (int)$cantidades[$index] : 0;
-
-                    if ($idProducto <= 0 || $cantidad <= 0) {
-                        $errorMensaje = 'Todos los productos deben tener un ID y cantidad válidos';
-                        break;
-                    }
-
-                    $producto = $productoModel->obtenerProductoPorId($idProducto);
-                    if (!$producto) {
-                        $errorMensaje = 'Uno de los productos de la compra no existe';
-                        break;
-                    }
-
-                    if ($cantidad > (int)($producto['stock'] ?? 0)) {
-                        $errorMensaje = 'No hay stock suficiente para uno de los productos de la compra';
-                        break;
-                    }
-
-                    $productosValidados[] = $idProducto;
-                    $cantidadesValidadas[] = $cantidad;
-                }
-
-                if ($errorMensaje !== null) {
-                    jsonResponse(['status' => 'error', 'message' => $errorMensaje]);
-                }
-
-                // Crear factura
                 $factura = new Factura();
-                $factura->setCliente($_SESSION['cedula']);
-                $factura->setFecha(date('Y-m-d H:i:s'));
-                $factura->setDescuento(0);
-                $factura->setEstatus('Borrador');
-                $factura->setIdProducto($productosValidados);
-                $factura->setCantidad($cantidadesValidadas);
-
-                // Procesar factura
-                $resultado = $factura->facturaTransaccion("Ingresar");
-
-                if (is_array($resultado) && isset($resultado['error'])) {
-                    jsonResponse(['status' => 'error', 'message' => $resultado['error']]);
-                } elseif ($resultado === true) {
-                    // Vaciar carrito después de crear factura
-                    try {
-                        $carrito = new Carrito();   
-                        $carritoCliente = $carrito->obtenerCarritoPorCliente($_SESSION['id_usuario']);
-                        if ($carritoCliente) {
-                            $id_carrito = $carritoCliente['id_carrito'];
-                            $carrito->eliminarTodoElCarrito($id_carrito);
-                        }
-                    } catch (Exception $e) {
-                        error_log("Error vaciando carrito: " . $e->getMessage());
-                        // Continuar aunque falle el vaciado del carrito
-                    }
-                    
+                if ($factura->registrarDesdeCarrito($_SESSION['cedula'], $_SESSION['id_usuario'])) {
                     jsonResponse(['status' => 'success', 'message' => 'Registro de Pedido se registro correctamente (Falta Pagar el pedido)']);
-                } else {
-                    jsonResponse(['status' => 'error', 'message' => 'Error desconocido al registrar la compra']);
                 }
-
+                jsonResponse(['status' => 'error', 'message' => 'No fue posible registrar la compra']);
             } catch (Exception $e) {
                 error_log("Excepción en registrar_compra: " . $e->getMessage());
                 jsonResponse(['status' => 'error', 'message' => 'Excepción: ' . $e->getMessage()]);
