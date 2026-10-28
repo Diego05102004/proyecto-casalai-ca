@@ -58,8 +58,8 @@ class SaleRow(BaseModel):
 
 
 class DashboardRequest(BaseModel):
-    producto_id: int | None = Field(default=None, gt=0)
-    categoria_id: int | None = Field(default=None, gt=0)
+    producto_id: int | None = Field(default=None)
+    categoria_id: int | None = Field(default=None)
     frecuencia: Literal["diaria", "semanal", "mensual"]
     horizonte: Literal[15, 30, 60, 90]
     productos: list[ProductRow] = Field(max_length=5000)
@@ -87,8 +87,10 @@ class FeedbackRequest(BaseModel):
 
 @router.post("/dashboard", dependencies=[Depends(validar_token_analitica)])
 def dashboard(request: DashboardRequest) -> dict:
-    if (request.producto_id is None) == (request.categoria_id is None):
-        raise HTTPException(status_code=422, detail="Indique exactamente un producto o una categoría.")
+    # Permitir que ambos sean nulos (analizar todos los productos o seleccionar automáticamente uno congelado)
+    # No permitir que ambos tengan valor
+    if (request.producto_id is not None) and (request.categoria_id is not None):
+        raise HTTPException(status_code=422, detail="Indique exactamente un producto o una categoría, no ambos.")
     payload = request.model_dump()
     return build_dashboard(payload, get_feedback_averages())
 

@@ -1009,12 +1009,25 @@ def build_dashboard(
     if selected_product is not None:
         selected_ids = {int(selected_product)} if int(selected_product) in product_by_id else set()
         model_key = f"producto:{int(selected_product)}"
-    else:
+    elif selected_category is not None:
         selected_ids = {
             product_id for product_id, product in product_by_id.items()
             if int(product.get("id_categoria") or 0) == int(selected_category)
         }
         model_key = f"categoria:{int(selected_category)}"
+    else:
+        # Si no se selecciona producto ni categoría, identificar productos congelados y seleccionar el primero
+        frozen_products = _identify_frozen_products(products, sales)
+        if frozen_products:
+            # Seleccionar el primer producto congelado para analizar
+            first_frozen = frozen_products[0]
+            selected_ids = {first_frozen["producto_id"]}
+            model_key = f"producto:{first_frozen['producto_id']}"
+        else:
+            # Si no hay productos congelados, seleccionar todos
+            selected_ids = set(product_by_id.keys())
+            model_key = "todos:productos"
+    
     if not selected_ids:
         return {"calidad": {"estado": "sin_datos"}, "historico": [], "prediccion": [], "metricas": {}}
 
@@ -1299,6 +1312,22 @@ def build_dashboard(
     # Generar explicaciones dinámicas
     dynamic_explanations = _generate_explanation(metrics, explanation_context, recommendation_type)
 
+    # Si no se seleccionó producto ni categoría, agregar información de productos congelados
+    frozen_products_info = []
+    if selected_product is None and selected_category is None:
+        frozen_products = _identify_frozen_products(products, sales)
+        frozen_products_info = [
+            {
+                "id": fp["producto_id"],
+                "nombre": fp["nombre_producto"],
+                "stock_actual": fp["stock_actual"],
+                "stock_excedente": fp["stock_excedente"],
+                "rotacion_mensual": fp["rotacion_mensual"],
+                "dias_sin_venta": fp["dias_sin_venta"]
+            }
+            for fp in frozen_products[:5]  # Top 5 productos congelados
+        ]
+
     return {
         "unidad": "unidades",
         "frecuencia": frequency,
@@ -1309,6 +1338,7 @@ def build_dashboard(
         "calidad": quality,
         "recomendaciones": recommendations,
         "explicaciones": dynamic_explanations,
+        "productos_congelados": frozen_products_info if frozen_products_info else None,
     }
 
 
