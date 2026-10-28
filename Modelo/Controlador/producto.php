@@ -534,7 +534,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $hayProducto = $productoId !== false && $productoId !== null && $productoId > 0;
             $hayCategoria = $categoriaId !== false && $categoriaId !== null && $categoriaId > 0;
 
-            if ($hayProducto === $hayCategoria ||
+            // Permitir que ambos sean nulos (analizar todos los productos)
+            // Pero no permitir que ambos tengan valor
+            if (($hayProducto && $hayCategoria) ||
                 !in_array($frecuencia, ['diaria', 'semanal', 'mensual'], true) ||
                 !in_array($horizonte, [15, 30, 60, 90], true)) {
                 http_response_code(400);

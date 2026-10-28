@@ -1761,29 +1761,138 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                             const explanationRow = document.createElement('tr');
                             explanationRow.className = 'explanation-row';
                             
-                            // Celda para la explicación que abarca las primeras 5 columnas (producto, señal, cantidad, confianza, calculado)
+                            // Celda para la explicación que abarca las primeras 5 columnas
                             const explanationCell = document.createElement('td');
-                            explanationCell.colSpan = 5;  // Abarca desde Producto / acción hasta Calculado
-                            explanationCell.style.padding = '12px';
-                            explanationCell.style.backgroundColor = '#f9f9f9';
+                            explanationCell.colSpan = 6;
+                            explanationCell.style.padding = '0';
+                            explanationCell.style.backgroundColor = '#ffffff';
                             explanationCell.style.borderTop = '1px solid #e0e0e0';
-                            explanationCell.style.fontSize = '0.85em';
-                            explanationCell.style.color = '#333';
-                            explanationCell.style.whiteSpace = 'normal';
-                            explanationCell.style.wordWrap = 'break-word';
-                            explanationCell.style.lineHeight = '1.5';
                             
-                            // Convertir saltos de línea en explicación a <br>
-                            const formattedExplanation = item.explicacion.replace(/\n/g, '<br>');
-                            explanationCell.innerHTML = formattedExplanation;
+                            // Contenedor principal de la explicación
+                            const explanationContainer = document.createElement('div');
+                            explanationContainer.style.padding = '16px';
+                            explanationContainer.style.display = 'flex';
+                            explanationContainer.style.flexDirection = 'column';
+                            explanationContainer.style.gap = '12px';
                             
+                            // Parsear la explicación por secciones
+                            const sections = item.explicacion.split('\n\n');
+                            
+                            // Agrupar secciones por tipo
+                            const problemaSection = sections.find(s => s.includes('PROBLEMA IDENTIFICADO'));
+                            const solucionSection = sections.find(s => s.includes('SOLUCIÓN ESTRATÉGICA'));
+                            const evidenciaSection = sections.find(s => s.includes('EVIDENCIA HISTÓRICA'));
+                            const impactoSection = sections.find(s => s.includes('IMPACTO FINANCIERO'));
+                            const ejecucionSection = sections.find(s => s.includes('RECOMENDACIÓN DE EJECUCIÓN'));
+                            const metricasSection = sections.find(s => s.includes('MÉTRICAS DE SEGUIMIENTO'));
+                            
+
+                            
+                            // 2. Contenedor para las 3 tarjetas intermedias (grid de 3 columnas)
+                            const middleContainer = document.createElement('div');
+                            middleContainer.style.display = 'grid';
+                            middleContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                            middleContainer.style.gap = '12px';
+                            
+                                                        // 1. Tarjeta PROBLEMA IDENTIFICADO (ancho completo)
+                            if (problemaSection) {
+                                const card = document.createElement('div');
+                                card.style.padding = '12px';
+                                card.style.borderRadius = '8px';
+                                card.style.border = '1px solid #fdba74';
+                                card.style.backgroundColor = '#fff7ed';
+                                card.style.fontSize = '1.5em';
+                                card.style.lineHeight = '1.4';
+                                card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:700;font-size:1.1em;color:#9a3412;">⚠️ PROBLEMA IDENTIFICADO</div>' + 
+                                               '<div style="color:#9a3412;">' + problemaSection.replace('⚠️ **PROBLEMA IDENTIFICADO:**', '').trim() + '</div>';
+                                middleContainer.appendChild(card);
+                            }
+                            // EVIDENCIA HISTÓRICA
+                            if (evidenciaSection) {
+                                const card = document.createElement('div');
+                                card.style.padding = '12px';
+                                card.style.borderRadius = '8px';
+                                card.style.border = '1px solid #93c5fd';
+                                card.style.backgroundColor = '#eff6ff';
+                                card.style.fontSize = '1.5em';
+                                card.style.lineHeight = '1.4';
+                                card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#1e40af;">📊 EVIDENCIA HISTÓRICA</div>' + 
+                                               '<div style="color:#1e40af;">' + evidenciaSection.replace('📊 **EVIDENCIA HISTÓRICA:**', '').trim() + '</div>';
+                                middleContainer.appendChild(card);
+                            }
+                            
+                            // IMPACTO FINANCIERO
+                            if (impactoSection) {
+                                const card = document.createElement('div');
+                                card.style.padding = '12px';
+                                card.style.borderRadius = '8px';
+                                card.style.border = '1px solid #fde047';
+                                card.style.backgroundColor = '#fef9c3';
+                                card.style.fontSize = '1.5em';
+                                card.style.lineHeight = '1.4';
+                                card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#854d0e;">💰 IMPACTO FINANCIERO</div>' + 
+                                               '<div style="color:#854d0e;">' + impactoSection.replace('💰 **IMPACTO FINANCIERO:**', '').trim() + '</div>';
+                                middleContainer.appendChild(card);
+                            }
+                            
+                            // RECOMENDACIÓN DE EJECUCIÓN
+                            /*
+                            if (ejecucionSection) {
+                                const card = document.createElement('div');
+                                card.style.padding = '12px';
+                                card.style.borderRadius = '8px';
+                                card.style.border = '1px solid #86efac';
+                                card.style.backgroundColor = '#f0fdf4';
+                                card.style.fontSize = '0.85em';
+                                card.style.lineHeight = '1.4';
+                                card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#166534;">🎯 RECOMENDACIÓN DE EJECUCIÓN</div>' + 
+                                               '<div style="color:#166534;">' + ejecucionSection.replace('🎯 **RECOMENDACIÓN DE EJECUCIÓN:**', '').trim() + '</div>';
+                                middleContainer.appendChild(card);
+                            }
+                            */
+                            explanationContainer.appendChild(middleContainer);
+                            
+                            // 3. Tarjeta SOLUCIÓN ESTRATÉGICA (ancho completo) que incluye MÉTRICAS como nota
+                            if (solucionSection) {
+                                const card = document.createElement('div');
+                                card.style.padding = '16px';
+                                card.style.borderRadius = '8px';
+                                card.style.border = '1px solid #86efac';
+                                card.style.backgroundColor = '#f0fdf4';
+                                card.style.fontSize = '1.5em';
+                                card.style.lineHeight = '1.5';
+                                
+                                const solucionText =  ejecucionSection.replace('🎯 **RECOMENDACIÓN DE EJECUCIÓN:**', '').trim();
+                                const metricasText = metricasSection ?  ejecucionSection.replace('🎯 **RECOMENDACIÓN DE EJECUCIÓN:**', '').trim() : '';
+                                
+                                let innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-weight:700;font-size:1.1em;color:#166534;">💡 SOLUCIÓN ESTRATÉGICA</div>' +
+                                               '<div style="color:#166534;margin-bottom:16px;">' + solucionText + '</div>' +
+                                               '<button class="add-combo-btn" data-combo-info=\'' + JSON.stringify({
+                                                    productos: item.productos,
+                                                    cantidad_congelada: item.cantidad_congelada,
+                                                    cantidad_popular: item.cantidad_popular,
+                                                    descuento: item.descuento_sugerido,
+                                                    recomendacion_id: item.recomendacion_id
+                                                }).replace(/'/g, "\\'") + '\' style="background:#22c55e;color:white;border:none;padding:12px 24px;border-radius:6px;cursor:pointer;font-size:1em;font-weight:600;margin-bottom:16px;transition:background 0.2s;" onmouseover="this.style.background=\'#16a34a\'" onmouseout="this.style.background=\'#22c55e\'">+ Agregar Combo Recomendado</button>';
+                                /*
+                                if (metricasText) {
+                                    innerHTML += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #86efac;">' +
+                                                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#166534;font-size:0.9em;">📈 Nota: MÉTRICAS DE SEGUIMIENTO</div>' +
+                                                '<div style="color:#166534;font-size:0.85em;">' + metricasText + '</div></div>';
+                                }
+                                */
+                                card.innerHTML = innerHTML;
+                                explanationContainer.appendChild(card);
+                            }
+                            
+                            explanationCell.appendChild(explanationContainer);
                             explanationRow.appendChild(explanationCell);
                             
                             // Celda vacía para la columna de valoración
                             const emptyRatingCell = document.createElement('td');
                             emptyRatingCell.style.padding = '0';
                             emptyRatingCell.style.border = 'none';
-                            emptyRatingCell.style.backgroundColor = '#f9f9f9';
+                            emptyRatingCell.style.backgroundColor = '#ffffff';
                             emptyRatingCell.style.borderTop = '1px solid #e0e0e0';
                             explanationRow.appendChild(emptyRatingCell);
                             
@@ -1795,7 +1904,18 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 async function loadAnalytics() {
                     const productId = analyticsProduct.value;
                     const categoryId = analyticsCategory.value;
-                    if (Boolean(productId) === Boolean(categoryId)) {
+                    
+                    // Si ambos están vacíos, seleccionar automáticamente el primer producto
+                    if (!productId && !categoryId) {
+                        if (analyticsProduct.options.length > 1) {
+                            analyticsProduct.value = analyticsProduct.options[1].value; // Saltar la primera opción (vacía)
+                            setAnalyticsStatus('Producto seleccionado automáticamente para análisis de combos estratégicos');
+                        }
+                    }
+                    
+                    // Permitir que ambos sean nulos (analizar todos los productos)
+                    // Pero no permitir que ambos tengan valor
+                    if (productId && categoryId) {
                         setAnalyticsStatus('Selecciona un producto o una categoría, pero no ambos.', 'error');
                         return;
                     }
@@ -1862,6 +1982,56 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 }
 
                 document.getElementById('runAnalytics').addEventListener('click', loadAnalytics);
+                
+                // Ejecutar análisis automáticamente al cargar la vista
+                loadAnalytics();
+                
+                // Event listener para botones "Agregar Combo Recomendado"
+                document.addEventListener('click', async function(event) {
+                    if (event.target.classList.contains('add-combo-btn')) {
+                        const comboInfo = JSON.parse(event.target.dataset.comboInfo);
+                        
+                        // Pedir nombre del combo al usuario
+                        const nombreCombo = prompt('Ingresa el nombre para el combo:');
+                        if (!nombreCombo || nombreCombo.trim() === '') {
+                            alert('El nombre del combo es obligatorio');
+                            return;
+                        }
+                        
+                        try {
+                            // Generar descripción automática
+                            const descripcion = "Combo estratégico generado por IA. Incluye " + comboInfo.cantidad_popular + " unidad(es) del producto principal y " + comboInfo.cantidad_congelada + " unidad(es) del producto congelado. Descuento aplicado: " + comboInfo.descuento + "%.";
+                            
+                            // Formatear productos como array de objetos con id y cantidad
+                            const productosFormateados = comboInfo.productos.map((productoId, index) => ({
+                                id: productoId,  // Usar 'id' en lugar de 'id_producto'
+                                cantidad: index === 0 ? comboInfo.cantidad_popular : comboInfo.cantidad_congelada
+                            }));
+                            
+                            // Enviar solicitud al controlador de combos
+                            const formData = new FormData();
+                            formData.append('accion', 'crear_combo');
+                            formData.append('nombre_combo', nombreCombo.trim());
+                            formData.append('descripcion', descripcion);
+                            formData.append('productos', JSON.stringify(productosFormateados));
+                            
+                            const response = await fetch('?pagina=combo', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const result = await response.json();
+                            
+                            if (!response.ok || result.status === 'error') {
+                                throw new Error(result.message || 'Error al crear el combo');
+                            }
+                            
+                            alert('Combo creado exitosamente: ' + nombreCombo);
+                        } catch (error) {
+                            alert('Error al crear el combo: ' + error.message);
+                        }
+                    }
+                });
+                
                 analyticsProduct.addEventListener('change', function () {
                     if (this.value) analyticsCategory.value = '';
                 });
