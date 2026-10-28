@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Combos;
 use Usuario\ProyectoCasalaiCa\Modelo\Clases\Bitacora;
+use Usuario\ProyectoCasalaiCa\Modelo\Clases\Productos;
 
 // Definir constantes para IDs de módulo
 define('MODULO_COMBOS', "Carrito");
@@ -83,7 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 try {
                     $nombre = $_POST['nombre_combo'] ?? '';
                     $descripcion = $_POST['descripcion'] ?? '';
-                    $productos = json_decode($_POST['productos'], true);
+                    $productosJson = (string)($_POST['productos'] ?? '');
+                    $productos = json_decode($productosJson, true, 512, JSON_THROW_ON_ERROR);
 
                     // Preparar datos para validación
                     $datos_validacion = [
@@ -103,9 +105,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                         exit;
                     }
 
-                    // Aquí iría la lógica para crear el combo
-                    // Por ahora, simulamos que se crea exitosamente
-                    $id_combo = rand(1, 1000); // Simulación
+                    $productosModel = new Productos();
+                    $productosValidos = [];
+                    foreach ($productos as $producto) {
+                        $idProducto = (int)$producto['id'];
+                        $cantidad = (int)$producto['cantidad'];
+                        if (!$productosModel->obtenerProductoPorId($idProducto)) {
+                            throw new RuntimeException('Uno de los productos seleccionados para el combo no existe.');
+                        }
+                        $productosValidos[] = [
+                            'id' => $idProducto,
+                            'cantidad' => $cantidad
+                        ];
+                    }
+
+                    $id_combo = $productosModel->crearCombo(
+                        trim($nombre),
+                        trim($descripcion),
+                        $productosValidos
+                    );
+                    if ((int)$id_combo <= 0) {
+                        throw new RuntimeException('No se pudo confirmar el registro del combo en la base de datos.');
+                    }
 
                     // Registrar en bitácora
                     if (!defined('SKIP_SIDE_EFFECTS')) {
@@ -121,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     echo json_encode([
                         'status' => 'success',
                         'message' => 'Combo creado exitosamente',
-                        'id_combo' => $id_combo
+                        'id_combo' => (int)$id_combo
                     ]);
                 } catch (Exception $e) {
                     echo json_encode([

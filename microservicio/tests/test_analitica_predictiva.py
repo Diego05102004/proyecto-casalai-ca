@@ -180,6 +180,37 @@ class AnaliticaPredictivaTest(unittest.TestCase):
         combo_actions = [item for item in dashboard["recomendaciones"] if item["tipo"] == "combo"]
         self.assertTrue(any(item["productos"] == [1, 2] for item in combo_actions))
 
+    def test_unfiltered_dashboard_recommends_combos_for_frozen_products_without_sales(self):
+        products = [
+            {**self.products[0], "stock": 8, "stock_minimo": 2},
+            {**self.products[1], "stock": 20, "stock_minimo": 2},
+        ]
+        sales = [
+            {
+                "id_factura": 2000 + index,
+                "id_producto": 1,
+                "fecha": (date.today() - timedelta(days=index)).isoformat(),
+                "cantidad": 3,
+            }
+            for index in range(16)
+        ]
+
+        dashboard = analytics.build_dashboard({
+            "producto_id": None,
+            "categoria_id": None,
+            "frecuencia": "diaria",
+            "horizonte": 15,
+            "productos": products,
+            "ventas": sales,
+        })
+
+        strategic_combos = [
+            item for item in dashboard["recomendaciones"]
+            if item["tipo"] == "combo_estrategico"
+        ]
+        self.assertTrue(any(item["productos"] == [2, 1] for item in strategic_combos))
+        self.assertEqual(dashboard["productos_congelados"][0]["id"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
