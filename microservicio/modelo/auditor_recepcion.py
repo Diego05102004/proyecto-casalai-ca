@@ -13,11 +13,22 @@ from PIL import Image
 import cv2
 import numpy as np
 import joblib
+import yaml
+import csv
+import os
+from modelo.adaptador_bd import FabricaAdaptadores, Producto, Proveedor
 
 # Asegurar que el directorio de logs exista
 BASE_DIR = Path(__file__).parent.parent
 LOGS_DIR = BASE_DIR / "logs_metricas"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Rutas de la base de conocimiento externa
+CONOCIMIENTO_DIR = BASE_DIR / "conocimiento"
+PATRONES_FILE = CONOCIMIENTO_DIR / "patrones_factura.yaml"
+REGLAS_FILE = CONOCIMIENTO_DIR / "reglas_validacion.yaml"
+CATALOGO_FILE = CONOCIMIENTO_DIR / "catalogo_productos.csv"
+CONFIG_ML_FILE = CONOCIMIENTO_DIR / "configuracion_ml.yaml"
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler(str(LOGS_DIR / 'auditor_recepcion.log')), logging.StreamHandler()])
@@ -75,10 +86,66 @@ class ResultadoVerificacion:
             data = f"{self.timestamp}{json.dumps(self.datos_formulario, sort_keys=True, default=str)}"
             self.hash_verificacion = hashlib.sha256(data.encode()).hexdigest()[:16]
 
+# ==========================================
+# FUNCIONES PARA CARGAR BASE DE CONOCIMIENTO
+# ==========================================
+
+def cargar_patrones_yaml(ruta: Path) -> Dict:
+    """Carga los patrones regex desde el archivo YAML."""
+    try:
+        with open(ruta, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        # Convertir estructura YAML a diccionario de patrones
+        patrones = {}
+        for campo, config in data.get('campos', {}).items():
+            patrones[campo] = config.get('patrones', [])
+        logger.info(f"Patrones cargados desde {ruta}")
+        return patrones
+    except Exception as e:
+        logger.error(f"Error cargando patrones desde {ruta}: {e}")
+        # Retornar patrones por defecto si falla la carga
+        return {}
+
+def cargar_reglas_yaml(ruta: Path) -> Dict:
+    """Carga las reglas de validación desde el archivo YAML."""
+    try:
+        with open(ruta, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        logger.info(f"Reglas cargadas desde {ruta}")
+        return data
+    except Exception as e:
+        logger.error(f"Error cargando reglas desde {ruta}: {e}")
+        return {}
+
+def cargar_catalogo_csv(ruta: Path) -> List[Dict]:
+    """Carga el catálogo de productos desde el archivo CSV."""
+    try:
+        catalogo = []
+        with open(ruta, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                catalogo.append(row)
+        logger.info(f"Catálogo cargado desde {ruta}: {len(catalogo)} productos")
+        return catalogo
+    except Exception as e:
+        logger.error(f"Error cargando catálogo desde {ruta}: {e}")
+        return []
+
+def cargar_config_ml_yaml(ruta: Path) -> Dict:
+    """Carga la configuración del modelo ML desde el archivo YAML."""
+    try:
+        with open(ruta, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        logger.info(f"Configuración ML cargada desde {ruta}")
+        return data
+    except Exception as e:
+        logger.error(f"Error cargando configuración ML desde {ruta}: {e}")
+        return {}
+
 class AuditorRecepcion:
     UMBRAL_CONFIANZA_ALTA = 0.85
     UMBRAL_CONFIANZA_MEDIA = 0.60
-    PATRONES = {
+    PATRONES_POR_DEFECTO = {
         'numero_factura': [
             r'(?:factura|n[°º]|nro|numero|#)\s*[.:]?\s*([A-Z0-9\-]{5,20})',
             r'(?:factura)\s*(?:n[°º])?\s*[.:]?\s*([A-Z0-9\-]+)',
@@ -125,10 +192,7 @@ class AuditorRecepcion:
             r'([A-Z0-9]{8,20})'
         ],
         'cantidad': [
-            r'(?:cantidad|qty|quantity|cant)[:\s]+(\d+)',
-            r'(?:und|unidades|units?|pcs|pieces)[:\s]+(\d+)',
-            r'(\d+)\s*(?:und|unidades|units?|pcs|pieces)',
-            r'(\d+)\s*x\s*'  # Formato "2x" para cantidad
+            r'(?:cantidad|qty|quantity|cant)[:\s]+(\d+)'
         ],
         'costo': [
             r'(?:precio|costo|price|valor|unitario|p/u|unit\s*price)[:\s]+[\$]?\s*(\d+[.,]?\d*)',
@@ -148,6 +212,21 @@ class AuditorRecepcion:
         self.cache_facturas: Dict[str, FacturaExtraida] = {}
         self.historial_verificaciones: List[ResultadoVerificacion] = []
         
+        # Cargar base de conocimiento externa
+        self.patrones = self._cargar_patrones()
+        self.reglas = self._cargar_reglas()
+        
+        # Cargar catálogo dinámico desde base de datos usando adaptador
+        self.adaptador_bd = self._crear_adaptador_bd()
+        self.catalogo_productos = self._cargar_catalogo()
+        self.catalogo_proveedores = self._cargar_proveedores()
+        self.config_ml = self._cargar_config_ml()
+        
+        # Actualizar umbrales desde reglas si están disponibles
+        if self.reglas and 'umbrales_confianza' in self.reglas:
+            self.UMBRAL_CONFIANZA_ALTA = self.reglas['umbrales_confianza'].get('alta', 0.85)
+            self.UMBRAL_CONFIANZA_MEDIA = self.reglas['umbrales_confianza'].get('media', 0.60)
+        
         # Cargar modelo ML entrenado si existe
         self.modelo_ml = None
         model_path = Path(__file__).parent / "modelo_actual.pkl"
@@ -161,6 +240,112 @@ class AuditorRecepcion:
             logger.info("No se encontró modelo_actual.pkl. El modelo ML no estará disponible.")
         
         logger.info("AuditorRecepcion inicializado - Fase 1: Verificación Asistida")
+        logger.info(f"Base de conocimiento cargada: {len(self.patrones)} campos, {len(self.catalogo_productos)} productos, {len(self.catalogo_proveedores)} proveedores")
+    
+    def _cargar_patrones(self) -> Dict:
+        """Carga los patrones desde YAML o usa los por defecto."""
+        if PATRONES_FILE.exists():
+            return cargar_patrones_yaml(PATRONES_FILE)
+        else:
+            logger.warning(f"No se encontró {PATRONES_FILE}, usando patrones por defecto")
+            return self.PATRONES_POR_DEFECTO.copy()
+    
+    def _cargar_reglas(self) -> Dict:
+        """Carga las reglas de validación desde YAML."""
+        if REGLAS_FILE.exists():
+            return cargar_reglas_yaml(REGLAS_FILE)
+        else:
+            logger.warning(f"No se encontró {REGLAS_FILE}, usando reglas por defecto")
+            return {}
+    
+    def _cargar_catalogo(self) -> List[Dict]:
+        """Carga el catálogo de productos desde el adaptador de base de datos."""
+        if self.adaptador_bd:
+            try:
+                productos = self.adaptador_bd.obtener_productos()
+                # Convertir objetos Producto a diccionarios para compatibilidad
+                return [
+                    {
+                        'id': p.id,
+                        'nombre': p.nombre,
+                        'modelo': p.modelo,
+                        'marca': p.marca,
+                        'costo_unitario': p.costo_unitario
+                    }
+                    for p in productos
+                ]
+            except Exception as e:
+                logger.error(f"Error cargando catálogo desde adaptador: {e}")
+                # Fallback a CSV si falla la BD
+                if CATALOGO_FILE.exists():
+                    return cargar_catalogo_csv(CATALOGO_FILE)
+                return []
+        else:
+            # Fallback a CSV si no hay adaptador
+            if CATALOGO_FILE.exists():
+                return cargar_catalogo_csv(CATALOGO_FILE)
+            logger.warning("No hay adaptador BD ni CSV, catálogo vacío")
+            return []
+    
+    def _cargar_proveedores(self) -> List[Dict]:
+        """Carga el catálogo de proveedores desde el adaptador de base de datos."""
+        if self.adaptador_bd:
+            try:
+                proveedores = self.adaptador_bd.obtener_proveedores()
+                return [
+                    {
+                        'id': p.id,
+                        'nombre': p.nombre
+                    }
+                    for p in proveedores
+                ]
+            except Exception as e:
+                logger.error(f"Error cargando proveedores desde adaptador: {e}")
+                return []
+        else:
+            logger.warning("No hay adaptador BD, proveedores vacíos")
+            return []
+    
+    def _crear_adaptador_bd(self):
+        """Crea el adaptador de base de datos según configuración del entorno."""
+        try:
+            bd_tipo = os.getenv('BD_TIPO', 'csv')
+            
+            if bd_tipo == 'mysql':
+                config = {
+                    'host': os.getenv('BD_HOST', 'localhost'),
+                    'port': int(os.getenv('BD_PORT', 3306)),
+                    'user': os.getenv('BD_USER', 'root'),
+                    'password': os.getenv('BD_PASSWORD', ''),
+                    'database': os.getenv('BD_DATABASE', 'casalai')
+                }
+                adaptador = FabricaAdaptadores.crear_adaptador('mysql', config)
+                if adaptador:
+                    logger.info(f"Adaptador MySQL creado: {config['host']}:{config['port']}/{config['database']}")
+                return adaptador
+            elif bd_tipo == 'csv':
+                config = {
+                    'ruta_productos': str(CATALOGO_FILE),
+                    'ruta_proveedores': str(CONOCIMIENTO_DIR / 'proveedores.csv')
+                }
+                adaptador = FabricaAdaptadores.crear_adaptador('csv', config)
+                if adaptador:
+                    logger.info(f"Adaptador CSV creado: {config['ruta_productos']}")
+                return adaptador
+            else:
+                logger.warning(f"Tipo de BD no reconocido: {bd_tipo}, usando CSV fallback")
+                return None
+        except Exception as e:
+            logger.error(f"Error creando adaptador BD: {e}")
+            return None
+    
+    def _cargar_config_ml(self) -> Dict:
+        """Carga la configuración ML desde YAML."""
+        if CONFIG_ML_FILE.exists():
+            return cargar_config_ml_yaml(CONFIG_ML_FILE)
+        else:
+            logger.warning(f"No se encontró {CONFIG_ML_FILE}, usando configuración por defecto")
+            return {}
 
     def _cargar_configuracion(self, config_path: Optional[str]) -> Dict:
         # Configurar ruta de Tesseract para Windows
@@ -348,9 +533,9 @@ class AuditorRecepcion:
     def _extraer_campos_factura(self, texto: str) -> FacturaExtraida:
         factura = FacturaExtraida()
         texto_limpio = self._limpiar_texto(texto)
-        factura.numero_factura = self._extraer_con_patrones(texto_limpio, self.PATRONES['numero_factura'])
-        factura.nombre_proveedor = self._extraer_con_patrones(texto_limpio, self.PATRONES['proveedor'])
-        factura.fecha_factura = self._extraer_con_patrones(texto_limpio, self.PATRONES['fecha'])
+        factura.numero_factura = self._extraer_con_patrones(texto_limpio, self.patrones.get('numero_factura', self.PATRONES_POR_DEFECTO['numero_factura']))
+        factura.nombre_proveedor = self._extraer_con_patrones(texto_limpio, self.patrones.get('proveedor', self.PATRONES_POR_DEFECTO['proveedor']))
+        factura.fecha_factura = self._extraer_con_patrones(texto_limpio, self.patrones.get('fecha', self.PATRONES_POR_DEFECTO['fecha']))
         factura.productos = self._extraer_productos(texto_limpio)
 
         # Patrones más flexibles para subtotal (acepta comas/puntos al final)

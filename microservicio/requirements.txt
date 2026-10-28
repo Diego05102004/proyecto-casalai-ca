@@ -23,6 +23,8 @@ pandas>=2.0.0
 scikit-learn==1.3.2
 joblib==1.3.2
 slowapi==0.1.9
+pyyaml>=6.0
+mysql-connector-python>=8.0.0
 
 # Opcional: Mejoras de OCR
 # easyocr>=1.7.0  # Alternativa a Tesseract
