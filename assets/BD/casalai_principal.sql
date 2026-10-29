@@ -846,7 +846,8 @@ CREATE TABLE `tbl_proveedores` (
 INSERT INTO `tbl_proveedores` (`id_proveedor`, `nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`, `estado`) VALUES
 (1, 'Grupo PC Depot', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos', 'habilitado'),
 (2, 'DISOFI', 'V-12878897-7', 'Paula Rivero', 'J-97781346-2', 'paula@gmail.com', 'AV. Lara, Calle Los Mangos', '0412-554-0466', '0424-181-4733', 'Envio gratis', 'habilitado'),
-(3, 'HP Paper', 'V-12354557-7', 'Simón Freitez', 'J-93423334-2', 'simon@gmail.com', 'AV. Los Leones, Trinitarias', '0424-545-9876', '0424-889-4013', 'Calidad, precio', 'habilitado');
+(3, 'HP Paper', 'V-12354557-7', 'Simón Freitez', 'J-93423334-2', 'simon@gmail.com', 'AV. Los Leones, Trinitarias', '0424-545-9876', '0424-889-4013', 'Calidad, precio', 'habilitado'),
+(4, 'Amazon Business', 'J-00234578-2', 'Diego Lopez', 'J-93423334-2', 'amazon@gmail.com', 'EE. UU.', '0424-511-4156', '0424-748-9837', 'Se consigue de todo', 'habilitado');
 
 -- --------------------------------------------------------
 
