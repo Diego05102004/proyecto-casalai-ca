@@ -39,7 +39,7 @@ class AdaptadorBaseDatos(ABC):
         pass
     
     @abstractmethod
-    def buscar_Producto_por_nombre(self, nombre: str) -> Optional[Producto]:
+    def buscar_producto_por_nombre(self, nombre: str) -> Optional[Producto]:
         """Busca un producto por nombre (búsqueda aproximada)."""
         pass
     
@@ -83,10 +83,9 @@ class AdaptadorMySQL(AdaptadorBaseDatos):
             raise
     
     def obtener_productos(self) -> List[Producto]:
-        """Obtiene productos desde la tabla tbl_productos con JOIN para obtener marca."""
+        """Obtiene todos los productos del catálogo."""
         try:
             cursor = self.connection.cursor(dictionary=True)
-            # JOIN con tbl_modelos y tbl_marcas para obtener la marca
             query = """
                 SELECT p.id_producto, p.nombre_producto, p.descripcion_producto, 
                        p.id_modelo, p.id_categoria, p.precio, p.estado,
@@ -99,13 +98,16 @@ class AdaptadorMySQL(AdaptadorBaseDatos):
             cursor.execute(query)
             productos = []
             for row in cursor.fetchall():
-                productos.append(Producto(
+                producto = Producto(
                     id=str(row['id_producto']),
                     nombre=row['nombre_producto'],
                     modelo=row.get('nombre_modelo', ''),
                     marca=row.get('nombre_marca', ''),
                     costo_unitario=float(row.get('precio', 0))
-                ))
+                )
+                productos.append(producto)
+                # Log individual para depuración
+                logger.info(f"Producto en MySQL: '{producto.nombre}' (modelo: '{producto.modelo}', marca: '{producto.marca}')")
             cursor.close()
             logger.info(f"Obtenidos {len(productos)} productos desde MySQL")
             return productos
@@ -156,6 +158,7 @@ class AdaptadorMySQL(AdaptadorBaseDatos):
             row = cursor.fetchone()
             cursor.close()
             if row:
+                logger.info(f"Producto encontrado en MySQL: '{row['nombre_producto']}' (modelo: '{row.get('nombre_modelo', '')}', marca: '{row.get('nombre_marca', '')}')")
                 return Producto(
                     id=str(row['id_producto']),
                     nombre=row['nombre_producto'],
@@ -163,6 +166,7 @@ class AdaptadorMySQL(AdaptadorBaseDatos):
                     marca=row.get('nombre_marca', ''),
                     costo_unitario=float(row.get('precio', 0))
                 )
+            logger.info(f"Producto NO encontrado en MySQL con LIKE '%{nombre}%'")
             return None
         except Exception as e:
             logger.error(f"Error buscando producto: {e}")
