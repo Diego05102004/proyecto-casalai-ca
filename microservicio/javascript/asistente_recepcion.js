@@ -16,7 +16,7 @@ class AsistenteRecepcionIA {
         this.facturaIdActual = null;
         this.datosExtraidos = null;
         this.modoDebug = config.debug || false;
-        this.timeoutMs = config.timeoutMs || 8000;
+        this.timeoutMs = config.timeoutMs || 30000; // Aumentado a 30s para PDFs de hasta 10 páginas
         this.maxFallosCircuito = config.circuitBreaker?.maxFallos || 3;
         this.enfriamientoCircuitoMs = config.circuitBreaker?.enfriamientoMs || 120000;
         this.claveCircuito = `asistente-recepcion-circuito:${this.apiUrl}`;

@@ -124,8 +124,8 @@ ANALITICA_PREDICTIVA_TOKEN=tu-token-aqui
 BD_TIPO=mysql
 BD_HOST=localhost
 BD_PORT=3306
-BD_USER=root
-BD_PASSWORD=
+BD_USER=MicroserviceCAI
+BD_PASSWORD=MSagente#26
 BD_DATABASE=casalai_principal
 ```
 
