@@ -34,6 +34,23 @@ $subtotalCarritoUsd = array_sum(array_map(
     is_array($carritos ?? null) ? $carritos : []
 ));
 $subtotalCarritoBs = $subtotalCarritoUsd * $precioDolar;
+$gruposCarrito = [];
+foreach (is_array($carritos ?? null) ? $carritos : [] as $carrito) {
+    $esCombo = !empty($carrito['id_combo']);
+    $grupoId = $esCombo
+        ? 'combo-' . (int)$carrito['id_combo']
+        : 'producto-' . (int)$carrito['id_carrito_detalle'];
+    if (!isset($gruposCarrito[$grupoId])) {
+        $gruposCarrito[$grupoId] = [
+            'es_combo' => $esCombo,
+            'combo' => $carrito['nombre_combo'] ?? 'Combo',
+            'items' => [],
+            'subtotal' => 0.0
+        ];
+    }
+    $gruposCarrito[$grupoId]['items'][] = $carrito;
+    $gruposCarrito[$grupoId]['subtotal'] += (float)($carrito['subtotal'] ?? 0);
+}
 
 // Iniciar el buffer de contenido
 ob_start();
@@ -45,7 +62,7 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
                     <div class="card-content">
                         <h3>Productos</h3>
-                        <p class="card-value"><?php echo count($carritos ?? []); ?></p>
+                        <p class="card-value"><?php echo count($gruposCarrito); ?></p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -110,20 +127,27 @@ ob_start();
                             <tr>
                                 <th>Producto</th>
                                 <th>Precio Unitario</th>
-                                <th>Cantidad</th>
+                                <th>Cantidad / Combos</th>
                                 <th>Subtotal</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (!empty($carritos)): ?>
+                            <?php if (!empty($gruposCarrito)): ?>
                                 <?php 
                                 $total = 0;
-                                foreach ($carritos as $carrito): 
-                                    $total += $carrito['subtotal'];
+                                foreach ($gruposCarrito as $grupo):
+                                    $total += $grupo['subtotal'];
+                                    $carrito = $grupo['items'][0];
+                                    $cantidadCombo = max(1, (int)($carrito['cantidad_combo'] ?? 1));
+                                    $cantidadVisible = $grupo['es_combo']
+                                        ? (int)$carrito['cantidad'] / $cantidadCombo
+                                        : (int)$carrito['cantidad'];
+                                    $cantidadVisible = max(1, (int)$cantidadVisible);
                                 ?>
                                     <tr>
                                         <td>
+                                            <?php if (!$grupo['es_combo']): ?>
                                             <div class="product-info">
                                                 <?php if (!empty($carrito['imagen'])): ?>
                                                     <img src="<?php echo htmlspecialchars($carrito['imagen']); ?>" alt="<?php echo htmlspecialchars($carrito['nombre']); ?>" class="product-img-mini">
@@ -136,31 +160,63 @@ ob_start();
                                                     <span class="product-name"><?php echo htmlspecialchars($carrito['nombre'] ?? 'N/A'); ?></span>
                                                     <span class="product-category">
                                                         <?php echo htmlspecialchars('Modelo ' . ($carrito['nombre_modelo'] ?? '') . ' - Marca ' . ($carrito['nombre_marca'] ?? '')); ?>
-                                                        <?php if (!empty($carrito['id_combo'])): ?>
-                                                            <br><strong>Parte del combo: <?php echo htmlspecialchars($carrito['nombre_combo'] ?? 'Combo'); ?></strong>
-                                                        <?php else: ?>
-                                                            <br><span>Unidad individual</span>
-                                                        <?php endif; ?>
+                                                        <br><span>Unidad individual</span>
                                                     </span>
                                                 </div>
                                             </div>
+                                            <?php else: ?>
+                                                <div class="combo-images" aria-label="Imágenes de los productos del combo">
+                                                    <?php foreach ($grupo['items'] as $componente): ?>
+                                                        <?php if (!empty($componente['imagen'])): ?>
+                                                            <img
+                                                                src="<?php echo htmlspecialchars($componente['imagen']); ?>"
+                                                                alt="<?php echo htmlspecialchars($componente['nombre'] ?? 'Producto del combo'); ?>"
+                                                                title="<?php echo htmlspecialchars($componente['nombre'] ?? 'Producto del combo'); ?>"
+                                                                class="product-img-mini">
+                                                        <?php else: ?>
+                                                            <div class="image-placeholder-mini" title="<?php echo htmlspecialchars($componente['nombre'] ?? 'Producto del combo'); ?>">
+                                                                <i class="fas fa-box"></i>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <strong><?php echo htmlspecialchars($grupo['combo']); ?></strong>
+                                                <ul class="combo-items">
+                                                    <?php foreach ($grupo['items'] as $componente): ?>
+                                                        <li>
+                                                            <?php echo htmlspecialchars($componente['nombre'] ?? 'Producto'); ?>
+                                                            × <?php echo (int)$componente['cantidad_combo']; ?>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php endif; ?>
                                         </td>
-                                        <td><?php echo number_format((float)$carrito['precio'] * $precioDolar, 2); ?> Bs.</td>
+                                        <td>
+                                            <?php if ($grupo['es_combo']): ?>
+                                                <ul class="combo-items combo-prices">
+                                                    <?php foreach ($grupo['items'] as $componente): ?>
+                                                        <li><?php echo number_format((float)$componente['precio'] * $precioDolar, 2); ?> Bs. c/u</li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else: ?>
+                                                <?php echo number_format((float)$carrito['precio'] * $precioDolar, 2); ?> Bs.
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <div class="quantity-control">
-                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, -<?php echo (int)$carrito['cantidad_combo']; ?>)">
+                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, -1, false, <?php echo $grupo['es_combo'] ? 'true' : 'false'; ?>, <?php echo $grupo['es_combo'] ? $cantidadCombo : 1; ?>)">
                                                     <i class="fas fa-minus"></i>
                                                 </button>
-                                                <input type="number" class="qty-input" value="<?php echo $carrito['cantidad'] ?? 1; ?>" 
-                                                       onchange="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, this.value, true)" min="<?php echo (int)$carrito['cantidad_combo']; ?>" readonly>
-                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, <?php echo (int)$carrito['cantidad_combo']; ?>)">
+                                                <input type="number" class="qty-input" value="<?php echo $cantidadVisible; ?>" min="1" readonly>
+                                                <?php if ($grupo['es_combo']): ?><small>combos</small><?php endif; ?>
+                                                <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, 1, false, <?php echo $grupo['es_combo'] ? 'true' : 'false'; ?>, <?php echo $grupo['es_combo'] ? $cantidadCombo : 1; ?>)">
                                                     <i class="fas fa-plus"></i>
                                                 </button>
                                             </div>
                                         </td>
-                                        <td><?php echo number_format((float)$carrito['subtotal'] * $precioDolar, 2); ?> Bs.</td>
+                                        <td><?php echo number_format($grupo['subtotal'] * $precioDolar, 2); ?> Bs.</td>
                                         <td>
-                                            <button class="btn-action btn-delete" onclick="removeFromCart(<?php echo $carrito['id_carrito_detalle']; ?>)">
+                                            <button class="btn-action btn-delete" onclick="removeFromCart(<?php echo $carrito['id_carrito_detalle']; ?>, <?php echo $grupo['es_combo'] ? 'true' : 'false'; ?>)">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -223,6 +279,27 @@ ob_start();
                 .carrito-table td {
                     padding: 15px;
                     border-bottom: 1px solid #e9ecef;
+                }
+
+                .combo-items {
+                    margin: 6px 0 0;
+                    padding-left: 18px;
+                }
+
+                .combo-images {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    margin-bottom: 8px;
+                }
+
+                .combo-items li {
+                    margin: 3px 0;
+                }
+
+                .combo-prices {
+                    list-style: none;
+                    padding-left: 0;
                 }
 
                 .carrito-table tbody tr:hover {
@@ -398,32 +475,27 @@ ob_start();
             </style>
 
             <script>
-                function updateQuantity(productId, change, isDirect = false) {
+                function updateQuantity(productId, change, isDirect = false, isCombo = false, componentQuantity = 1) {
                     if (isDirect) {
-                        // Si es edición directa, enviar el valor directamente
                         const qty = parseInt(change);
                         if (qty < 1) {
                             alert('La cantidad mínima es 1');
                             location.reload();
                             return;
                         }
-                        // Enviar al backend
                         updateCartBackend(productId, qty);
                     } else {
-                        // Si es incremento/decremento
                         const input = event.target.closest('.quantity-control').querySelector('.qty-input');
                         const currentQty = parseInt(input.value);
                         const newQty = currentQty + change;
                         
                         if (newQty < 1) {
-                            if (confirm('¿Desea eliminar este producto del carrito?')) {
-                                removeFromCart(productId);
-                            }
+                            removeFromCart(productId, isCombo);
                             return;
                         }
                         
                         input.value = newQty;
-                        updateCartBackend(productId, newQty);
+                        updateCartBackend(productId, newQty * componentQuantity);
                     }
                 }
 
@@ -451,8 +523,11 @@ ob_start();
                     });
                 }
 
-                function removeFromCart(productId) {
-                    if (confirm('¿Está seguro de eliminar este producto del carrito?')) {
+                function removeFromCart(productId, isCombo = false) {
+                    const mensaje = isCombo
+                        ? '¿Está seguro de eliminar este combo completo y todos sus productos del carrito?'
+                        : '¿Está seguro de eliminar este producto del carrito?';
+                    if (confirm(mensaje)) {
                         const formData = new FormData();
                         formData.append('accion', 'eliminar_del_carrito');
                         formData.append('id_carrito_detalle', productId);
@@ -501,7 +576,7 @@ ob_start();
                 }
 
                 async function checkout() {
-                    const carritoCount = <?php echo count($carritos ?? []); ?>;
+                    const carritoCount = <?php echo count($gruposCarrito); ?>;
                     if (carritoCount === 0) {
                         alert('El carrito está vacío. Agregue productos antes de procesar la compra.');
                         return;

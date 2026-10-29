@@ -281,6 +281,7 @@ class Carrito
         $detailId = $this->requirePositiveInteger($requestData['id_carrito_detalle'] ?? null, 'id_carrito_detalle');
         $quantity = $this->requirePositiveInteger($requestData['cantidad'] ?? null, 'cantidad', 999);
 
+        $pdo->beginTransaction();
         $detailStatement = $pdo->prepare(
             "SELECT cd.id_carrito, cd.id_producto, cd.id_combo, p.stock, p.precio,
                     c.descuento, cdCombo.cantidad AS cantidad_combo
@@ -293,17 +294,114 @@ class Carrito
              WHERE cd.id_carrito_detalle = :id_carrito_detalle
                AND cart.id_cliente = :id_cliente
                AND cd.estatus = 'pendiente'
-             LIMIT 1"
+             LIMIT 1
+             FOR UPDATE"
         );
         $detailStatement->execute([
             ':id_carrito_detalle' => $detailId,
             ':id_cliente' => $clientId,
         ]);
         $detail = $detailStatement->fetch(PDO::FETCH_ASSOC);
-
         if (!$detail) {
-            errorResponse('El producto no existe en tu carrito.', 404);
+            throw new DomainException('El producto no existe en tu carrito.', 404);
         }
+
+        if ($detail['id_combo'] !== null) {
+            $comboQuantity = (int)$detail['cantidad_combo'];
+            if ($detail['descuento'] === null || $comboQuantity <= 0 ||
+                $quantity % $comboQuantity !== 0 ||
+                (float)$detail['descuento'] < 0 || (float)$detail['descuento'] > 100) {
+                throw new DomainException('La cantidad debe corresponder a unidades completas del combo.', 422);
+            }
+
+            $comboCount = intdiv($quantity, $comboQuantity);
+            $componentsStatement = $pdo->prepare(
+                "SELECT cd.id_producto, cd.cantidad, p.stock, p.precio
+                 FROM tbl_combo_detalle cd
+                 INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+                 WHERE cd.id_combo = :id_combo
+                 FOR UPDATE"
+            );
+            $componentsStatement->execute([':id_combo' => (int)$detail['id_combo']]);
+            $components = $componentsStatement->fetchAll(PDO::FETCH_ASSOC);
+            $cartComboStatement = $pdo->prepare(
+                "SELECT id_carrito_detalle, id_producto
+                 FROM tbl_carritodetalle
+                 WHERE id_carrito = :id_carrito
+                   AND id_combo = :id_combo
+                   AND estatus = 'pendiente'
+                 FOR UPDATE"
+            );
+            $cartComboStatement->execute([
+                ':id_carrito' => (int)$detail['id_carrito'],
+                ':id_combo' => (int)$detail['id_combo'],
+            ]);
+            $cartComboRows = $cartComboStatement->fetchAll(PDO::FETCH_ASSOC);
+            $rowsByProduct = [];
+            foreach ($cartComboRows as $cartComboRow) {
+                $productId = (int)$cartComboRow['id_producto'];
+                if (isset($rowsByProduct[$productId])) {
+                    throw new DomainException('El combo tiene productos duplicados en el carrito.', 409);
+                }
+                $rowsByProduct[$productId] = (int)$cartComboRow['id_carrito_detalle'];
+            }
+            if (!$components || count($rowsByProduct) !== count($components)) {
+                throw new DomainException(
+                    'El combo está incompleto en el carrito; elimínalo y agrégalo nuevamente.',
+                    409
+                );
+            }
+
+            $otherQuantityStatement = $pdo->prepare(
+                'SELECT COALESCE(SUM(cantidad), 0)
+                 FROM tbl_carritodetalle
+                 WHERE id_carrito = :id_carrito AND id_producto = :id_producto
+                   AND (id_combo IS NULL OR id_combo <> :id_combo)'
+            );
+            $updateStatement = $pdo->prepare(
+                "UPDATE tbl_carritodetalle
+                 SET cantidad = :cantidad, precio_unitario = :precio_unitario
+                 WHERE id_carrito_detalle = :id_carrito_detalle
+                   AND estatus = 'pendiente'"
+            );
+
+            foreach ($components as $component) {
+                $productId = (int)$component['id_producto'];
+                $componentQuantity = (int)$component['cantidad'];
+                if ($componentQuantity <= 0 || !isset($rowsByProduct[$productId])) {
+                    throw new DomainException(
+                        'El combo está incompleto en el carrito; elimínalo y agrégalo nuevamente.',
+                        409
+                    );
+                }
+                $nextQuantity = $comboCount * $componentQuantity;
+                if ($nextQuantity > 999) {
+                    throw new DomainException('La cantidad por producto no puede superar 999 unidades.', 422);
+                }
+
+                $otherQuantityStatement->execute([
+                    ':id_carrito' => (int)$detail['id_carrito'],
+                    ':id_producto' => $productId,
+                    ':id_combo' => (int)$detail['id_combo'],
+                ]);
+                if ((int)$otherQuantityStatement->fetchColumn() + $nextQuantity > (int)$component['stock']) {
+                    throw new DomainException('No hay stock suficiente para completar la cantidad del combo.', 409);
+                }
+
+                $updateStatement->execute([
+                    ':cantidad' => $nextQuantity,
+                    ':precio_unitario' => round(
+                        (float)$component['precio'] * (1 - (float)$detail['descuento'] / 100),
+                        2
+                    ),
+                    ':id_carrito_detalle' => $rowsByProduct[$productId],
+                ]);
+            }
+
+            $pdo->commit();
+            return;
+        }
+
         $otherQuantityStatement = $pdo->prepare(
             'SELECT COALESCE(SUM(cantidad), 0)
              FROM tbl_carritodetalle
@@ -316,17 +414,7 @@ class Carrito
             ':id_carrito_detalle' => $detailId,
         ]);
         if ((int)$otherQuantityStatement->fetchColumn() + $quantity > (int)$detail['stock']) {
-            errorResponse('No hay stock suficiente para la cantidad solicitada.', 409);
-        }
-
-        $unitPrice = (float)$detail['precio'];
-        if ($detail['id_combo'] !== null) {
-            $comboQuantity = (int)$detail['cantidad_combo'];
-            if ($detail['descuento'] === null || $comboQuantity <= 0 || $quantity % $comboQuantity !== 0 ||
-                (float)$detail['descuento'] < 0 || (float)$detail['descuento'] > 100) {
-                errorResponse('La cantidad debe corresponder a unidades completas del combo.', 422);
-            }
-            $unitPrice = round((float)$detail['precio'] * (1 - (float)$detail['descuento'] / 100), 2);
+            throw new DomainException('No hay stock suficiente para la cantidad solicitada.', 409);
         }
 
         $updateStatement = $pdo->prepare(
@@ -336,29 +424,62 @@ class Carrito
         );
         $updateStatement->execute([
             ':cantidad' => $quantity,
-            ':precio_unitario' => $unitPrice,
+            ':precio_unitario' => (float)$detail['precio'],
             ':id_carrito_detalle' => $detailId,
         ]);
+        $pdo->commit();
     }
 
     private function eliminarDelCarrito(PDO $pdo, int $clientId, array $requestData): void
     {
         $detailId = $this->requirePositiveInteger($requestData['id_carrito_detalle'] ?? null, 'id_carrito_detalle');
-        $deleteStatement = $pdo->prepare(
-            'DELETE cd
+        $pdo->beginTransaction();
+        $detailStatement = $pdo->prepare(
+            "SELECT cd.id_carrito, cd.id_combo
              FROM tbl_carritodetalle cd
              INNER JOIN tbl_carrito c ON c.id_carrito = cd.id_carrito
              WHERE cd.id_carrito_detalle = :id_carrito_detalle
-               AND c.id_cliente = :id_cliente'
+               AND c.id_cliente = :id_cliente
+               AND cd.estatus = 'pendiente'
+             LIMIT 1
+             FOR UPDATE"
         );
-        $deleteStatement->execute([
+        $detailStatement->execute([
             ':id_carrito_detalle' => $detailId,
             ':id_cliente' => $clientId,
         ]);
+        $detail = $detailStatement->fetch(PDO::FETCH_ASSOC);
+        if (!$detail) {
+            throw new DomainException('El producto no existe en tu carrito.', 404);
+        }
+
+        $comboCondition = $detail['id_combo'] === null
+            ? 'cd.id_carrito_detalle = :id_carrito_detalle'
+            : 'cd.id_combo = :id_combo';
+        $deleteStatement = $pdo->prepare(
+            "DELETE cd
+             FROM tbl_carritodetalle cd
+             INNER JOIN tbl_carrito c ON c.id_carrito = cd.id_carrito
+             WHERE cd.id_carrito = :id_carrito
+               AND c.id_cliente = :id_cliente
+               AND cd.estatus = 'pendiente'
+               AND $comboCondition"
+        );
+        $deleteParams = [
+            ':id_carrito' => (int)$detail['id_carrito'],
+            ':id_cliente' => $clientId,
+        ];
+        if ($detail['id_combo'] === null) {
+            $deleteParams[':id_carrito_detalle'] = $detailId;
+        } else {
+            $deleteParams[':id_combo'] = (int)$detail['id_combo'];
+        }
+        $deleteStatement->execute($deleteParams);
 
         if ($deleteStatement->rowCount() === 0) {
-            errorResponse('El producto no existe en tu carrito.', 404);
+            throw new DomainException('El producto no existe en tu carrito.', 404);
         }
+        $pdo->commit();
     }
 
     private function vaciarDetalleCarrito(PDO $pdo, int $clientId): void

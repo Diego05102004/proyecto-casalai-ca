@@ -154,6 +154,21 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
             border: 1px solid #dee2e6;
         }
 
+        .combo-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .combo-product-image {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
 .cantidad-wrapper .form-control.cantidad {
     width: 60px;
     text-align: center;
@@ -228,26 +243,53 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         <div class="ghost"></div>
     </div>
 
+    <?php
+    $gruposCarritoVista = [];
+    foreach ($carritos ?? [] as $itemCarrito) {
+        $esCombo = !empty($itemCarrito['id_combo']);
+        $claveGrupo = $esCombo
+            ? 'combo-' . (int)$itemCarrito['id_combo']
+            : 'producto-' . (int)$itemCarrito['id_carrito_detalle'];
+        if (!isset($gruposCarritoVista[$claveGrupo])) {
+            $gruposCarritoVista[$claveGrupo] = [
+                'es_combo' => $esCombo,
+                'nombre_combo' => $itemCarrito['nombre_combo'] ?? 'Combo',
+                'items' => [],
+                'subtotal' => 0.0
+            ];
+        }
+        $gruposCarritoVista[$claveGrupo]['items'][] = $itemCarrito;
+        $gruposCarritoVista[$claveGrupo]['subtotal'] += (float)($itemCarrito['subtotal'] ?? 0);
+    }
+    ?>
+
     <table class="tabladeConsultas tabla" id="tabla-carrito">
         <thead>
             <tr>
                 <th>Imagen y Serial</th>
                 <th>Nombre del Producto</th>
-                <th>Cantidad</th>
+                <th>Cantidad / Combos</th>
                 <th>Precio Unitario</th>
                 <th>Subtotal</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-            <?php if (!empty($carritos)): ?>
+            <?php if (!empty($gruposCarritoVista)): ?>
                 <?php 
                 $total = 0;
-                foreach ($carritos as $carrito): 
-                    $total += $carrito['subtotal'];
+                foreach ($gruposCarritoVista as $grupoCarrito):
+                    $total += $grupoCarrito['subtotal'];
+                    $carrito = $grupoCarrito['items'][0];
+                    $cantidadCombo = max(1, (int)($carrito['cantidad_combo'] ?? 1));
+                    $cantidadVisible = $grupoCarrito['es_combo']
+                        ? (int)$carrito['cantidad'] / $cantidadCombo
+                        : (int)$carrito['cantidad'];
+                    $cantidadVisible = max(1, (int)$cantidadVisible);
                 ?>
                     <tr>
                         <td>
+                            <?php if (!$grupoCarrito['es_combo']): ?>
                             <div class="d-flex align-items-center">
                                 <?php if (!empty($carrito['imagen'])): ?>
                                     <img src="<?= htmlspecialchars($carrito['imagen']) ?>" class="product-image"
@@ -258,14 +300,39 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                                         <i class="bi bi-image"></i>
                                     </div>
                                 <?php endif; ?>
-
                             </div>
+                            <?php else: ?>
+                                <div class="combo-images" aria-label="Imágenes de los productos del combo">
+                                    <?php foreach ($grupoCarrito['items'] as $componente): ?>
+                                        <?php if (!empty($componente['imagen'])): ?>
+                                            <img src="<?= htmlspecialchars($componente['imagen']) ?>"
+                                                class="combo-product-image"
+                                                alt="<?= htmlspecialchars($componente['nombre'] ?? 'Producto del combo') ?>"
+                                                title="<?= htmlspecialchars($componente['nombre'] ?? 'Producto del combo') ?>"
+                                                onerror="this.src='assets/img/placeholder-product.png'">
+                                        <?php else: ?>
+                                            <div class="combo-product-image img-placeholder"
+                                                title="<?= htmlspecialchars($componente['nombre'] ?? 'Producto del combo') ?>">
+                                                <i class="bi bi-image"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                                <span class="badge bg-info text-dark"><?php echo htmlspecialchars($grupoCarrito['nombre_combo']); ?></span>
+                            <?php endif; ?>
                         </td>
                         <td>
-                            <?php echo htmlspecialchars($carrito['nombre'].' Modelo '.$carrito['nombre_modelo'].' de la Marca '.$carrito['nombre_marca']); ?>
-                            <?php if (!empty($carrito['id_combo'])): ?>
-                                <span class="badge bg-info text-dark">Combo: <?php echo htmlspecialchars($carrito['nombre_combo'] ?? 'Combo'); ?></span>
+                            <?php if ($grupoCarrito['es_combo']): ?>
+                                <ul class="mb-0">
+                                    <?php foreach ($grupoCarrito['items'] as $componente): ?>
+                                        <li>
+                                            <?php echo htmlspecialchars($componente['nombre'] . ' Modelo ' . $componente['nombre_modelo'] . ' de la Marca ' . $componente['nombre_marca']); ?>
+                                            × <?php echo (int)$componente['cantidad_combo']; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
                             <?php else: ?>
+                                <?php echo htmlspecialchars($carrito['nombre'].' Modelo '.$carrito['nombre_modelo'].' de la Marca '.$carrito['nombre_marca']); ?>
                                 <span class="badge bg-secondary">Unidad individual</span>
                             <?php endif; ?>
                         </td>
@@ -274,21 +341,34 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                                 <button type="button" class="btn-decrement" data-id-carrito-detalle="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>"><i class="bi bi-dash"></i></button>
                                 <input type="number"
                                     class="form-control cantidad"
-                                    value="<?php echo htmlspecialchars($carrito['cantidad']); ?>"
+                                    value="<?php echo $cantidadVisible; ?>"
                                     min="1"
                                     readonly
                                     data-id-carrito-detalle="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>"
                                     data-id-producto="<?php echo htmlspecialchars($carrito['id_producto']); ?>"
-                                    data-step="<?php echo (int)$carrito['cantidad_combo']; ?>">
+                                    data-step="1"
+                                    data-units-per-combo="<?php echo $grupoCarrito['es_combo'] ? $cantidadCombo : 1; ?>">
+                                <?php if ($grupoCarrito['es_combo']): ?><small>combos</small><?php endif; ?>
                                 <button type="button" class="btn-increment" data-id-carrito-detalle="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>"><i class="bi bi-plus"></i></button>
                             </div>
                         </td>
                         
-                        <td><?php echo number_format($carrito['precio']*$data['monitors']['bcv']['price'], 2); ?> BS</td>
-                        <td class="subtotal"><?php echo number_format($carrito['subtotal']*$data['monitors']['bcv']['price'], 2); ?> BS</td>
+                        <td>
+                            <?php if ($grupoCarrito['es_combo']): ?>
+                                <ul class="mb-0 list-unstyled">
+                                    <?php foreach ($grupoCarrito['items'] as $componente): ?>
+                                        <li><?php echo number_format($componente['precio']*$data['monitors']['bcv']['price'], 2); ?> BS c/u</li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php else: ?>
+                                <?php echo number_format($carrito['precio']*$data['monitors']['bcv']['price'], 2); ?> BS
+                            <?php endif; ?>
+                        </td>
+                        <td class="subtotal"><?php echo number_format($grupoCarrito['subtotal']*$data['monitors']['bcv']['price'], 2); ?> BS</td>
                         <td>
                             <button type="button" class="btn btn-danger btn-sm btn-eliminar" 
-                                    data-id="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>">
+                                    data-id="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>"
+                                    data-es-combo="<?php echo !empty($carrito['id_combo']) ? '1' : '0'; ?>">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>

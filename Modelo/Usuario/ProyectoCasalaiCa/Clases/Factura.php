@@ -300,6 +300,7 @@ class Factura extends BD
             }
 
             $quantitiesByProduct = [];
+            $combosEnCarrito = [];
             foreach ($rows as $row) {
                 $idProducto = (int)$row['id_producto'];
                 $cantidad = (int)$row['cantidad'];
@@ -316,6 +317,45 @@ class Factura extends BD
                         $cantidadCombo <= 0 || $cantidad % $cantidadCombo !== 0) {
                         throw new PDOException('Un producto del carrito ya no coincide con la composición de su combo.');
                     }
+
+                    $idCombo = (int)$row['id_combo'];
+                    if (isset($combosEnCarrito[$idCombo][$idProducto])) {
+                        throw new PDOException('El carrito contiene productos duplicados dentro de un combo.');
+                    }
+                    $combosEnCarrito[$idCombo][$idProducto] = [
+                        'cantidad' => $cantidad
+                    ];
+                }
+            }
+
+            $stmtComposicionCombo = $pdo->prepare("SELECT id_producto, cantidad
+                FROM tbl_combo_detalle
+                WHERE id_combo = ?");
+            foreach ($combosEnCarrito as $idCombo => $productosCombo) {
+                $stmtComposicionCombo->execute([(int)$idCombo]);
+                $composicion = $stmtComposicionCombo->fetchAll(PDO::FETCH_ASSOC);
+                if (!$composicion || count($composicion) !== count($productosCombo)) {
+                    throw new PDOException('El carrito contiene un combo incompleto o con una composición modificada.');
+                }
+
+                $cantidadCombos = null;
+                foreach ($composicion as $componente) {
+                    $idProducto = (int)$componente['id_producto'];
+                    $cantidadComponente = (int)$componente['cantidad'];
+                    if ($cantidadComponente <= 0 || !isset($productosCombo[$idProducto])) {
+                        throw new PDOException('El carrito contiene un combo incompleto o con una composición modificada.');
+                    }
+
+                    $detalleCombo = $productosCombo[$idProducto];
+                    if ($detalleCombo['cantidad'] % $cantidadComponente !== 0) {
+                        throw new PDOException('Las cantidades de los productos del combo no son consistentes.');
+                    }
+
+                    $cantidadComponenteCombos = intdiv($detalleCombo['cantidad'], $cantidadComponente);
+                    if ($cantidadCombos !== null && $cantidadCombos !== $cantidadComponenteCombos) {
+                        throw new PDOException('Las cantidades de los productos del combo no coinciden.');
+                    }
+                    $cantidadCombos = $cantidadComponenteCombos;
                 }
             }
 

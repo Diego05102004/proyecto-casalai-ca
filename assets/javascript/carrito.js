@@ -162,9 +162,11 @@ $(document).ready(function() {
     // Manejar cambio de cantidad en el carrito
     $(document).on('change', '.cantidad', function() {
         const idCarritoDetalle = $(this).data('id-carrito-detalle');
-        const cantidad = $(this).val();
+        const cantidadCombos = parseInt($(this).val(), 10);
+        const unidadesPorCombo = parseInt($(this).data('units-per-combo'), 10) || 1;
+        const cantidad = cantidadCombos * unidadesPorCombo;
 
-        if (cantidad < 1) {
+        if (cantidadCombos < 1) {
             $(this).val(1);
             return;
         }
@@ -197,10 +199,13 @@ $(document).ready(function() {
     // Manejar eliminación de producto del carrito
     $(document).on('click', '.btn-eliminar', function() {
         const idCarritoDetalle = $(this).data('id');
+        const esCombo = String($(this).data('es-combo')) === '1';
 
         Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡No podrás revertir esta acción!",
+            title: esCombo ? '¿Eliminar el combo completo?' : '¿Estás seguro?',
+            text: esCombo
+                ? 'Se eliminarán todos los productos que pertenecen a este combo.'
+                : '¡No podrás revertir esta acción!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
