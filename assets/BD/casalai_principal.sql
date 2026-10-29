@@ -637,7 +637,10 @@ INSERT INTO `tbl_marcas` (`id_marca`, `nombre_marca`) VALUES
 (11, 'Forza'),
 (12, 'Tripp Lite'),
 (13, 'CDP'),
-(14, 'Koblenz');
+(14, 'Koblenz'),
+(15, 'Redmi'),
+(16, 'Simbi'),
+(17, 'Kingston');
 
 -- --------------------------------------------------------
 
@@ -678,14 +681,14 @@ INSERT INTO `tbl_modelos` (`id_modelo`, `nombre_modelo`, `id_marca`) VALUES
 (20, 'L1300', 1),
 (21, 'F170', 1),
 (22, 'F570', 1),
-(23, 'Smart Tank 515', 2),
-(24, 'DeskJet 2775', 2),
-(25, 'LaserJet Pro M404dn', 2),
-(26, 'PIXMA G3110', 3),
-(27, 'PIXMA G6010', 3),
-(28, 'i-SENSYS MF445dw', 3),
-(29, 'Sublinova', 4),
-(30, 'SubliJet', 6),
+(23, 'Buds 6 Lite', 15),
+(24, 'S0156312', 1),
+(25, '544', 1),
+(26, 'GT52', 2),
+(27, 'Pegamento', 16),
+(28, '64GB', 17),
+(29, '128GB', 17),
+(30, 'Office20', 2),
 (31, 'Sublime', 8),
 (32, 'Durabrite', 1),
 (33, 'Innobella', 10),
@@ -710,29 +713,7 @@ INSERT INTO `tbl_modelos` (`id_modelo`, `nombre_modelo`, `id_marca`) VALUES
 (52, '1000VA', 13),
 (53, 'AVR-1000', 14),
 (54, '520 Joules', 14),
-(55, 'Sublime', 8),
-(56, 'Durabrite', 1),
-(57, 'Innobella', 10),
-(58, 'ChromaLife 100+', 3),
-(59, 'T664 ', 1),
-(60, 'T673 ', 1),
-(61, 'T774', 1),
-(62, '664 ', 2),
-(63, '662 ', 2),
-(64, '680 ', 2),
-(65, '955 ', 2),
-(66, '950', 2),
-(67, 'PG-145 ', 3),
-(68, 'CL-146 ', 3),
-(69, 'GI-190', 3),
-(70, 'FVR-1211', 11),
-(71, 'FVR-2202', 11),
-(72, 'LR2000', 12),
-(73, 'AVR750U', 12),
-(74, 'R2-1200 ', 13),
-(75, 'UPS 600VA', 13),
-(76, '1000VA', 13),
-(77, 'AVR-1000', 14),
+(55, 'GT52', 3),
 (78, '520 Joulesj', 3);
 
 -- --------------------------------------------------------
@@ -823,20 +804,20 @@ CREATE TABLE `tbl_productos` (
 --
 
 INSERT INTO `tbl_productos` (`id_producto`, `serial`, `nombre_producto`, `descripcion_producto`, `id_modelo`, `id_categoria`, `stock`, `stock_minimo`, `stock_maximo`, `clausula_garantia`, `precio`, `estado`, `imagen`) VALUES
-(28, '0001', 'EPSON EcoTank L3250', 'Impresora multifuncional imprime, copia, escanea y Wi‑Fi', 16, 11, 50, 10, 100, 'Garantia Valida hasta los 3 meses ', 372.66, 'habilitado', 'assets\\img\\productos\\producto_29.jpg'),
-(29, '0002', 'HP DeskJet 2775', 'Imprime, copia y escanea. Garantía de 1 año. Imprime desde el teléfono. Recarga fácil.', 24, 11, 50, 10, 100, 'Garantía para 1 mes', 243.33, 'habilitado', 'assets\\img\\productos\\producto_31.jpg'),
+(28, '0001', 'Impresora Digital', 'Impresora multifuncional imprime, copia, escanea y Wi‑Fi', 16, 11, 50, 10, 100, 'Garantia Valida hasta los 3 meses ', 372.66, 'habilitado', 'assets\\img\\productos\\producto_29.jpg'),
+(29, '0002', 'Botellas de Tinta Epson', 'Botellas de tinta, colores negro, azul, rosado y amarillo.', 25, 12, 50, 10, 100, 'Garantía para 1 mes', 243.33, 'habilitado', 'assets\\img\\productos\\producto_31.jpg'),
 (30, '0003', 'Cutter 360', 'Corta en todas direcciones. Ideal para manualidades.', 31, 15, 50, 10, 100, 'Garantía valida en los primeros 365 días', 10.75, 'habilitado', 'assets\\img\\productos\\producto_42.jpg'),
-(31, '0004', 'Pegamento Simbi para', 'Pegamento para papel. Ideal para reparar billetes.', 32, 15, 20, 10, 50, 'Sin Garantía', 7.16, 'habilitado', 'assets\\img\\productos\\producto_43.jpg'),
+(31, '0004', 'Pegamento para Papel', 'Pegamento para papel. Ideal para reparar billetes.', 27, 15, 20, 10, 50, 'Sin Garantía', 7.16, 'habilitado', 'assets\\img\\productos\\producto_43.jpg'),
 (32, '0005', 'Cortadoras de papel', 'Cortadoras especiales para papelería.', 33, 15, 20, 5, 50, 'Sin Garantía', 8.00, 'habilitado', 'assets\\img\\productos\\producto_44.jpg'),
-(33, '0006', 'Resma de papel HP ca', 'Resmas de papel originales HP. Calidad en cada hoja, perfecta para oficina (tamaño carta).', 31, 15, 30, 10, 70, 'Sin Garantía', 7.16, 'habilitado', 'assets\\img\\productos\\producto_45.jpg'),
-(34, '0007', 'Pendrive Kingston 64', 'Unidad flash USB 3.2 Gen 1. Compatible y de alto rendimiento.', 31, 15, 10, 5, 20, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'assets\\img\\productos\\producto_46.jpg'),
-(35, '0008', 'Tarjeta SD Kingston ', 'Tarjeta microSD con adaptador. Velocidades de hasta 150MB/s en lectura.', 31, 15, 7, 5, 20, 'Garantía de 1 mes de duración', 8.84, 'habilitado', 'assets\\img\\productos\\producto_47.jpg'),
-(36, '0009', 'Pendrive Kingston 12', 'Unidad flash USB 3.2 Gen 1. Gran capacidad para tus archivos.', 31, 15, 10, 5, 25, 'Garantía de 1 mes de duración', 10.96, 'habilitado', 'assets\\img\\productos\\producto_48.jpg'),
-(37, '0010', 'Cable USB para impre', 'Cable USB para impresoras, dos metros de largo.', 31, 11, 12, 10, 40, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'assets\\img\\productos\\producto_49.jpg'),
-(38, '0011', 'Auriculares Redmi Bu', 'Sonido de alta fidelidad con cancelación de ruido.', 31, 15, 16, 5, 20, 'Garantía de 1 mes de duración', 37.97, 'habilitado', 'assets\\img\\productos\\producto_50.jpg'),
-(39, '0012', 'Cinta Epson S0156312', 'Cinta original para impresoras Epson LX300 y LX350.', 31, 15, 7, 3, 15, 'Garantía de 1 mes de duración', 20.00, 'habilitado', 'assets\\img\\productos\\producto_51.jpg'),
-(40, '0013', 'Tinta HP Original GT', 'Botella de tinta negra original HP GT52/GT53.', 39, 12, 20, 10, 100, 'Garantía de 1 mes de duración', 31.52, 'habilitado', 'assets\\img\\productos\\producto_52.jpg'),
-(41, '0014', 'Kit de tintas CasaLa', 'Kit de tintas para impresoras con sistema adaptado en CasaLai.', 55, 12, 15, 5, 50, 'Sin Garantia', 57.32, 'habilitado', 'assets\\img\\productos\\producto_53.jpg');
+(33, '0006', 'Resma de Papel', 'Resmas de papel originales HP. Calidad en cada hoja, perfecta para oficina (tamaño carta).', 30, 15, 30, 10, 70, 'Sin Garantía', 7.16, 'habilitado', 'assets\\img\\productos\\producto_45.jpg'),
+(34, '0007', 'Pendrive 64GB', 'Unidad flash USB 3.2 Gen 1. Compatible y de alto rendimiento de 64GB.', 28, 15, 10, 5, 20, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'assets\\img\\productos\\producto_46.jpg'),
+(35, '0008', 'Tarjeta microSD', 'Tarjeta microSD con adaptador. Velocidades de hasta 150MB/s en lectura.', 28, 15, 7, 5, 20, 'Garantía de 1 mes de duración', 8.84, 'habilitado', 'assets\\img\\productos\\producto_47.jpg'),
+(36, '0009', 'Pendrive 128GB', 'Unidad flash USB 3.2 Gen 1 con capacidad de 128GB para tus archivos.', 29, 15, 10, 5, 25, 'Garantía de 1 mes de duración', 10.96, 'habilitado', 'assets\\img\\productos\\producto_48.jpg'),
+(37, '0010', 'Cable USB', 'Cable USB para impresoras, dos metros de largo.', 31, 11, 12, 10, 40, 'Garantía de 1 mes de duración', 7.16, 'habilitado', 'assets\\img\\productos\\producto_49.jpg'),
+(38, '0011', 'Auriculares Bluetooth', 'Sonido de alta fidelidad con cancelación de ruido.', 23, 15, 16, 5, 20, 'Garantía de 1 mes de duración', 37.97, 'habilitado', 'assets\\img\\productos\\producto_50.jpg'),
+(39, '0012', 'Cinta de Impresora', 'Cinta original para impresoras Epson LX300 y LX350.', 24, 15, 7, 3, 15, 'Garantía de 1 mes de duración', 20.00, 'habilitado', 'assets\\img\\productos\\producto_51.jpg'),
+(40, '0013', 'Botellas de Tinta HP', 'Botella de tinta original HP GT52.', 26, 12, 20, 10, 100, 'Garantía de 1 mes de duración', 31.52, 'habilitado', 'assets\\img\\productos\\producto_52.jpg'),
+(41, '0014', 'Botellas de Tinta Canon', 'Botella de tinta Canon GT52.', 55, 12, 15, 5, 50, 'Sin Garantia', 57.32, 'habilitado', 'assets\\img\\productos\\producto_53.jpg');
 
 -- --------------------------------------------------------
 
@@ -863,8 +844,9 @@ CREATE TABLE `tbl_proveedores` (
 --
 
 INSERT INTO `tbl_proveedores` (`id_proveedor`, `nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`, `estado`) VALUES
-(1, 'ebay', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos, envio gratis', 'habilitado'),
-(2, 'Amazon', 'V-12878897-7', 'Paula Rivero', 'J-97781346-2', 'paula@gmail.com', 'AV. Lara, Calle Los Mangos', '0412-554-0466', '0424-181-4733', 'Buena calidad de productos, envio gratis', 'habilitado');
+(1, 'Grupo PC Depot', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos', 'habilitado'),
+(2, 'DISOFI', 'V-12878897-7', 'Paula Rivero', 'J-97781346-2', 'paula@gmail.com', 'AV. Lara, Calle Los Mangos', '0412-554-0466', '0424-181-4733', 'Envio gratis', 'habilitado'),
+(3, 'HP Paper', 'V-12354557-7', 'Simón Freitez', 'J-93423334-2', 'simon@gmail.com', 'AV. Los Leones, Trinitarias', '0424-545-9876', '0424-889-4013', 'Calidad, precio', 'habilitado');
 
 -- --------------------------------------------------------
 
