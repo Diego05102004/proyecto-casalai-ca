@@ -149,11 +149,13 @@ class Catalogo extends BD {
                             p.id_producto,
                             p.nombre_producto,
                             cd.cantidad,
-                            p.precio AS precio_unitario,
-                            (p.precio * cd.cantidad) AS subtotal,
+                            c.descuento,
+                            ROUND(p.precio * (1 - COALESCE(c.descuento, 0) / 100), 2) AS precio_unitario,
+                            (ROUND(p.precio * (1 - COALESCE(c.descuento, 0) / 100), 2) * cd.cantidad) AS subtotal,
                             p.stock AS stock_disponible,
                             p.imagen
                         FROM tbl_combo_detalle cd
+                        INNER JOIN tbl_combo c ON c.id_combo = cd.id_combo
                         INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
                         WHERE cd.id_combo = :id_combo";
 

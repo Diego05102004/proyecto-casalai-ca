@@ -1161,7 +1161,7 @@ class Productos extends BD{
         return $this->ejecutarConConexionSegura(function($pdo) use ($esAdmin) {
             // Obtener combos
             $whereClause = $esAdmin ? "" : "AND c.activo = 1";
-            $sql = "SELECT c.id_combo, c.nombre_combo, c.descripcion, c.activo 
+            $sql = "SELECT c.id_combo, c.nombre_combo, c.descripcion, c.descuento, c.activo
                     FROM tbl_combo c 
                     WHERE 1=1 $whereClause 
                     ORDER BY c.nombre_combo";
@@ -1177,10 +1177,12 @@ class Productos extends BD{
             $comboIds = array_column($combos, 'id_combo');
             $placeholders = str_repeat('?,', count($comboIds) - 1) . '?';
             
-            $sqlDetalles = "SELECT cd.id_combo, cd.id_producto, cd.cantidad, 
+            $sqlDetalles = "SELECT cd.id_combo, cd.id_producto, cd.cantidad,
                                    p.nombre_producto, p.precio, p.stock, p.imagen,
-                                   m.nombre_marca as marca, p.descripcion_producto as descripcion
+                                   m.nombre_marca as marca, p.descripcion_producto as descripcion,
+                                   c.descuento
                             FROM tbl_combo_detalle cd
+                            INNER JOIN tbl_combo c ON c.id_combo = cd.id_combo
                             INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
                             INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
                             INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
@@ -1192,16 +1194,23 @@ class Productos extends BD{
             // Agrupar detalles por combo
             $detallesPorCombo = [];
             foreach ($detalles as $detalle) {
+                $detalle['precio_unitario'] = self::calcularPrecioConDescuento(
+                    (float)$detalle['precio'],
+                    (float)$detalle['descuento']
+                );
                 $detallesPorCombo[$detalle['id_combo']][] = $detalle;
             }
             
             // Combinar combos con sus detalles
             foreach ($combos as &$combo) {
                 $combo['detalles'] = $detallesPorCombo[$combo['id_combo']] ?? [];
+                $combo['precio_original'] = 0;
                 $combo['precio_total'] = 0;
                 foreach ($combo['detalles'] as $detalle) {
-                    $combo['precio_total'] += ($detalle['precio'] * $detalle['cantidad']);
+                    $combo['precio_original'] += (float)$detalle['precio'] * (int)$detalle['cantidad'];
+                    $combo['precio_total'] += (float)$detalle['precio_unitario'] * (int)$detalle['cantidad'];
                 }
+                $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_total'];
             }
             
             return $combos;
@@ -1238,11 +1247,15 @@ class Productos extends BD{
                 $combo['type'] = 'combo';
                 $combo['isCombo'] = true;
                 $combo['productos'] = $this->obtenerDetallesCombo($idCombo);
+                $combo['precio_original'] = 0;
                 $combo['precio_total'] = 0;
                 foreach ($combo['productos'] as $producto) {
-                    $combo['precio_total'] += ((float)($producto['precio'] ?? 0) * (int)($producto['cantidad'] ?? 1));
+                    $quantity = (int)($producto['cantidad'] ?? 1);
+                    $combo['precio_original'] += (float)($producto['precio'] ?? 0) * $quantity;
+                    $combo['precio_total'] += (float)($producto['precio_unitario'] ?? 0) * $quantity;
                 }
                 $combo['precio_final'] = (float)($combo['precio_total'] ?? 0);
+                $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_final'];
                 $combo['precio'] = $combo['precio_final'];
             }
 
@@ -1255,9 +1268,11 @@ class Productos extends BD{
     }
     private function o_detallesCombo($id_combo) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo) {
-            $query = "SELECT cd.id_producto, cd.cantidad, p.nombre_producto, p.precio, p.stock, p.imagen,
+            $query = "SELECT cd.id_producto, cd.cantidad, cd.precio_unitario, c.descuento,
+                            p.nombre_producto, p.precio, p.stock, p.imagen,
                             m.nombre_marca as marca, p.descripcion_producto as descripcion
                     FROM tbl_combo_detalle cd
+                    INNER JOIN tbl_combo c ON c.id_combo = cd.id_combo
                     INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
                     LEFT JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
                     LEFT JOIN tbl_marcas m ON mo.id_marca = m.id_marca
@@ -1268,6 +1283,10 @@ class Productos extends BD{
             $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($productos as &$producto) {
+                $producto['precio_unitario'] = self::calcularPrecioConDescuento(
+                    (float)$producto['precio'],
+                    (float)$producto['descuento']
+                );
                 $imagen = $producto['imagen'] ?? null;
                 if ($imagen) {
                     $imagen = str_replace('\\', '/', $imagen);
@@ -1285,40 +1304,89 @@ class Productos extends BD{
     }
     private function b_agregarProductoAlCarrito($id_cliente, $id_producto, $cantidad = 1, $id_combo = null) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_cliente, $id_producto, $cantidad, $id_combo) {
-            try {
-                $producto = $this->obtenerProductoPorId($id_producto);
-                if (!$producto || $producto['stock'] < $cantidad) {
-                    throw new PDOException('Producto no disponible o cantidad insuficiente');
-                }
-                $id_carrito = $this->obtenerOCrearCarrito($id_cliente);
-                $sql = "SELECT id_carrito_detalle, cantidad FROM tbl_carritodetalle 
-                        WHERE id_carrito = :id_carrito AND id_producto = :id_producto";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':id_carrito', $id_carrito);
-                $stmt->bindParam(':id_producto', $id_producto);
-                $stmt->execute();
-                $existente = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($existente) {
-                    $nueva_cantidad = $existente['cantidad'] + $cantidad;
-                    $sql = "UPDATE tbl_carritodetalle SET cantidad = :cantidad 
-                            WHERE id_carrito_detalle = :id_carrito_detalle";
-                    $stmt = $pdo->prepare($sql);
-                    $stmt->bindParam(':cantidad', $nueva_cantidad);
-                    $stmt->bindParam(':id_carrito_detalle', $existente['id_carrito_detalle']);
-                    return $stmt->execute();
-                } else {
-                    $sql = "INSERT INTO tbl_carritodetalle 
-                            (id_carrito, id_producto, cantidad, estatus) 
-                            VALUES (:id_carrito, :id_producto, :cantidad, 'pendiente')";
-                    $stmt = $pdo->prepare($sql);
-                    $stmt->bindParam(':id_carrito', $id_carrito);
-                    $stmt->bindParam(':id_producto', $id_producto);
-                    $stmt->bindParam(':cantidad', $cantidad);
-                    return $stmt->execute();
-                }
-            } catch (PDOException $e) {
-                throw $e;
+            $stmtProducto = $pdo->prepare("SELECT precio, stock FROM tbl_productos
+                WHERE id_producto = :id_producto AND estado = 'habilitado'");
+            $stmtProducto->execute([':id_producto' => (int)$id_producto]);
+            $producto = $stmtProducto->fetch(PDO::FETCH_ASSOC);
+            if (!$producto || (int)$producto['stock'] < (int)$cantidad) {
+                throw new PDOException('Producto no disponible o cantidad insuficiente');
             }
+
+            $precioUnitario = (float)$producto['precio'];
+            if ($id_combo !== null) {
+                $stmtCombo = $pdo->prepare("SELECT c.descuento, cd.cantidad
+                    FROM tbl_combo c
+                    INNER JOIN tbl_combo_detalle cd ON cd.id_combo = c.id_combo
+                    WHERE c.id_combo = :id_combo AND cd.id_producto = :id_producto");
+                $stmtCombo->execute([
+                    ':id_combo' => (int)$id_combo,
+                    ':id_producto' => (int)$id_producto
+                ]);
+                $comboDetalle = $stmtCombo->fetch(PDO::FETCH_ASSOC);
+                if (!$comboDetalle || (int)$comboDetalle['cantidad'] <= 0 ||
+                    (int)$cantidad % (int)$comboDetalle['cantidad'] !== 0) {
+                    throw new PDOException('El producto no corresponde a una cantidad válida del combo');
+                }
+                $precioUnitario = self::calcularPrecioConDescuento(
+                    (float)$producto['precio'],
+                    (float)$comboDetalle['descuento']
+                );
+            }
+
+            $stmtCarrito = $pdo->prepare("SELECT id_carrito FROM tbl_carrito
+                WHERE id_cliente = :id_cliente ORDER BY fecha_creacion DESC LIMIT 1");
+            $stmtCarrito->execute([':id_cliente' => (int)$id_cliente]);
+            $carrito = $stmtCarrito->fetch(PDO::FETCH_ASSOC);
+            if ($carrito) {
+                $idCarrito = (int)$carrito['id_carrito'];
+            } else {
+                $stmtCarrito = $pdo->prepare("INSERT INTO tbl_carrito (id_cliente) VALUES (:id_cliente)");
+                $stmtCarrito->execute([':id_cliente' => (int)$id_cliente]);
+                $idCarrito = (int)$pdo->lastInsertId();
+            }
+
+            $stmtCantidadCarrito = $pdo->prepare("SELECT COALESCE(SUM(cantidad), 0)
+                FROM tbl_carritodetalle
+                WHERE id_carrito = :id_carrito AND id_producto = :id_producto");
+            $stmtCantidadCarrito->execute([
+                ':id_carrito' => $idCarrito,
+                ':id_producto' => (int)$id_producto
+            ]);
+            if ((int)$stmtCantidadCarrito->fetchColumn() + (int)$cantidad > (int)$producto['stock']) {
+                throw new PDOException('No hay stock suficiente para agregar esa cantidad');
+            }
+
+            $comboCondition = $id_combo === null ? 'id_combo IS NULL' : 'id_combo = :id_combo';
+            $stmtExisting = $pdo->prepare("SELECT id_carrito_detalle, cantidad FROM tbl_carritodetalle
+                WHERE id_carrito = :id_carrito AND id_producto = :id_producto AND $comboCondition");
+            $params = [':id_carrito' => $idCarrito, ':id_producto' => (int)$id_producto];
+            if ($id_combo !== null) {
+                $params[':id_combo'] = (int)$id_combo;
+            }
+            $stmtExisting->execute($params);
+            $existing = $stmtExisting->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing) {
+                $stmtUpdate = $pdo->prepare("UPDATE tbl_carritodetalle
+                    SET cantidad = :cantidad, precio_unitario = :precio_unitario
+                    WHERE id_carrito_detalle = :id_carrito_detalle");
+                return $stmtUpdate->execute([
+                    ':cantidad' => (int)$existing['cantidad'] + (int)$cantidad,
+                    ':precio_unitario' => $precioUnitario,
+                    ':id_carrito_detalle' => (int)$existing['id_carrito_detalle']
+                ]);
+            }
+
+            $stmtInsert = $pdo->prepare("INSERT INTO tbl_carritodetalle
+                (id_carrito, id_producto, cantidad, precio_unitario, id_combo, estatus)
+                VALUES (:id_carrito, :id_producto, :cantidad, :precio_unitario, :id_combo, 'pendiente')");
+            return $stmtInsert->execute([
+                ':id_carrito' => $idCarrito,
+                ':id_producto' => (int)$id_producto,
+                ':cantidad' => (int)$cantidad,
+                ':precio_unitario' => $precioUnitario,
+                ':id_combo' => $id_combo === null ? null : (int)$id_combo
+            ]);
         });
     }
 
@@ -1356,33 +1424,98 @@ class Productos extends BD{
         return $this->a_agregarComboAlCarrito($id_cliente, $id_combo);
     }
     private function a_agregarComboAlCarrito($id_cliente, $id_combo) {
-        try {
-            $combo = $this->obtenerComboPorId($id_combo);
-            if (!$combo) {
-                throw new PDOException("El combo no está disponible");
-            }
-            $productosCombo = $this->obtenerDetallesCombo($id_combo);
-            if (empty($productosCombo)) {
-                throw new PDOException("El combo no contiene productos válidos");
-            }
-            foreach ($productosCombo as $producto) {
-                $productoInfo = $this->obtenerProductoPorId($producto['id_producto']);
-                if (!$productoInfo || $productoInfo['stock'] < $producto['cantidad']) {
-                    $nombre = $productoInfo['nombre_producto'] ?? ('ID: ' . $producto['id_producto']);
-                    throw new PDOException("El producto {$nombre} no tiene suficiente stock");
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_cliente, $id_combo) {
+            $pdo->beginTransaction();
+            try {
+                $stmtCombo = $pdo->prepare("SELECT descuento FROM tbl_combo
+                    WHERE id_combo = :id_combo AND activo = 1");
+                $stmtCombo->execute([':id_combo' => (int)$id_combo]);
+                $combo = $stmtCombo->fetch(PDO::FETCH_ASSOC);
+                if (!$combo) {
+                    throw new PDOException('El combo no está disponible');
                 }
-            }
-            foreach ($productosCombo as $producto) {
-                $resultado = $this->agregarProductoAlCarrito($id_cliente, $producto['id_producto'], $producto['cantidad']);
-                if ($resultado !== true) {
-                    $mensaje = is_string($resultado) ? $resultado : 'Error al agregar producto del combo al carrito';
-                    throw new PDOException($mensaje);
+
+                $stmtItems = $pdo->prepare("SELECT cd.id_producto, cd.cantidad, p.precio, p.stock,
+                        p.nombre_producto
+                    FROM tbl_combo_detalle cd
+                    INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+                    WHERE cd.id_combo = :id_combo AND p.estado = 'habilitado'");
+                $stmtItems->execute([':id_combo' => (int)$id_combo]);
+                $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+                if (!$items) {
+                    throw new PDOException('El combo no contiene productos válidos');
                 }
+
+                $stmtCart = $pdo->prepare("SELECT id_carrito FROM tbl_carrito
+                    WHERE id_cliente = :id_cliente ORDER BY fecha_creacion DESC LIMIT 1");
+                $stmtCart->execute([':id_cliente' => (int)$id_cliente]);
+                $cart = $stmtCart->fetch(PDO::FETCH_ASSOC);
+                if ($cart) {
+                    $idCarrito = (int)$cart['id_carrito'];
+                } else {
+                    $stmtCart = $pdo->prepare("INSERT INTO tbl_carrito (id_cliente) VALUES (:id_cliente)");
+                    $stmtCart->execute([':id_cliente' => (int)$id_cliente]);
+                    $idCarrito = (int)$pdo->lastInsertId();
+                }
+
+                $stmtCurrentQuantity = $pdo->prepare("SELECT COALESCE(SUM(cantidad), 0)
+                    FROM tbl_carritodetalle
+                    WHERE id_carrito = :id_carrito AND id_producto = :id_producto");
+                $stmtExisting = $pdo->prepare("SELECT id_carrito_detalle, cantidad
+                    FROM tbl_carritodetalle
+                    WHERE id_carrito = :id_carrito AND id_producto = :id_producto AND id_combo = :id_combo");
+                $stmtInsert = $pdo->prepare("INSERT INTO tbl_carritodetalle
+                    (id_carrito, id_producto, cantidad, precio_unitario, id_combo, estatus)
+                    VALUES (:id_carrito, :id_producto, :cantidad, :precio_unitario, :id_combo, 'pendiente')");
+                $stmtUpdate = $pdo->prepare("UPDATE tbl_carritodetalle
+                    SET cantidad = :cantidad, precio_unitario = :precio_unitario
+                    WHERE id_carrito_detalle = :id_carrito_detalle");
+
+                foreach ($items as $item) {
+                    $idProducto = (int)$item['id_producto'];
+                    $quantity = (int)$item['cantidad'];
+                    $stmtCurrentQuantity->execute([
+                        ':id_carrito' => $idCarrito,
+                        ':id_producto' => $idProducto
+                    ]);
+                    $alreadyInCart = (int)$stmtCurrentQuantity->fetchColumn();
+                    if ((int)$item['stock'] < $alreadyInCart + $quantity) {
+                        throw new PDOException("El producto {$item['nombre_producto']} no tiene suficiente stock");
+                    }
+
+                    $price = self::calcularPrecioConDescuento((float)$item['precio'], (float)$combo['descuento']);
+                    $stmtExisting->execute([
+                        ':id_carrito' => $idCarrito,
+                        ':id_producto' => $idProducto,
+                        ':id_combo' => (int)$id_combo
+                    ]);
+                    $existing = $stmtExisting->fetch(PDO::FETCH_ASSOC);
+                    if ($existing) {
+                        $stmtUpdate->execute([
+                            ':cantidad' => (int)$existing['cantidad'] + $quantity,
+                            ':precio_unitario' => $price,
+                            ':id_carrito_detalle' => (int)$existing['id_carrito_detalle']
+                        ]);
+                    } else {
+                        $stmtInsert->execute([
+                            ':id_carrito' => $idCarrito,
+                            ':id_producto' => $idProducto,
+                            ':cantidad' => $quantity,
+                            ':precio_unitario' => $price,
+                            ':id_combo' => (int)$id_combo
+                        ]);
+                    }
+                }
+
+                $pdo->commit();
+                return true;
+            } catch (\Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw $e;
             }
-            return true;
-        } catch (PDOException $e) {
-            throw $e;
-        }
+        });
     }
 
     public function obtenerComboPorId($id_combo) {
@@ -1480,36 +1613,62 @@ class Productos extends BD{
     }
 
     private function insertarProductoEnComboConConexion(PDO $pdo, $id_combo, $id_producto, $cantidad) {
-        $stmt = $pdo->prepare("SELECT id_producto FROM tbl_productos WHERE id_producto = :id_producto");
+        $stmtCombo = $pdo->prepare("SELECT descuento FROM tbl_combo WHERE id_combo = :id_combo");
+        $stmtCombo->execute([':id_combo' => (int)$id_combo]);
+        $descuento = $stmtCombo->fetchColumn();
+        if ($descuento === false) {
+            throw new PDOException("El combo con ID $id_combo no existe");
+        }
+
+        $stmt = $pdo->prepare("SELECT id_producto, precio FROM tbl_productos WHERE id_producto = :id_producto");
         $stmt->bindValue(':id_producto', $id_producto, PDO::PARAM_INT);
         $stmt->execute();
 
-        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$producto) {
             throw new PDOException("El producto con ID $id_producto no existe");
         }
 
-        $stmt = $pdo->prepare("INSERT INTO tbl_combo_detalle (id_combo, id_producto, cantidad)
-                               VALUES (:id_combo, :id_producto, :cantidad)");
+        $stmt = $pdo->prepare("INSERT INTO tbl_combo_detalle (id_combo, id_producto, cantidad, precio_unitario)
+                               VALUES (:id_combo, :id_producto, :cantidad, :precio_unitario)");
         $stmt->bindValue(':id_combo', $id_combo, PDO::PARAM_INT);
         $stmt->bindValue(':id_producto', $id_producto, PDO::PARAM_INT);
         $stmt->bindValue(':cantidad', $cantidad, PDO::PARAM_INT);
+        $stmt->bindValue(
+            ':precio_unitario',
+            self::calcularPrecioConDescuento((float)$producto['precio'], (float)$descuento)
+        );
         return $stmt->execute();
     }
 
-    public function crearCombo($nombre, $descripcion, $productos) {
-        return $this->c_crearCombo($nombre, $descripcion, $productos);
+    public static function calcularPrecioConDescuento($precioBase, $descuento) {
+        if (!is_numeric($precioBase) || !is_numeric($descuento) ||
+            (float)$precioBase < 0 || (float)$descuento < 0 || (float)$descuento > 100) {
+            throw new \InvalidArgumentException('El precio y el descuento deben ser válidos; el descuento debe estar entre 0 y 100.');
+        }
+
+        return round((float)$precioBase * (1 - (float)$descuento / 100), 2);
     }
-    private function c_crearCombo($nombre, $descripcion, $productos) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($nombre, $descripcion, $productos){
+
+    public function crearCombo($nombre, $descripcion, $productos, $descuento = 0) {
+        return $this->c_crearCombo($nombre, $descripcion, $productos, $descuento);
+    }
+    private function c_crearCombo($nombre, $descripcion, $productos, $descuento) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($nombre, $descripcion, $productos, $descuento){
             try {
+                if (!is_numeric($descuento) || (float)$descuento < 0 || (float)$descuento > 100) {
+                    throw new \InvalidArgumentException('El descuento del combo debe estar entre 0 y 100.');
+                }
                 $pdo->beginTransaction();
 
-                $sql = "INSERT INTO tbl_combo (nombre_combo, descripcion) 
-                        VALUES (:nombre, :descripcion)";
+                $sql = "INSERT INTO tbl_combo (nombre_combo, descripcion, descuento)
+                        VALUES (:nombre, :descripcion, :descuento)";
                 $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':nombre', $nombre);
-                $stmt->bindParam(':descripcion', $descripcion);
-                $stmt->execute();
+                $stmt->execute([
+                    ':nombre' => $nombre,
+                    ':descripcion' => $descripcion,
+                    ':descuento' => (float)$descuento
+                ]);
 
                 $id_combo = $pdo->lastInsertId();
 
@@ -1528,23 +1687,29 @@ class Productos extends BD{
         });
     }
 
-    public function actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
-        return $this->a_actualizarCombo($id_combo, $nombre, $descripcion, $productos);
+    public function actualizarCombo($id_combo, $nombre, $descripcion, $productos, $descuento = 0) {
+        return $this->a_actualizarCombo($id_combo, $nombre, $descripcion, $productos, $descuento);
     }
-    private function a_actualizarCombo($id_combo, $nombre, $descripcion, $productos) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo, $nombre, $descripcion, $productos) {
+    private function a_actualizarCombo($id_combo, $nombre, $descripcion, $productos, $descuento) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo, $nombre, $descripcion, $productos, $descuento) {
             try {
+                if (!is_numeric($descuento) || (float)$descuento < 0 || (float)$descuento > 100) {
+                    throw new \InvalidArgumentException('El descuento del combo debe estar entre 0 y 100.');
+                }
                 $pdo->beginTransaction();
 
                 $sql = "UPDATE tbl_combo 
                         SET nombre_combo = :nombre, 
-                            descripcion = :descripcion
+                            descripcion = :descripcion,
+                            descuento = :descuento
                         WHERE id_combo = :id_combo";
                 $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':nombre', $nombre);
-                $stmt->bindParam(':descripcion', $descripcion);
-                $stmt->bindParam(':id_combo', $id_combo);
-                $stmt->execute();
+                $stmt->execute([
+                    ':nombre' => $nombre,
+                    ':descripcion' => $descripcion,
+                    ':descuento' => (float)$descuento,
+                    ':id_combo' => (int)$id_combo
+                ]);
 
                 $sql = "DELETE FROM tbl_combo_detalle WHERE id_combo = :id_combo";
                 $stmt = $pdo->prepare($sql);
@@ -1588,12 +1753,14 @@ class Productos extends BD{
                 return null;
             }
             $combo['productos'] = $this->obtenerDetallesCombo($id_combo);
+            $combo['precio_original'] = 0;
             $combo['precio_total'] = 0;
             foreach ($combo['productos'] as $producto) {
-                $combo['precio_total'] += ($producto['precio'] * $producto['cantidad']);
+                $combo['precio_original'] += ((float)$producto['precio'] * (int)$producto['cantidad']);
+                $combo['precio_total'] += ((float)$producto['precio_unitario'] * (int)$producto['cantidad']);
             }
-            $combo['ahorro_estimado'] = $combo['precio_total'] * 0.1;
-            $combo['precio_final'] = $combo['precio_total'] - $combo['ahorro_estimado'];
+            $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_total'];
+            $combo['precio_final'] = $combo['precio_total'];
             return $combo;
         });
     }
@@ -1607,12 +1774,14 @@ class Productos extends BD{
             foreach ($combos as &$combo) {
                 $combo['productos'] = $this->obtenerDetallesCombo($combo['id_combo']);
                 $combo['total_productos'] = count($combo['productos']);
+                $combo['precio_original'] = 0;
                 $combo['precio_total'] = 0;
                 foreach ($combo['productos'] as $producto) {
-                    $combo['precio_total'] += ($producto['precio'] * $producto['cantidad']);
+                    $combo['precio_original'] += ((float)$producto['precio'] * (int)$producto['cantidad']);
+                    $combo['precio_total'] += ((float)$producto['precio_unitario'] * (int)$producto['cantidad']);
                 }
-                $combo['ahorro_estimado'] = $combo['precio_total'] * 0.1;
-                $combo['precio_final'] = $combo['precio_total'] - $combo['ahorro_estimado'];
+                $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_total'];
+                $combo['precio_final'] = $combo['precio_total'];
             }
             return $combos;
         });

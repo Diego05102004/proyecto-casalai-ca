@@ -261,7 +261,14 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
 
                             </div>
                         </td>
-                        <td><?php echo htmlspecialchars($carrito['nombre'].' Modelo '.$carrito['nombre_modelo'].' de la Marca '.$carrito['nombre_marca']); ?></td>
+                        <td>
+                            <?php echo htmlspecialchars($carrito['nombre'].' Modelo '.$carrito['nombre_modelo'].' de la Marca '.$carrito['nombre_marca']); ?>
+                            <?php if (!empty($carrito['id_combo'])): ?>
+                                <span class="badge bg-info text-dark">Combo: <?php echo htmlspecialchars($carrito['nombre_combo'] ?? 'Combo'); ?></span>
+                            <?php else: ?>
+                                <span class="badge bg-secondary">Unidad individual</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <div class="cantidad-wrapper">
                                 <button type="button" class="btn-decrement" data-id-carrito-detalle="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>"><i class="bi bi-dash"></i></button>
@@ -271,7 +278,8 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
                                     min="1"
                                     readonly
                                     data-id-carrito-detalle="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>"
-                                    data-id-producto="<?php echo htmlspecialchars($carrito['id_producto']); ?>">
+                                    data-id-producto="<?php echo htmlspecialchars($carrito['id_producto']); ?>"
+                                    data-step="<?php echo (int)$carrito['cantidad_combo']; ?>">
                                 <button type="button" class="btn-increment" data-id-carrito-detalle="<?php echo htmlspecialchars($carrito['id_carrito_detalle']); ?>"><i class="bi bi-plus"></i></button>
                             </div>
                         </td>
@@ -328,14 +336,16 @@ if (isset($permisosUsuario[$idRol][$idModulo]['consultar']) && $permisosUsuario[
         $(document).on('click', '.btn-increment', function () {
             let input = $(this).siblings('input.cantidad');
             let val = parseInt(input.val()) || 1;
-            input.val(val + 1).trigger('change');
+            let step = parseInt(input.data('step')) || 1;
+            input.val(val + step).trigger('change');
         });
 
         $(document).on('click', '.btn-decrement', function () {
             let input = $(this).siblings('input.cantidad');
             let val = parseInt(input.val()) || 1;
-            if (val > 1) {
-                input.val(val - 1).trigger('change');
+            let step = parseInt(input.data('step')) || 1;
+            if (val > step) {
+                input.val(val - step).trigger('change');
             }
         });
     </script>

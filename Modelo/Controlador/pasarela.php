@@ -143,7 +143,7 @@ if ($_SESSION['nombre_rol'] != 'Cliente') {
     $datos = $pasarela->pasarelaTransaccion('Consultar');
 }
 
-$pagina = "PasareladePago";
+$pagina = "pasarela";
 // Buscar primero en Vista/VistaNew/ y luego en Vista/
 if (is_file("Vista/VistaNew/" . $pagina . ".php")) {
     if (isset($_SESSION['id_usuario'])) {

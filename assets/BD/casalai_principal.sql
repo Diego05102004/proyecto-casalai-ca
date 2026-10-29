@@ -188,6 +188,8 @@ CREATE TABLE `tbl_carritodetalle` (
   `id_carrito` int(11) NOT NULL,
   `id_producto` int(11) NOT NULL,
   `cantidad` int(11) NOT NULL,
+  `precio_unitario` float NOT NULL DEFAULT 0,
+  `id_combo` int(11) DEFAULT NULL,
   `estatus` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -263,6 +265,7 @@ CREATE TABLE `tbl_combo` (
   `nombre_combo` varchar(255) NOT NULL,
   `descripcion` text DEFAULT NULL,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `descuento` float NOT NULL DEFAULT 0,
   `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -283,7 +286,8 @@ CREATE TABLE `tbl_combo_detalle` (
   `id_detalle` int(11) NOT NULL,
   `id_combo` int(11) NOT NULL,
   `id_producto` int(11) NOT NULL,
-  `cantidad` int(11) NOT NULL DEFAULT 1
+  `cantidad` int(11) NOT NULL DEFAULT 1,
+  `precio_unitario` float NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -534,7 +538,9 @@ CREATE TABLE `tbl_factura_detalle` (
   `id` int(11) NOT NULL,
   `factura_id` int(11) NOT NULL,
   `id_producto` int(11) NOT NULL,
-  `cantidad` int(11) NOT NULL DEFAULT 1
+  `cantidad` int(11) NOT NULL DEFAULT 1,
+  `precio_unitario` float NOT NULL DEFAULT 0,
+  `id_combo` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -886,6 +892,22 @@ INSERT INTO `tbl_recepcion_productos` (`id_recepcion`, `id_proveedor`, `fecha`, 
 (10, 2, '2025-07-22', '938210', 'habilitado', 2624.00, 16.00, 419.84, 3043.84),
 (11, 1, '2025-07-27', '012537', 'habilitado', 160.00, 16.00, 25.60, 185.60);
 
+UPDATE tbl_combo_detalle cd
+INNER JOIN tbl_combo c ON c.id_combo = cd.id_combo
+INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+SET cd.precio_unitario = ROUND(p.precio * (1 - COALESCE(c.descuento, 0) / 100), 2)
+WHERE cd.precio_unitario = 0;
+
+UPDATE tbl_carritodetalle cd
+INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+SET cd.precio_unitario = p.precio
+WHERE cd.id_combo IS NULL AND cd.precio_unitario = 0;
+
+UPDATE tbl_factura_detalle fd
+INNER JOIN tbl_productos p ON p.id_producto = fd.id_producto
+SET fd.precio_unitario = p.precio
+WHERE fd.id_combo IS NULL AND fd.precio_unitario = 0;
+
 --
 -- Índices para tablas volcadas
 --
@@ -944,7 +966,8 @@ ALTER TABLE `tbl_carrito`
 ALTER TABLE `tbl_carritodetalle`
   ADD PRIMARY KEY (`id_carrito_detalle`),
   ADD KEY `id_carrito` (`id_carrito`),
-  ADD KEY `id_producto` (`id_producto`);
+  ADD KEY `id_producto` (`id_producto`),
+  ADD KEY `id_combo` (`id_combo`);
 
 --
 -- Indices de la tabla `tbl_categoria`
@@ -1023,7 +1046,8 @@ ALTER TABLE `tbl_facturas`
 ALTER TABLE `tbl_factura_detalle`
   ADD PRIMARY KEY (`id`),
   ADD KEY `factura_id` (`factura_id`),
-  ADD KEY `tbl_factura_detalle` (`id_producto`);
+  ADD KEY `tbl_factura_detalle` (`id_producto`),
+  ADD KEY `id_combo` (`id_combo`);
 
 --
 -- Indices de la tabla `tbl_ingresos_egresos`

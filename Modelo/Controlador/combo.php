@@ -84,8 +84,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 try {
                     $nombre = $_POST['nombre_combo'] ?? '';
                     $descripcion = $_POST['descripcion'] ?? '';
+                    $descuentoRaw = $_POST['descuento'] ?? null;
                     $productosJson = (string)($_POST['productos'] ?? '');
                     $productos = json_decode($productosJson, true, 512, JSON_THROW_ON_ERROR);
+
+                    if (!is_numeric($descuentoRaw) || (float)$descuentoRaw < 0 || (float)$descuentoRaw > 100) {
+                        throw new InvalidArgumentException('El descuento sugerido debe ser un porcentaje entre 0 y 100.');
+                    }
+                    $descuento = (float)$descuentoRaw;
 
                     // Preparar datos para validación
                     $datos_validacion = [
@@ -122,7 +128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     $id_combo = $productosModel->crearCombo(
                         trim($nombre),
                         trim($descripcion),
-                        $productosValidos
+                        $productosValidos,
+                        $descuento
                     );
                     if ((int)$id_combo <= 0) {
                         throw new RuntimeException('No se pudo confirmar el registro del combo en la base de datos.');
@@ -134,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                             $_SESSION['id_usuario'],
                             MODULO_COMBOS,
                             'INCLUIR',
-                            "El usuario creó un nuevo combo: $nombre (ID: $id_combo)",
+                            "El usuario creó un nuevo combo: $nombre (ID: $id_combo, descuento: $descuento%)",
                             'alta'
                         );
                     }

@@ -81,6 +81,7 @@ $(document).ready(function () {
         $(document).on('click', '.btn-eliminar-combo', eliminarCombo);
         $('#agregar_producto').on('click', agregarProductoACombo);
         $(document).on('click', '.btn-eliminar-producto', eliminarProductoDeCombo);
+        $('#descuento').on('input change', actualizarTablaProductosCombo);
         $('#guardar_combo').on('click', guardarCombo);
         $('#confirmarCambioEstado').on('click', cambiarEstadoCombo);
 
@@ -533,6 +534,7 @@ function confirmarCantidad() {
         $('#id_combo').val('');
         $('#nombre_combo').val('');
         $('#descripcion').val('');
+        $('#descuento').val('0');
         productosSeleccionados = [];
         actualizarTablaProductosCombo();
         
@@ -570,6 +572,7 @@ function editarCombo() {
                     $('#id_combo').val(idCombo);
                     $('#nombre_combo').val(data.combo.nombre_combo);
                     $('#descripcion').val(data.combo.descripcion);
+                    $('#descuento').val(data.combo.descuento ?? 0);
 
                     // Establecer contexto de ayuda para modificar
                     $('.btn-ayuda-modal').attr('data-contexto', 'modificar');
@@ -965,6 +968,7 @@ function actualizarTablaProductosCombo() {
     }
 
     try {
+        const descuento = Math.min(100, Math.max(0, parseFloat($('#descuento').val()) || 0));
         // Asegurarse de que los datos tengan el formato correcto
         const productosFormateados = productosSeleccionados.map(item => ({
             id: item.id_producto || item.id,
@@ -977,22 +981,26 @@ function actualizarTablaProductosCombo() {
 
         // Generar las filas de la tabla
         productosFormateados.forEach(producto => {
-            const total = (producto.cantidad * producto.precio).toFixed(2);
+            const precioUnitarioFinal = producto.precio * (1 - descuento / 100);
+            const totalOriginal = (producto.cantidad * producto.precio).toFixed(2);
+            const totalFinal = (producto.cantidad * precioUnitarioFinal).toFixed(2);
             console.log(`Agregando producto: ${producto.nombre}, Cantidad: ${producto.cantidad}, Precio: ${producto.precio}`);
-            
-            tbody.append(`
-                <tr>
-                    <td>${producto.nombre}</td>
-                    <td>${producto.cantidad}</td>
-                    <td>${total} BS</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-danger btn-eliminar-producto" 
-                                data-id-producto="${producto.id}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `);
+            const row = $('<tr>');
+            $('<td>').text(producto.nombre).appendTo(row);
+            $('<td>').text(producto.cantidad).appendTo(row);
+            const totalCell = $('<td>');
+            $('<del>').addClass('text-muted me-2').text(`${totalOriginal} BS`).appendTo(totalCell);
+            $('<strong>').text(`${totalFinal} BS`).appendTo(totalCell);
+            totalCell.appendTo(row);
+            const actionCell = $('<td>').addClass('text-center');
+            $('<button>')
+                .attr('type', 'button')
+                .addClass('btn btn-sm btn-danger btn-eliminar-producto')
+                .attr('data-id-producto', producto.id)
+                .html('<i class="bi bi-trash"></i>')
+                .appendTo(actionCell);
+            actionCell.appendTo(row);
+            tbody.append(row);
         });
     } catch (e) {
         console.error('Error al actualizar la tabla de productos:', e);
@@ -1008,9 +1016,14 @@ function actualizarTablaProductosCombo() {
         const idCombo = $('#id_combo').val();
         const nombreCombo = $('#nombre_combo').val().trim();
         const descripcion = $('#descripcion').val().trim();
+            const descuento = parseFloat($('#descuento').val());
 
         if (!nombreCombo) {
             Swal.fire('Error', 'El nombre del combo es requerido', 'error');
+            return;
+        }
+        if (!Number.isFinite(descuento) || descuento < 0 || descuento > 100) {
+            Swal.fire('Error', 'El descuento debe ser un porcentaje entre 0 y 100', 'error');
             return;
         }
 
@@ -1032,6 +1045,7 @@ function actualizarTablaProductosCombo() {
                 id_combo: idCombo,
                 nombre_combo: nombreCombo,
                 descripcion: descripcion,
+                descuento: descuento,
                 productos: productosSeleccionados
             },
             success: function (response) {

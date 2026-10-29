@@ -1983,6 +1983,18 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 document.addEventListener('click', async function(event) {
                     if (event.target.classList.contains('add-combo-btn')) {
                         const comboInfo = JSON.parse(event.target.dataset.comboInfo);
+                        const descuentoSugerido = Number(comboInfo.descuento);
+                        if (
+                            comboInfo.descuento === null ||
+                            comboInfo.descuento === undefined ||
+                            String(comboInfo.descuento).trim() === '' ||
+                            !Number.isFinite(descuentoSugerido) ||
+                            descuentoSugerido < 0 ||
+                            descuentoSugerido > 100
+                        ) {
+                            alert('La recomendación no incluye un descuento válido. Vuelve a consultar el análisis antes de crear el combo.');
+                            return;
+                        }
                         
                         // Pedir nombre del combo al usuario
                         const nombreCombo = prompt('Ingresa el nombre para el combo:');
@@ -1993,7 +2005,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         
                         try {
                             // Generar descripción automática
-                            const descripcion = "Combo estratégico generado por IA. Incluye " + comboInfo.cantidad_popular + " unidad(es) del producto principal y " + comboInfo.cantidad_congelada + " unidad(es) del producto congelado. Descuento aplicado: " + comboInfo.descuento + "%.";
+                            const descripcion = "Combo especial que Incluye " + comboInfo.cantidad_popular + " unidad(es) del producto principal y " + comboInfo.cantidad_congelada + " unidad(es) del producto congelado. Descuento aplicado: " + descuentoSugerido + "%.";
                             
                             // Formatear productos como array de objetos con id y cantidad
                             const productosFormateados = comboInfo.productos.map((productoId, index) => ({
@@ -2006,6 +2018,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                             formData.append('accion', 'crear_combo');
                             formData.append('nombre_combo', nombreCombo.trim());
                             formData.append('descripcion', descripcion);
+                            formData.append('descuento', String(descuentoSugerido));
                             formData.append('productos', JSON.stringify(productosFormateados));
                             
                             const response = await fetch('?pagina=combo', {

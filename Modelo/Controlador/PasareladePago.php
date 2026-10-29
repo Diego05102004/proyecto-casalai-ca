@@ -76,16 +76,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             
             // Validar cada pago individualmente
             foreach ($pagos as $index => $pagoData) {
+                $tipoPago = trim((string)($pagoData['tipo'] ?? ''));
+                $observaciones = $tipoPago === 'Zelle'
+                    ? trim((string)($pagoData['observaciones'] ?? ''))
+                    : '';
                 $datos_validacion = [
                     'id_factura' => $id_factura,
                     'estatus_pago' => $pagoData['estatus_pago'] ?? null,
-                    'observaciones' => $pagoData['observaciones'] ?? null
+                    'observaciones' => $observaciones
                 ];
                 
                 $errores_validacion = $pasarela->validarRegistrarPago($datos_validacion);
                 
                 if (!empty($errores_validacion)) {
                     $errores[] = "Pago " . ($index + 1) . ": " . implode(', ', $errores_validacion);
+                }
+                if ($tipoPago === 'Zelle' && $observaciones === '') {
+                    $errores[] = "Pago " . ($index + 1) . ": debe indicar el nombre del titular de la cuenta Zelle";
+                } elseif (mb_strlen($observaciones, 'UTF-8') > 200) {
+                    $errores[] = "Pago " . ($index + 1) . ": el nombre del titular no debe exceder los 200 caracteres";
                 }
             }
             
@@ -107,7 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     $pasarela->setTipo($pagoData['tipo']);
                     $pasarela->setFactura($id_factura);
                     $pasarela->setMonto($pagoData['monto']);
-                    $pasarela->setObservaciones('');
+                    $pasarela->setObservaciones(
+                        $pagoData['tipo'] === 'Zelle'
+                            ? trim((string)($pagoData['observaciones'] ?? ''))
+                            : ''
+                    );
 
                     // Validar referencia duplicada
                     if ($pasarela->validarCodigoReferencia()) {

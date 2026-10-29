@@ -1161,8 +1161,8 @@ class Productos extends BD{
         return $this->ejecutarConConexionSegura(function($pdo) use ($esAdmin) {
             // Obtener combos
             $whereClause = $esAdmin ? "" : "AND c.activo = 1";
-            $sql = "SELECT c.id_combo, c.nombre_combo, c.descripcion, c.activo 
-                    FROM tbl_combo c 
+            $sql = "SELECT c.id_combo, c.nombre_combo, c.descripcion, c.descuento, c.activo
+                    FROM tbl_combo c
                     WHERE 1=1 $whereClause 
                     ORDER BY c.nombre_combo";
             $stmt = $pdo->prepare($sql);
@@ -1177,10 +1177,12 @@ class Productos extends BD{
             $comboIds = array_column($combos, 'id_combo');
             $placeholders = str_repeat('?,', count($comboIds) - 1) . '?';
             
-            $sqlDetalles = "SELECT cd.id_combo, cd.id_producto, cd.cantidad, 
+            $sqlDetalles = "SELECT cd.id_combo, cd.id_producto, cd.cantidad,
                                    p.nombre_producto, p.precio, p.stock, p.imagen,
-                                   m.nombre_marca as marca, p.descripcion_producto as descripcion
+                                   m.nombre_marca as marca, p.descripcion_producto as descripcion,
+                                   c.descuento
                             FROM tbl_combo_detalle cd
+                            INNER JOIN tbl_combo c ON c.id_combo = cd.id_combo
                             INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
                             INNER JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
                             INNER JOIN tbl_marcas m ON mo.id_marca = m.id_marca
@@ -1192,16 +1194,23 @@ class Productos extends BD{
             // Agrupar detalles por combo
             $detallesPorCombo = [];
             foreach ($detalles as $detalle) {
+                $detalle['precio_unitario'] = round(
+                    (float)$detalle['precio'] * (1 - (float)$detalle['descuento'] / 100),
+                    2
+                );
                 $detallesPorCombo[$detalle['id_combo']][] = $detalle;
             }
             
             // Combinar combos con sus detalles
             foreach ($combos as &$combo) {
                 $combo['detalles'] = $detallesPorCombo[$combo['id_combo']] ?? [];
+                $combo['precio_original'] = 0;
                 $combo['precio_total'] = 0;
                 foreach ($combo['detalles'] as $detalle) {
-                    $combo['precio_total'] += ($detalle['precio'] * $detalle['cantidad']);
+                    $combo['precio_original'] += (float)$detalle['precio'] * (int)$detalle['cantidad'];
+                    $combo['precio_total'] += (float)$detalle['precio_unitario'] * (int)$detalle['cantidad'];
                 }
+                $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_total'];
             }
             
             return $combos;
@@ -1238,11 +1247,15 @@ class Productos extends BD{
                 $combo['type'] = 'combo';
                 $combo['isCombo'] = true;
                 $combo['productos'] = $this->obtenerDetallesCombo($idCombo);
+                $combo['precio_original'] = 0;
                 $combo['precio_total'] = 0;
                 foreach ($combo['productos'] as $producto) {
-                    $combo['precio_total'] += ((float)($producto['precio'] ?? 0) * (int)($producto['cantidad'] ?? 1));
+                    $quantity = (int)($producto['cantidad'] ?? 1);
+                    $combo['precio_original'] += (float)($producto['precio'] ?? 0) * $quantity;
+                    $combo['precio_total'] += (float)($producto['precio_unitario'] ?? 0) * $quantity;
                 }
                 $combo['precio_final'] = (float)($combo['precio_total'] ?? 0);
+                $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_final'];
                 $combo['precio'] = $combo['precio_final'];
             }
 
@@ -1255,9 +1268,11 @@ class Productos extends BD{
     }
     private function o_detallesCombo($id_combo) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($id_combo) {
-            $query = "SELECT cd.id_producto, cd.cantidad, p.nombre_producto, p.precio, p.stock, p.imagen,
+            $query = "SELECT cd.id_producto, cd.cantidad, cd.precio_unitario, c.descuento,
+                            p.nombre_producto, p.precio, p.stock, p.imagen,
                             m.nombre_marca as marca, p.descripcion_producto as descripcion
                     FROM tbl_combo_detalle cd
+                    INNER JOIN tbl_combo c ON c.id_combo = cd.id_combo
                     INNER JOIN tbl_productos p ON cd.id_producto = p.id_producto
                     LEFT JOIN tbl_modelos mo ON p.id_modelo = mo.id_modelo
                     LEFT JOIN tbl_marcas m ON mo.id_marca = m.id_marca
@@ -1268,6 +1283,10 @@ class Productos extends BD{
             $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($productos as &$producto) {
+                $producto['precio_unitario'] = round(
+                    (float)$producto['precio'] * (1 - (float)$producto['descuento'] / 100),
+                    2
+                );
                 $imagen = $producto['imagen'] ?? null;
                 if ($imagen) {
                     $imagen = str_replace('\\', '/', $imagen);
@@ -1583,12 +1602,14 @@ class Productos extends BD{
                 return null;
             }
             $combo['productos'] = $this->obtenerDetallesCombo($id_combo);
+            $combo['precio_original'] = 0;
             $combo['precio_total'] = 0;
             foreach ($combo['productos'] as $producto) {
-                $combo['precio_total'] += ($producto['precio'] * $producto['cantidad']);
+                $combo['precio_original'] += (float)$producto['precio'] * (int)$producto['cantidad'];
+                $combo['precio_total'] += (float)$producto['precio_unitario'] * (int)$producto['cantidad'];
             }
-            $combo['ahorro_estimado'] = $combo['precio_total'] * 0.1;
-            $combo['precio_final'] = $combo['precio_total'] - $combo['ahorro_estimado'];
+            $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_total'];
+            $combo['precio_final'] = $combo['precio_total'];
             return $combo;
         });
     }
@@ -1602,12 +1623,14 @@ class Productos extends BD{
             foreach ($combos as &$combo) {
                 $combo['productos'] = $this->obtenerDetallesCombo($combo['id_combo']);
                 $combo['total_productos'] = count($combo['productos']);
+                $combo['precio_original'] = 0;
                 $combo['precio_total'] = 0;
                 foreach ($combo['productos'] as $producto) {
-                    $combo['precio_total'] += ($producto['precio'] * $producto['cantidad']);
+                    $combo['precio_original'] += (float)$producto['precio'] * (int)$producto['cantidad'];
+                    $combo['precio_total'] += (float)$producto['precio_unitario'] * (int)$producto['cantidad'];
                 }
-                $combo['ahorro_estimado'] = $combo['precio_total'] * 0.1;
-                $combo['precio_final'] = $combo['precio_total'] - $combo['ahorro_estimado'];
+                $combo['ahorro_estimado'] = $combo['precio_original'] - $combo['precio_total'];
+                $combo['precio_final'] = $combo['precio_total'];
             }
             return $combos;
         });

@@ -91,18 +91,52 @@ class Carrito
 
     private function agregarProductosAlCarrito(PDO $pdo, int $clientId, array $requestData): void
     {
+        $idCombo = null;
         $requestedItems = $requestData['items'] ?? null;
-        if (!\is_array($requestedItems)) {
+        if (!empty($requestData['id_combo'])) {
+            $idCombo = $this->requirePositiveInteger($requestData['id_combo'], 'id_combo');
+            $comboQuantity = $this->requirePositiveInteger($requestData['cantidad'] ?? 1, 'cantidad', 999);
+            $comboStatement = $pdo->prepare(
+                'SELECT descuento FROM tbl_combo WHERE id_combo = :id_combo AND activo = 1'
+            );
+            $comboStatement->execute([':id_combo' => $idCombo]);
+            if ($comboStatement->fetch(PDO::FETCH_ASSOC) === false) {
+                throw new DomainException('El combo ya no está disponible.', 404);
+            }
+
+            $comboItemsStatement = $pdo->prepare(
+                "SELECT cd.id_producto, cd.cantidad
+                 FROM tbl_combo_detalle cd
+                 INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+                 WHERE cd.id_combo = :id_combo AND p.estado = 'habilitado'"
+            );
+            $comboItemsStatement->execute([':id_combo' => $idCombo]);
+            $comboItems = $comboItemsStatement->fetchAll(PDO::FETCH_ASSOC);
+            if ($comboItems === []) {
+                throw new DomainException('El combo no contiene productos disponibles.', 409);
+            }
+            $requestedItems = array_map(
+                static function (array $item) use ($comboQuantity, $idCombo): array {
+                    return [
+                        'id_producto' => $item['id_producto'],
+                        'cantidad' => (int)$item['cantidad'] * $comboQuantity,
+                        'id_combo' => $idCombo,
+                    ];
+                },
+                $comboItems
+            );
+        } elseif (!\is_array($requestedItems)) {
             $requestedItems = [[
                 'id_producto' => $requestData['id_producto'] ?? null,
                 'cantidad' => $requestData['cantidad'] ?? 1,
+                'id_combo' => null,
             ]];
         }
         if ($requestedItems === []) {
             errorResponse('Debes indicar al menos un producto para agregar.', 422);
         }
 
-        $quantitiesByProduct = [];
+        $itemsByOriginAndProduct = [];
         foreach ($requestedItems as $requestedItem) {
             if (!\is_array($requestedItem)) {
                 errorResponse('El formato de los productos del carrito no es válido.', 422);
@@ -110,8 +144,17 @@ class Carrito
 
             $productId = $this->requirePositiveInteger($requestedItem['id_producto'] ?? null, 'id_producto');
             $quantity = $this->requirePositiveInteger($requestedItem['cantidad'] ?? null, 'cantidad', 999);
-            $quantitiesByProduct[$productId] = ($quantitiesByProduct[$productId] ?? 0) + $quantity;
-            if ($quantitiesByProduct[$productId] > 999) {
+            $originCombo = $idCombo === null ? null : $idCombo;
+            $key = ($originCombo ?? 'individual') . ':' . $productId;
+            if (!isset($itemsByOriginAndProduct[$key])) {
+                $itemsByOriginAndProduct[$key] = [
+                    'id_producto' => $productId,
+                    'cantidad' => 0,
+                    'id_combo' => $originCombo,
+                ];
+            }
+            $itemsByOriginAndProduct[$key]['cantidad'] += $quantity;
+            if ($itemsByOriginAndProduct[$key]['cantidad'] > 999) {
                 errorResponse('La cantidad por producto no puede superar 999 unidades.', 422);
             }
         }
@@ -134,9 +177,12 @@ class Carrito
             $cartId = (int) $pdo->lastInsertId();
         }
 
-        foreach ($quantitiesByProduct as $productId => $quantity) {
+        foreach ($itemsByOriginAndProduct as $item) {
+            $productId = (int)$item['id_producto'];
+            $quantity = (int)$item['cantidad'];
+            $originCombo = $item['id_combo'];
             $productStatement = $pdo->prepare(
-                "SELECT stock
+                "SELECT stock, precio
                  FROM tbl_productos
                  WHERE id_producto = :id_producto AND estado = 'habilitado'
                  FOR UPDATE"
@@ -147,45 +193,82 @@ class Carrito
                 throw new DomainException('Uno de los productos ya no está disponible.', 404);
             }
 
+            $existingCondition = $originCombo === null ? 'id_combo IS NULL' : 'id_combo = :id_combo';
             $existingStatement = $pdo->prepare(
                 "SELECT id_carrito_detalle, cantidad
                  FROM tbl_carritodetalle
-                 WHERE id_carrito = :id_carrito
-                   AND id_producto = :id_producto
-                   AND estatus = 'pendiente'
-                 LIMIT 1
-                 FOR UPDATE"
+                 WHERE id_carrito = :id_carrito AND id_producto = :id_producto
+                   AND estatus = 'pendiente' AND $existingCondition
+                 LIMIT 1 FOR UPDATE"
             );
-            $existingStatement->execute([
+            $existingParams = [
                 ':id_carrito' => $cartId,
                 ':id_producto' => $productId,
-            ]);
+            ];
+            if ($originCombo !== null) {
+                $existingParams[':id_combo'] = $originCombo;
+            }
+            $existingStatement->execute($existingParams);
             $existing = $existingStatement->fetch(PDO::FETCH_ASSOC);
             $nextQuantity = (int) ($existing['cantidad'] ?? 0) + $quantity;
 
-            if ($nextQuantity > (int) $stock) {
+            $allCartQuantityStatement = $pdo->prepare(
+                'SELECT COALESCE(SUM(cantidad), 0)
+                 FROM tbl_carritodetalle
+                 WHERE id_carrito = :id_carrito AND id_producto = :id_producto'
+            );
+            $allCartQuantityStatement->execute([
+                ':id_carrito' => $cartId,
+                ':id_producto' => $productId,
+            ]);
+            if ((int)$allCartQuantityStatement->fetchColumn() + $quantity > (int)$stock) {
                 throw new DomainException('No hay stock suficiente para la cantidad solicitada.', 409);
+            }
+
+            $unitPrice = (float)$product['precio'];
+            if ($originCombo !== null) {
+                $discountStatement = $pdo->prepare(
+                    'SELECT c.descuento, cd.cantidad
+                     FROM tbl_combo c
+                     INNER JOIN tbl_combo_detalle cd ON cd.id_combo = c.id_combo
+                     WHERE c.id_combo = :id_combo AND cd.id_producto = :id_producto'
+                );
+                $discountStatement->execute([
+                    ':id_combo' => $originCombo,
+                    ':id_producto' => $productId,
+                ]);
+                $comboDetail = $discountStatement->fetch(PDO::FETCH_ASSOC);
+                if (!$comboDetail || (int)$comboDetail['cantidad'] <= 0 ||
+                    $quantity % (int)$comboDetail['cantidad'] !== 0 ||
+                    (float)$comboDetail['descuento'] < 0 || (float)$comboDetail['descuento'] > 100) {
+                    throw new DomainException('El producto no corresponde a una cantidad válida del combo.', 409);
+                }
+                $unitPrice = round((float)$product['precio'] * (1 - (float)$comboDetail['descuento'] / 100), 2);
             }
 
             if ($existing) {
                 $updateStatement = $pdo->prepare(
                     'UPDATE tbl_carritodetalle
-                     SET cantidad = :cantidad
+                     SET cantidad = :cantidad, precio_unitario = :precio_unitario
                      WHERE id_carrito_detalle = :id_carrito_detalle'
                 );
                 $updateStatement->execute([
                     ':cantidad' => $nextQuantity,
+                    ':precio_unitario' => $unitPrice,
                     ':id_carrito_detalle' => $existing['id_carrito_detalle'],
                 ]);
             } else {
                 $insertStatement = $pdo->prepare(
-                    "INSERT INTO tbl_carritodetalle (id_carrito, id_producto, cantidad, estatus)
-                     VALUES (:id_carrito, :id_producto, :cantidad, 'pendiente')"
+                    "INSERT INTO tbl_carritodetalle
+                     (id_carrito, id_producto, cantidad, precio_unitario, id_combo, estatus)
+                     VALUES (:id_carrito, :id_producto, :cantidad, :precio_unitario, :id_combo, 'pendiente')"
                 );
                 $insertStatement->execute([
                     ':id_carrito' => $cartId,
                     ':id_producto' => $productId,
                     ':cantidad' => $quantity,
+                    ':precio_unitario' => $unitPrice,
+                    ':id_combo' => $originCombo,
                 ]);
             }
         }
@@ -199,12 +282,16 @@ class Carrito
         $quantity = $this->requirePositiveInteger($requestData['cantidad'] ?? null, 'cantidad', 999);
 
         $detailStatement = $pdo->prepare(
-            "SELECT cd.id_producto, p.stock
+            "SELECT cd.id_carrito, cd.id_producto, cd.id_combo, p.stock, p.precio,
+                    c.descuento, cdCombo.cantidad AS cantidad_combo
              FROM tbl_carritodetalle cd
-             INNER JOIN tbl_carrito c ON c.id_carrito = cd.id_carrito
+             INNER JOIN tbl_carrito cart ON cart.id_carrito = cd.id_carrito
              INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+             LEFT JOIN tbl_combo c ON c.id_combo = cd.id_combo
+             LEFT JOIN tbl_combo_detalle cdCombo
+                ON cdCombo.id_combo = cd.id_combo AND cdCombo.id_producto = cd.id_producto
              WHERE cd.id_carrito_detalle = :id_carrito_detalle
-               AND c.id_cliente = :id_cliente
+               AND cart.id_cliente = :id_cliente
                AND cd.estatus = 'pendiente'
              LIMIT 1"
         );
@@ -217,17 +304,39 @@ class Carrito
         if (!$detail) {
             errorResponse('El producto no existe en tu carrito.', 404);
         }
-        if ($quantity > (int) $detail['stock']) {
+        $otherQuantityStatement = $pdo->prepare(
+            'SELECT COALESCE(SUM(cantidad), 0)
+             FROM tbl_carritodetalle
+             WHERE id_carrito = :id_carrito AND id_producto = :id_producto
+               AND id_carrito_detalle <> :id_carrito_detalle'
+        );
+        $otherQuantityStatement->execute([
+            ':id_carrito' => (int)$detail['id_carrito'],
+            ':id_producto' => (int)$detail['id_producto'],
+            ':id_carrito_detalle' => $detailId,
+        ]);
+        if ((int)$otherQuantityStatement->fetchColumn() + $quantity > (int)$detail['stock']) {
             errorResponse('No hay stock suficiente para la cantidad solicitada.', 409);
+        }
+
+        $unitPrice = (float)$detail['precio'];
+        if ($detail['id_combo'] !== null) {
+            $comboQuantity = (int)$detail['cantidad_combo'];
+            if ($detail['descuento'] === null || $comboQuantity <= 0 || $quantity % $comboQuantity !== 0 ||
+                (float)$detail['descuento'] < 0 || (float)$detail['descuento'] > 100) {
+                errorResponse('La cantidad debe corresponder a unidades completas del combo.', 422);
+            }
+            $unitPrice = round((float)$detail['precio'] * (1 - (float)$detail['descuento'] / 100), 2);
         }
 
         $updateStatement = $pdo->prepare(
             'UPDATE tbl_carritodetalle
-             SET cantidad = :cantidad
+             SET cantidad = :cantidad, precio_unitario = :precio_unitario
              WHERE id_carrito_detalle = :id_carrito_detalle'
         );
         $updateStatement->execute([
             ':cantidad' => $quantity,
+            ':precio_unitario' => $unitPrice,
             ':id_carrito_detalle' => $detailId,
         ]);
     }
@@ -327,11 +436,17 @@ class Carrito
         }
 
         $itemsStatement = $pdo->prepare(
-            "SELECT cd.id_carrito_detalle, cd.id_producto, cd.cantidad,
-                    p.nombre_producto AS name, COALESCE(p.precio, 0) AS price, p.stock,
-                    p.imagen AS image
+            "SELECT cd.id_carrito_detalle, cd.id_producto, cd.id_combo, c.nombre_combo,
+                    cd.cantidad, cdCombo.cantidad AS cantidad_combo,
+                    p.nombre_producto AS name,
+                    COALESCE(cd.precio_unitario, p.precio, 0) AS price,
+                    COALESCE(cd.precio_unitario, p.precio, 0) * cd.cantidad AS subtotal,
+                    p.stock, p.imagen AS image
              FROM tbl_carritodetalle cd
              INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+             LEFT JOIN tbl_combo c ON c.id_combo = cd.id_combo
+             LEFT JOIN tbl_combo_detalle cdCombo
+                ON cdCombo.id_combo = cd.id_combo AND cdCombo.id_producto = cd.id_producto
              WHERE cd.id_carrito = :id_carrito AND cd.estatus = 'pendiente'
              ORDER BY cd.id_carrito_detalle"
         );
@@ -341,7 +456,7 @@ class Carrito
         $total = array_reduce(
             $items,
             static function (float $sum, array $item): float {
-                return $sum + ((float) $item['price'] * (int) $item['cantidad']);
+                return $sum + (float)$item['subtotal'];
             },
             0.0
         );

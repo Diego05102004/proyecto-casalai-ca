@@ -130,15 +130,43 @@ class Factura extends BD
         });
     }
 
-    public function agregarProducto($idFactura, $idProducto, $cantidad) {
-        return $this->a_agregarProducto($idFactura, $idProducto, $cantidad);
+    public function agregarProducto($idFactura, $idProducto, $cantidad, $idCombo = null) {
+        return $this->a_agregarProducto($idFactura, $idProducto, $cantidad, $idCombo);
     }
-    private function a_agregarProducto($idFactura, $idProducto, $cantidad) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($idFactura, $idProducto, $cantidad){
-            $sql = "INSERT INTO tbl_factura_detalle (factura_id, id_producto, cantidad) 
-                    VALUES (?, ?, ?)";
+    private function a_agregarProducto($idFactura, $idProducto, $cantidad, $idCombo = null) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($idFactura, $idProducto, $cantidad, $idCombo){
+            $stmtPrecio = $pdo->prepare("SELECT p.precio, c.descuento, cd.cantidad AS cantidad_combo
+                FROM tbl_productos p
+                LEFT JOIN tbl_combo c ON c.id_combo = :id_combo
+                LEFT JOIN tbl_combo_detalle cd
+                    ON cd.id_combo = c.id_combo AND cd.id_producto = p.id_producto
+                WHERE p.id_producto = :id_producto");
+            $stmtPrecio->execute([
+                ':id_combo' => $idCombo === null ? null : (int)$idCombo,
+                ':id_producto' => (int)$idProducto
+            ]);
+            $producto = $stmtPrecio->fetch(PDO::FETCH_ASSOC);
+            if (!$producto) {
+                throw new PDOException('El producto no existe.');
+            }
+
+            $precioUnitario = (float)$producto['precio'];
+            if ($idCombo !== null) {
+                if ($producto['descuento'] === null || (int)$producto['cantidad_combo'] <= 0 ||
+                    (int)$cantidad % (int)$producto['cantidad_combo'] !== 0) {
+                    throw new PDOException('La cantidad no corresponde a una composición válida del combo.');
+                }
+                $precioUnitario = Productos::calcularPrecioConDescuento(
+                    (float)$producto['precio'],
+                    (float)$producto['descuento']
+                );
+            }
+
+            $sql = "INSERT INTO tbl_factura_detalle
+                (factura_id, id_producto, cantidad, precio_unitario, id_combo)
+                VALUES (?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$idFactura, $idProducto, $cantidad]);
+            $stmt->execute([$idFactura, $idProducto, $cantidad, $precioUnitario, $idCombo]);
             return true;
         });
     }
@@ -228,6 +256,125 @@ class Factura extends BD
             if ($detalle_insertados !== count($this->id_producto)) {
                 throw new PDOException("No se insertaron todos los detalles de la factura.");
             }
+
+            return true;
+        });
+    }
+
+    public function registrarDesdeCarrito($cedula, $idUsuario) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($cedula, $idUsuario) {
+            $stmtCliente = $pdo->prepare("SELECT id_clientes FROM tbl_clientes WHERE cedula = ?");
+            $stmtCliente->execute([$cedula]);
+            $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+            if (!$cliente) {
+                throw new PDOException('No se encontró un cliente con la cédula indicada.');
+            }
+
+            $stmtCart = $pdo->prepare("SELECT c.id_carrito
+                FROM tbl_carrito c
+                WHERE c.id_cliente = ?
+                ORDER BY c.fecha_creacion DESC
+                LIMIT 1");
+            $stmtCart->execute([(int)$idUsuario]);
+            $cart = $stmtCart->fetch(PDO::FETCH_ASSOC);
+            if (!$cart) {
+                throw new PDOException('No se encontró un carrito para el cliente.');
+            }
+            $idCarrito = (int)$cart['id_carrito'];
+
+            $stmtRows = $pdo->prepare("SELECT cd.id_carrito_detalle, cd.id_producto, cd.cantidad,
+                    cd.precio_unitario AS precio_carrito,
+                    cd.id_combo, p.precio AS precio_base, p.stock, c.descuento,
+                    cdCombo.cantidad AS cantidad_combo
+                FROM tbl_carritodetalle cd
+                INNER JOIN tbl_productos p ON p.id_producto = cd.id_producto
+                LEFT JOIN tbl_combo c ON c.id_combo = cd.id_combo
+                LEFT JOIN tbl_combo_detalle cdCombo
+                    ON cdCombo.id_combo = cd.id_combo AND cdCombo.id_producto = cd.id_producto
+                WHERE cd.id_carrito = ?
+                ORDER BY cd.id_carrito_detalle");
+            $stmtRows->execute([$idCarrito]);
+            $rows = $stmtRows->fetchAll(PDO::FETCH_ASSOC);
+            if (!$rows) {
+                throw new PDOException('El carrito está vacío.');
+            }
+
+            $quantitiesByProduct = [];
+            foreach ($rows as $row) {
+                $idProducto = (int)$row['id_producto'];
+                $cantidad = (int)$row['cantidad'];
+                if ($cantidad <= 0) {
+                    throw new PDOException('El carrito contiene una cantidad inválida.');
+                }
+                $quantitiesByProduct[$idProducto] = ($quantitiesByProduct[$idProducto] ?? 0) + $cantidad;
+
+                if ($row['id_combo'] !== null) {
+                    $descuento = $row['descuento'];
+                    $cantidadCombo = (int)$row['cantidad_combo'];
+                    if ($descuento === null || !is_numeric($descuento) ||
+                        (float)$descuento < 0 || (float)$descuento > 100 ||
+                        $cantidadCombo <= 0 || $cantidad % $cantidadCombo !== 0) {
+                        throw new PDOException('Un producto del carrito ya no coincide con la composición de su combo.');
+                    }
+                }
+            }
+
+            foreach ($rows as $row) {
+                $idProducto = (int)$row['id_producto'];
+                if ($quantitiesByProduct[$idProducto] > (int)$row['stock']) {
+                    throw new PDOException('No hay stock suficiente para completar la compra.');
+                }
+            }
+
+            $stmtFactura = $pdo->prepare("INSERT INTO tbl_facturas (fecha, cliente, descuento, estatus)
+                VALUES (NOW(), ?, 0, 'Borrador')");
+            $stmtFactura->execute([(int)$cliente['id_clientes']]);
+            $idFactura = (int)$pdo->lastInsertId();
+            if ($idFactura <= 0) {
+                throw new PDOException('No se pudo crear la factura.');
+            }
+
+            $stmtUpdateComboPrice = $pdo->prepare("UPDATE tbl_combo_detalle
+                SET precio_unitario = :precio_unitario
+                WHERE id_combo = :id_combo AND id_producto = :id_producto");
+            $stmtUpdateCartPrice = $pdo->prepare("UPDATE tbl_carritodetalle
+                SET precio_unitario = :precio_unitario
+                WHERE id_carrito_detalle = :id_carrito_detalle");
+            $stmtFacturaDetalle = $pdo->prepare("INSERT INTO tbl_factura_detalle
+                (factura_id, id_producto, cantidad, precio_unitario, id_combo)
+                VALUES (:factura_id, :id_producto, :cantidad, :precio_unitario, :id_combo)");
+
+            foreach ($rows as $row) {
+                $precioUnitario = $row['precio_carrito'] === null
+                    ? (float)$row['precio_base']
+                    : (float)$row['precio_carrito'];
+                if ($row['id_combo'] !== null) {
+                    $precioUnitario = Productos::calcularPrecioConDescuento(
+                        (float)$row['precio_base'],
+                        (float)$row['descuento']
+                    );
+                    $stmtUpdateComboPrice->execute([
+                        ':precio_unitario' => $precioUnitario,
+                        ':id_combo' => (int)$row['id_combo'],
+                        ':id_producto' => (int)$row['id_producto']
+                    ]);
+                }
+
+                $stmtUpdateCartPrice->execute([
+                    ':precio_unitario' => $precioUnitario,
+                    ':id_carrito_detalle' => (int)$row['id_carrito_detalle']
+                ]);
+                $stmtFacturaDetalle->execute([
+                    ':factura_id' => $idFactura,
+                    ':id_producto' => (int)$row['id_producto'],
+                    ':cantidad' => (int)$row['cantidad'],
+                    ':precio_unitario' => $precioUnitario,
+                    ':id_combo' => $row['id_combo'] === null ? null : (int)$row['id_combo']
+                ]);
+            }
+
+            $stmtEmptyCart = $pdo->prepare("DELETE FROM tbl_carritodetalle WHERE id_carrito = ?");
+            $stmtEmptyCart->execute([$idCarrito]);
 
             return true;
         });
@@ -357,9 +504,13 @@ class Factura extends BD
             $facturas = $this->descifrarDatosCliente($stmt->fetchAll(PDO::FETCH_ASSOC));
             $detalleFacturas = [];
 
-            $stmtDetalle = $pdo->query("SELECT df.factura_id, p.nombre_producto, df.cantidad, df.precio_unitario
+            $stmtDetalle = $pdo->query("SELECT df.factura_id, p.nombre_producto, df.cantidad,
+                    CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
+                        THEN p.precio ELSE df.precio_unitario END AS precio_unitario,
+                    df.id_combo, cb.nombre_combo
                 FROM tbl_factura_detalle df
                 INNER JOIN tbl_productos p ON p.id_producto = df.id_producto
+                LEFT JOIN tbl_combo cb ON cb.id_combo = df.id_combo
                 ORDER BY df.factura_id, p.nombre_producto");
 
             foreach ($stmtDetalle->fetchAll(PDO::FETCH_ASSOC) as $detalle) {
@@ -396,11 +547,14 @@ class Factura extends BD
 
             $sqlDetalles = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
                 p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
-                p.precio, df.cantidad, f.descuento, f.estatus
+                CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
+                    THEN p.precio ELSE df.precio_unitario END AS precio,
+                df.id_combo, cb.nombre_combo, df.cantidad, f.descuento, f.estatus
             FROM tbl_factura_detalle df
             JOIN tbl_facturas f ON f.id_factura = df.factura_id
             JOIN tbl_clientes c ON c.id_clientes = f.cliente
             JOIN tbl_productos p ON df.id_producto = p.id_producto
+            LEFT JOIN tbl_combo cb ON cb.id_combo = df.id_combo
             JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
             JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
             ORDER BY f.id_factura DESC";
@@ -473,7 +627,7 @@ class Factura extends BD
                 $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars((string)($fila['cedula'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars((string)($fila['telefono'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars((string)($fila['direccion'] ?? '')) . ' | ';
-                $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
+                //$datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
                 
                 // Aplicar estilo especial para diferentes estatus
                 if ($esPagadaPresencialmente) {
@@ -563,7 +717,11 @@ class Factura extends BD
                     $total += $subtotal;
 
                     $contenido .= '<tr>';
-                    $contenido .= '<td>' . htmlspecialchars($item['producto']) . '</td>';
+                    $producto = htmlspecialchars($item['producto']);
+                    if (!empty($item['id_combo'])) {
+                        $producto .= ' <small>(Combo: ' . htmlspecialchars((string)($item['nombre_combo'] ?? ('#' . $item['id_combo']))) . ')</small>';
+                    }
+                    $contenido .= '<td>' . $producto . '</td>';
                     $contenido .= '<td>' . htmlspecialchars($item['nombre_modelo']) . '</td>';
                     $contenido .= '<td>' . htmlspecialchars($item['nombre_marca']) . '</td>';
                     $contenido .= '<td>' . $item['cantidad'] . '</td>';
@@ -631,11 +789,14 @@ class Factura extends BD
             
             $sqlDetalles = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
                 p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
-                p.precio, df.cantidad, f.descuento, f.estatus
+                CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
+                    THEN p.precio ELSE df.precio_unitario END AS precio,
+                df.id_combo, cb.nombre_combo, df.cantidad, f.descuento, f.estatus
             FROM tbl_factura_detalle df
             JOIN tbl_facturas f ON f.id_factura = df.factura_id
             JOIN tbl_clientes c ON c.id_clientes = f.cliente
             JOIN tbl_productos p ON df.id_producto = p.id_producto
+            LEFT JOIN tbl_combo cb ON cb.id_combo = df.id_combo
             JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
             JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
             WHERE c.cedula = :cedula
@@ -710,7 +871,7 @@ class Factura extends BD
                 $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars((string)($fila['cedula'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars((string)($fila['telefono'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars((string)($fila['direccion'] ?? '')) . ' | ';
-                $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
+                //$datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
                 
                 // Aplicar estilo especial para diferentes estatus
                 if ($esPagadaPresencialmente) {
@@ -801,7 +962,11 @@ class Factura extends BD
                     $total += $subtotal;
 
                     $contenido .= '<tr>';
-                    $contenido .= '<td>' . htmlspecialchars($item['producto'] ?? '') . '</td>';
+                    $producto = htmlspecialchars($item['producto'] ?? '');
+                    if (!empty($item['id_combo'])) {
+                        $producto .= ' <small>(Combo: ' . htmlspecialchars((string)($item['nombre_combo'] ?? ('#' . $item['id_combo']))) . ')</small>';
+                    }
+                    $contenido .= '<td>' . $producto . '</td>';
                     $contenido .= '<td>' . htmlspecialchars($item['nombre_modelo'] ?? '') . '</td>';
                     $contenido .= '<td>' . htmlspecialchars($item['nombre_marca'] ?? '') . '</td>';
                     $contenido .= '<td>' . ($item['cantidad'] ?? '0') . '</td>';
@@ -872,7 +1037,10 @@ public function facturaConsultarMovil()
                     p.nombre_producto AS producto,
                     m.nombre_modelo,
                     mar.nombre_marca,
-                    p.precio,
+                    CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
+                        THEN p.precio ELSE df.precio_unitario END AS precio,
+                    df.id_combo,
+                    cb.nombre_combo,
                     df.cantidad,
                     f.descuento,
                     f.estatus
@@ -880,6 +1048,7 @@ public function facturaConsultarMovil()
                 JOIN tbl_facturas f ON f.id_factura = df.factura_id
                 JOIN tbl_clientes c ON c.id_clientes = f.cliente
                 JOIN tbl_productos p ON df.id_producto = p.id_producto
+                LEFT JOIN tbl_combo cb ON cb.id_combo = df.id_combo
                 JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
                 JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
                 WHERE c.cedula = :cedula
@@ -924,6 +1093,8 @@ public function facturaConsultarMovil()
                     'modelo' => trim((string)($row['nombre_modelo'] ?? '')),
                     'marca' => trim((string)($row['nombre_marca'] ?? '')),
                     'precio' => $precio,
+                    'id_combo' => isset($row['id_combo']) ? (int)$row['id_combo'] : null,
+                    'nombre_combo' => $row['nombre_combo'] ?? null,
                     'cantidad' => $cantidad,
                     'subtotal' => $subtotal
                 ];
@@ -1005,7 +1176,8 @@ public function facturaConsultarMovil()
                 $sql = "SELECT 
                         ROUND(
                             (
-                                SUM(p.precio * df.cantidad) * (1 - (f.descuento / 100))
+                                SUM(CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
+                                    THEN p.precio ELSE df.precio_unitario END * df.cantidad) * (1 - (f.descuento / 100))
                             ) * 1.16, 2
                         ) AS total_con_impuesto
                     FROM tbl_factura_detalle df
@@ -1090,11 +1262,14 @@ public function facturaConsultarMovil()
             // Consulta de la factura
             $sql = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
                         p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
-                        p.precio, df.cantidad, f.descuento, f.estatus
+                        CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
+                            THEN p.precio ELSE df.precio_unitario END AS precio,
+                        df.id_combo, cb.nombre_combo, df.cantidad, f.descuento, f.estatus
                     FROM tbl_factura_detalle df
                     JOIN tbl_facturas f ON f.id_factura = df.factura_id
                     JOIN tbl_clientes c ON c.id_clientes = f.cliente
                     JOIN tbl_productos p ON df.id_producto = p.id_producto
+                    LEFT JOIN tbl_combo cb ON cb.id_combo = df.id_combo
                     JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
                     JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
                     WHERE f.id_factura = :id_factura";
@@ -1140,6 +1315,8 @@ public function facturaConsultarMovil()
                     'modelo' => trim($row['nombre_modelo']),
                     'marca' => trim($row['nombre_marca']),
                     'precio' => (float)$row['precio'],
+                    'id_combo' => isset($row['id_combo']) ? (int)$row['id_combo'] : null,
+                    'nombre_combo' => $row['nombre_combo'] ?? null,
                     'precio_convertido' => (float)$row['precio_convertido'],
                     'cantidad' => (int)$row['cantidad'],
                     'subtotal' => (float)$row['precio'] * (int)$row['cantidad']
@@ -1203,11 +1380,15 @@ public function facturaConsultarMovil()
             // Consulta de la factura (misma estructura que la consulta funcional de la tabla)
             $sql = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
                         p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
-                        p.precio, df.cantidad, f.descuento, f.estatus
+                        p.precio AS precio_base,
+                        CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
+                            THEN p.precio ELSE df.precio_unitario END AS precio,
+                        df.id_combo, cb.nombre_combo, df.cantidad, f.descuento, f.estatus
                     FROM tbl_factura_detalle df
                     JOIN tbl_facturas f ON f.id_factura = df.factura_id
                     JOIN tbl_clientes c ON c.id_clientes = f.cliente
                     JOIN tbl_productos p ON df.id_producto = p.id_producto
+                    LEFT JOIN tbl_combo cb ON cb.id_combo = df.id_combo
                     JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
                     JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
                     WHERE f.id_factura = :id_factura";
@@ -1229,6 +1410,7 @@ public function facturaConsultarMovil()
             if (!empty($facturas)) {
                 foreach ($facturas as &$factura) {
                     $factura['precio_convertido'] = $factura['precio'] * $tasa;
+                    $factura['precio_base_convertido'] = (float)$factura['precio_base'] * $tasa;
                 }
             }
             $facturas = $this->descifrarDatosCliente($facturas);
