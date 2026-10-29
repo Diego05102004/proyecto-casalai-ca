@@ -26,6 +26,14 @@ if (!Auth::validateToken() && isset($_SESSION['id_usuario']) && isset($_SESSION[
 // Variables para los componentes reutilizables
 $pagina_actual = 'PasareladePago';
 $titulo_pagina = 'Pasarela de Pagos';
+$cuentasActivas = array_values(array_filter(
+    is_array($listadocuentas ?? null) ? $listadocuentas : [],
+    static fn($cuenta) => strtolower(trim((string)($cuenta['estado'] ?? ''))) === 'habilitado'
+));
+$cuentasJson = json_encode(
+    $cuentasActivas,
+    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+);
 
 // Iniciar el buffer de contenido
 ob_start();
@@ -55,29 +63,8 @@ ob_start();
                         <!-- Datos Bancarios -->
                         <div class="datos-bancarios-section">
                             <h3 class="section-title"><i class="fas fa-university"></i> Datos Bancarios</h3>
-                            <div class="cuentas-list" id="cuentas-list">
-                                <?php if (!empty($listadocuentas)): ?>
-                                    <?php foreach ($listadocuentas as $cuenta): ?>
-                                        <div class="cuenta-card" data-cuenta="<?php echo htmlspecialchars($cuenta['id_cuenta'] ?? ''); ?>">
-                                            <div class="cuenta-header">
-                                                <span class="cuenta-banco"><?php echo htmlspecialchars($cuenta['nombre_banco'] ?? ''); ?></span>
-                                                <span class="cuenta-tipo"><?php echo htmlspecialchars($cuenta['tipo_cuenta'] ?? ''); ?></span>
-                                            </div>
-                                            <div class="cuenta-info">
-                                                <div class="cuenta-numero">
-                                                    <i class="fas fa-hashtag"></i>
-                                                    <?php echo htmlspecialchars($cuenta['numero_cuenta'] ?? ''); ?>
-                                                </div>
-                                                <div class="cuenta-rif">
-                                                    <i class="fas fa-id-card"></i>
-                                                    <?php echo htmlspecialchars($cuenta['rif'] ?? ''); ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <p class="no-cuentas">No hay cuentas bancarias registradas</p>
-                                <?php endif; ?>
+                            <div class="cuentas-list" id="cuentas-list" aria-live="polite">
+                                <p class="no-cuentas">Seleccione un método y una cuenta para consultar sus datos de pago.</p>
                             </div>
                         </div>
 
@@ -485,93 +472,306 @@ ob_start();
             </style>
 
             <script>
-                // Funcionalidad para agregar pagos
-                $(document).ready(function() {
-                    let contadorPagos = 0;
-                    const montoTotal = parseFloat('<?php echo number_format($monto ?? 0, 2, '.', ''); ?>');
-                    let totalRegistrado = 0;
+                document.addEventListener('DOMContentLoaded', () => {
+                    const form = document.getElementById('formularioPago');
+                    const pagosContainer = document.getElementById('pagos-container');
+                    const cuentasContainer = document.getElementById('cuentas-list');
+                    const resumen = document.getElementById('resumen-pagos');
+                    const mensajeValidacion = document.getElementById('mensaje-validacion');
+                    const botonRegistrar = document.getElementById('btn-registrar');
+                    const montoTotal = Number(<?php echo json_encode((float)($monto ?? 0)); ?>);
+                    const tasaDolar = Number(<?php echo json_encode((float)($data['monitors']['bcv']['price'] ?? 0)); ?>);
+                    const cuentas = <?php echo $cuentasJson; ?>;
+                    let siguientePago = 0;
 
-                    $('#agregar-pago').on('click', function() {
-                        contadorPagos++;
-                        
-                        const bloquePago = `
-                            <div class="bloque-pago" id="pago-${contadorPagos}">
-                                <button type="button" class="btn-quitar-pago" onclick="quitarPago(${contadorPagos})">&times;</button>
-                                <h4 style="margin: 0 0 15px 0; color: #2196F3;">Pago #${contadorPagos}</h4>
-                                <div class="campos-pago show">
-                                    <div class="envolver-form">
-                                        <label>Seleccionar Cuenta</label>
-                                        <select class="control-form cuenta-pago" name="pagos[${contadorPagos}][cuenta]">
-                                            <?php if (!empty($listadocuentas)): ?>
-                                                <?php foreach ($listadocuentas as $cuenta): ?>
-                                                    <option value="<?php echo $cuenta['id_cuenta']; ?>">
-                                                        <?php echo htmlspecialchars($cuenta['nombre_banco'] . ' - ' . $cuenta['numero_cuenta']); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            <?php endif; ?>
-                                        </select>
-                                    </div>
-                                    <div class="envolver-form">
-                                        <label>Método de Pago</label>
-                                        <select class="control-form metodo-pago" name="pagos[${contadorPagos}][tipo]">
-                                            <option value="">Seleccione método</option>
-                                            <option value="transferencia">Transferencia</option>
-                                            <option value="pago_movil">Pago Móvil</option>
-                                        </select>
-                                    </div>
-                                    <div class="envolver-form">
-                                        <label>Referencia</label>
-                                        <input type="text" class="control-form referencia-pago" name="pagos[${contadorPagos}][referencia]" maxlength="12" placeholder="Número de referencia">
-                                    </div>
-                                    <div class="envolver-form">
-                                        <label>Monto</label>
-                                        <input type="number" class="control-form monto-pago" name="pagos[${contadorPagos}][monto]" step="0.01" min="0" placeholder="0.00">
-                                    </div>
-                                    <div class="envolver-form">
-                                        <label>Comprobante</label>
-                                        <input type="file" class="control-form comprobante-pago" name="pagos[${contadorPagos}][comprobante]" accept="image/*">
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        $('#pagos-container').append(bloquePago);
-                        $('#resumen-pagos').show();
+                    const formatearMonto = (monto) => monto.toLocaleString('es-VE', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
                     });
 
-                    // Actualizar resumen al cambiar montos
-                    $(document).on('change', '.monto-pago', function() {
-                        actualizarResumen();
-                    });
-
-                    function actualizarResumen() {
-                        totalRegistrado = 0;
-                        $('.monto-pago').each(function() {
-                            totalRegistrado += parseFloat($(this).val()) || 0;
-                        });
-                        
-                        $('#total-registrado').text(totalRegistrado.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' Bs');
-                        
-                        const restante = montoTotal - totalRegistrado;
-                        $('#restante-pagar').text(restante.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' Bs');
-                        
-                        if (restante <= 0) {
-                            $('#restante-pagar').removeClass('danger').addClass('success');
-                            $('#btn-registrar').prop('disabled', false);
-                        } else {
-                            $('#restante-pagar').removeClass('success').addClass('danger');
-                            $('#btn-registrar').prop('disabled', true);
-                        }
-                    }
-
-                    window.quitarPago = function(id) {
-                        $('#pago-' + id).remove();
-                        actualizarResumen();
-                        
-                        if ($('#pagos-container .bloque-pago').length === 0) {
-                            $('#resumen-pagos').hide();
-                        }
+                    const crearCampo = (labelText, input) => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'envolver-form';
+                        const label = document.createElement('label');
+                        label.htmlFor = input.id;
+                        label.textContent = labelText;
+                        wrapper.append(label, input);
+                        return wrapper;
                     };
+
+                    const crearInput = (id, name, type, attributes = {}) => {
+                        const input = document.createElement('input');
+                        input.id = id;
+                        input.name = name;
+                        input.type = type;
+                        input.className = 'control-form';
+                        Object.entries(attributes).forEach(([key, value]) => input.setAttribute(key, value));
+                        return input;
+                    };
+
+                    const metodosDeCuenta = (cuenta) => String(cuenta.metodos || '')
+                        .split(',')
+                        .map((metodo) => metodo.trim().toLowerCase());
+
+                    const cuentasPorMetodo = (metodo) => cuentas.filter((cuenta) =>
+                        metodosDeCuenta(cuenta).includes(metodo.toLowerCase())
+                    );
+
+                    const mostrarInformacionCuenta = (panel, metodo, cuenta) => {
+                        const tarjeta = document.createElement('div');
+                        tarjeta.className = 'cuenta-card';
+                        tarjeta.dataset.cuenta = cuenta.id_cuenta;
+                        const encabezado = document.createElement('div');
+                        encabezado.className = 'cuenta-header';
+                        const banco = document.createElement('span');
+                        banco.className = 'cuenta-banco';
+                        banco.textContent = metodo === 'Zelle' ? 'Datos para Zelle' : (cuenta.nombre_banco || 'Banco');
+                        encabezado.appendChild(banco);
+                        tarjeta.appendChild(encabezado);
+
+                        const info = document.createElement('div');
+                        info.className = 'cuenta-info';
+                        const datos = metodo === 'Pago Movil'
+                            ? [['Banco', cuenta.nombre_banco], ['Teléfono', cuenta.telefono_cuenta], ['RIF', cuenta.rif_cuenta]]
+                            : metodo === 'Transferencia'
+                                ? [['Banco', cuenta.nombre_banco], ['Número de cuenta', cuenta.numero_cuenta], ['RIF', cuenta.rif_cuenta]]
+                                : [['Correo electrónico', cuenta.correo_cuenta]];
+
+                        datos.forEach(([etiqueta, valor]) => {
+                            const linea = document.createElement('div');
+                            linea.className = 'cuenta-numero';
+                            const etiquetaElemento = document.createElement('strong');
+                            etiquetaElemento.textContent = `${etiqueta}: `;
+                            linea.append(etiquetaElemento, document.createTextNode(valor || 'No disponible'));
+                            info.appendChild(linea);
+                        });
+                        tarjeta.appendChild(info);
+                        panel.replaceChildren(tarjeta);
+                    };
+
+                    const actualizarResumen = () => {
+                        let total = 0;
+                        pagosContainer.querySelectorAll('.bloque-pago').forEach((bloque) => {
+                            total += Number(bloque.querySelector('.monto-bs')?.value || 0);
+                        });
+                        const restante = montoTotal - total;
+                        document.getElementById('total-registrado').textContent = `${formatearMonto(total)} Bs`;
+                        const restanteElemento = document.getElementById('restante-pagar');
+                        restanteElemento.textContent = `${formatearMonto(restante)} Bs`;
+                        restanteElemento.classList.toggle('success', Math.abs(restante) <= 0.01);
+                        restanteElemento.classList.toggle('danger', Math.abs(restante) > 0.01);
+                        resumen.style.display = pagosContainer.children.length ? 'block' : 'none';
+                        botonRegistrar.disabled = Math.abs(restante) > 0.01 || total <= 0;
+                        mensajeValidacion.textContent = Math.abs(restante) <= 0.01
+                            ? 'Los montos coinciden con el total a pagar.'
+                            : restante > 0
+                                ? `Faltan ${formatearMonto(restante)} Bs por registrar.`
+                                : `Hay ${formatearMonto(-restante)} Bs de más.`;
+                    };
+
+                    const actualizarMontoZelle = (bloque) => {
+                        const montoUsd = Number(bloque.querySelector('.monto-usd').value || 0);
+                        const montoBs = montoUsd * tasaDolar;
+                        bloque.querySelector('.monto-bs').value = Number.isFinite(montoBs) ? montoBs.toFixed(2) : '';
+                        bloque.querySelector('.conversion-zelle').textContent = montoUsd > 0 && tasaDolar > 0
+                            ? `Equivalente: ${formatearMonto(montoBs)} Bs (tasa: ${formatearMonto(tasaDolar)} Bs/USD)`
+                            : '';
+                        actualizarResumen();
+                    };
+
+                    const mostrarCamposPago = (bloque, id, metodo) => {
+                        const campos = bloque.querySelector('.campos-pago');
+                        campos.replaceChildren();
+
+                        const referencia = crearInput(`referencia-${id}`, `pagos[${id}][referencia]`, 'text', {
+                            maxlength: metodo === 'Zelle' ? '30' : '12',
+                            placeholder: metodo === 'Zelle' ? 'ID o referencia de la transacción' : 'Número de referencia',
+                            required: '',
+                            autocomplete: 'off'
+                        });
+                        campos.appendChild(crearCampo(metodo === 'Zelle' ? 'ID/referencia de transacción *' : 'Número de referencia *', referencia));
+
+                        if (metodo === 'Zelle') {
+                            const titular = crearInput(`titular-${id}`, `pagos[${id}][observaciones]`, 'text', {
+                                maxlength: '200',
+                                placeholder: 'Nombre del titular de la cuenta Zelle',
+                                required: '',
+                                autocomplete: 'name'
+                            });
+                            campos.appendChild(crearCampo('Nombre del titular de la cuenta Zelle *', titular));
+                        }
+
+                        const comprobante = crearInput(`comprobante-${id}`, `pagos[${id}][comprobante]`, 'file', {
+                            accept: 'image/*,.pdf',
+                            required: ''
+                        });
+                        campos.appendChild(crearCampo('Comprobante del pago *', comprobante));
+
+                        const montoBs = crearInput(`monto-bs-${id}`, `pagos[${id}][monto]`, metodo === 'Zelle' ? 'hidden' : 'number', {
+                            step: '0.01',
+                            min: '0.01',
+                            required: ''
+                        });
+                        montoBs.classList.add('monto-bs');
+                        if (metodo === 'Zelle') {
+                            const montoUsd = crearInput(`monto-usd-${id}`, `pagos[${id}][monto_dolar]`, 'number', {
+                                step: '0.01',
+                                min: '0.01',
+                                required: '',
+                                placeholder: '0.00'
+                            });
+                            montoUsd.classList.add('monto-usd');
+                            const wrapperUsd = crearCampo('Monto (USD) *', montoUsd);
+                            const conversion = document.createElement('small');
+                            conversion.className = 'conversion-zelle';
+                            conversion.setAttribute('aria-live', 'polite');
+                            wrapperUsd.appendChild(conversion);
+                            campos.append(wrapperUsd, montoBs);
+                            montoUsd.addEventListener('input', () => actualizarMontoZelle(bloque));
+                        } else {
+                            campos.appendChild(crearCampo('Monto (Bs) *', montoBs));
+                            montoBs.addEventListener('input', actualizarResumen);
+                        }
+                        campos.classList.add('show');
+                        actualizarResumen();
+                    };
+
+                    const agregarPago = () => {
+                        if (pagosContainer.children.length >= 5) {
+                            window.alert('Solo puedes agregar hasta 5 métodos de pago.');
+                            return;
+                        }
+
+                        const id = siguientePago++;
+                        const bloque = document.createElement('div');
+                        bloque.className = 'bloque-pago';
+                        bloque.id = `pago-${id}`;
+                        bloque.innerHTML = `
+                            <button type="button" class="btn-quitar-pago" aria-label="Quitar método de pago">&times;</button>
+                            <h4 style="margin: 0 0 15px 0; color: #2196F3;">Método ${pagosContainer.children.length + 1}</h4>
+                            <div class="envolver-form">
+                                <label for="tipo-${id}">Método de pago *</label>
+                                <select class="control-form metodo-pago" id="tipo-${id}" name="pagos[${id}][tipo]" required>
+                                    <option value="">Seleccione método</option>
+                                    <option value="Pago Movil">Pago Móvil</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Zelle">Zelle</option>
+                                </select>
+                            </div>
+                            <div class="envolver-form campo-cuenta" hidden>
+                                <label for="cuenta-${id}">Cuenta de destino *</label>
+                                <select class="control-form cuenta-pago" id="cuenta-${id}" name="pagos[${id}][cuenta]" required>
+                                    <option value="">Seleccione una cuenta</option>
+                                </select>
+                            </div>
+                            <div class="campos-pago"></div>`;
+                        pagosContainer.appendChild(bloque);
+                        const panel = document.createElement('div');
+                        panel.id = `datos-cuenta-${id}`;
+                        cuentasContainer.querySelector('.no-cuentas')?.remove();
+                        cuentasContainer.appendChild(panel);
+
+                        const tipo = bloque.querySelector('.metodo-pago');
+                        const cuentaSelect = bloque.querySelector('.cuenta-pago');
+                        tipo.addEventListener('change', () => {
+                            const metodo = tipo.value;
+                            cuentaSelect.replaceChildren(new Option('Seleccione una cuenta', ''));
+                            panel.replaceChildren();
+                            const campos = bloque.querySelector('.campos-pago');
+                            campos.replaceChildren();
+                            campos.classList.remove('show');
+                            cuentasPorMetodo(metodo).forEach((cuenta) => {
+                                cuentaSelect.add(new Option(
+                                    `${cuenta.nombre_banco || 'Cuenta'}${metodo === 'Transferencia' && cuenta.numero_cuenta ? ` - ${cuenta.numero_cuenta}` : ''}`,
+                                    cuenta.id_cuenta
+                                ));
+                            });
+                            bloque.querySelector('.campo-cuenta').hidden = false;
+                            if (cuentaSelect.options.length === 1) {
+                                cuentaSelect.options[0].textContent = 'No hay cuentas activas para este método';
+                            }
+                            actualizarResumen();
+                        });
+
+                        cuentaSelect.addEventListener('change', () => {
+                            const cuenta = cuentas.find((item) => String(item.id_cuenta) === cuentaSelect.value);
+                            if (!cuenta) {
+                                panel.replaceChildren();
+                                return;
+                            }
+                            mostrarInformacionCuenta(panel, tipo.value, cuenta);
+                            mostrarCamposPago(bloque, id, tipo.value);
+                        });
+
+                        bloque.querySelector('.btn-quitar-pago').addEventListener('click', () => {
+                            bloque.remove();
+                            panel.remove();
+                            pagosContainer.querySelectorAll('.bloque-pago h4').forEach((titulo, index) => {
+                                titulo.textContent = `Método ${index + 1}`;
+                            });
+                            actualizarResumen();
+                            if (!pagosContainer.children.length) {
+                                const aviso = document.createElement('p');
+                                aviso.className = 'no-cuentas';
+                                aviso.textContent = 'Seleccione un método y una cuenta para consultar sus datos de pago.';
+                                cuentasContainer.appendChild(aviso);
+                            }
+                        });
+                    };
+
+                    document.getElementById('agregar-pago').addEventListener('click', agregarPago);
+                    form.addEventListener('submit', async (event) => {
+                        event.preventDefault();
+                        const bloques = [...pagosContainer.querySelectorAll('.bloque-pago')];
+                        const errores = [];
+
+                        if (!bloques.length) errores.push('Agregue al menos un método de pago.');
+                        bloques.forEach((bloque, index) => {
+                            const metodo = bloque.querySelector('.metodo-pago').value;
+                            if (!metodo) errores.push(`Seleccione el método del pago ${index + 1}.`);
+                            if (!bloque.querySelector('.cuenta-pago').value) errores.push(`Seleccione una cuenta activa para el pago ${index + 1}.`);
+                            if (!bloque.querySelector('[name$="[referencia]"]')?.value.trim()) errores.push(`Ingrese la referencia del pago ${index + 1}.`);
+                            const montoBs = bloque.querySelector('.monto-bs');
+                            if (!montoBs || !montoBs.value || Number(montoBs.value) <= 0) errores.push(`Ingrese un monto válido para el pago ${index + 1}.`);
+                            const comprobante = bloque.querySelector('[name$="[comprobante]"]');
+                            if (!comprobante?.files.length) errores.push(`Adjunte el comprobante del pago ${index + 1}.`);
+                            if (metodo === 'Zelle' && !bloque.querySelector('[name$="[observaciones]"]')?.value.trim()) {
+                                errores.push(`Ingrese el nombre del titular de Zelle para el pago ${index + 1}.`);
+                            }
+                        });
+
+                        const total = bloques.reduce((suma, bloque) => suma + Number(bloque.querySelector('.monto-bs')?.value || 0), 0);
+                        if (Math.abs(total - montoTotal) > 0.01) errores.push('La suma de los pagos debe coincidir con el total a pagar.');
+                        if (bloques.some((bloque) => bloque.querySelector('.metodo-pago').value === 'Zelle') && tasaDolar <= 0) {
+                            errores.push('No se pudo obtener una tasa BCV válida para calcular el pago Zelle.');
+                        }
+                        if (errores.length) {
+                            mensajeValidacion.textContent = errores.join(' ');
+                            return;
+                        }
+
+                        botonRegistrar.disabled = true;
+                        try {
+                            const respuesta = await fetch(window.location.href, { method: 'POST', body: new FormData(form) });
+                            const resultado = await respuesta.json();
+                            if (!respuesta.ok || resultado.status !== 'success') {
+                                const detalles = Array.isArray(resultado.errors) ? ` ${resultado.errors.join(' ')}` : '';
+                                throw new Error((resultado.message || 'No se pudieron registrar los pagos.') + detalles);
+                            }
+                            if (window.Swal) {
+                                await Swal.fire({ icon: 'success', title: 'Pago registrado', text: resultado.message });
+                            } else {
+                                window.alert(resultado.message);
+                            }
+                            window.location.href = '?pagina=gestionarfactura';
+                        } catch (error) {
+                            mensajeValidacion.textContent = error.message || 'Error al registrar los pagos.';
+                            botonRegistrar.disabled = false;
+                        }
+                    });
+
+                    agregarPago();
+                    actualizarResumen();
                 });
             </script>
 

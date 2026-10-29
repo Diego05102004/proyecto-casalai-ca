@@ -627,7 +627,7 @@ class Factura extends BD
                 $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars((string)($fila['cedula'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars((string)($fila['telefono'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars((string)($fila['direccion'] ?? '')) . ' | ';
-                $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
+                //$datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
                 
                 // Aplicar estilo especial para diferentes estatus
                 if ($esPagadaPresencialmente) {
@@ -871,7 +871,7 @@ class Factura extends BD
                 $datosCliente .= '<strong>Cédula:</strong> ' . htmlspecialchars((string)($fila['cedula'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Teléfono:</strong> ' . htmlspecialchars((string)($fila['telefono'] ?? '')) . ' | ';
                 $datosCliente .= '<strong>Dirección:</strong> ' . htmlspecialchars((string)($fila['direccion'] ?? '')) . ' | ';
-                $datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
+                //$datosCliente .= '<strong>Descuento:</strong> ' . htmlspecialchars((string)($fila['descuento'] ?? '')) . '% | ';
                 
                 // Aplicar estilo especial para diferentes estatus
                 if ($esPagadaPresencialmente) {
@@ -1380,6 +1380,7 @@ public function facturaConsultarMovil()
             // Consulta de la factura (misma estructura que la consulta funcional de la tabla)
             $sql = "SELECT f.id_factura, f.fecha, c.nombre, c.cedula, c.telefono, c.direccion,
                         p.nombre_producto AS producto, m.nombre_modelo, mar.nombre_marca,
+                        p.precio AS precio_base,
                         CASE WHEN df.precio_unitario IS NULL OR (df.id_combo IS NULL AND df.precio_unitario = 0)
                             THEN p.precio ELSE df.precio_unitario END AS precio,
                         df.id_combo, cb.nombre_combo, df.cantidad, f.descuento, f.estatus
@@ -1409,6 +1410,7 @@ public function facturaConsultarMovil()
             if (!empty($facturas)) {
                 foreach ($facturas as &$factura) {
                     $factura['precio_convertido'] = $factura['precio'] * $tasa;
+                    $factura['precio_base_convertido'] = (float)$factura['precio_base'] * $tasa;
                 }
             }
             $facturas = $this->descifrarDatosCliente($facturas);

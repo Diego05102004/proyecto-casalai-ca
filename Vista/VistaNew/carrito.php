@@ -28,7 +28,12 @@ $pagina_actual = 'carrito';
 $titulo_pagina = 'Carrito de Compras';
 
 // Calcular precio del dólar
-$precioDolar = $data['monitors']['bcv']['price'] ?? 35.50;
+$precioDolar = (float)($data['monitors']['bcv']['price'] ?? 35.50);
+$subtotalCarritoUsd = array_sum(array_map(
+    static fn($carrito) => (float)($carrito['subtotal'] ?? 0),
+    is_array($carritos ?? null) ? $carritos : []
+));
+$subtotalCarritoBs = $subtotalCarritoUsd * $precioDolar;
 
 // Iniciar el buffer de contenido
 ob_start();
@@ -55,7 +60,7 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-calculator"></i></div>
                     <div class="card-content">
                         <h3>Subtotal</h3>
-                        <p class="card-value">$<?php echo number_format(array_sum(array_column($carritos ?? [], 'subtotal' ?? 0)), 2); ?></p>
+                        <p class="card-value"><?php echo number_format($subtotalCarritoBs, 2); ?> Bs.</p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -70,7 +75,7 @@ ob_start();
                     <div class="card-icon"><i class="fas fa-dollar-sign"></i></div>
                     <div class="card-content">
                         <h3>Total</h3>
-                        <p class="card-value">$<?php echo number_format(array_sum(array_column($carritos ?? [], 'subtotal' ?? 0)), 2); ?></p>
+                        <p class="card-value"><?php echo number_format($subtotalCarritoBs, 2); ?> Bs.</p>
                         <div class="progress-circle">
                             <svg viewBox="0 0 36 36" class="circular-chart">
                                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -140,7 +145,7 @@ ob_start();
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>$<?php echo number_format($carrito['precio'] * $precioDolar, 2); ?> BS</td>
+                                        <td><?php echo number_format((float)$carrito['precio'] * $precioDolar, 2); ?> Bs.</td>
                                         <td>
                                             <div class="quantity-control">
                                                 <button class="qty-btn" onclick="updateQuantity(<?php echo $carrito['id_carrito_detalle']; ?>, -<?php echo (int)$carrito['cantidad_combo']; ?>)">
@@ -153,7 +158,7 @@ ob_start();
                                                 </button>
                                             </div>
                                         </td>
-                                        <td>$<?php echo number_format($carrito['subtotal'] * $precioDolar, 2); ?> BS</td>
+                                        <td><?php echo number_format((float)$carrito['subtotal'] * $precioDolar, 2); ?> Bs.</td>
                                         <td>
                                             <button class="btn-action btn-delete" onclick="removeFromCart(<?php echo $carrito['id_carrito_detalle']; ?>)">
                                                 <i class="fas fa-trash"></i>
@@ -164,7 +169,7 @@ ob_start();
                                 <tr class="total-row">
                                     <td colspan="3" style="text-align: right; font-weight: 700; font-size: 1.1rem;">Total:</td>
                                     <td colspan="2" style="font-weight: 700; font-size: 1.3rem; color: #2196F3;">
-                                        $<?php echo number_format($total * $precioDolar, 2); ?> BS
+                                        <?php echo number_format($total * $precioDolar, 2); ?> Bs.
                                     </td>
                                 </tr>
                             <?php else: ?>
