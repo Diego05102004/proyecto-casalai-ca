@@ -786,7 +786,7 @@ INSERT INTO `tbl_orden_despachos` (`id_orden_despachos`, `id_factura`, `cliente`
 CREATE TABLE `tbl_productos` (
   `id_producto` int(11) NOT NULL,
   `serial` varchar(20) NOT NULL,
-  `nombre_producto` varchar(20) NOT NULL,
+  `nombre_producto` varchar(40) NOT NULL,
   `descripcion_producto` varchar(255) DEFAULT NULL,
   `id_modelo` int(11) DEFAULT NULL,
   `id_categoria` int(2) DEFAULT NULL,
