@@ -8,11 +8,13 @@ class RecepcionIAProxy
     private $estadoCircuitoPath;
     private $maxFallos = 3;
     private $enfriamientoSegundos = 120;
+    private $authToken;
 
     public function __construct($baseUrl = null, $estadoCircuitoPath = null)
     {
         $this->baseUrl = rtrim($baseUrl ?: (getenv('RECEPCION_IA_URL') ?: 'http://127.0.0.1:8000'), '/');
         $this->estadoCircuitoPath = $estadoCircuitoPath ?: sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'casalai-recepcion-ia-circuit.json';
+        $this->authToken = getenv('AUDITOR_RECEPCION_TOKEN') ?: '';
     }
 
     public function health()
@@ -71,6 +73,11 @@ class RecepcionIAProxy
         $codigoHttp = 0;
         $errorCurl = '';
         $intento = 0;
+
+        // Agregar header de autenticación si está disponible
+        if (!empty($this->authToken)) {
+            $headers[] = 'X-Auditor-Token: ' . $this->authToken;
+        }
 
         do {
             $intento++;
