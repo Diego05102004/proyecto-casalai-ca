@@ -15,9 +15,9 @@ def run_retraining():
 
     df = pd.read_csv(feedback_path)
     
-    # Verificar que haya suficientes registros (mínimo 10)
-    if len(df) < 10:
-        print(f"Solo hay {len(df)} registros de feedback. Se requieren al menos 10 para reentrenar.")
+    # Verificar que haya suficientes registros (mínimo 5)
+    if len(df) < 5:
+        print(f"Solo hay {len(df)} registros de feedback. Se requieren al menos 5 para reentrenar.")
         return
 
     print(f"Procesando {len(df)} registros de feedback para reentrenamiento...")
