@@ -872,7 +872,7 @@ CREATE TABLE `tbl_recepcion_productos` (
 --
 
 INSERT INTO `tbl_recepcion_productos` (`id_recepcion`, `id_proveedor`, `fecha`, `correlativo`, `estado`, `subtotal_factura`, `porcentaje_iva`, `monto_iva`, `total_factura`) VALUES
-(10, 2, '2025-07-22', '938210', 'habilitado', 2624.00, 16.00, 419.84, 3043.84),
+(10, 2, '2025-07-22', '938215', 'habilitado', 2624.00, 16.00, 419.84, 3043.84),
 (11, 1, '2025-07-27', '012537', 'habilitado', 160.00, 16.00, 25.60, 185.60);
 
 UPDATE tbl_combo_detalle cd
