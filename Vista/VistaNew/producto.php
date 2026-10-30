@@ -355,7 +355,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                                 <div class="form-group">
                                     <label for="productName">Nombre del Producto*</label>
                                     <input type="text" id="productName" name="nombre_producto" required 
-                                           placeholder="Ej: iPhone 15 Pro Max" maxlength="50">
+                                           placeholder="Ej: iPhone 15 Pro Max" maxlength="40">
                                 </div>
                                 
                                 <div class="form-group">

@@ -440,7 +440,7 @@ class AuditorRecepcion:
         Retorna probabilidad de que sea confiable (0.0 a 1.0).
         
         El modelo se entrena para predecir confiabilidad basándose únicamente en
-        la confianza OCR, ya que durante la extracción no tenemos ground_truth.
+        la confianza OCR.
         """
         if not self.modelo_ml:
             logger.warning("Modelo ML no disponible, retornando 0.0")

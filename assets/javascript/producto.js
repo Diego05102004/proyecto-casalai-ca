@@ -83,7 +83,7 @@ function soloTextoPermitido(e) {
 
 // Agregar después de la función soloTextoPermitido
 
-const regexNombreProducto = /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/;
+const regexNombreProducto = /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,40}$/;
 const regexDescripcionProducto = /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,\-\s\b]{2,50}$/;
 const regexSerialesProducto = /^[a-zA-Z0-9-]{1,20}$/;
 const regexPrecioProducto = /^\d+(\.\d{1,2})?$/;
@@ -743,9 +743,9 @@ $(document).ready(function () {
         if (value === '') {
             $(this).removeClass('is-valid').addClass('is-invalid');
             $("#snombre_producto").text('*El nombre del producto es obligatorio*');
-        } else if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,20}$/.test(value)) {
+        } else if (!/^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]{3,40}$/.test(value)) {
             $(this).removeClass('is-valid').addClass('is-invalid');
-            $("#snombre_producto").text('*Solo letras, de 3 a 20 caracteres*');
+            $("#snombre_producto").text('*Solo letras, de 3 a 40 caracteres*');
         } else {
             $(this).removeClass('is-invalid').addClass('is-valid');
             $("#snombre_producto").text('');

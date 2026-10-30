@@ -786,7 +786,7 @@ INSERT INTO `tbl_orden_despachos` (`id_orden_despachos`, `id_factura`, `cliente`
 CREATE TABLE `tbl_productos` (
   `id_producto` int(11) NOT NULL,
   `serial` varchar(20) NOT NULL,
-  `nombre_producto` varchar(20) NOT NULL,
+  `nombre_producto` varchar(40) NOT NULL,
   `descripcion_producto` varchar(255) DEFAULT NULL,
   `id_modelo` int(11) DEFAULT NULL,
   `id_categoria` int(2) DEFAULT NULL,
@@ -846,7 +846,8 @@ CREATE TABLE `tbl_proveedores` (
 INSERT INTO `tbl_proveedores` (`id_proveedor`, `nombre_proveedor`, `rif_proveedor`, `nombre_representante`, `rif_representante`, `correo_proveedor`, `direccion_proveedor`, `telefono_1`, `telefono_2`, `observacion`, `estado`) VALUES
 (1, 'Grupo PC Depot', 'V-12332125-7', 'Brayan Mendoza', 'J-98778954-7', 'ejemplo@gmail.com', 'calle 32 con carrera 18 y 19', '0412-258-8989', '0424-654-4554', 'Buena calidad de productos', 'habilitado'),
 (2, 'DISOFI', 'V-12878897-7', 'Paula Rivero', 'J-97781346-2', 'paula@gmail.com', 'AV. Lara, Calle Los Mangos', '0412-554-0466', '0424-181-4733', 'Envio gratis', 'habilitado'),
-(3, 'HP Paper', 'V-12354557-7', 'Simón Freitez', 'J-93423334-2', 'simon@gmail.com', 'AV. Los Leones, Trinitarias', '0424-545-9876', '0424-889-4013', 'Calidad, precio', 'habilitado');
+(3, 'HP Paper', 'V-12354557-7', 'Simón Freitez', 'J-93423334-2', 'simon@gmail.com', 'AV. Los Leones, Trinitarias', '0424-545-9876', '0424-889-4013', 'Calidad, precio', 'habilitado'),
+(4, 'Amazon Business', 'J-00234578-2', 'Diego Lopez', 'J-93423334-2', 'amazon@gmail.com', 'EE. UU.', '0424-511-4156', '0424-748-9837', 'Se consigue de todo', 'habilitado');
 
 -- --------------------------------------------------------
 
@@ -871,7 +872,7 @@ CREATE TABLE `tbl_recepcion_productos` (
 --
 
 INSERT INTO `tbl_recepcion_productos` (`id_recepcion`, `id_proveedor`, `fecha`, `correlativo`, `estado`, `subtotal_factura`, `porcentaje_iva`, `monto_iva`, `total_factura`) VALUES
-(10, 2, '2025-07-22', '938210', 'habilitado', 2624.00, 16.00, 419.84, 3043.84),
+(10, 2, '2025-07-22', '938215', 'habilitado', 2624.00, 16.00, 419.84, 3043.84),
 (11, 1, '2025-07-27', '012537', 'habilitado', 160.00, 16.00, 25.60, 185.60);
 
 UPDATE tbl_combo_detalle cd
