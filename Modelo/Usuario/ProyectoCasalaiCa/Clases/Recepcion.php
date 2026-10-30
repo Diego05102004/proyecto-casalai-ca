@@ -1058,8 +1058,8 @@ class Recepcion extends BD{
         $registrosRestantes = count($datos);
         error_log("Eliminado registro de feedback para recepción ID: $idRecepcion. Registros restantes: $registrosRestantes");
         
-        // Si hay más de 10 registros, reentrenar el modelo
-        if ($registrosRestantes >= 10) {
+        // Si hay más de 5 registros, reentrenar el modelo
+        if ($registrosRestantes >= 5) {
             $this->reentrenarModelo();
         }
         
