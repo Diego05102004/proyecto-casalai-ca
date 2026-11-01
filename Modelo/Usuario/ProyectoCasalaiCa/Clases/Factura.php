@@ -607,18 +607,7 @@ class Factura extends BD
                 return ['resultado' => 'error', 'mensaje' => 'No hay facturas registradas.'];
             }
             
-            try {
-                $stmt = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
-                $stmt->execute();
-                
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($result && (time() - strtotime($result['fecha'])) < 86400) {
-                    $tasa = floatval($result['precio']);
-                }
-            } catch (PDOException $e) {
-                error_log('Error al obtener cache del dólar: ' . $e->getMessage());
-            }
+            $tasa = (new DolarService())->obtenerPrecioDolar();
 
             // Obtener los estatus y observaciones desde tbl_detalles_pago
             $stmtPagos = $pdo->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
@@ -851,18 +840,7 @@ class Factura extends BD
                 return ['resultado' => 'error', 'mensaje' => 'No hay facturas registradas para esta cédula.'];
             }
             
-            try {
-                $stmt = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
-                $stmt->execute();
-                
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($result && (time() - strtotime($result['fecha'])) < 86400) {
-                    $tasa = floatval($result['precio']);
-                }
-            } catch (PDOException $e) {
-                error_log('Error al obtener cache del dólar: ' . $e->getMessage());
-            }
+            $tasa = (new DolarService())->obtenerPrecioDolar();
             
             // Obtener los estatus y observaciones desde tbl_detalles_pago
             $stmtPagos = $pdo->prepare("SELECT id_factura, estatus, observaciones FROM tbl_detalles_pago");
@@ -988,9 +966,6 @@ class Factura extends BD
                     </form>';
                 }
 
-                // Definir tasa de conversión (1.0 por defecto para mantener los valores originales)
-                $tasa = 1.0;
-                
                 $contenido = '<div class="w-100">' . $datosCliente . $mensajePago;
                 $contenido .= '<div class="table-responsive w-100">';
                 $contenido .= '<table class="table table-bordered w-100">';

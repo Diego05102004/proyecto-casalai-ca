@@ -200,7 +200,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     <article class="analytics-kpi"><span>Punto de reorden</span><strong data-metric="punto_reorden">—</strong><small>stock mínimo configurado</small></article>
                     <article class="analytics-kpi"><span>Compra sugerida</span><strong data-metric="cantidad_sugerida_compra">—</strong><small>no descuenta órdenes abiertas</small></article>
                     <article class="analytics-kpi"><span>Rotación proyectada</span><strong data-metric="rotacion_proyectada">—</strong><small>veces en el horizonte</small></article>
-                    <article class="analytics-kpi"><span>Explicaciones</span><strong data-metric="explicaciones">—</strong><small>del modelo</small></article>
+                    <!-- <article class="analytics-kpi"><span>Explicaciones</span><strong data-metric="explicaciones">—</strong><small>del modelo</small></article> -->
                 </div>
 
                 <div class="analytics-chart-card">
@@ -1946,6 +1946,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         analyticsKpis.querySelector('[data-metric="rotacion_proyectada"]').textContent = displayMetric(metrics.rotacion_proyectada, 'x');
                         
                         // Mostrar explicaciones de manera especial
+                        /*
                         const explicacionesElement = analyticsKpis.querySelector('[data-metric="explicaciones"]');
                         if (metrics.explicaciones && typeof metrics.explicaciones === 'object') {
                             // Crear un tooltip o texto expandible con las explicaciones
@@ -1956,6 +1957,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         } else {
                             explicacionesElement.textContent = 'No disponible';
                         }
+                            */
                         renderAnalyticsChart(result);
                         renderAnalyticsRecommendations(result.recomendaciones || []);
 

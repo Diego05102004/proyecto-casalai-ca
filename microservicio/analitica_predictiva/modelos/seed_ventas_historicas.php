@@ -52,17 +52,30 @@ try {
     echo "Clientes activos: " . count($clientes) . "\n";
     echo "Productos activos: " . count($productos) . "\n\n";
 
+    if (count($clientes) === 0) {
+        die("ERROR: No hay clientes activos en la base de datos.\n");
+    }
+
+    if (count($productos) < 3) {
+        die("ERROR: Se necesitan al menos 3 productos habilitados para generar productos populares, congelados y normales.\n");
+    }
+
+    // Mantener los cambios de inventario y ventas dentro de una sola transacción.
+    $pdo->beginTransaction();
+
     // Simular diferentes escenarios de rotación de productos
     // Productos populares: alta frecuencia de ventas en todo el periodo
-    // Productos congelados: ventas hace 60+ días, nada recientemente
+    // Productos congelados: solo ventas históricas, nada en los últimos 30 días
     // Productos normales: ventas consistentes pero moderadas
     
     $productosPopulares = [];
     $productosCongelados = [];
     $productosNormales = [];
+    $productosPorId = [];
     
     foreach ($productos as $idx => $producto) {
-        $idProducto = $producto['id_producto'];
+        $idProducto = (int)$producto['id_producto'];
+        $productosPorId[$idProducto] = $producto;
         
         // Asignar roles (20% populares, 20% congelados, 60% normales)
         if ($idx < count($productos) * 0.2) {
@@ -108,9 +121,6 @@ try {
     echo "Rango de fechas: " . $fechaInicio->format('Y-m-d') . " a " . $fechaHoy->format('Y-m-d') . "\n";
     echo "Generando " . NUM_VENTAS . " facturas...\n\n";
 
-    // Iniciar transacción
-    $pdo->beginTransaction();
-
     // Preparar statements
     $stmtFactura = $pdo->prepare("
         INSERT INTO tbl_facturas (id_factura, fecha, cliente, descuento, estatus)
@@ -122,17 +132,23 @@ try {
         VALUES (?, ?, ?, ?, ?)
     ");
 
-    $stmtUltimoIdFactura = $pdo->prepare("SELECT MAX(id_factura) FROM tbl_facturas");
-    $stmtUltimoIdDetalle = $pdo->prepare("SELECT MAX(id) FROM tbl_factura_detalle");
-
     $facturasCreadas = 0;
     $detallesCreados = 0;
+    $facturasComboForzado = count($productosCongelados) * 2;
+    $fechaComboForzado = clone $fechaHoy;
+    $fechaComboForzado->sub(new DateInterval('P45D'));
 
     // Generar facturas
     for ($i = 1; $i <= NUM_VENTAS; $i++) {
-        // Generar fecha aleatoria dentro del rango
-        $timestampAleatorio = mt_rand($fechaInicio->getTimestamp(), $fechaHoy->getTimestamp());
-        $fechaVenta = date('Y-m-d', $timestampAleatorio);
+        $esFacturaComboForzado = $i <= $facturasComboForzado;
+        if ($esFacturaComboForzado) {
+            $indiceCongelado = intdiv($i - 1, 2);
+            $fechaVenta = $fechaComboForzado->format('Y-m-d');
+        } else {
+            // Generar fecha aleatoria dentro del rango
+            $timestampAleatorio = mt_rand($fechaInicio->getTimestamp(), $fechaHoy->getTimestamp());
+            $fechaVenta = date('Y-m-d', $timestampAleatorio);
+        }
         
         // Verificar si la fecha es reciente (últimos 30 días)
         $fechaVentaDT = new DateTime($fechaVenta);
@@ -146,10 +162,7 @@ try {
         // Generar descuento aleatorio (0-20%)
         $descuento = mt_rand(0, 20);
 
-        // Obtener el siguiente ID de factura
-        $stmtUltimoIdFactura->execute();
-        $ultimoIdFactura = $stmtUltimoIdFactura->fetchColumn();
-        $nuevoIdFactura = $ultimoIdFactura + 1;
+        $nuevoIdFactura = ++$ultimoIdFactura;
 
         // Insertar factura
         $stmtFactura->execute([
@@ -163,13 +176,20 @@ try {
 
         // Generar detalles de la factura (productos aleatorios con lógica de rotación)
         $numProductosFactura = mt_rand(PRODUCTOS_POR_FACTURA_MIN, PRODUCTOS_POR_FACTURA_MAX);
+        if ($esFacturaComboForzado) {
+            $numProductosFactura = max(2, $numProductosFactura);
+        }
         $productosUsados = [];
 
         for ($j = 0; $j < $numProductosFactura; $j++) {
             // Seleccionar producto según el escenario de rotación
             $idProducto;
             
-            if ($esFechaReciente) {
+            if ($esFacturaComboForzado && $j === 0) {
+                $idProducto = (int)$productosCongelados[$indiceCongelado];
+            } elseif ($esFacturaComboForzado && $j === 1) {
+                $idProducto = (int)$productosPopulares[$indiceCongelado % count($productosPopulares)];
+            } elseif ($esFechaReciente) {
                 // En fechas recientes: 
                 // - 70% probabilidad de productos populares
                 // - 30% probabilidad de productos normales
@@ -183,11 +203,11 @@ try {
                 // En fechas antiguas (antes de 30 días):
                 // - 40% probabilidad de productos populares
                 // - 40% probabilidad de productos normales
-                // - 20% probabilidad de productos congelados (para que tengan historial)
-                $rand = mt_rand(1, 10);
-                if ($rand <= 4 && !empty($productosPopulares)) {
+                // - 3% probabilidad de productos congelados para mantener baja su rotación
+                $rand = mt_rand(1, 100);
+                if ($rand <= 40 && !empty($productosPopulares)) {
                     $idProducto = $productosPopulares[array_rand($productosPopulares)];
-                } elseif ($rand <= 8) {
+                } elseif ($rand <= 97) {
                     $idProducto = $productosNormales[array_rand($productosNormales)];
                 } else {
                     $idProducto = $productosCongelados[array_rand($productosCongelados)];
@@ -205,13 +225,10 @@ try {
             // Generar cantidad aleatoria (1-5)
             $cantidad = mt_rand(1, 5);
 
-            // Usar el precio del producto (convertir de float a int según la tabla)
-            $precioUnitario = (int)$producto['precio'];
+            // Usar el precio correspondiente al producto seleccionado.
+            $precioUnitario = $productosPorId[$idProducto]['precio'];
 
-            // Obtener el siguiente ID de detalle
-            $stmtUltimoIdDetalle->execute();
-            $ultimoIdDetalle = $stmtUltimoIdDetalle->fetchColumn();
-            $nuevoIdDetalle = $ultimoIdDetalle + 1;
+            $nuevoIdDetalle = ++$ultimoIdDetalle;
 
             // Insertar detalle
             $stmtDetalle->execute([
