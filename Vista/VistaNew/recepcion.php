@@ -227,12 +227,12 @@ ob_start();
                             </div>
                             <div class="form-group">
                                 <label>Costo Unitario*</label>
-                                <input type="text" name="costo[]" placeholder="0.00" class="input-with-icon input-testnum costo-input" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <input type="text" name="costo[]" placeholder="0.00" class="input-with-icon input-testnum costo-input" maxlength="12" oninput="limitarDigitos(this, 9, true); limitarDosDecimales(this); calcularSubtotal(this);">
                                 <span class="span-value scosto-msg"></span>
                             </div>
                             <div class="form-group">
                                 <label>Cantidad*</label>
-                                <input type="text" name="cantidad[]" placeholder="0" class="input-with-icon input-testnum cantidad-input" maxlength="9" oninput="calcularSubtotal(this)">
+                                <input type="text" name="cantidad[]" placeholder="0" class="input-with-icon input-testnum cantidad-input" maxlength="9" oninput="limitarDigitos(this, 9); calcularSubtotal(this)">
                                 <span class="span-value scantidad-msg"></span>
                             </div>
                             <div class="form-group subtotal-group">
@@ -252,7 +252,7 @@ ob_start();
                             </div>
                             <div class="resumen-factura-item resumen-iva-tasa">
                                 <label for="porcentajeIvaRecepcion">IVA (%)</label>
-                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" class="input-with-icon input-testnum costo-input" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" class="input-with-icon input-testnum costo-input" maxlength="5" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
                                 <span class="span-value" id="sporcentajeIva"></span>
                             </div>
                             <div class="resumen-factura-item">

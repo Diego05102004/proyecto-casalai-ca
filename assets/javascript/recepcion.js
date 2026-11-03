@@ -199,6 +199,26 @@ function limitarDosDecimales(input) {
     }
 }
 
+function limitarDigitos(input, maxDigitos, permitirDecimales = false) {
+    let digitosEnteros = 0;
+    let despuesDelSeparadorDecimal = false;
+    input.value = input.value.replace(/[0-9.,]/g, caracter => {
+        if (permitirDecimales && (caracter === '.' || caracter === ',')) {
+            despuesDelSeparadorDecimal = true;
+            return caracter;
+        }
+
+        if (!despuesDelSeparadorDecimal && digitosEnteros >= maxDigitos) {
+            return '';
+        }
+
+        if (!despuesDelSeparadorDecimal) {
+            digitosEnteros++;
+        }
+        return caracter;
+    });
+}
+
 function space(str) {
     if (!str) return '';
     return str.replace(/\s{2,}/g, ' ');
@@ -248,11 +268,13 @@ function validarEnvioRecepcion() {
         }
 
         let $costoInput =$(this).find('.costo-input');
+        limitarDigitos($costoInput[0], 9, true);
         if (validarKeyUpDecimal($costoInput,$(this).find('.scosto-msg'), "*Costo inválido*") == 0) {
             esValido = false;
         }
 
         let $cantInput =$(this).find('.cantidad-input');
+        limitarDigitos($cantInput[0], 9);
         if (validarKeyUpEntero($cantInput,$(this).find('.scantidad-msg'), "*Cantidad inválida*") == 0) {
             esValido = false;
         }
@@ -1411,10 +1433,11 @@ $(document).ready(function() {
     });
 
     // Delegación de eventos para validaciones
-    $(document).on('keypress', '.costo-input', function(e) {
+    $(document).on('keypress', '.costo-input:not(#porcentajeIvaRecepcion)', function(e) {
         validarKeyPressDecimal(e);
     });
-    $(document).on('keyup', '.costo-input', function() {
+    $(document).on('keyup', '.costo-input:not(#porcentajeIvaRecepcion)', function() {
+        limitarDigitos(this, 9, true);
         validarKeyUpDecimal($(this),$(this).siblings('.scosto-msg'), "*Costo inválido (Ej: 10.50)*");
         evaluarDiscrepanciasInteractivas();
     });
@@ -1423,6 +1446,7 @@ $(document).ready(function() {
         validarKeyPressEntero(e);
     });
     $(document).on('keyup', '.cantidad-input', function() {
+        limitarDigitos(this, 9);
         validarKeyUpEntero($(this),$(this).siblings('.scantidad-msg'), "*Debe ser un entero mayor a 0*");
         evaluarDiscrepanciasInteractivas();
     });
