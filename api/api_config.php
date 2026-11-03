@@ -5,7 +5,8 @@
  */
 
 // Detectar entorno
-$env = getenv('APP_ENV') ?: 'development';
+$host = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
+$env = getenv('APP_ENV') ?: ($host === 'casalai.alwaysdata.net' ? 'production' : 'development');
 
 // Configuración de URLs según entorno
 $config = [
@@ -16,10 +17,10 @@ $config = [
         'images_url' => 'http://localhost/proyecto-casalai-ca/assets/img',
     ],
     'production' => [
-        'base_url' => 'https://tu-dominio.com',
-        'api_base_url' => 'https://tu-dominio.com/api',
-        'assets_url' => 'https://tu-dominio.com/assets',
-        'images_url' => 'https://tu-dominio.com/assets/img',
+        'base_url' => 'https://casalai.alwaysdata.net',
+        'api_base_url' => 'https://casalai.alwaysdata.net/api',
+        'assets_url' => 'https://casalai.alwaysdata.net/assets',
+        'images_url' => 'https://casalai.alwaysdata.net/assets/img',
     ]
 ];
 
@@ -59,23 +60,8 @@ function getImagesUrl() {
 }
 
 function getCurrentConfig() {
-    $env = getenv('APP_ENV') ?: 'development';
-    $configs = [
-        'development' => [
-            'base_url' => 'http://localhost/proyecto-casalai-ca',
-            'api_base_url' => 'http://localhost/proyecto-casalai-ca/api',
-            'assets_url' => 'http://localhost/proyecto-casalai-ca/assets',
-            'images_url' => 'http://localhost/proyecto-casalai-ca/assets/img',
-        ],
-        'production' => [
-            'base_url' => 'https://tu-dominio.com',
-            'api_base_url' => 'https://tu-dominio.com/api',
-            'assets_url' => 'https://tu-dominio.com/assets',
-            'images_url' => 'https://tu-dominio.com/assets/img',
-        ],
-    ];
-
-    return $configs[$env] ?? $configs['development'];
+    global $config, $env;
+    return $config[$env] ?? $config['development'];
 }
 
 /**
@@ -84,15 +70,27 @@ function getCurrentConfig() {
  * @return string URL completa de la imagen
  */
 function getImageUrl($imagePath) {
-    if (empty($imagePath)) {
+    if (!is_string($imagePath) || trim($imagePath) === '') {
         return null;
     }
-    
-    // Normalizar ruta de imagen
-    $imagePath = str_replace('\\', '/', $imagePath);
-    $imagePath = str_replace('assets/img/productos/', '', $imagePath);
-    
-    return getImagesUrl() . '/productos/' . $imagePath;
+
+    $imagePath = str_replace('\\', '/', trim($imagePath));
+    if (preg_match('#^https?://#i', $imagePath)) {
+        return $imagePath;
+    }
+
+    $imagePath = ltrim($imagePath, '/');
+    if (strpos($imagePath, 'assets/') === 0) {
+        $relativePath = $imagePath;
+    } elseif (strpos($imagePath, 'img/') === 0) {
+        $relativePath = 'assets/' . $imagePath;
+    } elseif (strpos($imagePath, 'productos/') === 0) {
+        $relativePath = 'assets/img/' . $imagePath;
+    } else {
+        $relativePath = 'assets/img/productos/' . $imagePath;
+    }
+
+    return rtrim(getBaseUrl(), '/') . '/' . $relativePath;
 }
 
 /**

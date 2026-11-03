@@ -1289,9 +1289,7 @@ class Productos extends BD{
                 );
                 $imagen = $producto['imagen'] ?? null;
                 if ($imagen) {
-                    $imagen = str_replace('\\', '/', $imagen);
-                    $imagen = str_replace('assets/img/productos/', '', $imagen);
-                    $producto['imagen'] = $this->getBaseUrl() . "/assets/img/productos/$imagen";
+                    $producto['imagen'] = \getImageUrl($imagen);
                 }
             }
 
@@ -1901,10 +1899,6 @@ class Productos extends BD{
 
     private function formatearProductoMovil(PDO $pdo, array $row, $incluirCaracteristicas = false) {
         $imagen = $row['imagen'] ?? null;
-        if ($imagen) {
-            $imagen = str_replace('\\', '/', $imagen);
-            $imagen = str_replace('assets/img/productos/', '', $imagen);
-        }
 
         $producto = [
             'id' => $row['id_producto'],
@@ -1924,7 +1918,7 @@ class Productos extends BD{
             'stock_minimo' => intval($row['stock_minimo']),
             'stock_maximo' => intval($row['stock_maximo']),
             'garantia' => $row['clausula_garantia'],
-            'imagen' => $imagen ? $this->getBaseUrl() . "/assets/img/productos/$imagen" : null
+            'imagen' => \getImageUrl($imagen)
         ];
 
         if ($incluirCaracteristicas) {
@@ -2091,20 +2085,4 @@ class Productos extends BD{
         ];
     }
     
-    /**
-     * Obtiene la URL base configurada para la API
-     * @return string URL base
-     */
-    private function getBaseUrl() {
-        // Intentar incluir la configuración centralizada
-        $configFile = __DIR__ . '/../../../../api/api_config.php';
-        if (file_exists($configFile)) {
-            require_once $configFile;
-            if (function_exists('getBaseUrl')) {
-                return getBaseUrl();
-            }
-        }
-        // Valor por defecto para desarrollo
-        return 'http://localhost/proyecto-casalai-ca';
-    }
 }

@@ -1,2 +1,7 @@
-# Configuracion local de reCAPTCHA para Apache/XAMPP.
-SetEnv RECAPTCHA_SECRET_KEY "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl"
+# API secrets are configured in Config/.env or in the server environment.
+# Keep Config/.env out of Git and deny direct HTTP access to it.
+Options -Indexes
+
+<FilesMatch "^\.env$">
+    Require all denied
+</FilesMatch>
