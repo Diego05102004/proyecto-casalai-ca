@@ -931,6 +931,7 @@ $(document).ready(function() {
     // Configuración del Asistente IA
     const asistenteIA = new AsistenteRecepcionIA({
         apiUrl: 'http://localhost:8000',
+        authToken: 'V2ULrTMDqWierxYc7i71JKpewJozqORhdI_JbmbsTVo',
         debug: true,
         selectores: {
             inputImagen: '#foto-factura-ia',

@@ -307,7 +307,7 @@ function obtenerAsistenteIA() {
         try {
             asistenteRecepcionIA = new AsistenteRecepcionIA({
                 apiUrl: 'http://127.0.0.1:8000',
-                authToken: 'bSQT-fp7TcQXwOgJxpZdyPpwZmCdlPQgawKXN56cqAs',
+                authToken: 'V2ULrTMDqWierxYc7i71JKpewJozqORhdI_JbmbsTVo',
                 debug: true,
                 selectores: { alertas: '#estadoIARecepcion' }
             });

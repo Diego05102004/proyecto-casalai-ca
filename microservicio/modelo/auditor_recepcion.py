@@ -673,6 +673,20 @@ class AuditorRecepcion:
                 if producto_catalogo:
                     logger.info(f"  ✓ Encontrado en catálogo por nombre+modelo+marca")
             
+            # Estrategia 5: Si el modelo contiene el nombre de otro producto, intentar separar
+            if not producto_catalogo and producto.modelo:
+                # Buscar si alguna parte del modelo coincide con un producto del catálogo
+                logger.info(f"  Estrategia 5: Buscando si el modelo contiene un producto del catálogo: '{producto.modelo}'")
+                # Dividir el modelo en palabras y buscar coincidencias parciales
+                palabras_modelo = producto.modelo.split()
+                for i in range(len(palabras_modelo), 2, -1):  # Probar desde 4 palabras hasta 3
+                    parte_modelo = ' '.join(palabras_modelo[:i])
+                    logger.info(f"    Buscando por parte del modelo: '{parte_modelo}'")
+                    producto_catalogo = self.adaptador_bd.buscar_producto_por_nombre(parte_modelo)
+                    if producto_catalogo:
+                        logger.info(f"  ✓ Encontrado en catálogo por parte del modelo: '{parte_modelo}'")
+                        break
+            
             if producto_catalogo:
                 # Producto encontrado en catálogo: usar datos del catálogo
                 producto.nombre = producto_catalogo.nombre
@@ -710,6 +724,9 @@ class AuditorRecepcion:
             r'\s*Importaci[ée]n y Suministros[^\n]*',
             r'\s*Equipos de Oficina[^\n]*',
             r'\s*CasaLa[^\n]*',
+            r'\s*pedido\s*',  # Palabra "pedido" basura
+            r'\s*Pedido\s*',
+            r'\s*Canon \d+ \d+\s*',  # Números aleatorios tipo Canon 48 00
         ]
         
         for patron in patrones_basura:
