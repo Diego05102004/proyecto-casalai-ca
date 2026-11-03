@@ -21,6 +21,7 @@ namespace Usuario\ProyectoCasalaiCa\Config;
 class Encryption {
     private $rsaPublicKey;
     private $rsaPrivateKey;
+    private $rsaLegacyPrivateKeys = [];
     private $aesMethod = 'AES-256-CBC';
     
     /**
@@ -35,61 +36,63 @@ class Encryption {
      * Carga claves RSA desde variables de entorno o directamente del archivo .env
      * @throws \RuntimeException si las claves no están configuradas
      */
-    private function loadRSAKeys() {
-        // Intentar cargar desde variables de entorno primero
-        $publicKey = getenv('RSA_PUBLIC_KEY');
-        $privateKey = getenv('RSA_PRIVATE_KEY');
-        
-        error_log("[ENCRYPTION] Cargando claves RSA desde variables de entorno...");
-        error_log("[ENCRYPTION] Clave pública desde getenv: " . ($publicKey !== false ? "YES" : "NO"));
-        error_log("[ENCRYPTION] Clave privada desde getenv: " . ($privateKey !== false ? "YES" : "NO"));
-        
-        // Fallback: Si no están en variables de entorno, cargar directamente del archivo .env
-        if ($publicKey === false || $privateKey === false) {
-            error_log("[ENCRYPTION] Variables de entorno no disponibles, cargando desde archivo .env...");
-            
-            $envPath = dirname(__DIR__, 2) . '/.env';
-            if (file_exists($envPath)) {
-                $content = file_get_contents($envPath);
-                
-                // Extraer claves RSA del archivo .env
-                preg_match('/RSA_PUBLIC_KEY="(.+?)"/s', $content, $publicMatch);
-                preg_match('/RSA_PRIVATE_KEY="(.+?)"/s', $content, $privateMatch);
-                
-                if ($publicMatch && $privateMatch) {
-                    $publicKey = $publicMatch[1];
-                    $privateKey = $privateMatch[1];
+    private function readConfiguredValue($name, $envContents) {
+        $value = getenv($name);
+        if ($value !== false && trim($value) !== '') {
+            return str_replace('\\n', "\n", trim($value, " \t\n\r\0\x0B\"'"));
+        }
 
-                    error_log("[ENCRYPTION] Claves cargadas desde archivo .env exitosamente");
-                    error_log("[ENCRYPTION] Longitud clave pública: " . strlen($publicKey));
-                    error_log("[ENCRYPTION] Longitud clave privada: " . strlen($privateKey));
-                } else {
-                    error_log("[ENCRYPTION] No se encontraron claves RSA en archivo .env");
-                }
-            } else {
-                error_log("[ENCRYPTION] Archivo .env no encontrado en: $envPath");
-            }
+        $pattern = '/^' . preg_quote($name, '/') . '="(.*?)"\s*$/ms';
+        if (preg_match($pattern, $envContents, $matches)) {
+            return $matches[1];
         }
-        
-        if ($publicKey === false || $privateKey === false) {
+
+        $pattern = '/^' . preg_quote($name, '/') . '=([^\r\n#]*)$/m';
+        if (preg_match($pattern, $envContents, $matches)) {
+            return trim($matches[1], " \t\"'");
+        }
+
+        return '';
+    }
+
+    private function loadRSAKeys() {
+        $envPath = __DIR__ . '/.env';
+        $envContents = is_file($envPath) ? file_get_contents($envPath) : '';
+        if ($envContents === false) {
+            throw new \RuntimeException('No se pudo leer la configuración de claves RSA de la API.');
+        }
+
+        $publicKey = $this->readConfiguredValue('RSA_PUBLIC_KEY', $envContents);
+        $privateKey = $this->readConfiguredValue('RSA_PRIVATE_KEY', $envContents);
+        $legacyPrivateKey = $this->readConfiguredValue('RSA_LEGACY_PRIVATE_KEY', $envContents);
+
+        if ($publicKey === '' || $privateKey === '') {
             throw new \RuntimeException(
-                'Las claves RSA no están configuradas en variables de entorno ni en el archivo .env. ' .
-                'Configure RSA_PUBLIC_KEY y RSA_PRIVATE_KEY en el archivo .env'
+                'Configure RSA_PUBLIC_KEY y RSA_PRIVATE_KEY en api/Config/.env o en el entorno del servidor.'
             );
         }
-        
-        // Validar formato de claves (PEM)
-        if (strpos($publicKey, '-----BEGIN PUBLIC KEY-----') === false || 
-            strpos($privateKey, '-----BEGIN PRIVATE KEY-----') === false) {
+
+        $privateResource = openssl_pkey_get_private($privateKey);
+        $privateDetails = $privateResource ? openssl_pkey_get_details($privateResource) : false;
+        $normalizedPublicKey = preg_replace('/\s+/', '', $publicKey);
+        $derivedPublicKey = is_array($privateDetails)
+            ? preg_replace('/\s+/', '', $privateDetails['key'] ?? '')
+            : '';
+
+        if (!$privateResource || !openssl_pkey_get_public($publicKey) || $normalizedPublicKey !== $derivedPublicKey) {
             throw new \RuntimeException(
-                'Las claves RSA no tienen formato PEM válido. ' .
-                'Asegúrese de incluir los encabezados -----BEGIN/END PUBLIC/PRIVATE KEY-----'
+                'RSA_PUBLIC_KEY y RSA_PRIVATE_KEY deben ser un par PEM válido en api/Config/.env.'
             );
         }
-        
+
+        if ($legacyPrivateKey !== '' && !openssl_pkey_get_private($legacyPrivateKey)) {
+            throw new \RuntimeException('RSA_LEGACY_PRIVATE_KEY no contiene una clave PEM válida.');
+        }
+
         $this->rsaPublicKey = $publicKey;
         $this->rsaPrivateKey = $privateKey;
-        
+        $this->rsaLegacyPrivateKeys = $legacyPrivateKey === '' ? [] : [$legacyPrivateKey];
+
         error_log("[ENCRYPTION] Claves RSA cargadas exitosamente");
     }
     
@@ -278,28 +281,30 @@ class Encryption {
             OPENSSL_PKCS1_OAEP_PADDING,   // OAEP (node-forge default)
         ];
 
-        foreach ($paddingMethods as $padding) {
-            try {
-                $decrypted = '';
-                $key = openssl_pkey_get_private($this->rsaPrivateKey);
-                
-                if ($key) {
-                    if (openssl_private_decrypt($encryptedAesKey, $decrypted, $key, $padding)) {
-                        error_log("[ENCRYPTION] Descifrado RSA exitoso con padding: " . $padding);
-                        
-                        if (!$requireAesKey || strlen($decrypted) === 32) {
-                            return $decrypted;
+        $privateKeys = array_merge([$this->rsaPrivateKey], $this->rsaLegacyPrivateKeys);
+        foreach ($privateKeys as $privateKey) {
+            foreach ($paddingMethods as $padding) {
+                try {
+                    $decrypted = '';
+                    $key = openssl_pkey_get_private($privateKey);
+
+                    if ($key) {
+                        if (openssl_private_decrypt($encryptedAesKey, $decrypted, $key, $padding)) {
+                            error_log("[ENCRYPTION] Descifrado RSA exitoso con padding: " . $padding);
+
+                            if (!$requireAesKey || strlen($decrypted) === 32) {
+                                return $decrypted;
+                            } else {
+                                error_log("[ENCRYPTION] Longitud incorrecta: " . strlen($decrypted) . " (esperado 32)");
+                            }
                         } else {
-                            error_log("[ENCRYPTION] Longitud incorrecta: " . strlen($decrypted) . " (esperado 32)");
+                            error_log("[ENCRYPTION] Descifrado RSA falló con padding " . $padding . ": " . openssl_error_string());
                         }
-                    } else {
-                        error_log("[ENCRYPTION] Descifrado RSA falló con padding " . $padding . ": " . openssl_error_string());
+                        // openssl_free_key ya no es necesario en PHP 8+.
                     }
-                    // openssl_free_key ya no es necesario en PHP 8+
+                } catch (\Throwable $e) {
+                    error_log("[ENCRYPTION] Excepción con padding " . $padding . ": " . $e->getMessage());
                 }
-            } catch (\Throwable $e) {
-                error_log("[ENCRYPTION] Excepción con padding " . $padding . ": " . $e->getMessage());
-                // Try the next padding method
             }
         }
 

@@ -18,15 +18,14 @@ error_log("[LOGIN] Archivos requeridos cargados exitosamente");
 
 // Configure RECAPTCHA_SECRET_KEY in the Apache/PHP environment.
 const RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
-const RECAPTCHA_ALLOWED_HOSTNAMES = ['localhost', '127.0.0.1'];
+const RECAPTCHA_ALLOWED_HOSTNAMES = ['casalai.alwaysdata.net'];
 
 /**
  * Función para verificar el token de reCAPTCHA mediante cURL
  */
 function validarReCaptcha($token) {
     // La clave privada solo debe existir en la configuración del servidor.
-    $secretKey = getenv('RECAPTCHA_SECRET_KEY') ?:
-                 ($_SERVER['RECAPTCHA_SECRET_KEY'] ?? '');
+    $secretKey = apiEnvironmentValue('RECAPTCHA_SECRET_KEY');
 
     if (!$secretKey) {
         return ['success' => false, 'error' => 'RECAPTCHA_SECRET_KEY no está configurada'];

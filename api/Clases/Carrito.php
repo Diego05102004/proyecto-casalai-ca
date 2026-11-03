@@ -188,10 +188,11 @@ class Carrito
                  FOR UPDATE"
             );
             $productStatement->execute([':id_producto' => $productId]);
-            $stock = $productStatement->fetchColumn();
-            if ($stock === false) {
+            $product = $productStatement->fetch(PDO::FETCH_ASSOC);
+            if ($product === false) {
                 throw new DomainException('Uno de los productos ya no está disponible.', 404);
             }
+            $stock = (int)$product['stock'];
 
             $existingCondition = $originCombo === null ? 'id_combo IS NULL' : 'id_combo = :id_combo';
             $existingStatement = $pdo->prepare(
@@ -573,6 +574,10 @@ class Carrito
         );
         $itemsStatement->execute([':id_carrito' => $cartId]);
         $items = $itemsStatement->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($items as &$item) {
+            $item['image'] = \getImageUrl($item['image'] ?? null);
+        }
+        unset($item);
 
         $total = array_reduce(
             $items,

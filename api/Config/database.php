@@ -1,19 +1,19 @@
 <?php
 // Base de Datos Principal "casalai"
 define('DB_PRINCIPAL', [
-    'host' => 'localhost',
+    'host' => 'mysql-casalai.alwaysdata.net',
     'dbname' => 'casalai_principal',
-    'user' => 'root',
-    'pass' => '',
+    'user' => 'casalai',
+    'pass' => 'Diego.10',
     'charset' => 'utf8'
 ]);
 
 // Base de Datos Secundaria "seguridadlai"
 define('DB_SEGURIDAD', [
-    'host' => 'localhost',
+    'host' => 'mysql-casalai.alwaysdata.net',
     'dbname' => 'casalai_seguridad',
-    'user' => 'root',
-    'pass' => '',
+    'user' => 'casalai',
+    'pass' => 'Diego.10',
     'charset' => 'utf8'
 ]);
 

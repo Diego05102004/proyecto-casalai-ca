@@ -1081,10 +1081,10 @@ public function facturaConsultarMovil($data = [])
                         'estado' => trim((string)($row['estatus'] ?? 'Borrador')),
                         'descuento' => (float)($row['descuento'] ?? 0),
                         'cliente' => [
-                            'nombre' => trim((string)($row['nombre'] ?? 'Cliente')),
+                            'nombre' => trim((string)$encryption->decrypt($row['nombre'] ?? 'Cliente')),
                             'cedula' => $cedulaEncontrada, // Usar cédula desencriptada
-                            'telefono' => trim((string)($row['telefono'] ?? '')),
-                            'direccion' => trim((string)($row['direccion'] ?? ''))
+                            'telefono' => trim((string)$encryption->decrypt($row['telefono'] ?? '')),
+                            'direccion' => trim((string)$encryption->decrypt($row['direccion'] ?? ''))
                         ],
                         'items' => [],
                         'total_suma' => 0
@@ -1120,12 +1120,6 @@ public function facturaConsultarMovil($data = [])
                     $totalFinal = $subtotal - (($subtotal * $descuento) / 100);
                 }
 
-                // Encriptar datos del cliente
-                $clienteNombreEncriptado = $encryption->encrypt($factura['cliente']['nombre']);
-                $clienteCedulaEncriptada = $encryption->encrypt($factura['cliente']['cedula']);
-                $clienteTelefonoEncriptado = $encryption->encrypt($factura['cliente']['telefono']);
-                $clienteDireccionEncriptada = $encryption->encrypt($factura['cliente']['direccion']);
-
                 $facturas[] = [
                     'id_factura' => $factura['id_factura'],
                     'numero_factura' => $factura['numero_factura'],
@@ -1133,12 +1127,12 @@ public function facturaConsultarMovil($data = [])
                     'total' => round($totalFinal, 2),
                     'estado' => ucfirst(strtolower(trim($factura['estado']))),
                     'descuento' => $descuento,
-                    'cliente' => $clienteNombreEncriptado,
+                    'cliente' => $factura['cliente']['nombre'],
                     'cliente_detalle' => [
-                        'nombre' => $clienteNombreEncriptado,
-                        'cedula' => $clienteCedulaEncriptada,
-                        'telefono' => $clienteTelefonoEncriptado,
-                        'direccion' => $clienteDireccionEncriptada
+                        'nombre' => $factura['cliente']['nombre'],
+                        'cedula' => $factura['cliente']['cedula'],
+                        'telefono' => $factura['cliente']['telefono'],
+                        'direccion' => $factura['cliente']['direccion']
                     ],
                     'items' => $factura['items']
                 ];

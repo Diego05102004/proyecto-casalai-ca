@@ -1,15 +1,5 @@
 <?php
-// 1. Cabeceras obligatorias para autorizar peticiones desde la App (CORS)
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Content-Type: application/json; charset=UTF-8");
 
-// 2. Manejo de la solicitud previa "Preflight" (OPTIONS)
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
 
 // 3. Obtener los datos JSON enviados por la App Móvil
 $inputJSON = file_get_contents("php://input");
