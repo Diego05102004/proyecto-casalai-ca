@@ -174,9 +174,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            $porcentajeIva = $_POST['porcentaje_iva'] ?? '0';
+            $porcentajeIva = trim((string)($_POST['porcentaje_iva'] ?? ''));
             if ($porcentajeIva === '') {
-                $porcentajeIva = '0';
+                http_response_code(400);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Debe ingresar el porcentaje de IVA.',
+                    'field' => 'porcentaje_iva'
+                ]);
+                exit;
             }
             if (!is_numeric($porcentajeIva) || (float)$porcentajeIva < 0 || (float)$porcentajeIva > 100) {
                 http_response_code(400);
