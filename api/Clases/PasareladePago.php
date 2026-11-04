@@ -492,6 +492,17 @@ class PasareladePago extends Factura {
     }
 
     public function pagoIngresarMovil($data = []) {
+        $invoiceId = $data['factura'] ?? null;
+        if (empty($invoiceId)) {
+            throw new \RuntimeException('El ID de factura es requerido.');
+        }
+
+        if (!$this->authenticatedCanManageAll) {
+            $this->ejecutarConConexionSegura(function($pdo) use ($invoiceId) {
+                $this->assertInvoiceAccess($pdo, $invoiceId);
+            });
+        }
+
         // Procesar el comprobante antes de la transacción de base de datos
         $nombreArchivo = null;
 
@@ -538,6 +549,7 @@ class PasareladePago extends Factura {
             }
 
             // Verificar que la factura existe
+            $this->assertInvoiceAccess($pdo, $factura);
             $stmtFactura = $pdo->prepare("SELECT id_factura FROM tbl_facturas WHERE id_factura = ?");
             $stmtFactura->execute([$factura]);
             if (!$stmtFactura->fetch(PDO::FETCH_ASSOC)) {
@@ -758,7 +770,7 @@ class PasareladePago extends Factura {
         // Siempre usar ruta por defecto
         return __DIR__ . '/../../assets/img/comprobantes/';
     }
-    private function pagoConsultar() {
+    public function pagoConsultar() {
         return $this->ejecutarConConexionSegura(function($pdo) {
             $sql = "SELECT 
                     dp.id_detalles, 
@@ -778,9 +790,17 @@ class PasareladePago extends Factura {
                 INNER JOIN tbl_cuentas c ON dp.id_cuenta = c.id_cuenta 
                 INNER JOIN tbl_facturas f ON dp.id_factura = f.id_factura 
                 INNER JOIN tbl_clientes cl ON f.cliente = cl.id_clientes 
-                WHERE cl.cedula = :cedula";
+                WHERE f.cliente = :id_cliente";
+            if (!$this->authenticatedCanManageAll && empty($this->authenticatedClientId)) {
+                throw new \RuntimeException('Se requiere una sesión autenticada para consultar pagos.');
+            }
+            if ($this->authenticatedCanManageAll) {
+                $sql = str_replace('WHERE f.cliente = :id_cliente', '', $sql);
+            }
             $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':cedula', $this->cedula, PDO::PARAM_STR);
+            if (!$this->authenticatedCanManageAll) {
+                $stmt->bindValue(':id_cliente', (int) $this->authenticatedClientId, PDO::PARAM_INT);
+            }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
@@ -788,8 +808,17 @@ class PasareladePago extends Factura {
 
     private function pagoConsultarTodos() {
         return $this->ejecutarConConexionSegura(function($pdo) {
-            $sql = "SELECT dp.id_detalles, f.id_factura, cl.nombre, cl.cedula, dp.id_cuenta, c.nombre_banco AS nombre_cuenta, dp.observaciones, dp.tipo, dp.referencia, dp.fecha, dp.comprobante,dp.monto, dp.estatus FROM tbl_detalles_pago dp INNER JOIN tbl_cuentas c ON dp.id_cuenta = c.id_cuenta INNER JOIN tbl_facturas f ON dp.id_factura = f.id_factura INNER JOIN tbl_clientes cl ON f.cliente = cl.id_clientes;";
+            $sql = "SELECT dp.id_detalles, f.id_factura, cl.nombre, cl.cedula, dp.id_cuenta, c.nombre_banco AS nombre_cuenta, dp.observaciones, dp.tipo, dp.referencia, dp.fecha, dp.comprobante,dp.monto, dp.estatus FROM tbl_detalles_pago dp INNER JOIN tbl_cuentas c ON dp.id_cuenta = c.id_cuenta INNER JOIN tbl_facturas f ON dp.id_factura = f.id_factura INNER JOIN tbl_clientes cl ON f.cliente = cl.id_clientes";
+            if (!$this->authenticatedCanManageAll) {
+                if (empty($this->authenticatedClientId)) {
+                    throw new \RuntimeException('Se requiere una sesión autenticada para consultar pagos.');
+                }
+                $sql .= ' WHERE f.cliente = :id_cliente';
+            }
             $stmt = $pdo->prepare($sql);
+            if (!$this->authenticatedCanManageAll) {
+                $stmt->bindValue(':id_cliente', (int) $this->authenticatedClientId, PDO::PARAM_INT);
+            }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         });

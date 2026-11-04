@@ -4,16 +4,20 @@
  * Establece headers, CORS y configuraciones base
  */
 
-// Habilitar errores para desarrollo (desactivar en producción)
+$requestHost = strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
+$isProduction = (getenv('APP_ENV') ?: '') === 'production'
+    || $requestHost === 'casalai.alwaysdata.net';
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', $isProduction ? '0' : '1');
 
 // Headers para API
 $allowedOrigins = [
     'https://casalai.alwaysdata.net',
-    // Solo si necesitas la app web local en desarrollo:
-    // 'http://localhost:8081',
 ];
+if (preg_match('/^(localhost|127\.0\.0\.1)(:\d+)?$/i', $requestHost)) {
+    $allowedOrigins[] = 'http://localhost:8081';
+    $allowedOrigins[] = 'http://127.0.0.1:8081';
+}
 
 $allowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';

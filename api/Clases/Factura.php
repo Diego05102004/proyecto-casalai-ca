@@ -14,6 +14,8 @@ class Factura extends BD
     private $estatus;
     private $id_producto;
     private $cantidad;
+    protected $authenticatedClientId;
+    protected $authenticatedCanManageAll = false;
 
     private $cedula;
     
@@ -49,6 +51,10 @@ class Factura extends BD
     public function setCantidad($cantidad) { $this->cantidad = $cantidad; }
     public function getCedula() { return $this->cedula; }
     public function setCedula($cedula) { $this->cedula = $cedula; }
+    public function setAuthenticatedClient($clientId, bool $canManageAll = false) {
+        $this->authenticatedClientId = $clientId;
+        $this->authenticatedCanManageAll = $canManageAll;
+    }
 
     public function __construct($tipo = 'P') {
     }
@@ -308,19 +314,21 @@ class Factura extends BD
             $stmtClientes->execute();
             $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
 
-            // Buscar el cliente desencriptando cada cédula y comparando
-            $id_cliente = null;
-            foreach ($clientes as $cliente) {
-                try {
-                    $cedulaDesencriptada = trim((string)$encryption->decrypt($cliente['cedula']));
-                    if ($cedulaDesencriptada === $cedula) {
-                        $id_cliente = $cliente['id_clientes'];
-                        error_log("[FACTURA_INGRESAR] Cliente encontrado: ID=" . $id_cliente);
-                        break;
+            // A mobile customer's invoice must always belong to the authenticated account.
+            $id_cliente = $this->authenticatedClientId;
+            if ($id_cliente === null) {
+                foreach ($clientes as $cliente) {
+                    try {
+                        $cedulaDesencriptada = trim((string)$encryption->decrypt($cliente['cedula']));
+                        if ($cedulaDesencriptada === $cedula) {
+                            $id_cliente = $cliente['id_clientes'];
+                            error_log("[FACTURA_INGRESAR] Cliente encontrado: ID=" . $id_cliente);
+                            break;
+                        }
+                    } catch (\Throwable $e) {
+                        error_log("[FACTURA_INGRESAR] Error desencriptando cédula cliente ID " . $cliente['id_clientes'] . ": " . $e->getMessage());
+                        continue;
                     }
-                } catch (\Throwable $e) {
-                    error_log("[FACTURA_INGRESAR] Error desencriptando cédula cliente ID " . $cliente['id_clientes'] . ": " . $e->getMessage());
-                    continue;
                 }
             }
 
@@ -666,10 +674,15 @@ class Factura extends BD
             }
 
             return $this->ejecutarConConexionSegura(function($pdo) use ($id){
-                $stmt = $pdo->prepare("UPDATE tbl_facturas SET estatus = 'Cancelada' WHERE id_factura = ?");
+                $this->assertInvoiceAccess($pdo, $id);
+                $stmt = $pdo->prepare(
+                    "UPDATE tbl_facturas
+                     SET estatus = 'Cancelada'
+                     WHERE id_factura = ? AND estatus = 'Borrador'"
+                );
                 $result = $stmt->execute([$id]);
 
-                if ($result) {
+                if ($result && $stmt->rowCount() > 0) {
                     return [
                         'status' => 'success',
                         'message' => 'Factura anulada correctamente',
@@ -963,17 +976,34 @@ public function facturaConsultarMovil($data = [])
         // Instanciar clase de encriptación - desencriptar internamente como en cambiarPersonal
         $encryption = new Encryption();
 
-        // Desencriptar la cédula recibida de la app móvil
+        // Authenticated client requests use the client bound to the verified token.
         $cedulaCifrada = $data['cedula'] ?? null;
         $cedula = null;
         
-        if ($cedulaCifrada && is_string($cedulaCifrada) && strlen($cedulaCifrada) > 50) {
+        if ($this->authenticatedClientId !== null && !$this->authenticatedCanManageAll) {
+            $idClienteEncontrado = $this->authenticatedClientId;
+            $cedulaEncontrada = $cedulaCifrada;
+            if (is_string($cedulaCifrada) && strlen($cedulaCifrada) > 50) {
+                try {
+                    $cedulaEncontrada = trim($encryption->decrypt(str_replace(' ', '+', $cedulaCifrada)));
+                    if ($cedulaEncontrada === $cedulaCifrada) {
+                        throw new \RuntimeException('No se pudo descifrar la identidad autenticada.');
+                    }
+                } catch (\Throwable $e) {
+                    error_log('[FACTURA_CONSULTAR_MOVIL] No se pudo descifrar la identidad del usuario autenticado.');
+                    return [
+                        'resultado' => 'error',
+                        'mensaje' => 'No se pudo validar la identidad del usuario autenticado.',
+                        'data' => ['facturas' => []]
+                    ];
+                }
+            }
+        } elseif ($cedulaCifrada && is_string($cedulaCifrada) && strlen($cedulaCifrada) > 50) {
             try {
                 $cedulaCifrada = str_replace(' ', '+', $cedulaCifrada);
                 $cedula = trim($encryption->decrypt($cedulaCifrada));
-                error_log("[FACTURA_CONSULTAR_MOVIL] Cédula desencriptada: " . substr($cedula, 0, 20) . "...");
             } catch (\Throwable $e) {
-                error_log("[FACTURA_CONSULTAR_MOVIL] Error desencriptando cédula: " . $e->getMessage());
+                error_log("[FACTURA_CONSULTAR_MOVIL] Error desencriptando cédula.");
                 return [
                     'resultado' => 'error',
                     'mensaje' => 'No se pudo desencriptar la cédula del cliente.',
@@ -986,7 +1016,7 @@ public function facturaConsultarMovil($data = [])
             $cedula = $cedulaCifrada;
         }
 
-        if (empty($cedula)) {
+        if (empty($cedula) && empty($this->authenticatedClientId)) {
             return [
                 'resultado' => 'error',
                 'mensaje' => 'No se ha proporcionado la cédula para consultar facturas.',
@@ -997,35 +1027,35 @@ public function facturaConsultarMovil($data = [])
         }
 
         try {
-            // Consultar todas las cédulas de clientes
-            $sqlClientes = "SELECT id_clientes, cedula FROM tbl_clientes";
-            $stmtClientes = $pdo->prepare($sqlClientes);
-            $stmtClientes->execute();
-            $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+            if ($this->authenticatedClientId === null || $this->authenticatedCanManageAll) {
+                $sqlClientes = "SELECT id_clientes, cedula FROM tbl_clientes";
+                $stmtClientes = $pdo->prepare($sqlClientes);
+                $stmtClientes->execute();
+                $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+                $idClienteEncontrado = null;
+                $cedulaEncontrada = null;
 
-            error_log("[FACTURA_CONSULTAR_MOVIL] Total clientes en BD: " . count($clientes));
-
-            // Buscar el cliente desencriptando cada cédula y comparando
-            $idClienteEncontrado = null;
-            $cedulaEncontrada = null;
-
-            foreach ($clientes as $cliente) {
-                try {
-                    $cedulaDesencriptada = trim((string)$encryption->decrypt($cliente['cedula']));
-                    if ($cedulaDesencriptada === $cedula) {
-                        $idClienteEncontrado = $cliente['id_clientes'];
-                        $cedulaEncontrada = $cedulaDesencriptada;
-                        error_log("[FACTURA_CONSULTAR_MOVIL] ✓ Cliente encontrado: ID=" . $idClienteEncontrado);
-                        break;
+                foreach ($clientes as $cliente) {
+                    try {
+                        $cedulaDesencriptada = trim((string)$encryption->decrypt($cliente['cedula']));
+                        if ($cedulaDesencriptada === $cedula) {
+                            $idClienteEncontrado = $cliente['id_clientes'];
+                            $cedulaEncontrada = $cedulaDesencriptada;
+                            break;
+                        }
+                    } catch (\Throwable $e) {
+                        error_log("[FACTURA_CONSULTAR_MOVIL] Error desencriptando cédula cliente ID " . $cliente['id_clientes'] . ": " . $e->getMessage());
+                        continue;
                     }
-                } catch (\Throwable $e) {
-                    error_log("[FACTURA_CONSULTAR_MOVIL] Error desencriptando cédula cliente ID " . $cliente['id_clientes'] . ": " . $e->getMessage());
-                    continue;
                 }
             }
 
+            if ($this->authenticatedClientId !== null && !$this->authenticatedCanManageAll) {
+                $idClienteEncontrado = $this->authenticatedClientId;
+            }
+
             if (!$idClienteEncontrado) {
-                error_log("[FACTURA_CONSULTAR_MOVIL] ✗ No se encontró cliente con cédula: " . substr($cedula, 0, 20) . "...");
+                error_log("[FACTURA_CONSULTAR_MOVIL] No se encontró el cliente asociado a la cédula solicitada.");
                 return [
                     'resultado' => 'error',
                     'mensaje' => 'No se encontró un cliente con la cédula proporcionada.',
@@ -1249,6 +1279,7 @@ public function facturaConsultarMovil($data = [])
             if (empty($id_factura)) {
                 throw new PDOException("El ID de factura es requerido.");
             }
+            $this->assertInvoiceAccess($pdo, $id_factura);
 
             try {
                 $stmt = $pdo->prepare("SELECT precio, fecha FROM dolar_cache ORDER BY fecha DESC LIMIT 1");
@@ -1261,6 +1292,7 @@ public function facturaConsultarMovil($data = [])
                 if ($result && (time() - strtotime($result['fecha'])) < 86400) {
                     $tasa = floatval($result['precio']);
                 }
+
             } catch (PDOException $e) {
                 error_log('Error al obtener cache del dólar: ' . $e->getMessage());
                 $tasa = 1;
@@ -1675,6 +1707,30 @@ public function facturaConsultarMovil($data = [])
                 return false;
             }
         });
+    }
+
+    protected function assertInvoiceAccess(PDO $pdo, $invoiceId): void {
+        if ($this->authenticatedCanManageAll) {
+            return;
+        }
+
+        if (empty($this->authenticatedClientId)) {
+            throw new \RuntimeException('Se requiere una sesión autenticada para acceder a la factura.');
+        }
+
+        $statement = $pdo->prepare(
+            'SELECT 1
+             FROM tbl_facturas
+             WHERE id_factura = :id_factura AND cliente = :id_cliente
+             LIMIT 1'
+        );
+        $statement->execute([
+            ':id_factura' => (int) $invoiceId,
+            ':id_cliente' => (int) $this->authenticatedClientId,
+        ]);
+        if ($statement->fetchColumn() === false) {
+            throw new \RuntimeException('Factura no encontrada.');
+        }
     }
 }
 ?>

@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../api/Config/RecaptchaConfig.php';
+$recaptchaSiteKey = \Usuario\ProyectoCasalaiCa\Config\RecaptchaConfig::getSiteKey();
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -46,7 +50,7 @@
               </div>
               <span class="span-v" id="spassword"></span>
             </div>
-            <div class="g-recaptcha" data-sitekey="6Le6TT8sAAAAAJYMWOjHmexCagrE-fxJKO-4aK2q"></div>
+            <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8'); ?>"></div>
             <button class="btn btn-vino w-100" id="acceder" name="acceder">Iniciar Sesión</button>
             <!-- Dentro del formulario de inicio de sesión, después del botón -->
               <div class="forgot-password">

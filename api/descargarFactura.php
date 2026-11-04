@@ -10,6 +10,7 @@
 
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/api_helper.php';
 require_once __DIR__ . '/Clases/Factura.php';
 
 use Usuario\ProyectoCasalaiCa\Factura;
@@ -34,6 +35,17 @@ if (empty($idFactura)) {
     exit;
 }
 
+$authContext = apiRequireAuthContext();
+if (!$authContext['is_admin']) {
+    $database = new \Usuario\ProyectoCasalaiCa\Config\BD('P');
+    try {
+        $clientId = apiResolveClientId($database->getConexion(), $authContext['user_id']);
+    } finally {
+        $database->cerrar();
+    }
+    apiAssertInvoiceAccess($idFactura, $clientId);
+}
+
 // Obtener datos de la factura usando el método existente
 $factura = new Factura();
 try {
@@ -49,10 +61,11 @@ try {
         exit;
     }
 } catch (Exception $e) {
+    error_log('[API descargarFactura] ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'status' => 'error',
-        'message' => 'Error al obtener la factura: ' . $e->getMessage()
+        'message' => 'No se pudo obtener la factura.'
     ]);
     exit;
 }

@@ -41,4 +41,4 @@ $operations = [
 ];
 
 // Procesar la petición
-RecibirPeticion($pasarela, $operations);
+RecibirPeticion($pasarela, $operations, 'client');
