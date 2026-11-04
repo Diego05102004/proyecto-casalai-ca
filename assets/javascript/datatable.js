@@ -1,8 +1,9 @@
 (function () {
     'use strict';
 
-    const MAX_SEARCH_LENGTH = 100;
+    const MAX_SEARCH_LENGTH = 50;
     const validSearchValues = new WeakMap();
+    const searchErrors = new WeakMap();
     const searchInputSelector = 'input[type="search"]';
     const htmlPattern = /<\s*\/?\s*[a-z!][^>]*>/i;
     const scriptPattern = /\bjavascript\s*:|\bon[a-z]+\s*=/i;
@@ -14,14 +15,18 @@
         return wrapper ? wrapper.querySelector('table[data-datatable]') : null;
     }
 
+    function getSearchContainer(input) {
+        return input.closest('.dataTables_filter, .dt-search') || input.parentElement;
+    }
+
     function getErrorElement(input) {
-        const container = input.closest('.dataTables_filter, .dt-search') || input.parentElement;
-        let error = container.querySelector('.datatable-search-error');
-        if (error) {
-            return error;
+        const container = getSearchContainer(input);
+        const existingError = searchErrors.get(container);
+        if (existingError) {
+            return existingError;
         }
 
-        error = document.createElement('small');
+        const error = document.createElement('small');
         error.id = 'datatable-search-error-' + (++errorId);
         error.className = 'datatable-search-error';
         error.setAttribute('role', 'alert');
@@ -29,7 +34,8 @@
         error.hidden = true;
         error.style.display = 'block';
         error.style.color = '#b02a37';
-        container.insertAdjacentElement('afterend', error);
+        container.appendChild(error);
+        searchErrors.set(container, error);
 
         const describedBy = input.getAttribute('aria-describedby');
         input.setAttribute(
@@ -47,8 +53,7 @@
     }
 
     function clearError(input) {
-        const container = input.closest('.dataTables_filter, .dt-search') || input.parentElement;
-        const error = container.querySelector('.datatable-search-error');
+        const error = searchErrors.get(getSearchContainer(input));
         if (error) {
             error.textContent = '';
             error.hidden = true;
@@ -59,7 +64,7 @@
     function isInvalidDateQuery(value) {
         const match = value.trim().match(/^(\d{1,2})([/-])(\d{1,2})\2(\d{4})$/);
         if (!match) {
-            return false;
+            return null;
         }
 
         const day = Number(match[1]);
@@ -67,9 +72,19 @@
         const year = Number(match[4]);
         const date = new Date(year, month - 1, day);
 
-        return date.getFullYear() !== year ||
+        if (date.getFullYear() !== year ||
             date.getMonth() !== month - 1 ||
-            date.getDate() !== day;
+            date.getDate() !== day) {
+            return 'Ingrese una fecha válida en formato DD/MM/AAAA.';
+        }
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (date > today) {
+            return 'No se permiten fechas futuras en la búsqueda.';
+        }
+
+        return null;
     }
 
     function handleSearchInput(event) {
@@ -104,11 +119,12 @@
             return;
         }
 
-        if (isInvalidDateQuery(query)) {
+        const dateError = isInvalidDateQuery(query);
+        if (dateError) {
             input.value = validSearchValues.get(input);
             event.preventDefault();
             event.stopImmediatePropagation();
-            showError(input, 'Ingrese una fecha válida en formato DD/MM/AAAA.');
+            showError(input, dateError);
             return;
         }
 
