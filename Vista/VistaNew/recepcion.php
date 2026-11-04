@@ -211,19 +211,19 @@ ob_start();
                                 <span class="span-value sproducto-msg"></span>
                             </div>
                             <div class="form-group">
-                                <label>Código*</label>
+                                <label>Código</label>
                                 <input type="text" class="producto-codigo input-testnum" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Marca*</label>
+                                <label>Marca</label>
                                 <input type="text" class="producto-marca input-testnum" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Modelo*</label>
+                                <label>Modelo</label>
                                 <input type="text" class="producto-modelo input-testnum" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Serial*</label>
+                                <label>Serial</label>
                                 <input type="text" class="producto-serial input-testnum" readonly>
                             </div>
                             <div class="form-group">
@@ -252,7 +252,7 @@ ob_start();
                                 <strong class="total-value" id="subtotalRecepcion">$0.00</strong>
                             </div>
                             <div class="resumen-factura-item resumen-iva-tasa">
-                                <label for="porcentajeIvaRecepcion">IVA (%)</label>
+                                <label for="porcentajeIvaRecepcion">IVA (%)*</label>
                                 <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" class="input-with-icon input-testnum costo-input" maxlength="5" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
                                 <span class="span-value" id="sporcentajeIva"></span>
                             </div>
