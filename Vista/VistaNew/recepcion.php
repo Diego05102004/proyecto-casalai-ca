@@ -253,7 +253,7 @@ ob_start();
                             </div>
                             <div class="resumen-factura-item resumen-iva-tasa">
                                 <label for="porcentajeIvaRecepcion">IVA (%)</label>
-                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" value="0.00" name="porcentaje_iva" class="input-with-icon input-testnum costo-input" maxlength="5" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" class="input-with-icon input-testnum costo-input" maxlength="5" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
                                 <span class="span-value" id="sporcentajeIva"></span>
                             </div>
                             <div class="resumen-factura-item">

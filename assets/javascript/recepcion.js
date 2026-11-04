@@ -96,21 +96,36 @@ function validarkeyup(er, etiqueta, etiquetamensaje, mensaje) {
     }
 }
 
-function validarKeyPressDecimal(e) {
+const intentosTeclaNumericaInvalida = new WeakSet();
+
+function consumirIntentoTeclaNumericaInvalida(input) {
+    if (!intentosTeclaNumericaInvalida.has(input)) {
+        return false;
+    }
+
+    intentosTeclaNumericaInvalida.delete(input);
+    return true;
+}
+
+function validarKeyPressDecimal(e, etiquetamensaje, mensaje) {
     let key = e.key;
     if (e.ctrlKey || key === 'Backspace' || key === 'Delete' || key === 'Tab' || key.startsWith('Arrow')) {
         return;
     }
+    let invalido = false;
     if (['e', 'E', '+', '-'].includes(key)) {
-        e.preventDefault();
-        return;
+        invalido = true;
+    } else if (!/[0-9.]/.test(key) || (key === '.' && e.target.value.includes('.'))) {
+        invalido = true;
     }
-    if (!/[0-9.]/.test(key)) {
+
+    if (invalido) {
         e.preventDefault();
-        return;
-    }
-    if (key === '.' && e.target.value.includes('.')) {
-        e.preventDefault();
+        if (etiquetamensaje && mensaje) {
+            intentosTeclaNumericaInvalida.add(e.target);
+            etiquetamensaje.text(mensaje);
+            $(e.target).removeClass('is-valid').addClass('is-invalid');
+        }
     }
 }
 
@@ -268,13 +283,13 @@ function validarCampoNumerico(input) {
     const $mensaje = obtenerMensajeCampoNumerico(input);
 
     if (input.id === 'correlativo') {
-        validarkeyup(/^[0-9]{6}$/, $input, $mensaje, "*Formato válido: 6 dígitos numéricos*");
+        validarkeyup(/^[0-9]{6}$/, $input, $mensaje, "*Formato válido: solo números, 6 dígitos*");
     } else if (input.classList.contains('cantidad-input')) {
-        validarKeyUpEntero($input, $mensaje, "*Debe ser un entero mayor a 0*");
+        validarKeyUpEntero($input, $mensaje, "*Debe ser un número entero mayor a 0*");
     } else if (input.id === 'porcentajeIvaRecepcion') {
         validarKeyUpIva($input, $mensaje, "*El IVA no puede ser mayor a 99%*");
     } else {
-        validarKeyUpDecimal($input, $mensaje, "*Costo inválido (Ej: 10.50)*");
+        validarKeyUpDecimal($input, $mensaje, "*Formato válido: solo números con hasta 2 decimales*");
     }
 }
 
@@ -341,7 +356,12 @@ function validarEnvioRecepcion() {
 
         let $costoInput =$(this).find('.costo-input');
         limitarDigitos($costoInput[0], 9, true);
-        if (validarKeyUpDecimal($costoInput,$(this).find('.scosto-msg'), "*Costo inválido*") == 0) {
+        let $costoMensaje = $(this).find('.scosto-msg');
+        if ($costoInput.val().trim() === '') {
+            $costoInput.removeClass("is-valid").addClass("is-invalid");
+            $costoMensaje.text("*Costo inválido*");
+            esValido = false;
+        } else if (validarKeyUpDecimal($costoInput, $costoMensaje, "*Costo inválido*") == 0) {
             esValido = false;
         }
 
@@ -353,7 +373,12 @@ function validarEnvioRecepcion() {
     });
 
     let $ivaInput =$("#porcentajeIvaRecepcion");
-    if (validarKeyUpIva($ivaInput,$("#sporcentajeIva"), "*IVA inválido (0-99%)*") == 0) {
+    let $ivaMensaje = $("#sporcentajeIva");
+    if ($ivaInput.val().trim() === '') {
+        $ivaInput.removeClass("is-valid").addClass("is-invalid");
+        $ivaMensaje.text("*Debe ingresar el IVA*");
+        esValido = false;
+    } else if (validarKeyUpIva($ivaInput, $ivaMensaje, "*IVA inválido (0-99%)*") == 0) {
         esValido = false;
     }
 
@@ -1490,7 +1515,7 @@ $(document).ready(function() {
     });
 
     $("#correlativo").on("keyup", function(){
-        validarkeyup(/^[0-9]{6}$/, $(this),$("#scorrelativo"), "*Formato válido: 6 dígitos numéricos*");
+        validarkeyup(/^[0-9]{6}$/, $(this),$("#scorrelativo"), "*Formato válido: solo números, 6 dígitos*");
         evaluarDiscrepanciasInteractivas();
     });
 
@@ -1530,11 +1555,17 @@ $(document).ready(function() {
 
     // Delegación de eventos para validaciones
     $(document).on('keypress', '.costo-input:not(#porcentajeIvaRecepcion)', function(e) {
-        validarKeyPressDecimal(e);
+        validarKeyPressDecimal(
+            e,
+            $(this).siblings('.scosto-msg'),
+            '*Costo inválido (Ej: 10.50)*'
+        );
     });
     $(document).on('keyup', '.costo-input:not(#porcentajeIvaRecepcion)', function() {
         limitarDigitos(this, 9, true);
-        validarKeyUpDecimal($(this),$(this).siblings('.scosto-msg'), "*Costo inválido (Ej: 10.50)*");
+        if (!consumirIntentoTeclaNumericaInvalida(this)) {
+            validarKeyUpDecimal($(this),$(this).siblings('.scosto-msg'), "*Costo inválido (Ej: 10.50)*");
+        }
         evaluarDiscrepanciasInteractivas();
     });
 
@@ -1558,10 +1589,16 @@ $(document).ready(function() {
     });
 
     $("#porcentajeIvaRecepcion").on('keypress', function(e) {
-        validarKeyPressDecimal(e);
+        validarKeyPressDecimal(
+            e,
+            $("#sporcentajeIva"),
+            '*El IVA debe ser numérico y tener hasta 2 decimales*'
+        );
     });
     $("#porcentajeIvaRecepcion").on('keyup input', function() {
-        validarKeyUpIva($(this), $("#sporcentajeIva"), "*El IVA no puede ser mayor a 99%*");
+        if (!consumirIntentoTeclaNumericaInvalida(this)) {
+            validarKeyUpIva($(this), $("#sporcentajeIva"), "*El IVA no puede ser mayor a 99%*");
+        }
         calcularTotal();
         evaluarDiscrepanciasInteractivas();
     });
