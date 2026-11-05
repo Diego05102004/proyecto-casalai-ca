@@ -137,8 +137,7 @@ ob_start();
                                 Factura para análisis asistido
                             </label>
                             <input type="file" id="fotoFacturaRecepcion" name="foto_factura" accept="image/*,.pdf">
-                            <br>
-                            <small><br> Adjunte una imagen o PDF (máximo 5 MB). <br>
+                            <small>Adjunte una imagen o PDF (máximo 5 MB). <br>
                                 El análisis rellenará los datos detectados.</small>
                         </div>
                         <div class="form-group">
@@ -146,7 +145,7 @@ ob_start();
                                 <i class="fas fa-file-invoice"></i>
                                 Número de Factura*
                             </label>
-                            <input type="text" placeholder="Ej: 012345" class="input-testnum" id="correlativo" name="correlativo" maxlength="6">
+                            <input type="text" placeholder="Ej: 012345" class="input-textnum" id="correlativo" name="correlativo" maxlength="6">
                             <span class="span-value" id="scorrelativo"></span>
                         </div>
                         <div class="form-group">
@@ -212,28 +211,28 @@ ob_start();
                             </div>
                             <div class="form-group">
                                 <label>Código</label>
-                                <input type="text" class="producto-codigo input-testnum" readonly>
+                                <input type="text" class="producto-codigo input-textnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Marca</label>
-                                <input type="text" class="producto-marca input-testnum" readonly>
+                                <input type="text" class="producto-marca input-textnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Modelo</label>
-                                <input type="text" class="producto-modelo input-testnum" readonly>
+                                <input type="text" class="producto-modelo input-textnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Serial</label>
-                                <input type="text" class="producto-serial input-testnum" readonly>
+                                <input type="text" class="producto-serial input-textnum" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Costo Unitario*</label>
-                                <input type="text" name="costo[]" placeholder="0.00" class="input-with-icon input-testnum costo-input" maxlength="12" oninput="limitarDigitos(this, 9, true); limitarDosDecimales(this); calcularSubtotal(this);">
+                                <input type="text" name="costo[]" placeholder="0.00" class="input-with-icon input-textnum costo-input" maxlength="12" oninput="limitarDigitos(this, 9, true); limitarDosDecimales(this); calcularSubtotal(this);">
                                 <span class="span-value scosto-msg"></span>
                             </div>
                             <div class="form-group">
                                 <label>Cantidad*</label>
-                                <input type="text" name="cantidad[]" placeholder="0" class="input-with-icon input-testnum cantidad-input" maxlength="9" oninput="limitarDigitos(this, 9); calcularSubtotal(this)">
+                                <input type="text" name="cantidad[]" placeholder="0" class="input-with-icon input-textnum cantidad-input" maxlength="9" oninput="limitarDigitos(this, 9); calcularSubtotal(this)">
                                 <span class="span-value scantidad-msg"></span>
                             </div>
                             <div class="form-group subtotal-group">
@@ -253,7 +252,7 @@ ob_start();
                             </div>
                             <div class="resumen-factura-item resumen-iva-tasa">
                                 <label for="porcentajeIvaRecepcion">IVA (%)*</label>
-                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" class="input-with-icon input-testnum costo-input" maxlength="5" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
+                                <input type="text" id="porcentajeIvaRecepcion" placeholder="16.00" name="porcentaje_iva" class="input-with-icon input-textnum costo-input" maxlength="5" oninput="limitarDosDecimales(this); calcularSubtotal(this);">
                                 <span class="span-value" id="sporcentajeIva"></span>
                             </div>
                             <div class="resumen-factura-item">
@@ -272,7 +271,7 @@ ob_start();
                         <i class="fas fa-times"></i> Cancelar
                     </button>
                     <button type="button" class="btm-confirmar btn-save" onclick="saveRecepcion()">
-                        <i class="fas fa-check"></i> Guardar
+                        <i class="fas fa-check"></i> Registrar
                     </button>
                 </div>
             </form>

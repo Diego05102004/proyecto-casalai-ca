@@ -66,6 +66,10 @@ $porcentaje_categorias = 100; // No tiene sentido calcular porcentaje aquí
 $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $total_productos) * 100) : 0;
 ?>
 
+<script src="assets/public/js/jquery-3.7.1.min.js"></script>
+<script src="assets/javascript/datatable.js"></script>
+<script src="assets/javascript/producto.js"></script>
+
             <!-- Summary Cards para Productos -->
             <div class="summary-cards">
                 <div class="summary-card sales">
@@ -338,116 +342,146 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 </div>
             </div>
 
-            <!-- Modal para Registrar/Editar Producto -->
-            <div id="productModal" class="modal">
-                <div class="modal-content modal-large">
-                    <div class="modal-header">
-                        <h2 id="modalTitle">Agregar Producto</h2>
-                        <span class="close-modal">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="productForm" enctype="multipart/form-data">
-                            <input type="hidden" id="productId" name="id_producto">
-                            <input type="hidden" name="accion" id="productAction" value="ingresar">
-                            <input type="hidden" id="productCategoryTable" name="tabla_categoria">
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="productName">Nombre del Producto*</label>
-                                    <input type="text" id="productName" name="nombre_producto" required 
-                                           placeholder="Ej: iPhone 15 Pro Max" maxlength="40">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="productModel">Modelo/Marca*</label>
-                                    <select id="productModel" name="modelo" required>
-                                        <option value="">Seleccione un modelo</option>
-                                        <?php if (!empty($modelos)): ?>
-                                            <?php foreach ($modelos as $modelo): ?>
-                                                <option value="<?php echo $modelo['id_modelo']; ?>">
-                                                    <?php echo htmlspecialchars($modelo['nombre_modelo'] . ' - ' . $modelo['nombre_marca']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="productCategory">Categoría*</label>
-                                    <select id="productCategory" name="Categoria" required>
-                                    <option value="">Seleccione una categoría</option>
-                                    <?php if (!empty($categoriasDinamicas)): ?>
-                                        <?php foreach ($categoriasDinamicas as $categoria): ?>
-                                            <option value="<?php echo htmlspecialchars($categoria['tabla'], ENT_QUOTES, 'UTF-8'); ?>">
-                                                <?php echo htmlspecialchars($categoria['nombre_categoria']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="productPrice">Precio*</label>
-                                <input type="number" id="productPrice" name="Precio" required
-                                       placeholder="0.00" step="0.01" min="0">
-                            </div>
-                            
-                            <div class="form-row stock-fields">
-                                <div class="form-group">
-                                    <label for="stockActual">Stock Actual*</label>
-                                    <input type="number" id="stockActual" name="Stock_Actual" required 
-                                           placeholder="0" min="0">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="stockMinimo">Stock Mínimo*</label>
-                                    <input type="number" id="stockMinimo" name="Stock_Minimo" required 
-                                           placeholder="0" min="0">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="stockMaximo">Stock Máximo*</label>
-                                    <input type="number" id="stockMaximo" name="Stock_Maximo" required 
-                                           placeholder="0" min="0">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="productDescription">Descripción</label>
-                                <textarea id="productDescription" name="descripcion_producto" rows="3"
-                                          placeholder="Descripción del producto"></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="productImage">Imagen del Producto</label>
-                                <input type="file" id="productImage" name="imagen" accept="image/*">
-                                <div class="product-image-preview" id="productImagePreviewFrame">
-                                    <img id="productImagePreview" alt="Vista previa de la imagen seleccionada" hidden>
-                                    <span id="productImagePreviewPlaceholder">Seleccione una imagen para previsualizarla</span>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="productWarranty">Garantía</label>
-                                    <input type="text" id="productWarranty" name="Clausula_garantia" required
-                                       placeholder="Ej: 1 año de garantía">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="productSerial">Serial/Código</label>
-                                <input type="text" id="productSerial" name="Seriales" required
-                                       placeholder="Código único del producto">
-                            </div>
-                            <div id="productCategoryFields" class="form-group"></div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-                        <button type="submit" class="btn-save" form="productForm">Guardar</button>
+<!-- Modal para Registrar/Editar Producto -->
+<div id="productModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <div class="modal-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <div class="modal-title-content">
+                    <h2 id="modalTitle">Nuevo Producto</h2>
+                    <p>Complete los datos para registrar un nuevo producto</p>
+                </div>
+                <button type="button" class="btn-ayuda-modal btn-ayuda" title="Ayuda para Incluir Producto" data-contexto="producto">
+                    <img src="assets/img/info-ayuda.svg">
+                </button>
+            </div>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="productForm" enctype="multipart/form-data">
+                <input type="hidden" id="productId" name="id_producto">
+                <input type="hidden" name="accion" id="productAction" value="ingresar">
+                <input type="hidden" id="productCategoryTable" name="tabla_categoria">
+
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre_producto">Nombre del producto*</label>
+                            <input type="text" placeholder="Ej: Impresora" maxlength="20" class="input-textnum"
+                            id="nombre_producto" name="nombre_producto" required>
+                            <span class="span-value" id="snombre_producto"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modelo">Modelo/Marca*</label>
+                            <select class="input-select" id="modelo" name="modelo" required>
+                            <option value="">Seleccione un modelo</option>
+                            <?php foreach ($modelos as $modelo): ?>
+                                <option value="<?= $modelo['tbl_modelos']; ?>">
+                                <?= $modelo['nombre_modelo'] . ' (' . $modelo['tbl_marcas'] . ')' ?>
+                                </option>
+                            <?php endforeach; ?>
+                            </select>
+                            <span class="span-value" id="smodelo"></span>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="productImage">Imagen del producto (JPG, PNG, etc)*</label>
+                        <input type="file" name="imagen" id="productImage" accept="image/*" required>
+                        <span class="span-value" id="simagen"></span>
+                        <div id="productImagePreviewFrame" class="product-image-preview">
+                            <img id="productImagePreview" alt="Vista previa de la imagen seleccionada" hidden>
+                            <span id="productImagePreviewPlaceholder">Seleccione una imagen para previsualizarla</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="descripcion_producto">Descripción del producto*</label>
+                        <textarea maxlength="50" class="text-long" id="descripcion_producto" name="descripcion_producto"
+                            rows="2" placeholder="Ej: Multifuncional a color con WiFi"></textarea>
+                        <span class="span-value" id="sdescripcion_producto"></span>
+                    </div>
+
+                    <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="Stock_Actual">Stock Actual*</label>
+                            <input type="number" class="input-textnum" id="Stock_Actual" name="Stock_Actual" min="1" required
+                            placeholder="Ej: 10" maxlength="3">
+                            <span class="span-value" id="sStock_Actual"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Stock_Maximo">Stock Máximo*</label>
+                            <input type="number" class="input-textnum" id="Stock_Maximo" name="Stock_Maximo" min="1" required
+                            placeholder="Ej: 100" maxlength="3">
+                            <span class="span-value" id="sStock_Maximo"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Stock_Minimo">Stock Mínimo*</label>
+                            <input type="number" class="input-textnum" id="Stock_Minimo" name="Stock_Minimo" min="1" required
+                            placeholder="Ej: 5" maxlength="3">
+                            <span class="span-value" id="sStock_Minimo"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Clausula_garantia">Cláusula de garantía*</label>
+                        <textarea class="text-long" maxlength="50" id="Clausula_garantia" name="Clausula_garantia" rows="2"
+                            placeholder="Ej: Garantía válida por 6 meses en defectos de fábrica."></textarea>
+                        <span class="span-value" id="sClausula_garantia"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productCategory">Categoría*</label>
+                        <select class="input-select" id="productCategory" name="Categoria" required>
+                            <option value="">Seleccione una categoría</option>
+                            <?php foreach ($categoriasDinamicas as $cat): ?>
+                            
+                            <option value="<?= $cat['tabla'] ?>" data-tabla="<?= $cat['tabla'] ?>">
+                                <?= htmlspecialchars($cat['nombre_categoria']) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <span class="span-value" id="sCategoria"></span>
+                    </div>
+                    <input type="hidden" id="tabla_categoria" name="tabla_categoria">
+                    <div id="productCategoryFields"></div>
+                    
+                    <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="Seriales">Código Serial*</label>
+                            <input type="text" class="input-textnum" id="Seriales" name="Seriales" maxlength="10" placeholder="Ej: EPSON1234" required>
+                            <span class="span-value" id="sSeriales"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Precio">Precio ($)*</label>
+                            <input type="number" class="input-textnum" id="Precio" name="Precio" min="1" step="1" placeholder="Ej: 100" required>
+                            <span class="span-value" id="sPrecio"></span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="reset" class="btm-confirmar btn-clear">
+                <i class="fas fa-trash-alt"></i> Limpiar
+            </button>
+            <button type="button" class="btm-confirmar btn-save" form="productForm">
+                <i class="fas fa-check"></i> Registrar
+            </button>
+        </div>
+    </div>
+</div>
 
             <div id="productDetailsModal" class="modal" aria-hidden="true">
                 <div class="modal-content modal-large">
@@ -1109,44 +1143,10 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     margin-bottom: 18px;
                 }
 
-                #productModal .form-group label {
-                    display: block;
-                    margin-bottom: 8px;
-                    color: #333;
-                    font-weight: 600;
-                }
-
-                #productModal .form-group input,
-                #productModal .form-group select,
-                #productModal .form-group textarea {
-                    display: block;
-                    width: 100%;
-                    min-height: 44px;
-                    padding: 11px 12px;
-                    border: 1px solid #d5dbe3;
-                    border-radius: 8px;
-                    background: #fff;
-                    color: #1f2937;
-                    font: inherit;
-                    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-                }
-
-                #productModal .form-group textarea {
-                    min-height: 90px;
+                #productModal textarea.input-textnum {
+                    height: auto;
+                    min-height: 72px;
                     resize: vertical;
-                }
-
-                #productModal .form-group input:focus,
-                #productModal .form-group select:focus,
-                #productModal .form-group textarea:focus {
-                    outline: none;
-                    border-color: #2196f3;
-                    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.16);
-                }
-
-                #productModal input[type="file"] {
-                    padding: 8px;
-                    background: #f8fafc;
                 }
 
                 #productModal .modal-header, #productDetailsModal .modal-header {
@@ -1401,6 +1401,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                         input.id = label.htmlFor;
                         input.name = `carac[${caracteristica.nombre}]`;
                         input.type = ['int', 'float'].includes(caracteristica.tipo) ? 'number' : 'text';
+                        input.className = 'input-textnum';
                         input.required = true;
                         if (input.type === 'number') {
                             input.min = '0';
@@ -1431,7 +1432,7 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     showProductImagePreview('');
 
                     if (type === 'registrar') {
-                        document.getElementById('modalTitle').textContent = 'Agregar Producto';
+                        document.getElementById('modalTitle').textContent = 'Nuevo Producto';
                     } else if (type === 'editar') {
                         const producto = productosDisponibles.find(item => Number(item.id_producto) === Number(productId));
                         if (!producto) {
