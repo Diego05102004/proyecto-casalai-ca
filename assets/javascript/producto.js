@@ -31,6 +31,7 @@ function protegerSelects(selectIds, interval = 1000) {
                 );
 
             if (alterado) {
+                const valorSeleccionado = select.value;
                 select.innerHTML = "";
                 opsOriginales.forEach(optData => {
                     const opt = document.createElement("option");
@@ -38,6 +39,9 @@ function protegerSelects(selectIds, interval = 1000) {
                     opt.textContent = optData.text;
                     select.appendChild(opt);
                 });
+                if (opsOriginales.some(optData => optData.value === valorSeleccionado)) {
+                    select.value = valorSeleccionado;
+                }
 
                 console.warn(`⚠ Opciones del <select id="${id}"> fueron alteradas. Restauradas automáticamente.`);
             }
@@ -647,6 +651,7 @@ $(document).ready(function () {
         }
     }
 
+    if (!document.getElementById('productModal')) {
     configurarValidacionesTiempoRealProducto();
 
     // Warranty clause validation - sin trim() para permitir espacios
@@ -1225,96 +1230,6 @@ error: function(xhr, status, error) {
  * Actualiza una fila en la tabla de productos con los nuevos datos
  * @param {Object} producto - Objeto con los datos actualizados del producto
  */
-function actualizarFilaEnTabla(producto) {
-    const fila = $(`tr[data-id="${producto.id_producto}"]`);
-    if (!fila.length) {
-        console.warn('No se encontró la fila del producto a actualizar');
-        location.reload(); // Recargar como último recurso
-        return;
-    }
-
-    try {
-        // Actualizar datos visibles en la fila
-        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
-        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
-        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
-        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
-        fila.find('td:eq(6) span').text(producto.seriales || '');
-        
-        // Formatear y actualizar precio
-        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
-        fila.find('.precio').text(precioFormateado);
-        
-        // Actualizar botón de edición
-        const botonEditar = fila.find('.btn-modificar');
-        if (botonEditar.length) {
-            // Actualizar atributos data-* para futuras ediciones
-            const datosActualizar = {
-                'data-nombre': producto.nombre_producto || '',
-                'data-descripcion': producto.descripcion_producto || '',
-                'data-modelo': producto.nombre_modelo || '',
-                'data-marca': producto.nombre_marca || '',
-                'data-stockactual': producto.stock_actual || '0',
-                'data-stockmaximo': producto.stock_maximo || '0',
-                'data-stockminimo': producto.stock_minimo || '0',
-                'data-seriales': producto.seriales || '',
-                'data-clausula': producto.clausula_garantia || '',
-                'data-precio': precioFormateado,
-                'data-categoria': producto.categoria_id || '',
-                'data-tabla_categoria': producto.tabla_categoria || ''
-            };
-
-            // Aplicar los cambios a los atributos data-*
-            Object.entries(datosActualizar).forEach(([key, value]) => {
-                botonEditar.attr(key, value);
-            });
-
-            // Actualizar características dinámicas si existen
-            if (producto.caracteristicas) {
-                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
-                    if (value !== null && value !== undefined) {
-                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
-                        botonEditar.attr(dataKey, value);
-                    }
-                });
-            }
-        }
-
-        // Actualizar botón de detalles si existe
-        const botonDetalle = fila.find('.btn-detalle');
-        if (botonDetalle.length) {
-            botonDetalle.attr({
-                'data-nombredtl': producto.nombre_producto || '',
-                'data-modelodtl': producto.nombre_modelo || '',
-                'data-marcadtl': producto.nombre_marca || '',
-                'data-descripciondtl': producto.descripcion_producto || '',
-                'data-stockactualdtl': producto.stock_actual || '0',
-                'data-stockmaximodtl': producto.stock_maximo || '0',
-                'data-stockminimodtl': producto.stock_minimo || '0',
-                'data-serialdtl': producto.seriales || '',
-                'data-clausuladtl': producto.clausula_garantia || '',
-                'data-categoriadtl': producto.nombre_categoria || '',
-                'data-preciodtl': precioFormateado
-            });
-        }
-
-        // Mostrar notificación de éxito
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Producto actualizado',
-            showConfirmButton: false,
-            timer: 2000
-        });
-
-    } catch (error) {
-        console.error('Error al actualizar la fila del producto:', error);
-        // Si hay un error, recargar la página para asegurar consistencia
-        location.reload();
-    }
-}
-
 document.getElementById('imagen').addEventListener('change', function (event) {
   const input = event.target;
   const preview = document.getElementById('imagenPreview');
@@ -1332,33 +1247,6 @@ document.getElementById('imagen').addEventListener('change', function (event) {
     preview.src = '#';
     preview.style.display = 'none';
   }
-});
-
-document.querySelectorAll('.btn-modificar').forEach(btn => {
-  btn.addEventListener('click', function () {
-    // ...otros campos...
-    const imagen = this.dataset.imagen; // ya es la ruta completa
-const preview = document.getElementById('modificarImagenPreview');
-preview.src = imagen;
-preview.style.display = 'block';
-
-    // Limpiar input file
-    document.getElementById('modificarImagen').value = '';
-    // Limpiar preview si cambia la imagen
-    document.getElementById('modificarImagen').onchange = function (event) {
-      if (this.files && this.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          preview.src = e.target.result;
-        };
-        reader.readAsDataURL(this.files[0]);
-      } else {
-        preview.src = rutaImagen;
-      }
-    };
-    // ...resto del código...
-    $('#modificarProductoModal').modal('show');
-  });
 });
 
 $('#Precio').on('input', function() {
@@ -1391,103 +1279,13 @@ $('#Precio').on('input', function() {
     $(document).on('click', function() {
         $('.desplegable').hide();
     });
+    }
 });
 
 /**
  * Actualiza una fila en la tabla de productos con los nuevos datos
  * @param {Object} producto - Objeto con los datos actualizados del producto
  */
-function actualizarFilaEnTabla(producto) {
-    const fila = $(`tr[data-id="${producto.id_producto}"]`);
-    if (!fila.length) {
-        console.warn('No se encontró la fila del producto a actualizar');
-        location.reload(); // Recargar como último recurso
-        return;
-    }
-
-    try {
-        // Actualizar datos visibles en la fila
-        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
-        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
-        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
-        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
-        fila.find('td:eq(6) span').text(producto.seriales || '');
-        
-        // Formatear y actualizar precio
-        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
-        fila.find('.precio').text(precioFormateado);
-        
-        // Actualizar botón de edición
-        const botonEditar = fila.find('.btn-modificar');
-        if (botonEditar.length) {
-            // Actualizar atributos data-* para futuras ediciones
-            const datosActualizar = {
-                'data-nombre': producto.nombre_producto || '',
-                'data-descripcion': producto.descripcion_producto || '',
-                'data-modelo': producto.nombre_modelo || '',
-                'data-marca': producto.nombre_marca || '',
-                'data-stockactual': producto.stock_actual || '0',
-                'data-stockmaximo': producto.stock_maximo || '0',
-                'data-stockminimo': producto.stock_minimo || '0',
-                'data-seriales': producto.seriales || '',
-                'data-clausula': producto.clausula_garantia || '',
-                'data-precio': precioFormateado,
-                'data-categoria': producto.categoria_id || '',
-                'data-tabla_categoria': producto.tabla_categoria || ''
-            };
-
-            // Aplicar los cambios a los atributos data-*
-            Object.entries(datosActualizar).forEach(([key, value]) => {
-                botonEditar.attr(key, value);
-            });
-
-            // Actualizar características dinámicas si existen
-            if (producto.caracteristicas) {
-                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
-                    if (value !== null && value !== undefined) {
-                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
-                        botonEditar.attr(dataKey, value);
-                    }
-                });
-            }
-        }
-
-        // Actualizar botón de detalles si existe
-        const botonDetalle = fila.find('.btn-detalle');
-        if (botonDetalle.length) {
-            botonDetalle.attr({
-                'data-nombredtl': producto.nombre_producto || '',
-                'data-modelodtl': producto.nombre_modelo || '',
-                'data-marcadtl': producto.nombre_marca || '',
-                'data-descripciondtl': producto.descripcion_producto || '',
-                'data-stockactualdtl': producto.stock_actual || '0',
-                'data-stockmaximodtl': producto.stock_maximo || '0',
-                'data-stockminimodtl': producto.stock_minimo || '0',
-                'data-serialdtl': producto.seriales || '',
-                'data-clausuladtl': producto.clausula_garantia || '',
-                'data-categoriadtl': producto.nombre_categoria || '',
-                'data-preciodtl': precioFormateado
-            });
-        }
-
-        // Mostrar notificación de éxito
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Producto actualizado',
-            showConfirmButton: false,
-            timer: 2000
-        });
-
-    } catch (error) {
-        console.error('Error al actualizar la fila del producto:', error);
-        // Si hay un error, recargar la página para asegurar consistencia
-        location.reload();
-    }
-}
-
-
     function enviarAjax(datos, callback) {
         $.ajax({
             url: '',
@@ -1568,43 +1366,41 @@ document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('modalDetallesProducto');
     const cerrar = document.getElementById('cerrarModalDetalles');
 
-    document.querySelectorAll('.btn-detalle').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const imagen = this.dataset.imagendtl;
-            const contenedorImagen = document.getElementById('detalle-imagen');
-            contenedorImagen.innerHTML = imagen 
-                ? `<img src="${imagen}" alt="Imagen del Producto" style="width: 150px; height: 150px;">`
-                : 'Sin imagen';
-            document.getElementById('detalle-id').textContent = this.dataset.iddtl;
-            document.getElementById('detalle-nombre').textContent = this.dataset.nombredtl;
-            document.getElementById('detalle-modelo').textContent = this.dataset.modelodtl;
-            document.getElementById('detalle-marca').textContent = this.dataset.marcadtl;
-            document.getElementById('detalle-descripcion').textContent = this.dataset.descripciondtl;
-            document.getElementById('detalle-stockactual').textContent = this.dataset.stockactualdtl;
-            document.getElementById('detalle-stockmaximo').textContent = this.dataset.stockmaximodtl;
-            document.getElementById('detalle-stockminimo').textContent = this.dataset.stockminimodtl;
-            document.getElementById('detalle-serial').textContent = this.dataset.serialdtl;
-            document.getElementById('detalle-clausula').textContent = this.dataset.clausuladtl;
-            document.getElementById('detalle-categoria').textContent = this.dataset.categoriadtl;
-            document.getElementById('detalle-precio').textContent = this.dataset.preciodtl;
-            document.getElementById('detalle-estatus').textContent = this.dataset.estatusdtl;
-
-            // Mostrar modal con clase animada
-            modal.classList.add('mostrar');
+    if (modal && cerrar) {
+        document.querySelectorAll('.btn-detalle').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const imagen = this.dataset.imagendtl;
+                const contenedorImagen = document.getElementById('detalle-imagen');
+                contenedorImagen.innerHTML = imagen
+                    ? `<img src="${imagen}" alt="Imagen del Producto" style="width: 150px; height: 150px;">`
+                    : 'Sin imagen';
+                document.getElementById('detalle-id').textContent = this.dataset.iddtl;
+                document.getElementById('detalle-nombre').textContent = this.dataset.nombredtl;
+                document.getElementById('detalle-modelo').textContent = this.dataset.modelodtl;
+                document.getElementById('detalle-marca').textContent = this.dataset.marcadtl;
+                document.getElementById('detalle-descripcion').textContent = this.dataset.descripciondtl;
+                document.getElementById('detalle-stockactual').textContent = this.dataset.stockactualdtl;
+                document.getElementById('detalle-stockmaximo').textContent = this.dataset.stockmaximodtl;
+                document.getElementById('detalle-stockminimo').textContent = this.dataset.stockminimodtl;
+                document.getElementById('detalle-serial').textContent = this.dataset.serialdtl;
+                document.getElementById('detalle-clausula').textContent = this.dataset.clausuladtl;
+                document.getElementById('detalle-categoria').textContent = this.dataset.categoriadtl;
+                document.getElementById('detalle-precio').textContent = this.dataset.preciodtl;
+                document.getElementById('detalle-estatus').textContent = this.dataset.estatusdtl;
+                modal.classList.add('mostrar');
+            });
         });
-    });
 
-    // Cierre al hacer clic en el botón "X"
-    cerrar.addEventListener('click', () => {
-        modal.classList.remove('mostrar');
-    });
-
-    // Cierre al hacer clic fuera del contenido del modal
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
+        cerrar.addEventListener('click', () => {
             modal.classList.remove('mostrar');
-        }
-    });
+        });
+
+        window.addEventListener('click', event => {
+            if (event.target === modal) {
+                modal.classList.remove('mostrar');
+            }
+        });
+    }
 
     let modalAyudaInstance = null;
 
@@ -1633,21 +1429,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!$('script[src*="ayuda/js/modal.js"]').length) {
                     $.getScript('assets/public/ayuda/js/modal.js')
                         .done(function() {
-                            // Inicializar modal
                             if (typeof inicializarModalAyudaUsuario === 'function') {
                                 modalAyudaInstance = inicializarModalAyudaUsuario();
-
-                                // Abrir modal con contexto si se proporciona
                                 if (contexto) {
                                     setTimeout(() => {
                                         const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                        if (slideIndex !== undefined) {
-                                            modalAyudaInstance.goToSlide(slideIndex);
-                                        }
+                                        if (slideIndex !== undefined) modalAyudaInstance.goToSlide(slideIndex);
                                     }, 300);
                                 }
-
-                                // Abrir modal
                                 modalAyudaInstance.openModal();
                             } else {
                                 console.error('La función inicializarModalAyudaUsuario no está disponible');
@@ -1656,24 +1445,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         .fail(function() {
                             console.error('Error al cargar el JavaScript del modal de ayuda');
                         });
-                } else {
-                    // Si el JS ya está cargado, solo abrir el modal existente
-                    if (typeof inicializarModalAyudaUsuario === 'function') {
-                        modalAyudaInstance = inicializarModalAyudaUsuario();
-
-                        // Abrir modal con contexto si se proporciona
-                        if (contexto) {
-                            setTimeout(() => {
-                                const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
-                                if (slideIndex !== undefined) {
-                                    modalAyudaInstance.goToSlide(slideIndex);
-                                }
-                            }, 300);
-                        }
-
-                        // Abrir modal
-                        modalAyudaInstance.openModal();
+                } else if (typeof inicializarModalAyudaUsuario === 'function') {
+                    modalAyudaInstance = inicializarModalAyudaUsuario();
+                    if (contexto) {
+                        setTimeout(() => {
+                            const slideIndex = modalAyudaInstance.mapeoContextos[contexto];
+                            if (slideIndex !== undefined) modalAyudaInstance.goToSlide(slideIndex);
+                        }, 300);
                     }
+                    modalAyudaInstance.openModal();
                 }
             })
             .fail(function() {
@@ -1686,19 +1466,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // Botón de ayuda principal
-    $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(e) {
-        e.preventDefault();
-        console.log('Clic en botón de ayuda detectado');
-        cargarYMostrarModalAyuda(); // Sin contexto específico
+    $('.btn-ayuda').off('click.ayuda-modal').on('click.ayuda-modal', function(event) {
+        event.preventDefault();
+        cargarYMostrarModalAyuda();
     });
 
-    // Botón de ayuda dentro de modales
-    $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(e) {
-        e.preventDefault();
-        const contexto = $(this).data('contexto');
-        console.log('Clic en botón de ayuda modal con contexto:', contexto);
-        cargarYMostrarModalAyuda(contexto);
+    $(document).on('click.ayuda-modal', '.btn-ayuda-modal', function(event) {
+        event.preventDefault();
+        cargarYMostrarModalAyuda($(this).data('contexto'));
     });
 });
 // Evento para eliminar producto
@@ -1763,92 +1538,1141 @@ function eliminarFilaProducto(id_producto) {
  * Actualiza una fila en la tabla de productos con los nuevos datos
  * @param {Object} producto - Objeto con los datos actualizados del producto
  */
-function actualizarFilaEnTabla(producto) {
-    const fila = $(`tr[data-id="${producto.id_producto}"]`);
-    if (!fila.length) {
-        console.warn('No se encontró la fila del producto a actualizar');
-        location.reload(); // Recargar como último recurso
-        return;
-    }
+(function initializeVistaNewProducts() {
+    function initialize() {
+        const productModal = document.getElementById('productModal');
+        if (!productModal) return;
 
-    try {
-        // Actualizar datos visibles en la fila
-        fila.find('.campo-nombres').first().text(producto.nombre_producto || '');
-        fila.find('td:eq(3) span').text(producto.nombre_modelo || '');
-        fila.find('td:eq(4) span').text(producto.nombre_marca || '');
-        fila.find('td:eq(5) span').text(producto.stock_actual || '0');
-        fila.find('td:eq(6) span').text(producto.seriales || '');
-        
-        // Formatear y actualizar precio
-        const precioFormateado = parseFloat(producto.precio || 0).toFixed(2);
-        fila.find('.precio').text(precioFormateado);
-        
-        // Actualizar botón de edición
-        const botonEditar = fila.find('.btn-modificar');
-        if (botonEditar.length) {
-            // Actualizar atributos data-* para futuras ediciones
-            const datosActualizar = {
-                'data-nombre': producto.nombre_producto || '',
-                'data-descripcion': producto.descripcion_producto || '',
-                'data-modelo': producto.nombre_modelo || '',
-                'data-marca': producto.nombre_marca || '',
-                'data-stockactual': producto.stock_actual || '0',
-                'data-stockmaximo': producto.stock_maximo || '0',
-                'data-stockminimo': producto.stock_minimo || '0',
-                'data-seriales': producto.seriales || '',
-                'data-clausula': producto.clausula_garantia || '',
-                'data-precio': precioFormateado,
-                'data-categoria': producto.categoria_id || '',
-                'data-tabla_categoria': producto.tabla_categoria || ''
-            };
+        const productForm = document.getElementById('productForm');
+        const categoriasDinamicasProducto = JSON.parse(productModal.dataset.categories || '[]');
+        let productosDisponibles = JSON.parse(productModal.dataset.products || '[]');
+        const productCategory = document.getElementById('productCategory');
+        const productCategoryTable = document.getElementById('productCategoryTable');
+        const productCategoryFields = document.getElementById('productCategoryFields');
+        const productDetailsModal = document.getElementById('productDetailsModal');
+        const productImageInput = document.getElementById('productImage');
+        const productImagePreview = document.getElementById('productImagePreview');
+        const productImagePreviewPlaceholder = document.getElementById('productImagePreviewPlaceholder');
+        let temporaryProductImageUrl = null;
+        const allowedModelValues = new Set(Array.from(productForm.querySelector('#modelo').options, option => option.value));
+        const allowedCategoryValues = new Set(categoriasDinamicasProducto.map(category => category.tabla));
+        const productFormConfig = {
+            tipo: 'registrar',
+            formSelector: '#productForm',
+            campos: {
+                nombre: { selector: '#nombre_producto', span: '#snombre_producto', label: 'nombre del producto' },
+                descripcion: { selector: '#descripcion_producto', span: '#sdescripcion_producto', label: 'descripción del producto' },
+                modelo: { selector: '#modelo', span: '#smodelo', label: 'modelo' },
+                imagen: { selector: '#productImage', span: '#simagen', label: 'imagen del producto' },
+                stockActual: { selector: '#Stock_Actual', span: '#sStock_Actual', label: 'stock actual' },
+                stockMaximo: { selector: '#Stock_Maximo', span: '#sStock_Maximo', label: 'stock máximo' },
+                stockMinimo: { selector: '#Stock_Minimo', span: '#sStock_Minimo', label: 'stock mínimo' },
+                clausula: { selector: '#Clausula_garantia', span: '#sClausula_garantia', label: 'cláusula de garantía' },
+                categoria: { selector: '#productCategory', span: '#sCategoria', label: 'categoría' },
+                seriales: { selector: '#Seriales', span: '#sSeriales', label: 'seriales' },
+                precio: { selector: '#Precio', span: '#sPrecio', label: 'precio' }
+            },
+            caracteristicasContenedor: '#productCategoryFields',
+            tablaCategoriaHidden: '#productCategoryTable'
+        };
 
-            // Aplicar los cambios a los atributos data-*
-            Object.entries(datosActualizar).forEach(([key, value]) => {
-                botonEditar.attr(key, value);
-            });
+        protegerSelects(['modelo', 'productCategory']);
 
-            // Actualizar características dinámicas si existen
-            if (producto.caracteristicas) {
-                Object.entries(producto.caracteristicas).forEach(([key, value]) => {
-                    if (value !== null && value !== undefined) {
-                        const dataKey = `data-${key.toLowerCase().replace(/_/g, '')}`;
-                        botonEditar.attr(dataKey, value);
-                    }
+        function validateProductForm() {
+            if (!allowedModelValues.has(productForm.querySelector('#modelo').value)) {
+                Swal.fire({ icon: 'error', title: 'Modelo no válido', text: 'Selecciona un modelo disponible.' });
+                return false;
+            }
+            if (!allowedCategoryValues.has(productCategory.value)) {
+                Swal.fire({ icon: 'error', title: 'Categoría no válida', text: 'Selecciona una categoría disponible.' });
+                return false;
+            }
+            const result = validarFormularioProducto(productFormConfig);
+            if (!result.valido) {
+                const firstInvalid = productForm.querySelector('.is-invalid');
+                if (firstInvalid) firstInvalid.focus();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Revisa los datos del producto',
+                    text: result.errores.join('. ')
                 });
+            }
+            return result.valido;
+        }
+
+        const textInputRules = [
+            ['#nombre_producto', /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ\s\b]*$/, validarNombreProductoCampo, productFormConfig.campos.nombre],
+            ['#descripcion_producto', /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,\-\s\b]*$/, validarDescripcionProductoCampo, productFormConfig.campos.descripcion],
+            ['#Clausula_garantia', /^[a-zA-ZÁÉÍÓÚñÑáéíóúüÜ0-9,\-\s\b]*$/, validarClausulaCampo, productFormConfig.campos.clausula],
+            ['#Seriales', /^[a-zA-Z0-9-]*$/, validarSerialesCampo, productFormConfig.campos.seriales]
+        ];
+        textInputRules.forEach(([selector, keypressPattern, validate, config]) => {
+            const input = productForm.querySelector(selector);
+            input.addEventListener('keypress', event => validarkeypress(keypressPattern, event));
+            input.addEventListener('keyup', () => validate(config));
+            input.addEventListener('blur', () => validate(config));
+        });
+
+        [
+            ['#Stock_Actual', productFormConfig.campos.stockActual],
+            ['#Stock_Maximo', productFormConfig.campos.stockMaximo],
+            ['#Stock_Minimo', productFormConfig.campos.stockMinimo],
+            ['#Precio', productFormConfig.campos.precio]
+        ].forEach(([selector, config]) => {
+            const input = productForm.querySelector(selector);
+            input.addEventListener('keypress', event => validarkeypress(/^[0-9\b]*$/, event));
+            input.addEventListener('keyup', () => {
+                if (config === productFormConfig.campos.precio) {
+                    validarPrecioCampo(config);
+                } else {
+                    validarStockCampo(config);
+                    if (config === productFormConfig.campos.stockMinimo) {
+                        validarStockCampo(productFormConfig.campos.stockMaximo, {
+                            compare: maximo => maximo <= Number(input.value)
+                                ? { spanMensaje: '*Debe ser mayor al stock mínimo*', errorMensaje: 'El stock máximo debe ser mayor al stock mínimo' }
+                                : null
+                        });
+                    }
+                }
+            });
+            input.addEventListener('blur', () => {
+                if (config === productFormConfig.campos.precio) validarPrecioCampo(config);
+                else validarStockCampo(config);
+            });
+        });
+
+        productForm.querySelector('#modelo').addEventListener('change', () => validarModeloCampo(productFormConfig.campos.modelo));
+        productCategory.addEventListener('change', () => validarCategoriaCampo(productFormConfig.campos.categoria, productFormConfig.tablaCategoriaHidden));
+        productImageInput.addEventListener('change', () => validarImagenCampo(productFormConfig.campos.imagen, productFormConfig.tipo === 'registrar'));
+        productForm.addEventListener('input', event => {
+            if (event.target.closest('#productCategoryFields')) validarCaracteristicasProducto(productFormConfig);
+        });
+
+        function showProductImagePreview(source) {
+            if (!source) {
+                productImagePreview.removeAttribute('src');
+                productImagePreview.hidden = true;
+                productImagePreviewPlaceholder.hidden = false;
+                return;
+            }
+
+            productImagePreview.src = source;
+            productImagePreview.hidden = false;
+            productImagePreviewPlaceholder.hidden = true;
+        }
+
+        function clearTemporaryProductImageUrl() {
+            if (temporaryProductImageUrl) {
+                URL.revokeObjectURL(temporaryProductImageUrl);
+                temporaryProductImageUrl = null;
             }
         }
 
-        // Actualizar botón de detalles si existe
-        const botonDetalle = fila.find('.btn-detalle');
-        if (botonDetalle.length) {
-            botonDetalle.attr({
-                'data-nombredtl': producto.nombre_producto || '',
-                'data-modelodtl': producto.nombre_modelo || '',
-                'data-marcadtl': producto.nombre_marca || '',
-                'data-descripciondtl': producto.descripcion_producto || '',
-                'data-stockactualdtl': producto.stock_actual || '0',
-                'data-stockmaximodtl': producto.stock_maximo || '0',
-                'data-stockminimodtl': producto.stock_minimo || '0',
-                'data-serialdtl': producto.seriales || '',
-                'data-clausuladtl': producto.clausula_garantia || '',
-                'data-categoriadtl': producto.nombre_categoria || '',
-                'data-preciodtl': precioFormateado
+        productImageInput.addEventListener('change', function () {
+            clearTemporaryProductImageUrl();
+            const selectedImage = this.files && this.files[0];
+            if (!selectedImage) {
+                return;
+            }
+            temporaryProductImageUrl = URL.createObjectURL(selectedImage);
+            showProductImagePreview(temporaryProductImageUrl);
+        });
+
+        function renderProductCategoryFields(tabla, valores = {}) {
+            const categoria = categoriasDinamicasProducto.find(item => item.tabla === tabla);
+            productCategoryFields.replaceChildren();
+            productCategoryTable.value = tabla || '';
+
+            if (!categoria) {
+                return;
+            }
+
+            categoria.caracteristicas.forEach(caracteristica => {
+                const group = document.createElement('div');
+                group.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.htmlFor = `productCaracteristica_${caracteristica.nombre}`;
+                label.textContent = caracteristica.nombre.replace(/_/g, ' ');
+
+                const input = document.createElement('input');
+                input.id = label.htmlFor;
+                input.name = `carac[${caracteristica.nombre}]`;
+                input.type = ['int', 'float'].includes(caracteristica.tipo) ? 'number' : 'text';
+                input.className = 'input-textnum';
+                input.required = true;
+                if (input.type === 'number') {
+                    input.min = '0';
+                    if (caracteristica.tipo === 'float') input.step = 'any';
+                } else {
+                    input.maxLength = Number(caracteristica.max) || 255;
+                }
+                input.addEventListener('keypress', event => {
+                    const allowed = input.type === 'number' ? /^[0-9\b]*$/ : /^[a-zA-Z0-9@.\-\sÁÉÍÓÚáéíóúñÑ]*$/;
+                    validarkeypress(allowed, event);
+                });
+                input.addEventListener('keyup', () => validarCaracteristicasProducto(productFormConfig));
+                if (Object.prototype.hasOwnProperty.call(valores, caracteristica.nombre)) {
+                    input.value = valores[caracteristica.nombre] ?? '';
+                }
+
+                group.append(label, input);
+                productCategoryFields.appendChild(group);
             });
         }
 
-        // Mostrar notificación de éxito
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Producto actualizado',
-            showConfirmButton: false,
-            timer: 2000
+        productCategory.addEventListener('change', function () {
+            renderProductCategoryFields(this.value);
         });
 
-    } catch (error) {
-        console.error('Error al actualizar la fila del producto:', error);
-        // Si hay un error, recargar la página para asegurar consistencia
-        location.reload();
+        function openModal(type, productId = null) {
+            clearTemporaryProductImageUrl();
+            productForm.reset();
+            productFormConfig.tipo = type === 'editar' ? 'modificar' : 'registrar';
+            document.getElementById('productId').value = '';
+            document.getElementById('productAction').value = 'ingresar';
+            productCategoryFields.replaceChildren();
+            productCategoryTable.value = '';
+            showProductImagePreview('');
+            limpiarValidacionesFormulario(productFormConfig);
+
+            if (type === 'registrar') {
+                document.getElementById('modalTitle').textContent = 'Nuevo Producto';
+                productImageInput.required = true;
+                document.querySelector('#productModal .btn-save').textContent = 'Registrar';
+            } else if (type === 'editar') {
+                const producto = productosDisponibles.find(item => Number(item.id_producto) === Number(productId));
+                if (!producto) {
+                    Swal.fire({ icon: 'error', title: 'Producto no encontrado', text: 'Actualiza la página e inténtalo de nuevo.' });
+                    return;
+                }
+
+                document.getElementById('modalTitle').textContent = 'Modificar Producto';
+                productImageInput.required = false;
+                document.querySelector('#productModal .btn-save').textContent = 'Guardar cambios';
+                document.getElementById('productId').value = producto.id_producto;
+                document.getElementById('productAction').value = 'modificar';
+                document.getElementById('nombre_producto').value = producto.nombre_producto || '';
+                document.getElementById('descripcion_producto').value = producto.descripcion_producto || '';
+                document.getElementById('modelo').value = producto.id_modelo || '';
+                document.getElementById('Precio').value = producto.precio || '';
+                document.getElementById('Stock_Actual').value = producto.stock_actual ?? producto.stock ?? 0;
+                document.getElementById('Stock_Minimo').value = producto.stock_minimo ?? 0;
+                document.getElementById('Stock_Maximo').value = producto.stock_maximo ?? 0;
+                document.getElementById('Clausula_garantia').value = producto.clausula_garantia || '';
+                document.getElementById('Seriales').value = producto.serial || '';
+                showProductImagePreview(producto.imagen || '');
+
+                const normalizarCategoria = value => String(value || '')
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .replace(/[\s_-]+/g, '');
+                const categoria = categoriasDinamicasProducto.find(item => normalizarCategoria(item.nombre_categoria) === normalizarCategoria(producto.nombre_categoria));
+                productCategory.value = categoria ? categoria.tabla : '';
+                productForm.querySelector('#modelo').dispatchEvent(new Event('change'));
+                productCategory.dispatchEvent(new Event('change'));
+                renderProductCategoryFields(productCategory.value, producto.caracteristicas || {});
+            }
+            productModal.style.display = 'block';
+        }
+
+        function closeModal() {
+            productModal.style.display = 'none';
+            clearTemporaryProductImageUrl();
+            productForm.reset();
+            productCategoryFields.replaceChildren();
+            productCategoryTable.value = '';
+            showProductImagePreview('');
+        }
+
+        async function enviarAccionProducto(datos) {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                body: datos,
+                credentials: 'same-origin'
+            });
+            const responseText = await response.text();
+            let resultado;
+            try {
+                resultado = JSON.parse(responseText);
+            } catch (error) {
+                throw new Error('El servidor devolvió una respuesta no válida. Inténtalo nuevamente.');
+            }
+            if (!response.ok || resultado.status === 'error') {
+                throw new Error(resultado.message || resultado.mensaje || 'No se pudo completar la operación.');
+            }
+            return resultado;
+        }
+
+        function readImageAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('No se pudo leer la imagen seleccionada.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function makeProductFromForm(existingProduct, idProducto, result) {
+            const modelSelect = productForm.querySelector('#modelo');
+            const modelOption = modelSelect.options[modelSelect.selectedIndex];
+            const modelParts = modelOption.textContent.match(/^(.*?)\s+\((.*)\)$/);
+            const categoryOption = productCategory.options[productCategory.selectedIndex];
+            const product = {
+                ...(existingProduct || {}),
+                id_producto: idProducto,
+                nombre_producto: productForm.querySelector('#nombre_producto').value.trim(),
+                descripcion_producto: productForm.querySelector('#descripcion_producto').value.trim(),
+                id_modelo: modelSelect.value,
+                nombre_modelo: modelParts ? modelParts[1] : modelOption.textContent,
+                nombre_marca: modelParts ? modelParts[2] : '',
+                stock_actual: Number(productForm.querySelector('#Stock_Actual').value),
+                stock: Number(productForm.querySelector('#Stock_Actual').value),
+                stock_maximo: Number(productForm.querySelector('#Stock_Maximo').value),
+                stock_minimo: Number(productForm.querySelector('#Stock_Minimo').value),
+                clausula_garantia: productForm.querySelector('#Clausula_garantia').value,
+                serial: productForm.querySelector('#Seriales').value.trim(),
+                precio: Number(productForm.querySelector('#Precio').value),
+                nombre_categoria: (categoriasDinamicasProducto.find(item => item.tabla === productCategory.value) || {}).nombre_categoria || categoryOption.textContent,
+                caracteristicas: Object.fromEntries(Array.from(productCategoryFields.querySelectorAll('input')).map(input => [
+                    input.name.match(/^carac\[(.+)\]$/)?.[1] || input.name,
+                    input.value
+                ])),
+                estado: (existingProduct && existingProduct.estado) || 'habilitado'
+            };
+            const selectedImage = productImageInput.files && productImageInput.files[0];
+            product.imagen = result.imagen || (existingProduct && existingProduct.imagen) || '';
+            return selectedImage ? readImageAsDataUrl(selectedImage).then(image => ({ ...product, imagen: image })) : Promise.resolve(product);
+        }
+
+        function createProductAction(action, id) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `btn-action btn-${action}`;
+            button.dataset.productAction = action;
+            button.dataset.productId = String(id);
+            const titles = { edit: 'Modificar Producto', delete: 'Eliminar Producto', view: 'Ver Producto' };
+            const icons = { edit: 'fa-edit', delete: 'fa-trash', view: 'fa-eye' };
+            button.title = titles[action];
+            button.setAttribute('aria-label', titles[action]);
+            const icon = document.createElement('i');
+            icon.className = `fas ${icons[action]}`;
+            button.appendChild(icon);
+            return button;
+        }
+
+        function updateProductCard(product) {
+            const grid = document.querySelector('.products-grid');
+            const id = String(product.id_producto);
+            let card = grid.querySelector(`.product-card[data-product-id="${id}"]`);
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'product-card';
+                card.dataset.productId = id;
+                const imageFrame = document.createElement('div');
+                imageFrame.className = 'product-image';
+                const info = document.createElement('div');
+                info.className = 'product-info';
+                const name = document.createElement('h3');
+                const category = document.createElement('p');
+                category.className = 'product-category';
+                const brand = document.createElement('p');
+                brand.className = 'product-brand';
+                const price = document.createElement('div');
+                price.className = 'product-price';
+                const stock = document.createElement('div');
+                stock.className = 'product-stock';
+                stock.innerHTML = '<span class="stock-label">Stock:</span> <span class="stock-value"></span>';
+                const actions = document.createElement('div');
+                actions.className = 'product-actions';
+                if (productModal.dataset.canModify === 'true') actions.append(createProductAction('edit', id));
+                if (productModal.dataset.canDelete === 'true') actions.append(createProductAction('delete', id));
+                actions.append(createProductAction('view', id));
+                info.append(name, category, brand, price, stock, actions);
+                card.append(imageFrame, info);
+            }
+
+            card.dataset.productId = id;
+            const imageFrame = card.querySelector('.product-image');
+            imageFrame.replaceChildren();
+            if (product.imagen) {
+                const image = document.createElement('img');
+                image.src = product.imagen;
+                image.alt = product.nombre_producto || 'Producto';
+                image.className = 'product-img';
+                imageFrame.appendChild(image);
+            } else {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'image-placeholder';
+                placeholder.innerHTML = '<i class="fas fa-box"></i>';
+                imageFrame.appendChild(placeholder);
+            }
+
+            const stockActual = Number(product.stock_actual ?? product.stock ?? 0);
+            const stockMinimo = Number(product.stock_minimo || 0);
+            if (stockActual <= stockMinimo || stockActual < 10) {
+                const badge = document.createElement('span');
+                badge.className = `product-badge ${stockActual <= stockMinimo ? 'low-stock' : 'critical'}`;
+                badge.textContent = stockActual <= stockMinimo ? 'Stock Bajo' : 'Crítico';
+                imageFrame.appendChild(badge);
+            }
+
+            card.querySelector('h3').textContent = product.nombre_producto || '';
+            card.querySelector('.product-category').textContent = product.nombre_categoria || 'Sin categoría';
+            card.querySelector('.product-brand').textContent = product.nombre_marca || 'Sin marca';
+            card.querySelector('.product-price').textContent = `$${Number(product.precio || 0).toFixed(2)}`;
+            const stockValue = card.querySelector('.stock-value');
+            stockValue.textContent = `${stockActual} unidades`;
+            stockValue.className = `stock-value ${stockActual <= stockMinimo ? 'low' : stockActual < 10 ? 'critical' : stockActual > 30 ? 'high' : 'medium'}`;
+            card.querySelectorAll('[data-product-id]').forEach(button => { button.dataset.productId = id; });
+            if (!card.isConnected) {
+                grid.querySelector('.no-products')?.remove();
+                grid.appendChild(card);
+            }
+        }
+
+        function updateAnalyticsProductOptions() {
+            const selectedValue = analyticsProduct.value;
+            analyticsProduct.replaceChildren(new Option('Seleccionar producto', ''));
+            productosDisponibles.forEach(product => {
+                analyticsProduct.add(new Option(product.nombre_producto || 'Producto', String(product.id_producto)));
+            });
+            analyticsProduct.value = productosDisponibles.some(product => String(product.id_producto) === selectedValue) ? selectedValue : '';
+        }
+
+        function updateStockSummary() {
+            const total = productosDisponibles.length;
+            const low = productosDisponibles.filter(product => Number(product.stock_actual ?? product.stock ?? 0) <= Number(product.stock_minimo || 0)).length;
+            const stable = productosDisponibles.filter(product => {
+                const stock = Number(product.stock_actual ?? product.stock ?? 0);
+                return stock > Number(product.stock_minimo || 0) && stock < Number(product.stock_maximo || 0);
+            }).length;
+            const exceeded = productosDisponibles.filter(product => Number(product.stock_actual ?? product.stock ?? 0) >= Number(product.stock_maximo || 0)).length;
+            const metrics = [low, stable, exceeded];
+            const cards = document.querySelectorAll('.summary-card');
+            metrics.forEach((value, index) => {
+                const card = cards[index];
+                if (!card) return;
+                card.querySelector('.card-value').textContent = String(value);
+                const percentage = total ? Math.round(value / total * 100) : 0;
+                card.querySelector('.percentage').textContent = `${percentage}%`;
+                card.querySelector('.circle').setAttribute('stroke-dasharray', `${percentage}, 100`);
+            });
+        }
+
+        function updateCategorySummary() {
+            const normalize = value => String(value || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[\s_-]+/g, '');
+            document.querySelectorAll('.category-card').forEach(card => {
+                const category = normalize(card.querySelector('h3').textContent);
+                const count = productosDisponibles.filter(product => normalize(product.nombre_categoria) === category).length;
+                card.querySelector('p').textContent = `${count} productos`;
+            });
+        }
+
+        productForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            if (!validateProductForm() || !productForm.reportValidity()) return;
+
+            productCategoryTable.value = productCategory.value;
+            const datos = new FormData(productForm);
+            datos.set('tabla_categoria', productCategory.value);
+            const submitButton = document.querySelector('#productModal .btn-save');
+            const action = document.getElementById('productAction').value;
+            const editing = action === 'modificar';
+            const productId = document.getElementById('productId').value;
+            const existingProduct = productosDisponibles.find(product => String(product.id_producto) === String(productId));
+            if (submitButton) submitButton.disabled = true;
+            try {
+                const productDraft = await makeProductFromForm(existingProduct, productId, {});
+                const resultado = await enviarAccionProducto(datos);
+                const savedId = editing ? productId : resultado.id_producto;
+                const savedProduct = {
+                    ...productDraft,
+                    id_producto: savedId,
+                    imagen: resultado.imagen || productDraft.imagen
+                };
+                const existingIndex = productosDisponibles.findIndex(product => String(product.id_producto) === String(savedId));
+                if (existingIndex < 0) productosDisponibles.unshift(savedProduct);
+                else productosDisponibles[existingIndex] = savedProduct;
+                productModal.dataset.products = JSON.stringify(productosDisponibles);
+                updateProductCard(savedProduct);
+                updateAnalyticsProductOptions();
+                updateStockSummary();
+                updateCategorySummary();
+                closeModal();
+                await Swal.fire({
+                    icon: 'success',
+                    title: editing ? 'Producto modificado' : 'Producto registrado',
+                    text: resultado.mensaje || resultado.message || 'Los cambios se guardaron correctamente.'
+                });
+                loadAnalytics();
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'No se pudo guardar', text: error.message });
+            } finally {
+                if (submitButton) submitButton.disabled = false;
+            }
+        });
+
+        async function deleteProduct(productId) {
+            const confirmacion = await Swal.fire({
+                icon: 'warning',
+                title: '¿Eliminar producto?',
+                text: 'La operación será validada por el sistema antes de aplicarse.',
+                showCancelButton: true,
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            if (!confirmacion.isConfirmed) return;
+
+            const datos = new FormData();
+            datos.append('accion', 'eliminar');
+            datos.append('id_producto', String(productId));
+            try {
+                const resultado = await enviarAccionProducto(datos);
+                productosDisponibles = productosDisponibles.filter(product => String(product.id_producto) !== String(productId));
+                productModal.dataset.products = JSON.stringify(productosDisponibles);
+                Array.from(document.querySelectorAll('.product-card')).find(card => card.dataset.productId === String(productId))?.remove();
+                if (!productosDisponibles.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'no-products';
+                    empty.innerHTML = '<i class="fas fa-box-open"></i><p>No hay productos registrados en el sistema</p>';
+                    document.querySelector('.products-grid').appendChild(empty);
+                }
+                updateAnalyticsProductOptions();
+                updateStockSummary();
+                updateCategorySummary();
+                await Swal.fire({ icon: 'success', title: 'Producto eliminado', text: resultado.message || 'Se eliminó correctamente.' });
+                loadAnalytics();
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'No se pudo eliminar', text: error.message });
+            }
+        }
+
+        function viewProduct(productId) {
+            const producto = productosDisponibles.find(item => Number(item.id_producto) === Number(productId));
+            if (!producto) return;
+
+            const setDetail = (id, value) => {
+                document.getElementById(id).textContent = value === null || value === undefined || value === '' ? '-' : String(value);
+            };
+
+            document.getElementById('detailProductTitle').textContent = producto.nombre_producto || 'Detalles del Producto';
+            setDetail('detailProductId', producto.id_producto);
+            setDetail('detailProductName', producto.nombre_producto);
+            setDetail('detailProductCategory', producto.nombre_categoria);
+            setDetail('detailProductModel', producto.nombre_modelo);
+            setDetail('detailProductBrand', producto.nombre_marca);
+            setDetail('detailProductPrice', `$${Number(producto.precio || 0).toFixed(2)}`);
+            setDetail('detailProductStock', producto.stock_actual ?? producto.stock);
+            setDetail('detailProductMinStock', producto.stock_minimo);
+            setDetail('detailProductMaxStock', producto.stock_maximo);
+            setDetail('detailProductSerial', producto.serial);
+            setDetail('detailProductStatus', producto.estado);
+            setDetail('detailProductDescription', producto.descripcion_producto);
+            setDetail('detailProductWarranty', producto.clausula_garantia);
+
+            const image = document.getElementById('detailProductImage');
+            const placeholder = document.getElementById('detailProductImagePlaceholder');
+            if (producto.imagen) {
+                image.src = producto.imagen;
+                image.hidden = false;
+                placeholder.hidden = true;
+            } else {
+                image.removeAttribute('src');
+                image.hidden = true;
+                placeholder.hidden = false;
+            }
+
+            const characteristics = document.getElementById('detailProductCharacteristics');
+            characteristics.replaceChildren();
+            Object.entries(producto.caracteristicas || {}).forEach(([name, value]) => {
+                if (['id', 'id_producto'].includes(name)) return;
+                const item = document.createElement('div');
+                item.className = 'product-detail';
+                const label = document.createElement('span');
+                label.textContent = name.replace(/_/g, ' ');
+                const detailValue = document.createElement('strong');
+                detailValue.textContent = value === null || value === '' ? '-' : String(value);
+                item.append(label, detailValue);
+                characteristics.appendChild(item);
+            });
+
+            productDetailsModal.style.display = 'block';
+            productDetailsModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeProductDetails() {
+            productDetailsModal.style.display = 'none';
+            productDetailsModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function openFilterModal() {
+            Swal.fire({
+                title: 'Filtrar productos',
+                input: 'text',
+                inputPlaceholder: 'Nombre, categoría, modelo o marca',
+                showCancelButton: true,
+                confirmButtonText: 'Filtrar',
+                cancelButtonText: 'Limpiar'
+            }).then(result => {
+                const filtro = result.isConfirmed ? (result.value || '').trim().toLocaleLowerCase() : '';
+                document.querySelectorAll('.product-card').forEach(card => {
+                    card.hidden = filtro !== '' && !card.textContent.toLocaleLowerCase().includes(filtro);
+                });
+            });
+        }
+
+        function clearProductForm() {
+            const action = document.getElementById('productAction').value;
+            const productId = document.getElementById('productId').value;
+            productForm.reset();
+            document.getElementById('productAction').value = action;
+            document.getElementById('productId').value = productId;
+            productCategoryFields.replaceChildren();
+            productCategoryTable.value = '';
+            showProductImagePreview('');
+            clearTemporaryProductImageUrl();
+            limpiarValidacionesFormulario(productFormConfig);
+        }
+
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('[data-product-action]');
+            if (!button) return;
+
+            const productId = button.dataset.productId;
+            switch (button.dataset.productAction) {
+                case 'register':
+                    openModal('registrar');
+                    break;
+                case 'edit':
+                    openModal('editar', productId);
+                    break;
+                case 'delete':
+                    deleteProduct(productId);
+                    break;
+                case 'view':
+                    viewProduct(productId);
+                    break;
+                case 'filter':
+                    openFilterModal();
+                    break;
+                case 'clear':
+                    clearProductForm();
+                    break;
+            }
+        });
+
+        const analyticsProduct = document.getElementById('analyticsProduct');
+        const analyticsCategory = document.getElementById('analyticsCategory');
+        const analyticsStatus = document.getElementById('analyticsStatus');
+        const analyticsKpis = document.getElementById('analyticsKpis');
+        const analyticsRecommendations = document.getElementById('analyticsRecommendations');
+        const analyticsCanvas = document.getElementById('analyticsChart');
+        let analyticsChart = null;
+
+        function setAnalyticsStatus(message, type = '') {
+            analyticsStatus.textContent = message;
+            analyticsStatus.className = `analytics-status ${type}`.trim();
+        }
+
+        async function postAnalytics(action, values = {}) {
+            const form = new FormData();
+            form.append('accion', action);
+            Object.entries(values).forEach(([key, value]) => form.append(key, String(value)));
+            const response = await fetch(window.location.href, { method: 'POST', body: form });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.detail || result.message || 'No se pudo completar la solicitud.');
+            }
+            return result;
+        }
+
+        function displayMetric(value, suffix = '') {
+            if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+                return 'No disponible';
+            }
+            return `${Number(value).toLocaleString('es-VE', { maximumFractionDigits: 2 })}${suffix}`;
+        }
+
+        function renderAnalyticsChart(data) {
+            if (typeof Chart === 'undefined') {
+                setAnalyticsStatus('Chart.js no está disponible; los datos del análisis sí se recibieron.', 'error');
+                return;
+            }
+            const historical = Array.isArray(data.historico) ? data.historico : [];
+            const forecast = Array.isArray(data.prediccion) ? data.prediccion : [];
+            const labels = [...historical.map(item => item.fecha), ...forecast.map(item => item.fecha)];
+            const empty = Array(historical.length).fill(null);
+            const missingForecast = Array(forecast.length).fill(null);
+            const datasets = [
+                {
+                    label: 'Ventas reales',
+                    data: [...historical.map(item => item.valor), ...missingForecast],
+                    borderColor: '#2563eb',
+                    backgroundColor: '#2563eb',
+                    borderWidth: 2,
+                    pointRadius: 1,
+                    tension: 0.2
+                },
+                {
+                    label: 'Demanda estimada',
+                    data: [...empty, ...forecast.map(item => item.valor)],
+                    borderColor: '#f97316',
+                    backgroundColor: '#f97316',
+                    borderWidth: 2,
+                    borderDash: [7, 5],
+                    pointRadius: 1,
+                    tension: 0.2
+                },
+                {
+                    label: 'Límite inferior',
+                    data: [...empty, ...forecast.map(item => item.limite_inferior)],
+                    borderColor: 'rgba(249, 115, 22, 0)',
+                    pointRadius: 0,
+                    fill: false
+                },
+                {
+                    label: 'Intervalo estimado',
+                    data: [...empty, ...forecast.map(item => item.limite_superior)],
+                    borderColor: 'rgba(249, 115, 22, 0)',
+                    backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                    pointRadius: 0,
+                    fill: 2
+                }
+            ];
+
+            if (analyticsChart) analyticsChart.destroy();
+            analyticsChart = new Chart(analyticsCanvas.getContext('2d'), {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${context.dataset.label}: ${context.parsed.y === null ? '—' : `${context.parsed.y.toLocaleString('es-VE', { maximumFractionDigits: 2 })} unidades`}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Unidades' } },
+                        x: { title: { display: true, text: `Fecha · horizonte ${data.horizonte_dias} días` } }
+                    }
+                }
+            });
+        }
+
+        function renderAnalyticsRecommendations(items) {
+            analyticsRecommendations.replaceChildren();
+            if (!items.length) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 6;  // 6 columnas (sin explicación)
+                cell.textContent = 'No hay acciones recomendadas con la información disponible.';
+                row.appendChild(cell);
+                analyticsRecommendations.appendChild(row);
+                return;
+            }
+
+            items.forEach(item => {
+                // Fila principal con los datos del combo
+                const row = document.createElement('tr');
+                const values = [
+                    item.producto || 'Producto',
+                    item.senal || '—',
+                    item.cantidad_sugerida === null || item.cantidad_sugerida === undefined ? '—' : item.cantidad_sugerida,
+                    `${item.nivel_confianza || '—'} (${Math.round((item.confianza || 0) * 100)}%)`,
+                    item.calculado_en ? new Date(item.calculado_en).toLocaleString('es-VE') : '—'
+                ];
+                values.forEach(value => {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+
+                const ratingCell = document.createElement('td');
+                const rating = document.createElement('div');
+                rating.className = 'analytics-rating';
+                rating.setAttribute('role', 'group');
+                rating.setAttribute('aria-label', `Valorar ${item.producto || 'recomendación'}`);
+                for (let stars = 1; stars <= 5; stars += 1) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.textContent = '★';
+                    button.dataset.recommendationId = item.recomendacion_id;
+                    button.dataset.recommendationType = item.tipo;
+                    button.dataset.stars = String(stars);
+                    button.setAttribute('aria-label', `${stars} estrellas`);
+                    button.title = `${stars} estrellas`;
+                    rating.appendChild(button);
+                }
+                ratingCell.appendChild(rating);
+                row.appendChild(ratingCell);
+                analyticsRecommendations.appendChild(row);
+
+                // Fila secundaria para la explicación
+                if (item.explicacion) {
+                    const explanationRow = document.createElement('tr');
+                    explanationRow.className = 'explanation-row';
+
+                    // Celda para la explicación que abarca las primeras 5 columnas
+                    const explanationCell = document.createElement('td');
+                    explanationCell.colSpan = 6;
+                    explanationCell.style.padding = '0';
+                    explanationCell.style.backgroundColor = '#ffffff';
+                    explanationCell.style.borderTop = '1px solid #e0e0e0';
+
+                    // Contenedor principal de la explicación
+                    const explanationContainer = document.createElement('div');
+                    explanationContainer.style.padding = '16px';
+                    explanationContainer.style.display = 'flex';
+                    explanationContainer.style.flexDirection = 'column';
+                    explanationContainer.style.gap = '12px';
+
+                    // Parsear la explicación por secciones
+                    const sections = item.explicacion.split('\n\n');
+
+                    // Agrupar secciones por tipo
+                    const problemaSection = sections.find(s => s.includes('PROBLEMA IDENTIFICADO'));
+                    const solucionSection = sections.find(s => s.includes('SOLUCIÓN ESTRATÉGICA'));
+                    const evidenciaSection = sections.find(s => s.includes('EVIDENCIA HISTÓRICA'));
+                    const impactoSection = sections.find(s => s.includes('IMPACTO FINANCIERO'));
+                    const ejecucionSection = sections.find(s => s.includes('RECOMENDACIÓN DE EJECUCIÓN'));
+                    const metricasSection = sections.find(s => s.includes('MÉTRICAS DE SEGUIMIENTO'));
+
+
+
+                    // 2. Contenedor para las 3 tarjetas intermedias (grid de 3 columnas)
+                    const middleContainer = document.createElement('div');
+                    middleContainer.style.display = 'grid';
+                    middleContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                    middleContainer.style.gap = '12px';
+
+                                                // 1. Tarjeta PROBLEMA IDENTIFICADO (ancho completo)
+                    if (problemaSection) {
+                        const card = document.createElement('div');
+                        card.style.padding = '12px';
+                        card.style.borderRadius = '8px';
+                        card.style.border = '1px solid #fdba74';
+                        card.style.backgroundColor = '#fff7ed';
+                        card.style.fontSize = '1.5em';
+                        card.style.lineHeight = '1.4';
+                        card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:700;font-size:1.1em;color:#9a3412;">⚠️ PROBLEMA IDENTIFICADO</div>' +
+                                       '<div style="color:#9a3412;">' + problemaSection.replace('⚠️ **PROBLEMA IDENTIFICADO:**', '').trim() + '</div>';
+                        middleContainer.appendChild(card);
+                    }
+                    // EVIDENCIA HISTÓRICA
+                    if (evidenciaSection) {
+                        const card = document.createElement('div');
+                        card.style.padding = '12px';
+                        card.style.borderRadius = '8px';
+                        card.style.border = '1px solid #93c5fd';
+                        card.style.backgroundColor = '#eff6ff';
+                        card.style.fontSize = '1.5em';
+                        card.style.lineHeight = '1.4';
+                        card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#1e40af;">📊 EVIDENCIA HISTÓRICA</div>' +
+                                       '<div style="color:#1e40af;">' + evidenciaSection.replace('📊 **EVIDENCIA HISTÓRICA:**', '').trim() + '</div>';
+                        middleContainer.appendChild(card);
+                    }
+
+                    // IMPACTO FINANCIERO
+                    if (impactoSection) {
+                        const card = document.createElement('div');
+                        card.style.padding = '12px';
+                        card.style.borderRadius = '8px';
+                        card.style.border = '1px solid #fde047';
+                        card.style.backgroundColor = '#fef9c3';
+                        card.style.fontSize = '1.5em';
+                        card.style.lineHeight = '1.4';
+                        card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#854d0e;">💰 IMPACTO FINANCIERO</div>' +
+                                       '<div style="color:#854d0e;">' + impactoSection.replace('💰 **IMPACTO FINANCIERO:**', '').trim() + '</div>';
+                        middleContainer.appendChild(card);
+                    }
+
+                    // RECOMENDACIÓN DE EJECUCIÓN
+                    /*
+                    if (ejecucionSection) {
+                        const card = document.createElement('div');
+                        card.style.padding = '12px';
+                        card.style.borderRadius = '8px';
+                        card.style.border = '1px solid #86efac';
+                        card.style.backgroundColor = '#f0fdf4';
+                        card.style.fontSize = '0.85em';
+                        card.style.lineHeight = '1.4';
+                        card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#166534;">🎯 RECOMENDACIÓN DE EJECUCIÓN</div>' +
+                                       '<div style="color:#166534;">' + ejecucionSection.replace('🎯 **RECOMENDACIÓN DE EJECUCIÓN:**', '').trim() + '</div>';
+                        middleContainer.appendChild(card);
+                    }
+                    */
+                    explanationContainer.appendChild(middleContainer);
+
+                    // 3. Tarjeta SOLUCIÓN ESTRATÉGICA (ancho completo) que incluye MÉTRICAS como nota
+                    if (solucionSection) {
+                        const card = document.createElement('div');
+                        card.style.padding = '16px';
+                        card.style.borderRadius = '8px';
+                        card.style.border = '1px solid #86efac';
+                        card.style.backgroundColor = '#f0fdf4';
+                        card.style.fontSize = '1.5em';
+                        card.style.lineHeight = '1.5';
+
+                        const solucionText = (solucionSection || ejecucionSection || item.explicacion)
+                            .replace(/^(?:💡 )?\*\*SOLUCIÓN ESTRATÉGICA:\*\*/i, '').trim();
+                        const metricasText = metricasSection
+                            ? metricasSection.replace('📈 **MÉTRICAS DE SEGUIMIENTO:**', '').trim()
+                            : '';
+
+                        let innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-weight:700;font-size:1.1em;color:#166534;">💡 SOLUCIÓN ESTRATÉGICA</div>' +
+                                       '<div style="color:#166534;margin-bottom:16px;">' + solucionText + '</div>' +
+                                       '<button class="add-combo-btn" data-combo-info=\'' + JSON.stringify({
+                                            productos: item.productos,
+                                            cantidad_congelada: item.cantidad_congelada,
+                                            cantidad_popular: item.cantidad_popular,
+                                            descuento: item.descuento_sugerido,
+                                            recomendacion_id: item.recomendacion_id
+                                        }).replace(/'/g, "\\'") + '\' style="background:#22c55e;color:white;border:none;padding:12px 24px;border-radius:6px;cursor:pointer;font-size:1em;font-weight:600;margin-bottom:16px;transition:background 0.2s;" onmouseover="this.style.background=\'#16a34a\'" onmouseout="this.style.background=\'#22c55e\'">+ Agregar Combo Recomendado</button>';
+                        /*
+                        if (metricasText) {
+                            innerHTML += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #86efac;">' +
+                                        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;color:#166534;font-size:0.9em;">📈 Nota: MÉTRICAS DE SEGUIMIENTO</div>' +
+                                        '<div style="color:#166534;font-size:0.85em;">' + metricasText + '</div></div>';
+                        }
+                        */
+                        card.innerHTML = innerHTML;
+                        explanationContainer.appendChild(card);
+                    }
+
+                    explanationCell.appendChild(explanationContainer);
+                    explanationRow.appendChild(explanationCell);
+
+                    // Celda vacía para la columna de valoración
+                    const emptyRatingCell = document.createElement('td');
+                    emptyRatingCell.style.padding = '0';
+                    emptyRatingCell.style.border = 'none';
+                    emptyRatingCell.style.backgroundColor = '#ffffff';
+                    emptyRatingCell.style.borderTop = '1px solid #e0e0e0';
+                    explanationRow.appendChild(emptyRatingCell);
+
+                    analyticsRecommendations.appendChild(explanationRow);
+                }
+            });
+        }
+
+        async function loadAnalytics() {
+            const productId = analyticsProduct.value;
+            const categoryId = analyticsCategory.value;
+
+            if (productId && categoryId) {
+                setAnalyticsStatus('Selecciona un producto o una categoría, pero no ambos.', 'error');
+                return;
+            }
+
+            const button = document.getElementById('runAnalytics');
+            button.disabled = true;
+            setAnalyticsStatus('Consultando ventas y calculando el análisis…');
+            try {
+                const result = await postAnalytics('analitica_dashboard', {
+                    producto_id: productId || '',
+                    categoria_id: categoryId || '',
+                    frecuencia: document.getElementById('analyticsFrequency').value,
+                    horizonte: document.getElementById('analyticsHorizon').value,
+                });
+                if (result.calidad?.estado === 'sin_datos') {
+                    analyticsKpis.hidden = true;
+                    renderAnalyticsRecommendations([]);
+                    setAnalyticsStatus('El producto o categoría seleccionado no tiene productos activos.');
+                    return;
+                }
+                if (result.calidad?.estado === 'sin_ventas') {
+                    analyticsKpis.hidden = true;
+                    renderAnalyticsChart(result);
+                    renderAnalyticsRecommendations([]);
+                    setAnalyticsStatus('No hay ventas de facturas pagadas para este filtro en los últimos 365 días.');
+                    return;
+                }
+
+                analyticsKpis.hidden = false;
+                const metrics = result.metricas || {};
+                analyticsKpis.querySelector('[data-metric="venta_proyectada"]').textContent = displayMetric(metrics.venta_proyectada);
+                analyticsKpis.querySelector('[data-metric="dias_estimados_agotamiento"]').textContent = displayMetric(metrics.dias_estimados_agotamiento, ' días');
+                analyticsKpis.querySelector('[data-metric="punto_reorden"]').textContent = displayMetric(metrics.punto_reorden, ' unidades');
+                analyticsKpis.querySelector('[data-metric="cantidad_sugerida_compra"]').textContent = displayMetric(metrics.cantidad_sugerida_compra, ' unidades');
+                analyticsKpis.querySelector('[data-metric="rotacion_proyectada"]').textContent = displayMetric(metrics.rotacion_proyectada, 'x');
+
+                // Mostrar explicaciones de manera especial
+                /*
+                const explicacionesElement = analyticsKpis.querySelector('[data-metric="explicaciones"]');
+                if (metrics.explicaciones && typeof metrics.explicaciones === 'object') {
+                    // Crear un tooltip o texto expandible con las explicaciones
+                    const explicacionesText = Object.values(metrics.explicaciones).filter(e => e).join('\n\n');
+                    explicacionesElement.textContent = explicacionesText.length > 100 ? explicacionesText.substring(0, 100) + '...' : explicacionesText;
+                    explicacionesElement.title = explicacionesText; // Tooltip completo
+                    explicacionesElement.style.cursor = 'help';
+                } else {
+                    explicacionesElement.textContent = 'No disponible';
+                }
+                    */
+                renderAnalyticsChart(result);
+                renderAnalyticsRecommendations(result.recomendaciones || []);
+
+                const quality = result.calidad || {};
+                if (quality.estado === 'insuficiente_historial') {
+                    setAnalyticsStatus('Historial insuficiente: se requieren al menos 24 semanas y seis semanas con ventas para entrenar el modelo.');
+                } else if (quality.estado === 'modelo_pendiente') {
+                    setAnalyticsStatus('Se muestran ventas reales. Entrena el modelo local para habilitar predicciones.');
+                } else {
+                    setAnalyticsStatus(`Modelo ${quality.modelo || ''} · entrenamiento ${quality.fecha_entrenamiento || 'sin fecha'} · ${result.horizonte_dias} días.`);
+                }
+            } catch (error) {
+                setAnalyticsStatus(error.message, 'error');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('runAnalytics').addEventListener('click', loadAnalytics);
+
+        // Sin filtros, el microservicio analiza el inventario completo y genera combos estratégicos.
+        loadAnalytics();
+
+        // Event listener para botones "Agregar Combo Recomendado"
+        document.addEventListener('click', async function(event) {
+            if (event.target.classList.contains('add-combo-btn')) {
+                const comboInfo = JSON.parse(event.target.dataset.comboInfo);
+                const descuentoSugerido = Number(comboInfo.descuento);
+                if (
+                    comboInfo.descuento === null ||
+                    comboInfo.descuento === undefined ||
+                    String(comboInfo.descuento).trim() === '' ||
+                    !Number.isFinite(descuentoSugerido) ||
+                    descuentoSugerido < 0 ||
+                    descuentoSugerido > 100
+                ) {
+                    alert('La recomendación no incluye un descuento válido. Vuelve a consultar el análisis antes de crear el combo.');
+                    return;
+                }
+
+                // Pedir nombre del combo al usuario
+                const nombreCombo = prompt('Ingresa el nombre para el combo:');
+                if (!nombreCombo || nombreCombo.trim() === '') {
+                    alert('El nombre del combo es obligatorio');
+                    return;
+                }
+
+                try {
+                    // Generar descripción automática
+                    const descripcion = "Combo especial que Incluye " + comboInfo.cantidad_popular + " unidad(es) del producto principal y " + comboInfo.cantidad_congelada + " unidad(es) del producto congelado. Descuento aplicado: " + descuentoSugerido + "%.";
+
+                    // Formatear productos como array de objetos con id y cantidad
+                    const productosFormateados = comboInfo.productos.map((productoId, index) => ({
+                        id: productoId,  // Usar 'id' en lugar de 'id_producto'
+                        cantidad: index === 0 ? comboInfo.cantidad_popular : comboInfo.cantidad_congelada
+                    }));
+
+                    // Enviar solicitud al controlador de combos
+                    const formData = new FormData();
+                    formData.append('accion', 'crear_combo');
+                    formData.append('nombre_combo', nombreCombo.trim());
+                    formData.append('descripcion', descripcion);
+                    formData.append('descuento', String(descuentoSugerido));
+                    formData.append('productos', JSON.stringify(productosFormateados));
+
+                    const response = await fetch('?pagina=combo', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || result.status === 'error') {
+                        throw new Error(result.message || 'Error al crear el combo');
+                    }
+
+                    alert('Combo creado exitosamente: ' + nombreCombo);
+                } catch (error) {
+                    alert('Error al crear el combo: ' + error.message);
+                }
+            }
+        });
+
+        analyticsProduct.addEventListener('change', function () {
+            if (this.value) analyticsCategory.value = '';
+        });
+        analyticsCategory.addEventListener('change', function () {
+            if (this.value) analyticsProduct.value = '';
+        });
+
+        const trainAnalyticsButton = document.getElementById('trainAnalytics');
+        if (trainAnalyticsButton) {
+            trainAnalyticsButton.addEventListener('click', async function () {
+                this.disabled = true;
+                setAnalyticsStatus('Entrenando el modelo local con las 24 semanas completas más recientes…');
+                try {
+                    const result = await postAnalytics('analitica_entrenar');
+                    if (result.estado === 'insuficiente_historial') {
+                        setAnalyticsStatus('No se actualizó el modelo: ningún producto alcanzó seis semanas con ventas dentro de la ventana. El modelo anterior se conservó.');
+                    } else {
+                        setAnalyticsStatus(
+                            `Entrenamiento completado: ${result.modelos_entrenados} modelos guardados; ${result.productos_sin_historial_suficiente} productos sin historial suficiente.`,
+                            'success'
+                        );
+                    }
+                    if (analyticsProduct.value || analyticsCategory.value) await loadAnalytics();
+                } catch (error) {
+                    setAnalyticsStatus(error.message, 'error');
+                } finally {
+                    this.disabled = false;
+                }
+            });
+        }
+
+        analyticsRecommendations.addEventListener('click', async function (event) {
+            const button = event.target.closest('button[data-recommendation-id]');
+            if (!button || button.disabled) return;
+            const group = button.parentElement;
+            group.querySelectorAll('button').forEach(star => { star.disabled = true; });
+            try {
+                await postAnalytics('analitica_feedback', {
+                    recomendacion_id: button.dataset.recommendationId,
+                    tipo: button.dataset.recommendationType,
+                    estrellas: button.dataset.stars
+                });
+                group.querySelectorAll('button').forEach(star => {
+                    if (Number(star.dataset.stars) <= Number(button.dataset.stars)) star.classList.add('selected');
+                });
+                setAnalyticsStatus('Valoración guardada. Se tendrá en cuenta al priorizar futuras recomendaciones.', 'success');
+            } catch (error) {
+                group.querySelectorAll('button').forEach(star => { star.disabled = false; });
+                setAnalyticsStatus(error.message, 'error');
+            }
+        });
+
+        // Event listeners para cerrar modal
+        productModal.querySelector('.close-modal').addEventListener('click', closeModal);
+        productDetailsModal.querySelector('.close-modal').addEventListener('click', closeProductDetails);
+        document.getElementById('closeProductDetails').addEventListener('click', closeProductDetails);
+
+        window.addEventListener('click', function(event) {
+            if (event.target === productModal) {
+                closeModal();
+            }
+            if (event.target === productDetailsModal) {
+                closeProductDetails();
+            }
+        });
+
     }
-}
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize, { once: true });
+    } else {
+        initialize();
+    }
+})();
