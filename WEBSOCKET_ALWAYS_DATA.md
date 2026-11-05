@@ -1,5 +1,7 @@
 # WebSocket en AlwaysData
 
+**Nota:** la aplicación web fue migrada a HTTP Long Polling y ya no necesita iniciar este servicio para notificaciones. Consulta [HTTP_LONG_POLLING.md](./HTTP_LONG_POLLING.md). Esta guía queda como referencia únicamente para instalaciones que decidan conservar el daemon WebSocket legado.
+
 El servidor usa Ratchet y puede ejecutarse como proceso persistente desde el panel de AlwaysData. La app web obtiene una URL y un JWT de corta duración desde `?pagina=websocket_token`; no debe autenticar al socket enviando el ID de usuario.
 
 ## Variables de entorno

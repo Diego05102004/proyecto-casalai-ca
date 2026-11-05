@@ -167,6 +167,12 @@ if ($id_usuario_header > 0) {
                             </small>
                         <?php endif; ?>
                     </div>
+                    <button type="button" class="marcar-leido"
+                        data-id="<?php echo (int) $notificacion['id_notificacion']; ?>"
+                        aria-label="Marcar notificación como leída"
+                        title="Marcar como leída">
+                        <img src="assets/img/check.svg" alt="" class="local-icon">
+                    </button>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
@@ -222,6 +228,7 @@ if ($id_usuario_header > 0) {
 <link rel="stylesheet" href="assets/styles/modal-detallar.css">
 <link rel="stylesheet" href="assets/styles/modal-eliminar-anular.css">
 
+<script src="assets/javascript/http-long-poll-client.js"></script>
 <script>
 // JavaScript para el menú lateral
 document.addEventListener('DOMContentLoaded', function() {
@@ -377,48 +384,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const idNotificacion = button.getAttribute('data-id');
             if (!idNotificacion) return;
 
-            console.log('Click marcar-leido. idNotificacion =', idNotificacion, 'WS disponible =', !!window.notificacionesWS);
+            console.log('Click marcar-leido. idNotificacion =', idNotificacion, 'Long polling disponible =', !!window.notificacionesWS);
 
             if (window.notificacionesWS) {
                 window.notificacionesWS.marcarComoLeida(idNotificacion);
             } else {
-                console.error('WebSocket de notificaciones no está disponible');
+                console.error('Long polling de notificaciones no está disponible');
             }
         });
     }
     
-    // Inicializar WebSocket para notificaciones, tasa de cambio y carrito
+    // Inicializar long polling para notificaciones y actualizaciones auxiliares
     if (window.notificacionesWS) {
         // Esperar a que el DOM esté completamente cargado antes de configurar intervalos
         const configurarIntervalos = () => {
-            // Configurar intervalos para actualizaciones periódicas
+            // El long polling entrega notificaciones; solo se sondean datos auxiliares aquí.
             setInterval(() => {
-                if (window.notificacionesWS && window.notificacionesWS.socket && 
-                    window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
-                    window.notificacionesWS.enviar({ tipo: 'ping_nuevas' });
-                }
-            }, 6000);
-            
-            // Actualizar contador del carrito cada 5 segundos
-            setInterval(() => {
-                if (window.notificacionesWS && window.notificacionesWS.socket && 
-                    window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                if (window.notificacionesWS) {
                     window.notificacionesWS.solicitarCarritoCount();
                 }
-            }, 5000);
+            }, 30000);
             
-            // Actualizar tasa de cambio cada 5 minutos
             setInterval(() => {
-                if (window.notificacionesWS && window.notificacionesWS.socket && 
-                    window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                if (window.notificacionesWS) {
                     window.notificacionesWS.solicitarTasaCambio();
                 }
             }, 300000);
             
             // Solicitar datos iniciales después de un pequeño retraso
             setTimeout(() => {
-                if (window.notificacionesWS && window.notificacionesWS.socket && 
-                    window.notificacionesWS.socket.readyState === WebSocket.OPEN) {
+                if (window.notificacionesWS) {
                     window.notificacionesWS.solicitarTasaCambio();
                     window.notificacionesWS.solicitarCarritoCount();
                 }
@@ -447,161 +442,35 @@ function actualizarCarritoCount() {
     }
 }
 
-class NotificacionesWebSocket {
+class NotificacionesLongPoll {
     constructor(usuarioId) {
         this.usuarioId = usuarioId;
-        this.socket = null;
-        this.reconectarTimeout = null;
-        this.reconectarIntentos = 0;
-        this.maxReconectarIntentos = 10;
-        this.reconectarDelay = 1000; // 1 segundo inicial
-        this.heartbeatInterval = null;
-        this.conectando = false;
+        this.client = new CasalaiLongPoll.Client({
+            endpoint: '?pagina=long_poll_notificaciones',
+            credentials: 'same-origin',
+            onMessage: (data) => this.manejarMensaje(data),
+            onError: (error) => console.error('Error en long polling:', error.message)
+        });
         this.conectar();
     }
 
-    async conectar() {
-        if (this.conectando) {
-            return;
-        }
-
-        // Evitar múltiples conexiones simultáneas
-        if (this.socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(this.socket.readyState)) {
-            return;
-        }
-
-        console.log(`Intentando conectar WebSocket (intento ${this.reconectarIntentos + 1})...`);
-        this.conectando = true;
-        try {
-            const response = await fetch('?pagina=websocket_token', {
-                credentials: 'same-origin',
-                cache: 'no-store',
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!response.ok) {
-                throw new Error(`No se pudo obtener credenciales WebSocket (HTTP ${response.status})`);
-            }
-            const config = await response.json();
-            if (typeof config.url !== 'string' || typeof config.token !== 'string') {
-                throw new Error('La configuración de WebSocket recibida no es válida');
-            }
-
-            this.socket = new WebSocket(config.url);
-            this.socket.onopen = () => {
-                this.conectando = false;
-                console.log('Conexión WebSocket establecida');
-                this.reconectarIntentos = 0;
-                this.reconectarDelay = 1000;
-                this.enviar({ tipo: 'autenticar', token: config.token });
-                this.iniciarHeartbeat();
-                clearTimeout(this.reconectarTimeout);
-            };
-
-            this.socket.onmessage = (event) => {
-                this.manejarMensaje(JSON.parse(event.data));
-            };
-
-            this.socket.onclose = (event) => {
-                this.conectando = false;
-                console.log('Conexión WebSocket cerrada. Código:', event.code);
-                this.detenerHeartbeat();
-                if (event.code !== 1000) {
-                    this.programarReconexion();
-                }
-            };
-
-            this.socket.onerror = () => {
-                console.error('Error en la conexión WebSocket');
-            };
-        } catch (error) {
-            this.conectando = false;
-            console.error('No se pudo conectar al WebSocket:', error.message);
-            this.programarReconexion();
-        }
-    }
-
-    programarReconexion() {
-        // Evitar múltiples reconexiones programadas
-        if (this.reconectarTimeout) {
-            clearTimeout(this.reconectarTimeout);
-        }
-
-        // Calcular delay con backoff exponencial
-        const delay = Math.min(this.reconectarDelay * Math.pow(2, this.reconectarIntentos), 30000);
-        
-        console.log(`Programando reconexión en ${delay}ms (intento ${this.reconectarIntentos + 1}/${this.maxReconectarIntentos})`);
-        
-        this.reconectarTimeout = setTimeout(() => {
-            if (this.reconectarIntentos < this.maxReconectarIntentos) {
-                this.reconectarIntentos++;
-                this.conectar();
-            } else {
-                console.error('Se alcanzó el máximo número de intentos de reconexión');
-                // Mostrar notificación al usuario
-                this.mostrarErrorConexion();
-            }
-        }, delay);
+    conectar() {
+        return this.client.start();
     }
 
     reconectar() {
-        console.log('Reconexión manual solicitada');
-        this.reconectarIntentos = 0;
-        this.reconectarDelay = 1000;
-        
-        // Limpiar cualquier timeout existente
-        if (this.reconectarTimeout) {
-            clearTimeout(this.reconectarTimeout);
-        }
-        
-        // Cerrar conexión actual si existe
-        if (this.socket) {
-            this.socket.close();
-        }
-        
-        // Conectar inmediatamente
-        this.conectar();
-    }
-
-    iniciarHeartbeat() {
-        // Enviar ping cada 30 segundos para mantener la conexión activa
-        this.heartbeatInterval = setInterval(() => {
-            if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                this.socket.send(JSON.stringify({ tipo: 'ping' }));
-            }
-        }, 30000);
-    }
-
-    detenerHeartbeat() {
-        if (this.heartbeatInterval) {
-            clearInterval(this.heartbeatInterval);
-            this.heartbeatInterval = null;
-        }
-    }
-
-    mostrarErrorConexion() {
-        // Crear notificación visual para el usuario
-        const notificacion = document.createElement('div');
-        notificacion.className = 'alert alert-warning alert-dismissible fade show position-fixed';
-        notificacion.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
-        notificacion.innerHTML = `
-            <strong>Conexión perdida</strong><br>
-            No se puede conectar al servidor de notificaciones. 
-            Algunas funciones pueden no estar disponibles.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(notificacion);
-        
-        // Auto-eliminar después de 10 segundos
-        setTimeout(() => {
-            if (notificacion.parentNode) {
-                notificacion.parentNode.removeChild(notificacion);
-            }
-        }, 10000);
+        return this.client.restart();
     }
 
     enviar(mensaje) {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify(mensaje));
+        if (mensaje.tipo === 'obtener_tasa_cambio') {
+            return this.client.getExchangeRate().catch((error) => console.error(error.message));
+        }
+        if (mensaje.tipo === 'obtener_carrito_count') {
+            return this.client.getCartCount().catch((error) => console.error(error.message));
+        }
+        if (mensaje.tipo === 'marcar_leida') {
+            return this.marcarComoLeida(mensaje.id_notificacion);
         }
     }
 
@@ -618,7 +487,7 @@ class NotificacionesWebSocket {
                 if (data.ok) {
                     this.actualizarNotificacionUI(data.id_notificacion);
                 } else {
-                    console.error('Error al marcar notificación como leída (WS):', data.error || data);
+                    console.error('Error al marcar notificación como leída:', data.error || data);
                 }
                 break;
             case 'actualizar_tasa_cambio':
@@ -702,11 +571,8 @@ class NotificacionesWebSocket {
     }
 
     marcarComoLeida(idNotificacion) {
-        console.log('WS marcarComoLeida para id', idNotificacion);
-        this.enviar({
-            tipo: 'marcar_leida',
-            id_notificacion: idNotificacion
-        });
+        return this.client.markAsRead(idNotificacion)
+            .catch((error) => console.error('No se pudo marcar la notificación como leída:', error.message));
     }
 
     actualizarNotificacionUI(idNotificacion) {
@@ -831,7 +697,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const usuarioId = '<?php echo isset($_SESSION['id_usuario']) ? $_SESSION['id_usuario'] : ''; ?>';
     
     if (usuarioId && usuarioId !== '0') {
-        window.notificacionesWS = new NotificacionesWebSocket(usuarioId);
+        window.notificacionesWS = new NotificacionesLongPoll(usuarioId);
     }
 });
 </script>

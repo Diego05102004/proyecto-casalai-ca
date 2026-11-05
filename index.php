@@ -12,17 +12,6 @@ require_once __DIR__ . '/Modelo/Config/paths.php';
 // Cargar variables de entorno desde archivo .env
 require_once __DIR__ . '/Modelo/Config/loadEnv.php';
 
-// DETECTAR ENTORNO: Solo arranca WebSockets si estás en Localhost
-$is_localhost = in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) 
-                || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'localhost') !== false);
-
-if ($is_localhost) {
-    // Esto solo se ejecutará en tu computadora local con XAMPP
-    if (file_exists(__DIR__ . '/start_websocket.php')) {
-        require_once __DIR__ . '/start_websocket.php';
-    }
-}
-
 // Iniciar sesión si no está iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
