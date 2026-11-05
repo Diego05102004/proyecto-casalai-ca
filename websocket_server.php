@@ -7,78 +7,133 @@ if (php_sapi_name() !== 'cli') {
 require 'vendor/autoload.php';
 require_once __DIR__ . '/Modelo/Config/database.php';
 require_once __DIR__ . '/Modelo/Config/Config.php';
+require_once __DIR__ . '/Modelo/Config/WebSocketConfig.php';
 
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
+use Ratchet\Http\OriginCheck;
 use Ratchet\WebSocket\WsServer;
+use React\EventLoop\Factory as LoopFactory;
+use React\Socket\SocketServer;
 use Usuario\ProyectoCasalaiCa\Config\BD;
+use Usuario\ProyectoCasalaiCa\Config\WebSocketConfig;
 
 class NotificacionWebSocket implements MessageComponentInterface {
     protected $clients;
-    protected $usuarios = []; // Almacena las conexiones por ID de usuario
+    protected $usuarios = [];
+    protected $autenticados = [];
+    protected $limitesMensajes = [];
+    protected $limitesAcciones = [];
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
     }
 
-public function onOpen(ConnectionInterface $conn) {
-    $this->clients->attach($conn);
-}
+    public function onOpen(ConnectionInterface $conn) {
+        $this->clients->attach($conn);
+    }
 
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        $data = json_decode($msg, true);
-
-        if (!is_array($data)) {
+        $connectionId = spl_object_id($from);
+        if (strlen((string)$msg) > 8192) {
+            $from->close(1009);
+            return;
+        }
+        if (!$this->permitirMensaje($connectionId)) {
+            $from->close(1008);
             return;
         }
 
-        if (isset($data['tipo'])) {
-            if ($data['tipo'] === 'autenticar' && isset($data['usuario_id'])) {
-                $usuarioId = (int)$data['usuario_id'];
-                $this->usuarios[$usuarioId] = $from;
-                echo "Usuario autenticado: {$usuarioId}\n";
+        $data = json_decode($msg, true);
 
-                // Enviar estado inicial de notificaciones no leídas a este usuario
-                $this->enviarNotificacionesIniciales($from, $usuarioId);
+        if (!is_array($data)) {
+            $from->close(1007);
+            return;
+        }
+
+        if (!isset($this->autenticados[$connectionId])) {
+            if (($data['tipo'] ?? null) !== 'autenticar' || !is_string($data['token'] ?? null)) {
+                $from->close(1008);
                 return;
             }
 
-            if ($data['tipo'] === 'marcar_leida') {
+            try {
+                $usuarioId = WebSocketConfig::verifyToken($data['token']);
+            } catch (\Throwable $e) {
+                $from->close(1008);
+                return;
+            }
+
+            $this->autenticados[$connectionId] = $usuarioId;
+            $this->usuarios[$usuarioId] = $from;
+            $from->send(json_encode(['tipo' => 'autenticado']));
+            $this->enviarNotificacionesIniciales($from, $usuarioId);
+            return;
+        }
+
+        $usuarioId = $this->autenticados[$connectionId];
+        $tipo = $data['tipo'] ?? null;
+        if (!is_string($tipo)) {
+            return;
+        }
+
+        if ($tipo === 'marcar_leida') {
+            if ($this->permitirAccion($connectionId, $tipo)) {
                 $this->procesarMarcarLeida($from, $data);
-                return;
             }
+            return;
+        }
 
-            if ($data['tipo'] === 'ping_nuevas') {
+        if ($tipo === 'ping_nuevas') {
+            if ($this->permitirAccion($connectionId, $tipo)) {
                 $this->procesarPingNuevas($from);
-                return;
             }
+            return;
+        }
 
-            if ($data['tipo'] === 'obtener_tasa_cambio') {
+        if ($tipo === 'obtener_tasa_cambio') {
+            if ($this->permitirAccion($connectionId, $tipo)) {
                 $this->obtenerTasaCambio($from);
-                return;
             }
-
-            if ($data['tipo'] === 'obtener_carrito_count') {
-                $usuarioId = array_search($from, $this->usuarios, true);
-                if ($usuarioId !== false) {
-                    $this->obtenerCarritoCount($from, $usuarioId);
-                }
-                return;
-            }
-
-            if ($data['tipo'] === 'ping') {
-                // Responder al ping para mantener la conexión activa
-                $from->send(json_encode(['tipo' => 'pong']));
-                return;
-            }
+            return;
         }
 
-        if (isset($data['para_usuario_id']) && isset($this->usuarios[$data['para_usuario_id']])) {
-            $this->usuarios[$data['para_usuario_id']]->send(json_encode($data));
+        if ($tipo === 'obtener_carrito_count') {
+            if ($this->permitirAccion($connectionId, $tipo)) {
+                $this->obtenerCarritoCount($from, $usuarioId);
+            }
+            return;
         }
+
+        if ($tipo === 'ping') {
+            $from->send(json_encode(['tipo' => 'pong']));
+        }
+    }
+
+    private function permitirMensaje(int $connectionId): bool
+    {
+        $now = microtime(true);
+        $limit = $this->limitesMensajes[$connectionId] ?? ['start' => $now, 'count' => 0];
+        if ($now - $limit['start'] >= 10) {
+            $limit = ['start' => $now, 'count' => 0];
+        }
+        $limit['count']++;
+        $this->limitesMensajes[$connectionId] = $limit;
+        return $limit['count'] <= 60;
+    }
+
+    private function permitirAccion(int $connectionId, string $action): bool
+    {
+        $now = microtime(true);
+        $lastActionAt = $this->limitesAcciones[$connectionId][$action] ?? 0;
+        if ($now - $lastActionAt < 2) {
+            return false;
+        }
+        $this->limitesAcciones[$connectionId][$action] = $now;
+        return true;
     }
 
     protected function enviarNotificacionesIniciales(ConnectionInterface $conn, int $usuarioId): void
@@ -87,7 +142,7 @@ public function onOpen(ConnectionInterface $conn) {
             $bd_seguridad = new BD('S');
             $pdo_seguridad = $bd_seguridad->getConexion();
 
-            $stmt = $pdo_seguridad->prepare("SELECT * FROM tbl_notificaciones WHERE id_usuario = :id_usuario AND leido = 0 ORDER BY fecha_hora DESC LIMIT 5");
+            $stmt = $pdo_seguridad->prepare("SELECT id_notificacion, tipo, titulo, mensaje, id_referencia, fecha_hora, leido, prioridad FROM tbl_notificaciones WHERE id_usuario = :id_usuario AND leido = 0 ORDER BY fecha_hora DESC LIMIT 5");
             $stmt->bindParam(':id_usuario', $usuarioId, \PDO::PARAM_INT);
             $stmt->execute();
             $notificaciones = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -112,7 +167,7 @@ public function onOpen(ConnectionInterface $conn) {
                 'count' => count($notificaciones),
             ]));
         } catch (\Throwable $e) {
-            echo "Error en enviarNotificacionesIniciales: " . $e->getMessage() . "\n";
+            error_log('No se pudieron cargar las notificaciones iniciales: ' . $e->getMessage());
         } finally {
             if (isset($bd_seguridad)) {
                 $bd_seguridad->cerrar();
@@ -132,7 +187,7 @@ public function onOpen(ConnectionInterface $conn) {
             $bd_seguridad = new BD('S');
             $pdo_seguridad = $bd_seguridad->getConexion();
 
-            $stmt = $pdo_seguridad->prepare("SELECT * FROM tbl_notificaciones WHERE id_usuario = :id_usuario AND leido = 0 ORDER BY fecha_hora DESC LIMIT 5");
+            $stmt = $pdo_seguridad->prepare("SELECT id_notificacion, tipo, titulo, mensaje, id_referencia, fecha_hora, leido, prioridad FROM tbl_notificaciones WHERE id_usuario = :id_usuario AND leido = 0 ORDER BY fecha_hora DESC LIMIT 5");
             $stmt->bindParam(':id_usuario', $usuarioId, \PDO::PARAM_INT);
             $stmt->execute();
             $notificaciones = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -156,7 +211,7 @@ public function onOpen(ConnectionInterface $conn) {
                 'count' => count($notificaciones),
             ]));
         } catch (\Throwable $e) {
-            echo "Error en procesarPingNuevas: " . $e->getMessage() . "\n";
+            error_log('No se pudieron consultar notificaciones recientes: ' . $e->getMessage());
         } finally {
             if (isset($bd_seguridad)) {
                 $bd_seguridad->cerrar();
@@ -188,13 +243,10 @@ public function onOpen(ConnectionInterface $conn) {
                 ]));
             }
         } catch (\Exception $e) {
-            echo "Error al obtener tasa de cambio: " . $e->getMessage() . "\n";
-            // Enviar valor por defecto en caso de error
+            error_log('No se pudo consultar la tasa de cambio: ' . $e->getMessage());
             $from->send(json_encode([
                 'tipo' => 'actualizar_tasa_cambio',
-                'tasa' => 1.00,
-                'actualizado' => date('d/m/Y H:i'),
-                'error' => 'No se pudo obtener la tasa de cambio actual'
+                'error' => 'No se pudo obtener la tasa de cambio actual.'
             ]));
         } finally {
             if (isset($bd)) {
@@ -206,72 +258,42 @@ public function onOpen(ConnectionInterface $conn) {
     protected function obtenerCarritoCount(ConnectionInterface $from, int $usuarioId): void
     {
         try {
-            echo "=== INICIO obtenerCarritoCount ===\n";
-            echo "Usuario ID: $usuarioId\n";
-            
             $bd = new BD('P'); // Usar 'S' para consultas de lectura
             $pdo = $bd->getConexion();
-            
-            echo "Conexión a BD establecida\n";
-            
+
             // Obtener el ID del carrito más reciente del usuario
             $sqlCarrito = "SELECT id_carrito FROM tbl_carrito WHERE id_cliente = :usuario_id ORDER BY fecha_creacion DESC LIMIT 1";
-            echo "SQL Carrito: $sqlCarrito\n";
-            
             $stmt = $pdo->prepare($sqlCarrito);
             $stmt->bindParam(':usuario_id', $usuarioId, \PDO::PARAM_INT);
             $stmt->execute();
             $carrito = $stmt->fetch(\PDO::FETCH_ASSOC);
-            
-            echo "Resultado carrito: " . ($carrito ? json_encode($carrito) : 'NULL') . "\n";
-            
+
             $count = 0;
             if ($carrito) {
                 $carritoId = $carrito['id_carrito'];
-                echo "Carrito ID encontrado: $carritoId\n";
-                
+
                 // Contar los productos en el carrito con estatus 'pendiente'
                 $sqlDetalle = "SELECT COUNT(*) as total FROM tbl_carritodetalle WHERE id_carrito = :carrito_id AND estatus = 'pendiente'";
-                echo "SQL Detalle: $sqlDetalle\n";
-                
                 $stmt = $pdo->prepare($sqlDetalle);
                 $stmt->bindParam(':carrito_id', $carritoId, \PDO::PARAM_INT);
                 $stmt->execute();
                 $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-                
-                echo "Resultado detalle: " . json_encode($result) . "\n";
                 $count = (int)$result['total'];
-                
-                echo "Carrito encontrado: {$carrito['id_carrito']}, Productos: $count\n";
-            } else {
-                echo "No se encontró carrito para el usuario: $usuarioId\n";
             }
-            
-            echo "Enviando respuesta: count=$count\n";
             $from->send(json_encode([
                 'tipo' => 'actualizar_carrito_count',
                 'count' => $count
             ]));
-            
-            echo "=== FIN obtenerCarritoCount ===\n";
-            
+
         } catch (\Exception $e) {
-            echo "=== ERROR obtenerCarritoCount ===\n";
-            echo "Error: " . $e->getMessage() . "\n";
-            echo "Código: " . $e->getCode() . "\n";
-            echo "Archivo: " . $e->getFile() . ":" . $e->getLine() . "\n";
-            echo "Traza: " . $e->getTraceAsString() . "\n";
-            
-            // Enviar 0 en caso de error
+            error_log('No se pudo consultar el carrito: ' . $e->getMessage());
             $from->send(json_encode([
                 'tipo' => 'actualizar_carrito_count',
-                'count' => 0,
-                'error' => 'nteo del carrito: ' . $e->getMessage()
+                'error' => 'No se pudo consultar el carrito.'
             ]));
         } finally {
             if (isset($bd)) {
                 $bd->cerrar();
-                echo "Conexión a BD cerrada\n";
             }
         }
     }
@@ -289,7 +311,6 @@ public function onOpen(ConnectionInterface $conn) {
         $idNotificacion = (int)$data['id_notificacion'];
 
         try {
-            echo "procesarMarcarLeida: usuarioId={$usuarioId}, idNotificacion={$idNotificacion}\n";
             $bd_seguridad = new BD('S');
             $pdo_seguridad = $bd_seguridad->getConexion();
 
@@ -299,7 +320,6 @@ public function onOpen(ConnectionInterface $conn) {
             $stmt->execute();
 
             $ok = $stmt->rowCount() > 0;
-            echo "procesarMarcarLeida: filas actualizadas=" . $stmt->rowCount() . "\n";
 
             $respuesta = [
                 'tipo' => 'marcar_leida',
@@ -313,12 +333,12 @@ public function onOpen(ConnectionInterface $conn) {
 
             $from->send(json_encode($respuesta));
         } catch (\Throwable $e) {
-            echo "Error en procesarMarcarLeida: " . $e->getMessage() . "\n";
+            error_log('No se pudo marcar la notificación como leída: ' . $e->getMessage());
             $from->send(json_encode([
                 'tipo' => 'marcar_leida',
                 'ok' => false,
                 'id_notificacion' => $idNotificacion,
-                'error' => $e->getMessage(),
+                'error' => 'No se pudo actualizar la notificación.',
             ]));
         } finally {
             if (isset($bd_seguridad)) {
@@ -328,10 +348,15 @@ public function onOpen(ConnectionInterface $conn) {
     }
 
     public function onClose(ConnectionInterface $conn) {
-        // Eliminar de usuarios conectados
-        if ($usuarioId = array_search($conn, $this->usuarios, true)) {
-            unset($this->usuarios[$usuarioId]);
+        $connectionId = spl_object_id($conn);
+        if (isset($this->autenticados[$connectionId])) {
+            $usuarioId = $this->autenticados[$connectionId];
+            if (($this->usuarios[$usuarioId] ?? null) === $conn) {
+                unset($this->usuarios[$usuarioId]);
+            }
+            unset($this->autenticados[$connectionId]);
         }
+        unset($this->limitesMensajes[$connectionId], $this->limitesAcciones[$connectionId]);
         $this->clients->detach($conn);
         echo "Conexión cerrada! ({$conn->resourceId})\n";
     }
@@ -342,15 +367,34 @@ public function onOpen(ConnectionInterface $conn) {
     }
 }
 
-// Iniciar el servidor
-$server = IoServer::factory(
-    new HttpServer(
-        new WsServer(
-            new NotificacionWebSocket()
+try {
+    $settings = WebSocketConfig::settings();
+    WebSocketConfig::validateSecret();
+    $loop = LoopFactory::create();
+    $socketUri = sprintf(
+        '%s://%s:%d',
+        $settings['tls_certificate'] !== null ? 'tls' : 'tcp',
+        $settings['address'],
+        $settings['port']
+    );
+    $socketContext = $settings['tls_certificate'] !== null
+        ? ['tls' => [
+            'local_cert' => $settings['tls_certificate'],
+            'local_pk' => $settings['tls_private_key'],
+        ]]
+        : [];
+    $socket = new SocketServer($socketUri, $socketContext, $loop);
+    $component = new HttpServer(
+        new OriginCheck(
+            new WsServer(new NotificacionWebSocket()),
+            $settings['allowed_origins']
         )
-    ),
-    8080
-);
+    );
+    $server = new IoServer($component, $socket, $loop);
+} catch (\Throwable $e) {
+    fwrite(STDERR, 'No se pudo iniciar WebSocket: ' . $e->getMessage() . PHP_EOL);
+    exit(1);
+}
 
-echo "Servidor WebSocket iniciado en el puerto 8080\n";
+echo sprintf("Servidor WebSocket iniciado en %s:%d\n", $settings['address'], $settings['port']);
 $server->run();

@@ -96,6 +96,10 @@ class EnvLoader {
     }
     
     private static function setEnvVar($name, $value) {
+        if (getenv($name) !== false || array_key_exists($name, $_ENV) || array_key_exists($name, $_SERVER)) {
+            return;
+        }
+
         // Remover comillas si están presentes al inicio y final
         if (strlen($value) >= 2) {
             if ((strpos($value, '"') === 0 && strrpos($value, '"') === strlen($value) - 1) ||

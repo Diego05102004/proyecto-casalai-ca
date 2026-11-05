@@ -112,7 +112,7 @@
                 
                 if (data.websocket_running) {
                     updateStatus('✅ Servidor WebSocket está corriendo', 'success');
-                    log('✅ Servidor WebSocket está corriendo en el puerto 8080', 'success');
+                    log(`✅ Servidor WebSocket está corriendo en el puerto ${data.port}`, 'success');
                 } else {
                     updateStatus('❌ Servidor WebSocket no está corriendo', 'danger');
                     log('❌ Servidor WebSocket no está corriendo', 'error');
@@ -153,28 +153,50 @@
             log('🔗 Probando conexión al WebSocket...');
             
             try {
-                const ws = new WebSocket('ws://localhost:8080');
+                const configResponse = await fetch('?pagina=websocket_token', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {'Accept': 'application/json'}
+                });
+                if (!configResponse.ok) {
+                    throw new Error(`No se pudo obtener credenciales (HTTP ${configResponse.status})`);
+                }
+                const config = await configResponse.json();
+                const ws = new WebSocket(config.url);
+                let autenticado = false;
                 
                 ws.onopen = function() {
-                    log('✅ Conexión establecida exitosamente', 'success');
-                    updateStatus('✅ Conexión WebSocket establecida', 'success');
-                    ws.close();
+                    ws.send(JSON.stringify({tipo: 'autenticar', token: config.token}));
+                };
+
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    if (data.tipo === 'autenticado') {
+                        autenticado = true;
+                        log('✅ Conexión autenticada exitosamente', 'success');
+                        updateStatus('✅ Conexión WebSocket autenticada', 'success');
+                        ws.close(1000, 'Prueba completada');
+                    }
                 };
                 
-                ws.onerror = function(error) {
-                    log('❌ Error de conexión: ' + error, 'error');
+                ws.onerror = function() {
+                    log('❌ Error de conexión WebSocket', 'error');
                     updateStatus('❌ Error de conexión WebSocket', 'danger');
                 };
                 
                 ws.onclose = function() {
+                    if (!autenticado) {
+                        log('❌ La conexión se cerró antes de autenticar', 'error');
+                        updateStatus('❌ No se pudo autenticar la conexión', 'danger');
+                    }
                     log('🔌 Conexión cerrada');
                 };
                 
                 // Timeout después de 5 segundos
                 setTimeout(() => {
-                    if (ws.readyState === WebSocket.CONNECTING) {
+                    if (!autenticado && ws.readyState !== WebSocket.CLOSED) {
                         ws.close();
-                        log('⏰ Tiempo de espera agotado', 'error');
+                        log('⏰ Tiempo de espera agotado al conectar/autenticar', 'error');
                         updateStatus('⏰ Tiempo de espera agotado', 'danger');
                     }
                 }, 5000);

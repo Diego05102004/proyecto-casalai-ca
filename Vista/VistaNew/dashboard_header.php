@@ -456,65 +456,68 @@ class NotificacionesWebSocket {
         this.maxReconectarIntentos = 10;
         this.reconectarDelay = 1000; // 1 segundo inicial
         this.heartbeatInterval = null;
+        this.conectando = false;
         this.conectar();
     }
 
-    conectar() {
-        // Evitar múltiples conexiones simultáneas
-        if (this.socket && this.socket.readyState === WebSocket.CONNECTING) {
+    async conectar() {
+        if (this.conectando) {
             return;
         }
 
-        // Cerrar conexión existente si la hay
-        if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
-            this.socket.close();
+        // Evitar múltiples conexiones simultáneas
+        if (this.socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(this.socket.readyState)) {
+            return;
         }
 
         console.log(`Intentando conectar WebSocket (intento ${this.reconectarIntentos + 1})...`);
-        
-        // Asegúrate de que la URL apunte a tu servidor WebSocket
-        this.socket = new WebSocket('ws://localhost:8080');
-        
-        this.socket.onopen = () => {
-            console.log('Conexión WebSocket establecida');
-            this.reconectarIntentos = 0;
-            this.reconectarDelay = 1000;
-            
-            // Autenticar al usuario
-            this.enviar({ 
-                tipo: 'autenticar',
-                usuario_id: this.usuarioId 
+        this.conectando = true;
+        try {
+            const response = await fetch('?pagina=websocket_token', {
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json' }
             });
-            
-            // Iniciar heartbeat para mantener conexión activa
-            this.iniciarHeartbeat();
-            
-            // Limpiar cualquier intento de reconexión pendiente
-            clearTimeout(this.reconectarTimeout);
-        };
-
-        this.socket.onmessage = (event) => {
-            console.log('WS mensaje recibido bruto:', event.data);
-            const data = JSON.parse(event.data);
-            this.manejarMensaje(data);
-        };
-
-        this.socket.onclose = (event) => {
-            console.log('Conexión WebSocket cerrada. Código:', event.code, 'Razón:', event.reason);
-            
-            // Detener heartbeat
-            this.detenerHeartbeat();
-            
-            // Solo reconectar si no fue un cierre normal
-            if (event.code !== 1000) {
-                this.programarReconexion();
+            if (!response.ok) {
+                throw new Error(`No se pudo obtener credenciales WebSocket (HTTP ${response.status})`);
             }
-        };
+            const config = await response.json();
+            if (typeof config.url !== 'string' || typeof config.token !== 'string') {
+                throw new Error('La configuración de WebSocket recibida no es válida');
+            }
 
-        this.socket.onerror = (error) => {
-            console.error('Error en WebSocket:', error);
-            // No cerrar aquí, dejar que onclose maneje la reconexión
-        };
+            this.socket = new WebSocket(config.url);
+            this.socket.onopen = () => {
+                this.conectando = false;
+                console.log('Conexión WebSocket establecida');
+                this.reconectarIntentos = 0;
+                this.reconectarDelay = 1000;
+                this.enviar({ tipo: 'autenticar', token: config.token });
+                this.iniciarHeartbeat();
+                clearTimeout(this.reconectarTimeout);
+            };
+
+            this.socket.onmessage = (event) => {
+                this.manejarMensaje(JSON.parse(event.data));
+            };
+
+            this.socket.onclose = (event) => {
+                this.conectando = false;
+                console.log('Conexión WebSocket cerrada. Código:', event.code);
+                this.detenerHeartbeat();
+                if (event.code !== 1000) {
+                    this.programarReconexion();
+                }
+            };
+
+            this.socket.onerror = () => {
+                console.error('Error en la conexión WebSocket');
+            };
+        } catch (error) {
+            this.conectando = false;
+            console.error('No se pudo conectar al WebSocket:', error.message);
+            this.programarReconexion();
+        }
     }
 
     programarReconexion() {
@@ -597,12 +600,8 @@ class NotificacionesWebSocket {
     }
 
     enviar(mensaje) {
-        console.log('WS enviar llamado con', mensaje, 'readyState =', this.socket ? this.socket.readyState : null);
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify(mensaje));
-            console.log('WS mensaje enviado');
-        } else {
-            console.warn('WS no envía: socket no está abierto. readyState =', this.socket ? this.socket.readyState : null);
         }
     }
 
@@ -623,10 +622,18 @@ class NotificacionesWebSocket {
                 }
                 break;
             case 'actualizar_tasa_cambio':
-                this.actualizarTasaCambioUI(data);
+                if (data.error) {
+                    console.error(data.error);
+                } else {
+                    this.actualizarTasaCambioUI(data);
+                }
                 break;
             case 'actualizar_carrito_count':
-                this.actualizarCarritoCountUI(data.count);
+                if (data.error) {
+                    console.error(data.error);
+                } else {
+                    this.actualizarCarritoCountUI(data.count);
+                }
                 break;
             // Agregar más casos según sea necesario
         }
