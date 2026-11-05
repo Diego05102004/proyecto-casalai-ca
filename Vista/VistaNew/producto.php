@@ -335,7 +335,6 @@ $porcentaje_stock_excedido = $total_productos > 0 ? round(($stock_excedido / $to
                 </div>
                 <div class="modal-title-content">
                     <h2 id="modalTitle">Nuevo Producto</h2>
-                    <p>Complete los datos para registrar un nuevo producto</p>
                 </div>
                 <button type="button" class="btn-ayuda-modal btn-ayuda" title="Ayuda para Incluir Producto" data-contexto="producto">
                     <img src="assets/img/info-ayuda.svg">
@@ -363,7 +362,7 @@ $porcentaje_stock_excedido = $total_productos > 0 ? round(($stock_excedido / $to
                             <select class="input-select" id="modelo" name="modelo" required>
                             <option value="">Seleccione un modelo</option>
                             <?php foreach ($modelos as $modelo): ?>
-                                <option value="<?= $modelo['tbl_modelos']; ?>">
+                                <option value="<?= (int)$modelo['id_modelo']; ?>">
                                 <?= $modelo['nombre_modelo'] . ' (' . $modelo['tbl_marcas'] . ')' ?>
                                 </option>
                             <?php endforeach; ?>
@@ -459,7 +458,7 @@ $porcentaje_stock_excedido = $total_productos > 0 ? round(($stock_excedido / $to
             <button type="reset" class="btm-confirmar btn-clear">
                 <i class="fas fa-trash-alt"></i> Limpiar
             </button>
-            <button type="button" class="btm-confirmar btn-save" form="productForm">
+            <button type="submit" class="btm-confirmar btn-save" form="productForm">
                 <i class="fas fa-check"></i> Registrar
             </button>
         </div>
@@ -1407,6 +1406,7 @@ $porcentaje_stock_excedido = $total_productos > 0 ? round(($stock_excedido / $to
 
                     if (type === 'registrar') {
                         document.getElementById('modalTitle').textContent = 'Nuevo Producto';
+                        productImageInput.required = true;
                     } else if (type === 'editar') {
                         const producto = productosDisponibles.find(item => Number(item.id_producto) === Number(productId));
                         if (!producto) {
@@ -1414,18 +1414,19 @@ $porcentaje_stock_excedido = $total_productos > 0 ? round(($stock_excedido / $to
                             return;
                         }
 
-                        document.getElementById('modalTitle').textContent = 'Editar Producto';
+                        document.getElementById('modalTitle').textContent = 'Modificar Producto';
+                        productImageInput.required = false;
                         document.getElementById('productId').value = producto.id_producto;
                         document.getElementById('productAction').value = 'modificar';
-                        document.getElementById('productName').value = producto.nombre_producto || '';
-                        document.getElementById('productDescription').value = producto.descripcion_producto || '';
-                        document.getElementById('productModel').value = producto.id_modelo || '';
-                        document.getElementById('productPrice').value = producto.precio || '';
-                        document.getElementById('stockActual').value = producto.stock_actual ?? producto.stock ?? 0;
-                        document.getElementById('stockMinimo').value = producto.stock_minimo ?? 0;
-                        document.getElementById('stockMaximo').value = producto.stock_maximo ?? 0;
-                        document.getElementById('productWarranty').value = producto.clausula_garantia || '';
-                        document.getElementById('productSerial').value = producto.serial || '';
+                        document.getElementById('nombre_producto').value = producto.nombre_producto || '';
+                        document.getElementById('descripcion_producto').value = producto.descripcion_producto || '';
+                        document.getElementById('modelo').value = producto.id_modelo || '';
+                        document.getElementById('Precio').value = producto.precio || '';
+                        document.getElementById('Stock_Actual').value = producto.stock_actual ?? producto.stock ?? 0;
+                        document.getElementById('Stock_Minimo').value = producto.stock_minimo ?? 0;
+                        document.getElementById('Stock_Maximo').value = producto.stock_maximo ?? 0;
+                        document.getElementById('Clausula_garantia').value = producto.clausula_garantia || '';
+                        document.getElementById('Seriales').value = producto.serial || '';
                         showProductImagePreview(producto.imagen || '');
 
                         const normalizarCategoria = value => String(value || '').toLowerCase().replace(/[\s_-]+/g, '');
