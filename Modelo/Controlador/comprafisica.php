@@ -184,8 +184,8 @@ if (is_file("Vista/" . $pagina . ".php")) {
                 if (!empty($errores)) {
                     error_log("[COMPRFISICA] Errores de validación: " . json_encode($errores));
                     echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Error en los datos de la venta',
+                        'resultado' => 'error',
+                        'mensaje' => 'Error en los datos de la venta',
                         'errors' => $errores
                     ]);
                     exit;
@@ -195,13 +195,21 @@ if (is_file("Vista/" . $pagina . ".php")) {
                 // Registrar en el modelo
                 error_log("[COMPRFISICA] Llamando a registrarCompraFisica con datos: " . json_encode($datosVenta));
                 try {
-                    $resultado = $k->registrarCompraFisica($datosVenta);
+                    $resultado = $k->registrarCompraFisica(
+                        $datosVenta,
+                        (int) ($_SESSION['id_usuario'] ?? 0)
+                    );
                     error_log("[COMPRFISICA] Resultado del modelo: " . json_encode($resultado));
                 } catch (Exception $e) {
                     error_log("[COMPRFISICA] Excepción en modelo: " . $e->getMessage());
+                    $mensaje = 'No se pudo registrar la venta. Inténtelo de nuevo o consulte al administrador.';
+                    if (strpos($e->getMessage(), '1305') !== false &&
+                        strpos($e->getMessage(), 'sp_registrar_compra_presencial') !== false) {
+                        $mensaje = 'La base de datos casalai_principal no tiene instalado el procedimiento sp_registrar_compra_presencial. Importe la versión actualizada de assets/BD/casalai_principal.sql y vuelva a intentar. La venta no fue registrada.';
+                    }
                     echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Excepción al registrar compra: ' . $e->getMessage()
+                        'resultado' => 'error',
+                        'mensaje' => $mensaje
                     ]);
                     exit;
                 }
@@ -218,18 +226,6 @@ if (is_file("Vista/" . $pagina . ".php")) {
                     // Registro exitoso
                     $correlativo = $facturaModel->obtenerUltimaFactura() ?? 'N/A';
                     $name = $_SESSION['name'] ?? 'Desconocido';
-                    
-                    // Registrar en bitácora
-                    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
-                        $bitacoraModel = new Bitacora();
-                        $bitacoraModel->registrarBitacora(
-                            $_SESSION['id_usuario'],
-                            MODULO_DESPACHO,
-                            'INCLUIR',
-                            'El usuario '.$name.' incluyó la compra física: ' . $correlativo,
-                            'alta'
-                        );
-                    }
                     
                     // Crear notificación
                     $bd_seguridad = new BD('S');

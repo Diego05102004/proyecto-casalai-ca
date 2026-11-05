@@ -387,12 +387,12 @@ class Comprafisica extends BD{
         return $errores;
     }
 
-    public function registrarCompraFisica($datos) {
-        return $this->r_compraFisica($datos);
+    public function registrarCompraFisica($datos, $idUsuarioAuditor) {
+        return $this->r_compraFisica($datos, $idUsuarioAuditor);
     }
 
-    private function r_compraFisica($datos) {
-        return $this->ejecutarConConexionSegura(function($pdo) use ($datos){
+    private function r_compraFisica($datos, $idUsuarioAuditor) {
+        return $this->ejecutarConConexionSegura(function($pdo) use ($datos, $idUsuarioAuditor){
             try{
                 error_log("[COMPRFISICA-MODELO] Iniciando r_compraFisica con procedimiento almacenado");
                 error_log("[COMPRFISICA-MODELO] Datos recibidos: " . json_encode($datos));
@@ -406,12 +406,13 @@ class Comprafisica extends BD{
                 error_log("[COMPRFISICA-MODELO] Pagos JSON: " . $pagosJson);
                 
                 // Llamar al procedimiento almacenado
-                $stmt = $pdo->prepare("CALL sp_registrar_compra_presencial(:id_cliente, :productos, :pagos, :fecha, @resultado)");
+                $stmt = $pdo->prepare("CALL sp_registrar_compra_presencial(:id_cliente, :productos, :pagos, :fecha, :id_usuario_auditor, @resultado)");
                 $stmt->execute([
                     ':id_cliente' => $datos['cliente'],
                     ':productos' => $productosJson,
                     ':pagos' => $pagosJson,
-                    ':fecha' => $fecha
+                    ':fecha' => $fecha,
+                    ':id_usuario_auditor' => $idUsuarioAuditor
                 ]);
                 
                 // Obtener el resultado
@@ -421,6 +422,10 @@ class Comprafisica extends BD{
                 
                 error_log("[COMPRFISICA-MODELO] Resultado del procedimiento: " . json_encode($resultadoJson));
                 
+                if (!is_array($resultadoJson)) {
+                    throw new RuntimeException('El procedimiento devolvió una respuesta inválida.');
+                }
+
                 // Verificar si hubo error
                 if ($resultadoJson['status'] === 'error') {
                     error_log("[COMPRFISICA-MODELO] Error en procedimiento: " . $resultadoJson['mensaje']);
@@ -430,18 +435,59 @@ class Comprafisica extends BD{
                         'debug' => $resultadoJson['debug'] ?? ''
                     ];
                 }
+
+                $idFactura = (int) ($resultadoJson['id_factura'] ?? 0);
+                if ($idFactura <= 0) {
+                    throw new RuntimeException('El procedimiento no devolvió el identificador de la factura.');
+                }
+
+                $stmtProductos = $pdo->prepare("
+                    SELECT
+                        p.id_producto,
+                        p.id_producto AS codigo,
+                        p.nombre_producto AS nombre,
+                        p.descripcion_producto AS descripcion,
+                        m.nombre_modelo AS modelo,
+                        mar.nombre_marca AS marca,
+                        p.serial,
+                        p.precio,
+                        fd.cantidad
+                    FROM tbl_factura_detalle fd
+                    INNER JOIN tbl_productos p ON p.id_producto = fd.id_producto
+                    LEFT JOIN tbl_modelos m ON m.id_modelo = p.id_modelo
+                    LEFT JOIN tbl_marcas mar ON mar.id_marca = m.id_marca
+                    WHERE fd.factura_id = :id_factura
+                ");
+                $stmtProductos->execute([':id_factura' => $idFactura]);
+                $productos = $stmtProductos->fetchAll(PDO::FETCH_ASSOC);
+
+                $stmtPagos = $pdo->prepare("
+                    SELECT
+                        dp.id_detalles,
+                        dp.id_cuenta AS cuenta,
+                        dp.referencia,
+                        dp.fecha,
+                        dp.tipo,
+                        dp.monto,
+                        COALESCE(dp.comprobante, '') AS comprobante,
+                        COALESCE(dp.estatus, '') AS estatus,
+                        COALESCE(dp.observaciones, '') AS observaciones
+                    FROM tbl_detalles_pago dp
+                    WHERE dp.id_factura = :id_factura
+                ");
+                $stmtPagos->execute([':id_factura' => $idFactura]);
+                $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Construir respuesta en el formato esperado por el frontend
-                // Los productos y pagos ya vienen como arrays JSON del procedimiento
                 $respuesta = [
-                    'id_factura' => $resultadoJson['id_factura'],
+                    'id_factura' => $idFactura,
                     'fecha_factura' => $resultadoJson['fecha_factura'],
                     'nombre_cliente' => $resultadoJson['nombre_cliente'],
                     'cedula' => $resultadoJson['cedula'],
                     'telefono' => $resultadoJson['telefono'],
                     'correo' => $resultadoJson['correo'],
-                    'productos' => $resultadoJson['productos'],
-                    'pagos' => $resultadoJson['pagos'],
+                    'productos' => $productos,
+                    'pagos' => $pagos,
                     'total' => $resultadoJson['monto_total']
                 ];
                 

@@ -215,7 +215,7 @@ final class CompraTest extends TestCase
             ],
         ];
 
-        $resultado = $compra->registrarCompraFisica($datos);
+        $resultado = $compra->registrarCompraFisica($datos, 1);
 
         $this->assertIsArray($resultado);
         $this->assertArrayHasKey('id_factura', $resultado);
@@ -258,7 +258,7 @@ final class CompraTest extends TestCase
             ],
         ];
 
-        $resultado = $compra->registrarCompraFisica($datos);
+        $resultado = $compra->registrarCompraFisica($datos, 1);
 
         $this->assertIsArray($resultado);
         $this->assertArrayHasKey('id_factura', $resultado);
@@ -294,7 +294,7 @@ final class CompraTest extends TestCase
                 ],
                 'pagos' => [],
             ];
-            $resultado = $compra->registrarCompraFisica($datos);
+            $resultado = $compra->registrarCompraFisica($datos, 1);
         } catch (\Exception $e) {
             // Capturar la excepción simulada y convertirla en resultado de error
             $resultado = ['status' => 'error', 'message' => $e->getMessage()];
@@ -333,7 +333,7 @@ final class CompraTest extends TestCase
         ];
 
         try {
-            $resultado = $compra->registrarCompraFisica($datos);
+            $resultado = $compra->registrarCompraFisica($datos, 1);
         } catch (\Exception $e) {
             // Capturar la excepción de cliente requerido y convertirla en resultado de error
             $resultado = ['status' => 'error', 'message' => $e->getMessage()];

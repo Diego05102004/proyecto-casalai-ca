@@ -258,7 +258,7 @@ aria-labelledby="registrarCompraFisicaModalLabel" aria-hidden="true">
         <div class="ghost"></div>
     </div>
     
-    <table class="tablaConsultas" id="tablaConsultas">
+    <table class="tablaConsultas" id="tablaConsultas" data-datatable>
         <thead>
             <tr>
                 <th>FECHA</th>
@@ -585,7 +585,6 @@ $(document).on('click', '.btn-eliminar-producto', function () {
 <script src="assets/public/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="assets/public/js/jquery.dataTables.min.js"></script>
 <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
-<script src="assets/public/js/datatable.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="assets/javascript/validaciones.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -3,13 +3,18 @@
 -- Maneja concurrencia con REPEATABLE READ y depuración
 -- -----------------------------------------------------------------------------
 
+USE `casalai_principal`;
+
 DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_registrar_compra_presencial $$
 
 CREATE PROCEDURE sp_registrar_compra_presencial(
     IN p_id_cliente INT,
     IN p_productos JSON,
     IN p_pagos JSON,
     IN p_fecha DATE,
+    IN p_id_usuario_auditor INT,
     OUT p_resultado JSON
 )
 BEGIN
@@ -66,6 +71,11 @@ BEGIN
         
         ROLLBACK;
     END;
+
+    IF p_id_usuario_auditor IS NULL OR p_id_usuario_auditor <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El usuario auditor de la venta no es válido.';
+    END IF;
 
     -- Nota: PHP ya maneja la transacción a través de ejecutarConConexionSegura
     SET v_debug_log = CONCAT(v_debug_log, '[INFO] Iniciando lógica dentro de transacción existente\n');
@@ -234,6 +244,34 @@ BEGIN
     -- Insertar arrays JSON correctamente
     SET p_resultado = JSON_SET(p_resultado, '$.productos', v_productos_json);
     SET p_resultado = JSON_SET(p_resultado, '$.pagos', v_pagos_json);
+
+    -- Auditoría síncrona en la base de datos de seguridad.
+    INSERT INTO `casalai_seguridad`.`tbl_bitacora` (
+        `fecha_hora`, `nombre_modulo`, `accion`, `datos_nuevos`, `datos_viejos`,
+        `id_usuario`, `prioridad`, `descripcion`
+    ) VALUES (
+        NOW(),
+        'Compra Fisica',
+        'INCLUIR',
+        JSON_OBJECT(
+            'id_despacho', v_id_despacho,
+            'id_factura', v_id_factura,
+            'id_cliente', p_id_cliente,
+            'nombre_cliente', v_nombre_cliente,
+            'productos', JSON_EXTRACT(v_productos_json, '$'),
+            'pagos', JSON_EXTRACT(v_pagos_json, '$'),
+            'monto_total', v_monto_total,
+            'fecha', p_fecha,
+            'descripcion', v_descripcion
+        ),
+        NULL,
+        p_id_usuario_auditor,
+        'media',
+        CONCAT(
+            'Se registró una venta presencial #', v_id_factura,
+            ' para el cliente "', IFNULL(v_nombre_cliente, 'N/A'), '".'
+        )
+    );
     
 END$$
 

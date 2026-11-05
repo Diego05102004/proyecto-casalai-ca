@@ -2,12 +2,15 @@
 -- PRUEBA DEL PROCEDIMIENTO ALMACENADO sp_registrar_compra_presencial
 -- -----------------------------------------------------------------------------
 
+USE `casalai_principal`;
+
 -- Prueba 1: Registro de compra presencial con productos y pagos
 CALL sp_registrar_compra_presencial(
     1, -- id_cliente (reemplazar con un ID válido)
     '[{"id_producto": 1, "cantidad": 2}]', -- productos JSON (reemplazar con datos válidos)
     '[{"tipo": "Efectivo", "monto": 100.00}]', -- pagos JSON
     CURDATE(), -- fecha
+    1, -- id_usuario_auditor (reemplazar con un ID válido)
     @resultado
 );
 
@@ -39,6 +42,7 @@ CALL sp_registrar_compra_presencial(
     '[{"id_producto": 1, "cantidad": 2}, {"id_producto": 2, "cantidad": 1}]', -- múltiples productos
     '[{"tipo": "Efectivo", "monto": 150.00}, {"tipo": "Transferencia", "monto": 50.00, "referencia": "REF123"}]', -- múltiples pagos
     CURDATE(),
+    1, -- id_usuario_auditor
     @resultado
 );
 
@@ -50,6 +54,7 @@ CALL sp_registrar_compra_presencial(
     '[{"id_producto": 1, "cantidad": 1}]', -- productos
     NULL, -- sin pagos
     CURDATE(),
+    1, -- id_usuario_auditor
     @resultado
 );
 

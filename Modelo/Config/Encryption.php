@@ -33,20 +33,26 @@ class Encryption {
         $publicKey = getenv('RSA_PUBLIC_KEY');
         $privateKey = getenv('RSA_PRIVATE_KEY');
 
-        if ($publicKey === false || trim($publicKey) === '' ||
-            $privateKey === false || trim($privateKey) === '') {
+        $normalizeKey = static function($key) {
+            return trim(str_replace(['\\n', "\r\n", "\r"], ["\n", "\n", "\n"], $key));
+        };
+        $configuredKeysAreParseable = $publicKey !== false && $privateKey !== false &&
+            trim($publicKey) !== '' && trim($privateKey) !== '' &&
+            @openssl_pkey_get_public($normalizeKey($publicKey)) !== false &&
+            @openssl_pkey_get_private($normalizeKey($privateKey)) !== false;
+
+        if (!$configuredKeysAreParseable) {
             $envPath = dirname(__DIR__, 2) . '/.env';
             if (is_file($envPath)) {
                 $content = file_get_contents($envPath);
+                if ($content === false) {
+                    throw new \RuntimeException('No se pudo leer el archivo de configuración RSA.');
+                }
                 preg_match('/RSA_PUBLIC_KEY="(.+?)"/s', $content, $publicMatch);
                 preg_match('/RSA_PRIVATE_KEY="(.+?)"/s', $content, $privateMatch);
 
-                if ($publicKey === false || trim($publicKey) === '') {
-                    $publicKey = $publicMatch[1] ?? false;
-                }
-                if ($privateKey === false || trim($privateKey) === '') {
-                    $privateKey = $privateMatch[1] ?? false;
-                }
+                $publicKey = $publicMatch[1] ?? $publicKey;
+                $privateKey = $privateMatch[1] ?? $privateKey;
             }
         }
 
@@ -57,9 +63,6 @@ class Encryption {
             );
         }
 
-        $normalizeKey = static function($key) {
-            return trim(str_replace(['\\n', "\r\n", "\r"], ["\n", "\n", "\n"], $key));
-        };
         $publicKey = $normalizeKey($publicKey);
         $privateKey = $normalizeKey($privateKey);
 

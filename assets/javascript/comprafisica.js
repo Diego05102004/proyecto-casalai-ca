@@ -45,6 +45,86 @@ function protegerSelects(selectIds, interval = 1000) {
     }, interval);
 }
 
+const valoresValidosCompraFisica = new WeakMap();
+const erroresValidacionCompraFisica = new WeakMap();
+const patronesEntradaNoPermitida = [
+    /<\s*\/?\s*[a-z!][^>]*>/i,
+    /\bjavascript\s*:|\bon[a-z]+\s*=/i,
+    /(?:\b(?:union\s+select|select\s+.+\s+from|insert\s+into|update\s+\w+\s+set|delete\s+from|drop\s+(?:table|database))\b|--|\/\*|\*\/|\b(?:or|and)\b\s+['"]?[\w'"]+\s*=\s*['"]?[\w'"]+)/i
+];
+
+function esCampoEditable(input) {
+    if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) {
+        return false;
+    }
+
+    return !(input instanceof HTMLInputElement &&
+        ['button', 'checkbox', 'color', 'file', 'hidden', 'image', 'radio', 'range', 'reset', 'submit'].includes(input.type));
+}
+
+function obtenerErrorValidacion(input) {
+    let error = erroresValidacionCompraFisica.get(input);
+    if (error) {
+        return error;
+    }
+
+    error = document.createElement('small');
+    error.className = 'comprafisica-input-error';
+    error.setAttribute('role', 'alert');
+    error.setAttribute('aria-live', 'polite');
+    error.style.display = 'block';
+    error.style.color = '#b02a37';
+    error.hidden = true;
+    input.insertAdjacentElement('afterend', error);
+
+    const errorId = 'comprafisica-input-error-' + Math.random().toString(36).slice(2);
+    error.id = errorId;
+    const describedBy = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+    describedBy.push(errorId);
+    input.setAttribute('aria-describedby', describedBy.join(' '));
+    erroresValidacionCompraFisica.set(input, error);
+    return error;
+}
+
+function validarEntradaCompraFisica(event) {
+    const input = event.target;
+    if (!esCampoEditable(input)) {
+        return;
+    }
+
+    const valor = input.value;
+    const contieneEntradaNoPermitida = patronesEntradaNoPermitida.some(pattern => pattern.test(valor));
+    if (contieneEntradaNoPermitida) {
+        input.value = valoresValidosCompraFisica.get(input) || '';
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const error = obtenerErrorValidacion(input);
+        error.textContent = 'El contenido ingresado no está permitido.';
+        error.hidden = false;
+        input.setAttribute('aria-invalid', 'true');
+        return;
+    }
+
+    Promise.resolve().then(() => {
+        valoresValidosCompraFisica.set(input, input.value);
+    });
+
+    const error = erroresValidacionCompraFisica.get(input);
+    if (error) {
+        error.textContent = '';
+        error.hidden = true;
+        input.removeAttribute('aria-invalid');
+    }
+}
+
+document.addEventListener('focusin', function (event) {
+    if (esCampoEditable(event.target)) {
+        valoresValidosCompraFisica.set(event.target, event.target.value);
+    }
+}, true);
+document.addEventListener('input', validarEntradaCompraFisica, true);
+
 $(document).ready(function () {
 
     var $tabla = $('#tablaConsultas');
@@ -915,8 +995,8 @@ $(document).ready(function () {
                     console.error("No se recibió objeto venta:", respuesta);
                     muestraMensaje("error", "Error", "No se recibieron los datos de la venta");
                 }
-            } else if (respuesta.resultado === "error") {
-                muestraMensaje("error", "Error", respuesta.mensaje);
+            } else if (respuesta.resultado === "error" || respuesta.status === "error") {
+                muestraMensaje("error", "Error", respuesta.mensaje || respuesta.message || "No se pudo registrar la venta");
             } else {
                 console.error("Respuesta inesperada:", respuesta);
                 muestraMensaje("warning", "Aviso", "Respuesta inesperada del servidor");
@@ -932,25 +1012,30 @@ $(document).ready(function () {
             });
         }
 
+        const escaparHtml = valor => String(valor ?? '').replace(/[&<>"']/g, caracter => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[caracter]);
         const fechaOriginal = compra.fecha_factura || compra.fecha || '';
         const fechaMostrada = fechaOriginal ? formatearFecha(fechaOriginal) : '';
 
         const nuevaFila = [
-            `<span class="campo-numeros">${fechaMostrada}</span>`,
-            `<span class="campo-nombres">${compra.nombre_cliente}</span>
-            <span class="campo-numeros">(${compra.cedula})</span>`,
+            `<span class="campo-numeros">${escaparHtml(fechaMostrada)}</span>`,
+            `<span class="campo-nombres">${escaparHtml(compra.nombre_cliente)}</span>
+            <span class="campo-numeros">(${escaparHtml(compra.cedula)})</span>`,
             `<span class="campo-numeros">${formatearNumero(montoTotal)}</span>`,
             `<ul>
                 <button class="btn-detalle ver-detalles"
                     title="Detallar"
-                    data-id="${compra.id_factura}"
-                    data-productos='${JSON.stringify(compra.productos)}'
-                    data-pagos='${JSON.stringify(compra.pagos)}'
-                    data-cliente="${compra.nombre_cliente}"
-                    data-cedula="${compra.cedula}"
-                    data-telefono="${compra.telefono ?? ''}"
-                    data-correo="${compra.correo ?? ''}"
-                    data-fecha="${compra.fecha_factura || compra.fecha || ''}">
+                    data-id="${escaparHtml(compra.id_factura)}"
+                    data-cliente="${escaparHtml(compra.nombre_cliente)}"
+                    data-cedula="${escaparHtml(compra.cedula)}"
+                    data-telefono="${escaparHtml(compra.telefono)}"
+                    data-correo="${escaparHtml(compra.correo)}"
+                    data-fecha="${escaparHtml(fechaOriginal)}">
                     <img src="assets/img/eye.svg">
                 </button>
             </ul>`
@@ -964,6 +1049,10 @@ $(document).ready(function () {
 
         // Mostrar siempre la última página
         tabla.page('last').draw('page');
+        $(tabla.row(rowIdx).node()).find('.btn-detalle').data({
+            productos: Array.isArray(compra.productos) ? compra.productos : [],
+            pagos: Array.isArray(compra.pagos) ? compra.pagos : []
+        });
     }
 
     // Función para verificar permisos en tiempo real
