@@ -409,11 +409,11 @@
     <!--footer-->
 
     <script src="assets/public/js/jquery-3.7.1.min.js"></script>
-    
     <script src="assets/javascript/sweetalert2.all.min.js"></script>
     <script src="assets/javascript/catalogo.js"></script>
     <script src="assets/public/js/jquery.dataTables.min.js"></script>
     <script src="assets/public/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/javascript/datatable.js"></script>
 <script>
 /**
  * Protege uno o varios selects contra modificaciones en DevTools.

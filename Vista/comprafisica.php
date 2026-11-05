@@ -593,6 +593,7 @@ $(document).on('click', '.btn-eliminar-producto', function () {
 <script src="assets/public/js/html2canvas.min.js"></script>
 <script src="assets/public/js/jspdf.umd.min.js"></script>
 <script src="assets/javascript/comprafisica.js"></script>
+<script src="assets/javascript/datatable.js"></script>
 
 <script>
 // Funciones de validación

@@ -32,7 +32,7 @@
     
     // Configuración
     const CONFIG = {
-        verifyInterval: 1000, // Verificar cada 5 segundos
+        verifyInterval: 5000, // Verificar cada 5 segundos
         verifyEndpoint: 'api/verify_token.php',
         extendEndpoint: 'api/extend_token.php',
         invalidateEndpoint: 'api/invalidate_token.php',
@@ -47,6 +47,7 @@
     let modalShowTimer = null;
     let isRedirecting = false;
     let isModalShown = false;
+    let isVerificationInProgress = false;
     let lastVerifyData = null;
     
     console.log('[JWT] Script jwt_validator.js cargado');
@@ -115,11 +116,16 @@
     }
 
     function verifyToken() {
-        if (isRedirecting || isModalShown) {
-            console.log('[JWT] Verificación omitida: isRedirecting=', isRedirecting, ', isModalShown=', isModalShown);
+        if (isRedirecting || isModalShown || isVerificationInProgress) {
+            console.log('[JWT] Verificación omitida:', {
+                isRedirecting,
+                isModalShown,
+                isVerificationInProgress
+            });
             return;
         }
         
+        isVerificationInProgress = true;
         console.log('[JWT] Verificando token...');
         fetch(CONFIG.verifyEndpoint, {
             method: 'GET',
@@ -129,20 +135,24 @@
             }
         })
         .then(response => {
+            if (response.status === 401) {
+                invalidateSession();
+                return null;
+            }
             if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.message || 'Token inválido o expirado');
-                }).catch(() => {
-                    throw new Error('Token inválido o expirado');
-                });
+                throw new Error(`Error HTTP ${response.status} al verificar el token`);
             }
             return response.json();
         })
         .then(data => {
+            if (!data) {
+                return;
+            }
+
             console.log('[JWT] Respuesta de verificación:', data);
             lastVerifyData = data;
 
-            const state = data.state || (data.valid ? 'valid' : 'expired');
+            const state = data.state;
             const remainingExtensions = data.extensions_remaining ?? CONFIG.maxExtensions;
             const secondsLeft = Number(data.expires_in);
             console.log('[JWT] token state:', state, 'expires_in parsed:', secondsLeft, 'type:', typeof secondsLeft);
@@ -167,12 +177,19 @@
                 return;
             }
 
-            console.log('[JWT] Token expirado o inválido, invalidando sesión');
-            invalidateSession();
+            if (['expired', 'invalid', 'missing'].includes(state)) {
+                console.log('[JWT] Token expirado o inválido, invalidando sesión');
+                invalidateSession();
+                return;
+            }
+
+            console.error('[JWT] Estado inesperado al verificar el token:', state);
         })
         .catch(error => {
-            console.error('[JWT] Error al verificar token:', error);
-            handleTokenExpired();
+            console.error('[JWT] No se pudo verificar el token; se reintentará:', error);
+        })
+        .finally(() => {
+            isVerificationInProgress = false;
         });
     }
     
@@ -510,17 +527,6 @@
             toast.style.animation = 'slideInRight 0.3s ease-out reverse';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
-    }
-    
-    /**
-     * Maneja la expiración del token
-     */
-    function handleTokenExpired() {
-        if (isRedirecting) {
-            return;
-        }
-        
-        invalidateSession();
     }
     
     /**

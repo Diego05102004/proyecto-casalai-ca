@@ -309,7 +309,7 @@ if (is_file("Vista/" . $pagina . ".php")) {
     $permisos = new Permisos();
     $permisosUsuarioEntrar = $permisos->getPermisosPorRolModulo();
     $listadocuentas = $cuentaModel->consultarCuentabanco();
-    $vistaNueva = "Vista/VistaNew/" . $pagina . ".php";
+    $vistaNueva = "Vista/Vista/" . $pagina . ".php";
     $vistaLegacy = "Vista/" . $pagina . ".php";
     require_once(is_file($vistaNueva) ? $vistaNueva : $vistaLegacy);
     if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
