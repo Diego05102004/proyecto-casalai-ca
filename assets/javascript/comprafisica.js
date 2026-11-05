@@ -250,7 +250,7 @@ $(document).ready(function () {
     window.parsearNumeroFormateado = parsearNumeroFormateado;
 
     // Sanitiza mientras se escribe (permite coma o punto; no elimina separadores para no dañar 2,450.00)
-    $(document).on("input", ".numerico, .monto, #total_cancelado, #total_restante, #total_cambio", function () {
+    $(document).on("input", ".numerico:not([name='cantidad[]']):not([name='cantidades[]']), .monto, #total_cancelado, #total_restante, #total_cambio", function () {
         let valor = $(this).val();
         // Permitir solo dígitos, coma y punto
         valor = valor.replace(/[^0-9.,]/g, "");
@@ -258,7 +258,7 @@ $(document).ready(function () {
     });
 
     // Al salir del input, aplicar formato 1,234.56
-    $(document).on('blur', ".numerico, .monto, #total_cancelado, #total_restante, #total_cambio", function () {
+    $(document).on('blur', ".numerico:not([name='cantidad[]']):not([name='cantidades[]']), .monto, #total_cancelado, #total_restante, #total_cambio", function () {
         const num = parsearNumeroFormateado($(this).val());
         $(this).val(formatearNumero(num));
     });
@@ -275,7 +275,9 @@ $(document).ready(function () {
             const valor = $(this).val();
             if (valor && !isNaN(parsearNumeroFormateado(valor))) {
                 const valorNumerico = parsearNumeroFormateado(valor);
-                $(this).val(formatearNumero(valorNumerico));
+                $(this).val(this.dataset.permiteDecimales === 'true'
+                    ? valorNumerico.toFixed(2).replace('.', ',')
+                    : String(Math.trunc(valorNumerico)));
             }
         });
         
@@ -587,15 +589,6 @@ $(document).ready(function () {
     }
 
 
-    // Función para aplicar formato a inputs numéricos
-    function aplicarFormatoNumerico(input) {
-        const valor = input.val();
-        if (valor && !isNaN(parsearNumeroFormateado(valor))) {
-            const valorNumerico = parsearNumeroFormateado(valor);
-            input.val(formatearNumero(valorNumerico));
-        }
-    }
-
     if($.trim($("#mensajes").text()) != ""){
         mensajes("warning", "Atención", $("#mensajes").html());
     }
@@ -626,38 +619,78 @@ $(document).ready(function () {
         );
     });
 
-    // Evento para formatear cantidades al perder foco
-    $(document).on('blur', 'input[name="cantidad[]"]', function() {
-        aplicarFormatoNumerico($(this));
-        calcularTotal();
-    });
+    const cantidadesValidas = new WeakMap();
+    const selectorCantidadesEnteras = 'input[name="cantidad[]"], input[name="cantidades[]"]';
+    const montosValidos = new WeakMap();
+    const selectorMontosPago = '.monto-input, .monto-input-dolar';
+    document.addEventListener('focusin', function(event) {
+        if (event.target.matches(selectorCantidadesEnteras)) {
+            cantidadesValidas.set(event.target, event.target.value);
+        }
+        if (event.target.matches(selectorMontosPago)) {
+            montosValidos.set(event.target, event.target.value);
+        }
+    }, true);
 
-    // Evento para permitir solo números, punto y coma en cantidades
-    $(document).on('keypress', 'input[name="cantidad[]"]', function(e) {
-        const char = String.fromCharCode(e.which);
-        const currentValue = $(this).val();
-        
-        // Permitir solo números, coma y punto
-        if (!/[\d,.]/.test(char)) {
-            e.preventDefault();
+    document.addEventListener('keydown', function(event) {
+        if (event.target.matches(selectorCantidadesEnteras) &&
+            ['.', ',', 'e', 'E', '+', '-'].includes(event.key)) {
+            event.preventDefault();
+        }
+        if (!event.target.matches(selectorMontosPago) || event.ctrlKey || event.metaKey ||
+            event.altKey || event.key.length !== 1) {
             return;
         }
-        
-        // Validar que solo haya una coma decimal
-        if (char === ',' || char === '.') {
-            if (currentValue.includes(',') || currentValue.includes('.')) {
-                e.preventDefault();
-                return;
-            }
-        }
-    });
 
-    // Evento para formatear al cargar la página
-    $(document).ready(function() {
-        $('input[name="cantidad[]"]').each(function() {
-            aplicarFormatoNumerico($(this));
-        });
-    });
+        const permiteDecimales = event.target.dataset.permiteDecimales === 'true';
+        if (!/[0-9]/.test(event.key) && !(permiteDecimales && [',', '.'].includes(event.key))) {
+            event.preventDefault();
+        }
+    }, true);
+
+    document.addEventListener('input', function(event) {
+        const input = event.target;
+        if (input.matches(selectorCantidadesEnteras)) {
+            const esCantidadValida = /^\d{0,9}$/.test(input.value) &&
+                (input.value === '' || Number(input.value) <= 999999999);
+            if (esCantidadValida) {
+                cantidadesValidas.set(input, input.value);
+                input.setCustomValidity('');
+            } else {
+                input.value = cantidadesValidas.get(input) || '';
+                input.setCustomValidity('La cantidad debe ser un entero de hasta 9 dígitos.');
+            }
+            calcularTotal();
+            return;
+        }
+
+        if (!input.matches(selectorMontosPago)) {
+            return;
+        }
+
+        const permiteDecimales = input.dataset.permiteDecimales === 'true';
+        const montoValido = permiteDecimales
+            ? /^\d*(?:[.,]\d{0,2})?$/.test(input.value)
+            : /^\d*$/.test(input.value);
+        if (montoValido) {
+            montosValidos.set(input, input.value);
+            input.setCustomValidity('');
+        } else {
+            input.value = montosValidos.get(input) || '';
+            input.setCustomValidity(permiteDecimales
+                ? 'Ingrese un monto con un máximo de dos decimales.'
+                : 'Este método de pago solo acepta montos enteros.');
+        }
+    }, true);
+
+    document.addEventListener('blur', function(event) {
+        if (event.target.matches(selectorCantidadesEnteras) && event.target.value !== '') {
+            event.target.setCustomValidity('');
+        }
+        if (event.target.matches(selectorMontosPago) && event.target.value !== '') {
+            event.target.setCustomValidity('');
+        }
+    }, true);
 
     // Tipo de pago (select)
     $(document).on("change blur", ".tipo-pago", function () {
@@ -703,19 +736,14 @@ $(document).ready(function () {
         }
     });
 
-    // Monto (solo números)
-    $(document).on("keypress", "input[id^='monto_']", function (e) {
-        // Solo dígitos 0-9
-        validarKeyPress(/^[0-9]$/, e);
-    });
-    $(document).on("keyup blur", "input[id^='monto_']", function () {
-        // Solo números (al menos 1 dígito)
-        validarKeyUp(
-            /^[0-9]+$/,
-            $(this),
-            $("#smonto"),
-            "*Solo se permiten números*"
-        );
+    $(document).on('keypress', '.monto-input, .monto-input-dolar', function(event) {
+        const key = event.key;
+        const permiteDecimales = this.dataset.permiteDecimales === 'true';
+        const isControl = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key);
+        if (isControl || /^\d$/.test(key) || (permiteDecimales && [',', '.'].includes(key))) {
+            return;
+        }
+        event.preventDefault();
     });
 
     function validarEnvioVenta() {
@@ -975,8 +1003,9 @@ $(document).ready(function () {
 
         // Normalizar montos antes de enviar: quitar separadores y dejar punto decimal
         $('input[name^="pagos"][name$="[monto]"]').each(function () {
-            const limpio = parsearNumeroFormateado($(this).val()) || 0;
-            $(this).val(limpio.toFixed(2));
+            const monto = parsearNumeroFormateado($(this).val()) || 0;
+            const tipo = $(this).closest('.bloque-pago').find('.tipo-pago').val();
+            $(this).val(tipo === 'Efectivo' ? String(Math.trunc(monto)) : monto.toFixed(2));
         });
 
         $("#accion").val("registrar");
@@ -1634,8 +1663,12 @@ function colocaproducto(linea) {
             encontro = true;
             var cantidadInput = $(this).find("input[name='cantidad[]']");
             let cantidadActual = parsearNumeroFormateado(cantidadInput.val()) || 0;
+            if (cantidadActual >= 999999999) {
+                Swal.fire('Límite alcanzado', 'La cantidad máxima por producto es de 9 dígitos.', 'warning');
+                return false;
+            }
             let nuevaCantidad = cantidadActual + 1;
-            cantidadInput.val(formatearNumero(nuevaCantidad, 0)); // 0 decimales para cantidades
+            cantidadInput.val(String(nuevaCantidad));
             calcularTotal();
             return false;
         }
@@ -1657,7 +1690,7 @@ function colocaproducto(linea) {
                 <td>${$(linea).find("td:eq(4)").text()}</td>
                 <td>${$(linea).find("td:eq(5)").text()}</td>
                 <td>
-                    <input type="text" class="numerico" name="cantidad[]" value="${formatearNumero(1, 0)}" required>
+                    <input type="number" class="numerico" name="cantidad[]" value="1" min="1" step="1" inputmode="numeric" required>
                 </td>
             </tr>`;
         $("#recepcion1").append(l);
@@ -1705,14 +1738,6 @@ function calcularCambio() {
 
 // Recalcula el cambio cada vez que se modifica un monto en cualquier pago
 $(document).on('input', 'input[name^="pagos"][name$="[monto]"]', function() {
-    // Aplicar formato al monto ingresado
-    let valor = $(this).val();
-    if (valor && !isNaN(parsearNumeroFormateado(valor))) {
-        const valorNumerico = parsearNumeroFormateado(valor);
-        $(this).val(formatearNumero(valorNumerico));
-    }
-    
-    // Recalcular todo
     calcularCambio();
 });
 
@@ -1751,6 +1776,16 @@ function validarFormularioCompra() {
     // 2. Validar que al menos hay un producto
     if ($('#recepcion1 tr').length === 0) {
         Swal.fire('Error', 'Debe agregar al menos un producto', 'error');
+        return false;
+    }
+
+    const cantidadInvalida = $('#recepcion1 input[name="cantidad[]"]').filter(function() {
+        const cantidad = Number(this.value);
+        return !/^\d{1,9}$/.test(this.value) || !Number.isSafeInteger(cantidad) || cantidad < 1 || cantidad > 999999999;
+    }).first();
+    if (cantidadInvalida.length) {
+        Swal.fire('Error', 'La cantidad de cada producto debe ser un número entero mayor que cero.', 'error');
+        cantidadInvalida.trigger('focus');
         return false;
     }
 
@@ -1893,6 +1928,7 @@ function validarPagos() {
     $(".bloque-pago").each(function (idx) {
         const tipo = $(this).find(".tipo-pago").val();
         const monto = $(this).find('input[name^="pagos"][name$="[monto]"]').val();
+        const montoIngresado = $(this).find('.monto-input');
         const cuenta = $(this).find(".cuenta-pago").val();
         const referencia = $(this).find('input[name^="pagos"][name$="[referencia]"]').val();
         const comprobante = $(this).find('input[type="file"].comprobante-pago')[0];
@@ -1901,6 +1937,19 @@ function validarPagos() {
         if (!tipo) {
             esValido = false;
             mensajeError = `Debe seleccionar el tipo de pago en el pago #${idx + 1}.`;
+            return false;
+        }
+
+        const admiteDecimales = ["Pago Movil", "Transferencia", "Zelle"].includes(tipo);
+        const formatoMonto = admiteDecimales
+            ? /^(?:\d+(?:[.,]\d{1,2})?|[.,]\d{1,2})$/
+            : /^\d+$/;
+        if (!montoIngresado.length || !formatoMonto.test(montoIngresado.val().trim())) {
+            esValido = false;
+            mensajeError = admiteDecimales
+                ? `El monto del pago #${idx + 1} debe ser positivo y tener como máximo dos decimales.`
+                : `El monto del pago #${idx + 1} debe ser un número entero positivo.`;
+            montoIngresado.trigger('focus');
             return false;
         }
 
@@ -1972,11 +2021,13 @@ $(document).ready(function() {
     actualizarTotalesFormateados();
 });
 
-$(document).on('blur', '.monto-input, .monto-input-dolar, input[name="cantidad[]"]', function () {
+$(document).on('blur', '.monto-input, .monto-input-dolar', function () {
     let valor = $(this).val();
     if (valor && !isNaN(parsearNumeroFormateado(valor))) {
         const valorNumerico = parsearNumeroFormateado(valor);
-        $(this).val(formatearNumero(valorNumerico));
+        $(this).val(this.dataset.permiteDecimales === 'true'
+            ? valorNumerico.toFixed(2).replace('.', ',')
+            : String(Math.trunc(valorNumerico)));
     }
 });
 /**
@@ -2093,11 +2144,7 @@ function calcularMontoTotalCancelado() {
 
     // Busca todos los inputs de montos en los bloques de pagos dinámicos
     $('input[name^="pagos"][name$="[monto]"]').each(function () {
-        let valor = $(this).val();
-        // Usar parsearNumeroFormateado en lugar de parseFloat
-        let valorNumerico = valor.includes('.') && valor.includes(',') ? 
-                           parsearNumeroFormateado(valor) : 
-                           parseFloat(valor) || 0;
+        const valorNumerico = parsearNumeroFormateado($(this).val());
         totalCancelado += valorNumerico;
     });
 

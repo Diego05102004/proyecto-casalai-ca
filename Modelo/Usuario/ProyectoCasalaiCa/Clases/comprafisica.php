@@ -19,10 +19,9 @@ class Comprafisica extends BD{
     // Constantes para validaciones
     const MAX_DESCRIPCION = 500;
     const MAX_REFERENCIA = 100;
-    const MAX_CANTIDAD_PRODUCTO = 999999;
+    const MAX_CANTIDAD_PRODUCTO = 999999999;
     const MAX_MONTO_PAGO = 99999999.99;
-    const MIN_CANTIDAD_PRODUCTO = 0.01;
-    const TIPOS_PAGO_PERMITIDOS = ['Efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'Efectivo $', 'Tarjeta', 'Cheque'];
+    const TIPOS_PAGO_PERMITIDOS = ['Efectivo', 'Transferencia', 'Zelle', 'Pago Movil', 'Efectivo en $', 'Efectivo $', 'Tarjeta', 'Cheque'];
     const TIPOS_PAGO_CON_REFERENCIA = ['Transferencia', 'Zelle', 'Pago Movil'];
     const ESTADOS_PERMITIDOS = ['activo', 'inactivo', 'pendiente'];
 
@@ -167,9 +166,15 @@ class Comprafisica extends BD{
                 if (!isset($producto['cantidad'])) {
                     $errores["productos_{$index}_cantidad"] = 'La cantidad del producto en la posición ' . $index . ' es obligatoria';
                 } else {
-                    $cantidad = (float)$producto['cantidad'];
-                    if ($cantidad <= self::MIN_CANTIDAD_PRODUCTO) {
-                        $errores["productos_{$index}_cantidad"] = 'La cantidad debe ser mayor a ' . self::MIN_CANTIDAD_PRODUCTO;
+                    $cantidadTexto = trim((string) $producto['cantidad']);
+                    if (!preg_match('/^\d{1,9}$/D', $cantidadTexto)) {
+                        $errores["productos_{$index}_cantidad"] = 'La cantidad debe ser un número entero de hasta 9 dígitos';
+                        continue;
+                    }
+
+                    $cantidad = (int) $cantidadTexto;
+                    if ($cantidad < 1) {
+                        $errores["productos_{$index}_cantidad"] = 'La cantidad debe ser al menos 1';
                     } elseif ($cantidad > self::MAX_CANTIDAD_PRODUCTO) {
                         $errores["productos_{$index}_cantidad"] = 'La cantidad no debe exceder ' . self::MAX_CANTIDAD_PRODUCTO;
                     }
@@ -201,11 +206,30 @@ class Comprafisica extends BD{
                 if (!isset($pago['monto'])) {
                     $errores["pagos_{$index}_monto"] = 'El monto del pago en la posición ' . $index . ' es obligatorio';
                 } else {
-                    $monto = (float)$pago['monto'];
+                    $tipoPago = trim((string) ($pago['tipo'] ?? ''));
+                    $montoTexto = trim((string) $pago['monto']);
+                    $esEfectivo = $tipoPago === 'Efectivo';
+                    $formatoMonto = $esEfectivo
+                        ? '/^\d+$/D'
+                        : '/^\d+(?:[.,]\d{1,2})?$/D';
+                    if (!preg_match($formatoMonto, $montoTexto)) {
+                        $errores["pagos_{$index}_monto"] = $esEfectivo
+                            ? 'El monto en efectivo debe ser un número entero'
+                            : 'El monto debe ser positivo y tener como máximo dos decimales';
+                        continue;
+                    }
+
+                    $monto = (float) str_replace(',', '.', $montoTexto);
                     if ($monto <= 0) {
                         $errores["pagos_{$index}_monto"] = 'El monto debe ser mayor a 0';
                     } elseif ($monto > self::MAX_MONTO_PAGO) {
                         $errores["pagos_{$index}_monto"] = 'El monto no debe exceder ' . self::MAX_MONTO_PAGO;
+                    }
+
+                    if (in_array($tipoPago, ['Efectivo en $', 'Efectivo $'], true) &&
+                        (!isset($pago['monto_dolar']) ||
+                            !preg_match('/^\d+$/D', trim((string) $pago['monto_dolar'])))) {
+                        $errores["pagos_{$index}_monto_dolar"] = 'El monto recibido en dólares debe ser un número entero';
                     }
                 }
                 

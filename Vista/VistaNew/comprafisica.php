@@ -641,7 +641,7 @@ function crearBloqueProducto(productosDisponibles) {
             </div>
             <div class="col-md-3">
                 <label>Cantidad</label>
-                <input type="number" class="form-control" name="cantidades[]" value="1" min="1">
+                <input type="number" class="form-control" name="cantidades[]" value="1" min="1" max="999999999" step="1" inputmode="numeric" required>
             </div>
             <div class="col-md-2">
 
@@ -695,7 +695,7 @@ function validarPropietarioZelle(input) {
 }
 
 function validarMontoZelle(input) {
-    const value = parseFloat(input.value);
+    const value = parsearNumeroFormateado(input.value);
     if (isNaN(value) || value <= 0) {
         input.setCustomValidity('Por favor, ingrese un monto válido mayor a 0');
     } else {
@@ -748,12 +748,17 @@ function crearBloquePago(idx) {
     `;
 }
 
-function camposPorTipo(tipo, idx) {
-    let montoField = `
-        <input type="text" class="control-form monto-input" 
-       name="pagos[${idx}][monto]" id="monto_${idx}" maxlength="10" required>
+function crearCampoMonto(idx, permiteDecimales) {
+    return `
+        <input type="text" class="control-form monto-input"
+       name="pagos[${idx}][monto]" id="monto_${idx}" maxlength="10"
+       data-permite-decimales="${permiteDecimales}" inputmode="${permiteDecimales ? 'decimal' : 'numeric'}" required>
         <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
     `;
+}
+
+function camposPorTipo(tipo, idx) {
+    const montoField = crearCampoMonto(idx, ["Pago Movil", "Transferencia"].includes(tipo));
 
     if (tipo === "Pago Movil") {
         return `
@@ -807,11 +812,14 @@ function camposPorTipo(tipo, idx) {
         return `
             <div class="envolver-form">
                 <label for="monto_${idx}">Monto Recibido ($)*</label>
-                <input type="text" 
+                <input type="text"
                      class="control-form monto-input-dolar" 
                      name="pagos[${idx}][monto_dolar]" 
                      id="monto_${idx}" 
-                     maxlength="10"required>
+                     maxlength="10"
+                     data-permite-decimales="false"
+                     inputmode="numeric"
+                     required>
                 <span class="span-value" id="smonto"></span>
                 <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
                 <input type="hidden" name="pagos[${idx}][monto]" id="monto_bs_${idx}">
@@ -844,13 +852,14 @@ function camposPorTipo(tipo, idx) {
             </div>
             <div class="envolver-form">
                 <label for="monto_${idx}">Monto Recibido ($)*</label>
-                <input type="number" 
-                       step="0.01" 
-                       class="control-form monto-input-dolar" 
-                       min="0.01" 
-                       name="pagos[${idx}][monto_dolar]" 
-                       id="zellemonto_${idx}" 
-                       oninput="validarMontoZelle(this); actualizarConversionDolar(this.value, '${idx}');"
+                <input type="text"
+                       class="control-form monto-input-dolar"
+                       name="pagos[${idx}][monto_dolar]"
+                       id="zellemonto_${idx}"
+                       maxlength="10"
+                       data-permite-decimales="true"
+                       inputmode="decimal"
+                       oninput="validarMontoZelle(this);"
                        required>
                 <span class="span-value" id="smonto"></span>
                 <span class="span-value bolivares-conversion" id="bolivares_${idx}" style="font-weight:bold;color:#0d6efd;"></span>
@@ -924,10 +933,12 @@ function formatearNumero(num, decimales = 2, esMoneda = false) {
 // Función para parsear números con formato
 function parsearNumeroFormateado(numStr) {
     if (!numStr) return 0;
-    return parseFloat(numStr.toString()
-        .replace(/\./g, '')
-        .replace(',', '.')
-    ) || 0;
+    const texto = String(numStr).trim();
+    const separadorDecimal = Math.max(texto.lastIndexOf(','), texto.lastIndexOf('.'));
+    const normalizado = separadorDecimal < 0
+        ? texto
+        : texto.slice(0, separadorDecimal).replace(/[.,]/g, '') + '.' + texto.slice(separadorDecimal + 1);
+    return Number(normalizado) || 0;
 }
 
 // Obtener la tasa de cambio actual
@@ -942,7 +953,7 @@ function obtenerTasa() {
 // Actualizar la conversión de dólares a bolívares
 function actualizarConversionDolar(input) {
     const idx = input.id.split('_')[1];
-    const montoDolar = parseFloat(input.value) || 0;
+    const montoDolar = parsearNumeroFormateado(input.value);
     const tasa = obtenerTasa();
     const montoBs = (montoDolar * tasa).toFixed(2);
 

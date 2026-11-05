@@ -139,7 +139,8 @@ if (is_file("Vista/" . $pagina . ".php")) {
                         'cuenta' => $pago['cuenta'] ?? '',
                         'referencia' => $pago['referencia'] ?? '',
                         'fecha' => date("Y-m-d H:i:s"),
-                        'monto' => $pago['monto'] ?? 0
+                        'monto' => str_replace(',', '.', (string) ($pago['monto'] ?? 0)),
+                        'monto_dolar' => $pago['monto_dolar'] ?? null
                     ];
 
                     // Subida de comprobante (si existe)
