@@ -6,6 +6,7 @@ use PDO;
 use PDOException;
 use PDOStatement;
 use RuntimeException;
+
 class Productos extends BD{
 
     private $id_centro;
@@ -1160,7 +1161,7 @@ class Productos extends BD{
     public function obtenerCombosConDetalles($esAdmin = false) {
         return $this->ejecutarConConexionSegura(function($pdo) use ($esAdmin) {
             // Obtener combos
-            $whereClause = $esAdmin ? "" : "AND c.activo = 1";
+            $whereClause = $esAdmin ? "AND c.activo <> 2" : "AND c.activo = 1";
             $sql = "SELECT c.id_combo, c.nombre_combo, c.descripcion, c.descuento, c.activo
                     FROM tbl_combo c 
                     WHERE 1=1 $whereClause 
@@ -2291,15 +2292,15 @@ class Productos extends BD{
      * @return string URL base
      */
     private function getBaseUrl() {
-        // Intentar incluir la configuración centralizada
-        $configFile = __DIR__ . '/../../../../api/api_config.php';
-        if (file_exists($configFile)) {
-            require_once $configFile;
-            if (function_exists('getBaseUrl')) {
-                return getBaseUrl();
-            }
+        $apiConfigFile = __DIR__ . '/../../../../api/api_config.php';
+        if (file_exists($apiConfigFile)) {
+            require_once $apiConfigFile;
         }
-        // Valor por defecto para desarrollo
+
+        if (function_exists('getBaseUrl')) {
+            return \getBaseUrl();
+        }
+
         return 'http://localhost/proyecto-casalai-ca';
     }
 }

@@ -76,6 +76,7 @@
                     <div class="search-box" style="flex:1;">
                         <i class="bi bi-search"></i>
                         <input type="text" id="searchProduct" placeholder="Buscar producto...">
+                        <span class="combo-validation-error text-danger small" id="error_searchProduct" role="alert" aria-live="polite"></span>
                     </div>
                 </div>
             </div>
@@ -308,17 +309,20 @@
                         <form id="comboForm">
                             <input type="hidden" id="id_combo" name="id_combo" value="">
                             <div class="envolver-form">
-                                <label for="nombre_combo" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Nombre del Combo</label>
-                                <input type="text" class="control-form" id="nombre_combo" name="nombre_combo" required>
+                                <label for="nombre_combo" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Nombre del Combo*</label>
+                                <input type="text" class="control-form" id="nombre_combo" name="nombre_combo" maxlength="100" required>
+                                <span class="combo-validation-error text-danger small" id="error_nombre_combo"></span>
                             </div>
                             <div class="envolver-form">
-                                <label for="descripcion" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Descripción</label>
-                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+                                <label for="descripcion" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Descripción*</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3" maxlength="500" required></textarea>
+                                <span class="combo-validation-error text-danger small" id="error_descripcion"></span>
                             </div>
                             <div class="envolver-form">
                                 <label for="descuento" style="color: #1976D2; font-weight: 500; font-size: 1rem; margin-bottom: 4px;">Descuento del combo (%)</label>
-                                <input type="number" class="form-control" id="descuento" name="descuento"
-                                       min="0" max="100" step="0.01" value="0" required>
+                                <input type="text" inputmode="decimal" class="form-control" id="descuento" name="descuento"
+                                       maxlength="6" value="0">
+                                <span class="combo-validation-error text-danger small" id="error_descuento"></span>
                                 <small class="text-muted">El descuento se aplica únicamente a las unidades que pertenecen a este combo.</small>
                             </div>
                             
@@ -329,7 +333,7 @@
                                 <div class="card-body">
                                     <div class="row mb-3">
                                         <div class="col-md-8">
-                                            <select class="form-select" id="producto_combo">
+                                            <select class="form-select" id="producto_combo" required>
                                                 <option value="">Seleccionar producto</option>
                                                 <?php foreach ($productos as $producto): 
                                                     $precioBs = isset($data['monitors']['bcv']['price']) ? 
@@ -344,9 +348,11 @@
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
+                                            <span class="combo-validation-error text-danger small" id="error_producto_combo"></span>
                                         </div>
                                         <div class="col-md-2">
-                                            <input type="number" class="form-control" id="cantidad_producto" min="1" value="1">
+                                            <input type="number" class="form-control" id="cantidad_producto" min="1" max="999" step="1" value="1" required>
+                                            <span class="combo-validation-error text-danger small" id="error_cantidad_producto"></span>
                                         </div>
                                         <div class="col-md-2">
                                             <button type="button" class="btn btn-primary" style="width: 200px;" id="agregar_producto">
@@ -377,7 +383,7 @@
                     <div class="modal-footer">
                         <button type="button" class="boton-reset btn-primary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="boton-form btn-primary" style="width: 160px;" id="guardar_combo">
-                            <i class="bi bi-save"></i> Guardar Combo
+                            Nuevo Combo
                         </button>
                     </div>
                 </div>

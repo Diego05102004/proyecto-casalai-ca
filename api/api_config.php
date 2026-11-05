@@ -4,25 +4,26 @@
  * Centraliza las URLs base para desarrollo y producción
  */
 
-// Detectar entorno
+function getApiConfigurations() {
+    return [
+        'development' => [
+            'base_url' => 'http://localhost/proyecto-casalai-ca',
+            'api_base_url' => 'http://localhost/proyecto-casalai-ca/api',
+            'assets_url' => 'http://localhost/proyecto-casalai-ca/assets',
+            'images_url' => 'http://localhost/proyecto-casalai-ca/assets/img',
+        ],
+        'production' => [
+            'base_url' => 'https://casalai.alwaysdata.net',
+            'api_base_url' => 'https://casalai.alwaysdata.net/api',
+            'assets_url' => 'https://casalai.alwaysdata.net/assets',
+            'images_url' => 'https://casalai.alwaysdata.net/assets/img',
+        ],
+    ];
+}
+
 $host = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
 $env = getenv('APP_ENV') ?: ($host === 'casalai.alwaysdata.net' ? 'production' : 'development');
-
-// Configuración de URLs según entorno
-$config = [
-    'development' => [
-        'base_url' => 'http://localhost/proyecto-casalai-ca',
-        'api_base_url' => 'http://localhost/proyecto-casalai-ca/api',
-        'assets_url' => 'http://localhost/proyecto-casalai-ca/assets',
-        'images_url' => 'http://localhost/proyecto-casalai-ca/assets/img',
-    ],
-    'production' => [
-        'base_url' => 'https://casalai.alwaysdata.net',
-        'api_base_url' => 'https://casalai.alwaysdata.net/api',
-        'assets_url' => 'https://casalai.alwaysdata.net/assets',
-        'images_url' => 'https://casalai.alwaysdata.net/assets/img',
-    ]
-];
+$config = getApiConfigurations();
 
 // Configuración actual basada en el entorno
 $currentConfig = $config[$env] ?? $config['development'];
@@ -60,8 +61,10 @@ function getImagesUrl() {
 }
 
 function getCurrentConfig() {
-    global $config, $env;
-    return $config[$env] ?? $config['development'];
+    $host = strtolower(preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
+    $env = getenv('APP_ENV') ?: ($host === 'casalai.alwaysdata.net' ? 'production' : 'development');
+    $configs = getApiConfigurations();
+    return $configs[$env] ?? $configs['development'];
 }
 
 /**

@@ -59,6 +59,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
     try {
         header('Content-Type: application/json; charset=utf-8');
         $accion = $_POST['accion'];
+        $contieneEntradaNoPermitida = static function ($valor) {
+            if (!is_string($valor)) {
+                return true;
+            }
+
+            $patrones = [
+                '/<\s*\/?\s*[a-z!][^>]*>/i',
+                '/\bjavascript\s*:|\bon[a-z]+\s*=/i',
+                '/(?:\b(?:union\s+select|select\s+.+\s+from|insert\s+into|update\s+\w+\s+set|delete\s+from|drop\s+(?:table|database))\b|--|\/\*|\*\/|\b(?:or|and)\b\s+[\'"]?[\w\'"]+\s*=\s*[\'"]?[\w\'"]+)/i'
+            ];
+
+            foreach ($patrones as $patron) {
+                if (preg_match($patron, $valor) === 1) {
+                    return true;
+                }
+            }
+            return false;
+        };
 
         if ($accion == 'obtener_datos_reportes') {
             try {
@@ -85,6 +103,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
             $marca = $_POST['marca'] ?? '';
             $tipo_item = $_POST['tipo_item'] ?? '';
             $id_marca_raw = $_POST['id_marca'] ?? '';
+
+            if (!is_string($busqueda) || strlen($busqueda) > 100 || $contieneEntradaNoPermitida($busqueda)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'La búsqueda contiene texto no permitido o supera el límite de 100 caracteres.'
+                ]);
+                exit;
+            }
 
             if (!empty($id_marca_raw) && is_numeric($id_marca_raw) && (int)$id_marca_raw > 0) {
                 $datos_validacion = ['id_marca' => (int)$id_marca_raw];
@@ -264,6 +290,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
             exit;
         }
 
+        $validarDatosCombo = static function ($nombre, $descripcion, $descuentoRaw) use ($contieneEntradaNoPermitida) {
+            $nombre = is_string($nombre) ? trim($nombre) : '';
+            $descripcion = is_string($descripcion) ? trim($descripcion) : '';
+            $descuentoRaw = is_string($descuentoRaw) || is_numeric($descuentoRaw)
+                ? trim((string)$descuentoRaw)
+                : '';
+
+            foreach ([$nombre, $descripcion, $descuentoRaw] as $valor) {
+                if ($contieneEntradaNoPermitida($valor)) {
+                    throw new Exception('El contenido ingresado no está permitido.');
+                }
+            }
+
+            if ($nombre === '' || preg_match('/^[\p{L}\p{N}][\p{L}\p{N}\s._\'-]{0,99}$/u', $nombre) !== 1) {
+                throw new Exception('El nombre debe tener entre 1 y 100 caracteres válidos');
+            }
+            if ($descripcion === '') {
+                throw new Exception('La descripción del combo es requerida');
+            }
+
+            $longitudDescripcion = function_exists('mb_strlen')
+                ? mb_strlen($descripcion, 'UTF-8')
+                : preg_match_all('/./us', $descripcion);
+            if ($longitudDescripcion === false || $longitudDescripcion > 500) {
+                throw new Exception('La descripción no puede superar los 500 caracteres');
+            }
+
+            $descuentoRaw = $descuentoRaw === '' ? '0' : str_replace(',', '.', $descuentoRaw);
+            if (preg_match('/^\d{1,3}(?:\.\d{1,2})?$/', $descuentoRaw) !== 1
+                || (float)$descuentoRaw > 100) {
+                throw new Exception('El descuento debe ser un porcentaje entre 0 y 100, con hasta dos decimales');
+            }
+
+            return [$nombre, $descripcion, (float)$descuentoRaw];
+        };
+
         if ($accion == 'crear_combo') {
             try {
                 $nombre = $_POST['nombre_combo'] ?? '';
@@ -271,15 +333,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 $descuentoRaw = $_POST['descuento'] ?? null;
                 $productos = $_POST['productos'] ?? [];
 
-                $nombre = trim($nombre);
-
-                if ($nombre === '') {
-                    throw new Exception('El nombre del combo es requerido');
-                }
-                if (!is_numeric($descuentoRaw) || (float)$descuentoRaw < 0 || (float)$descuentoRaw > 100) {
-                    throw new Exception('El descuento debe ser un porcentaje entre 0 y 100');
-                }
-                $descuento = (float)$descuentoRaw;
+                [$nombre, $descripcion, $descuento] = $validarDatosCombo($nombre, $descripcion, $descuentoRaw);
 
                 if (!is_array($productos) || empty($productos)) {
                     throw new Exception('Debe seleccionar al menos un producto para el combo');
@@ -288,7 +342,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 $productosValidos = [];
                 foreach ($productos as $producto) {
                     $id = isset($producto['id']) ? (int)$producto['id'] : 0;
-                    $cantidad = isset($producto['cantidad']) ? (int)$producto['cantidad'] : 0;
+                    $cantidadRaw = isset($producto['cantidad']) ? (string)$producto['cantidad'] : '';
+                    if (preg_match('/^[1-9]\d{0,2}$/', $cantidadRaw) !== 1) {
+                        throw new Exception('La cantidad de cada producto debe ser un entero entre 1 y 999');
+                    }
+                    $cantidad = (int)$cantidadRaw;
 
                     if ($id <= 0 || $cantidad <= 0) {
                         throw new Exception('Los productos del combo deben tener un ID y una cantidad válidos');
@@ -384,19 +442,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 $descuentoRaw = $_POST['descuento'] ?? null;
                 $productos = $_POST['productos'] ?? [];
 
-                $nombre = trim($nombre);
-
                 if ($id_combo <= 0) {
                     throw new Exception('ID de combo no especificado o inválido');
                 }
 
-                if ($nombre === '') {
-                    throw new Exception('El nombre del combo es requerido');
-                }
-                if (!is_numeric($descuentoRaw) || (float)$descuentoRaw < 0 || (float)$descuentoRaw > 100) {
-                    throw new Exception('El descuento debe ser un porcentaje entre 0 y 100');
-                }
-                $descuento = (float)$descuentoRaw;
+                [$nombre, $descripcion, $descuento] = $validarDatosCombo($nombre, $descripcion, $descuentoRaw);
 
                 if (!is_array($productos) || empty($productos)) {
                     throw new Exception('Debe seleccionar al menos un producto para el combo');
@@ -410,7 +460,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion'])) {
                 $productosValidos = [];
                 foreach ($productos as $producto) {
                     $id = isset($producto['id']) ? (int)$producto['id'] : 0;
-                    $cantidad = isset($producto['cantidad']) ? (int)$producto['cantidad'] : 0;
+                    $cantidadRaw = isset($producto['cantidad']) ? (string)$producto['cantidad'] : '';
+                    if (preg_match('/^[1-9]\d{0,2}$/', $cantidadRaw) !== 1) {
+                        throw new Exception('La cantidad de cada producto debe ser un entero entre 1 y 999');
+                    }
+                    $cantidad = (int)$cantidadRaw;
 
                     if ($id <= 0 || $cantidad <= 0) {
                         throw new Exception('Los productos del combo deben tener un ID y una cantidad válidos');
@@ -602,7 +656,7 @@ try {
 // Asignar la página y cargar la vista
 $pagina = "catalogo";
 if (is_file("Vista/" . $pagina . ".php")) {
-    if (!defined('SKIP_SIDE_EFFECTS') && isset($_SESSION['id_usuario'])) {
+    if (!defined('SKIP_SIDE_EFFECTS') && ($_GET['ajax'] ?? '') !== 'combo_refresh' && isset($_SESSION['id_usuario'])) {
         register_shutdown_function(function() use ($bitacoraModel) {
             try {
                 $bitacoraModel->registrarBitacora(

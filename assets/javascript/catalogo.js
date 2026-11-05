@@ -1,5 +1,63 @@
 // catalogo.js - controlador principal del módulo de catálogo
 
+const valoresValidosCatalogo = new WeakMap();
+const entradasNoPermitidasCatalogo = new WeakSet();
+const patronesEntradaNoPermitidaCatalogo = [
+    /<\s*\/?\s*[a-z!][^>]*>/i,
+    /\bjavascript\s*:|\bon[a-z]+\s*=/i,
+    /(?:\b(?:union\s+select|select\s+.+\s+from|insert\s+into|update\s+\w+\s+set|delete\s+from|drop\s+(?:table|database))\b|--|\/\*|\*\/|\b(?:or|and)\b\s+['"]?[\w'"]+\s*=\s*['"]?[\w'"]+)/i
+];
+
+function esCampoProtegidoCatalogo(elemento) {
+    return elemento instanceof HTMLInputElement || elemento instanceof HTMLTextAreaElement;
+}
+
+function obtenerErrorEntradaCatalogo(elemento) {
+    const errorId = `error_${elemento.id}`;
+    return document.getElementById(errorId);
+}
+
+document.addEventListener('focusin', function(event) {
+    if (esCampoProtegidoCatalogo(event.target) &&
+        ['nombre_combo', 'descripcion', 'descuento', 'cantidad_producto', 'searchProduct'].includes(event.target.id)) {
+        const valorActual = event.target.value;
+        const contenidoNoPermitido = patronesEntradaNoPermitidaCatalogo.some(pattern => pattern.test(valorActual));
+        valoresValidosCatalogo.set(event.target, contenidoNoPermitido ? '' : valorActual);
+    }
+}, true);
+
+document.addEventListener('input', function(event) {
+    const campo = event.target;
+    if (!esCampoProtegidoCatalogo(campo) ||
+        !['nombre_combo', 'descripcion', 'descuento', 'cantidad_producto', 'searchProduct'].includes(campo.id)) {
+        return;
+    }
+
+    if (patronesEntradaNoPermitidaCatalogo.some(pattern => pattern.test(campo.value))) {
+        campo.value = valoresValidosCatalogo.get(campo) || '';
+        entradasNoPermitidasCatalogo.add(campo);
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const error = obtenerErrorEntradaCatalogo(campo);
+        if (error) {
+            error.textContent = 'El contenido ingresado no está permitido.';
+        }
+        campo.setAttribute('aria-invalid', 'true');
+        campo.setCustomValidity('El contenido ingresado no está permitido.');
+        return;
+    }
+
+    valoresValidosCatalogo.set(campo, campo.value);
+    entradasNoPermitidasCatalogo.delete(campo);
+    campo.removeAttribute('aria-invalid');
+    campo.setCustomValidity('');
+    const error = obtenerErrorEntradaCatalogo(campo);
+    if (error) {
+        error.textContent = '';
+    }
+}, true);
+
 $(document).ready(function () {
     
     // Variables globales
@@ -58,7 +116,11 @@ $(document).ready(function () {
             renderCrumbs();
             buscarProductos();
         });
-        $('#searchProduct').on('keyup', function (e) {
+        $('#searchProduct').on('keyup.catalogoBusqueda', function (e) {
+            if (entradasNoPermitidasCatalogo.has(this)) {
+                e.preventDefault();
+                return;
+            }
             // Filtrado inmediato en grid; mantener Enter para fallback
             if ($('.productos-grid').length) {
                 filtrarYBuscarProductos();
@@ -77,20 +139,110 @@ $(document).ready(function () {
         // Gestión de combos (admin)
         $('#nuevo_combo').on('click', mostrarModalNuevoCombo);
         $(document).on('click', '.btn-editar-combo', editarCombo);
-        $(document).on('click', '.btn-cambiar-estado', mostrarModalCambioEstado);
         $(document).on('click', '.btn-eliminar-combo', eliminarCombo);
         $('#agregar_producto').on('click', agregarProductoACombo);
         $(document).on('click', '.btn-eliminar-producto', eliminarProductoDeCombo);
+        $('#nombre_combo, #descripcion, #descuento').on('keypress', validarTeclaCombo);
+        $('#nombre_combo, #descripcion, #descuento').on('input keyup blur', function() {
+            if (entradasNoPermitidasCatalogo.has(this)) return;
+            validarCampoCombo(this.id);
+        });
+        $('#producto_combo').on('change keyup', function() {
+            validarCampoProductoCombo('producto_combo');
+        });
+        $('#cantidad_producto').on('keypress', validarTeclaCombo);
+        $('#cantidad_producto').on('input keyup blur', function() {
+            if (entradasNoPermitidasCatalogo.has(this)) return;
+            validarCampoProductoCombo('cantidad_producto');
+        });
         $('#descuento').on('input change', actualizarTablaProductosCombo);
         $('#guardar_combo').on('click', guardarCombo);
-        $('#confirmarCambioEstado').on('click', cambiarEstadoCombo);
+        $('#comboModal').on('hidden.bs.modal', limpiarErroresCombo);
 
         // Modal de cantidad
         $('#confirmarCantidad').on('click', confirmarCantidad);
 
-        
+    }
 
-        
+    function validarTeclaCombo(event) {
+        if (event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1) return;
+
+        const validadores = {
+            nombre_combo: /^[\p{L}\p{N}\s._'-]$/u,
+            descripcion: /^[^<>]$/u,
+            descuento: /^[0-9.,]$/,
+            cantidad_producto: /^[0-9]$/
+        };
+        const validador = validadores[event.currentTarget.id];
+        if (validador && !validador.test(event.key)) {
+            event.preventDefault();
+        }
+    }
+
+    function mostrarErrorCombo(selector, mensaje) {
+        const $campo = $(selector);
+        const errorSelector = `#error_${$campo.attr('id')}`;
+        $(errorSelector).text(mensaje);
+        $campo.toggleClass('is-invalid', Boolean(mensaje));
+        $campo[0].setCustomValidity(mensaje);
+        return !mensaje;
+    }
+
+    function validarCampoCombo(campoId) {
+        const valor = ($(`#${campoId}`).val() || '').trim();
+        let valido = false;
+        let mensaje = '';
+
+        if (campoId === 'nombre_combo') {
+            valido = /^[\p{L}\p{N}][\p{L}\p{N}\s._'-]{0,99}$/u.test(valor);
+            mensaje = 'El nombre es obligatorio y debe tener entre 1 y 100 caracteres válidos.';
+        } else if (campoId === 'descripcion') {
+            valido = valor.length > 0 && valor.length <= 500 && !/[<>]/.test(valor);
+            mensaje = 'La descripción es obligatoria y admite hasta 500 caracteres.';
+        } else if (campoId === 'descuento') {
+            const descuento = valor.replace(',', '.');
+            valido = descuento === '' || (/^\d{1,3}(?:\.\d{0,2})?$/.test(descuento) && Number(descuento) <= 100);
+            mensaje = 'Ingresa un porcentaje entre 0 y 100, con hasta dos decimales.';
+        }
+
+        mostrarErrorCombo(`#${campoId}`, valido ? '' : mensaje);
+        return valido;
+    }
+
+    function validarCamposCombo() {
+        return ['nombre_combo', 'descripcion', 'descuento']
+            .map(validarCampoCombo)
+            .every(Boolean);
+    }
+
+    function validarCampoProductoCombo(campoId) {
+        const productoValido = Boolean($('#producto_combo').val());
+        const cantidadTexto = ($('#cantidad_producto').val() || '').trim();
+        const cantidadValida = /^[1-9]\d{0,2}$/.test(cantidadTexto);
+        const valido = campoId === 'producto_combo' ? productoValido : cantidadValida;
+        const mensaje = campoId === 'producto_combo'
+            ? 'Selecciona un producto.'
+            : 'Ingresa una cantidad entera entre 1 y 999.';
+
+        mostrarErrorCombo(`#${campoId}`, valido ? '' : mensaje);
+        return valido;
+    }
+
+    function validarCamposProductoCombo() {
+        return ['producto_combo', 'cantidad_producto']
+            .map(validarCampoProductoCombo)
+            .every(Boolean);
+    }
+
+    function limpiarErroresCombo() {
+        $('#comboForm .combo-validation-error').text('');
+        $('#comboForm .is-invalid').removeClass('is-invalid').each(function() {
+            this.setCustomValidity('');
+        });
+        $('#comboForm input, #comboForm textarea').each(function() {
+            entradasNoPermitidasCatalogo.delete(this);
+            this.removeAttribute('aria-invalid');
+        });
     }
 
     // Verificar preferencia de tab
@@ -535,7 +687,10 @@ function confirmarCantidad() {
         $('#nombre_combo').val('');
         $('#descripcion').val('');
         $('#descuento').val('0');
+        $('#producto_combo').val('');
+        $('#cantidad_producto').val('1');
         productosSeleccionados = [];
+        limpiarErroresCombo();
         actualizarTablaProductosCombo();
         
         // Establecer contexto de ayuda para registrar
@@ -557,22 +712,22 @@ function editarCombo() {
             accion: 'obtener_detalles_combo',
             id_combo: idCombo
         },
+        dataType: 'json',
         beforeSend: function() {
             $('#comboModal').modal('show');
             $('#comboModalLabel').html('<span class="spinner-border spinner-border-sm" role="status"></span> Cargando combo...');
         },
         success: function(response) {
-            try {
-                const data = typeof response === 'object' ? response : JSON.parse(response);
-                console.log('Datos del combo recibidos:', data); // Para depuración
-
-                if (data.status === 'success') {
+                if (response.status === 'success') {
                     // Actualizar el formulario con los datos del combo
-                    $('#comboModalLabel').text('Editar Combo: ' + data.combo.nombre_combo);
+                    $('#comboModalLabel').text('Editar Combo: ' + response.combo.nombre_combo);
                     $('#id_combo').val(idCombo);
-                    $('#nombre_combo').val(data.combo.nombre_combo);
-                    $('#descripcion').val(data.combo.descripcion);
-                    $('#descuento').val(data.combo.descuento ?? 0);
+                    $('#nombre_combo').val(response.combo.nombre_combo);
+                    $('#descripcion').val(response.combo.descripcion);
+                    $('#descuento').val(response.combo.descuento ?? 0);
+                    $('#producto_combo').val('');
+                    $('#cantidad_producto').val('1');
+                    limpiarErroresCombo();
 
                     // Establecer contexto de ayuda para modificar
                     $('.btn-ayuda-modal').attr('data-contexto', 'modificar');
@@ -582,8 +737,8 @@ function editarCombo() {
                     productosSeleccionados = [];
 
                     // Procesar los detalles del combo
-                    if (data.detalles && Array.isArray(data.detalles)) {
-                        data.detalles.forEach(item => {
+                    if (Array.isArray(response.detalles)) {
+                        response.detalles.forEach(item => {
                             productosSeleccionados.push({
                                 id: item.id_producto,
                                 nombre: item.nombre_producto || `Producto ${item.id_producto}`,
@@ -596,48 +751,20 @@ function editarCombo() {
                     // Actualizar la tabla de productos
                     actualizarTablaProductosCombo();
                 } else {
-                    Swal.fire('Error', data.message || 'Error al cargar el combo', 'error');
+                    Swal.fire('Error', response.message || 'Error al cargar el combo', 'error');
                     $('#comboModal').modal('hide');
                 }
-            } catch (e) {
-                console.error('Error al procesar la respuesta:', e, 'Respuesta:', response);
-                Swal.fire('Error', 'Error al procesar la respuesta del servidor', 'error');
-                $('#comboModal').modal('hide');
-            }
         },
         error: function(xhr, status, error) {
             console.error('Error en la solicitud AJAX:', status, error);
-            Swal.fire('Error', 'No se pudo cargar el combo. Intente nuevamente.', 'error');
+            const mensaje = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'No se pudo cargar el combo. Intente nuevamente.';
+            Swal.fire('Error', mensaje, 'error');
             $('#comboModal').modal('hide');
         }
     });
 }
-
-    // Mostrar modal para cambiar estado de combo
-    function mostrarModalCambioEstado() {
-        const idCombo = $(this).data('id-combo');
-        const nombreCombo = $(this).data('nombre-combo');
-        const estadoActual = $(this).data('estado-actual');
-
-        const accion = estadoActual ? 'inhabilitar' : 'habilitar';
-        const textoAccion = estadoActual ? 'Inhabilitar' : 'Habilitar';
-
-        $('#estadoComboModalLabel').text(`${textoAccion} Combo: ${nombreCombo}`);
-        $('#accionEstado').text(accion);
-        $('#comboIdEstado').val(idCombo);
-        $('#estadoComboMensaje').html(`
-            ¿Estás seguro de que deseas <strong>${accion}</strong> el combo <strong>${nombreCombo}</strong>?
-            <br><small class="text-muted">${estadoActual ? 'Los clientes no podrán ver este combo.' : 'Los clientes podrán ver y comprar este combo.'}</small>
-        `);
-
-        // Cambiar color del botón según la acción
-        const btnConfirmar = $('#confirmarCambioEstado');
-        btnConfirmar.removeClass('btn-primary btn-danger btn-success');
-        btnConfirmar.addClass(estadoActual ? 'btn-danger' : 'btn-success');
-        btnConfirmar.text(textoAccion);
-
-        $('#estadoComboModal').modal('show');
-    }
 
     // Cambiar estado de combo (habilitar/inhabilitar)
 function cambiarEstadoCombo() {
@@ -826,13 +953,18 @@ $(document).on('click', '.btn-cambiar-estado', function(e) {
     // Agregar producto al combo en edición
 function agregarProductoACombo() {
     console.group('=== DEPURACIÓN: agregarProductoACombo ===');
+
+    if (!validarCamposProductoCombo()) {
+        console.groupEnd();
+        return;
+    }
     
     // 1. Obtener valores del formulario - USANDO LOS IDs CORRECTOS DE TU HTML
     const $selectProducto = $('#producto_combo'); // ID que tienes en tu HTML
     const idProducto = $selectProducto.val();
     const productoSeleccionado = $selectProducto.find('option:selected');
     const productoTexto = productoSeleccionado.text().trim();
-    const cantidad = parseInt($('#cantidad_producto').val()); // ID que tienes en tu HTML
+    const cantidad = Number($('#cantidad_producto').val()); // ID que tienes en tu HTML
     const stock = parseInt(productoSeleccionado.data('stock') || 0);
     
     // OBTENER PRECIO - Buscar en los datos del producto
@@ -870,16 +1002,16 @@ function agregarProductoACombo() {
         return;
     }
 
-    if (isNaN(cantidad) || cantidad < 1) {
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 999) {
         console.error('Error: Cantidad inválida', { cantidad });
-        Swal.fire('Error', 'La cantidad debe ser un número mayor a 0', 'error');
+        mostrarErrorCombo('#cantidad_producto', 'Ingresa una cantidad entera entre 1 y 999.');
         console.groupEnd();
         return;
     }
 
     if (cantidad > stock) {
         console.error('Error: Stock insuficiente', { cantidad, stock });
-        Swal.fire('Error', `La cantidad (${cantidad}) no puede ser mayor al stock disponible (${stock})`, 'error');
+        mostrarErrorCombo('#cantidad_producto', `La cantidad no puede superar el stock disponible (${stock}).`);
         console.groupEnd();
         return;
     }
@@ -942,6 +1074,8 @@ function agregarProductoACombo() {
     // 5. Resetear controles
     $selectProducto.val('').trigger('change');
     $('#cantidad_producto').val(1);
+    mostrarErrorCombo('#producto_combo', '');
+    mostrarErrorCombo('#cantidad_producto', '');
     
     console.groupEnd();
 }
@@ -1011,24 +1145,51 @@ function actualizarTablaProductosCombo() {
     $('#productos_combo_table').trigger('update');
 }
 
+    function refrescarCombosSinRecargar() {
+        return $.ajax({
+            url: '?pagina=catalogo&ajax=combo_refresh',
+            type: 'GET',
+            dataType: 'html',
+            cache: false
+        }).then(function(html) {
+            const documento = new DOMParser().parseFromString(html, 'text/html');
+            const nuevoContenido = documento.querySelector('#combos-content');
+            const contenidoActual = document.querySelector('#combos-content');
+
+            if (!nuevoContenido || !contenidoActual) {
+                throw new Error('No se pudo actualizar la lista de combos');
+            }
+
+            nuevoContenido.style.display = 'block';
+            contenidoActual.replaceWith(nuevoContenido);
+            return true;
+        });
+    }
+
     // Guardar combo (crear o actualizar)
     function guardarCombo() {
         const idCombo = $('#id_combo').val();
         const nombreCombo = $('#nombre_combo').val().trim();
         const descripcion = $('#descripcion').val().trim();
-            const descuento = parseFloat($('#descuento').val());
+        const descuentoRaw = ($('#descuento').val() || '').trim().replace(',', '.');
+        const descuento = descuentoRaw === '' ? 0 : Number(descuentoRaw);
 
-        if (!nombreCombo) {
-            Swal.fire('Error', 'El nombre del combo es requerido', 'error');
-            return;
-        }
-        if (!Number.isFinite(descuento) || descuento < 0 || descuento > 100) {
-            Swal.fire('Error', 'El descuento debe ser un porcentaje entre 0 y 100', 'error');
+        if (!validarCamposCombo()) {
+            const primerCampoInvalido = document.querySelector('#comboForm .is-invalid');
+            if (primerCampoInvalido) primerCampoInvalido.focus();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos obligatorios',
+                text: 'Debes llenar los campos obligatorios marcados con * antes de guardar el combo.',
+                confirmButtonText: 'Entendido'
+            });
             return;
         }
 
         if (productosSeleccionados.length === 0) {
-            Swal.fire('Error', 'Debes agregar al menos un producto al combo', 'error');
+            mostrarErrorCombo('#producto_combo', 'Debes agregar al menos un producto al combo.');
+            $('#producto_combo').trigger('focus');
+            Swal.fire('Campos obligatorios', 'Debes agregar al menos un producto al combo.', 'warning');
             return;
         }
 
@@ -1048,32 +1209,40 @@ function actualizarTablaProductosCombo() {
                 descuento: descuento,
                 productos: productosSeleccionados
             },
+            dataType: 'json',
             success: function (response) {
-                try {
-                    const data = typeof response === 'object' ? response : JSON.parse(response);
+                if (response.status !== 'success') {
+                    Swal.fire('Error', response.message || 'No se pudo guardar el combo', 'error');
+                    return;
+                }
 
-                    if (data.status === 'success') {
+                $('#comboModal').modal('hide');
+                refrescarCombosSinRecargar()
+                    .done(function() {
                         Swal.fire({
                             icon: 'success',
                             title: 'Éxito',
-                            text: data.message,
+                            text: response.message,
                             timer: 2000,
                             showConfirmButton: false
-                        }).then(() => {
-                            $('#comboModal').modal('hide');
-                            location.reload();
                         });
-                    } else {
-                        Swal.fire('Error', data.message, 'error');
-                    }
-                } catch (e) {
-                    console.error('Error parsing response:', e);
-                    Swal.fire('Error', 'Error al procesar la respuesta', 'error');
-                }
+                    })
+                    .fail(function(error) {
+                        console.error('No se pudo refrescar la lista de combos:', error);
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Combo guardado',
+                            text: 'El cambio se guardó, pero no se pudo actualizar la lista. Recarga la página para ver los datos más recientes.'
+                        });
+                    });
             },
             error: function (xhr) {
                 console.error('AJAX Error:', xhr.status, xhr.statusText);
-                Swal.fire('Error', 'Error al guardar el combo', 'error');
+                let mensaje = 'Error al guardar el combo';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    mensaje = xhr.responseJSON.message;
+                }
+                Swal.fire('Error', mensaje, 'error');
             },
             complete: function () {
                 btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Combo');
@@ -1375,7 +1544,7 @@ verificarTodo();
         });
 
         // Sincronizar el input de búsqueda personalizado con el DataTable
-        $('#searchProduct').off('keyup').on('keyup', function () {
+        $('#searchProduct').off('keyup.catalogoTabla').on('keyup.catalogoTabla', function () {
             tablaProductosDT.search(this.value).draw();
         });
     }
