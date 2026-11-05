@@ -256,6 +256,33 @@ class Encryption {
         return $decrypted;
     }
 
+    public function decryptIfEncrypted($value) {
+        if (!is_string($value) || $value === '') {
+            return $value;
+        }
+
+        $encodedValue = str_replace(' ', '+', $value);
+        $decodedValue = base64_decode($encodedValue, true);
+        if ($decodedValue === false) {
+            return $value;
+        }
+
+        $isHybridCiphertext = strlen($decodedValue) >= 4
+            && unpack('N', substr($decodedValue, 0, 4))[1] === 256
+            && strlen($decodedValue) >= 4 + 256 + 16 + 16
+            && (strlen($decodedValue) - 4 - 256 - 16) % 16 === 0;
+        if (!$isHybridCiphertext && strlen($decodedValue) !== 256) {
+            return $value;
+        }
+
+        $decryptedValue = $this->decrypt($encodedValue);
+        if (!is_string($decryptedValue) || $decryptedValue === $encodedValue) {
+            throw new \RuntimeException('No se pudo descifrar un campo de respuesta.');
+        }
+
+        return $decryptedValue;
+    }
+
     /**
      * Descifra datos usando RSA puro (sin AES híbrido)
      * Compatibilidad con node-forge que a veces usa RSA directo

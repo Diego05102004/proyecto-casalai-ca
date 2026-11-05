@@ -1,6 +1,7 @@
 <?php
 // Incluir autoload de Composer
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../api/Config/RecaptchaConfig.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -46,46 +47,31 @@ if ($h == 'acceder') {
             $o->setUsername($username);
             $o->setPassword($_POST['password'] ?? '');
             $captcha = $_POST['g-recaptcha-response'] ?? '';
-            $clavesecreta = "6Le6TT8sAAAAABzR4qMhotOlQ2_5EOlbGTzzdPVl";
             $ip = $_SERVER['REMOTE_ADDR'];
             
             if (empty($captcha) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
                 $captchaValido = true;
             } else {
-                $url = "https://www.google.com/recaptcha/api/siteverify?secret=" . $clavesecreta . "&response=" . $captcha . "&remoteip=" . $ip;
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-                $response = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $curlError = curl_error($ch);
-                curl_close($ch);
-                
-                if ($response === false || $httpCode !== 200) {
+                $captchaResult = \Usuario\ProyectoCasalaiCa\Config\RecaptchaConfig::verifyToken($captcha, $ip);
+
+                if (!empty($captchaResult['configuration_error']) || isset($captchaResult['error'])) {
                     $mensaje = '<div class="error">Error en la verificación del reCAPTCHA: No se pudo conectar con el servidor de verificación. Por favor, inténtalo de nuevo más tarde.</div>';
                     $captchaValido = false;
-                    // Registrar intento fallido por error de captcha
                     RateLimiter::recordFailedLogin($username);
                 } else {
-                    $responseKeys = json_decode($response, true);
-                    $captchaValido = isset($responseKeys['success']) && $responseKeys['success'] === true;
+                    $captchaValido = !empty($captchaResult['success']) && !empty($captchaResult['hostname_ok']);
                     
                     if (!$captchaValido) {
-                        $errorCodes = $responseKeys['error-codes'] ?? [];
+                        $errorCodes = $captchaResult['error_codes'] ?? [];
                         $errorMessage = 'Error desconocido';
                         
-                        if (in_array('missing-input-secret', $errorCodes)) {
+                        if (in_array('invalid-keys', $errorCodes, true) || in_array('invalid-input-secret', $errorCodes, true)) {
                             $errorMessage = 'Configuración del servidor incorrecta';
-                        } elseif (in_array('invalid-input-secret', $errorCodes)) {
-                            $errorMessage = 'Clave secreta inválida';
-                        } elseif (in_array('missing-input-response', $errorCodes)) {
+                        } elseif (in_array('missing-input-response', $errorCodes, true)) {
                             $errorMessage = 'Por favor completa el reCAPTCHA';
-                        } elseif (in_array('invalid-input-response', $errorCodes)) {
+                        } elseif (in_array('invalid-input-response', $errorCodes, true)) {
                             $errorMessage = 'Respuesta de reCAPTCHA inválida';
-                        } elseif (in_array('timeout-or-duplicate', $errorCodes)) {
+                        } elseif (in_array('timeout-or-duplicate', $errorCodes, true)) {
                             $errorMessage = 'La verificación expiró, por favor inténtalo de nuevo';
                         }
                         

@@ -4,6 +4,14 @@
 
 Los archivos PHP en la carpeta `api` actúan como endpoints para recibir solicitudes HTTPS de la app móvil Expo.
 
+## Autenticación y acceso a datos
+
+- Los endpoints móviles de perfil, facturas, pagos y descarga requieren `Authorization: Bearer <JWT>`.
+- El JWT se firma con `JWT_SECRET_KEY`, configurada únicamente en `api/Config/.env` o en el entorno privado del hosting. Usa una clave aleatoria de al menos 32 bytes; no la incluyas en Git ni en la app.
+- El token de inicio de sesión expira a las 24 horas. Cambiar la clave invalida los tokens firmados con la clave anterior y los usuarios deberán iniciar sesión de nuevo.
+- Los clientes solo pueden consultar o modificar su perfil y sus propias facturas y pagos. Los roles administrativos conservan el acceso de gestión.
+- Las credenciales de servicios externos deben permanecer en el servidor; la app no debe llamar a esos servicios con una clave incorporada en el bundle.
+
 ## Función RecibirPeticion()
 
 La función `RecibirPeticion()` es el núcleo del sistema. Detecta la función solicitada e invoca el método correspondiente de la clase del modelo.

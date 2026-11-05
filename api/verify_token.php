@@ -20,15 +20,6 @@ if (session_status() === PHP_SESSION_NONE) {
 use Usuario\ProyectoCasalaiCa\Config\Auth;
 
 try {
-    // Debug: Verificar si hay sesión activa
-    $debugInfo = [
-        'session_active' => session_status() === PHP_SESSION_ACTIVE,
-        'session_id' => session_id(),
-        'cookie_name' => Auth::getCookieName(),
-        'cookie_exists' => isset($_COOKIE[Auth::getCookieName()]),
-        'cookie_value_prefix' => isset($_COOKIE[Auth::getCookieName()]) ? substr($_COOKIE[Auth::getCookieName()], 0, 20) . '...' : 'N/A'
-    ];
-    
     // Verificar el estado del token JWT
     $tokenState = Auth::inspectToken();
     $extensionsUsed = isset($_SESSION['session_extensions']) ? (int) $_SESSION['session_extensions'] : 0;
@@ -49,8 +40,7 @@ try {
             'role' => $payload['role'] ?? null,
             'extensions_used' => $extensionsUsed,
             'extensions_remaining' => max(0, $maxExtensions - $extensionsUsed),
-            'message' => $status === 'warning' ? 'Token por expirar' : 'Token válido',
-            'debug' => $debugInfo
+            'message' => $status === 'warning' ? 'Token por expirar' : 'Token válido'
         ]);
     } else {
         http_response_code(401);
@@ -61,8 +51,7 @@ try {
             'message' => $status === 'expired' ? 'Token expirado' : 'Token inválido o expirado',
             'redirect' => '?pagina=login',
             'extensions_used' => $extensionsUsed,
-            'extensions_remaining' => max(0, $maxExtensions - $extensionsUsed),
-            'debug' => $debugInfo
+            'extensions_remaining' => max(0, $maxExtensions - $extensionsUsed)
         ]);
     }
 } catch (Exception $e) {
@@ -70,7 +59,6 @@ try {
     echo json_encode([
         'success' => false,
         'valid' => false,
-        'message' => 'Error al verificar token: ' . $e->getMessage(),
-        'debug' => $debugInfo ?? []
+        'message' => 'No se pudo verificar el token.'
     ]);
 }

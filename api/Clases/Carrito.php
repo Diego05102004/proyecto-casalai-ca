@@ -49,7 +49,7 @@ class Carrito
 
             $database = new BD();
             $pdo = $database->getConexion();
-            $clientId = $this->resolveClientId($pdo, $userId);
+            $clientId = \apiResolveClientId($pdo, $userId);
 
             switch ($action) {
                 case 'consultar':
@@ -494,53 +494,6 @@ class Carrito
         $deleteStatement->execute([':id_cliente' => $clientId]);
     }
 
-    private function resolveClientId(PDO $principalPdo, int $userId): int
-    {
-        $securityDatabase = new BD('S');
-
-        try {
-            $userStatement = $securityDatabase->getConexion()->prepare(
-                'SELECT cedula
-                 FROM tbl_usuarios
-                 WHERE id_usuario = :id_usuario
-                 LIMIT 1'
-            );
-            $userStatement->execute([':id_usuario' => $userId]);
-            $userIdentityNumber = $userStatement->fetchColumn();
-        } finally {
-            $securityDatabase->cerrar();
-        }
-
-        if (!\is_string($userIdentityNumber) || $this->normalizeIdentityNumber($userIdentityNumber) === '') {
-            errorResponse('No se encontró una cédula válida para el usuario autenticado.', 403);
-        }
-
-        $clientStatement = $principalPdo->query(
-            "SELECT id_clientes, cedula
-             FROM tbl_clientes
-             WHERE cedula IS NOT NULL AND TRIM(cedula) <> ''"
-        );
-        $normalizedUserIdentityNumber = $this->normalizeIdentityNumber($userIdentityNumber);
-        $matchingClientIds = [];
-
-        foreach ($clientStatement->fetchAll(PDO::FETCH_ASSOC) as $client) {
-            if ($this->normalizeIdentityNumber((string) $client['cedula']) === $normalizedUserIdentityNumber) {
-                $matchingClientIds[] = (int) $client['id_clientes'];
-            }
-        }
-
-        if (\count($matchingClientIds) !== 1) {
-            errorResponse(
-                \count($matchingClientIds) === 0
-                    ? 'No existe un cliente asociado a la cédula del usuario autenticado.'
-                    : 'La cédula del usuario está asociada a más de un cliente. Contacta al administrador.',
-                \count($matchingClientIds) === 0 ? 403 : 409
-            );
-        }
-
-        return $matchingClientIds[0];
-    }
-
     private function cartResponse(PDO $pdo, int $clientId): array
     {
         $cartStatement = $pdo->prepare(
@@ -598,11 +551,6 @@ class Carrito
         }
 
         return $number;
-    }
-
-    private function normalizeIdentityNumber(string $identityNumber): string
-    {
-        return preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($identityNumber)));
     }
 
     private function rollbackIfNeeded(?PDO $pdo): void

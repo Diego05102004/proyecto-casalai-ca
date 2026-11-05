@@ -69,4 +69,4 @@ $operations = [
 ];
 
 // Procesar la petición
-RecibirPeticion($usuario, $operations);
+RecibirPeticion($usuario, $operations, 'self');

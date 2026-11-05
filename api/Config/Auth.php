@@ -61,7 +61,12 @@ class Auth {
      */
     private static function getSecretKey() {
         self::loadEnv();
-        return $_ENV['JWT_SECRET_KEY'] ?? 'd6e32e8d9c57eeef6fb09bebe9cb579bc75836c0d8327914bf689369d4e5f76b';
+        $secretKey = $_ENV['JWT_SECRET_KEY'] ?? getenv('JWT_SECRET_KEY') ?: '';
+        if (!is_string($secretKey) || strlen($secretKey) < 32) {
+            throw new Exception('JWT_SECRET_KEY no está configurada o no cumple la longitud mínima.');
+        }
+
+        return $secretKey;
     }
     
     /**

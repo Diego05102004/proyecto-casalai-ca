@@ -10,114 +10,46 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/Clases/Login.php';
 require_once __DIR__ . '/Config/Encryption.php';
+require_once __DIR__ . '/Config/RecaptchaConfig.php';
 
 use Usuario\ProyectoCasalaiCa\Login;
 use Usuario\ProyectoCasalaiCa\Config\Encryption;
 
 error_log("[LOGIN] Archivos requeridos cargados exitosamente");
 
-// Configure RECAPTCHA_SECRET_KEY in the Apache/PHP environment.
-const RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
-const RECAPTCHA_ALLOWED_HOSTNAMES = ['casalai.alwaysdata.net'];
-
-/**
- * Función para verificar el token de reCAPTCHA mediante cURL
- */
 function validarReCaptcha($token) {
-    // La clave privada solo debe existir en la configuración del servidor.
-    $secretKey = apiEnvironmentValue('RECAPTCHA_SECRET_KEY');
-
-    if (!$secretKey) {
-        return ['success' => false, 'error' => 'RECAPTCHA_SECRET_KEY no está configurada'];
+    if (!is_string($token)) {
+        return ['success' => false, 'error_codes' => ['invalid-input-response']];
     }
 
-    if (!is_string($token) || trim($token) === '') {
-        return ['success' => false, 'error' => 'Token no recibido'];
-    }
-
-    $ch = curl_init(RECAPTCHA_VERIFY_URL);
-    if ($ch === false) {
-        return ['success' => false, 'error' => 'No se pudo iniciar cURL'];
-    }
-
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query([
-            'secret'   => $secretKey,
-            'response' => trim($token),
-        ]),
-        CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
-        CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_SSL_VERIFYHOST => 2,
-        CURLOPT_CONNECTTIMEOUT => 5,
-        CURLOPT_TIMEOUT => 10,
-    ]);
-
-    $response = curl_exec($ch);
-    $curlError = curl_error($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($response === false) {
-        return ['success' => false, 'error' => "Error de conexión con Google: $curlError"];
-    }
-
-    $result = json_decode($response, true);
-    if (!is_array($result)) {
-        return ['success' => false, 'error' => "Respuesta inválida de Google (HTTP $httpCode)"];
-    }
-
-    $errorCodes = $result['error-codes'] ?? [];
-    $hostname = strtolower(trim((string) ($result['hostname'] ?? '')));
-    // Google normalmente omite el puerto, pero lo eliminamos por compatibilidad
-    // con entornos locales que usan localhost:8081 o 127.0.0.1:8081.
-    $hostname = preg_replace('/:\d+$/', '', $hostname);
-    $isValidHostname = in_array($hostname, RECAPTCHA_ALLOWED_HOSTNAMES, true);
-
-    return [
-        'success'     => isset($result['success']) && $result['success'] === true,
-        'hostname'    => $hostname,
-        'hostname_ok' => $isValidHostname,
-        'error_codes' => $errorCodes,
-    ];
+    return \Usuario\ProyectoCasalaiCa\Config\RecaptchaConfig::verifyToken(
+        $token,
+        $_SERVER['REMOTE_ADDR'] ?? null
+    );
 }
 
 // Solo permitir método POST
 validateMethod(['POST']);
 try{
-error_log("[LOGIN] Iniciando procesamiento de login");
-    $data = getRequestData();
-    error_log("[LOGIN] Datos recibidos (crudos): " . json_encode($data));
-    if (!is_array($data)) {
-        errorResponse('El cuerpo de la solicitud no es válido', 400);
-    }
+$data = getRequestData();
+if (!is_array($data)) {
+    errorResponse('El cuerpo de la solicitud no es válido', 400);
+}
     
     // Desencriptar datos sensibles si están cifrados
     $encryption = new Encryption();
-    $sensitiveFields = ['email', 'username', 'password', 'recaptcha_token', 'recaptchaToken'];
+    $sensitiveFields = ['email', 'username', 'password'];
     foreach ($sensitiveFields as $field) {
         if (isset($data[$field]) && $data[$field] !== '') {
             try {
-                error_log("[LOGIN] Intentando descifrar campo '$field' antes: " . substr($data[$field], 0, 50) . "...");
-                
-                // ====== 💡 SOLUCIÓN AQUÍ ======
-                // Si los datos vienen de un formulario clásico HTTP, los '+' se convierten en espacios.
-                // Restauramos los espacios en blanco a '+' para que Base64 no se corrompa.
                 if (is_string($data[$field])) {
                     $data[$field] = str_replace(' ', '+', $data[$field]);
                 }
-                // ==============================
-
-                error_log("[LOGIN] Campo '$field' después de reemplazo: " . substr($data[$field], 0, 50) . "...");
-                
                 $decryptedValue = $encryption->decrypt($data[$field]);
-                error_log("[LOGIN] Campo '$field' descifrado exitosamente: " . substr($decryptedValue, 0, 20) . "...");
                 $data[$field] = $decryptedValue;
             } catch (\Throwable $decryptError) {
-                error_log("[LOGIN] Error descifrando campo '$field': " . $decryptError->getMessage());
-                error_log("[LOGIN] Stack trace: " . $decryptError->getTraceAsString());
-                errorResponse('No se pudieron descifrar los datos de inicio de sesión: ' . $decryptError->getMessage(), 400);
+                error_log("[LOGIN] No se pudo descifrar el campo '$field': " . $decryptError->getMessage());
+                errorResponse('No se pudieron descifrar los datos de inicio de sesión', 400);
             }
         }
     }
@@ -139,57 +71,33 @@ error_log("[LOGIN] Iniciando procesamiento de login");
         errorResponse('La contraseña debe tener al menos 6 caracteres', 400);
     }
 
-    // Detectar si estamos en localhost para permitir omitir reCAPTCHA en desarrollo
-    $isLocalhost = isset($_SERVER['HTTP_HOST']) &&
-                   (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
-                    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
-
-    // En localhost, permitir omitir reCAPTCHA para desarrollo (igual que controlador web)
-    if ($isLocalhost && empty($recaptchaToken)) {
-        error_log('reCAPTCHA omitido en localhost para desarrollo');
-        $recaptchaToken = null; // Continuar sin validar reCAPTCHA
-    } elseif (empty($recaptchaToken)) {
+    if (empty($recaptchaToken)) {
         errorResponse('Es necesario completar la verificación del reCAPTCHA', 400);
     }
 
-    // Validar el token de reCAPTCHA con Google solo si se proporcionó
-    if ($recaptchaToken) {
-        $resCaptcha = validarReCaptcha($recaptchaToken);
-
-        // En localhost, solo verificar que el token sea válido, no el hostname
-        if ($isLocalhost) {
-            if (!$resCaptcha['success']) {
-                $detalles = !empty($resCaptcha['error_codes'])
-                    ? ' [' . implode(', ', $resCaptcha['error_codes']) . ']'
-                    : (!empty($resCaptcha['error']) ? ' [' . $resCaptcha['error'] . ']' : '');
-                error_log('reCAPTCHA rechazado en localhost: ' . json_encode([
-                    'error_codes' => $resCaptcha['error_codes'] ?? [],
-                    'hostname' => $resCaptcha['hostname'] ?? '',
-                ]));
-                errorResponse('La verificación de reCAPTCHA ha fallado' . $detalles, 400, [
-                    'captcha_error_codes' => $resCaptcha['error_codes'] ?? [],
-                ]);
-            }
-            error_log('reCAPTCHA validado en localhost (hostname check omitido)');
-        } else {
-            // En producción, verificar tanto success como hostname
-            if (!$resCaptcha['success'] || !$resCaptcha['hostname_ok']) {
-                $detalles = !empty($resCaptcha['error_codes'])
-                    ? ' [' . implode(', ', $resCaptcha['error_codes']) . ']'
-                    : '';
-                error_log('reCAPTCHA rechazado: ' . json_encode([
-                    'error_codes' => $resCaptcha['error_codes'] ?? [],
-                    'hostname' => $resCaptcha['hostname'] ?? '',
-                    'hostname_ok' => $resCaptcha['hostname_ok'] ?? false,
-                ]));
-                errorResponse('La verificación de reCAPTCHA ha fallado' . $detalles, 400, [
-                    'captcha_error_codes' => $resCaptcha['error_codes'] ?? [],
-                    'hostname_validado' => $resCaptcha['hostname_ok'] ?? false,
-                ]);
-            }
+    $resCaptcha = validarReCaptcha($recaptchaToken);
+    if (!empty($resCaptcha['configuration_error'])) {
+        error_log('[reCAPTCHA] Configuración del API incompleta o inválida');
+        errorResponse('La verificación de reCAPTCHA no está configurada correctamente', 503);
+    }
+    if (
+        empty($resCaptcha['success']) ||
+        empty($resCaptcha['hostname_ok'])
+    ) {
+        error_log('[reCAPTCHA] Token rechazado: ' . json_encode([
+            'error_codes' => $resCaptcha['error_codes'] ?? [],
+            'hostname_ok' => $resCaptcha['hostname_ok'] ?? false,
+            'challenge_ts' => $resCaptcha['challenge_ts'] ?? null,
+        ]));
+        $errorCodes = $resCaptcha['error_codes'] ?? [];
+        if (in_array('invalid-keys', $errorCodes, true) || in_array('invalid-input-secret', $errorCodes, true)) {
+            error_log('[reCAPTCHA] Google rechazó la configuración de claves; verifica que la secret key corresponda a la site key v2.');
+            errorResponse('La configuración de reCAPTCHA no coincide. Contacta al administrador.', 503);
         }
-    } else {
-        error_log('reCAPTCHA omitido (localhost sin token)');
+        if (in_array('timeout-or-duplicate', $errorCodes, true)) {
+            errorResponse('La verificación expiró o ya fue utilizada. Completa reCAPTCHA otra vez.', 400);
+        }
+        errorResponse('La verificación de reCAPTCHA ha fallado. Completa el reto otra vez.', 400);
     }
 
     // Crear instancia de Login
@@ -213,12 +121,17 @@ error_log("[LOGIN] Iniciando procesamiento de login");
     $resultado = $login->existe();
     
     if ($resultado['resultado'] == 'existe') {
+        $cedulaUsuario = $resultado['cedula'] ?? '';
+        if (is_string($cedulaUsuario) && $cedulaUsuario !== '') {
+            $cedulaUsuario = $encryption->decryptIfEncrypted($cedulaUsuario);
+        }
+
         $userData = [
             'id_usuario' => $resultado['id_usuario'],
             'username'   => $resultado['mensaje'],
             'nombre_rol' => $resultado['nombre_rol'],
             'id_rol'     => $resultado['id_rol'],
-            'cedula'     => $resultado['cedula'],
+            'cedula'     => $cedulaUsuario,
             'foto_perfil' => $resultado['foto_perfil']
         ];
         
@@ -237,5 +150,6 @@ error_log("[LOGIN] Iniciando procesamiento de login");
     }
     
 } catch (Exception $e) {
-    errorResponse('Error en el servidor: ' . $e->getMessage(), 500);
+    error_log('[LOGIN] Error al procesar autenticación: ' . $e->getMessage());
+    errorResponse('No se pudo completar el inicio de sesión.', 500);
 }

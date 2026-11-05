@@ -1221,21 +1221,6 @@ class Usuarios extends BD {
         unset($usuario['estatus']);
         unset($usuario['id_usuario']);
 
-        // Encriptar datos sensibles del usuario
-        $encryption = new \Usuario\ProyectoCasalaiCa\Config\Encryption();
-
-        $camposEncriptar = ['username','cedula', 'correo', 'nombres', 'apellidos', 'telefono'];
-        foreach ($camposEncriptar as $campo) {
-            if (isset($usuario[$campo]) && $usuario[$campo] !== null) {
-                try {
-                    $usuario[$campo] = $encryption->encrypt($usuario[$campo]);
-                } catch (\Throwable $e) {
-                    error_log("[USUARIOS] Error encriptando campo '$campo': " . $e->getMessage());
-                    // Mantener el valor original si falla la encriptación
-                }
-            }
-        }
-
         return [
             'status' => 'success',
             'message' => 'Perfil obtenido correctamente',

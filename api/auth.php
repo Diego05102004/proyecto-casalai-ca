@@ -5,10 +5,18 @@
 
 class Auth {
     
-    // Clave secreta para firmar tokens (debe estar en variables de entorno en producción)
-    private static $secretKey = 'proyecto-casalai-ca-secret-key-2024';
-    
-    // Tiempo de expiración del token (24 horas)
+    private static function getSecretKey() {
+        $secretKey = function_exists('apiEnvironmentValue')
+            ? apiEnvironmentValue('JWT_SECRET_KEY')
+            : (getenv('JWT_SECRET_KEY') ?: '');
+
+        if (!is_string($secretKey) || strlen($secretKey) < 32) {
+            throw new RuntimeException('JWT_SECRET_KEY no está configurada o no cumple la longitud mínima.');
+        }
+
+        return $secretKey;
+    }
+
     private static $tokenExpiration = 86400;
     
     /**
@@ -36,7 +44,7 @@ class Auth {
         $payloadEncoded = self::base64UrlEncode(json_encode($payload));
         
         // Crear firma
-        $signature = hash_hmac('sha256', $headerEncoded . '.' . $payloadEncoded, self::$secretKey, true);
+        $signature = hash_hmac('sha256', $headerEncoded . '.' . $payloadEncoded, self::getSecretKey(), true);
         $signatureEncoded = self::base64UrlEncode($signature);
         
         // Retornar token
@@ -60,18 +68,27 @@ class Auth {
         list($headerEncoded, $payloadEncoded, $signatureEncoded) = $tokenParts;
         
         // Verificar firma
-        $signature = hash_hmac('sha256', $headerEncoded . '.' . $payloadEncoded, self::$secretKey, true);
+        $signature = hash_hmac('sha256', $headerEncoded . '.' . $payloadEncoded, self::getSecretKey(), true);
         $expectedSignature = self::base64UrlEncode($signature);
-        
+
         if (!hash_equals($expectedSignature, $signatureEncoded)) {
             return null;
         }
-        
+
+        $header = json_decode(self::base64UrlDecode($headerEncoded), true);
         // Decodificar payload
         $payload = json_decode(self::base64UrlDecode($payloadEncoded), true);
-        
-        // Verificar expiración
-        if (isset($payload['exp']) && $payload['exp'] < time()) {
+
+        if (
+            !is_array($header) ||
+            ($header['alg'] ?? null) !== 'HS256' ||
+            !is_array($payload) ||
+            !isset($payload['exp'], $payload['user_id']) ||
+            !is_numeric($payload['exp']) ||
+            !is_numeric($payload['user_id']) ||
+            (int) $payload['user_id'] < 1 ||
+            (int) $payload['exp'] <= time()
+        ) {
             return null;
         }
         
@@ -82,14 +99,21 @@ class Auth {
      * Obtener el token del header Authorization
      */
     public static function getTokenFromHeader() {
-        $headers = getallheaders();
-        
-        if (isset($headers['Authorization'])) {
-            $authHeader = $headers['Authorization'];
-            
-            if (preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                return $matches[1];
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        if (!is_array($headers)) {
+            $headers = [];
+        }
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+
+        foreach ($headers as $name => $value) {
+            if (strcasecmp($name, 'Authorization') === 0) {
+                $authHeader = $value;
+                break;
             }
+        }
+
+        if (is_string($authHeader) && preg_match('/^Bearer\s+(\S+)$/i', trim($authHeader), $matches)) {
+            return $matches[1];
         }
         
         return null;

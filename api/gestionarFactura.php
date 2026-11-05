@@ -16,4 +16,4 @@ $operations = [
     'descargar' => ['method' => 'GET', 'handler' => 'facturaDescargarMovil'],
 ];
 
-RecibirPeticion($factura, $operations);
+RecibirPeticion($factura, $operations, 'client');
