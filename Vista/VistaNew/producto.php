@@ -52,86 +52,68 @@ unset($producto);
 
 $total_productos = count($productos ?? []);
 $stock_bajo = count(array_filter($productos, function($p) { return $p['stock_actual'] <= $p['stock_minimo']; }));
-$total_categorias = count(is_array($categorias ?? null) ? $categorias : []);
-$recepcionesProducto = is_array($productosMasRecibidos ?? null) ? $productosMasRecibidos : [];
-$nombresProductosRecibidos = array_unique(array_filter(array_map(function($recepcion) {
-    return mb_strtolower(trim((string)($recepcion['label'] ?? '')));
-}, $recepcionesProducto)));
-$productos_recepcion = count($nombresProductosRecibidos);
+$stock_estable = count(array_filter($productos, function($p) { return $p['stock_actual'] > $p['stock_minimo'] && $p['stock_actual'] < $p['stock_maximo']; }));
+$stock_excedido = count(array_filter($productos, function($p) { return $p['stock_actual'] >= $p['stock_maximo']; }));
+
 
 // Calcular porcentajes
 $porcentaje_total = 100; // Siempre 100% para el total
 $porcentaje_stock_bajo = $total_productos > 0 ? round(($stock_bajo / $total_productos) * 100) : 0;
-$porcentaje_categorias = 100; // No tiene sentido calcular porcentaje aquí
-$porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $total_productos) * 100) : 0;
+$porcentaje_stock_estable = $total_productos > 0 ? round(($stock_estable / $total_productos) * 100) : 0;
+$porcentaje_stock_excedido = $total_productos > 0 ? round(($stock_excedido / $total_productos) * 100) : 0;
 ?>
 
 <script src="assets/public/js/jquery-3.7.1.min.js"></script>
 <script src="assets/javascript/datatable.js"></script>
 <script src="assets/javascript/producto.js"></script>
 
-            <!-- Summary Cards para Productos -->
-            <div class="summary-cards">
-                <div class="summary-card sales">
-                    <div class="card-icon"><i class="fas fa-box"></i></div>
-                    <div class="card-content">
-                        <h3>Total Productos</h3>
-                        <p class="card-value"><?php echo $total_productos; ?></p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_total; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage"><?php echo $porcentaje_total; ?>%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="summary-card expenses">
-                    <div class="card-icon"><i class="fas fa-chart-down"></i></div>
-                    <div class="card-content">
-                        <h3>Stock Bajo</h3>
-                        <p class="card-value"><?php echo $stock_bajo; ?></p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_stock_bajo; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage"><?php echo $porcentaje_stock_bajo; ?>%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="summary-card income">
-                    <div class="card-icon"><i class="fas fa-tag"></i></div>
-                    <div class="card-content">
-                        <h3>Categorías</h3>
-                        <p class="card-value"><?php echo $total_categorias; ?></p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_categorias; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage"><?php echo $porcentaje_categorias; ?>%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="summary-card recepcion">
-                    <div class="card-icon"><i class="fas fa-inbox"></i></div>
-                    <div class="card-content">
-                        <h3>Con recepción</h3>
-                        <p class="card-value"><?php echo $productos_recepcion; ?></p>
-                        <div class="progress-circle">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="<?php echo $porcentaje_recepcion; ?>, 100" stroke="#2196F3" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="percentage"><?php echo $porcentaje_recepcion; ?>%</span>
-                        </div>
-                    </div>
-                </div>
+<!-- Summary Cards para Productos -->
+<div class="summary-cards">
+    <div class="summary-card expenses">
+        <div class="card-icon"><i class="fas fa-chart-down"></i></div>
+        <div class="card-content">
+            <h3>Stock Bajo</h3>
+            <p class="card-value"><?php echo $stock_bajo; ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_stock_bajo; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage"><?php echo $porcentaje_stock_bajo; ?>%</span>
             </div>
+        </div>
+    </div>
+
+    <div class="summary-card expenses">
+        <div class="card-icon"><i class="fas fa-chart-down"></i></div>
+        <div class="card-content">
+            <h3>Stock Estable</h3>
+            <p class="card-value"><?php echo $stock_estable; ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_stock_estable; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage"><?php echo $porcentaje_stock_estable; ?>%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-card expenses">
+        <div class="card-icon"><i class="fas fa-chart-down"></i></div>
+        <div class="card-content">
+            <h3>Stock Excedido</h3>
+            <p class="card-value"><?php echo $stock_excedido; ?></p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle" stroke-dasharray="<?php echo $porcentaje_stock_excedido; ?>, 100" stroke="#ff6b6b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <span class="percentage"><?php echo $porcentaje_stock_excedido; ?>%</span>
+            </div>
+        </div>
+    </div>
+</div>
 
             <section class="analytics-section" aria-labelledby="analyticsTitle">
                 <div class="analytics-header">
@@ -248,15 +230,16 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                 <div class="section-header">
                     <h2>Inventario de Productos</h2>
                     <div class="section-actions">
+                        <button class="btn-table-superior btn-ayuda" title="Visualizar Ayuda">
+                            <img src="assets/img/info-ayuda.svg">
+                        </button>
                         <?php if ($puedeIncluirProductos): ?>
-                        <button type="button" class="btn-add-product" onclick="openModal('registrar')" <?php echo empty($categoriasDinamicas) ? 'disabled' : ''; ?>>
-                            <span class="btn-icon"><i class="fas fa-plus"></i></span>
-                            Agregar Producto
+                        <button type="button" class="btn-table-superior btn-incluir" title="Incluir Producto" onclick="openModal('registrar')" <?php echo empty($categoriasDinamicas) ? 'disabled' : ''; ?>>
+                            <img src="assets/img/plus.svg">
                         </button>
                         <?php endif; ?>
-                        <button class="btn-filter" onclick="openFilterModal()">
-                            <span class="btn-icon"><i class="fas fa-search"></i></span>
-                            Filtrar
+                        <button class="btn-table-superior btn-filter" title="Filtrar Productos" onclick="openFilterModal()">
+                            <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
@@ -300,12 +283,12 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                                     </div>
                                     <div class="product-actions">
                                         <?php if ($puedeModificarProductos): ?>
-                                        <button type="button" class="btn-action btn-edit" onclick="openModal('editar', <?php echo (int)$producto['id_producto']; ?>)" title="Editar producto" aria-label="Editar producto"><i class="fas fa-edit"></i></button>
+                                        <button type="button" class="btn-action btn-edit" onclick="openModal('editar', <?php echo (int)$producto['id_producto']; ?>)" title="Modificar Producto" aria-label="Modificar Producto"><i class="fas fa-edit"></i></button>
                                         <?php endif; ?>
                                         <?php if ($puedeEliminarProductos): ?>
-                                        <button type="button" class="btn-action btn-delete" onclick="deleteProduct(<?php echo (int)$producto['id_producto']; ?>)" title="Eliminar producto" aria-label="Eliminar producto"><i class="fas fa-trash"></i></button>
+                                        <button type="button" class="btn-action btn-delete" onclick="deleteProduct(<?php echo (int)$producto['id_producto']; ?>)" title="Eliminar Producto" aria-label="Eliminar Producto"><i class="fas fa-trash"></i></button>
                                         <?php endif; ?>
-                                        <button type="button" class="btn-action btn-view" onclick="viewProduct(<?php echo (int)$producto['id_producto']; ?>)" title="Ver producto" aria-label="Ver producto"><i class="fas fa-eye"></i></button>
+                                        <button type="button" class="btn-action btn-view" onclick="viewProduct(<?php echo (int)$producto['id_producto']; ?>)" title="Ver Producto" aria-label="Ver Producto"><i class="fas fa-eye"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -1070,8 +1053,8 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     display: flex;
                     gap: 12px;
                 }
-
-                .btn-add-product, .btn-filter {
+/*
+                .btn-filter {
                     padding: 12px 20px;
                     border: none;
                     border-radius: 10px;
@@ -1084,24 +1067,15 @@ $porcentaje_recepcion = $total_productos > 0 ? round(($productos_recepcion / $to
                     transition: all 0.3s ease;
                 }
 
-                .btn-add-product {
-                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-                    color: white;
-                }
-
                 .btn-filter {
                     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
                     color: white;
                 }
 
-                .btn-add-product:hover, .btn-filter:hover {
+                .btn-filter:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
-                }
-
-                .btn-icon {
-                    font-size: 1rem;
-                }
+                }*/
 
                 #productModal.modal, #productDetailsModal.modal {
                     overflow-y: auto;

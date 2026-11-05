@@ -43,11 +43,11 @@
     filter:brightness(0) invert(1);
 }
 
-.btn-ayuda, .btn-incluir{
+.btn-ayuda, .btn-incluir, .btn-filter {
     background: linear-gradient(135deg, #a8e7f7 0%, #059cf3 100%);
 }
 
-.btn-ayuda:hover, .btn-incluir:hover {
+.btn-ayuda:hover, .btn-incluir:hover, .btn-filter:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(44, 75, 250, 0.479);
 }
