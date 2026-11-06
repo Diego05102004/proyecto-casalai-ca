@@ -720,7 +720,7 @@ function editarCombo() {
         success: function(response) {
                 if (response.status === 'success') {
                     // Actualizar el formulario con los datos del combo
-                    $('#comboModalLabel').text('Editar Combo: ' + response.combo.nombre_combo);
+                    $('#comboModalLabel').text('Modificar Combo: ' + response.combo.nombre_combo);
                     $('#id_combo').val(idCombo);
                     $('#nombre_combo').val(response.combo.nombre_combo);
                     $('#descripcion').val(response.combo.descripcion);

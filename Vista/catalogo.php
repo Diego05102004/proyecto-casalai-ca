@@ -266,7 +266,7 @@
                                     <div class="d-flex justify-content-between mt-3">
                                         <button class="btn btn-sm btn-outline-primary btn-editar-combo"
                                                 data-id-combo="<?= $combo['id_combo'] ?>">
-                                            <i class="bi bi-pencil"></i> Editar
+                                            <i class="bi bi-pencil"></i> Modificar
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger btn-eliminar-combo"
                                                 data-id-combo="<?= $combo['id_combo'] ?>">
