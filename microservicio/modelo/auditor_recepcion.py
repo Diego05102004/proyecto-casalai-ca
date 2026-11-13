@@ -33,6 +33,7 @@ CONFIG_ML_FILE = CONOCIMIENTO_DIR / "configuracion_ml.yaml"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.FileHandler(str(LOGS_DIR / 'auditor_recepcion.log')), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
+MODEL_PATH = Path(__file__).resolve().with_name("modelo_actual.pkl")
 
 try:
     from pdf2image import convert_from_path
@@ -228,17 +229,10 @@ class AuditorRecepcion:
             self.UMBRAL_CONFIANZA_ALTA = self.reglas['umbrales_confianza'].get('alta', 0.85)
             self.UMBRAL_CONFIANZA_MEDIA = self.reglas['umbrales_confianza'].get('media', 0.60)
         
-        # Cargar modelo ML entrenado si existe
+        # Cargar el modelo ML si existe y contiene ambas clases de confiabilidad.
         self.modelo_ml = None
-        model_path = Path(__file__).parent / "modelo_actual.pkl"
-        if model_path.exists():
-            try:
-                self.modelo_ml = joblib.load(model_path)
-                logger.info("Modelo ML cargado exitosamente desde modelo_actual.pkl")
-            except Exception as e:
-                logger.warning(f"No se pudo cargar el modelo ML: {e}")
-        else:
-            logger.info("No se encontró modelo_actual.pkl. El modelo ML no estará disponible.")
+        self._modelo_ml_signature = None
+        self.recargar_modelo(force=True)
         
         logger.info("AuditorRecepcion inicializado - Fase 1: Verificación Asistida")
         logger.info(f"Base de conocimiento cargada: {len(self.patrones)} campos, {len(self.catalogo_productos)} productos, {len(self.catalogo_proveedores)} proveedores")
@@ -317,7 +311,7 @@ class AuditorRecepcion:
                     'host': os.getenv('BD_HOST', 'localhost'),
                     'port': int(os.getenv('BD_PORT', 3306)),
                     'user': os.getenv('BD_USER', 'MicroserviceCAI'),
-                    'password': os.getenv('BD_PASSWORD', 'MSagente#26'),
+                    'password': os.getenv('BD_PASSWORD', ''),
                     'database': os.getenv('BD_DATABASE', 'casalai')
                 }
                 adaptador = FabricaAdaptadores.crear_adaptador('mysql', config)
@@ -393,9 +387,10 @@ class AuditorRecepcion:
             'mensaje_validacion': mensaje_error
         }
         
-        # Predecir confiabilidad usando el modelo ML si está disponible
+        # La comprobación de firma permite adoptar un modelo entrenado sin reiniciar FastAPI.
+        confiabilidad_ml = self._predecir_confiabilidad(confianza_promedio)
         if self.modelo_ml:
-            factura.metadatos_extraccion['confiabilidad_ml'] = self._predecir_confiabilidad(confianza_promedio)
+            factura.metadatos_extraccion['confiabilidad_ml'] = confiabilidad_ml
             logger.info(f"Confiabilidad ML predicha: {factura.metadatos_extraccion['confiabilidad_ml']:.2%}")
         
         if id_cache and self.config['guardar_cache']:
@@ -442,7 +437,8 @@ class AuditorRecepcion:
         El modelo se entrena para predecir confiabilidad basándose únicamente en
         la confianza OCR.
         """
-        if not self.modelo_ml:
+        self.recargar_modelo()
+        if self.modelo_ml is None:
             logger.warning("Modelo ML no disponible, retornando 0.0")
             return 0.0
         
@@ -454,18 +450,47 @@ class AuditorRecepcion:
             prediccion = self.modelo_ml.predict_proba(features)[0]
             logger.info(f"Predicción ML para confianza_ocr={confianza_ocr:.2%}: {prediccion}")
             
-            # Si el modelo solo tiene una clase, usar la confianza OCR como fallback
-            if len(prediccion) == 1:
-                logger.warning("Modelo solo tiene una clase, usando confianza OCR como fallback")
-                return confianza_ocr
-            
-            # Retornar probabilidad de clase 1 (confiable)
-            # Asumimos que las clases son [0: no confiable, 1: confiable]
-            return prediccion[1]
+            clase_confiable = list(self.modelo_ml.classes_).index(1)
+            return prediccion[clase_confiable]
         except Exception as e:
             logger.warning(f"Error prediciendo confiabilidad: {e}")
-            # En caso de error, usar la confianza OCR como fallback
-            return confianza_ocr
+            return 0.0
+
+    def recargar_modelo(self, force: bool = False) -> bool:
+        """Carga el artefacto validado y detecta actualizaciones realizadas en disco."""
+        try:
+            stat = MODEL_PATH.stat()
+        except FileNotFoundError:
+            self.modelo_ml = None
+            self._modelo_ml_signature = None
+            return False
+        except OSError as error:
+            logger.error(f"No se pudo consultar modelo_actual.pkl: {error}")
+            self.modelo_ml = None
+            self._modelo_ml_signature = None
+            return False
+
+        signature = (stat.st_mtime_ns, stat.st_size)
+        if not force and signature == self._modelo_ml_signature:
+            return self.modelo_ml is not None
+
+        try:
+            candidate = joblib.load(MODEL_PATH)
+            classes = set(candidate.classes_.tolist())
+            if classes != {0, 1} or candidate.n_features_in_ != 1:
+                raise ValueError(
+                    "el artefacto debe tener las clases 0 y 1 y exactamente una característica"
+                )
+        except Exception as error:
+            self.modelo_ml = None
+            self._modelo_ml_signature = signature
+            logger.error(f"Se rechazó modelo_actual.pkl: {error}")
+            return False
+
+        self.modelo_ml = candidate
+        self._modelo_ml_signature = signature
+        logger.info("Modelo ML cargado o actualizado desde modelo_actual.pkl")
+        return True
 
     def _preprocesar_imagen(self, ruta_imagen: str) -> Any:
         if Path(ruta_imagen).suffix.lower() == '.pdf':

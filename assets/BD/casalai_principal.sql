@@ -4289,7 +4289,7 @@ END $$
 DROP PROCEDURE IF EXISTS sp_obtener_productos_recepcion $$
 CREATE PROCEDURE sp_obtener_productos_recepcion(IN p_id_recepcion INT)
 BEGIN
-    SELECT p.id_producto AS codigo, p.nombre_producto AS producto,
+    SELECT p.id_producto AS codigo, p.nombre_producto AS nombre_producto,
            m.nombre_modelo AS modelo, mar.nombre_marca AS marca, p.serial,
            d.cantidad, d.costo
     FROM tbl_detalle_recepcion_productos d
