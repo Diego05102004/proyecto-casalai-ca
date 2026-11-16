@@ -10,6 +10,12 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
+from modelo.corrector_feedback import (
+    MINIMUM_CORRECTION_SUPPORT,
+    build_correction_rules,
+    evaluate_corrections,
+)
+
 
 BASE_DIR = Path(__file__).resolve().parent
 MINIMUM_SAMPLES = 5
@@ -22,6 +28,14 @@ ERROR_COLUMNS = (
     "error_total",
 )
 REQUIRED_COLUMNS = (*ERROR_COLUMNS, "confianza_ocr_promedio")
+CORRECTION_COLUMNS = (
+    "id_recepcion",
+    "prediccion_proveedor",
+    "ground_truth_proveedor",
+    "prediccion_productos",
+    "ground_truth_productos",
+)
+REQUIRED_FEEDBACK_COLUMNS = (*REQUIRED_COLUMNS, *CORRECTION_COLUMNS)
 
 
 def _write_temporary_file(directory: Path, suffix: str) -> Path:
@@ -57,7 +71,9 @@ def run_retraining(
         raise FileNotFoundError(f"No se encontró el dataset de feedback: {feedback_path}")
 
     df = pd.read_csv(feedback_path)
-    missing_columns = [column for column in REQUIRED_COLUMNS if column not in df.columns]
+    missing_columns = [
+        column for column in REQUIRED_FEEDBACK_COLUMNS if column not in df.columns
+    ]
     if missing_columns:
         raise ValueError(f"Faltan columnas requeridas en el feedback: {', '.join(missing_columns)}")
 
@@ -87,6 +103,9 @@ def run_retraining(
     features = df[["confianza_ocr_promedio"]].to_numpy(dtype=float)
     model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
     model.fit(features, targets)
+    feedback_rows = df.to_dict(orient="records")
+    corrections = build_correction_rules(feedback_rows)
+    correction_evaluation = evaluate_corrections(feedback_rows)
 
     training_accuracy = float(model.score(features, targets))
     metrics = {
@@ -105,6 +124,54 @@ def run_retraining(
         "confianza_promedio": float(df["confianza_ocr_promedio"].mean()),
         "accuracy_entrenamiento": training_accuracy,
         "precision_modelo": training_accuracy,
+        "correcciones_activas": {
+            "por_campo": {
+                "proveedor": len(corrections["proveedor"]),
+                "numero_factura": len(
+                    corrections["campos_factura"].get("numero_factura", [])
+                ),
+                "fecha_factura": len(
+                    corrections["campos_factura"].get("fecha_factura", [])
+                ),
+                "producto": len(corrections["producto"]),
+                **{
+                    f"producto.{field}": sum(
+                        1 for rule in corrections["producto"]
+                        if field in rule["target"]
+                    )
+                    for field in ("nombre", "modelo", "marca", "serial", "cantidad", "costo")
+                },
+                "subtotal_factura": len(
+                    corrections["campos_factura"].get("subtotal_factura", [])
+                ),
+                "porcentaje_iva": len(
+                    corrections["campos_factura"].get("porcentaje_iva", [])
+                ),
+                "monto_iva": len(
+                    corrections["campos_factura"].get("monto_iva", [])
+                ),
+                "total_factura": len(
+                    corrections["campos_factura"].get("total_factura", [])
+                ),
+            },
+        },
+        "politica_autocorreccion": {
+            "soporte_minimo_recepciones": MINIMUM_CORRECTION_SUPPORT,
+            "requiere_confirmacion_humana": True,
+            "campos_numericos_solo_con_contexto_exactamente_coincidente": True,
+            "aplica_sugerencias_automaticamente": False,
+        },
+        "evaluacion_correcciones": correction_evaluation,
+    }
+    artifact = {
+        "artifact_version": 3,
+        "reliability_model": model,
+        "corrections": corrections,
+        "correction_policy": {
+            "minimum_support": MINIMUM_CORRECTION_SUPPORT,
+            "suggestion_only": True,
+            "numeric_rules_require_exact_context": True,
+        },
     }
 
     model_path.parent.mkdir(parents=True, exist_ok=True)
@@ -113,9 +180,16 @@ def run_retraining(
     temporary_metrics = _write_temporary_file(metrics_path.parent, ".json")
 
     try:
-        joblib.dump(model, temporary_model)
+        joblib.dump(artifact, temporary_model)
         candidate = joblib.load(temporary_model)
-        if set(candidate.classes_.tolist()) != {0, 1} or candidate.n_features_in_ != 1:
+        candidate_model = candidate["reliability_model"]
+        if (
+            candidate.get("artifact_version") != 3
+            or set(candidate_model.classes_.tolist()) != {0, 1}
+            or candidate_model.n_features_in_ != 1
+            or set(candidate.get("corrections", {}))
+            != {"proveedor", "producto", "campos_factura"}
+        ):
             raise ValueError("El artefacto generado no cumple el contrato del modelo de auditoría.")
 
         with temporary_metrics.open("w", encoding="utf-8") as metrics_file:

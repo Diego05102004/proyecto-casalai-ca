@@ -1,5 +1,5 @@
 {
-  "fecha_reentrenamiento": "2026-11-12T22:52:45.756196",
+  "fecha_reentrenamiento": "2026-11-15T21:55:27.937669",
   "num_registros": 6,
   "distribucion_clases": {
     "no_confiable": 5,
@@ -13,5 +13,90 @@
   "error_promedio_total": 0.0405255037249945,
   "confianza_promedio": 0.851528998779,
   "accuracy_entrenamiento": 1.0,
-  "precision_modelo": 1.0
+  "precision_modelo": 1.0,
+  "correcciones_activas": {
+    "por_campo": {
+      "proveedor": 0,
+      "numero_factura": 0,
+      "fecha_factura": 0,
+      "producto": 1,
+      "producto.nombre": 1,
+      "producto.modelo": 0,
+      "producto.marca": 0,
+      "producto.serial": 0,
+      "producto.cantidad": 0,
+      "producto.costo": 0,
+      "subtotal_factura": 0,
+      "porcentaje_iva": 0,
+      "monto_iva": 0,
+      "total_factura": 0
+    }
+  },
+  "politica_autocorreccion": {
+    "soporte_minimo_recepciones": 2,
+    "requiere_confirmacion_humana": true,
+    "campos_numericos_solo_con_contexto_exactamente_coincidente": true,
+    "aplica_sugerencias_automaticamente": false
+  },
+  "evaluacion_correcciones": {
+    "metodo": "leave_one_reception_out",
+    "documentos_evaluados": 6,
+    "documentos_con_sugerencias": 1,
+    "campos_con_error": 32,
+    "campos_sugeridos": 1,
+    "campos_sugeridos_correctamente": 0,
+    "precision_campos_sugeridos": 0.0,
+    "cobertura_campos_evaluables": 0.03125,
+    "por_campo": {
+      "numero_factura": {
+        "evaluables": 6,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      },
+      "producto.cantidad": {
+        "evaluables": 2,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      },
+      "producto.costo": {
+        "evaluables": 3,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      },
+      "producto.nombre": {
+        "evaluables": 10,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      },
+      "proveedor": {
+        "evaluables": 6,
+        "sugeridos": 1,
+        "correctos": 0,
+        "precision": 0.0,
+        "cobertura": 0.16666666666666666
+      },
+      "subtotal_factura": {
+        "evaluables": 3,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      },
+      "total_factura": {
+        "evaluables": 2,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      }
+    }
+  }
 }

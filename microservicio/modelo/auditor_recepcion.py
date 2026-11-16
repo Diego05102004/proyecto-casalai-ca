@@ -17,6 +17,7 @@ import yaml
 import csv
 import os
 from modelo.adaptador_bd import FabricaAdaptadores, Producto, Proveedor
+from modelo.corrector_feedback import suggest_corrections
 
 # Asegurar que el directorio de logs exista
 BASE_DIR = Path(__file__).parent.parent
@@ -231,6 +232,11 @@ class AuditorRecepcion:
         
         # Cargar el modelo ML si existe y contiene ambas clases de confiabilidad.
         self.modelo_ml = None
+        self.correcciones_aprendidas = {
+            "proveedor": [],
+            "producto": [],
+            "campos_factura": {},
+        }
         self._modelo_ml_signature = None
         self.recargar_modelo(force=True)
         
@@ -392,6 +398,28 @@ class AuditorRecepcion:
         if self.modelo_ml:
             factura.metadatos_extraccion['confiabilidad_ml'] = confiabilidad_ml
             logger.info(f"Confiabilidad ML predicha: {factura.metadatos_extraccion['confiabilidad_ml']:.2%}")
+        factura.metadatos_extraccion['sugerencias_autocorreccion'] = suggest_corrections(
+            self.correcciones_aprendidas,
+            factura.nombre_proveedor,
+            [
+                {
+                    "nombre": producto.nombre,
+                    "modelo": producto.modelo,
+                    "marca": producto.marca,
+                    "cantidad": producto.cantidad,
+                    "costo": producto.costo_unitario,
+                }
+                for producto in factura.productos
+            ],
+            {
+                "numero_factura": factura.numero_factura,
+                "fecha_factura": factura.fecha_factura,
+                "subtotal_factura": factura.subtotal_factura,
+                "porcentaje_iva": factura.porcentaje_iva,
+                "monto_iva": factura.monto_iva,
+                "total_factura": factura.total_factura,
+            },
+        )
         
         if id_cache and self.config['guardar_cache']:
             self.cache_facturas[id_cache] = factura
@@ -462,11 +490,21 @@ class AuditorRecepcion:
             stat = MODEL_PATH.stat()
         except FileNotFoundError:
             self.modelo_ml = None
+            self.correcciones_aprendidas = {
+                "proveedor": [],
+                "producto": [],
+                "campos_factura": {},
+            }
             self._modelo_ml_signature = None
             return False
         except OSError as error:
             logger.error(f"No se pudo consultar modelo_actual.pkl: {error}")
             self.modelo_ml = None
+            self.correcciones_aprendidas = {
+                "proveedor": [],
+                "producto": [],
+                "campos_factura": {},
+            }
             self._modelo_ml_signature = None
             return False
 
@@ -475,7 +513,80 @@ class AuditorRecepcion:
             return self.modelo_ml is not None
 
         try:
-            candidate = joblib.load(MODEL_PATH)
+            artifact = joblib.load(MODEL_PATH)
+            if isinstance(artifact, dict):
+                artifact_version = artifact.get("artifact_version")
+                if artifact_version not in {2, 3}:
+                    raise ValueError("versión del artefacto desconocida")
+                candidate = artifact.get("reliability_model")
+                corrections = artifact.get("corrections")
+                expected_correction_keys = (
+                    {"proveedor", "producto"}
+                    if artifact_version == 2
+                    else {"proveedor", "producto", "campos_factura"}
+                )
+                if (
+                    not isinstance(corrections, dict)
+                    or set(corrections) != expected_correction_keys
+                ):
+                    raise ValueError("el artefacto no contiene las reglas de corrección")
+                if artifact_version == 2:
+                    corrections["campos_factura"] = {}
+                if not all(
+                    isinstance(rules, list)
+                    and all(
+                        isinstance(rule, dict)
+                        and bool(rule.get("source_key"))
+                        and isinstance(rule.get("support"), int)
+                        and rule["support"] >= 2
+                        and (
+                            (
+                                field == "proveedor"
+                                and isinstance(rule.get("target"), str)
+                                and bool(rule["target"].strip())
+                            )
+                            or (
+                                field == "producto"
+                                and isinstance(rule.get("target"), dict)
+                                and bool(rule["target"])
+                                and set(rule["target"]).issubset(
+                                    {"nombre", "modelo", "marca"}
+                                )
+                                and all(
+                                    isinstance(value, str) and value.strip()
+                                    for value in rule["target"].values()
+                                )
+                            )
+                        )
+                        for rule in rules
+                    )
+                    for field, rules in corrections.items()
+                    if field != "campos_factura"
+                ):
+                    raise ValueError("las reglas de corrección no son válidas")
+                if not isinstance(corrections["campos_factura"], dict):
+                    raise ValueError("las reglas de campos de factura no son válidas")
+                if not all(
+                    isinstance(rules, list)
+                    and all(
+                        isinstance(rule, dict)
+                        and bool(rule.get("source_key"))
+                        and isinstance(rule.get("target"), str)
+                        and bool(rule["target"].strip())
+                        and isinstance(rule.get("support"), int)
+                        and rule["support"] >= 2
+                        for rule in rules
+                    )
+                    for rules in corrections["campos_factura"].values()
+                ):
+                    raise ValueError("las reglas de campos de factura no son válidas")
+            else:
+                candidate = artifact
+                corrections = {
+                    "proveedor": [],
+                    "producto": [],
+                    "campos_factura": {},
+                }
             classes = set(candidate.classes_.tolist())
             if classes != {0, 1} or candidate.n_features_in_ != 1:
                 raise ValueError(
@@ -483,11 +594,17 @@ class AuditorRecepcion:
                 )
         except Exception as error:
             self.modelo_ml = None
+            self.correcciones_aprendidas = {
+                "proveedor": [],
+                "producto": [],
+                "campos_factura": {},
+            }
             self._modelo_ml_signature = signature
             logger.error(f"Se rechazó modelo_actual.pkl: {error}")
             return False
 
         self.modelo_ml = candidate
+        self.correcciones_aprendidas = corrections
         self._modelo_ml_signature = signature
         logger.info("Modelo ML cargado o actualizado desde modelo_actual.pkl")
         return True

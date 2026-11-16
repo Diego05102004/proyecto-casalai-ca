@@ -199,7 +199,10 @@ async def fase1_extraer(request: Request, imagen: UploadFile = File(...)):
             "total_factura": resultado.total_factura,
             "confianza_promedio": resultado.metadatos_extraccion.get('confianza_promedio', 0.0),
             "es_factura_valida": resultado.metadatos_extraccion.get('es_factura_valida', True),
-            "mensaje_validacion": resultado.metadatos_extraccion.get('mensaje_validacion', '')
+            "mensaje_validacion": resultado.metadatos_extraccion.get('mensaje_validacion', ''),
+            "sugerencias_autocorreccion": resultado.metadatos_extraccion.get(
+                'sugerencias_autocorreccion', []
+            ),
         }
         
         # Incluir confiabilidad ML si está disponible

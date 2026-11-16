@@ -49,7 +49,7 @@ Esta versión unificada incorpora las siguientes mejoras implementadas:
 
 | Aspecto | Versión 1 | Versión 2 | Versión 3 | Versión 4 |
 |---------|-----------|-----------|-----------|-----------|
-| Features de entrenamiento | 6 (errores + confianza) | 1 (solo confianza) | 1 (solo confianza) | 1 (solo confianza) |
+| Features del clasificador de confiabilidad | 6 (errores + confianza) | 1 (solo confianza) | 1 (solo confianza) | 1 (confianza OCR) + reglas de corrección separadas |
 | Modelo en inferencia | No usado | Sí usado | Sí usado | Sí usado |
 | Autenticación API | No | Token HMAC | Token HMAC | Token HMAC |
 | Alertas de confiabilidad | No | Sí (basadas en ML) | Sí (basadas en ML) | Sí (basadas en ML) |
@@ -60,6 +60,7 @@ Esta versión unificada incorpora las siguientes mejoras implementadas:
 | Degradación sin modelo | No definido | Graceful | Graceful | Graceful |
 | Eliminación de feedback | No | No | No | Sí (al anular) |
 | Reentrenamiento automático | Manual | Manual | Manual | Automático |
+| Correcciones aprendidas por campo | No | No | No | Sí, con sugerencia confirmable |
 
 ---
 
@@ -847,7 +848,7 @@ class FabricaAdaptadores:
                     host=os.getenv('BD_HOST', 'localhost'),
                     port=int(os.getenv('BD_PORT', 3306)),
                     user=os.getenv('BD_USER', 'root'),
-                    password=os.getenv('BD_PASSWORD', ''),
+                    password=os.getenv('BD_PASSWORD', "[REDACTADO]"),
                     database=os.getenv('BD_DATABASE', 'casalai_principal')
                 )
             except Exception as e:
@@ -2197,7 +2198,7 @@ try:
         host=os.getenv('BD_HOST', 'localhost'),
         port=int(os.getenv('BD_PORT', 3306)),
         user=os.getenv('BD_USER', 'root'),
-        password=os.getenv('BD_PASSWORD', ''),
+        password=os.getenv('BD_PASSWORD', "[REDACTADO]"),
         database=os.getenv('BD_DATABASE', 'casalai_principal')
     )
 except Exception as e:
@@ -2303,8 +2304,8 @@ try {
 | `recepcion.php` (controlador) | Backend PHP | ✅ Activo - Registra recepción y captura feedback |
 | `Recepcion.php` (modelo) | Modelo PHP | ✅ Activo - `agregarFeedbackDataset()`, `eliminarFeedbackDataset()` |
 | `feedback_dataset.csv` | Dataset de feedback | ✅ Activo - Acumula predicciones vs ground truth |
-| `retrain.py` | Script de reentrenamiento | ✅ Activo - Valida ambas clases y entrena RandomForest con 1 feature |
-| `modelo_actual.pkl` | Modelo entrenado | ✅ Activo solo si contiene las clases 0 y 1; el auditor recarga el archivo actualizado |
+| `retrain.py` | Script de reentrenamiento | ✅ Activo - Valida mínimo 5 registros y ambas clases; genera clasificador de confiabilidad y reglas de corrección por campo |
+| `modelo_actual.pkl` | Bundle versionado | ✅ Activo - Incluye el clasificador de confiabilidad y reglas de corrección; el auditor detecta y carga el archivo actualizado |
 | `main.py` | Punto de entrada FastAPI | ✅ Activo - Configura rate limiting global |
 | `config.py` | Configuración Pydantic | ✅ Activo - Carga tokens desde variables de entorno |
 | `.env` | Variables de entorno | ✅ Activo - Almacena tokens y configuración BD para FastAPI |
@@ -2364,8 +2365,18 @@ try {
 12. **Catálogo siempre actualizado**: Productos y proveedores desde MySQL en tiempo real
 13. **Arquitectura extensible**: Sistema de adaptadores permite integrar con otros sistemas
 14. **Dataset limpio**: Eliminación automática de feedback erróneo al anular recepciones
-15. **Reentrenamiento automático**: Modelo se actualiza automáticamente cuando se elimina feedback
+15. **Reentrenamiento automático**: Modelo se actualiza automáticamente al alcanzar el umbral configurado de feedback válido
 16. **Fallback robusto**: Si MySQL falla, usa CSV automáticamente
+
+### 17.3 Aprendizaje de correcciones por campo
+
+- El bundle versión 3 conserva el clasificador de confiabilidad basado en la confianza OCR y añade reglas para campos de factura y atributos de productos.
+- Cada recepción nueva puede guardar, junto con el feedback existente, snapshots de los campos predichos y confirmados. Las filas históricas sin snapshots siguen siendo válidas para confiabilidad, pero no aportan correcciones por campo.
+- Una regla requiere coincidencias consistentes en al menos dos recepciones independientes. Las sugerencias numéricas también requieren contexto coincidente de proveedor y productos.
+- Las sugerencias se muestran para revisión y requieren confirmación explícita; no modifican silenciosamente la recepción ni el OCR original.
+- El auditor comprueba cambios en `modelo_actual.pkl` durante la extracción y carga las reglas actualizadas antes de generar sugerencias, sin reiniciar el proceso de la API.
+- La fecha de factura puede confirmarse opcionalmente para aprendizaje; este dato de feedback no se persiste como parte de la recepción.
+- `metricas_reentrenamiento.json` incluye reglas activas y evaluación por campo. Con pocos ejemplos, una métrica de entrenamiento no representa precisión de generalización.
 
 ---
 

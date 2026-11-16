@@ -985,7 +985,11 @@ class Recepcion extends BD{
         $gtTotal = $datosFeedback['ground_truth_total'] ?? 0;
         $errorTotal = $this->calcularErrorNumerico($predTotal, $gtTotal);
         
-        $discrepanciasCorregidas = $datosFeedback['discrepancias_corregidas'] ?? [];
+        $discrepanciasCorregidas = [
+            'discrepancias' => $datosFeedback['discrepancias_corregidas'] ?? [],
+            'campos_predichos' => $datosFeedback['campos_predichos'] ?? [],
+            'campos_confirmados' => $datosFeedback['campos_confirmados'] ?? []
+        ];
 
         $fila = [
             $timestamp,

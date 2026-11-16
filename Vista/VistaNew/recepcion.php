@@ -167,6 +167,14 @@ ob_start();
                             </select><br>
                             <span class="span-value" id="sproveedor"></span>
                         </div>
+                        <div class="form-group">
+                            <label for="fechaFacturaFeedback">
+                                <i class="fas fa-calendar"></i>
+                                Fecha de factura (confirmar para aprendizaje)
+                            </label>
+                            <input type="text" id="fechaFacturaFeedback" placeholder="Fecha como aparece en la factura">
+                            <small>Se usa para mejorar las sugerencias de IA; no se guarda en la recepción.</small>
+                        </div>
                     </div>
                     <div id="previewFacturaRecepcion" class="recepcion-ia-preview" hidden>
                         <img id="previewImagenRecepcion" alt="Vista previa de la factura" hidden>

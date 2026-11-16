@@ -45,6 +45,33 @@ final class FeedbackRetrainingTriggerTest extends TestCase
         self::assertTrue($this->recepcion->agregarFeedbackDataset([]));
         self::assertSame(2, $this->recepcion->retrainingCalls);
     }
+
+    public function testFeedbackPersistsFieldPredictionsAndConfirmedFormValues(): void
+    {
+        self::assertTrue($this->recepcion->agregarFeedbackDataset([
+            'id_recepcion' => 42,
+            'campos_predichos' => [
+                'numero_factura' => '00O123',
+                'fecha_factura' => '2026-01-02',
+                'productos' => [['nombre' => 'Cable O']],
+            ],
+            'campos_confirmados' => [
+                'numero_factura' => '000123',
+                'fecha_factura' => '2026-01-02',
+                'productos' => [['nombre' => 'Cable 0']],
+            ],
+        ]));
+
+        $file = fopen($this->csvPath, 'r');
+        fgetcsv($file);
+        $row = fgetcsv($file);
+        fclose($file);
+
+        $feedback = json_decode($row[18], true);
+        self::assertSame('00O123', $feedback['campos_predichos']['numero_factura']);
+        self::assertSame('000123', $feedback['campos_confirmados']['numero_factura']);
+        self::assertSame('Cable 0', $feedback['campos_confirmados']['productos'][0]['nombre']);
+    }
 }
 
 final class FeedbackRetrainingTriggerFake extends Recepcion

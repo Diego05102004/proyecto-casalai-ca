@@ -61,6 +61,97 @@ class ModelReloadTest(unittest.TestCase):
             self.assertAlmostEqual(second_prediction, 0.2)
             self.assertNotEqual(first_prediction, second_prediction)
 
+    def test_reload_accepts_versioned_bundle_and_loads_corrections(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            model_path = Path(temporary_directory) / "modelo_actual.pkl"
+            corrections = {
+                "proveedor": [
+                    {
+                        "source_key": "proveedor anterior",
+                        "target": "Proveedor correcto",
+                        "support": 2,
+                    }
+                ],
+                "producto": [],
+            }
+            joblib.dump(
+                {
+                    "artifact_version": 2,
+                    "reliability_model": build_model([0, 1, 0, 1, 1]),
+                    "corrections": corrections,
+                    "correction_policy": {
+                        "minimum_support": 2,
+                        "suggestion_only": True,
+                    },
+                },
+                model_path,
+            )
+            auditor = self.make_auditor()
+
+            with patch.object(auditor_module, "MODEL_PATH", model_path):
+                self.assertTrue(auditor.recargar_modelo(force=True))
+
+            self.assertEqual(
+                auditor.correcciones_aprendidas,
+                {
+                    **corrections,
+                    "campos_factura": {},
+                },
+            )
+
+    def test_reload_accepts_v3_field_rules_and_loads_all_corrections(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            model_path = Path(temporary_directory) / "modelo_actual.pkl"
+            corrections = {
+                "proveedor": [],
+                "producto": [],
+                "campos_factura": {
+                    "fecha_factura": [
+                        {
+                            "source_key": "fecha_factura|distribuidor|2026 11 1",
+                            "target": "2026-11-15",
+                            "support": 2,
+                        }
+                    ]
+                },
+            }
+            joblib.dump(
+                {
+                    "artifact_version": 3,
+                    "reliability_model": build_model([0, 1, 0, 1, 1]),
+                    "corrections": corrections,
+                    "correction_policy": {
+                        "minimum_support": 2,
+                        "suggestion_only": True,
+                    },
+                },
+                model_path,
+            )
+            auditor = self.make_auditor()
+
+            with patch.object(auditor_module, "MODEL_PATH", model_path):
+                self.assertTrue(auditor.recargar_modelo(force=True))
+
+            self.assertEqual(auditor.correcciones_aprendidas, corrections)
+
+    def test_reload_keeps_legacy_classifier_compatible_without_corrections(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            model_path = Path(temporary_directory) / "modelo_actual.pkl"
+            joblib.dump(build_model([0, 1, 0, 1, 1]), model_path)
+            auditor = self.make_auditor()
+
+            with patch.object(auditor_module, "MODEL_PATH", model_path):
+                self.assertTrue(auditor.recargar_modelo(force=True))
+
+            self.assertEqual(
+                auditor.correcciones_aprendidas,
+                {
+                    "proveedor": [],
+                    "producto": [],
+                    "campos_factura": {},
+                },
+            )
+
     def test_manual_reload_returns_false_when_artifact_is_missing(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             auditor = self.make_auditor()

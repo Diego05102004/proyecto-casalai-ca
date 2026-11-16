@@ -9,11 +9,14 @@ from unittest.mock import patch
 import joblib
 
 import retrain
+from modelo import auditor_recepcion as auditor_module
+from modelo.auditor_recepcion import AuditorRecepcion
+from modelo.corrector_feedback import suggest_corrections
 
 
 class RetrainingTest(unittest.TestCase):
     def write_feedback(self, path, labels):
-        fields = [*retrain.REQUIRED_COLUMNS]
+        fields = [*retrain.REQUIRED_FEEDBACK_COLUMNS]
         with path.open("w", encoding="utf-8", newline="") as feedback_file:
             writer = csv.DictWriter(feedback_file, fieldnames=fields)
             writer.writeheader()
@@ -21,6 +24,11 @@ class RetrainingTest(unittest.TestCase):
                 field_error = 0.05 if label else 0.5
                 writer.writerow(
                     {
+                        "id_recepcion": index + 1,
+                        "prediccion_proveedor": "",
+                        "ground_truth_proveedor": "",
+                        "prediccion_productos": "[]",
+                        "ground_truth_productos": "[]",
                         "error_proveedor": field_error,
                         "error_correlativo": field_error,
                         "error_productos": field_error,
@@ -51,8 +59,14 @@ class RetrainingTest(unittest.TestCase):
             metrics_path = root / "entrenamiento" / "metricas_reentrenamiento.json"
             self.assertTrue(model_path.is_file())
             self.assertTrue(metrics_path.is_file())
-            model = joblib.load(model_path)
+            artifact = joblib.load(model_path)
+            self.assertEqual(artifact["artifact_version"], 3)
+            model = artifact["reliability_model"]
             self.assertEqual(set(model.classes_.tolist()), {0, 1})
+            self.assertEqual(
+                artifact["corrections"],
+                {"proveedor": [], "producto": [], "campos_factura": {}},
+            )
             saved_metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
             self.assertEqual(saved_metrics["num_registros"], 5)
             self.assertEqual(saved_metrics["distribucion_clases"], {
@@ -60,6 +74,98 @@ class RetrainingTest(unittest.TestCase):
                 "confiable": 3,
             })
             self.assertEqual(metrics["accuracy_entrenamiento"], saved_metrics["accuracy_entrenamiento"])
+
+    def test_trained_correction_bundle_reloads_and_produces_suggestions(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            feedback_path = root / "feedback.csv"
+            model_path = root / "modelo_actual.pkl"
+            metrics_path = root / "metrics.json"
+            self.write_feedback(feedback_path, [1, 1, 0, 0, 1])
+            with feedback_path.open(encoding="utf-8", newline="") as feedback_file:
+                rows = list(csv.DictReader(feedback_file))
+
+            predicted_products = json.dumps([
+                {
+                    "nombre": "Cable USB 5m",
+                    "modelo": "USB-5",
+                    "marca": "Acme",
+                    "cantidad": 2,
+                    "costo": 4.5,
+                }
+            ])
+            corrected_products = json.dumps([
+                {
+                    "nombre": "Cable USB 5 m",
+                    "modelo": "USB-5",
+                    "marca": "Acme",
+                    "cantidad": 2,
+                    "costo": 4.5,
+                }
+            ])
+            for index in range(2):
+                rows[index]["prediccion_proveedor"] = "Distribuidora ACME"
+                rows[index]["ground_truth_proveedor"] = "Distribuidora Acme, C.A."
+                rows[index]["prediccion_productos"] = predicted_products
+                rows[index]["ground_truth_productos"] = corrected_products
+                rows[index]["id_recepcion"] = index + 1
+            with feedback_path.open("w", encoding="utf-8", newline="") as feedback_file:
+                writer = csv.DictWriter(
+                    feedback_file,
+                    fieldnames=retrain.REQUIRED_FEEDBACK_COLUMNS,
+                )
+                writer.writeheader()
+                writer.writerows(rows)
+
+            retrain.run_retraining(feedback_path, model_path, metrics_path)
+            auditor = AuditorRecepcion.__new__(AuditorRecepcion)
+            auditor.modelo_ml = None
+            auditor.correcciones_aprendidas = {"proveedor": [], "producto": []}
+            auditor._modelo_ml_signature = None
+
+            with patch.object(auditor_module, "MODEL_PATH", model_path):
+                self.assertTrue(auditor.recargar_modelo(force=True))
+
+            suggestions = suggest_corrections(
+                auditor.correcciones_aprendidas,
+                "Distribuidora ACME",
+                [
+                    {
+                        "nombre": "Cable USB 5m",
+                        "modelo": "USB-5",
+                        "marca": "Acme",
+                        "cantidad": 2,
+                        "costo": 4.5,
+                    }
+                ],
+            )
+            metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(suggestions), 2)
+            self.assertEqual(
+                metrics["correcciones_activas"],
+                {
+                    "por_campo": {
+                        "proveedor": 1,
+                        "numero_factura": 0,
+                        "fecha_factura": 0,
+                        "producto": 1,
+                        "producto.nombre": 1,
+                        "producto.modelo": 0,
+                        "producto.marca": 0,
+                        "producto.serial": 0,
+                        "producto.cantidad": 0,
+                        "producto.costo": 0,
+                        "subtotal_factura": 0,
+                        "porcentaje_iva": 0,
+                        "monto_iva": 0,
+                        "total_factura": 0,
+                    }
+                },
+            )
+            self.assertEqual(
+                metrics["evaluacion_correcciones"]["precision_campos_sugeridos"],
+                None,
+            )
 
     def test_refuses_less_than_five_samples_without_replacing_artifacts(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -107,7 +213,7 @@ class RetrainingTest(unittest.TestCase):
                 row["error_subtotal"] = 0.5
                 row["error_total"] = 0.0
             with feedback_path.open("w", encoding="utf-8", newline="") as feedback_file:
-                writer = csv.DictWriter(feedback_file, fieldnames=retrain.REQUIRED_COLUMNS)
+                writer = csv.DictWriter(feedback_file, fieldnames=retrain.REQUIRED_FEEDBACK_COLUMNS)
                 writer.writeheader()
                 writer.writerows(rows)
 
@@ -127,7 +233,7 @@ class RetrainingTest(unittest.TestCase):
                 rows = list(csv.DictReader(feedback_file))
             rows[0]["confianza_ocr_promedio"] = "1.5"
             with feedback_path.open("w", encoding="utf-8", newline="") as feedback_file:
-                writer = csv.DictWriter(feedback_file, fieldnames=retrain.REQUIRED_COLUMNS)
+                writer = csv.DictWriter(feedback_file, fieldnames=retrain.REQUIRED_FEEDBACK_COLUMNS)
                 writer.writeheader()
                 writer.writerows(rows)
 
