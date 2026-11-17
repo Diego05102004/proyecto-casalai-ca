@@ -11,7 +11,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 MINIMUM_CORRECTION_SUPPORT = 2
 DOCUMENT_FIELDS = (
     "numero_factura",
-    "fecha_factura",
     "subtotal_factura",
     "porcentaje_iva",
     "monto_iva",

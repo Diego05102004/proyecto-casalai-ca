@@ -2375,7 +2375,7 @@ try {
 - Una regla requiere coincidencias consistentes en al menos dos recepciones independientes. Las sugerencias numéricas también requieren contexto coincidente de proveedor y productos.
 - Las sugerencias se muestran para revisión y requieren confirmación explícita; no modifican silenciosamente la recepción ni el OCR original.
 - El auditor comprueba cambios en `modelo_actual.pkl` durante la extracción y carga las reglas actualizadas antes de generar sugerencias, sin reiniciar el proceso de la API.
-- La fecha de factura puede confirmarse opcionalmente para aprendizaje; este dato de feedback no se persiste como parte de la recepción.
+- La fecha de factura se excluye del formulario de aprendizaje y de las reglas de corrección, ya que no forma parte de los datos registrados en la recepción.
 - `metricas_reentrenamiento.json` incluye reglas activas y evaluación por campo. Con pocos ejemplos, una métrica de entrenamiento no representa precisión de generalización.
 
 ---

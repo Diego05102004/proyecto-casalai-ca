@@ -106,10 +106,10 @@ class ModelReloadTest(unittest.TestCase):
                 "proveedor": [],
                 "producto": [],
                 "campos_factura": {
-                    "fecha_factura": [
+                    "total_factura": [
                         {
-                            "source_key": "fecha_factura|distribuidor|2026 11 1",
-                            "target": "2026-11-15",
+                            "source_key": "total_factura|distribuidor|cable usb",
+                            "target": "11.6",
                             "support": 2,
                         }
                     ]

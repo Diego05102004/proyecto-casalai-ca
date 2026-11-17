@@ -1,5 +1,5 @@
 {
-  "fecha_reentrenamiento": "2026-11-15T21:55:27.937669",
+  "fecha_reentrenamiento": "2026-11-17T05:54:47.007464",
   "num_registros": 6,
   "distribucion_clases": {
     "no_confiable": 5,
@@ -18,7 +18,6 @@
     "por_campo": {
       "proveedor": 0,
       "numero_factura": 0,
-      "fecha_factura": 0,
       "producto": 1,
       "producto.nombre": 1,
       "producto.modelo": 0,

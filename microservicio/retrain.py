@@ -130,9 +130,6 @@ def run_retraining(
                 "numero_factura": len(
                     corrections["campos_factura"].get("numero_factura", [])
                 ),
-                "fecha_factura": len(
-                    corrections["campos_factura"].get("fecha_factura", [])
-                ),
                 "producto": len(corrections["producto"]),
                 **{
                     f"producto.{field}": sum(

@@ -147,7 +147,6 @@ class RetrainingTest(unittest.TestCase):
                     "por_campo": {
                         "proveedor": 1,
                         "numero_factura": 0,
-                        "fecha_factura": 0,
                         "producto": 1,
                         "producto.nombre": 1,
                         "producto.modelo": 0,

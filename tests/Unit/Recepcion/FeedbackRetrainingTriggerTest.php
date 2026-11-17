@@ -52,12 +52,10 @@ final class FeedbackRetrainingTriggerTest extends TestCase
             'id_recepcion' => 42,
             'campos_predichos' => [
                 'numero_factura' => '00O123',
-                'fecha_factura' => '2026-01-02',
                 'productos' => [['nombre' => 'Cable O']],
             ],
             'campos_confirmados' => [
                 'numero_factura' => '000123',
-                'fecha_factura' => '2026-01-02',
                 'productos' => [['nombre' => 'Cable 0']],
             ],
         ]));

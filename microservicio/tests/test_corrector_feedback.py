@@ -132,7 +132,6 @@ class FeedbackCorrectionTest(unittest.TestCase):
             {
                 "proveedor",
                 "numero_factura",
-                "fecha_factura",
                 "subtotal_factura",
                 "porcentaje_iva",
                 "monto_iva",
@@ -140,7 +139,9 @@ class FeedbackCorrectionTest(unittest.TestCase):
                 "producto",
             }.issubset(suggested_fields)
         )
-        self.assertEqual(len(corrections["campos_factura"]), 6)
+        self.assertNotIn("fecha_factura", suggested_fields)
+        self.assertNotIn("fecha_factura", corrections["campos_factura"])
+        self.assertEqual(len(corrections["campos_factura"]), 5)
         product_suggestion = next(
             item for item in suggestions if item["campo"] == "producto"
         )
@@ -245,10 +246,7 @@ class FeedbackCorrectionTest(unittest.TestCase):
 
         metrics = evaluate_corrections(rows)
 
-        self.assertEqual(
-            metrics["por_campo"]["fecha_factura"]["precision"],
-            1.0,
-        )
+        self.assertNotIn("fecha_factura", metrics["por_campo"])
         self.assertEqual(
             metrics["por_campo"]["producto.serial"]["precision"],
             1.0,

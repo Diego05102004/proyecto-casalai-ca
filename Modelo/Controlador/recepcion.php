@@ -438,7 +438,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             'discrepancias_corregidas' => $prediccionIA['discrepancias'] ?? [],
                             'campos_predichos' => $prediccionIA['campos_predichos'] ?? [
                                 'numero_factura' => $prediccionIA['numero_factura'] ?? '',
-                                'fecha_factura' => $prediccionIA['fecha_factura'] ?? '',
                                 'nombre_proveedor' => $prediccionIA['nombre_proveedor'] ?? '',
                                 'productos' => $prediccionIA['productos'] ?? [],
                                 'subtotal_factura' => $prediccionIA['subtotal_factura'] ?? 0,

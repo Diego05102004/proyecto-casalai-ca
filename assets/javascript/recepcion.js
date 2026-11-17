@@ -547,20 +547,6 @@ function mostrarSugerenciasAutocorreccion(factura) {
                 boton.disabled = true;
                 boton.textContent = 'Número actualizado';
             });
-        } else if (sugerencia.campo === 'fecha_factura') {
-            const fecha = document.getElementById('fechaFacturaFeedback');
-            elemento.appendChild(document.createTextNode(
-                `Fecha de factura: "${sugerencia.valor_actual}" → ` +
-                `"${sugerencia.valor_sugerido}". ${evidencia} `
-            ));
-            boton.textContent = 'Aceptar fecha';
-            boton.disabled = !fecha;
-            boton.addEventListener('click', () => {
-                if (!fecha) return;
-                fecha.value = sugerencia.valor_sugerido;
-                boton.disabled = true;
-                boton.textContent = 'Fecha actualizada';
-            });
         } else if (sugerencia.campo === 'porcentaje_iva') {
             const iva = document.getElementById('porcentajeIvaRecepcion');
             elemento.appendChild(document.createTextNode(
@@ -687,7 +673,6 @@ function construirFeedbackCamposIA(prediccion) {
 
     prediccion.campos_predichos = {
         numero_factura: prediccion.numero_factura || '',
-        fecha_factura: prediccion.fecha_factura || '',
         nombre_proveedor: prediccion.nombre_proveedor || '',
         productos: Array.isArray(prediccion.productos) ? prediccion.productos : [],
         subtotal_factura: Number(prediccion.subtotal_factura || 0),
@@ -697,7 +682,6 @@ function construirFeedbackCamposIA(prediccion) {
     };
     prediccion.campos_confirmados = {
         numero_factura: document.getElementById('correlativo')?.value?.trim() || '',
-        fecha_factura: document.getElementById('fechaFacturaFeedback')?.value?.trim() || '',
         nombre_proveedor: nombreProveedor,
         productos,
         subtotal_factura: Number(subtotal.toFixed(2)),
@@ -721,8 +705,6 @@ function rellenarRecepcionDesdeFactura(factura) {
     
     const correlativo = document.getElementById('correlativo');
     if (factura.numero_factura && correlativo) correlativo.value = factura.numero_factura;
-    const fechaFacturaFeedback = document.getElementById('fechaFacturaFeedback');
-    if (fechaFacturaFeedback) fechaFacturaFeedback.value = '';
 
     const proveedor = document.getElementById('proveedor');
     const proveedorEncontrado = buscarOpcionCatalogo(proveedor, factura.nombre_proveedor);
