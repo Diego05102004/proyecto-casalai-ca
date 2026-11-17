@@ -1,17 +1,17 @@
 {
-  "fecha_reentrenamiento": "2026-11-17T05:54:47.007464",
-  "num_registros": 6,
+  "fecha_reentrenamiento": "2026-11-17T06:36:05.352845",
+  "num_registros": 7,
   "distribucion_clases": {
-    "no_confiable": 5,
+    "no_confiable": 6,
     "confiable": 1
   },
-  "error_promedio_extraccion": 0.4186928033163359,
-  "error_promedio_proveedor": 0.8843323586744632,
-  "error_promedio_correlativo": 0.8333333333333334,
-  "error_promedio_productos": 0.3145997950462233,
-  "error_promedio_subtotal": 0.02067302580266504,
-  "error_promedio_total": 0.0405255037249945,
-  "confianza_promedio": 0.851528998779,
+  "error_promedio_extraccion": 0.4278465967094721,
+  "error_promedio_proveedor": 0.8611737677527141,
+  "error_promedio_correlativo": 0.8571428571428571,
+  "error_promedio_productos": 0.3313066270464229,
+  "error_promedio_subtotal": 0.02709071888396832,
+  "error_promedio_total": 0.06251901272139813,
+  "confianza_promedio": 0.84756907378336,
   "accuracy_entrenamiento": 1.0,
   "precision_modelo": 1.0,
   "correcciones_activas": {
