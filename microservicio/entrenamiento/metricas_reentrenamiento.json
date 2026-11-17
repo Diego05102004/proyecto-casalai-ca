@@ -1,17 +1,17 @@
 {
-  "fecha_reentrenamiento": "2026-11-17T06:36:05.352845",
-  "num_registros": 7,
+  "fecha_reentrenamiento": "2026-11-17T06:54:58.455895",
+  "num_registros": 5,
   "distribucion_clases": {
-    "no_confiable": 6,
+    "no_confiable": 4,
     "confiable": 1
   },
-  "error_promedio_extraccion": 0.4278465967094721,
-  "error_promedio_proveedor": 0.8611737677527141,
-  "error_promedio_correlativo": 0.8571428571428571,
-  "error_promedio_productos": 0.3313066270464229,
-  "error_promedio_subtotal": 0.02709071888396832,
-  "error_promedio_total": 0.06251901272139813,
-  "confianza_promedio": 0.84756907378336,
+  "error_promedio_extraccion": 0.4174471365121041,
+  "error_promedio_proveedor": 0.886198830409356,
+  "error_promedio_correlativo": 0.8,
+  "error_promedio_productos": 0.327409863945578,
+  "error_promedio_subtotal": 0.02490899819281705,
+  "error_promedio_total": 0.0487179900127694,
+  "confianza_promedio": 0.856001465201466,
   "accuracy_entrenamiento": 1.0,
   "precision_modelo": 1.0,
   "correcciones_activas": {
@@ -39,23 +39,30 @@
   },
   "evaluacion_correcciones": {
     "metodo": "leave_one_reception_out",
-    "documentos_evaluados": 6,
+    "documentos_evaluados": 5,
     "documentos_con_sugerencias": 1,
-    "campos_con_error": 32,
+    "campos_con_error": 39,
     "campos_sugeridos": 1,
     "campos_sugeridos_correctamente": 0,
     "precision_campos_sugeridos": 0.0,
-    "cobertura_campos_evaluables": 0.03125,
+    "cobertura_campos_evaluables": 0.02564102564102564,
     "por_campo": {
-      "numero_factura": {
-        "evaluables": 6,
+      "monto_iva": {
+        "evaluables": 2,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      },
+      "porcentaje_iva": {
+        "evaluables": 1,
         "sugeridos": 0,
         "correctos": 0,
         "precision": null,
         "cobertura": 0.0
       },
       "producto.cantidad": {
-        "evaluables": 2,
+        "evaluables": 3,
         "sugeridos": 0,
         "correctos": 0,
         "precision": null,
@@ -69,18 +76,25 @@
         "cobertura": 0.0
       },
       "producto.nombre": {
-        "evaluables": 10,
+        "evaluables": 9,
+        "sugeridos": 0,
+        "correctos": 0,
+        "precision": null,
+        "cobertura": 0.0
+      },
+      "producto.serial": {
+        "evaluables": 11,
         "sugeridos": 0,
         "correctos": 0,
         "precision": null,
         "cobertura": 0.0
       },
       "proveedor": {
-        "evaluables": 6,
+        "evaluables": 5,
         "sugeridos": 1,
         "correctos": 0,
         "precision": 0.0,
-        "cobertura": 0.16666666666666666
+        "cobertura": 0.2
       },
       "subtotal_factura": {
         "evaluables": 3,
